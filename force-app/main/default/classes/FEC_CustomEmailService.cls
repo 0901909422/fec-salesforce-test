@@ -234,40 +234,28 @@ public without sharing class FEC_CustomEmailService {
             if (!userQueueIds.isEmpty()) {
                 // Lấy tên và email của các Queue mà user là member
                 Set<String> queueNames = new Set<String>();
-                Map<String, Boolean> queueEmailSet = new Map<String, Boolean>();
+                Set<String> queueEmails = new Set<String>();
                 for (Group q : [SELECT Name, Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                     queueNames.add(q.Name);
-                    if (String.isNotBlank(q.Email)) queueEmailSet.put(q.Email.toLowerCase(), true);
+                    if (String.isNotBlank(q.Email)) queueEmails.add(q.Email.toLowerCase());
                 }
-                // Query trực tiếp theo PersonalName IN tên Queue
-                if (!queueNames.isEmpty()) {
-                    for (SObject r : Database.query(
-                        'SELECT Id, Address, PersonalName FROM EmailRoutingAddress WHERE PersonalName IN :queueNames ORDER BY PersonalName ASC'
-                    )) {
-                        String addr = (String) r.get(FIELD_ADDRESS);
-                        String name = (String) r.get(FIELD_PERSONAL_NAME);
-                        if (String.isNotBlank(addr)) {
-                            String lower = addr.toLowerCase();
-                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                            routingLabelMap.put(lower, lbl);
-                            routingAddrMap.put(lower, addr);
-                            routingOrder.add(lower);
-                        }
-                    }
-                }
-                // Thêm các routing address match theo Queue email (nếu có)
-                if (!queueEmailSet.isEmpty() && routingOrder.isEmpty()) {
+                // 1 query duy nhất: lấy tất cả EmailRoutingAddress, filter theo tên Queue hoặc address Queue
+                if (!queueNames.isEmpty() || !queueEmails.isEmpty()) {
                     for (SObject r : Database.query(
                         'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
                     )) {
                         String addr = (String) r.get(FIELD_ADDRESS);
                         String name = (String) r.get(FIELD_PERSONAL_NAME);
-                        if (String.isNotBlank(addr) && queueEmailSet.containsKey(addr.toLowerCase())) {
-                            String lower = addr.toLowerCase();
-                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                            routingLabelMap.put(lower, lbl);
-                            routingAddrMap.put(lower, addr);
-                            routingOrder.add(lower);
+                        if (String.isNotBlank(addr)) {
+                            Boolean matchName = String.isNotBlank(name) && queueNames.contains(name);
+                            Boolean matchEmail = queueEmails.contains(addr.toLowerCase());
+                            if (matchName || matchEmail) {
+                                String lower = addr.toLowerCase();
+                                String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                                routingLabelMap.put(lower, lbl);
+                                routingAddrMap.put(lower, addr);
+                                routingOrder.add(lower);
+                            }
                         }
                     }
                 }
