@@ -28,6 +28,7 @@ import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.che
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
+import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
 import {
   publish,
   MessageContext,
@@ -50,7 +51,7 @@ import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Num
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 import { CurrentPageReference } from 'lightning/navigation';
-import { formatDateTimeVN } from 'c/fec_CommonUtils';
+import { formatDateTimeVNShort } from 'c/fec_CommonUtils';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -247,9 +248,9 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
             year: "numeric"
         }, 
         sortable: true },
-      ...(this.isAccountContractSearch ? [{ label: "Product Code", fieldName: "PlasticID", sortable: true }] : [{ label: "Product Code", fieldName: "ProductCode", sortable: true }]),
+      { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
-      { label: this.isAccountContractSearch ? "Account Status" : "Contract Status", fieldName: "ContractStatus", sortable: true },
+      { label: "Contract Status", fieldName: "ContractStatus", sortable: true },
     ];
   }
 
@@ -1191,7 +1192,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.historyModalRows = (rows || []).map(h => ({ ...h, editDate: formatDateTimeVN(h.editDate) }));
+        this.historyModalRows = (rows || []).map(h => ({ ...h, editDate: formatDateTimeVNShort(h.editDate) }));
         this.historyModalLoading = false;
       })
       .catch(() => {
@@ -1242,7 +1243,7 @@ hasAnySearchCriteria(params) {
 
     getApplicationHistory({ applicationId })
       .then(rows => {
-        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: (rows || []).map(h => ({ ...h, editDate: formatDateTimeVN(h.editDate) })) } };
+        this.appHistoryMap = { ...this.appHistoryMap, [key]: { loading: false, expanded: true, rows: (rows || []).map(h => ({ ...h, editDate: formatDateTimeVNShort(h.editDate) })) } };
         this._refreshData();
       })
       .catch(() => {
@@ -1399,6 +1400,7 @@ hasAnySearchCriteria(params) {
               "History created successfully",
               "success",
             );
+            await this._pollHistoryReady(res);
             if (this.recordId) {
                 //publish(this.messageContext, IS_MODE_EDIT, payload);
                 this.handlePublishMessageChanel();
@@ -1435,6 +1437,42 @@ hasAnySearchCriteria(params) {
         break;
     }
   }
+
+  async _pollHistoryReady(caseId) {
+      const MAX_ATTEMPTS = 15;
+      const INTERVAL_MS  = 2000;
+
+      let historyId = await this._getHistoryIdFromCase(caseId);
+      if (!historyId) return; 
+
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          await new Promise(resolve => setTimeout(resolve, INTERVAL_MS));
+
+          try {
+              const status = await getHistoryStatus({ historyId });
+              if (status?.isReady) {
+                  return;
+              }
+          } catch (e) {
+              console.error('Polling error:', e);
+              return; 
+          }
+      }
+      console.warn('Polling timeout, refreshing anyway.');
+  }
+
+  async _getHistoryIdFromCase(caseId) {
+    try {
+        const result = await getCase({ caseId });
+        const histories = result?.Customer_Histories__r;
+        if (histories && histories.length > 0) {
+            return histories[histories.length - 1].Id;
+        }
+    } catch (e) {
+        console.error('_getHistoryIdFromCase error:', e);
+    }
+    return null;
+  } 
 
   get isDisplayCreateCase() {
     return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);

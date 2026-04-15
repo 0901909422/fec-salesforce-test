@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
 import CASE_OBJECT from "@salesforce/schema/Case";
@@ -26,10 +26,14 @@ import {
     RECORD_TYPE_CUSTOMER_CASE_NAME,
  } from 'c/fec_CommonConst';
 
+import getCardBlockData from '@salesforce/apex/FEC_CardLockUnLockController.getCardBlockData';
 import blockCard from '@salesforce/apex/FEC_CardLockUnLockController.blockCard';
 
 export default class Fec_CardBlock extends LightningElement {
     @api recordId;
+    @api isEdit;
+
+    @track cardBlock = {};
 
     isShowSpinner = false;
     isShowModal = false;
@@ -59,9 +63,6 @@ export default class Fec_CardBlock extends LightningElement {
     optionReasons;
     verifyInformationOptions;
     callbackOptions;
-    cardBlockReasonValue;
-    verifyInformationValue;
-    callbackValue;
 
     mapNewBlockCode = {
         'A': 'A',
@@ -69,12 +70,16 @@ export default class Fec_CardBlock extends LightningElement {
         'Thẻ bị mất/ đánh cắp có phát sinh giao dịch': 'S',
     }
 
-    get isShowBtn() {
-        return !this.isSuccess && (this.blockCardCount < 3);
+    get isDisabled() {
+        return this.isEdit === false;
     }
 
-    get newBlockCodeValue() {
-        return this.mapNewBlockCode[this.cardBlockReasonValue] || '';
+    get isShowBtn() {
+        return !this.isDisabled && !this.isSuccess && (this.blockCardCount < 3);
+    }
+
+    get isShowMsgRetry() {
+        return !this.isSuccess && (this.blockCardCount < 3);
     }
 
     @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
@@ -132,6 +137,13 @@ export default class Fec_CardBlock extends LightningElement {
 
     connectedCallback() {
         this.blockCardCount = 0;
+        getCardBlockData({ recordId: this.recordId })
+        .then((result) => {
+            this.cardBlock = result;
+        })
+        .catch((error) => {
+            console.error(error);
+        })
     }
 
     handleBlockCardClick() {
@@ -144,37 +156,43 @@ export default class Fec_CardBlock extends LightningElement {
 
     handleConfirmClick() {
         this.isShowSpinner = true;
-        blockCard({ recordId: this.recordId })
-            .then((result) => {
-                if (result === 'SUCCESS') {
-                    this.isSuccess = true;
-                } else if (result === 'FAIL') {
-                    this.blockCardCount++;
-                    this.isError = true;
-                } else {
-                    this.showToast(this.customLabel.errorTitle, result, 'error');
-                }
-                this.isShowModal = false;
-            })
-            .catch((error) => {
-                console.error(error);
-                this.showToast(this.customLabel.errorTitle, this.handleError(error), 'error');
-            })
-            .finally(() => {
-                this.isShowSpinner = false;
-            });
+        const blockCode = this.template.querySelector('input[data-id="newBlockCode"]').value;
+        blockCard({ 
+            recordId: this.recordId,
+            blockCode: blockCode,
+        })
+        .then((result) => {
+            if (result === 'SUCCESS') {
+                this.isSuccess = true;
+            } else if (result === 'FAIL') {
+                this.blockCardCount++;
+                this.isError = true;
+            } else {
+                this.showToast(this.customLabel.errorTitle, result, 'error');
+            }
+            this.isShowModal = false;
+        })
+        .catch((error) => {
+            console.error(error);
+            this.showToast(this.customLabel.errorTitle, this.handleError(error), 'error');
+        })
+        .finally(() => {
+            this.isShowSpinner = false;
+        });
     }
 
     handleCardBlockReasonChange(event) {
-        this.cardBlockReasonValue = event.detail.value;
+        const value = event.detail.value;
+        this.cardBlock.cardBlockReason = value;
+        this.cardBlock.newBlockCode = this.mapNewBlockCode[value] || '';
     }
 
     handleVerifyInformationChange(event) {
-        this.verifyInformationValue = event.detail.value;
+        this.cardBlock.verifyInformation = event.detail.value;
     }
 
     handleCallbackChange(event) {
-        this.callbackValue = event.detail.value;
+        this.cardBlock.callback = event.detail.value;
     }
 
     handleError(error) {

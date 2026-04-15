@@ -44,8 +44,6 @@ export default class Fec_PinResetView extends LightningElement {
     getCardInfo({ customerCaseId: this.recordId })
       .then((res) => {
         console.log("res: ", JSON.stringify(res));
-        this.cardNumber = res.cardNumber;
-        this.cifNumber = res.cifNumber;
         this.nationalId = res.nationalId;
         this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
@@ -87,34 +85,6 @@ export default class Fec_PinResetView extends LightningElement {
 
   handleConfirmReset() {
     this.isLoading = true;
-
-    if (
-      this.cardNumber === null ||
-      this.cardNumber === undefined ||
-      this.cardNumber === ""
-    ) {
-      this.showToast(
-        ERROR_MODAL_TITLE,
-        this.label.FEC_Card_Number_Required_MSG,
-        ERROR_TOAST_TYPE,
-      );
-      this.close();
-      return;
-    }
-
-    if (
-      this.cifNumber === null ||
-      this.cifNumber === undefined ||
-      this.cardNumber === ""
-    ) {
-      this.showToast(
-        ERROR_MODAL_TITLE,
-        this.label.FEC_CIF_Number_Required_MSG,
-        ERROR_MODAL_TITLE,
-      );
-      this.close();
-      return;
-    }
 
     resetPin({
       caseId: this.recordId,

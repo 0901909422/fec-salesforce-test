@@ -1,9 +1,14 @@
 import { LightningElement, api, wire, track } from 'lwc';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
+import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
+import getCase from '@salesforce/apex/FEC_CaseEditNOCController.getCase';
+import { VIEW_MODE_HANDLING } from 'c/fec_CommonConst';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getAvailableNotifications from '@salesforce/apex/FEC_Notification.getAvailableNotifications';
 import sendManualEmail from '@salesforce/apex/FEC_Notification.sendManualEmail';
-import getTemplate from '@salesforce/apex/FEC_TemplateController.getTemplate';
+import previewTemplate from '@salesforce/apex/FEC_Notification.previewTemplate';
 import labelSendManualNotification from '@salesforce/label/c.FEC_Send_Manual_Notification';
 import LBL_SFT_Notification_Type from '@salesforce/label/c.LBL_SFT_Notification_Type';
 import FEC_Choose_Notification_Type from '@salesforce/label/c.FEC_Choose_Notification_Type';
@@ -55,6 +60,20 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     targetEmail = '';
     error;
 
+    @wire(MessageContext)
+    messageContext;
+    
+    subscriptionMode = null;
+    subscriptionNOC = null;
+    
+    @track modeEditCase = false;
+    @track isSubmited = true;
+    @track interactionViewMode = '';
+    
+    @track productTypeId = null;
+    @track categoryId = null;
+    @track subCategoryId = null;
+    @track subCodeId = null;
     @track isDropdownOpen = false;
     @track isSearching = false;
     @track userSearchResults = [];
@@ -71,7 +90,72 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         return this.userSearchResults.length === 0;
     }
 
-    @wire(getAvailableNotifications, { caseId: '$recordId' })
+    // get isEdit() {
+    //     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
+    //     return defaultEdit && !this.isSubmited;
+    // }
+
+    async connectedCallback() {
+        this.subscribeToMessageChannel();
+        try {
+            const res = await getCase({ recordId: this.recordId });
+            this.isSubmited = res.FEC_Is_Submited__c;
+            this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
+            this.productTypeId = res.FEC_Product_Type__c;
+            this.categoryId = res.FEC_Category__c;
+            this.subCategoryId = res.FEC_SubCategory__c;
+            this.subCodeId = res.FEC_SubCode__c;
+        } catch(error) {
+            console.error('Error fetching Case details in fec_ManualNotification: ', error);
+        }
+    }
+
+    disconnectedCallback() {
+        unsubscribe(this.subscriptionMode);
+        this.subscriptionMode = null;
+
+        unsubscribe(this.subscriptionNOC);
+        this.subscriptionNOC = null;
+    }
+
+    subscribeToMessageChannel() {
+        this.subscriptionMode = subscribe(
+            this.messageContext,
+            IS_MODE_EDIT,
+            (message) => this.handleModeMessage(message),
+            { scope: APPLICATION_SCOPE }
+        );
+
+        this.subscriptionNOC = subscribe(
+            this.messageContext,
+            CASE_NOC,
+            (message) => this.handleNOCMessage(message),
+            { scope: APPLICATION_SCOPE }
+        );
+    }
+
+    handleModeMessage(message) {
+        if (!message || typeof message.isModeEdit === 'undefined') return;
+        this.modeEditCase = message.isModeEdit === true;
+    }
+
+    handleNOCMessage(message) {
+        if (!message) return;
+        if (message.productTypeId !== undefined) {
+            this.productTypeId = message.productTypeId;
+            this.categoryId = message.categoryId;
+            this.subCategoryId = message.subCategoryId;
+            this.subCodeId = message.subCodeId;
+        } else if (message.accountType != null) {
+            // When accountType is provided, it means NOC is reset from another source
+            this.productTypeId = null;
+            this.categoryId = null;
+            this.subCategoryId = null;
+            this.subCodeId = null;
+        }
+    }
+
+    @wire(getAvailableNotifications, { caseId: '$recordId', productTypeId: '$productTypeId', categoryId: '$categoryId', subCategoryId: '$subCategoryId', subCodeId: '$subCodeId' })
     wiredNotifications({ error, data }) {
         if (data) {
             this.rawNotifications = data;
@@ -96,9 +180,9 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     handleChange(event) {
         this.selectedNotificationId = event.detail.value;
-        
+
         const selectedItem = this.rawNotifications.find(item => item.value === this.selectedNotificationId);
-        
+
         if (selectedItem) {
             this.selectedChannel = selectedItem.channel;
             this.selectedTemplateId = selectedItem.templateId;
@@ -181,7 +265,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     async handlePreview() {
         try {
-            const recResult = await getTemplate({ templateId: this.selectedTemplateId });    
+            const recResult = await previewTemplate({ caseId: this.recordId, templateId: this.selectedTemplateId });    
             this._record = recResult ? this._mapTemplate(recResult) : null;
             this._isPreviewOpen = true;
         } catch (error) {

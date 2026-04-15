@@ -102,7 +102,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
-
+    public static final String MERGE_FIELD_OPEN = '{{{';
+    public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String MERGE_FIELD_NORMALIZE_REPLACEMENT = '{{{$1}}}';
+    public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
+    public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
+    
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
 
@@ -128,7 +136,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
-
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
+    
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
     /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
@@ -443,5 +452,18 @@ public with sharing class FEC_ConstantCommon {
       'Document Preparation' => 'DocumentPreparation',
       'Task Under Review' => 'TaskUnderReview'
     };
+    
+    public static final String CASE_ALL_REQUEST = 'All';
+
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+    
+    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
     
 }

@@ -43,6 +43,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
+                   FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
                    FEC_SubCategory__c,
@@ -81,6 +82,35 @@ public without sharing class FEC_NotificationService {
         // Lấy OrgWide sender 1 lần cho toàn bộ emails
         Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
 
+        // Cache letterhead đã xử lý để tránh query nhiều lần
+        Map<Id, FEC_Enhanced_Letterhead__c> letterheadCache = new Map<Id, FEC_Enhanced_Letterhead__c>();
+
+        // Bulk query ContentDocumentLink cho tất cả template
+        Set<Id> templateIds = new Set<Id>();
+        for (FEC_Notification__c n : notifications) {
+            if (n.FEC_Notification_Template__c != null) templateIds.add(n.FEC_Notification_Template__c);
+        }
+        Map<Id, List<ContentVersion>> templateAttachments = new Map<Id, List<ContentVersion>>();
+        if (!templateIds.isEmpty()) {
+            Map<Id, Id> docToTemplate = new Map<Id, Id>();
+            for (ContentDocumentLink link : [
+                SELECT ContentDocumentId, LinkedEntityId, ContentDocument.LatestPublishedVersionId
+                FROM ContentDocumentLink WHERE LinkedEntityId IN :templateIds
+            ]) {
+                docToTemplate.put(link.ContentDocument.LatestPublishedVersionId, link.LinkedEntityId);
+            }
+            if (!docToTemplate.isEmpty()) {
+                for (ContentVersion cv : [
+                    SELECT Id, Title, FileExtension, VersionData
+                    FROM ContentVersion WHERE Id IN :docToTemplate.keySet()
+                ]) {
+                    Id tId = docToTemplate.get(cv.Id);
+                    if (!templateAttachments.containsKey(tId)) templateAttachments.put(tId, new List<ContentVersion>());
+                    templateAttachments.get(tId).add(cv);
+                }
+            }
+        }
+
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
             System.debug('--- case=' + c.Id + ' OwnerId=' + c.OwnerId + ' candidates=' + (candidates == null ? 0 : candidates.size()));
@@ -102,10 +132,45 @@ public without sharing class FEC_NotificationService {
                 if (!templateActive) continue;
 
                 String subject = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
-                String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
+                String bodyContent = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
 
-                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, body, orgWideId));
+                // Wrap body với letterhead header/footer nếu có
+                Id lhId = n.FEC_Notification_Template__r?.FEC_Enhanced_Letterhead__c;
+                if (lhId != null) {
+                    if (!letterheadCache.containsKey(lhId)) {
+                        try {
+                            FEC_Enhanced_Letterhead__c lh = [SELECT Id, FEC_Header__c, FEC_Footer__c FROM FEC_Enhanced_Letterhead__c WHERE Id = :lhId LIMIT 1];
+                            letterheadCache.put(lhId, lh);
+                        } catch (Exception e) {
+                            System.debug('FEC Letterhead query failed: ' + e.getMessage());
+                            letterheadCache.put(lhId, null);
+                        }
+                    }
+                    FEC_Enhanced_Letterhead__c lh = letterheadCache.get(lhId);
+                    if (lh != null) {
+                        String header = String.isNotBlank(lh.FEC_Header__c) ? inlineImages(lh.FEC_Header__c) : '';
+                        String footer = String.isNotBlank(lh.FEC_Footer__c) ? inlineImages(lh.FEC_Footer__c) : '';
+                        bodyContent = header + bodyContent + footer;
+                    }
+                }
+
+                Messaging.SingleEmailMessage mail = FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId);
+
+                // Attach files từ ContentDocumentLink của template (đã bulk query)
+                Id templateId = n.FEC_Notification_Template__c;
+                if (templateId != null && templateAttachments.containsKey(templateId)) {
+                    List<Messaging.EmailFileAttachment> attachments = new List<Messaging.EmailFileAttachment>();
+                    for (ContentVersion cv : templateAttachments.get(templateId)) {
+                        Messaging.EmailFileAttachment att = new Messaging.EmailFileAttachment();
+                        att.setFileName(cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
+                        att.setBody(cv.VersionData);
+                        attachments.add(att);
+                    }
+                    if (!attachments.isEmpty()) mail.setFileAttachments(attachments);
+                }
+
+                emailsToSend.add(mail);
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
@@ -290,13 +355,147 @@ public without sharing class FEC_NotificationService {
     }
 
     /**
+     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
+     * Tự detect org domain nên không cần hardcode URL.
+     */
+    public static String inlineImages(String html) {
+        if (String.isBlank(html)) return html;
+        // Tìm tất cả src="...rtaImage..." và replace bằng base64
+        Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
+        Matcher m = p.matcher(html);
+        String result = html;
+        while (m.find()) {
+            String rawUrl = m.group(1);
+            // Decode HTML entities trong URL (&amp; → &)
+            String url = rawUrl.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>');
+            try {
+                HttpRequest req = new HttpRequest();
+                req.setEndpoint(url);
+                req.setMethod('GET');
+                req.setTimeout(10000);
+                req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                Http http = new Http();
+                HttpResponse res = http.send(req);
+                Integer statusCode = res.getStatusCode();
+                // Follow redirect nếu 302/301, statusCode == 200 bên dưới khác với statusCode ban đầu
+                if (statusCode == 302 || statusCode == 301) {
+                    String location = res.getHeader('Location');
+                    if (String.isNotBlank(location)) {
+                        HttpRequest req2 = new HttpRequest();
+                        req2.setEndpoint(location);
+                        req2.setMethod('GET');
+                        req2.setTimeout(10000);
+                        req2.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+                        res = http.send(req2);
+                        statusCode = res.getStatusCode();
+                    }
+                }
+                if (statusCode == 200 && res.getBodyAsBlob() != null && res.getBodyAsBlob().size() > 0) {
+                    String contentType = res.getHeader('Content-Type') != null ? res.getHeader('Content-Type') : 'image/png';
+                    if (contentType.contains(';')) contentType = contentType.substringBefore(';').trim();
+                    String b64 = EncodingUtil.base64Encode(res.getBodyAsBlob());
+                    String dataUri = 'data:' + contentType + ';base64,' + b64;
+                    result = result.replace(rawUrl, dataUri);
+                } else {
+                    // Không inline được ảnh, giữ nguyên URL gốc trong HTML
+                    System.debug('inlineImages: skip inline for url=' + url + ' | status=' + statusCode
+                        + ' | bodySize=' + (res.getBodyAsBlob() != null ? res.getBodyAsBlob().size() : 0));
+                }
+            } catch (Exception e) {
+                System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
+            }
+        }
+        return result;
+    }
+
+    /**
      * Thay thế placeholder {{FieldName}} trong template bằng giá trị từ Case
      */
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
-            return FEC_CommonUltils.resolveTemplate(template, c);
+            // Normalize: convert {{{...}}} → {{...}}
+            template = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+            System.debug('resolveTemplate after triple convert: ' + template.left(100));
+            // Resolve User.* fields từ current user
+            Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+            Matcher userMat = userPat.matcher(template);
+            if (userMat.find()) {
+                // Collect all User field names needed
+                Set<String> userFieldNames = new Set<String>{'Id'};
+                Matcher userMatCollect = userPat.matcher(template);
+                while (userMatCollect.find()) { userFieldNames.add(userMatCollect.group(1)); }
+                // Dynamic query to get all needed fields
+                String userSoql = 'SELECT ' + String.join(new List<String>(userFieldNames), ', ') + ' FROM User WHERE Id = :userId LIMIT 1';
+                Id userId = UserInfo.getUserId();
+                List<User> users = new List<User>();
+                try { users = Database.query(userSoql); } catch(Exception qEx) {
+                    // Fallback: query standard fields only
+                    users = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :userId LIMIT 1];
+                }
+                if (!users.isEmpty()) {
+                    User u = users[0];
+                    Matcher userMat2 = userPat.matcher(template);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { Object fv = u.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                        template = template.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                System.debug('resolveTemplate after user resolve: ' + template.left(100));
+            }
+            // Re-query Case với dynamic fields từ template
+            if (c != null && c.Id != null && template.contains('{{')) {
+                try {
+                    // Extract tất cả Case.* fields từ template
+                    Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
+                    Matcher caseMat = casePat.matcher(template);
+                    Set<String> caseFields = new Set<String>{'Id'};
+                    while (caseMat.find()) { caseFields.add(caseMat.group(1)); }
+
+                    // Build dynamic SOQL
+                    String caseSoql = 'SELECT ' + String.join(new List<String>(caseFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1';
+                    Id cId = c.Id;
+                    List<Case> caseList = new List<Case>();
+                    try {
+                        caseList = Database.query(caseSoql);
+                    } catch(Exception qEx) {
+                        // Fallback nếu có field không hợp lệ: query từng field, bỏ qua field lỗi
+                        Set<String> validFields = new Set<String>{'Id'};
+                        for (String f : caseFields) {
+                            if (f == 'Id') continue;
+                            try {
+                                Database.query('SELECT ' + f + ' FROM Case WHERE Id = :cId LIMIT 1');
+                                validFields.add(f);
+                            } catch(Exception fe) {}
+                        }
+                        caseList = Database.query('SELECT ' + String.join(new List<String>(validFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1');
+                    }
+
+                    if (!caseList.isEmpty()) {
+                        Case fullCase = caseList[0];
+                        // Replace {{Case.FieldName}} với giá trị thực
+                        Matcher caseMat2 = casePat.matcher(template);
+                        while (caseMat2.find()) {
+                            String fieldName = caseMat2.group(1);
+                            String val = '';
+                            try { Object fv = fullCase.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                            template = template.replace('{{Case.' + fieldName + '}}', val);
+                        }
+                        // Tiếp tục resolve các object khác (FEC_Additional_Info__c, FEC_Customer_History__c...)
+                        template = FEC_CommonUltils.resolveTemplate(template, fullCase);
+                    }
+                    System.debug('resolveTemplate final: ' + template.left(100));
+                    return template;
+                } catch (Exception ex) { System.debug('fullCase query error: ' + ex.getMessage()); }
+            }
+            if (c != null) {
+                return FEC_CommonUltils.resolveTemplate(template, c);
+            }
+            return template;
         } catch (Exception e) {
+            System.debug('resolveTemplate exception: ' + e.getMessage());
             return template;
         }
     }
