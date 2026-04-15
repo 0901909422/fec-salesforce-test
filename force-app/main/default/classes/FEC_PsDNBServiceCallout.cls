@@ -10,6 +10,7 @@ public with sharing class FEC_PsDNBServiceCallout {
         public Boolean do_not_bother;
         public String type;
         public String type_value;
+        public String contract_id;
     }
     
     // ================= RESPONSE =================
@@ -45,11 +46,13 @@ public with sharing class FEC_PsDNBServiceCallout {
         String isoTimestamp = FEC_CommonUltils.formatISOWithTimezone(Datetime.now());
         
         Map<String, String> headers = new Map<String, String>{
-            'requester'    => isoTimestamp,
-            'trans_id'     => System.UUID.randomUUID().toString(),
-            'source'       => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            'confirmer'    => isoTimestamp
+            'Content-Type'   => FEC_ConstantCommon.API_CONTENT_TYPE_JSON, // should resolve to 'application/json'
+            'trans_id'       => System.UUID.randomUUID().toString(),
+            'source'         => FEC_ConstantCommon.REQUESTOR_LANDING_PAGE, // ensure = 'FEC_LandingPage'
+            'requester'      => 'A',
+            'requested-time' => isoTimestamp,
+            'confirmer'      => 'B',
+            'confirmed-time' => isoTimestamp
         };
         
         String body = JSON.serialize(reqList);

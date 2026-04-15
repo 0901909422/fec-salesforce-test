@@ -456,7 +456,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
             FEC_Customer_History__c customerHistory = [
             SELECT ID,  FEC_Account_Number__c, FEC_Contract_Number__c  , CreatedDate , FEC_Product_Code__c  
             FROM FEC_Customer_History__c 
-            WHERE FEC_Case__c  = :caseId ORDER BY CreatedDate  ASC
+            WHERE FEC_Case__c  = :caseId ORDER BY CreatedDate ASC
             LIMIT 1
          ];
             String accountContractNumber;

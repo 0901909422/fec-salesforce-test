@@ -2,7 +2,7 @@ public without sharing class FEC_Notification {
 
     // Compile Pattern 1 lần ở class level để tái sử dụng
     private static final Pattern PATTERN_MERGE  = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-    private static final Pattern PATTERN_DOUBLE = Pattern.compile(FEC_ConstantCommon.PATTERN_DOUBLE_BRACE);
+    private static final Pattern PATTERN_FLEXIBLE = Pattern.compile(FEC_ConstantCommon.PATTERN_FLEXIBLE_BRACES);
 
     public class EmailInfo {
         public Id caseId;
@@ -162,13 +162,14 @@ public without sharing class FEC_Notification {
         String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
         String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
 
+        Set<String> validCustomerTypes = new Set<String>{currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_CUSTOMER};
         // 3. Query Notification satisfying conditions
         List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
                                                     FEC_Notification_Template__r.Name,
                                                     FEC_Notification_Channel__r.Name,
                                                     FEC_Target_Group__c
                                              FROM FEC_Notification__c 
-                                             WHERE FEC_Customer_Type__c = :currentCase.FEC_Customer_Type__c
+                                             WHERE FEC_Customer_Type__c IN :validCustomerTypes
                                              AND FEC_Product_Type__c = :finalProductType
                                              AND FEC_Category__c = :finalCategory
                                              AND FEC_SubCategory__c = :finalSubCategory
@@ -237,9 +238,16 @@ public without sharing class FEC_Notification {
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-
+        String fullBody = '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
+        }
+        fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+        }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, template.FEC_Body__c);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, fullBody);
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
         }
@@ -259,12 +267,13 @@ public without sharing class FEC_Notification {
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
-            // Normalize {{...}} → {{{...}}} để xử lý chung
+            // Sanitize and Normalize ANY variation: {{...}}, {{{...}}}, {{{{...}}}} → exactly {{{...}}}
             if (String.isNotBlank(info.body)) {
-                info.body = PATTERN_DOUBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                info.body = PATTERN_FLEXIBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                
             }
             if (String.isNotBlank(info.subject)) {
-                info.subject = PATTERN_DOUBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                info.subject = PATTERN_FLEXIBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
             }
             
             if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
