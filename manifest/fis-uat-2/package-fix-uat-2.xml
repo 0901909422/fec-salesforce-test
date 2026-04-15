@@ -105,6 +105,7 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_NotificationHistoryService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -675,7 +676,10 @@
 		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
 		<members>Case.FEC_Recipient_Name__c</members>
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
-		<members>FEC_Notification__c.FEC_Notification_History__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Status__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
