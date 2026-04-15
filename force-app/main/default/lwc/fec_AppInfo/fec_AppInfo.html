@@ -14,12 +14,6 @@
                         </div>
                     </template>
 
-                    <template if:true={noDataOnly}>
-                        <div class="no-data-text slds-p-around_small slds-text-align_center slds-text-color_weak">
-                            {customLabel.applicationHistoryLabel}&nbsp;-&nbsp;{customLabel.noDataLabel}
-                        </div>
-                    </template>
-
                     <template if:true={showDataTable}>
                         <c-fec_-related-list-paging records={histories} data-section="history" columns={columns}
                             sorted-by="user">

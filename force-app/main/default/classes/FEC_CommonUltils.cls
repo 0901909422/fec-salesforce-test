@@ -1153,7 +1153,7 @@ public with sharing class FEC_CommonUltils {
       if (owas.isEmpty()) return null;
       // Ưu tiên Default No-Reply Address
       for (OrgWideEmailAddress owa : owas) {
-        if (owa.Purpose == 'Default No-Reply Address') return owa.Id;
+        if (owa.Purpose == 'DefaultNoreply') return owa.Id;
       }
       // Fallback: đầu tiên
       return owas[0].Id;
