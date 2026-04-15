@@ -48,6 +48,7 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -727,6 +728,7 @@
         <members>FEC_IncorrectPaymentController</members>
         <members>FEC_RemovePhoneController</members>
         <members>FEC_ContractClosureController</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
         <name>ApexClass</name>
     </types>
 	<types>
