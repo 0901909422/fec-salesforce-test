@@ -241,21 +241,19 @@ public without sharing class FEC_CustomEmailService {
                 }
                 // 1 query duy nhất: lấy tất cả EmailRoutingAddress, filter theo tên Queue hoặc address Queue
                 if (!queueNames.isEmpty() || !queueEmails.isEmpty()) {
-                    for (SObject r : Database.query(
-                        'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
-                    )) {
+                    for (SObject r : [
+                        SELECT Id, Address, PersonalName FROM EmailRoutingAddress
+                        WHERE PersonalName IN :queueNames OR Address IN :queueEmails
+                        ORDER BY PersonalName ASC
+                    ]) {
                         String addr = (String) r.get(FIELD_ADDRESS);
                         String name = (String) r.get(FIELD_PERSONAL_NAME);
                         if (String.isNotBlank(addr)) {
-                            Boolean matchName = String.isNotBlank(name) && queueNames.contains(name);
-                            Boolean matchEmail = queueEmails.contains(addr.toLowerCase());
-                            if (matchName || matchEmail) {
-                                String lower = addr.toLowerCase();
-                                String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                                routingLabelMap.put(lower, lbl);
-                                routingAddrMap.put(lower, addr);
-                                routingOrder.add(lower);
-                            }
+                            String lower = addr.toLowerCase();
+                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                            routingLabelMap.put(lower, lbl);
+                            routingAddrMap.put(lower, addr);
+                            routingOrder.add(lower);
                         }
                     }
                 }
