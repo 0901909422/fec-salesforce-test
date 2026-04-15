@@ -260,22 +260,6 @@ public without sharing class FEC_CustomEmailService {
             }
         } catch (Exception e) {
             System.debug('EmailRoutingAddress query failed: ' + e.getMessage());
-            try {
-                List<SObject> routingAddrs = Database.query(
-                    'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
-                );
-                for (SObject r : routingAddrs) {
-                    String addr = (String) r.get(FIELD_ADDRESS);
-                    String name = (String) r.get(FIELD_PERSONAL_NAME);
-                    if (String.isNotBlank(addr)) {
-                        String lower = addr.toLowerCase();
-                        String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                        routingLabelMap.put(lower, lbl);
-                        routingAddrMap.put(lower, addr);
-                        routingOrder.add(lower);
-                    }
-                }
-            } catch (Exception e2) {}
         }
 
         // Xác định Queue email của Case
@@ -312,18 +296,20 @@ public without sharing class FEC_CustomEmailService {
         // Nếu user không thuộc Queue nào → fallback lấy EmailRoutingAddress của Queue owner của Case
         if (options.isEmpty() && String.isNotBlank(queueEmail)) {
             try {
-                List<SObject> allRouting = Database.query(
-                    'SELECT Id, Address, PersonalName FROM EmailRoutingAddress ORDER BY PersonalName ASC LIMIT 50'
-                );
-                String qeLower = queueEmail.toLowerCase();
-                for (SObject r : allRouting) {
-                    String addr = (String) r.get(FIELD_ADDRESS);
-                    String name = (String) r.get(FIELD_PERSONAL_NAME);
-                    if (String.isNotBlank(addr) && addr.toLowerCase() == qeLower) {
-                        String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                        options.add(new Map<String, String>{ 'label' => lbl, 'value' => addr });
-                        defaultFrom = addr;
-                        break;
+                List<OrgWideEmailAddress> owas = [SELECT Id, Address, DisplayName FROM OrgWideEmailAddress WHERE Address = :queueEmail LIMIT 1];
+                if (!owas.isEmpty()) {
+                    String lbl = String.isNotBlank(owas[0].DisplayName) ? owas[0].DisplayName + ' <' + owas[0].Address + '>' : owas[0].Address;
+                    options.add(new Map<String, String>{ 'label' => lbl, 'value' => owas[0].Address });
+                    defaultFrom = owas[0].Address;
+                } else {
+                    for (SObject r : [SELECT Id, Address, PersonalName FROM EmailRoutingAddress WHERE Address = :queueEmail LIMIT 1]) {
+                        String addr = (String) r.get(FIELD_ADDRESS);
+                        String name = (String) r.get(FIELD_PERSONAL_NAME);
+                        if (String.isNotBlank(addr)) {
+                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
+                            options.add(new Map<String, String>{ 'label' => lbl, 'value' => addr });
+                            defaultFrom = addr;
+                        }
                     }
                 }
             } catch (Exception e) {
