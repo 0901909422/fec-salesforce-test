@@ -1948,6 +1948,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
+        this._saveRefundRequestIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
