@@ -2,7 +2,7 @@ public without sharing class FEC_Notification {
 
     // Compile Pattern 1 lần ở class level để tái sử dụng
     private static final Pattern PATTERN_MERGE  = Pattern.compile(FEC_ConstantCommon.PATTERN_MERGE_FIELD);
-    private static final Pattern PATTERN_DOUBLE = Pattern.compile(FEC_ConstantCommon.PATTERN_DOUBLE_BRACE);
+    private static final Pattern PATTERN_FLEXIBLE = Pattern.compile(FEC_ConstantCommon.PATTERN_FLEXIBLE_BRACES);
 
     public class EmailInfo {
         public Id caseId;
@@ -267,12 +267,13 @@ public without sharing class FEC_Notification {
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
-            // Normalize {{...}} → {{{...}}} để xử lý chung
+            // Sanitize and Normalize ANY variation: {{...}}, {{{...}}}, {{{{...}}}} → exactly {{{...}}}
             if (String.isNotBlank(info.body)) {
-                info.body = PATTERN_DOUBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                info.body = PATTERN_FLEXIBLE.matcher(info.body).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                
             }
             if (String.isNotBlank(info.subject)) {
-                info.subject = PATTERN_DOUBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
+                info.subject = PATTERN_FLEXIBLE.matcher(info.subject).replaceAll(FEC_ConstantCommon.MERGE_FIELD_NORMALIZE_REPLACEMENT);
             }
             
             if (String.isNotBlank(info.body) && info.body.contains(FEC_ConstantCommon.MERGE_FIELD_OPEN)) {
