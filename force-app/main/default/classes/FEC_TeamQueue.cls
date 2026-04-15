@@ -1,0 +1,308 @@
+/**
+ * @description Class to handle team queue operations
+ * @author FEC Team
+ * @since 2026-03-24
+ */
+public with sharing class FEC_TeamQueue {
+    public static final String CLASS_NAME = 'FEC_TeamQueue';
+    public static final String QUEUE_TYPE = 'Queue';
+    /**
+     * @description Wrapper class to hold team 
+     */
+    public class TeamQueueWrapper {
+        @AuraEnabled public String teamName;
+        @AuraEnabled public String teamLabel;
+        @AuraEnabled public String teamId;
+    }
+
+    /**
+     * @description Wrapper class to hold list queue
+     */
+    public class ListQueueDto {
+        @AuraEnabled public String id;
+        @AuraEnabled public String name;
+        @AuraEnabled public String teamqueue;
+        @AuraEnabled public String queueId;
+        @AuraEnabled public String displayname;
+    }
+
+    /**
+     * @description DTO for editing queue information
+     */
+    public class EditQueueDto {
+        @AuraEnabled public Id queueId;                // Group Id
+        @AuraEnabled public String queueLabel;         // Group.Name
+
+        @AuraEnabled public Id teamQueueRecordId;      // FEC_Team_Queue__c.Id
+        @AuraEnabled public Id teamId;
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Returns a list of teams
+    @return List of team queue records with TeamQueueWrapper
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static List<TeamQueueWrapper> getListTeam() {
+        List<TeamQueueWrapper> result = new List<TeamQueueWrapper>();
+        
+        try {
+            // Query to get teams and their queue counts
+            List<FEC_Team__c> listTeamNames = [
+                SELECT Id, Name, FEC_Team_Label__c 
+                FROM FEC_Team__c
+                ORDER BY Name
+            ];
+            
+            // Process the results
+            for (FEC_Team__c team : listTeamNames) {
+                TeamQueueWrapper wrapper = new TeamQueueWrapper();
+                wrapper.teamName = team.Name;
+                wrapper.teamLabel = team.FEC_Team_Label__c;
+                wrapper.teamId = team.Id;
+                result.add(wrapper);
+            }
+        } catch (Exception e) {
+            // Log the exception or handle as needed
+            System.debug('Error in getListTeam: ' + e.getMessage());
+            throw e;
+        }
+        
+        return result;
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Returns a list of queue names for a specific team
+    @param teamID The ID of the team to get queues for
+    @return List of queue names for the specified team
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static List<ListQueueDto> getQueuesForTeam(Id teamID) {
+        try {
+            // Query to get queue names for a specific team
+            List<FEC_Team_Queue__c> teamQueues = [
+                SELECT Id, FEC_Queue_Name__c
+                FROM FEC_Team_Queue__c
+                WHERE Team__r.Id = :teamID
+                ORDER BY FEC_Queue_Name__c
+            ];
+
+            List<ListQueueDto> result = new List<ListQueueDto>();
+            
+            // Extract queue names and validate each one exists
+            for (FEC_Team_Queue__c tq : teamQueues) {
+                // Validate that the queue exists using DepartmentAdmin.getQueueValidBaseNameOrId
+                DepartmentAdmin.QueueDto queueInfo = DepartmentAdmin.getQueueValidBaseNameOrId(tq.FEC_Queue_Name__c, null);
+                // Only add to result if queue exists
+                if (queueInfo != null) {
+                    ListQueueDto listQueue = new ListQueueDto();
+                    listQueue.id = tq.Id;
+                    listQueue.name = tq.FEC_Queue_Name__c;
+                    listQueue.teamqueue = teamID;
+                    listQueue.queueId = queueInfo.Id;
+                    listQueue.displayname = queueInfo.name;
+                    result.add(listQueue);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            // Log the exception or handle as needed
+            System.debug('Error in getQueuesForTeam: ' + e.getMessage());
+            throw e;
+        }
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Creates a new queue in Salesforce with the specified properties
+    @param queueLabel The label for the new queue
+    @param queueName The developer name for the new queue
+    @return String QueueID if successful, null otherwise
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static String createQueue(String queueLabel, String queueName) {
+        try {
+            // Create a new Group (Queue) record
+            Group newQueue = new Group(
+                Name = queueLabel, 
+                DeveloperName = queueName, 
+                Type = QUEUE_TYPE
+            );
+            // Insert the queue
+            insert newQueue;
+            QueueSobject mapping = new QueueSobject(
+                QueueId = newQueue.Id, 
+                SobjectType = 'Case'
+            );
+            insert mapping;
+            return newQueue.Id;
+        } catch (Exception e) {
+            System.debug('Error creating queue: ' + e.getMessage());
+            return null;
+        }
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Creates a new record in FEC_Team_Queue__c custom object
+    @param teamID The ID of the team
+    @param queueName The developer name for the new queue
+    @return Boolean indicating success or failure
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static Boolean createTeamQueueRecord(String teamID, String queueName) {
+        try {
+            // Create a new FEC_Team_Queue__c record
+            FEC_Team_Queue__c newTeamQueue = new FEC_Team_Queue__c(
+                Team__c = teamID,  // This maps to the Name field on the custom object
+                FEC_Queue_Name__c = queueName  // This maps to the custom field
+            );
+            Database.insert(newTeamQueue, false);
+            DepartmentAdmin.insertCustomLog(teamID, CLASS_NAME, 'saveNewQueue', 'Add New Queue For Team', '', queueName);
+            return true;
+        } catch (Exception e) {
+            System.debug('Error creating team queue record: ' + e.getMessage());
+            return false;
+        }
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Creates a new Team (FEC_Team__c) from modal inputs with validation
+    @param teamLabel maps to FEC_Team__c.FEC_Team_Label__c
+    @param teamName maps to FEC_Team__c.Name (API/Developer Name style)
+    @param teamDescription maps to FEC_Team__c.FEC_Team_Description__c
+    @return Id of created FEC_Team__c on success
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static Id CreateNewTeam(String teamLabel, String teamName, String teamDescription) {
+        // Basic null/blank checks
+        if (String.isBlank(teamLabel)) {
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_AddTeamModal_Label_Require_Err);
+        }
+        if (String.isBlank(teamName)) {
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_AddTeamModal_Name_Require_Err);
+        }
+        // Construct record
+        FEC_Team__c rec = new FEC_Team__c();
+        rec.Name = teamName.trim();
+        rec.FEC_Team_Label__c = teamLabel;
+        rec.FEC_Team_Description__c = teamDescription;
+
+        // Insert with error handling
+        try {
+            insert rec;
+            DepartmentAdmin.insertCustomLog(rec.Id, CLASS_NAME, 'CreateNewTeam', 'Add new Team', '', teamName);
+            return rec.Id;
+        } catch (DmlException dmlEx) {
+            // Surface first error to LWC cleanly
+            String msg = (dmlEx.getNumDml() > 0 && dmlEx.getDmlMessage(0) != null) ? dmlEx.getDmlMessage(0) : dmlEx.getMessage();
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_AddTeamModal_Create_Err + msg);
+        } catch (Exception e) {
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_AddTeamModal_Create_Err + e.getMessage());
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Get queue edit info: Queue Label (from Group by Id) and Queue Team (from FEC_Team_Queue__c by id)
+    @param queueId Group (Queue) Id
+    @param teamQueueRecordId Id record in FEC_Team_Queue__c
+    @return object EditQueueDto
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static EditQueueDto getQueueEditInfo(Id queueId, Id teamQueueRecordId) {
+        EditQueueDto dto = new EditQueueDto();
+
+        // Load Group (Queue) - use safe list query to avoid QueryException when no rows returned
+        List<Group> groups = [SELECT Id, Name FROM Group WHERE Id = :queueId AND Type = :QUEUE_TYPE LIMIT 1];
+        if (groups.isEmpty()) {
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_Invalid_Queue);
+        }
+        Group queue = groups[0];
+        dto.queueId = queue.Id;
+        dto.queueLabel = queue.Name;
+
+        // Resolve FEC_Team_Queue__c mapping
+        FEC_Team_Queue__c teamQueue = [
+                SELECT Id, Team__c
+                FROM FEC_Team_Queue__c
+                WHERE Id = :teamQueueRecordId
+                LIMIT 1
+            ];
+
+        if (teamQueue != null) {
+            dto.teamQueueRecordId = teamQueue.Id;
+            dto.teamId = teamQueue.Team__c;
+        }
+        return dto;
+    }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Update queue label (Group.Name) and Team mapping (FEC_Team_Queue__c.Team__c)
+    @param queueId Group (Queue) Id to update label
+    @param newQueueLabel New label for queue (Group.Name)
+    @param teamQueueRecordId Id of FEC_Team_Queue__c to update Team__ct
+    @param newTeamId New Team__c Id to map the queue to
+    @return Boolean success
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/03/31      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static Boolean updateQueueEdit(Id queueId, String newQueueLabel, Id teamQueueRecordId, Id newTeamId) {
+        String messageEdit = '';
+        // Update Queue Label if provided
+        if (!String.isBlank(newQueueLabel)) {
+            Group toUpdate = new Group(Id = queueId, Name = newQueueLabel);
+            try {
+                update toUpdate;
+                messageEdit = messageEdit + 'update label to:' + newQueueLabel;
+            } catch (DmlException d) {
+                throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_Update_Err + d.getMessage());
+            }
+        }
+        // Update Team mapping if provided
+        if (newTeamId != null) {
+            try {
+                FEC_Team_Queue__c tqUpdate = new FEC_Team_Queue__c(Id = teamQueueRecordId, Team__c = newTeamId);
+                update tqUpdate;
+                messageEdit = messageEdit + ' update team to: ' + newTeamId;
+            } catch (DmlException d) {
+                throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err + d.getMessage());
+            }
+        }
+        if (!String.isBlank(messageEdit)) {
+            DepartmentAdmin.insertCustomLog(queueId, CLASS_NAME, 'updateQueueEdit', 'Update Queue', '', messageEdit);
+        }
+        return true;
+    }
+}

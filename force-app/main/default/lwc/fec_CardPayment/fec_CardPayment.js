@@ -28,6 +28,9 @@ export default class Fec_CardPayment extends LightningElement {
     helpTextMap = {};
     
     // Custom labels for template (khớp với customLabel.xxx trong HTML)
+    /** Bảng: API OK nhưng không có dòng */
+    noDataLabel = 'No data';
+
     customLabel = {
         cardPaymentLabel: FEC_Card_Payment_Label,
         fullPaymentAmountLabel: FEC_Full_Payment_Amount_Label,
@@ -59,8 +62,7 @@ export default class Fec_CardPayment extends LightningElement {
         }
     }
     
-    // Format dữ liệu percent: chia cho 100 và thêm ký hiệu %
-    // Và thêm CSS class để highlight số âm màu đỏ
+    // Format percent + currency/date cho bảng; highlight số âm (currency)
     formatPercentData(records) {
         if (!records || records.length === 0) return records;
 
@@ -72,10 +74,10 @@ export default class Fec_CardPayment extends LightningElement {
             formattedRecord.FEC_REF_Number_Display__c =
                 refRaw != null && String(refRaw).trim() !== '' ? String(refRaw) : '__';
 
-            // Base Rate - format với 2 chữ số thập phân + %
+            // Base Rate: trường Percent — giá trị đã là % (vd 10 → 10.00 %)
             if (formattedRecord.FEC_Base_Rate__c != null && formattedRecord.FEC_Base_Rate__c !== undefined) {
                 const value = Number(formattedRecord.FEC_Base_Rate__c);
-                formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + '%';
+                formattedRecord.FEC_Base_Rate_Formatted__c = value.toFixed(2) + ' %';
             }
 
             // IPP Interest - format với 2 chữ số thập phân + %
@@ -268,6 +270,14 @@ export default class Fec_CardPayment extends LightningElement {
     // Computed property for hasData - giống Card Info
     get hasData() {
         return !this.hasError;
+    }
+
+    get hasCardPaymentTableData() {
+        return Array.isArray(this.cardPaymentData) && this.cardPaymentData.length > 0;
+    }
+
+    get showCardPaymentNoData() {
+        return !this.isLoading && !this.hasError && !this.hasCardPaymentTableData;
     }
     
     // Hiển thị Payment Summary

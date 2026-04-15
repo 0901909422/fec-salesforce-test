@@ -1,0 +1,64 @@
+<template>
+    <div class="slds-card__body_inner">
+            <template if:true={isLoading}>
+                <lightning-spinner size="medium" alternative-text="Loading queues"></lightning-spinner>
+            </template>
+
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">{customLabels.CS_OrgChart_Text_Save_Error_Title}</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:true={queues.length}>
+                    <div class="slds-theme_default">
+                        <div class="slds-text-title_bold slds-m-bottom_small">{customLabels.CS_OrgChart_Text_UserDetail_Queues}</div>
+                        <table class="slds-table slds-table_bordered slds-table_fixed-layout" role="grid">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    <th class="padding-header-size sku-header" aria-label="Name" scope="col">
+                                        <span class="slds-truncate return-items-header">
+                                            {customLabels.CS_OrgChart_Text_UserDetail_QueueName}
+                                        </span>
+                                    </th>
+                                    <th class="padding-header-size" aria-label="Name" scope="col" style="width: 100px;">
+                                        <span class="slds-truncate return-items-header">
+                                            {customLabels.CS_OrgChart_Text_UserDetail_MainQueue}
+                                        </span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={queues} for:item="queue" for:index="key">
+                                    <tr class="slds-hint-parent" key={queue.id}>
+                                        <td role="gridcell" class="td-element">
+                                            {queue.name}
+                                        </td>
+                                        <td role="gridcell" class="td-element">
+                                            <lightning-input type="checkbox" name="selectMainQueue"
+                                                            checked={queue.isMainQueue}
+                                                            data-key={key}
+                                                            data-id={queue.id}
+                                                            data-name={queue.name}
+                                                            data-devname={queue.devname}
+                                                            onchange={handleCheckboxChange}>
+                                            </lightning-input>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            </table>
+                        <div class="slds-m-top_small">
+                            <lightning-button
+                                label={customLabels.CS_OrgChart_Btn_Modal_Save}
+                                variant="brand"
+                                onclick={handleSaveMainQueue}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </div>
+</template>

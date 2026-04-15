@@ -1,0 +1,38 @@
+<template>
+  <div class="slds-box slds-theme_shade">
+    <template if:true={isLoading}>
+      <lightning-spinner
+        alternative-text={labelLoading}
+        size="medium"
+      ></lightning-spinner>
+    </template>
+    <template if:false={isLoading}>
+      <template if:true={showIppTableSection}>
+        <h3 class="slds-text-heading_small slds-m-bottom_small">
+          {headingText}
+        </h3>
+        <lightning-datatable
+          key-field="Id"
+          data={ippList}
+          columns={ippColumns}
+          max-row-selection={datatableMaxRowSelection}
+          hide-checkbox-column={isReadOnly}
+          onrowselection={handleRowSelection}
+        >
+        </lightning-datatable>
+        <template if:true={showNoEligibleWarning}>
+          <p class="slds-m-top_small validation-msg validation-msg-red">{noti12Message}</p>
+        </template>
+        <template if:true={showNoti11}>
+          <p class="slds-m-top_small validation-msg validation-msg-red">{noti11Message}</p>
+        </template>
+      </template>
+    </template>
+  </div>
+  <template if:true={completeLoading}>
+    <lightning-spinner
+      alternative-text={labelSaving}
+      size="medium"
+    ></lightning-spinner>
+  </template>
+</template>

@@ -5,6 +5,7 @@ export const FEC_GENESYS_CONST = {
 
     EVENT_INBOUND: 'InboundRinging',
     EVENT_OUTBOUND: 'OutboundEstablished',
+    EVENT_EMAIL: 'EmailInboundEstablished',
     EVENT_WRAPUP: 'WrapupCall',
 
     SOURCE_GENESYS_HOST: 'genesys_host',

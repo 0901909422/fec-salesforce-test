@@ -1,0 +1,15 @@
+.result-error {
+    margin-top: 0.75rem;
+    font-weight: 700;
+    color: #ba0517;
+}
+
+.input-row {
+    display: flex;
+    column-gap: 1rem;
+    align-items: end;
+}
+
+.button-wrap {
+    padding-bottom: 0.125rem;
+}

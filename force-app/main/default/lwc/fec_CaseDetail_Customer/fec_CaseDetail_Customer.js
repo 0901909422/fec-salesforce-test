@@ -21,6 +21,7 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
 
@@ -34,6 +35,7 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
+  // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
@@ -79,6 +81,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   @track remarklst = [];
+  isLoaded = false;
+  isSubmitting = false;
 
   get remarkColumnlst() {
     return [
@@ -115,17 +119,20 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .finally(() => { });
   }
 
-  connectedCallback() {
-    resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
+  async connectedCallback() {
+    try {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_REVIEW,
+      });
 
-    this.loadRemarkHistory();
-
-    this.subscribeToMessageChannel();
-
-    this.isLoaded = true;
+      this.subscribeToMessageChannel();
+      this.loadRemarkHistory();
+    } catch (err) {
+      console.error("Failed to reset view mode:", err);
+    } finally {
+      this.isLoaded = true;
+    }
   }
 
   subscribeToMessageChannel() {
@@ -145,6 +152,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   }
 
   handleMessage(message) {
+    console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
     this.modeEditCase = message.isModeEdit === true;
@@ -310,33 +318,31 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       return;
     }
 
-    this.isLoaded = false;
-    await Promise.resolve();
-
     // Kiểm tra chặn submit (vd: original === updated phone)
     if (caseBusinessEle?.checkSubmitBlock) {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
-        this.isLoaded = true;
         this.isSubmitting = false;
         return;
       }
     }
 
+    this.isLoaded = false;
+
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)
       await clearDraftRemarks({ caseId: this.recordId });
-      await caseRemarksEle.createRemark(stageName);
-
-      // Luôn đẩy Case Remark vào History khi user đã nhập và bấm Submit (tránh mất nội dung khi business submit bị chặn)
-      await caseRemarksEle.submitRemark(stageName);
-      this.loadRemarkHistory();
 
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
       }
+
+      // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
+      await caseRemarksEle.createRemark(stageName);
+      await caseRemarksEle.submitRemark(stageName);
+      this.loadRemarkHistory();
 
       // Chuyển sang Case Review (chế độ xem), không đóng tab
       setTimeout(() => {

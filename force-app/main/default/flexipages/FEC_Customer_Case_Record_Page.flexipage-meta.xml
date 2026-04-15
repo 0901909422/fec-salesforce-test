@@ -32,9 +32,41 @@
                                     <rightValue>Interaction</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Is_My_Follow_Up__c}</leftValue>
+                                    <leftValue>{!Record.FEC_Show_Unfollow__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Reopen</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Resolved</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Recall</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Pending</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
@@ -89,6 +121,16 @@
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
+                        <valueListItems>
+                            <value>Case.Hold_Case</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>handling</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -121,12 +163,24 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_CaseModePublisher</componentName>
+                <identifier>c_fec_CaseModePublisher</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>modeEditCase</name>
                     <value>false</value>
                 </componentInstanceProperties>
                 <componentName>fec_CaseDetail_Customer</componentName>
                 <identifier>c_fec_CaseDetail_Customer</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ManualNotification</componentName>
+                <identifier>c_fec_ManualNotification</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
@@ -314,7 +368,7 @@
                             <value>FEC_User_Role__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>CREATED_DATE</value>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -344,32 +398,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>forceChatter:recordFeedContainer</componentName>
-                <identifier>forceChatter_recordFeedContainer</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>handling</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>showLegacyActivityComposer</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <componentName>runtime_sales_activities:activityPanel</componentName>
-                <identifier>runtime_sales_activities_activityPanel</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>review</rightValue>
-                    </criteria>
-                </visibilityRule>
+                <componentName>fecEmailSection</componentName>
+                <identifier>c_fecEmailSection</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-d56f04f8-9999-47ac-9f57-deb1710d03c5</name>
@@ -484,7 +514,7 @@
                             <value>FEC_User_Role__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>CREATED_DATE</value>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -498,11 +528,11 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldAlias</name>
-                    <value>__DEFAULT__</value>
+                    <value>FEC_Date_Time__c</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldOrder</name>
-                    <value>Default</value>
+                    <value>Ascending</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
                 <identifier>lst_dynamicRelatedList3</identifier>
@@ -557,7 +587,7 @@
                             <value>FEC_User_Role__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>CREATED_DATE</value>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -571,11 +601,11 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldAlias</name>
-                    <value>__DEFAULT__</value>
+                    <value>FEC_Date_Time__c</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>sortFieldOrder</name>
-                    <value>Default</value>
+                    <value>Ascending</value>
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
                 <identifier>lst_dynamicRelatedList6</identifier>
@@ -585,6 +615,11 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
+                    <valueList>
+                        <valueListItems>
+                            <value>New</value>
+                        </valueListItems>
+                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -609,13 +644,31 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>CREATED_DATE</value>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -679,13 +732,31 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>CREATED_DATE</value>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FE_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -718,68 +789,8 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>parentFieldApiName</name>
-                    <value>Case.Id</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListApiName</name>
-                    <value>AttachedContentNotes</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListComponentOverride</name>
-                    <value>GRID</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>rowsToDisplay</name>
-                    <value>10</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>showActionBar</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>force:relatedListSingleContainer</componentName>
-                <identifier>force_relatedListSingleContainer5</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>review</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>parentFieldApiName</name>
-                    <value>Case.Id</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListApiName</name>
-                    <value>AttachedContentNotes</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListComponentOverride</name>
-                    <value>GRID</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>rowsToDisplay</name>
-                    <value>10</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>showActionBar</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <componentName>force:relatedListSingleContainer</componentName>
-                <identifier>force_relatedListSingleContainer</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>handling</rightValue>
-                    </criteria>
-                </visibilityRule>
+                <componentName>fec_CaseNote</componentName>
+                <identifier>c_fec_CaseNote</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

@@ -26,7 +26,20 @@ import FEC_INTERACTION_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_C
 import FEC_INTERACTION_SUB_CHANNEL_LABEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
 import FEC_Interaction_Information_Label from "@salesforce/label/c.FEC_Interaction_Information_Label";
 
+import FEC_PHONE_IS_REQUIRED_MSG from "@salesforce/label/c.FEC_PHONE_IS_REQUIRED_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_1_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_1_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_2_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_2_MSG";
+import FEC_PHONE_IS_INVALID_FORMAT_3_MSG from "@salesforce/label/c.FEC_PHONE_IS_INVALID_FORMAT_3_MSG";
+
 import { formatDateTime } from "c/fec_CommonUtils";
+
+import {
+  RECORD_TYPES,
+  VIEW_MODE_REVIEW,
+  ICON_HIDE,
+  ICON_PREVIEW,
+  CLOSED_STATUS,
+} from "c/fec_CommonConst";
 
 export default class FecInteractionInfo extends LightningElement {
   labels = {
@@ -136,7 +149,11 @@ export default class FecInteractionInfo extends LightningElement {
 
   // ================= GETTERS =================
   get isInteractionCase() {
-    return this.recordTypeDevName === "Interaction";
+    return this.recordTypeDevName === RECORD_TYPES.INTERACTION;
+  }
+
+  get isCustomerCase() {
+    return this.recordTypeDevName === RECORD_TYPES.CUSTOMER_CASE;
   }
 
   get isInteractionClosed() {
@@ -144,12 +161,8 @@ export default class FecInteractionInfo extends LightningElement {
     return false;
   }
 
-  get isCustomerCase() {
-    return this.recordTypeDevName === "Customer_Case";
-  }
-
   get isReview() {
-    return this.viewMode === "review";
+    return this.viewMode === VIEW_MODE_REVIEW;
   }
 
   get showField() {
@@ -172,7 +185,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   get eyeIcon() {
-    return this.isMasked ? "utility:hide" : "utility:preview";
+    return this.isMasked ? ICON_HIDE : ICON_PREVIEW;
   }
 
   get channel() {
@@ -233,38 +246,72 @@ export default class FecInteractionInfo extends LightningElement {
 
   handlePhoneChange(event) {
     this.phoneDraft = event.target.value;
+
+    const input = event.target;
+    const value = this.phoneDraft;
+
+    // reset lỗi
+    input.setCustomValidity("");
+
+    if (!value) {
+      input.setCustomValidity(FEC_PHONE_IS_REQUIRED_MSG);
+    } else if (value.startsWith("0")) {
+      if (!/^\d{10}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_1_MSG);
+      }
+    } else if (value.startsWith("84")) {
+      if (!/^\d{11}$/.test(value)) {
+        input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_2_MSG);
+      }
+    } else {
+      input.setCustomValidity(FEC_PHONE_IS_INVALID_FORMAT_3_MSG);
+    }
+
+    input.reportValidity();
   }
 
-  handleSavePhone() {
+  async handleSavePhone() {
+    const input = this.template.querySelector("lightning-input");
+
+    if (!input || !input.checkValidity()) {
+      input.reportValidity();
+      return;
+    }
+
     if (!this.phoneDraft || !this.interactionId) return;
 
-    updateInteractionPhone({
-      recordId: this.interactionId,
-      phone: this.phoneDraft,
-    })
-      .then((maskedPhone) => {
-        this.record = {
-          ...this.record,
-          FEC_Interaction_Masked_Phone__c: maskedPhone,
-        };
-
-        this.isEditingPhone = false;
-        this.isMasked = true;
-        this.phoneDraft = null;
-      })
-      .catch((error) => {
-        console.error("updateInteractionPhone error", error);
+    try {
+      const maskedPhone = await updateInteractionPhone({
+        recordId: this.interactionId,
+        phone: this.phoneDraft,
       });
+
+      this.record = {
+        ...this.record,
+        FEC_Interaction_Masked_Phone__c: maskedPhone,
+      };
+
+      this.isEditingPhone = false;
+      this.isMasked = true;
+      this.phoneDraft = null;
+
+    } catch (error) {
+      console.error("updateInteractionPhone error", error);
+    }
   }
 
-  revealPhone() {
+  async revealPhone() {
     if (!this.interactionId) return;
 
-    getInteractionPhoneReveal({ recordId: this.interactionId })
-      .then((result) => {
-        this.revealedPhone = result;
-        this.isMasked = false;
-      })
-      .catch((e) => console.error("revealPhone error", e));
+    try {
+      const result = await getInteractionPhoneReveal({
+        recordId: this.interactionId,
+      });
+
+      this.revealedPhone = result;
+      this.isMasked = false;
+    } catch (e) {
+      console.error("revealPhone error", e);
+    }
   }
 }

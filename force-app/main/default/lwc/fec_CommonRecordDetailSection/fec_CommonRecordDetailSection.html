@@ -1,24 +1,119 @@
 <template>
-    <lightning-accordion-section
-        name={sectionTitle}
-        label={sectionTitle}
-        class="slds-accordion__section">
+    <template if:false={bodyOnly}>
+        <lightning-accordion-section
+            name={sectionTitle}
+            label={accordionLabel}
+            class="slds-accordion__section">
 
-        <!-- ACTIONS -->
-        <div slot="actions" if:true={showRefreshButton}>
-            <lightning-button
-                label={customLabel.btnRefresh}
-                variant="brand"
-                onclick={handleRefresh}>
-            </lightning-button>
-        </div>
+            <div slot="actions" if:true={showRefreshButton}>
+                <lightning-button
+                    label={customLabel.btnRefresh}
+                    variant="brand"
+                    onclick={handleRefresh}>
+                </lightning-button>
+            </div>
 
-        <!-- CONTENT -->
+            <template if:true={sectionLoading}>
+                <div class="fec-section-spinner-wrapper">
+                    <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
+                </div>
+            </template>
+            <template if:false={sectionLoading}>
+            <div class="slds-form slds-p-around_small" role="list">
+
+                <template for:each={rows} for:item="row">
+
+                    <div key={row.key} if:true={row.isButtonRow} class={row.buttonRowClass}>
+                        <template for:each={row.buttons} for:item="btn">
+                            <lightning-button
+                                key={btn.name}
+                                label={btn.label}
+                                variant={btn.variant}
+                                data-name={btn.name}
+                                onclick={handleButtonClick}
+                                class="slds-m-right_x-small">
+                            </lightning-button>
+                        </template>
+                    </div>
+
+                    <div key={row.key} if:false={row.isButtonRow}
+                         class="slds-grid slds-wrap slds-gutters_x-small">
+
+                        <template for:each={row.fields} for:item="field">
+                            <div key={field.key} class={field.gridClass}>
+
+                                <template if:false={field.isEmpty}>
+                                    <div class="slds-p-around_x-small">
+
+                                        <div class="slds-grid
+                                                    slds-grid_vertical-align-start
+                                                    slds-border_bottom
+                                                    slds-p-bottom_x-small
+                                                    fec-field-label-value-row">
+
+                                            <div class="slds-grid
+                                                        slds-grid_vertical-align-center
+                                                        slds-text-title_bold
+                                                        field-label-style">
+
+                                                <span>{field.label}</span>
+
+                                                <template if:true={field.hasHelpText}>
+                                                    <lightning-helptext
+                                                        content={field.helpText}
+                                                        class="slds-m-left_xx-small">
+                                                    </lightning-helptext>
+                                                </template>
+                                            </div>
+
+                                            <div class="slds-text-body_regular field-value-style">
+                                                <span class={field.valueClass}>
+                                                    {field.value}
+                                                </span>
+                                            </div>
+
+                                            <div class="slds-m-left_x-small
+                                                        slds-grid
+                                                        slds-grid_vertical-align-center">
+                                                <template if:true={field.showSuccess}>
+                                                    <lightning-icon
+                                                        icon-name="utility:success"
+                                                        variant="success"
+                                                        size="x-small">
+                                                    </lightning-icon>
+                                                </template>
+
+                                                <template if:true={field.showError}>
+                                                    <lightning-icon
+                                                        icon-name="utility:clear"
+                                                        variant="error"
+                                                        size="x-small">
+                                                    </lightning-icon>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+            </template>
+        </lightning-accordion-section>
+    </template>
+
+    <template if:true={bodyOnly}>
+        <template if:true={sectionLoading}>
+            <div class="fec-section-spinner-wrapper">
+                <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
+            </div>
+        </template>
+        <template if:false={sectionLoading}>
         <div class="slds-form slds-p-around_small" role="list">
 
             <template for:each={rows} for:item="row">
 
-                <!-- BUTTON ROW -->
                 <div key={row.key} if:true={row.isButtonRow} class={row.buttonRowClass}>
                     <template for:each={row.buttons} for:item="btn">
                         <lightning-button
@@ -32,7 +127,6 @@
                     </template>
                 </div>
 
-                <!-- FIELD ROW -->
                 <div key={row.key} if:false={row.isButtonRow}
                      class="slds-grid slds-wrap slds-gutters_x-small">
 
@@ -42,13 +136,12 @@
                             <template if:false={field.isEmpty}>
                                 <div class="slds-p-around_x-small">
 
-                                    <!-- ROW -->
                                     <div class="slds-grid
                                                 slds-grid_vertical-align-start
                                                 slds-border_bottom
-                                                slds-p-bottom_x-small">
+                                                slds-p-bottom_x-small
+                                                fec-field-label-value-row">
 
-                                        <!-- LABEL -->
                                         <div class="slds-grid
                                                     slds-grid_vertical-align-center
                                                     slds-text-title_bold
@@ -64,14 +157,12 @@
                                             </template>
                                         </div>
 
-                                        <!-- VALUE -->
                                         <div class="slds-text-body_regular field-value-style">
                                             <span class={field.valueClass}>
                                                 {field.value}
                                             </span>
                                         </div>
 
-                                        <!-- ICON -->
                                         <div class="slds-m-left_x-small
                                                     slds-grid
                                                     slds-grid_vertical-align-center">
@@ -99,5 +190,6 @@
                 </div>
             </template>
         </div>
-    </lightning-accordion-section>
+        </template>
+    </template>
 </template>

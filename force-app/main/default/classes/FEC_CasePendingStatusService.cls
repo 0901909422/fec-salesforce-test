@@ -1,7 +1,13 @@
 /**
- * Đồng bộ Case.Status theo bản ghi Routing Action History mới nhất (Route to).
- * Map Team: User → FEC_Main_Queue__c → FEC_Team_Queue__c; Queue → DeveloperName → FEC_Team_Queue__c
- * (dùng FEC_Original_User_Queue_ID__c / FEC_Updated_User_Queue_ID__c — các trường *_Queue__c text chỉ là nhãn).
+ * Trạng thái hiển thị khi Pending: Standard Status = Pending; chuỗi Pending-{team}
+ * qua formula FEC_Final_Status__c (FEC_Team__c) và computePendingStatusForCase.
+ *
+ * computePendingStatusForCase (khi Status = Pending): ưu tiên bản ghi **FEC_Routing_Action_History__c**
+ * có Routing Action = Change Owner mới nhất để tính Pending-{team} (thay cho dựa vào Route to mới nhất).
+ *
+ * Khi đổi Owner: nếu Status trước đó là Open và Case đã submit (FEC_Is_Submited__c)
+ * thì chuyển Status standard sang Pending. Case nháp chưa submit giữ Open.
+ * (Gọi sau các xử lý khác trong after update — ví dụ Routing Action History khi change owner.)
  */
 public without sharing class FEC_CasePendingStatusService {
   /** Tránh vòng lặp khi update Case kích hoạt lại trigger. */
@@ -13,59 +19,64 @@ public without sharing class FEC_CasePendingStatusService {
    * @param newCases Trigger.new
    * @param oldMap Trigger.oldMap (null khi insert)
    */
+  /** @deprecated Chuyển sang syncPendingStatusWhenSubmittedOwnerChanges (tên cũ gây nhầm). */
   public static void syncPendingStatusFromLatestRouteTo(
     List<Case> newCases,
     Map<Id, Case> oldMap
   ) {
-    if (inPendingStatusSync || newCases == null || newCases.isEmpty()) {
+    syncPendingStatusWhenSubmittedOwnerChanges(newCases, oldMap);
+  }
+
+  public static void syncPendingStatusWhenSubmittedOwnerChanges(
+    List<Case> newCases,
+    Map<Id, Case> oldMap
+  ) {
+    if (inPendingStatusSync || newCases == null || newCases.isEmpty() || oldMap == null) {
       return;
     }
 
-    Set<Id> caseIds = new Set<Id>();
+    Set<Id> candidateIds = new Set<Id>();
     for (Case c : newCases) {
-      if (c.Id != null) {
-        caseIds.add(c.Id);
+      Case oldCase = oldMap.get(c.Id);
+      if (oldCase == null) {
+        continue;
       }
+      if (c.OwnerId == oldCase.OwnerId) {
+        continue;
+      }
+      if (oldCase.Status != FEC_ConstantCommon.CASE_STATUS_OPEN) {
+        continue;
+      }
+      if (c.IsClosed) {
+        continue;
+      }
+      if (c.Status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+        continue;
+      }
+      candidateIds.add(c.Id);
     }
-    if (caseIds.isEmpty()) {
+
+    if (candidateIds.isEmpty()) {
       return;
     }
 
-    // Một query: Case hiện tại (Status/IsClosed) — so sánh đúng sau các trigger lồng (vd: Routing History).
-    Map<Id, Case> currentCaseById = new Map<Id, Case>(
+    // Đọc từ DB: Trigger.new khi chỉ đổi Owner có thể không populate FEC_Is_Submited__c.
+    Map<Id, Case> submittedCaseMap = new Map<Id, Case>(
       [
-        SELECT Id, Status, IsClosed
+        SELECT Id
         FROM Case
-        WHERE Id IN :caseIds
+        WHERE Id IN :candidateIds AND FEC_Is_Submited__c = TRUE
       ]
     );
 
-    // Một query: Route to mới nhất mỗi Case (ORDER BY CreatedDate DESC, lấy bản đầu tiên theo từng Case).
-    Map<Id, FEC_Routing_Action_History__c> latestRouteToByCaseId = loadLatestRouteToHistoryByCaseId(
-      caseIds
-    );
-    if (latestRouteToByCaseId.isEmpty()) {
-      return;
-    }
-
     List<Case> toUpdate = new List<Case>();
-    for (Id caseId : caseIds) {
-      Case current = currentCaseById.get(caseId);
-      if (current == null || current.IsClosed) {
+    for (Id caseId : candidateIds) {
+      if (!submittedCaseMap.containsKey(caseId)) {
         continue;
       }
-      FEC_Routing_Action_History__c history = latestRouteToByCaseId.get(caseId);
-      if (history == null) {
-        continue;
-      }
-
-      String desiredStatus = FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(
-        history
+      toUpdate.add(
+        new Case(Id = caseId, Status = FEC_ConstantCommon.CASE_STATUS_PENDING)
       );
-      if (desiredStatus == current.Status) {
-        continue;
-      }
-      toUpdate.add(new Case(Id = caseId, Status = desiredStatus));
     }
 
     if (toUpdate.isEmpty()) {
@@ -81,49 +92,47 @@ public without sharing class FEC_CasePendingStatusService {
   }
 
   /**
-   * Tính chuỗi Status cho một Case (không DML) — Aura/API có thể gọi.
+   * Chuỗi hiển thị Pending: Pending hoặc Pending-{Team} / Pending-{Team1}_{Team2}.
+   * Bước 1: nếu có bản ghi Routing Action History **Change Owner** mới nhất → tính từ
+   * FEC_Original_User_Queue_ID__c / FEC_Updated_User_Queue_ID__c (giống buildPendingStatusFromRouteHistoryRow).
+   * Ngược lại: theo FEC_Team__c trên Case (khớp công thức FEC_Final_Status__c).
    */
   public static String computePendingStatusForCase(Id caseId) {
     if (caseId == null) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    Map<Id, FEC_Routing_Action_History__c> latest = loadLatestRouteToHistoryByCaseId(
-      new Set<Id>{ caseId }
-    );
-    FEC_Routing_Action_History__c h = latest.get(caseId);
-    if (h == null) {
+    List<Case> rows = [
+      SELECT Status, FEC_Team__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (rows.isEmpty()) {
       return FEC_ConstantCommon.CASE_STATUS_PENDING;
     }
-    return FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(h);
-  }
-
-  /**
-   * Bulk: mỗi CaseId → đúng một bản ghi Route to mới nhất (CreatedDate DESC).
-   */
-  private static Map<Id, FEC_Routing_Action_History__c> loadLatestRouteToHistoryByCaseId(
-    Set<Id> caseIds
-  ) {
-    Map<Id, FEC_Routing_Action_History__c> latestByCase = new Map<Id, FEC_Routing_Action_History__c>();
-    if (caseIds == null || caseIds.isEmpty()) {
-      return latestByCase;
+    Case c = rows[0];
+    if (c.Status != FEC_ConstantCommon.CASE_STATUS_PENDING) {
+      return c.Status;
     }
-
-    String routeTo = FEC_ConstantCommon.CASE_ROUTING_ACTION;
-    List<FEC_Routing_Action_History__c> rows = [
+    List<FEC_Routing_Action_History__c> latestChangeOwner = [
       SELECT
-        FEC_Case__c,
         FEC_Original_User_Queue_ID__c,
         FEC_Updated_User_Queue_ID__c
       FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c IN :caseIds AND FEC_Routing_Action__c = :routeTo
-      ORDER BY CreatedDate DESC
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c = :FEC_ConstantCommon.FEC_ROUTING_ACTION_CHANGE_OWNER
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
     ];
-
-    for (FEC_Routing_Action_History__c row : rows) {
-      if (row.FEC_Case__c != null && !latestByCase.containsKey(row.FEC_Case__c)) {
-        latestByCase.put(row.FEC_Case__c, row);
-      }
+    if (!latestChangeOwner.isEmpty()) {
+      return FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(
+        latestChangeOwner[0]
+      );
     }
-    return latestByCase;
+    if (String.isBlank(c.FEC_Team__c)) {
+      return FEC_ConstantCommon.CASE_STATUS_PENDING;
+    }
+    return FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + c.FEC_Team__c;
   }
 }

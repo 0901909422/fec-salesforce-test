@@ -1,16 +1,106 @@
-/* Ensure even distribution controlled by lightning-layout size attributes */
-/* Centered buttons already handled by SLDS utilities in HTML */
-
-/* Mobile: stack each field full width for readability */
+/* Mobile */
 @media (max-width: 600px) {
-    .responsive-layout {
-        display: flex;
-        flex-wrap: wrap;
-    }
+    .responsive-layout { display: flex; flex-wrap: wrap; }
+    .field-item { flex: 0 0 100%; max-width: 100%; }
+}
 
-    /* Match the new class used on layout items */
-    .field-item {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
+/* Application History sub-table */
+.fec-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.fec-history-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    background-color: #f3f2f2;
+    font-weight: 600;
+    color: #3e3e3c;
+    border-bottom: 1px solid #dddbda;
+    border-right: 1px solid #dddbda;
+}
+
+.fec-history-table th:last-child { border-right: none; }
+
+.fec-history-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+    color: #080707;
+    text-align: center;
+}
+
+.fec-history-table td:last-child { border-right: none; }
+.fec-history-table tr:last-child td { border-bottom: none; }
+
+.fec-history-wrap {
+    background-color: #f8f8f8;
+    border: 1px solid #dddbda;
+    border-top: none;
+    margin-bottom: 0.5rem;
+}
+/* Application History sub-table */
+.fec-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.fec-history-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    background-color: #f3f2f2;
+    font-weight: 600;
+    color: #3e3e3c;
+    border-bottom: 1px solid #dddbda;
+    border-right: 1px solid #dddbda;
+}
+
+.fec-history-table th:last-child { border-right: none; }
+
+.fec-history-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+    color: #080707;
+    text-align: center;
+}
+
+.fec-history-table td:last-child { border-right: none; }
+.fec-history-table tr:last-child td { border-bottom: none; }
+
+/* Old history wrap */
+.fec-history-wrap {
+    background-color: #f8f8f8;
+    border: 1px solid #dddbda;
+    border-top: none;
+    margin-bottom: 0.5rem;
+}
+
+.fec-history-label {
+    padding: 0.25rem 0.75rem;
+    background-color: #e8f4fd;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: #0070d2;
+    border-bottom: 1px solid #dddbda;
+}
+
+.no-result-icon {
+    --sds-c-icon-color-foreground-default: #c23934;
+}
+
+.no-result-text {
+    color: #c23934;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.no-result-text .no-result-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #c23934;
 }

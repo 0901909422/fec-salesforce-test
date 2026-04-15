@@ -4,6 +4,7 @@ import {
   IsConsoleNavigation,
   getAllTabInfo,
   openSubtab,
+  openTab,
   closeTab,
   getFocusedTabInfo
 } from "lightning/platformWorkspaceApi";
@@ -11,16 +12,20 @@ import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
-import { getRecord, getFieldValue } from "lightning/uiRecordApi";
-import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
-import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
+import {
+  setMode,
+} from "c/fec_CustomerCaseModeStore";
+// import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+// import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+// import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 
 export default class Fec_InteractionCreateCase extends NavigationMixin(
   LightningElement,
 ) {
   isLoading = false;
-  viewMode; // handling | review
-  _resetDone = false;
+  // viewMode; // handling | review
+  // _resetDone = false;
+  // _initialized = false;
   @wire(CurrentPageReference)
   pageRef;
 
@@ -30,15 +35,15 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
   @wire(MessageContext)
   messageContext;
 
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: [VIEW_MODE],
-  })
-  wiredViewMode({ data }) {
-    if (data) {
-      this.viewMode = getFieldValue(data, VIEW_MODE);
-    }
-  }
+  // @wire(getRecord, {
+  //   recordId: "$recordId",
+  //   fields: [VIEW_MODE],
+  // })
+  // wiredViewMode({ data }) {
+  //   if (data) {
+  //     this.viewMode = getFieldValue(data, VIEW_MODE);
+  //   }
+  // }
 
   get recordId() {
     // Access parameters via the 'state' object
@@ -55,6 +60,11 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     return this.pageRef ? this.pageRef.state.c__identityNo : null;
   }
 
+  get isCreatedFromSearch() {
+    // Access parameters via the 'state' object
+    return this.pageRef ? this.pageRef.state.c__isCreatedFromSearch : null;
+  }
+
   get isNonExistingCustomer() {
     if (this.customerName != null) {
       return true;
@@ -63,32 +73,46 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     }
   }
 
-  connectedCallback() {
-    if (!this.recordId) {
-      console.error("recordId is undefined");
-      return;
-    }
+  // @wire(CurrentPageReference)
+  // setPageRef(pageRef) {
+  //   if (pageRef) {
+  //     this.pageRef = pageRef;
 
+  //     if (this.recordId && !this._initialized) {
+  //       this._initialized = true;
+  //       this.handleInit();
+  //     }
+  //   }
+  // }
+
+  async connectedCallback() {
     this.isLoading = true;
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
         .then(async (newCaseId) => {
           this.isLoading = false;
           if (this.isConsoleNavigation) {
-            let primaryTabId;
-            const tabInfos = await getAllTabInfo();
-            tabInfos?.forEach(async (tabInfo) => {
-              if (tabInfo.recordId === this.recordId) {
-                primaryTabId = tabInfo.tabId;
-              }
-            });
-            let { tabId } = await getFocusedTabInfo();
-            await openSubtab(primaryTabId, {
-              recordId: newCaseId,
-              focus: true,
-            });
-            await closeTab(tabId);
-            await this.handlePublishMessageChanel();
+            const focusedTab = await getFocusedTabInfo();
+            const currentTabId = focusedTab.tabId;
+
+            if (focusedTab.parentTabId) {
+              await openSubtab(focusedTab.parentTabId, {
+                recordId: newCaseId,
+                focus: true,
+              });
+            } else {
+              await openTab({
+                recordId: newCaseId,
+                focus: true,
+              });
+            }
+
+            // await this.handlePublishMessageChanel();
+            // await closeTab(currentTabId);
+            setTimeout(async () => {
+              await this.handlePublishMessageChanel();
+              closeTab(currentTabId);
+            }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -98,7 +122,9 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
                 actionName: "view",
               },
             });
-            resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+            // if (this.recordId) {
+            //   await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+            // }
           }
         })
         .catch((error) => {
@@ -110,24 +136,31 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
         caseId: this.recordId,
         customerName: this.customerName,
         nationalPassportId: this.identityNo,
+        isCreatedFromSearch: this.isCreatedFromSearch
       })
         .then(async (newCaseId) => {
           this.isLoading = false;
           if (this.isConsoleNavigation) {
-            let primaryTabId;
-            const tabInfos = await getAllTabInfo();
-            tabInfos?.forEach(async (tabInfo) => {
-              if (tabInfo.recordId === this.recordId) {
-                primaryTabId = tabInfo.tabId;
-              }
-            });
-            const { tabId } = await getFocusedTabInfo();
-            await openSubtab(primaryTabId, {
-              recordId: newCaseId,
-              focus: true,
-            });
-            await closeTab(tabId);
-            await this.handlePublishMessageChanel();
+            const focusedTab = await getFocusedTabInfo();
+            const currentTabId = focusedTab.tabId;
+
+            if (focusedTab.parentTabId) {
+              await openSubtab(focusedTab.parentTabId, {
+                recordId: newCaseId,
+                focus: true,
+              });
+            } else {
+              await openTab({
+                recordId: newCaseId,
+                focus: true,
+              });
+            }
+
+            // await closeTab(currentTabId);
+            setTimeout(async () => {
+              await this.handlePublishMessageChanel();
+              closeTab(currentTabId);
+            }, 2000);
           } else {
             this[NavigationMixin.Navigate]({
               type: "standard__recordPage",
@@ -138,7 +171,9 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
               },
             });
           }
-          await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+          // if (this.recordId) {
+          //     await resetViewMode({ recordId: this.recordId, viewMode: "handling" });
+          //   }
         })
         
         .catch((error) => {
@@ -152,6 +187,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     const payload = {
       isModeEdit: true,
     };
+    setMode(true);
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 }

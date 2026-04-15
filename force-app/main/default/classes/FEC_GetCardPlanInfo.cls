@@ -158,7 +158,7 @@
 
                             // Map Decimal Fields
                             plan.currentBalance = FEC_CommonUltils.xmlValToDecimal(planNode, 'PlanCurrentBalance');
-                            plan.baseRate = FEC_CommonUltils.xmlValToDecimal(planNode, 'BaseRate');
+                            plan.baseRate = FEC_CommonUltils.xmlPackedBaseRateToPercent(planNode, 'BaseRate');
                             plan.deferredInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'DeferredInterest');
                             plan.accruedInterest = FEC_CommonUltils.xmlValToDecimal(planNode, 'AccruedInterest');
                             plan.perDiem = FEC_CommonUltils.xmlValToDecimal(planNode, 'PerDiem');

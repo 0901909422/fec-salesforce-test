@@ -2,13 +2,41 @@
     color: var(--lwc-colorTextError, #ea001e);
     font-weight: 600;
 }
-.field-value-style {
-    flex: 1;
-    word-break: break-word;
+
+/* Hàng label + value: không cho nhãn dài nuốt cột giá trị */
+.fec-field-label-value-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.25rem;
 }
+
 .field-label-style {
-    width: 140px;
-    min-width: 170px;
-    margin-right: 4px;
-    white-space: nowrap;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 55%;
+    margin-right: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.field-value-style {
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+    text-align: right;
+}
+
+/* Cột icon sync không bị co mất */
+.fec-field-label-value-row > div:last-child {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.fec-section-spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    padding: 1rem;
 }
