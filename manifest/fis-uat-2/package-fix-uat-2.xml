@@ -429,6 +429,7 @@
 		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
+		<members>FEC_Email_Label_Danh_Xung</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
