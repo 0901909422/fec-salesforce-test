@@ -403,7 +403,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
                 String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'ORG' })
             );
         }
-        if (org.length() < 10) {
+        if (org.length() > 10) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{ 'ORG', '10' })
             );
