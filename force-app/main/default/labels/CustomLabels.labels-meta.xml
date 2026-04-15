@@ -9807,7 +9807,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Danh xung label</shortDescription>
-        <value>Danh xưng</value>
+        <value>Title</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh_Chi</fullName>
@@ -12463,5 +12463,68 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket modal title</shortDescription>
+        <value>New Relevant Ticket</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Section_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket section header</shortDescription>
+        <value>Relevant Ticket Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Field_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket interaction field label</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket search placeholder</shortDescription>
+        <value>Search by Case Number or ID...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket no results message</shortDescription>
+        <value>No results found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Select_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket select required error</shortDescription>
+        <value>Please select an Interaction.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Case_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket case not found error</shortDescription>
+        <value>Could not determine the current Case. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save error</shortDescription>
+        <value>An error occurred while saving. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save success</shortDescription>
+        <value>Relevant Ticket was created successfully.</value>
     </labels>
 </CustomLabels>
