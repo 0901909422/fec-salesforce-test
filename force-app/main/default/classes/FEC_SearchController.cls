@@ -75,6 +75,8 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
         objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        // 15/04/2026 PhuongNT add
+        objCase.FEC_Recipient_Name__c = customerName;
 
         if (fieldName == 'UserId') {
             objCase.FEC_Contract_Number__c = policyNumber;
@@ -118,6 +120,8 @@ public with sharing class FEC_SearchController {
 
         // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
+        // 15/04/2026 PhuongNT add
+        objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c;
         update objCase;
 
         // ===== CALL API Demographic  =====
