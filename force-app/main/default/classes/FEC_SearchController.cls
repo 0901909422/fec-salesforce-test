@@ -121,6 +121,7 @@ public with sharing class FEC_SearchController {
         // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
         // 15/04/2026 PhuongNT add
+        objCase.FEC_Phone_Number__c = rec.FEC_Primary_Phone__c;
         objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c;
         update objCase;
 
