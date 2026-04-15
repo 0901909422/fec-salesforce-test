@@ -852,7 +852,7 @@
             if (r.getState()==='SUCCESS') {
                 var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={}, headers={}, footers={};
                 data.forEach(function(t){
-                    opts.push({label:t.FEC_Template_Name__c||t.Name, value:t.Id});
+                    opts.push({label:t.Name, value:t.Id});
                     bodies[t.Id] = t.FEC_Body__c || '';
                     subjects[t.Id] = t.FEC_Subject_Line__c || '';
                     var lh = t.FEC_Enhanced_Letterhead__r;
