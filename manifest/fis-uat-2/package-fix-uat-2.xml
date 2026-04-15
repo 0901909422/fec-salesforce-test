@@ -105,6 +105,7 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_NotificationHistoryService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -682,6 +683,10 @@
 		<members>FEC_Notification_History__c.FEC_User_Role__c</members>
 		<members>FEC_Notification_History__c.FEC_Stage_Name__c</members>
 		<members>FEC_Notification_History__c.FEC_Notification_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Status__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
