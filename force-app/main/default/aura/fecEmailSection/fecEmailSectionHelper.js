@@ -741,6 +741,7 @@
     },
 
     loadFromAddresses: function(component, incomingToAddress) {
+        var self = this;
         var a = component.get('c.getFromAddresses');
         a.setParams({ caseId: component.get('v.recordId') });
         a.setCallback(this, function(r) {
@@ -781,25 +782,88 @@
         $A.enqueueAction(a);
     },
 
+    showPreviewModal: function(body) {
+        var existing = document.getElementById('fec-preview-overlay');
+        if (existing) existing.parentNode.removeChild(existing);
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-preview-overlay';
+        overlay.setAttribute('style', [
+            'position:fixed','top:0','left:0','right:0','bottom:0',
+            'width:100vw','height:100vh',
+            'background:rgba(0,0,0,.55)',
+            'z-index:2147483647',
+            'display:flex','align-items:center','justify-content:center'
+        ].join('!important;') + '!important;');
+
+        var modal = document.createElement('div');
+        modal.setAttribute('style', [
+            'background:#fff','border-radius:8px',
+            'width:760px','max-width:92vw','max-height:88vh',
+            'display:flex','flex-direction:column',
+            'box-shadow:0 8px 32px rgba(0,0,0,.35)',
+            'overflow:hidden','position:relative'
+        ].join('!important;') + '!important;');
+
+        var header = document.createElement('div');
+        header.setAttribute('style','display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e5e5;flex-shrink:0;');
+        var title = document.createElement('span');
+        title.textContent = 'Preview email';
+        title.setAttribute('style','font-size:17px;font-weight:600;color:#16325c;flex:1;text-align:center;');
+        var closeBtn = document.createElement('span');
+        closeBtn.innerHTML = '&#x2715;';
+        closeBtn.setAttribute('style','cursor:pointer;font-size:20px;color:#706e6b;line-height:1;padding:2px 6px;position:absolute;right:16px;top:14px;');
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
+        bodyDiv.innerHTML = body || '';
+
+        var footer = document.createElement('div');
+        footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
+        var footCloseBtn = document.createElement('button');
+        footCloseBtn.textContent = 'Close';
+        footCloseBtn.setAttribute('style','padding:8px 24px;border:none;border-radius:20px;background:#0070d2;color:#fff;font-size:14px;cursor:pointer;font-weight:500;');
+        footer.appendChild(footCloseBtn);
+
+        modal.appendChild(header);
+        modal.appendChild(bodyDiv);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        function closeModal() {
+            var el = document.getElementById('fec-preview-overlay');
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        closeBtn.addEventListener('click', closeModal);
+        footCloseBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+    },
+
     loadTemplates: function(component, mailboxAddress) {
         var actionName = mailboxAddress ? 'c.getEmailTemplatesByMailbox' : 'c.getEmailTemplates';
         var a = component.get(actionName);
         if (mailboxAddress) {
             a.setParams({ mailboxAddress: mailboxAddress });
-        } else {
-            a.setStorable();
         }
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
-                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={};
+                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={}, headers={}, footers={};
                 data.forEach(function(t){
-                    opts.push({label:t.FEC_Template_Name__c||t.Name, value:t.Id});
+                    opts.push({label:t.Name, value:t.Id});
                     bodies[t.Id] = t.FEC_Body__c || '';
                     subjects[t.Id] = t.FEC_Subject_Line__c || '';
+                    var lh = t.FEC_Enhanced_Letterhead__r;
+                    headers[t.Id] = (lh && lh.FEC_Header__c) ? lh.FEC_Header__c : '';
+                    footers[t.Id] = (lh && lh.FEC_Footer__c) ? lh.FEC_Footer__c : '';
                 });
                 component.set('v.templateOptions',opts);
                 component.set('v.templateBodies',bodies);
                 component.set('v.templateSubjects',subjects);
+                component.set('v.templateHeaders',headers);
+                component.set('v.templateFooters',footers);
                 // Reset template selection nếu template hiện tại không còn trong list
                 var currentTemplate = component.get('v.replyTemplate');
                 if (currentTemplate && !bodies[currentTemplate]) {
