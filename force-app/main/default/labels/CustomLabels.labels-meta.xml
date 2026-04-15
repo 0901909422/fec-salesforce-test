@@ -12432,4 +12432,11 @@
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_No_Data_Application_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không tìm thấy kết quả (Application History)</shortDescription>
+        <value>Không tìm thấy kết quả</value>
+    </labels>
 </CustomLabels>
