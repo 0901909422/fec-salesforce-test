@@ -175,6 +175,7 @@
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
 		<members>fec_AppInfo</members>
+		<members>fec_RelatedListPaging</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -431,6 +432,7 @@
 		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<members>FEC_Email_Label_Danh_Xung</members>
+		<members>FEC_No_Data_Application_History</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

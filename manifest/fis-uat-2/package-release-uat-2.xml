@@ -1562,6 +1562,7 @@
 		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
+		<members>FEC_No_Data_Application_History</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
