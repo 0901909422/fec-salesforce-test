@@ -105,6 +105,7 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_NotificationHistoryService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -656,6 +657,7 @@
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
+		<members>FEC_Additional_Info__c.FEC_IPP_Plan__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
 		<members>Case.FEC_Current_Card_Status__c</members>
 		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
@@ -674,6 +676,16 @@
 		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
 		<members>Case.FEC_Recipient_Name__c</members>
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification_Channel__c</members>
+		<members>FEC_Notification_History__c.FEC_Target_Group__c</members>
+		<members>FEC_Notification_History__c.FEC_User__c</members>
+		<members>FEC_Notification_History__c.FEC_User_Role__c</members>
+		<members>FEC_Notification_History__c.FEC_Stage_Name__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Status__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
 		<members>FEC_Additional_Info__c.FEC_Last_4_Digits__c</members>
 		<members>FEC_Additional_Info__c.FEC_Conversion_Rate__c</members>
 		<name>CustomField</name>

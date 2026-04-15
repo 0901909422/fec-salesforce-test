@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Send_User__c</fullName>
+    <fullName>FEC_Notification__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
-    <label>Send User</label>
-    <referenceTo>User</referenceTo>
+    <label>Notification</label>
+    <referenceTo>FEC_Notification__c</referenceTo>
+    <relationshipLabel>Notification History</relationshipLabel>
     <relationshipName>Notification_History</relationshipName>
     <required>false</required>
     <trackHistory>false</trackHistory>
