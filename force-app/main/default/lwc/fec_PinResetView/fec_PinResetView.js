@@ -1,4 +1,4 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
 import getCardInfo from "@salesforce/apex/FEC_PinResetHandler.getCardInfo";
 import resetPin from "@salesforce/apex/FEC_PinResetHandler.resetPin";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -8,7 +8,8 @@ import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 import FEC_Card_Number_Required_MSG from "@salesforce/label/c.FEC_Card_Number_Required_MSG";
 import FEC_CIF_Number_Required_MSG from "@salesforce/label/c.FEC_CIF_Number_Required_MSG";
-
+import ISSUBMITED from "@salesforce/schema/Case.FEC_Is_Submited__c";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import {
   ERROR_MODAL_TITLE,
   SUCCESS_MODAL_TITLE,
@@ -43,6 +44,13 @@ export default class Fec_PinResetView extends LightningElement {
     FEC_RESET_PIN_FAILED,
   };
   // ================= INIT =================
+  @wire(getRecord, { recordId: "$recordId", fields: [ISSUBMITED] })
+  case;
+
+  get isSubmited() {
+    return getFieldValue(this.case.data, ISSUBMITED);
+  }
+
   connectedCallback() {
     this.loadCardInfo();
   }
@@ -95,15 +103,15 @@ export default class Fec_PinResetView extends LightningElement {
 
   get messageClass() {
     if (this.successReset) {
-      return "slds-text-color_success slds-m-top_medium";
+      return "success-text ";
     }
 
     if (this.processActionCount >= 3) {
-      return "slds-text-color_error slds-m-top_medium";
+      return "slds-text-color_error  slds-text-title_bold";
     }
 
     if (this.processActionCount > 0) {
-      return "slds-text-color_error slds-m-top_medium";
+      return "slds-text-color_error slds-text-title_bold";
     }
 
     return "";
@@ -133,9 +141,9 @@ export default class Fec_PinResetView extends LightningElement {
       .then((res) => {
         console.log("res from api: ", JSON.stringify(res));
         if (res.RespCode != "1") {
-          this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
           this.successReset = true;
         } else {
+          this.successReset = false;
           this.showToast(
             ERROR_MODAL_TITLE,
             res.RespDesc || res.errorMessage,
@@ -144,7 +152,8 @@ export default class Fec_PinResetView extends LightningElement {
         }
       })
       .catch((err) => {
-        this.showToast(ERROR_MODAL_TITLE, err.body?.message, ERROR_TOAST_TYPE);
+        console.error("error from resetPin: ", JSON.stringify(err));
+        this.showToast(ERROR_MODAL_TITLE, err?.body?.message, ERROR_TOAST_TYPE);
       })
       .finally(() => {
         this.loadCardInfo();
