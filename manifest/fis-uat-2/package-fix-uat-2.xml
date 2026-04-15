@@ -114,7 +114,7 @@
         <members>fec_templateListView</members>
         <members>fec_CaseEditNOC</members>
 		<members>fec_CaseBussiness</members>
-		<members>fec_CardBlock</members>
+		<!--<members>fec_CardBlock</members>-->
 		<members>fec_Search</members>
 		<members>fecInteractionEmailInfo</members>
 		<members>fec_CaseDetail_Customer</members>
