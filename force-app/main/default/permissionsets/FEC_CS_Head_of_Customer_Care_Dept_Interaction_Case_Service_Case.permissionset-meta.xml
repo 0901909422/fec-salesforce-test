@@ -251,7 +251,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
+        <editable>false</editable>
         <field>Case.FEC_Incorrect_Payment_Adj_Rows__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1158,6 +1158,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Gender__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Additional_Info__c.FEC_IPP_Plan__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
