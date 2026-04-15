@@ -3,7 +3,7 @@
     <fullName>FEC_Customer_Type__c</fullName>
     <description>Đối tượng khách hàng được áp dụng thông báo</description>
     <label>Customer Type</label>
-    <required>true</required>
+    <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Card_Replacement_Reason__c</fullName>
+    <description>Lý do khách hàng muốn thay thế thẻ</description>
+    <label>Card Replacement Reason</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Bị hư hỏng</fullName>
+                <default>false</default>
+                <label>Bị hư hỏng</label>
+            </value>
+            <value>
+                <fullName>Bị mất/ đánh cắp</fullName>
+                <default>false</default>
+                <label>Bị mất/ đánh cắp</label>
+            </value>
+            <value>
+                <fullName>Bị nuốt tại ATM</fullName>
+                <default>false</default>
+                <label>Bị nuốt tại ATM</label>
+            </value>
+            <value>
+                <fullName>Chưa nhận được thẻ</fullName>
+                <default>false</default>
+                <label>Chưa nhận được thẻ</label>
+            </value>
+            <value>
+                <fullName>Liên quan gian lận</fullName>
+                <default>false</default>
+                <label>Liên quan gian lận</label>
+            </value>
+            <value>
+                <fullName>Không còn nguyên vẹn</fullName>
+                <default>false</default>
+                <label>Không còn nguyên vẹn</label>
+            </value>
+            <value>
+                <fullName>Sai tên in nổi</fullName>
+                <default>false</default>
+                <label>Sai tên in nổi</label>
+            </value>
+            <value>
+                <fullName>Thay thế lần đầu thẻ Money Tab</fullName>
+                <default>false</default>
+                <label>Thay thế lần đầu thẻ Money Tab</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

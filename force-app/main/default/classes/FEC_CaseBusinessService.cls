@@ -20,7 +20,9 @@ public without sharing class FEC_CaseBusinessService {
   public static final String GENDER_UPDATE = 'Gender Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
+  public static final String BLOCK_CARD = 'Block Card';
   public static final String UNBLOCK_CARD = 'Unblock Card';
+  public static final String PIN_REISSUE = 'Reissue PIN';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -63,7 +65,9 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE,
     IDENTIFICATION_UPDATE,
     OC_001,
-    UNBLOCK_CARD
+    BLOCK_CARD,
+    UNBLOCK_CARD,
+    PIN_REISSUE
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -84,7 +88,9 @@ public without sharing class FEC_CaseBusinessService {
     GENDER_UPDATE => Method.GENDER_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
-    UNBLOCK_CARD => Method.UNBLOCK_CARD
+    BLOCK_CARD => Method.BLOCK_CARD,
+    UNBLOCK_CARD => Method.UNBLOCK_CARD,
+    PIN_REISSUE => Method.PIN_REISSUE
   };
 
   @AuraEnabled
@@ -521,7 +527,7 @@ public without sharing class FEC_CaseBusinessService {
           String.escapeSingleQuotes(String.valueOf(selectedStage.Id)) +
           '\' ' +
           'AND FEC_Field_Status__c = TRUE ' +
-          'ORDER BY FEC_Section__c, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
+          'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
 
@@ -574,7 +580,14 @@ public without sharing class FEC_CaseBusinessService {
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
             if (String.isNotBlank(lwcName)) {
-              sectionTemp.componentlst.add(lwcName);
+              DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
+              lwcSlot.componentName = lwcName;
+              lwcSlot.order = subSectionOrderTemp;
+              lwcSlot.fieldLayout = (Decimal) item.get(
+                'FEC_Sub_Section_Field_Layout__c'
+              );
+              lwcSlot.subSectionName = subSectionNameTemp;
+              sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
@@ -587,6 +600,14 @@ public without sharing class FEC_CaseBusinessService {
                   subSectionLayoutTemp
                 );
                 sectionTemp.subSectionlst.add(subSectionTemp);
+              } else if (subSectionOrderTemp != null) {
+                // Nhiều dòng MDS cùng FEC_Sub_Section__c: giữ order nhỏ nhất (đúng FEC_Sub_Section_Order__c khi SOQL không theo order).
+                if (
+                  subSectionTemp.order == null ||
+                  subSectionOrderTemp < subSectionTemp.order
+                ) {
+                  subSectionTemp.order = subSectionOrderTemp;
+                }
               }
 
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
@@ -671,7 +692,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (containProcessAction) {
         validButtonTypelst.add('Process Action');
-      }
+      } 
 
       List<FEC_Stage_Screen__c> actionlst = Database.query(
         'SELECT Id, FEC_Action_Button__c, ' +
@@ -953,6 +974,7 @@ public without sharing class FEC_CaseBusinessService {
     return k.Status;
   }
 
+
   private static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
@@ -1104,9 +1126,14 @@ public without sharing class FEC_CaseBusinessService {
         when OC_001 {
           System.debug(OC_001);
         }
+        when BLOCK_CARD {
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', BLOCK_CARD);
+        }
         when UNBLOCK_CARD {
-          System.debug(UNBLOCK_CARD);
-          return null;
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', UNBLOCK_CARD);
+        }
+        when PIN_REISSUE {
+          return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -1649,8 +1676,8 @@ public without sharing class FEC_CaseBusinessService {
       FEC_User__c = currentUserEmailId,
       FEC_User_Role__c = currentUserRole,
       FEC_Description__c = FEC_ConstantCommon.FEC_RAH_DESCRIPTION_CHANGE_OWNER,
-      FEC_Current_Status__c = routingHistoryFinalStatusSnapshot(oldCase),
-      FEC_Changed_Status__c = routingHistoryFinalStatusSnapshot(c)
+      FEC_Current_Status__c = null,
+      FEC_Changed_Status__c = null
     );
   }
 
@@ -2461,6 +2488,18 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  /** Metadata LWC slot (FEC_Type__c = LWC) — thứ tự theo FEC_Sub_Section_Order__c. */
+  public class DynamicLwcComponent {
+    @AuraEnabled
+    public String componentName;
+    @AuraEnabled
+    public Decimal order;
+    @AuraEnabled
+    public Decimal fieldLayout;
+    @AuraEnabled
+    public String subSectionName;
+  }
+
   public class Section implements Comparable {
     @AuraEnabled
     public String name;
@@ -2481,14 +2520,14 @@ public without sharing class FEC_CaseBusinessService {
     public Decimal layout;
 
     @AuraEnabled
-    public List<String> componentlst;
+    public List<DynamicLwcComponent> componentlst;
 
     // Default constructor
     public Section() {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public Section(String name) {
@@ -2496,7 +2535,7 @@ public without sharing class FEC_CaseBusinessService {
       this.objlst = new List<CObject>();
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public Section(String name, Decimal order, Decimal layout) {
@@ -2506,14 +2545,14 @@ public without sharing class FEC_CaseBusinessService {
       this.layout = layout;
       this.subSectionlst = new List<Section>();
       this.error = new Error();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     // Parameterized constructor
     public Section(String name, List<CObject> objlst) {
       this.name = name;
       this.objlst = objlst != null ? objlst : new List<CObject>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
       this.error = new Error();
     }
 
@@ -2521,7 +2560,7 @@ public without sharing class FEC_CaseBusinessService {
       this.name = name;
       this.error = err;
       this.subSectionlst = new List<Section>();
-      this.componentlst = new List<String>();
+      this.componentlst = new List<DynamicLwcComponent>();
     }
 
     public CObject findObj(String name) {
@@ -2583,7 +2622,12 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
-      // 3. Keep if still has valid subsections
+      // 3. Check if this section has any LWC
+      if (!componentlst.isEmpty()) {
+        return true; // keep this section
+      }
+
+      // 4. Keep if still has valid subsections
       return !subSectionlst.isEmpty();
     }
   }

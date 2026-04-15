@@ -294,7 +294,7 @@ export default class Fec_AccountOrContractPicklistInteraction extends LightningE
     const success = await this.createHistory();
     this.isOpen = false;
     if (success) {
-      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      window.location.reload();
     }
   }
 

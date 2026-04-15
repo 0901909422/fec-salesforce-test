@@ -76,10 +76,54 @@ public without sharing class FEC_Notification {
                     result.put('queue', queues[0]);
                 }
             }
+
+            result.put('currentStatusPills', buildCaseStatusPills(noti.FEC_Current_Status__c));
+            result.put('changedStatusPills', buildCaseStatusPills(noti.FEC_Changed_Status__c));
+
             return result;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    /**
+     * Builds lookup pill payloads for FEC_Case_Status__c: Id = record Id when found, else Name (legacy/orphan).
+     * Stored CSV uses Name values separated by ','.
+     */
+    private static List<Map<String, String>> buildCaseStatusPills(String csv) {
+        List<Map<String, String>> pills = new List<Map<String, String>>();
+        if (String.isBlank(csv)) {
+            return pills;
+        }
+        List<String> orderedNames = new List<String>();
+        for (String raw : csv.split(',')) {
+            String n = raw == null ? '' : raw.trim();
+            if (String.isNotBlank(n)) {
+                orderedNames.add(n);
+            }
+        }
+        if (orderedNames.isEmpty()) {
+            return pills;
+        }
+        Set<String> nameSet = new Set<String>(orderedNames);
+        Map<String, Id> nameToId = new Map<String, Id>();
+        for (FEC_Case_Status__c row : [
+            SELECT Id, Name FROM FEC_Case_Status__c WHERE Name IN :nameSet
+        ]) {
+            nameToId.put(row.Name, row.Id);
+        }
+        for (String n : orderedNames) {
+            Map<String, String> m = new Map<String, String>();
+            if (nameToId.containsKey(n)) {
+                m.put('id', String.valueOf(nameToId.get(n)));
+            } else {
+                m.put('id', n);
+            }
+            m.put('title', n);
+            m.put('subtitle', 'FEC Case Status');
+            pills.add(m);
+        }
+        return pills;
     }
 
     /**
@@ -118,10 +162,8 @@ public without sharing class FEC_Notification {
         String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
         String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
 
-        System.debug('Search Criteria -> CustomerType: ' + currentCase.FEC_Customer_Type__c + ', ProductType: ' + finalProductType + ', Category: ' + finalCategory + ', SubCategory: ' + finalSubCategory + ', SubCode: ' + finalSubCode + ', Stage: ' + currentCase.FEC_Current_Case_Stage__c);
-
+        Set<String> validCustomerTypes = new Set<String>{currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_CUSTOMER};
         // 3. Query Notification satisfying conditions
-        Set<String> validCustomerTypes = new Set<String>{ currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_REQUEST };
         List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
                                                     FEC_Notification_Template__r.Name,
                                                     FEC_Notification_Channel__r.Name,
@@ -196,16 +238,23 @@ public without sharing class FEC_Notification {
         }
 
         String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-
+        String fullBody = '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
+        }
+        fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
+        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
+            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+        }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, template.FEC_Body__c);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, fullBody);
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
         }
     }
 
     /**
-     * Resolves {{{Object.Field}}} and {{Object.Field}} merge fields for manual and bulk emails dynamically.
+     * Resolves {{{Object.Field}}} merge fields for manual and bulk emails dynamically.
      * Extracts tokens securely across ALL emails and builds single bulk SOQL queries to avoid DML limits!
      */
     private static void bulkResolveMergeFields(List<EmailInfo> emailsToSend, String fromEmail) {
@@ -215,7 +264,6 @@ public without sharing class FEC_Notification {
         Set<String> custHistoryFields = new Set<String>();
         Set<Id> caseIds = new Set<Id>();
 
-        // Match cả {{{...}}} và {{...}} (không phải triple-brace)
         // Pass 1: Extract all fields and Case Ids
         for (EmailInfo info : emailsToSend) {
             if (info.caseId != null) caseIds.add(info.caseId);
