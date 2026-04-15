@@ -674,6 +674,8 @@
 		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
 		<members>Case.FEC_Recipient_Name__c</members>
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
+		<members>FEC_Additional_Info__c.FEC_Last_4_Digits__c</members>
+		<members>FEC_Additional_Info__c.FEC_Conversion_Rate__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
