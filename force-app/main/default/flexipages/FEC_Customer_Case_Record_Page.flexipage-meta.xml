@@ -428,16 +428,34 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Stage_Name__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Type__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Channel__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Target_Group__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Send_Type__c</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>FEC_Send_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>FEC_Failure_Reason__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Send_User__c</value>
+                            <value>FEC_User__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
