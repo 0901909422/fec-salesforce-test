@@ -1674,6 +1674,13 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const refundReqEl = this._getRefundRequestFormEl();
+    if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
+      if (!refundReqEl.validateRefund()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1786,6 +1793,29 @@ export default class Fec_CaseBussiness extends LightningElement {
       return Promise.resolve();
     }
     return el.saveForSubmitIfApplicable();
+  }
+
+  _getRefundRequestFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_RefundRequestForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateRefund === "function" ||
+        typeof host.saveRefundDataIfVisible === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveRefundRequestIfApplicable() {
+    const el = this._getRefundRequestFormEl();
+    if (!el || typeof el.saveRefundDataIfVisible !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveRefundDataIfVisible();
   }
   /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
@@ -1918,6 +1948,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
+        this._saveRefundRequestIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -1962,6 +1993,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveIPPClosureIfApplicable(),
       this._saveBeneficiaryIfApplicable(),
       this._saveCardClosureRefundForSubmitIfApplicable(),
+      this._saveRefundRequestIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;
@@ -2475,5 +2507,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // this._syncHasRoutingAction(); // PhuongNT cmt, method not exist
     this.business = { ...this.business };
+  }
+  //Thangtv update logic only show routing action when mode = handling
+  get showRoutingSection() {
+   return this.isEdit && this.business?.hasRoutingAction;
   }
 }
