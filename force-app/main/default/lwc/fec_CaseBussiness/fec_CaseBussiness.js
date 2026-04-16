@@ -84,6 +84,10 @@ const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
 
+const PROCESS_BLOCK_CARD = "Card Block";
+const PROCESS_UNBLOCK_CARD = "Card Unblock";
+const PROCESS_PIN_REISSUE = "PIN Replacement";
+
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
   ACTION_ESCALATE,
@@ -1102,13 +1106,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // check show button process action PIN Reissue
-        const processActions = this.business.processActionlst || [];
-        processActions.forEach(processAction => {
-          if (processAction.value === ACTION_BLOCK_CARD || processAction.value === ACTION_PIN_REISSUE) {
-            this.showProcessAction = true;
-          }
-        });
+        // show button process action with process Block Card and PIN Reissue
+        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
+          this.showProcessAction = true;
+        }
 
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
@@ -1494,6 +1495,11 @@ export default class Fec_CaseBussiness extends LightningElement {
           toRouteTo = TYPE_QUALIFIED == value;
 
           toRevert = TYPE_UNQUALIFIED == value;
+          // PhuongNT add for Unblock Card
+          if (this.business?.code === PROCESS_UNBLOCK_CARD) {
+            this.showProcessAction = TYPE_QUALIFIED == value;
+          }
+          
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
@@ -1685,6 +1691,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    if (!this._validateFastCashForSubmit()) {
+      isAllValid = false;
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1838,6 +1848,46 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
     return Promise.resolve();
   }
+
+  _getFastCashCaseFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_FastCashCaseForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForCaseSubmit === "function" ||
+        typeof host.saveDraftIfApplicable === "function" ||
+        typeof host.saveForSubmitIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _validateFastCashForSubmit() {
+    const el = this._getFastCashCaseFormEl();
+    if (!el || typeof el.validateForCaseSubmit !== "function") {
+      return true;
+    }
+    return el.validateForCaseSubmit();
+  }
+
+  _saveFastCashDraftIfApplicable() {
+    const el = this._getFastCashCaseFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveFastCashForSubmitIfApplicable() {
+    const el = this._getFastCashCaseFormEl();
+    if (!el || typeof el.saveForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveForSubmitIfApplicable();
+  }
   /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
     const wrapper = this.template.querySelector(
@@ -1970,6 +2020,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
         this._saveRefundRequestDraftIfApplicable(),
+        this._saveFastCashDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
@@ -2015,6 +2066,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveBeneficiaryIfApplicable(),
       this._saveCardClosureRefundForSubmitIfApplicable(),
       this._saveRefundRequestIfApplicable(),
+      this._saveFastCashForSubmitIfApplicable(),
     ]);
     if (routeToEle) {
       let method = routeToEle.value;
@@ -2226,10 +2278,17 @@ export default class Fec_CaseBussiness extends LightningElement {
           // thangtv update logic for Jira KH-931
           this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
 
+          if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
+            this._refreshFecUpdateAddressAfterProcessSuccess();
+          }
+
         } else {
           this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
+          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+            this._revertFecUpdateAddressAfterProcessFailure();
+          }
         }
 
         // switch (this.processActionMethod) {
@@ -2249,10 +2308,44 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
         this.processActionMsg = msgError;
+        if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+          this._revertFecUpdateAddressAfterProcessFailure();
+        }
       })
       .finally(() => {
         this.isLoaded = true;
       });
+  }
+
+  _getFecUpdateAddressCmp() {
+    const host = this.template.querySelector(
+      '[data-fec-lwc="fec_UpdateAddress"]',
+    );
+    if (!host) {
+      return null;
+    }
+    return (
+      host.querySelector("c-fec_-update-address") || host.firstElementChild
+    );
+  }
+
+  /** Đồng bộ lại địa chỉ + mailing sau khi Process Action cập nhật thông tin KH thành công. */
+  _refreshFecUpdateAddressAfterProcessSuccess() {
+    const cmp = this._getFecUpdateAddressCmp();
+    if (
+      cmp &&
+      typeof cmp.refreshUpdatedInformationAfterProcessSuccess === "function"
+    ) {
+      cmp.refreshUpdatedInformationAfterProcessSuccess();
+    }
+  }
+
+  /** Khôi phục UI địa chỉ (fec_UpdateAddress) khi Process Action trả lỗi cập nhật thông tin KH. */
+  _revertFecUpdateAddressAfterProcessFailure() {
+    const cmp = this._getFecUpdateAddressCmp();
+    if (cmp && typeof cmp.revertUpdatedInformationToOriginal === "function") {
+      cmp.revertUpdatedInformationToOriginal();
+    }
   }
 
   find(filter) {
