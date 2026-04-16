@@ -1564,6 +1564,9 @@
 		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
 		<members>FEC_No_Data_Application_History</members>
+		<members>FEC_RESET_PIN_SUCCESS</members>
+        <members>FEC_RESET_PIN_ERROR</members>
+        <members>FEC_RESET_PIN_FAILED</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
