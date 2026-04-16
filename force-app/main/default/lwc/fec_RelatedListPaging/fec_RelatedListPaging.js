@@ -31,7 +31,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
-    
+    /** Khi không có dòng dữ liệu. Mặc định giữ "No data" cho tương thích; component cha có thể truyền khác (vd. fec_AppInfo). */
+    @api emptyStateMessage = 'No data';
 
     /* ================= STATE ================= */
     _records = [];
