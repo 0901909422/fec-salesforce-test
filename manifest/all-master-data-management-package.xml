@@ -1078,7 +1078,6 @@
         <members>FEC_Notification_History__c.FEC_Send_System__c</members>
         <members>FEC_Notification_History__c.FEC_Send_Type__c</members>
         <members>FEC_Notification_History__c.FEC_Send_User__c</members>
-        <members>FEC_Notification__c.FEC_Applicable_Roles__c</members>
         <members>FEC_Notification__c.FEC_Assigned_to_Queue__c</members>
         <members>FEC_Notification__c.FEC_Category__c</members>
         <members>FEC_Notification__c.FEC_Changed_Status__c</members>

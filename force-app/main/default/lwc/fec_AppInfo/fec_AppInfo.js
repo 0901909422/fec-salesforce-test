@@ -8,6 +8,7 @@ import FEC_Activity_ID_Label from '@salesforce/label/c.FEC_Activity_ID_Label';
 import FEC_Status_Label from '@salesforce/label/c.FEC_Status_Label';
 import FEC_Edit_Date_Label from '@salesforce/label/c.FEC_Edit_Date_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_No_Data_Application_History from '@salesforce/label/c.FEC_No_Data_Application_History';
 
 export default class Fec_AppInfo extends LightningElement {
     @api recordId;
@@ -23,8 +24,13 @@ export default class Fec_AppInfo extends LightningElement {
         activityIdLabel: FEC_Activity_ID_Label,
         statusLabel: FEC_Status_Label,
         editDateLabel: FEC_Edit_Date_Label,
-        msgErrorAPI: FEC_MSG_Error_API_Label
+        msgErrorAPI: FEC_MSG_Error_API_Label,
+        noDataApplicationHistory: FEC_No_Data_Application_History
     };
+
+    get emptyStateMessage() {
+        return this.customLabel.noDataApplicationHistory;
+    }
 
     get showDataTable() {
         return !this.errorText;
