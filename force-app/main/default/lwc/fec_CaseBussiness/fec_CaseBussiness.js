@@ -1675,15 +1675,13 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     const refundReqEl = this._getRefundRequestFormEl();
-    if (refundReqEl) {
-      if (typeof refundReqEl.validateForSubmit === "function") {
-        if (!refundReqEl.validateForSubmit()) {
-          isAllValid = false;
-        }
-      } else if (typeof refundReqEl.validateRefund === "function") {
-        if (!refundReqEl.validateRefund()) {
-          isAllValid = false;
-        }
+    if (refundReqEl && typeof refundReqEl.validateForSubmit === "function") {
+      if (!refundReqEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    } else if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
+      if (!refundReqEl.validateRefund()) {
+        isAllValid = false;
       }
     }
 
@@ -2530,5 +2528,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // this._syncHasRoutingAction(); // PhuongNT cmt, method not exist
     this.business = { ...this.business };
+  }
+  //Thangtv update logic only show routing action when mode = handling
+  get showRoutingSection() {
+   return this.isEdit && this.business?.hasRoutingAction;
   }
 }
