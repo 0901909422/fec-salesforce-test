@@ -1452,6 +1452,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Notification_History__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Notification_History__c.FEC_Failure_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
