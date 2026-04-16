@@ -68,5 +68,18 @@ implements Queueable, Database.AllowsCallouts {
         hist.FEC_Mobile_App_Account__c    = result.hasMobileAppAccount ? FEC_ConstantCommon.TEXT_YES : FEC_ConstantCommon.TEXT_NO;
 
         update hist;
+
+        // 15/04/2026 PhuongNT add
+        List<Case> cases = [SELECT Id FROM Case WHERE FEC_Account_or_Contract__c = :historyId];
+        if (!cases.isEmpty()) {
+            for (Case c : cases) {
+                c.FEC_Recipient_Name__c = result.customerName;
+                c.FEC_Phone_Number__c = result.primaryPhone;
+                c.FEC_Recipient_Phone_Number__c = result.primaryPhone;
+            }
+            FEC_CaseTriggerHandler.isExecuting = true;
+            update cases;
+            FEC_CaseTriggerHandler.isExecuting = false;
+        }
     }
 }

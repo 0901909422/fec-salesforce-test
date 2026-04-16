@@ -8,14 +8,29 @@ public without sharing class FEC_Notification {
         public Id caseId;
         public String toEmail;
         public String subject;
+        public String header;
         public String body;
+        public String footer;
 
-        public EmailInfo(Id caseId, String toEmail, String subject, String body) {
+        public EmailInfo(Id caseId, String toEmail, String subject, String header, String body, String footer) {
             this.caseId = caseId;
             this.toEmail = toEmail;
             this.subject = subject;
+            this.header = header;
             this.body = body;
+            this.footer = footer;
         }
+    }
+
+    /** Đồng bộ thứ tự với từng phần tử EmailInfo khi gửi bulk từ routing. */
+    public class RoutingEmailHistoryInput {
+        public Id caseId;
+        public Id notificationRuleId;
+        public String stageName;
+        public String templateDisplayName;
+        public String channelName;
+        public String targetGroup;
+        public String notificationRuleName;
     }
     
     @AuraEnabled
@@ -143,8 +158,48 @@ public without sharing class FEC_Notification {
         return targetEmail;
     }
 
+    /**
+     * Parse FEC_Customer_Type__c (multi-select lưu dạng "a;b;c" hoặc một giá trị picklist đơn).
+     */
+    private static Set<String> parseCustomerTypeTokens(String raw) {
+        Set<String> out = new Set<String>();
+        if (String.isBlank(raw)) {
+            return out;
+        }
+        for (String p : raw.split(';')) {
+            String t = p == null ? '' : p.trim();
+            if (String.isNotBlank(t)) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Hiển thị notification nếu Customer Type của cấu hình chứa giá trị Customer Type trên Case,
+     * hoặc chứa token "All" (áp dụng mọi loại KH).
+     */
+    private static Boolean notificationMatchesCaseCustomerType(String notifCustomerTypeRaw, String caseCustomerType) {
+        Set<String> notifTokens = parseCustomerTypeTokens(notifCustomerTypeRaw);
+        if (notifTokens.isEmpty()) {
+            return false;
+        }
+        if (notifTokens.contains(FEC_ConstantCommon.CASE_ALL_REQUEST)) {
+            return true;
+        }
+        if (String.isBlank(caseCustomerType)) {
+            return false;
+        }
+        return notifTokens.contains(caseCustomerType.trim());
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId) {
+        System.debug('--- [getAvailableNotifications] caseId: ' + caseId);
+        System.debug('--- [getAvailableNotifications] productTypeId: ' + productTypeId);
+        System.debug('--- [getAvailableNotifications] categoryId: ' + categoryId);
+        System.debug('--- [getAvailableNotifications] subCategoryId: ' + subCategoryId);
+        System.debug('--- [getAvailableNotifications] subCodeId: ' + subCodeId);
         // 1. Fetch current Case with required fields for Notification and Email logic
         Case currentCase = [SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, 
                                    FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, 
@@ -162,21 +217,29 @@ public without sharing class FEC_Notification {
         String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
         String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
 
-        Set<String> validCustomerTypes = new Set<String>{currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_CUSTOMER};
-        // 3. Query Notification satisfying conditions
-        List<FEC_Notification__c> validNotifs = [SELECT Id, Name, FEC_Notification_Template__c, 
-                                                    FEC_Notification_Template__r.Name,
-                                                    FEC_Notification_Channel__r.Name,
-                                                    FEC_Target_Group__c
-                                             FROM FEC_Notification__c 
-                                             WHERE FEC_Customer_Type__c IN :validCustomerTypes
-                                             AND FEC_Product_Type__c = :finalProductType
-                                             AND FEC_Category__c = :finalCategory
-                                             AND FEC_SubCategory__c = :finalSubCategory
-                                             AND FEC_SubCode__c = :finalSubCode
-                                             AND FEC_Case_Stage__c = :currentCase.FEC_Current_Case_Stage__c
-                                             AND FEC_Notification_Status__c = true 
-                                             AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL];
+        // 3. Query Notification satisfying conditions (FEC_Customer_Type__c = Multi-Select → INCLUDES)
+        String caseCustomerType = currentCase.FEC_Customer_Type__c;
+
+        // 3. Lọc NOC + stage + channel, sau đó lọc Customer Type (notification chứa giá trị Case hoặc All)
+        List<FEC_Notification__c> queried = [
+            SELECT Id, Name, FEC_Notification_Template__c, FEC_Notification_Template__r.Name,
+                   FEC_Notification_Channel__r.Name, FEC_Target_Group__c, FEC_Customer_Type__c
+            FROM FEC_Notification__c
+            WHERE FEC_Product_Type__c = :finalProductType
+              AND FEC_Category__c = :finalCategory
+              AND FEC_SubCategory__c = :finalSubCategory
+              AND FEC_SubCode__c = :finalSubCode
+              AND FEC_Case_Stage__c = :currentCase.FEC_Current_Case_Stage__c
+              AND FEC_Notification_Status__c = true
+              AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
+        ];
+
+        List<FEC_Notification__c> validNotifs = new List<FEC_Notification__c>();
+        for (FEC_Notification__c notif : queried) {
+            if (notificationMatchesCaseCustomerType(notif.FEC_Customer_Type__c, caseCustomerType)) {
+                validNotifs.add(notif);
+            }
+        }
         
         List<Map<String, String>> options = new List<Map<String, String>>();
         
@@ -190,6 +253,7 @@ public without sharing class FEC_Notification {
                     'targetEmail' => targetEmail 
                 });
         }
+        System.debug('--- [getAvailableNotifications] options: ' + options);
         return options;
     }
 
@@ -208,47 +272,180 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled
-    public static void sendManualEmail(Id caseId, Id templateId, String toEmail) {
-        // 1. Query Case
-        Case c = [SELECT Id, FEC_Customer_Type__c, 
-                         FEC_Account_or_Contract__r.FEC_Email__c,
-                         FEC_Interaction__r.FEC_Interaction_Email__c,
-                         FEC_Case_Email__c, ContactId
-                  FROM Case WHERE Id = :caseId LIMIT 1];
-                  
-        // 2. Use helper method to extract email
+    public static void sendManualEmail(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId) {
+        User sendingUser = [
+            SELECT Email, UserRole.Name
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        String manualUserLocal = FEC_NotificationHistoryService.emailLocalPart(sendingUser.Email);
+        String manualUserRole = sendingUser.UserRole != null ? sendingUser.UserRole.Name : null;
+
+        Case c = [
+            SELECT
+                Id,
+                FEC_Customer_Type__c,
+                FEC_Stage_Name__c,
+                FEC_Account_or_Contract__r.FEC_Email__c,
+                FEC_Interaction__r.FEC_Interaction_Email__c,
+                FEC_Case_Email__c,
+                ContactId
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        FEC_Notification__c notifRule;
+        if (fecNotificationConfigId != null) {
+            List<FEC_Notification__c> rules = [
+                SELECT Id, Name, FEC_Target_Group__c, FEC_Notification_Channel__r.Name
+                FROM FEC_Notification__c
+                WHERE Id = :fecNotificationConfigId
+                LIMIT 1
+            ];
+            notifRule = rules.isEmpty() ? null : rules[0];
+        } else {
+            notifRule = null;
+        }
+
+        String channelLabel = FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL;
+        String targetGrp = (notifRule != null && String.isNotBlank(notifRule.FEC_Target_Group__c))
+            ? notifRule.FEC_Target_Group__c
+            : '';
+        if (
+            notifRule != null &&
+            notifRule.FEC_Notification_Channel__r != null &&
+            String.isNotBlank(notifRule.FEC_Notification_Channel__r.Name)
+        ) {
+            channelLabel = notifRule.FEC_Notification_Channel__r.Name;
+        }
+        String notifRuleName = notifRule != null ? notifRule.Name : '';
+
         String targetEmail;
         if (String.isNotBlank(toEmail)) {
             targetEmail = toEmail;
         } else {
             targetEmail = getTargetEmailFromCase(c);
         }
-        if(String.isBlank(targetEmail)) {
+        if (String.isBlank(targetEmail)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Email_No_Valid_Address_Found,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
             throw new AuraHandledException(System.Label.FEC_Email_No_Valid_Address_Found);
         }
-        if(String.isBlank(templateId)) {
+        if (String.isBlank(templateId)) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    System.Label.FEC_Template_Not_Found,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
             throw new AuraHandledException(System.Label.FEC_Template_Not_Found);
         }
 
-        FEC_Template__c template = FEC_TemplateController.getTemplate(templateId);  
+        FEC_Template__c template;
+        try {
+            template = FEC_TemplateController.getTemplate(templateId);
+        } catch (Exception exLoadTpl) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    exLoadTpl.getMessage(),
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
+            throw new AuraHandledException(exLoadTpl.getMessage());
+        }
+
         String senderEmail = '';
         FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
         if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
             senderEmail = systemConfig.FEC_Sender_Email__c;
         }
-
-        String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-        String fullBody = '';
+        String header = '';
+        String footer = '';
+        String subject = String.isNotBlank(template.FEC_Subject_Line__c)
+            ? template.FEC_Subject_Line__c
+            : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
-            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
+            header += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
         }
-        fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
-            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+            footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
         }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, fullBody);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, header, template.FEC_Body__c, footer);
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    template.Name,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
+                    null,
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
         } catch (Exception e) {
+            FEC_NotificationHistoryService.insertRow(
+                FEC_NotificationHistoryService.buildRow(
+                    caseId,
+                  notifRule != null ? notifRule.Id : null,
+                    c.FEC_Stage_Name__c,
+                    template != null ? template.Name : null,
+                    notifRuleName,
+                    channelLabel,
+                    targetGrp,
+                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    e.getMessage(),
+                    manualUserLocal,
+                    manualUserRole,
+                    System.now()
+                )
+            );
             throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
         }
     }
@@ -394,6 +591,14 @@ public without sharing class FEC_Notification {
     // 2. HÀM XỬ LÝ GỬI EMAIL BULK CHUẨN BEST PRACTICE (Dùng cho Trigger)
     // =========================================================
     public static void executeSendEmailsBulk(List<EmailInfo> emailsToSend, String fromEmail) {
+        executeSendEmailsBulk(emailsToSend, fromEmail, null);
+    }
+
+    public static void executeSendEmailsBulk(
+        List<EmailInfo> emailsToSend,
+        String fromEmail,
+        List<RoutingEmailHistoryInput> historyInputs
+    ) {
         if (emailsToSend == null || emailsToSend.isEmpty()) return;
 
         // NEW: Resolve Merge Fields natively for the entire Bulk!
@@ -417,10 +622,11 @@ public without sharing class FEC_Notification {
         // 2. Gom dữ liệu vào List thay vì thực thi ngay
         for (EmailInfo info : emailsToSend) {
             // Build Email
+            String fullBody = info.header + info.body + info.footer;
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(info.toEmail.split(','));
             mail.setSubject(info.subject);
-            mail.setHtmlBody(info.body != null ? info.body.replace('\n', '<br/>') : '');
+            mail.setHtmlBody(info.body != null ? fullBody?.replace('\n', '<br/>') : '');
             mail.setWhatId(info.caseId);
             mail.setSaveAsActivity(false); 
             
@@ -444,9 +650,44 @@ public without sharing class FEC_Notification {
         }
 
         // 3. Thực thi DML và Callout 1 LẦN DUY NHẤT
+        List<Messaging.SendEmailResult> sendResults = new List<Messaging.SendEmailResult>();
         if (!mailList.isEmpty()) {
             // false: Gửi các email không lỗi ngay cả khi có 1 email bị lỗi
-            Messaging.sendEmail(mailList, false); 
+            sendResults = Messaging.sendEmail(mailList, false);
+        }
+
+        if (
+            historyInputs != null &&
+            historyInputs.size() == mailList.size() &&
+            !mailList.isEmpty()
+        ) {
+            List<FEC_Notification_History__c> histRows = new List<FEC_Notification_History__c>();
+            for (Integer i = 0; i < historyInputs.size(); i++) {
+                RoutingEmailHistoryInput hi = historyInputs[i];
+                Boolean ok = (i < sendResults.size()) && sendResults[i].isSuccess();
+                String failMsg = ok ? null : ((i < sendResults.size()) ? FEC_NotificationHistoryService.joinSendEmailErrors(sendResults[i]) : null);
+                if (!ok && String.isBlank(failMsg)) {
+                    failMsg = 'Email send failed';
+                }
+                histRows.add(
+                    FEC_NotificationHistoryService.buildRow(
+                        hi.caseId,
+                        hi.notificationRuleId,
+                        hi.stageName,
+                        hi.templateDisplayName,
+                        hi.notificationRuleName,
+                        hi.channelName,
+                        hi.targetGroup,
+                        FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                        ok ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        failMsg,
+                        FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                        null,
+                        System.now()
+                    )
+                );
+            }
+            FEC_NotificationHistoryService.insertRows(histRows);
         }
 
         if (!emailMessageLogs.isEmpty()) {
@@ -461,8 +702,8 @@ public without sharing class FEC_Notification {
     // =========================================================
     // 3. HÀM CHO LWC (Cập nhật để gọi chung hàm Bulk ở trên)
     // =========================================================
-    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String body) {
-        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, body);
+    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String header, String body, String footer) {
+        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, header, body, footer);
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
@@ -479,7 +720,7 @@ public without sharing class FEC_Notification {
                 senderEmail = systemConfig.FEC_Sender_Email__c;
             }
 
-            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, body);
+            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, '', body, '');
             bulkResolveMergeFields(new List<EmailInfo>{ previewEmail }, senderEmail);
 
             template.FEC_Subject_Line__c = previewEmail.subject;

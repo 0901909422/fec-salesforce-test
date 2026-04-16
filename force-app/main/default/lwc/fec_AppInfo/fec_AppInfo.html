@@ -16,7 +16,7 @@
 
                     <template if:true={showDataTable}>
                         <c-fec_-related-list-paging records={histories} data-section="history" columns={columns}
-                            sorted-by="user">
+                            empty-state-message={emptyStateMessage} sorted-by="user">
                         </c-fec_-related-list-paging>
                     </template>
 
