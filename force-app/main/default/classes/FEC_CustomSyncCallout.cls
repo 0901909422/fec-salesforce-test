@@ -42,23 +42,33 @@ public with sharing class FEC_CustomSyncCallout {
         }
         return log;
     } 
-    private static String toJson(CustomSync__c cus,List<SObject> scope){ 
-        String temporaryJson = JSON.serialize(scope);
-        List<Object> cleanedRecords = (List<Object>) JSON.deserializeUntyped(temporaryJson);
- 
-        for (Object recordObj : cleanedRecords) {
-            Map<String, Object> recordMap = (Map<String, Object>) recordObj; 
-            for (String key : recordMap.keySet()) {
-                Object value = recordMap.get(key); 
-                if (value instanceof Map<String, Object>) {
-                    Map<String, Object> childMap = (Map<String, Object>) value; 
-                    childMap.remove('attributes');  
-                }
+    private static String toJson(CustomSync__c cus, List<SObject> scope) {
+        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cus.RequestBodyMapping__c);
+        List<Map<String, Object>> mappedRecords = new List<Map<String, Object>>();
+
+        for (SObject record : scope) {
+            Map<String, Object> row = new Map<String, Object>();
+            for (String jsonKey : mapping.keySet()) {
+                String sfField = (String) mapping.get(jsonKey);
+                row.put(jsonKey, getFieldValue(record, sfField));
             }
-        } 
+            mappedRecords.add(row);
+        }
+
         Map<String, Object> finalWrapper = new Map<String, Object>();
         finalWrapper.put('tableName', cus.TableName__c);
-        finalWrapper.put('records', cleanedRecords);
-        return  JSON.serialize(finalWrapper);
+        finalWrapper.put('records', mappedRecords);
+        return JSON.serialize(finalWrapper);
+    }
+
+    private static Object getFieldValue(SObject record, String fieldPath) {
+        List<String> parts = fieldPath.split('\\.');
+        SObject current = record;
+        for (Integer i = 0; i < parts.size() - 1; i++) {
+            if (current == null) return null;
+            current = current.getSObject(parts[i]);
+        }
+        if (current == null) return null;
+        return current.get(parts[parts.size() - 1]);
     }
 }

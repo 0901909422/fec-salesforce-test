@@ -15,8 +15,8 @@
         <members>CustomSync__c.SyncFailed__c</members>
         <members>CustomSync__c.ProcessingQuantity__c</members>
         <members>CustomSync__c.WhatSync__c</members>
-        <members>CustomSync__c.Fields__c</members> 
         <members>CustomSync__c.TargetObject__c</members> 
+        <members>CustomSync__c.RequestBodyMapping__c</members>
 
         <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
@@ -49,6 +49,7 @@
         <members>FEC_CustomSyncAllInOneTest</members>  
         <name>ApexClass</name>
     </types>
+    
     <types>
         <members>FEC_Common_System_Setting</members>
         <name>PermissionSet</name>

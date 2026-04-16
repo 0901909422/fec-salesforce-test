@@ -770,7 +770,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>CustomSync__c.Fields__c</field>
+        <field>CustomSync__c.RequestBodyMapping__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

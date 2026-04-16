@@ -79,11 +79,21 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     }
 
     public static String getFields(CustomSync__c cus) { 
-    if (Test.isRunningTest())  return 'SELECT ' + cus.Fields__c + ' FROM ' + cus.TargetObject__c; 
+        String fieldList = extractFieldsFromMapping(cus.RequestBodyMapping__c);
+        if (Test.isRunningTest()) return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c; 
 
-     String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
-                        ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
-                        ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName';  
-        return 'SELECT ' + cus.Fields__c + ' FROM ' + cus.TargetObject__c + wherePart;
+        String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
+                           ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
+                           ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName';  
+        return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c + wherePart;
+    }
+
+    public static String extractFieldsFromMapping(String mappingJson) {
+        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(mappingJson);
+        Set<String> fields = new Set<String>();
+        for (String key : mapping.keySet()) {
+            fields.add((String) mapping.get(key));
+        }
+        return String.join(new List<String>(fields), ', ');
     }
 }
