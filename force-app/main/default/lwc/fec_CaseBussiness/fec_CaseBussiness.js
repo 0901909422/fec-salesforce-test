@@ -384,7 +384,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   set isEdit(value) {
     const prev = this._isEdit;
-    this._isEdit = Boolean(value);
+    this._isEdit = value === true || value === "true";
     if (prev !== this._isEdit && this.business?.sectionlst) {
       this._applyEditModeToBusiness();
     }
@@ -399,8 +399,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track activeSectionlst = ["routing-action"];
 
   routingAccordionSectionKey = "routing-action";
-
-  _routingSelectLockedForIpp = false;
 
   _ippClosureHasEligibleRows = false;
 
@@ -641,7 +639,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   content;
 
   get isRoutingActionDisabled() {
-    return !this._isEdit || this._routingSelectLockedForIpp === true;
+    return !this._isEdit;
   }
 
   get showRouteTo() {
@@ -817,9 +815,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       Array.isArray(this.business.routingActionlst) &&
       this.business.routingActionlst.length > 0;
     this._updateDynCmpIsEditFlags();
-    if (!this._isEdit) {
-      this._routingSelectLockedForIpp = false;
-    }
     this.business = { ...this.business };
   }
 
@@ -923,7 +918,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
-    this._routingSelectLockedForIpp = false;
     this._ippClosureHasEligibleRows = false;
 
     getByCase({
@@ -1861,13 +1855,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → khóa routing + auto Route to */									
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */									
   handleIppClosureLoad(event) {
     const d = event.detail || {};
     this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
 
     if (d.noEligibleForClosure) {
-      this._routingSelectLockedForIpp = false;
       Promise.resolve().then(() => {
         const hasReject = this.business.routingActionlst?.some(
           (a) => a.value === ACTION_REJECT,
@@ -1887,14 +1880,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     if (d.hasEligibleRows && d.savedIppToCloseOnCase) {
-      this._routingSelectLockedForIpp = true;
       Promise.resolve().then(() => {
         this._applyIppClosureRouteToWhenEditable();
       });
       return;
     }
 
-    this._routingSelectLockedForIpp = false;
   }
 
   handleIppClosureSelection(event) {
@@ -1904,10 +1895,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
     if (!has) {
-      this._routingSelectLockedForIpp = false;
       return;
     }
-    this._routingSelectLockedForIpp = true;
     Promise.resolve().then(() => {
       this._applyIppClosureRouteToWhenEditable();				   
     });
