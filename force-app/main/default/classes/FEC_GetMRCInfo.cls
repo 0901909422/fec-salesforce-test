@@ -115,25 +115,7 @@ public with sharing class FEC_GetMRCInfo {
     return env;
   }
 
-  /**
-   * Nginx thường 301 canonical hóa path thiếu dấu / cuối; Apex không tự follow redirect POST.
-   */
-  private static String appendTrailingSlashBeforeQuery(String url) {
-    if (String.isBlank(url)) {
-      return url;
-    }
-    String pathPart = url;
-    String suffix = '';
-    Integer q = url.indexOf('?');
-    if (q >= 0) {
-      pathPart = url.substring(0, q);
-      suffix = url.substring(q);
-    }
-    if (!pathPart.endsWith('/')) {
-      pathPart = pathPart + '/';
-    }
-    return pathPart + suffix;
-  }
+
 
   public static HttpResponse sendRequest(String envelope) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -143,7 +125,7 @@ public with sharing class FEC_GetMRCInfo {
 
     String endpoint = apiSetting?.FEC_Call_Mock__c
       ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
-      : appendTrailingSlashBeforeQuery(
+      : (
           apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c
         );
     System.debug('endpoint: ' + endpoint);
@@ -286,7 +268,7 @@ public with sharing class FEC_GetMRCInfo {
   public static MRCInfoResult getMRCInfo(MRCInfoRequest req) {
     MRCInfoResult finalResult = new MRCInfoResult();
     System.debug('getMRCInfo input: ' + (req == null ? 'null' : JSON.serialize(req)));
-    String transId = FEC_CommonUltils.generateTransactionId();
+    String transId = FEC_CommonUltils.generateTransactionUUID();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
     try {
@@ -310,7 +292,7 @@ public with sharing class FEC_GetMRCInfo {
       FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
       String endpoint = apiSetting?.FEC_Call_Mock__c
         ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
-        : appendTrailingSlashBeforeQuery(
+        : (
             apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c
           );
 	  
