@@ -815,6 +815,6 @@
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
 	</types>
->>>>>>> manifest/fis-uat-2/package-fix-uat-2.xml
+
     <version>65.0</version>
 </Package>
