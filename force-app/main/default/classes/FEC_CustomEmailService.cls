@@ -124,23 +124,36 @@ public without sharing class FEC_CustomEmailService {
 
     @AuraEnabled
     public static List<SObject> getEmailTemplates() {
-        // Lấy email của các Queue mà user đang là member
+        // Lấy email của các Queue mà user đang là member (direct hoặc qua Public Group)
         Set<String> userMailboxEmails = new Set<String>();
         try {
+            Id userId = UserInfo.getUserId();
+            // Bước 1: Lấy User Group của current user
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :userId LIMIT 1];
+            String userGroup = currentUser.FEC_User_Group__c;
+
+            // Bước 2: Lấy tất cả User có cùng User Group
+            Set<Id> sameGroupUserIds = new Set<Id>();
+            if (String.isNotBlank(userGroup)) {
+                for (User u : [SELECT Id FROM User WHERE FEC_User_Group__c = :userGroup AND IsActive = true LIMIT 500]) {
+                    sameGroupUserIds.add(u.Id);
+                }
+            }
+            sameGroupUserIds.add(userId);
+
+            // Bước 3: Lấy Queue mà những user đó là member
             Set<Id> queueIds = new Set<Id>();
-            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
+            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId IN :sameGroupUserIds]) {
                 queueIds.add(gm.GroupId);
             }
+
             if (!queueIds.isEmpty()) {
                 Set<String> queueNames = new Set<String>();
                 for (Group q : [SELECT Name FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                     queueNames.add(q.Name);
                 }
                 if (!queueNames.isEmpty()) {
-                    // Query trực tiếp theo PersonalName = tên Queue
-                    for (SObject r : Database.query(
-                        'SELECT Address, PersonalName FROM EmailRoutingAddress WHERE PersonalName IN :queueNames'
-                    )) {
+                    for (SObject r : [SELECT Address FROM EmailRoutingAddress WHERE PersonalName IN :queueNames]) {
                         String addr = (String) r.get('Address');
                         if (String.isNotBlank(addr)) {
                             userMailboxEmails.add(addr.toLowerCase());
@@ -225,21 +238,34 @@ public without sharing class FEC_CustomEmailService {
         String FIELD_ADDRESS = 'Address';
         String FIELD_PERSONAL_NAME = 'PersonalName';
         try {
-            // Lấy Queue Id mà user đang là member
+            Id userId = UserInfo.getUserId();
+            // Bước 1: Lấy User Group của current user
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :userId LIMIT 1];
+            String userGroup = currentUser.FEC_User_Group__c;
+
+            // Bước 2: Lấy tất cả User có cùng User Group
+            Set<Id> sameGroupUserIds = new Set<Id>();
+            if (String.isNotBlank(userGroup)) {
+                for (User u : [SELECT Id FROM User WHERE FEC_User_Group__c = :userGroup AND IsActive = true LIMIT 500]) {
+                    sameGroupUserIds.add(u.Id);
+                }
+            }
+            sameGroupUserIds.add(userId); // luôn include current user
+
+            // Bước 3: Lấy Queue mà những user đó là member
             Set<Id> userQueueIds = new Set<Id>();
-            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
+            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId IN :sameGroupUserIds]) {
                 userQueueIds.add(gm.GroupId);
             }
-            // Lấy EmailRoutingAddress của các Queue đó
+
+            // Bước 4: Lấy EmailRoutingAddress của các Queue đó
             if (!userQueueIds.isEmpty()) {
-                // Lấy tên và email của các Queue mà user là member
                 Set<String> queueNames = new Set<String>();
                 Set<String> queueEmails = new Set<String>();
                 for (Group q : [SELECT Name, Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                     queueNames.add(q.Name);
                     if (String.isNotBlank(q.Email)) queueEmails.add(q.Email.toLowerCase());
                 }
-                // 1 query duy nhất: lấy tất cả EmailRoutingAddress, filter theo tên Queue hoặc address Queue
                 if (!queueNames.isEmpty() || !queueEmails.isEmpty()) {
                     for (SObject r : [
                         SELECT Id, Address, PersonalName FROM EmailRoutingAddress
