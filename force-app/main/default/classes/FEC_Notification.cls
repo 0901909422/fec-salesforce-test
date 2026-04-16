@@ -221,8 +221,7 @@ public without sharing class FEC_Notification {
                        'FEC_Notification_Channel__r.Name, ' +
                        'FEC_Target_Group__c ' +
                        'FROM FEC_Notification__c ' +
-                       'WHERE FEC_Customer_Type__c IN :validCustomerTypes ' +
-                       'AND FEC_Case_Stage__c = :currentStage ' +
+                       'WHERE FEC_Case_Stage__c = :currentStage  ' +
                        'AND FEC_Notification_Status__c = true ' +
                        'AND FEC_Notification_Channel__r.Name = :emailChannel';
                        
