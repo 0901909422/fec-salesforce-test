@@ -1182,6 +1182,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Additional_Info__c.FEC_Last_4_Digits__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Additional_Info__c.FEC_New_Case_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>

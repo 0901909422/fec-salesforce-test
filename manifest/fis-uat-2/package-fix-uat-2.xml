@@ -757,5 +757,9 @@
 		<members>QuillEditor</members>
         <name>StaticResource</name>
     </types>
+	<types>
+		<members>FEC_Additional_Info__c.FEC_Last_Four_Digits</members>
+		<name>ValidationRule</name>
+	</types>
     <version>65.0</version>
 </Package>
