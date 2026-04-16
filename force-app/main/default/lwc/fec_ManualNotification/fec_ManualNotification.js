@@ -26,7 +26,11 @@ import searchInternalUsers from '@salesforce/apex/FEC_Notification.searchInterna
 import { 
     SEARCH_PLACEHOLDER, 
     TARGET_GROUP_INTERNAL_USER,
-    SEARCH_INTERNAL_USERS
+    SEARCH_INTERNAL_USERS,
+    PATTERN_EMAIL_FEC_STRICT,
+    MSG_INVALID_EMAIL_FORMAT,
+    ERROR_MODAL_TITLE,
+    MSG_ENTER_EMAIL_CORRECTLY
 } from 'c/fec_CommonConst';
 
 
@@ -268,6 +272,25 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         }
     }
 
+    handleEmailChange(event) {
+        this.targetEmail = event.target.value;
+        const input = event.target;
+        const val = this.targetEmail ? this.targetEmail.toString().trim() : "";
+        if (!val) {
+            input.setCustomValidity("");
+        } else {
+            const oneLevel = PATTERN_EMAIL_FEC_STRICT;
+            if (!oneLevel.test(val)) {
+                input.setCustomValidity(
+                  MSG_INVALID_EMAIL_FORMAT
+                );
+            } else {
+                input.setCustomValidity("");
+            }
+        }
+        input.reportValidity();
+    }
+
     get isActionDisabled() {
         return !this.selectedNotificationId;
     }
@@ -325,10 +348,33 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     }
 
     handleSend() {
+        console.log('--- [handleSend] targetEmail: ' + this.targetEmail);
+        let isValid = true;
+        
+        const inputs = this.template.querySelectorAll('lightning-input');
+        inputs.forEach(input => {
+            if (!input.reportValidity()) {
+                isValid = false;
+            }
+        });
+        if (!this.targetEmail) {
+            isValid = false;
+        }
+        if (!isValid) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: ERROR_MODAL_TITLE,
+                    message: MSG_ENTER_EMAIL_CORRECTLY,
+                    variant: 'error',
+                })
+            );
+            return;
+        }
+
         sendManualEmail({
             caseId: this.recordId,
             templateId: this.selectedTemplateId,
-            toEmail: this.selectedTargetGroup === 'Internal User' ? this.targetEmail : '',
+            toEmail: this.targetEmail,
             fecNotificationConfigId: this.selectedNotificationId
         })
             .then(() => {

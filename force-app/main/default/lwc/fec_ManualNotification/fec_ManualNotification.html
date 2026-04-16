@@ -33,12 +33,12 @@
           <template if:true={selectedNotificationId}>
             <div class="slds-grid slds-gutters slds-m-top_medium">
               <div class="slds-col slds-size_1-of-2">
-                <template if:false="{isInternalUser}">
+                <template if:false={isInternalUser}>
                   <lightning-input
                     type="text"
                     label={label.FEC_Target_Email}
                     value={targetEmail}
-                    readonly
+                    onchange={handleEmailChange}
                   >
                   </lightning-input>
                 </template>
