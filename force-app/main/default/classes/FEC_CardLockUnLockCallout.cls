@@ -91,11 +91,25 @@ public without sharing class FEC_CardLockUnLockCallout {
                 'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
 
+            String blockCodeParam = '';
+            String last4DigitParam = '';
+            String accountNumberParam = '';
+            FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
+            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c) && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+                blockCodeParam = FEC_ConstantCommon.CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE;
+                last4DigitParam = FEC_ConstantCommon.CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT;
+                accountNumberParam = FEC_ConstantCommon.CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER;
+            }else{
+                blockCodeParam = blockCode;
+                last4DigitParam = last4Digit;
+                accountNumberParam = accountNumber;
+            }
+
             request.body = new Map<String, String>{
-                'BlockCode' => blockCode,
+                'BlockCode' => blockCodeParam,
                 'Func' => funcCode,
-                'Last4Digit' => last4Digit,
-                'AccountNumber' => accountNumber
+                'Last4Digit' => last4DigitParam,
+                'AccountNumber' => accountNumberParam
             };
 
             String requestBodyJson = JSON.serialize(request.body);

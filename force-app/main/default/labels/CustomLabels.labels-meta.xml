@@ -8246,7 +8246,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Danh xung label</shortDescription>
-        <value>Danh xưng</value>
+        <value>Title</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh_Chi</fullName>
@@ -10595,9 +10595,9 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
-        <value>Mở khóa PIN thành công!</value>
+        <value>Mở khóa PIN thành công.</value>
     </labels>
-</CustomLabels>
+    <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -10628,5 +10628,12 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Data_Application_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không tìm thấy kết quả (Application History)</shortDescription>
+        <value>Không tìm thấy kết quả</value>
     </labels>
 </CustomLabels>

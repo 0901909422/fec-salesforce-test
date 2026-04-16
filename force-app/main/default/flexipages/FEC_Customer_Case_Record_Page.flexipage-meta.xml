@@ -177,12 +177,6 @@
                 <identifier>c_fec_CaseDetail_Customer</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_ManualNotification</componentName>
-                <identifier>c_fec_ManualNotification</identifier>
-            </componentInstance>
-        </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -434,16 +428,34 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Stage_Name__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Type__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Channel__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Target_Group__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Send_Type__c</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>FEC_Send_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>FEC_Failure_Reason__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Send_User__c</value>
+                            <value>FEC_User__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -1348,6 +1360,12 @@
                 </componentInstanceProperties>
                 <componentName>fec_CaseEditNOC</componentName>
                 <identifier>c_fec_CaseEditNOC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ManualNotification</componentName>
+                <identifier>c_fec_ManualNotification</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>

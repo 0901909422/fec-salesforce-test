@@ -74,7 +74,7 @@ public without sharing class FEC_PINReissueServiceCallout {
             String nationalIdParam = '';
             String mobileParam = '';
             FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
-            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c) && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.RESET_PIN_NON_PRODUCTION) {
+            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c) && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
                 nationalIdParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_NID;
                 mobileParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_PHONE;
             }else{
