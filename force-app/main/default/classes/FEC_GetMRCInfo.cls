@@ -115,6 +115,26 @@ public with sharing class FEC_GetMRCInfo {
     return env;
   }
 
+  /**
+   * Nginx thường 301 canonical hóa path thiếu dấu / cuối; Apex không tự follow redirect POST.
+   */
+  private static String appendTrailingSlashBeforeQuery(String url) {
+    if (String.isBlank(url)) {
+      return url;
+    }
+    String pathPart = url;
+    String suffix = '';
+    Integer q = url.indexOf('?');
+    if (q >= 0) {
+      pathPart = url.substring(0, q);
+      suffix = url.substring(q);
+    }
+    if (!pathPart.endsWith('/')) {
+      pathPart = pathPart + '/';
+    }
+    return pathPart + suffix;
+  }
+
   public static HttpResponse sendRequest(String envelope) {
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
@@ -123,7 +143,10 @@ public with sharing class FEC_GetMRCInfo {
 
     String endpoint = apiSetting?.FEC_Call_Mock__c
       ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
-      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+      : appendTrailingSlashBeforeQuery(
+          apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c
+        );
+    System.debug('endpoint: ' + endpoint);
     HttpResponse res = FEC_CommonUltils.calloutApi(
       endpoint,
       FEC_ConstantCommon.API_METHOD_POST,
@@ -262,6 +285,7 @@ public with sharing class FEC_GetMRCInfo {
   @AuraEnabled
   public static MRCInfoResult getMRCInfo(MRCInfoRequest req) {
     MRCInfoResult finalResult = new MRCInfoResult();
+    System.debug('getMRCInfo input: ' + (req == null ? 'null' : JSON.serialize(req)));
     String transId = FEC_CommonUltils.generateTransactionId();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     String envelope = buildEnvelope(req, transId, timestamp);
@@ -270,12 +294,26 @@ public with sharing class FEC_GetMRCInfo {
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
 
+      if (res != null) {
+        System.debug('Status Code: ' + res.getStatusCode());
+        System.debug('Status: ' + res.getStatus());
+        System.debug('Response Body: ' + res.getBody());
+        for (String key : res.getHeaderKeys()) {
+            System.debug('Header: ' + key + ' = ' + res.getHeader(key));
+        }
+        System.debug('Redirect Location: ' + res.getHeader('Location'));
+    } else {
+        System.debug('Response is NULL');
+    }
+
       FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
       FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
       String endpoint = apiSetting?.FEC_Call_Mock__c
         ? FEC_MockupEndpoint.GET_MRC_INFO_ENDPOINT_MOCKUP
-        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
+        : appendTrailingSlashBeforeQuery(
+            apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c
+          );
+	  
       responseLog = new FEC_ResponseLog(
         'FEC_GetMRCInfo',
         endpoint,
@@ -323,14 +361,18 @@ public with sharing class FEC_GetMRCInfo {
   }
 
   @AuraEnabled
-  public static FEC_MRC__c updateMRCRecord(String caseId) {
+  public static FEC_Customer_History__c updateMRCRecord(String caseId) {
     if (String.isBlank(caseId)) {
       return null;
     }
 
     // 1. Query the Case to get the Contract Number
     List<Case> cases = [
-      SELECT Id, FEC_Contract_Number__c, FEC_Search_Contract_Number__c
+      SELECT
+        Id,
+        FEC_Contract_Number__c,
+        FEC_Search_Contract_Number__c,
+        FEC_Account_or_Contract__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -350,6 +392,15 @@ public with sharing class FEC_GetMRCInfo {
         String.format(
           System.Label.FEC_MSG_Invalid,
           new List<String>{ 'Contract Number' }
+        )
+      );
+    }
+
+    if (cases[0].FEC_Account_or_Contract__c == null) {
+      throw new AuraHandledException(
+        String.format(
+          System.Label.FEC_MSG_Invalid,
+          new List<String>{ 'Account/Contract' }
         )
       );
     }
@@ -377,46 +428,74 @@ public with sharing class FEC_GetMRCInfo {
       );
     }
 
-    // 3. Upsert the MRC record
+    // 3. Update FEC_Customer_History__c (Case → FEC_Account_or_Contract__c)
     MRCInfoData data = result.data;
-    List<FEC_MRC__c> mrcRecords = [
-      SELECT Id
-      FROM FEC_MRC__c
-      WHERE FEC_Case__c = :caseId
+    List<FEC_Customer_History__c> chRecords = [
+      SELECT
+        Id,
+        Name,
+        FEC_MRC_Zone__c,
+        FEC_Area__c,
+        FEC_Plate_Number__c,
+        FEC_MRC_Status__c,
+        FEC_Status_ID__c,
+        FEC_ID__c,
+        FEC_Original_MRC_Remark__c,
+        FEC_Modified_Date__c,
+        FEC_Delivery_Date__c,
+        FEC_Received_Date__c,
+        FEC_Original_MRC_Receiver__c,
+        FEC_Posted_Date__c,
+        FEC_Postal_Code__c,
+        FEC_Notarized_MRC_Remark__c,
+        FEC_Provided_Number__c,
+        FEC_Notarized_MRC_Receiver__c
+      FROM FEC_Customer_History__c
+      WHERE Id = :cases[0].FEC_Account_or_Contract__c
       LIMIT 1
     ];
 
-    FEC_MRC__c mrcToUpsert = mrcRecords.isEmpty()
-      ? new FEC_MRC__c(FEC_Case__c = caseId)
-      : mrcRecords[0];
+    if (chRecords.isEmpty()) {
+      throw new AuraHandledException(
+        String.format(
+          System.Label.FEC_MSG_Invalid,
+          new List<String>{ 'Customer History' }
+        )
+      );
+    }
 
-    mrcToUpsert.FEC_MRC_Zone__c = data.mrcZone;
-    mrcToUpsert.FEC_Area__c = data.area;
-    mrcToUpsert.FEC_Plate_Number__c = data.plateNumber;
-    mrcToUpsert.FEC_Status__c = data.status;
-    mrcToUpsert.FEC_Status_ID__c = data.statusId;
-    mrcToUpsert.FEC_ID__c = data.id;
+    FEC_Customer_History__c chToUpsert = chRecords[0];
 
-    mrcToUpsert.FEC_Remark__c = data.remark;
-    mrcToUpsert.FEC_Modified_Date__c = String.isBlank(data.modifiedDate)
+    chToUpsert.FEC_MRC_Zone__c = data.mrcZone;
+    chToUpsert.FEC_Area__c = data.area;
+    chToUpsert.FEC_Plate_Number__c = data.plateNumber;
+    chToUpsert.FEC_MRC_Status__c = data.status;
+    chToUpsert.FEC_Status_ID__c = data.statusId;
+    chToUpsert.FEC_ID__c = data.id;
+
+    chToUpsert.FEC_Original_MRC_Remark__c = data.remark;
+    chToUpsert.FEC_Modified_Date__c = String.isBlank(data.modifiedDate)
       ? null
       : Date.valueOf(data.modifiedDate);
-    mrcToUpsert.FEC_Received_Date__c = String.isBlank(data.receivedDate)
+    chToUpsert.FEC_Received_Date__c = String.isBlank(data.receivedDate)
       ? null
       : Date.valueOf(data.receivedDate);
-    mrcToUpsert.FEC_Receiver__c = data.receiverInformation;
+    chToUpsert.FEC_Original_MRC_Receiver__c = data.receiverInformation;
 
-    mrcToUpsert.FEC_Posted_Date__c = String.isBlank(data.notaryPostedDate)
+    chToUpsert.FEC_Posted_Date__c = String.isBlank(data.notaryPostedDate)
       ? null
       : Date.valueOf(data.notaryPostedDate);
-    mrcToUpsert.FEC_Postal_Code__c = data.notaryMailcode;
+    chToUpsert.FEC_Postal_Code__c = data.notaryMailcode;
 
-    mrcToUpsert.FEC_Provided_Number__c = String.isNotBlank(data.provideNumber)
+    chToUpsert.FEC_Notarized_MRC_Remark__c = data.notaryRemark;
+    chToUpsert.FEC_Notarized_MRC_Receiver__c = data.notaryReceiverInformation;
+
+    chToUpsert.FEC_Provided_Number__c = String.isNotBlank(data.provideNumber)
       ? Decimal.valueOf(data.provideNumber)
       : null;
 
-    upsert mrcToUpsert;
+    update chToUpsert;
 
-    return mrcToUpsert;
+    return chToUpsert;
   }
 }
