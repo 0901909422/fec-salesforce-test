@@ -380,7 +380,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   set isEdit(value) {
     const prev = this._isEdit;
-    this._isEdit = Boolean(value);
+    this._isEdit = value === true || value === "true";
     if (prev !== this._isEdit && this.business?.sectionlst) {
       this._applyEditModeToBusiness();
     }
@@ -395,8 +395,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track activeSectionlst = ["routing-action"];
 
   routingAccordionSectionKey = "routing-action";
-
-  _routingSelectLockedForIpp = false;
 
   _ippClosureHasEligibleRows = false;
 
@@ -637,7 +635,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   content;
 
   get isRoutingActionDisabled() {
-    return !this._isEdit || this._routingSelectLockedForIpp === true;
+    return !this._isEdit;
   }
 
   get showRouteTo() {
@@ -813,9 +811,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       Array.isArray(this.business.routingActionlst) &&
       this.business.routingActionlst.length > 0;
     this._updateDynCmpIsEditFlags();
-    if (!this._isEdit) {
-      this._routingSelectLockedForIpp = false;
-    }
     this.business = { ...this.business };
   }
 
@@ -919,7 +914,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
-    this._routingSelectLockedForIpp = false;
     this._ippClosureHasEligibleRows = false;
 
     getByCase({
@@ -1674,11 +1668,19 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
-    const fcEl = this._getFastCashCaseFormEl();
-    if (fcEl && typeof fcEl.validateForCaseSubmit === "function") {
-      if (!fcEl.validateForCaseSubmit()) {
+    const refundReqEl = this._getRefundRequestFormEl();
+    if (refundReqEl && typeof refundReqEl.validateForSubmit === "function") {
+      if (!refundReqEl.validateForSubmit()) {
         isAllValid = false;
       }
+    } else if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
+      if (!refundReqEl.validateRefund()) {
+        isAllValid = false;
+      }
+    }
+
+    if (!this._validateFastCashForSubmit()) {
+      isAllValid = false;
     }
 
     // let accountContractField = this.template.querySelector(
@@ -1795,6 +1797,46 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveForSubmitIfApplicable();
   }
 
+  _getRefundRequestFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_RefundRequestForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.validateRefund === "function" ||
+        typeof host.saveDraftIfApplicable === "function" ||
+        typeof host.saveRefundDataIfApplicable === "function" ||
+        typeof host.saveRefundDataIfVisible === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveRefundRequestDraftIfApplicable() {
+    const el = this._getRefundRequestFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveRefundRequestIfApplicable() {
+    const el = this._getRefundRequestFormEl();
+    if (!el) {
+      return Promise.resolve();
+    }
+    if (typeof el.saveRefundDataIfApplicable === "function") {
+      return el.saveRefundDataIfApplicable();
+    }
+    if (typeof el.saveRefundDataIfVisible === "function") {
+      return el.saveRefundDataIfVisible();
+    }
+    return Promise.resolve();
+  }
+
   _getFastCashCaseFormEl() {
     const wrap = this.template.querySelector(
       '[data-fec-lwc="fec_FastCashCaseForm"]',
@@ -1809,6 +1851,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       return host;
     }
     return null;
+  }
+
+  _validateFastCashForSubmit() {
+    const el = this._getFastCashCaseFormEl();
+    if (!el || typeof el.validateForCaseSubmit !== "function") {
+      return true;
+    }
+    return el.validateForCaseSubmit();
   }
 
   _saveFastCashDraftIfApplicable() {
@@ -1843,13 +1893,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → khóa routing + auto Route to */									
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */									
   handleIppClosureLoad(event) {
     const d = event.detail || {};
     this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
 
     if (d.noEligibleForClosure) {
-      this._routingSelectLockedForIpp = false;
       Promise.resolve().then(() => {
         const hasReject = this.business.routingActionlst?.some(
           (a) => a.value === ACTION_REJECT,
@@ -1869,14 +1918,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     if (d.hasEligibleRows && d.savedIppToCloseOnCase) {
-      this._routingSelectLockedForIpp = true;
       Promise.resolve().then(() => {
         this._applyIppClosureRouteToWhenEditable();
       });
       return;
     }
 
-    this._routingSelectLockedForIpp = false;
   }
 
   handleIppClosureSelection(event) {
@@ -1886,10 +1933,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
     if (!has) {
-      this._routingSelectLockedForIpp = false;
       return;
     }
-    this._routingSelectLockedForIpp = true;
     Promise.resolve().then(() => {
       this._applyIppClosureRouteToWhenEditable();				   
     });
@@ -1957,6 +2002,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
+        this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
       ]);
     if (total === 0) {
@@ -2002,6 +2048,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveIPPClosureIfApplicable(),
       this._saveBeneficiaryIfApplicable(),
       this._saveCardClosureRefundForSubmitIfApplicable(),
+      this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
     ]);
     if (routeToEle) {
@@ -2516,5 +2563,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // this._syncHasRoutingAction(); // PhuongNT cmt, method not exist
     this.business = { ...this.business };
+  }
+  //Thangtv update logic only show routing action when mode = handling
+  get showRoutingSection() {
+   return this.isEdit && this.business?.hasRoutingAction;
   }
 }
