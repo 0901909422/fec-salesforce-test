@@ -1675,7 +1675,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     const refundReqEl = this._getRefundRequestFormEl();
-    if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
+    if (refundReqEl && typeof refundReqEl.validateForSubmit === "function") {
+      if (!refundReqEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    } else if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
       if (!refundReqEl.validateRefund()) {
         isAllValid = false;
       }
@@ -1802,7 +1806,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     const host = wrap && wrap.firstElementChild;
     if (
       host &&
-      (typeof host.validateRefund === "function" ||
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.validateRefund === "function" ||
+        typeof host.saveDraftIfApplicable === "function" ||
+        typeof host.saveRefundDataIfApplicable === "function" ||
         typeof host.saveRefundDataIfVisible === "function")
     ) {
       return host;
@@ -1810,12 +1817,26 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
-  _saveRefundRequestIfApplicable() {
+  _saveRefundRequestDraftIfApplicable() {
     const el = this._getRefundRequestFormEl();
-    if (!el || typeof el.saveRefundDataIfVisible !== "function") {
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
-    return el.saveRefundDataIfVisible();
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveRefundRequestIfApplicable() {
+    const el = this._getRefundRequestFormEl();
+    if (!el) {
+      return Promise.resolve();
+    }
+    if (typeof el.saveRefundDataIfApplicable === "function") {
+      return el.saveRefundDataIfApplicable();
+    }
+    if (typeof el.saveRefundDataIfVisible === "function") {
+      return el.saveRefundDataIfVisible();
+    }
+    return Promise.resolve();
   }
   /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
@@ -1948,7 +1969,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
-        this._saveRefundRequestIfApplicable(),
+        this._saveRefundRequestDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();
