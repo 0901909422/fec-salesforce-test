@@ -783,6 +783,20 @@ const formatThousandsFromDigits = (digits) => {
   }).format(n);
 };
 
+const formatThousandsFromDigitsEnUs = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
 const toUpperNoVietnameseAccent = (str) => {
   if (!str) {
     return STR_EMPTY;
@@ -844,6 +858,7 @@ export {
   getCaseIdNumber,
   sortByStringField,
   formatThousandsFromDigits,
+  formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
   toUpperNoVietnameseAccent
