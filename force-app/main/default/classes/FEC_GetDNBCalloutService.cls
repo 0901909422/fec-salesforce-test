@@ -123,7 +123,7 @@ public with sharing class FEC_GetDNBCalloutService {
             
             if (!raw.containsKey('sys')) {
                 result.success = false;
-                result.errorMessage = 'Missing sys in response';
+                result.errorMessage = System.Label.FEC_CS_CASE_SYS_MISSING_MSG;
                 return result;
             }
             
@@ -154,7 +154,7 @@ public with sharing class FEC_GetDNBCalloutService {
             }
             
             if (result.result == null || result.result.isEmpty()) {
-                result.errorMessage = 'No DNB data found';
+                result.errorMessage = System.Label.FEC_Termination_No_Data;
             }
             
         } catch (Exception ex) {
@@ -170,11 +170,11 @@ public with sharing class FEC_GetDNBCalloutService {
     public static DNBResult getDNB(DNBRequest req) {
         System.debug('Received Request: ' + JSON.serialize(req));
         if (req == null) {
-            return error('Request is required');
+            return error(System.Label.FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG);
         }
         
         if (String.isBlank(req.phone) || String.isBlank(req.nid)) {
-            return error('Missing required fields');
+            return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
         }
         
         try {
@@ -185,7 +185,7 @@ public with sharing class FEC_GetDNBCalloutService {
             
             
             if (res == null) {
-                return error('No response from API');
+                return error(System.Label.FEC_MSG_Response_Null);
             }
             
             Boolean isSuccess = res.getStatusCode() == 200;
