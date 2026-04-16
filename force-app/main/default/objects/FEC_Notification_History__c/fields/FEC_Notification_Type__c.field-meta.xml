@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Applicable_Roles__c</fullName>
-    <description>Đối tượng người dùng được sử dụng thông báo</description>
+    <fullName>FEC_Notification_Type__c</fullName>
+    <description>Tên mẫu thông báo đã gửi tại stage</description>
     <externalId>false</externalId>
-    <label>Applicable Roles</label>
+    <label>Notification Type</label>
     <length>255</length>
     <required>false</required>
-    <trackHistory>true</trackHistory>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
