@@ -4,11 +4,10 @@
     <description>Bốn số cuối thẻ KH muốn thay thế PIN</description>
     <externalId>false</externalId>
     <label>Last 4 Digits</label>
-    <precision>18</precision>
+    <length>255</length>
     <required>false</required>
-    <scale>0</scale>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Number</type>
+    <type>Text</type>
     <unique>false</unique>
 </CustomField>
