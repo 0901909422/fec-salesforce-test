@@ -1336,6 +1336,7 @@
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<members>Case.FEC_Refund_Amount__c</members>
 		<members>Case.FEC_Refund_Request_Draft__c</members>
+		<members>Case.FEC_Show_Unfollow__c</members>
 		<members>FEC_Notification_History__c.FEC_Notification_Channel__c</members>
 		<members>FEC_Notification_History__c.FEC_Target_Group__c</members>
 		<members>FEC_Notification_History__c.FEC_User__c</members>
@@ -1652,6 +1653,57 @@
     <types>
 		<members>en_US</members>
 		<name>Translations</name>
+	</types>
+	<types>
+        <members>FEC_RD_Card_Operations_User_Customer_360</members>
+        <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Card_Operations_User_Master_Data_Management</members>
+        <members>FEC_RD_Card_Operations_User_User_Management</members>
+        <members>FEC_RD_Collections_User_Customer_360</members>
+        <members>FEC_RD_Collections_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Collections_User_Master_Data_Management</members>
+        <members>FEC_RD_Collections_User_User_Management</members>
+        <members>FEC_RD_Contract_Processing_User_Customer_360</members>
+        <members>FEC_RD_Contract_Processing_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Contract_Processing_User_Master_Data_Management</members>
+        <members>FEC_RD_Contract_Processing_User_User_Management</members>
+		<members>FEC_RD_Credit_Assessment_User_Customer_360</members>
+        <members>FEC_RD_Credit_Assessment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Credit_Assessment_User_Master_Data_Management</members>
+        <members>FEC_RD_Credit_Assessment_User_User_Management</members>
+        <members>FEC_RD_Direct_Sales_User_Customer_360</members>
+        <members>FEC_RD_Direct_Sales_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Direct_Sales_User_Master_Data_Management</members>
+        <members>FEC_RD_Direct_Sales_User_User_Management</members>
+        <members>FEC_RD_Internal_Audit_User_Customer_360</members>
+        <members>FEC_RD_Internal_Audit_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Internal_Audit_User_Master_Data_Management</members>
+        <members>FEC_RD_Internal_Audit_User_User_Management</members>
+        <members>FEC_RD_Payment_User_Customer_360</members>
+        <members>FEC_RD_Payment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Payment_User_Master_Data_Management</members>
+        <members>FEC_RD_Payment_User_User_Management</members>
+        <members>FEC_RD_Telesales_User_1_Customer_360</members>
+        <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
+        <members>FEC_RD_Telesales_User_1_User_Management</members>
+        <members>FEC_RD_Telesales_User_2_Customer_360</members>
+        <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
+        <members>FEC_RD_Telesales_User_2_User_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_PSG_RD_Card_Operations_User</members>
+		<members>FEC_PSG_RD_Collections_User</members>
+		<members>FEC_PSG_RD_Contract_Processing_User</members>
+		<members>FEC_PSG_RD_Credit_Assessment_User</members>
+		<members>FEC_PSG_RD_Direct_Sales_PSG_User</members>
+		<members>FEC_PSG_RD_Internal_Audit_User</members>
+		<members>FEC_PSG_RD_Payment_User</members>
+		<members>FEC_PSG_RD_Telesales_User_1</members>
+		<members>FEC_PSG_RD_Telesales_User_2</members>
+		<name>PermissionSetGroup</name>
 	</types>
     <version>65.0</version>
 </Package>

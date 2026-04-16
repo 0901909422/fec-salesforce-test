@@ -84,6 +84,10 @@ const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
 
+const PROCESS_BLOCK_CARD = "Card Block";
+const PROCESS_UNBLOCK_CARD = "Card Unblock";
+const PROCESS_PIN_REISSUE = "PIN Replacement";
+
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
   ACTION_ESCALATE,
@@ -1096,13 +1100,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // check show button process action PIN Reissue
-        const processActions = this.business.processActionlst || [];
-        processActions.forEach(processAction => {
-          if (processAction.value === ACTION_BLOCK_CARD || processAction.value === ACTION_PIN_REISSUE) {
-            this.showProcessAction = true;
-          }
-        });
+        // show button process action with process Block Card and PIN Reissue
+        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
+          this.showProcessAction = true;
+        }
 
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
@@ -1488,6 +1489,11 @@ export default class Fec_CaseBussiness extends LightningElement {
           toRouteTo = TYPE_QUALIFIED == value;
 
           toRevert = TYPE_UNQUALIFIED == value;
+          // PhuongNT add for Unblock Card
+          if (this.business?.code === PROCESS_UNBLOCK_CARD) {
+            this.showProcessAction = TYPE_QUALIFIED == value;
+          }
+          
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
