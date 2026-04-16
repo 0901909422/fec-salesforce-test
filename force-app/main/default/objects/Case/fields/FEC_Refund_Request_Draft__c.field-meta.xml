@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Refund_Request_Draft__c</fullName>
+    <description>JSON nháp Refund Request (refundAmount + receiptLines). Submit xóa field và ghi FEC_Case_Refund_Details__c.</description>
+    <label>Refund Request Draft</label>
+    <length>131072</length>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>LongTextArea</type>
+    <visibleLines>3</visibleLines>
+</CustomField>

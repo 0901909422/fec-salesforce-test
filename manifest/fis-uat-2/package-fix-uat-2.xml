@@ -674,6 +674,8 @@
 		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
 		<members>Case.FEC_Recipient_Name__c</members>
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
+		<members>Case.FEC_Refund_Amount__c</members>
+		<members>Case.FEC_Refund_Request_Draft__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
