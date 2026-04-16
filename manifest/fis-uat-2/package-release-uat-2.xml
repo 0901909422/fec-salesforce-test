@@ -1336,6 +1336,7 @@
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
 		<members>Case.FEC_Refund_Amount__c</members>
 		<members>Case.FEC_Refund_Request_Draft__c</members>
+		<members>Case.FEC_Show_Unfollow__c</members>
 		<members>FEC_Notification_History__c.FEC_Notification_Channel__c</members>
 		<members>FEC_Notification_History__c.FEC_Target_Group__c</members>
 		<members>FEC_Notification_History__c.FEC_User__c</members>
