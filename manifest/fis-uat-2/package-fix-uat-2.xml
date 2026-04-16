@@ -687,6 +687,7 @@
 		<members>FEC_Notification_History__c.FEC_Send_Status__c</members>
 		<members>FEC_Notification_History__c.FEC_Send_Type__c</members>
 		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
+		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
 		<members>FEC_Additional_Info__c.FEC_Last_4_Digits__c</members>
 		<members>FEC_Additional_Info__c.FEC_Conversion_Rate__c</members>
 		<name>CustomField</name>
