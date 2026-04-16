@@ -49,7 +49,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
-      //sendNotificationEmails(newRecords);
+      sendNotificationEmails(newRecords);
     } catch (Exception e) {
       throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
     } finally {
