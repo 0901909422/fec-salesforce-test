@@ -597,11 +597,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Case_NFU_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -627,11 +622,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Last_Modified_Date__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -643,11 +633,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -993,11 +978,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Notification__c.FEC_Applicable_Roles__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1390,12 +1370,6 @@
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Template__c.FEC_Template_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Field__c.FEC_Data_Type__c</field>
