@@ -1499,9 +1499,6 @@ export default class Fec_CaseBussiness extends LightningElement {
           // PhuongNT add for Unblock Card
           if (this.business?.code === PROCESS_UNBLOCK_CARD) {
             this.showProcessAction = TYPE_QUALIFIED == value;
-            console.log('>>>>this.business?.code: ' + this.business?.code);
-            console.log('>>>>value: ' + value);
-            console.log('>>>>this.showProcessAction: ' + this.showProcessAction);
           }
           
           break;
