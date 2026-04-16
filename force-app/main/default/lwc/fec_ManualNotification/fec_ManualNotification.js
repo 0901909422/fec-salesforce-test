@@ -312,7 +312,12 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     }
 
     handleSend() {
-        sendManualEmail({ caseId: this.recordId, templateId: this.selectedTemplateId, toEmail: this.selectedTargetGroup === 'Internal User' ? this.targetEmail : '' })
+        sendManualEmail({
+            caseId: this.recordId,
+            templateId: this.selectedTemplateId,
+            toEmail: this.selectedTargetGroup === 'Internal User' ? this.targetEmail : '',
+            fecNotificationConfigId: this.selectedNotificationId
+        })
             .then(() => {
                 this.dispatchEvent(
                     new ShowToastEvent({
