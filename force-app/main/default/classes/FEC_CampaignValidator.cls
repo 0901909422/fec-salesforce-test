@@ -194,6 +194,9 @@ public with sharing class FEC_CampaignValidator {
         Integer rowIndex, ValidationResult result
     ) {
         Object val = row.get(fieldName);
+        if (val == null || String.isBlank(String.valueOf(val))) {
+            return; // Optional field — blank is valid
+        }
         if (!FEC_Util.checkIsNumber(val)) {
             result.errors.add(
                 'Row ' + (rowIndex + 1) + ': Field \'' + fieldName + '\' - '

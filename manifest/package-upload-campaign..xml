@@ -48,5 +48,9 @@
         <members>*</members>
         <name>CustomLabel</name>
     </types>
+    <types>
+        <members>FEC_SheetJSStyle</members>
+        <name>StaticResource</name>
+    </types>
     <version>65.0</version>
 </Package>

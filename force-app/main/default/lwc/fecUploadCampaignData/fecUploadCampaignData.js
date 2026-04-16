@@ -2,8 +2,9 @@ import { LightningElement, track, wire } from 'lwc';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE, CAMPAIGN_EXCEL_HEADERS } from 'c/fecUtils';
+import { SUCCESS_TITLE, FAIL_TITLE, WARNING_TITLE, CAMPAIGN_INPROGRESS_EXPORT_HEADERS, CAMPAIGN_STRING_COLUMNS } from 'c/fecUtils';
 import FEC_SHEETJS from '@salesforce/resourceUrl/FEC_SheetJS';
+import FEC_SHEETJS_STYLE from '@salesforce/resourceUrl/FEC_SheetJSStyle';
 import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
 import getInProgressSummary from '@salesforce/apex/FEC_CampaignController.getInProgressSummary';
 import pushRecords from '@salesforce/apex/FEC_CampaignController.pushRecords';
@@ -65,6 +66,7 @@ export default class FecUploadCampaignData extends LightningElement {
     renderedCallback() {
         if (this.librariesLoaded) return;
         loadScript(this, FEC_SHEETJS)
+            .then(() => loadScript(this, FEC_SHEETJS_STYLE))
             .then(() => { this.librariesLoaded = true; })
             .catch(error => { console.error('Error loading XLSX', error); });
     }
@@ -144,8 +146,20 @@ export default class FecUploadCampaignData extends LightningElement {
         return csCampaign.label;
     }
 
+    formatTimestamp(value) {
+        if (!value) return '';
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return '';
+        const dd = String(date.getDate()).padStart(2, '0');
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        const ss = String(date.getSeconds()).padStart(2, '0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
+    }
+
     handleDownloadExcel() {
-        // 1. Kiểm tra thư viện và dữ liệu
         if (!this.librariesLoaded || !window.XLSX) {
             this.showToast(FAIL_TITLE, errorLoadExcelLib, 'error');
             return;
@@ -157,39 +171,86 @@ export default class FecUploadCampaignData extends LightningElement {
         }
     
         const XLSX = window.XLSX;
+        const headers = CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
     
-        // 2. Khởi tạo mảng dữ liệu với dòng đầu tiên là Header
-        const ws_data = [CAMPAIGN_EXCEL_HEADERS];
+        const ws_data = [headers];
     
-        // 3. Map dữ liệu từ Object sang mảng theo đúng thứ tự cột của Header
         this.inProgressData.forEach(item => {
             ws_data.push([
                 item.FEC_ProductLine__c || '',               // ProductLine
-                this.findCSCampaignLabel(this.selectedMappingId) || '',                // Campaign ID (lấy từ biến chung)
-                item.FEC_AppId__c || '',                    // App ID
+                item.FEC_AppId__c || '',                     // App ID
                 item.FEC_AccountOrContractNumber__c || '',   // Account or Contract number
-                item.FEC_DateTime1__c || '',                // DateTime 1
-                item.FEC_DateTime2__c || '',                // DateTime 2
-                item.FEC_DateTime3__c || '',                // DateTime 3
-                item.FEC_Number1__c ?? 0,                   // Number 1 (Dùng ?? để giữ giá trị 0)
-                item.FEC_Number2__c ?? 0,                   // Number 2
-                item.FEC_Number3__c ?? 0,                   // Number 3
-                item.FEC_Number4__c ?? 0,                   // Number 4
-                item.FEC_Number5__c ?? 0,                   // Number 5
-                item.FEC_String1__c || '',                  // String 1
-                item.FEC_String2__c || '',                  // String 2
-                item.FEC_String3__c || '',                  // String 3
-                item.FEC_String4__c || '',                  // String 4
-                item.FEC_String5__c || ''                   // String 5
+                this.findCSCampaignLabel(this.selectedMappingId) || '', // Campaign ID
+                item.FEC_DateTime1__c || '',                 // DateTime 1
+                item.FEC_DateTime2__c || '',                 // DateTime 2
+                item.FEC_DateTime3__c || '',                 // DateTime 3
+                item.FEC_Number1__c ?? 0,                    // Number 1
+                item.FEC_Number2__c ?? 0,                    // Number 2
+                item.FEC_Number3__c ?? 0,                    // Number 3
+                item.FEC_Number4__c ?? 0,                    // Number 4
+                item.FEC_Number5__c ?? 0,                    // Number 5
+                item.FEC_String1__c || '',                   // String 1
+                item.FEC_String2__c || '',                   // String 2
+                item.FEC_String3__c || '',                   // String 3
+                item.FEC_String4__c || '',                   // String 4
+                item.FEC_String5__c || '',                   // String 5
+                this.formatTimestamp(item.CreatedDate),       // Uploaded Time
+                this.formatTimestamp(item.FEC_InsertionDate__c) // Inserted Time
             ]);
         });
     
-        // 4. Tạo Worksheet và Workbook bằng thư viện
         const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
+
+        // Auto column width based on header text length
+        worksheet['!cols'] = headers.map(header => ({
+            wch: header.length + 4
+        }));
+
+        // Style header and data cells
+        const borderStyle = { style: 'thin', color: { rgb: '000000' } };
+        const headerStyle = {
+            fill: { fgColor: { rgb: '4472C4' } },
+            font: { color: { rgb: '000000' } },
+            border: {
+                top: borderStyle,
+                bottom: borderStyle,
+                left: borderStyle,
+                right: borderStyle
+            }
+        };
+        const dataCellStyle = {
+            border: {
+                top: borderStyle,
+                bottom: borderStyle,
+                left: borderStyle,
+                right: borderStyle
+            }
+        };
+
+        // Apply header styling
+        for (let col = 0; col < headers.length; col++) {
+            const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
+            if (worksheet[cellRef]) {
+                worksheet[cellRef].s = headerStyle;
+                if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
+                    worksheet[cellRef].z = '@';
+                }
+            }
+        }
+
+        // Apply borders to all data cells
+        for (let row = 1; row < ws_data.length; row++) {
+            for (let col = 0; col < headers.length; col++) {
+                const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                if (worksheet[cellRef]) {
+                    worksheet[cellRef].s = dataCellStyle;
+                }
+            }
+        }
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "InProgress_Records");
     
-        // 5. Xuất file với định dạng .xlsx chuẩn
         const fileName = `Campaign_InProgress_${new Date().getTime()}.xlsx`;
         XLSX.writeFile(workbook, fileName);
     }

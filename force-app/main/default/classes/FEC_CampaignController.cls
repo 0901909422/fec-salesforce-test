@@ -31,7 +31,8 @@ public with sharing class FEC_CampaignController {
                 SELECT FEC_ProductLine__c, FEC_AppID__c, FEC_AccountOrContractNumber__c,
                        FEC_DateTime1__c, FEC_DateTime2__c, FEC_DateTime3__c,
                        FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c,
-                       FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c
+                       FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c,
+                       CreatedDate, FEC_InsertionDate__c
                 FROM FEC_DataCampaign__c 
                 WHERE FEC_CS_Campaign__c = :mappingId 
                 AND (NOT FEC_RecordStatus__c LIKE 'Resolved-%')

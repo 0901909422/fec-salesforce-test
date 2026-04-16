@@ -87,7 +87,7 @@ public with sharing class FEC_CampaignBatchService {
     public static String buildScheduledQuery(String selectFields, String dayOfWeek) {
         String query = 'SELECT ' + selectFields +
             ' FROM FEC_DataCampaign__c' +
-            ' WHERE (NOT FEC_RecordStatus__c LIKE \'Resolved-%\')' +
+            ' WHERE (NOT FEC_RecordStatus__c LIKE \'%Resolved%\')' +
             ' AND FEC_CS_Campaign__r.FEC_ScheduleCampaign__c = true' +
             ' AND FEC_IsWithinLifetime__c = true';
 

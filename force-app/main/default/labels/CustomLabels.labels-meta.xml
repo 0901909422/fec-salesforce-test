@@ -12812,4 +12812,18 @@
         <shortDescription>Push Record Button</shortDescription>
         <value>Push Record</value>
     </labels>
+    <labels>
+        <fullName>FEC_Header_Mismatch_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Header Mismatch Message</shortDescription>
+        <value>The uploaded file headers do not match the expected template. Please download the template and try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty_File_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty File Message</shortDescription>
+        <value>The uploaded file contains no data rows. Please add data and try again.</value>
+    </labels>
 </CustomLabels>

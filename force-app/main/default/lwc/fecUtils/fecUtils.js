@@ -17,6 +17,8 @@ export const SUCCESS_TITLE = Constants.SUCCESS_TITLE;
 export const FAIL_TITLE = Constants.FAIL_TITLE;
 export const WARNING_TITLE = Constants.WARNING_TITLE;
 export const CAMPAIGN_EXCEL_HEADERS = Constants.CAMPAIGN_EXCEL_HEADERS;
+export const CAMPAIGN_INPROGRESS_EXPORT_HEADERS = Constants.CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
+export const CAMPAIGN_STRING_COLUMNS = Constants.CAMPAIGN_STRING_COLUMNS;
 
 // Export Status Constants
 export const STATUS_UPLOADED = Constants.STATUS_UPLOADED;
