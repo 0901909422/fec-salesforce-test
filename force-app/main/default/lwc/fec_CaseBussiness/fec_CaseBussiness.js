@@ -84,6 +84,8 @@ const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
 
+const PROCESS_UNBLOCK_CARD = "Card Unblock";
+
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
   ACTION_ESCALATE,
@@ -1494,6 +1496,14 @@ export default class Fec_CaseBussiness extends LightningElement {
           toRouteTo = TYPE_QUALIFIED == value;
 
           toRevert = TYPE_UNQUALIFIED == value;
+          // PhuongNT add for Unblock Card
+          if (this.business?.code === PROCESS_UNBLOCK_CARD) {
+            this.showProcessAction = TYPE_QUALIFIED == value;
+            console.log('>>>>this.business?.code: ' + this.business?.code);
+            console.log('>>>>value: ' + value);
+            console.log('>>>>this.showProcessAction: ' + this.showProcessAction);
+          }
+          
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
