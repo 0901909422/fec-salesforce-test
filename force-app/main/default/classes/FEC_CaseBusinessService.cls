@@ -2279,17 +2279,22 @@ public without sharing class FEC_CaseBusinessService {
   }
 
   /**
-   * fecMasterDataSettingIsEdit — (1) ReadOnly=true -> false. (2) Editable=true va khong ReadOnly -> true chi khi UserGroup khop FEC_Editable_User_Group__c. (3) Field_Status=false khong load (SOQL getData). (4) Ten stage Stage 2 hoac 3 (regex) -> false.
+   * fecMasterDataSettingIsEdit — (1) ReadOnly=true -> false. (2) Editable=true va khong ReadOnly -> true chi khi UserGroup khop FEC_Editable_User_Group__c. (3) Field_Status=false khong load (SOQL getData). (4) Ten stage co "Stage N" voi N!=1 -> false; Stage 1 hoac khong co cap trong ten -> khong ep.
    */
-  private static final Pattern PAT_STAGE_NAME_DYN_LWC_READONLY = Pattern.compile(
-    '(?i)[\\s-]stage (2|3)( -|$)'
+  private static final Pattern PAT_STAGE_NAME_WITH_NUMBER = Pattern.compile(
+    '(?i)[\\s-]stage ([0-9]+)( -|$)'
   );
 
   private static Boolean isCaseStageNameForcingDynLwcReadonly(String stageName) {
     if (String.isBlank(stageName)) {
       return false;
     }
-    return PAT_STAGE_NAME_DYN_LWC_READONLY.matcher(stageName.trim()).find();
+    Matcher m = PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName.trim());
+    if (!m.find()) {
+      return false;
+    }
+    Integer stageNum = Integer.valueOf(m.group(1));
+    return stageNum != 1;
   }
 
   private static Boolean isLwcDynamicMasterInEditMode(
