@@ -211,7 +211,7 @@ public without sharing class FEC_Notification {
                             
         // 2. Use helper method to calculate Target Email
         String targetEmail = getTargetEmailFromCase(currentCase);
-        Set<String> validCustomerTypes = new Set<String>{currentCase.FEC_Customer_Type__c, FEC_ConstantCommon.CASE_ALL_CUSTOMER};
+        String caseCustomerType = currentCase.FEC_Customer_Type__c;
         // 3. Query Notification satisfying conditions
         String currentStage = currentCase.FEC_Current_Case_Stage__c;
         String emailChannel = FEC_ConstantCommon.EMAIL;
@@ -239,7 +239,13 @@ public without sharing class FEC_Notification {
             query += ' AND FEC_SubCode__c = :subCodeId';
         }
 
-        List<FEC_Notification__c> validNotifs = Database.query(query);
+        List<FEC_Notification__c> queried = Database.query(query);
+        List<FEC_Notification__c> validNotifs = new List<FEC_Notification__c>();
+        for (FEC_Notification__c notif : queried) {
+            if (notificationMatchesCaseCustomerType(notif.FEC_Customer_Type__c, caseCustomerType)) {
+                validNotifs.add(notif);
+            }
+        }
         System.debug('--- [getAvailableNotifications] validNotifs: ' + validNotifs);
         
         List<Map<String, String>> options = new List<Map<String, String>>();
