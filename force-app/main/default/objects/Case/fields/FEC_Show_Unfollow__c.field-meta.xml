@@ -29,7 +29,6 @@
   ),
   AND(
     NOT(BEGINS(TEXT(Status), &apos;Resolved&apos;)),
-    NOT(FEC_Is_Submited__c),
     OwnerId &lt;&gt; $User.Id,
     CreatedById &lt;&gt; $User.Id,
     OR(
