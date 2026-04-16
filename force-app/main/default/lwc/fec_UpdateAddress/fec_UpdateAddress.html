@@ -128,28 +128,16 @@
                                             >
                                                 {labels.mailingAddress}
                                             </p>
-                                            <template
-                                                if:true={mailingSelectionBusy}
-                                            >
-                                                <lightning-spinner
-                                                    alternative-text={labels.loading}
-                                                    size="small"
-                                                ></lightning-spinner>
-                                            </template>
-                                            <template
-                                                if:false={mailingSelectionBusy}
-                                            >
-                                                <lightning-input
-                                                    type="checkbox"
-                                                    variant="label-hidden"
-                                                    label={labels.mailingAddress}
-                                                    data-row="permanent"
-                                                    checked={permanentMailingRadioChecked}
-                                                    disabled={permanentMailingCheckboxDisabled}
-                                                    onchange={handleMailingCheckboxChange}
-                                                    class="case-info__mailing-checkbox-input"
-                                                ></lightning-input>
-                                            </template>
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label={labels.mailingAddress}
+                                                data-row="permanent"
+                                                checked={permanentMailingRadioChecked}
+                                                disabled={permanentMailingCheckboxDisabled}
+                                                onchange={handleMailingCheckboxChange}
+                                                class="case-info__mailing-checkbox-input"
+                                            ></lightning-input>
                                         </div>
                                         <div
                                             class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-text-align_right case-info__pencil-cell"
@@ -266,219 +254,16 @@
                                                 >
                                                     {labels.mailingAddress}
                                                 </p>
-                                                <template
-                                                    if:true={mailingSelectionBusy}
-                                                >
-                                                    <lightning-spinner
-                                                        alternative-text={labels.loading}
-                                                        size="small"
-                                                    ></lightning-spinner>
-                                                </template>
-                                                <template
-                                                    if:false={mailingSelectionBusy}
-                                                >
-                                                    <lightning-input
-                                                        type="checkbox"
-                                                        variant="label-hidden"
-                                                        label={labels.mailingAddress}
-                                                        data-row="permanent"
-                                                        checked={permanentMailingRadioChecked}
-                                                        disabled={permanentMailingCheckboxDisabled}
-                                                        onchange={handleMailingCheckboxChange}
-                                                        class="case-info__mailing-checkbox-input"
-                                                    ></lightning-input>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </template>
-                            </div>
-
-                            <div
-                                class="case-info__row case-info__row--editable slds-border_bottom"
-                            >
-                                <template if:false={isEditingCurrentMailing}>
-                                    <div
-                                        class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-start"
-                                    >
-                                        <div
-                                            class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-                                        >
-                                            <p class="case-info__field-label">
-                                                {labels.currentAddressOption}
-                                            </p>
-                                            <p class="case-info__field-value">
-                                                {currentUpdatedDisplay}
-                                            </p>
-                                        </div>
-                                        <div
-                                            class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 case-info__mailing-toggle-col"
-                                        >
-                                            <p
-                                                class="case-info__field-label slds-m-bottom_xx-small"
-                                            >
-                                                {labels.mailingAddress}
-                                            </p>
-                                            <template
-                                                if:true={mailingSelectionBusy}
-                                            >
-                                                <lightning-spinner
-                                                    alternative-text={labels.loading}
-                                                    size="small"
-                                                ></lightning-spinner>
-                                            </template>
-                                            <template
-                                                if:false={mailingSelectionBusy}
-                                            >
                                                 <lightning-input
                                                     type="checkbox"
                                                     variant="label-hidden"
                                                     label={labels.mailingAddress}
-                                                    data-row="current"
-                                                    checked={currentMailingRadioChecked}
-                                                    disabled={currentMailingCheckboxDisabled}
+                                                    data-row="permanent"
+                                                    checked={permanentMailingRadioChecked}
+                                                    disabled={permanentMailingCheckboxDisabled}
                                                     onchange={handleMailingCheckboxChange}
                                                     class="case-info__mailing-checkbox-input"
                                                 ></lightning-input>
-                                            </template>
-                                        </div>
-                                        <div
-                                            class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-text-align_right case-info__pencil-cell"
-                                        >
-                                            <lightning-button-icon
-                                                icon-name="utility:edit"
-                                                variant="bare"
-                                                alternative-text={labels.editMailing}
-                                                data-row="current"
-                                                onclick={handleEditMailing}
-                                                disabled={currentEditPencilDisabled}
-                                            ></lightning-button-icon>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template if:true={isEditingCurrentMailing}>
-                                    <template if:true={mailingModalLoading}>
-                                        <lightning-spinner
-                                            alternative-text={labels.loading}
-                                            size="small"
-                                        ></lightning-spinner>
-                                    </template>
-                                    <template if:false={mailingModalLoading}>
-                                        <div
-                                            class="slds-grid slds-wrap slds-gutters_medium slds-grid_vertical-align-start"
-                                        >
-                                            <div
-                                                class="slds-col slds-size_1-of-1 slds-large-size_8-of-12"
-                                            >
-                                                <p class="case-info__field-label">
-                                                    {labels.currentAddressOption}
-                                                </p>
-                                                <div
-                                                    class="case-info__mailing-inline-form"
-                                                >
-                                                    <div
-                                                        class="slds-form-element slds-m-bottom_small"
-                                                    >
-                                                        <lightning-input
-                                                            label={labels.building}
-                                                            value={mailingBuilding}
-                                                            required
-                                                            onchange={handleMailingBuildingChange}
-                                                        ></lightning-input>
-                                                    </div>
-                                                    <div
-                                                        class="slds-form-element slds-m-bottom_small"
-                                                    >
-                                                        <lightning-input
-                                                            label={labels.number}
-                                                            value={mailingNumber}
-                                                            required
-                                                            onchange={handleMailingNumberChange}
-                                                        ></lightning-input>
-                                                    </div>
-                                                    <div
-                                                        class="slds-form-element slds-m-bottom_small"
-                                                    >
-                                                        <lightning-input
-                                                            label={labels.street}
-                                                            value={mailingStreet}
-                                                            required
-                                                            onchange={handleMailingStreetChange}
-                                                        ></lightning-input>
-                                                    </div>
-                                                    <div
-                                                        class="slds-form-element slds-m-bottom_small"
-                                                    >
-                                                        <c-fec_searchable-combobox
-                                                            label={labels.provinceCity}
-                                                            value={mailingCity}
-                                                            options={provinceOptions}
-                                                            placeholder={labels.provinceSearchPlaceholder}
-                                                            required
-                                                            onchange={handleMailingProvinceChange}
-                                                        ></c-fec_searchable-combobox>
-                                                    </div>
-                                                    <div
-                                                        class="slds-form-element slds-m-bottom_small"
-                                                    >
-                                                        <lightning-combobox
-                                                            label={labels.ward}
-                                                            value={mailingWard}
-                                                            options={wardOptions}
-                                                            required
-                                                            disabled={wardComboboxDisabled}
-                                                            onchange={handleMailingWardChange}
-                                                        ></lightning-combobox>
-                                                    </div>
-                                                    <div
-                                                        class="slds-grid slds-grid_align-end slds-m-top_small case-info__form-actions"
-                                                    >
-                                                        <lightning-button
-                                                            variant="neutral"
-                                                            label={labels.cancel}
-                                                            onclick={handleCancelMailingEdit}
-                                                            disabled={mailingSaveLoading}
-                                                        ></lightning-button>
-                                                        <lightning-button
-                                                            variant="brand"
-                                                            label={labels.save}
-                                                            onclick={handleSaveMailing}
-                                                            disabled={mailingSaveButtonDisabled}
-                                                            class="slds-m-left_x-small"
-                                                        ></lightning-button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div
-                                                class="slds-col slds-size_1-of-1 slds-large-size_4-of-12 case-info__mailing-aside"
-                                            >
-                                                <p
-                                                    class="case-info__field-label slds-m-bottom_xx-small"
-                                                >
-                                                    {labels.mailingAddress}
-                                                </p>
-                                                <template
-                                                    if:true={mailingSelectionBusy}
-                                                >
-                                                    <lightning-spinner
-                                                        alternative-text={labels.loading}
-                                                        size="small"
-                                                    ></lightning-spinner>
-                                                </template>
-                                                <template
-                                                    if:false={mailingSelectionBusy}
-                                                >
-                                                    <lightning-input
-                                                        type="checkbox"
-                                                        variant="label-hidden"
-                                                        label={labels.mailingAddress}
-                                                        data-row="current"
-                                                        checked={currentMailingRadioChecked}
-                                                        disabled={currentMailingCheckboxDisabled}
-                                                        onchange={handleMailingCheckboxChange}
-                                                        class="case-info__mailing-checkbox-input"
-                                                    ></lightning-input>
-                                                </template>
                                             </div>
                                         </div>
                                     </template>
@@ -510,28 +295,16 @@
                                             >
                                                 {labels.mailingAddress}
                                             </p>
-                                            <template
-                                                if:true={mailingSelectionBusy}
-                                            >
-                                                <lightning-spinner
-                                                    alternative-text={labels.loading}
-                                                    size="small"
-                                                ></lightning-spinner>
-                                            </template>
-                                            <template
-                                                if:false={mailingSelectionBusy}
-                                            >
-                                                <lightning-input
-                                                    type="checkbox"
-                                                    variant="label-hidden"
-                                                    label={labels.mailingAddress}
-                                                    data-row="office"
-                                                    checked={officeMailingRadioChecked}
-                                                    disabled={officeMailingCheckboxDisabled}
-                                                    onchange={handleMailingCheckboxChange}
-                                                    class="case-info__mailing-checkbox-input"
-                                                ></lightning-input>
-                                            </template>
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label={labels.mailingAddress}
+                                                data-row="office"
+                                                checked={officeMailingRadioChecked}
+                                                disabled={officeMailingCheckboxDisabled}
+                                                onchange={handleMailingCheckboxChange}
+                                                class="case-info__mailing-checkbox-input"
+                                            ></lightning-input>
                                         </div>
                                         <div
                                             class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-text-align_right case-info__pencil-cell"
@@ -648,28 +421,183 @@
                                                 >
                                                     {labels.mailingAddress}
                                                 </p>
-                                                <template
-                                                    if:true={mailingSelectionBusy}
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    variant="label-hidden"
+                                                    label={labels.mailingAddress}
+                                                    data-row="office"
+                                                    checked={officeMailingRadioChecked}
+                                                    disabled={officeMailingCheckboxDisabled}
+                                                    onchange={handleMailingCheckboxChange}
+                                                    class="case-info__mailing-checkbox-input"
+                                                ></lightning-input>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+
+                            <div
+                                class="case-info__row case-info__row--editable slds-border_bottom"
+                            >
+                                <template if:false={isEditingCurrentMailing}>
+                                    <div
+                                        class="slds-grid slds-wrap slds-gutters_small slds-grid_vertical-align-start"
+                                    >
+                                        <div
+                                            class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+                                        >
+                                            <p class="case-info__field-label">
+                                                {labels.currentAddressOption}
+                                            </p>
+                                            <p class="case-info__field-value">
+                                                {currentUpdatedDisplay}
+                                            </p>
+                                        </div>
+                                        <div
+                                            class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 case-info__mailing-toggle-col"
+                                        >
+                                            <p
+                                                class="case-info__field-label slds-m-bottom_xx-small"
+                                            >
+                                                {labels.mailingAddress}
+                                            </p>
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label={labels.mailingAddress}
+                                                data-row="current"
+                                                checked={currentMailingRadioChecked}
+                                                disabled={currentMailingCheckboxDisabled}
+                                                onchange={handleMailingCheckboxChange}
+                                                class="case-info__mailing-checkbox-input"
+                                            ></lightning-input>
+                                        </div>
+                                        <div
+                                            class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-text-align_right case-info__pencil-cell"
+                                        >
+                                            <lightning-button-icon
+                                                icon-name="utility:edit"
+                                                variant="bare"
+                                                alternative-text={labels.editMailing}
+                                                data-row="current"
+                                                onclick={handleEditMailing}
+                                                disabled={currentEditPencilDisabled}
+                                            ></lightning-button-icon>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template if:true={isEditingCurrentMailing}>
+                                    <template if:true={mailingModalLoading}>
+                                        <lightning-spinner
+                                            alternative-text={labels.loading}
+                                            size="small"
+                                        ></lightning-spinner>
+                                    </template>
+                                    <template if:false={mailingModalLoading}>
+                                        <div
+                                            class="slds-grid slds-wrap slds-gutters_medium slds-grid_vertical-align-start"
+                                        >
+                                            <div
+                                                class="slds-col slds-size_1-of-1 slds-large-size_8-of-12"
+                                            >
+                                                <p class="case-info__field-label">
+                                                    {labels.currentAddressOption}
+                                                </p>
+                                                <div
+                                                    class="case-info__mailing-inline-form"
                                                 >
-                                                    <lightning-spinner
-                                                        alternative-text={labels.loading}
-                                                        size="small"
-                                                    ></lightning-spinner>
-                                                </template>
-                                                <template
-                                                    if:false={mailingSelectionBusy}
+                                                    <div
+                                                        class="slds-form-element slds-m-bottom_small"
+                                                    >
+                                                        <lightning-input
+                                                            label={labels.building}
+                                                            value={mailingBuilding}
+                                                            required
+                                                            onchange={handleMailingBuildingChange}
+                                                        ></lightning-input>
+                                                    </div>
+                                                    <div
+                                                        class="slds-form-element slds-m-bottom_small"
+                                                    >
+                                                        <lightning-input
+                                                            label={labels.number}
+                                                            value={mailingNumber}
+                                                            required
+                                                            onchange={handleMailingNumberChange}
+                                                        ></lightning-input>
+                                                    </div>
+                                                    <div
+                                                        class="slds-form-element slds-m-bottom_small"
+                                                    >
+                                                        <lightning-input
+                                                            label={labels.street}
+                                                            value={mailingStreet}
+                                                            required
+                                                            onchange={handleMailingStreetChange}
+                                                        ></lightning-input>
+                                                    </div>
+                                                    <div
+                                                        class="slds-form-element slds-m-bottom_small"
+                                                    >
+                                                        <c-fec_searchable-combobox
+                                                            label={labels.provinceCity}
+                                                            value={mailingCity}
+                                                            options={provinceOptions}
+                                                            placeholder={labels.provinceSearchPlaceholder}
+                                                            required
+                                                            onchange={handleMailingProvinceChange}
+                                                        ></c-fec_searchable-combobox>
+                                                    </div>
+                                                    <div
+                                                        class="slds-form-element slds-m-bottom_small"
+                                                    >
+                                                        <lightning-combobox
+                                                            label={labels.ward}
+                                                            value={mailingWard}
+                                                            options={wardOptions}
+                                                            required
+                                                            disabled={wardComboboxDisabled}
+                                                            onchange={handleMailingWardChange}
+                                                        ></lightning-combobox>
+                                                    </div>
+                                                    <div
+                                                        class="slds-grid slds-grid_align-end slds-m-top_small case-info__form-actions"
+                                                    >
+                                                        <lightning-button
+                                                            variant="neutral"
+                                                            label={labels.cancel}
+                                                            onclick={handleCancelMailingEdit}
+                                                            disabled={mailingSaveLoading}
+                                                        ></lightning-button>
+                                                        <lightning-button
+                                                            variant="brand"
+                                                            label={labels.save}
+                                                            onclick={handleSaveMailing}
+                                                            disabled={mailingSaveButtonDisabled}
+                                                            class="slds-m-left_x-small"
+                                                        ></lightning-button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="slds-col slds-size_1-of-1 slds-large-size_4-of-12 case-info__mailing-aside"
+                                            >
+                                                <p
+                                                    class="case-info__field-label slds-m-bottom_xx-small"
                                                 >
-                                                    <lightning-input
-                                                        type="checkbox"
-                                                        variant="label-hidden"
-                                                        label={labels.mailingAddress}
-                                                        data-row="office"
-                                                        checked={officeMailingRadioChecked}
-                                                        disabled={officeMailingCheckboxDisabled}
-                                                        onchange={handleMailingCheckboxChange}
-                                                        class="case-info__mailing-checkbox-input"
-                                                    ></lightning-input>
-                                                </template>
+                                                    {labels.mailingAddress}
+                                                </p>
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    variant="label-hidden"
+                                                    label={labels.mailingAddress}
+                                                    data-row="current"
+                                                    checked={currentMailingRadioChecked}
+                                                    disabled={currentMailingCheckboxDisabled}
+                                                    onchange={handleMailingCheckboxChange}
+                                                    class="case-info__mailing-checkbox-input"
+                                                ></lightning-input>
                                             </div>
                                         </div>
                                     </template>
