@@ -80,13 +80,25 @@
                 return origSanitize ? origSanitize(url) : url;
             };
             window.Quill.register(ImageBlot, true);
-            window._fecQReg = true;
-        }
+            // Register quill-better-table
+            if (window.quillBetterTable) {
+                window.Quill.register({'modules/better-table': window.quillBetterTable}, true);
+            }
+            window._fecQReg = true;        }
         if (!window._fecQCss) {
             var st = document.createElement('style');
             st.setAttribute('data-fec-qcss','1');
             st.innerHTML = self._css();
             document.head.appendChild(st);
+            // Inject table border override riêng với priority cao nhất
+            var stTbl = document.createElement('style');
+            stTbl.setAttribute('data-fec-qtbl','1');
+            stTbl.innerHTML = [
+                '.ql-editor table{border-collapse:collapse!important;width:100%!important}',
+                '.ql-editor table tr td,.ql-editor table tr th{border:1px solid #999!important;padding:6px 10px!important;min-width:40px!important}',
+                '.ql-editor table{border:1px solid #999!important}'
+            ].join('');
+            document.head.appendChild(stTbl);
             window._fecQCss = true;
         } else {
             // Update existing style with latest CSS
@@ -147,6 +159,7 @@
             image:'<svg viewBox="0 0 18 18"><rect x="2" y="3" width="14" height="12" rx="1" style="fill:none;stroke:#333;stroke-width:1.5"/><circle cx="6.5" cy="7.5" r="1.5" style="fill:#333"/><polyline points="2,13 6,9 9,12 12,8 16,13" style="fill:none;stroke:#333;stroke-width:1.5"/></svg>',
             code:'<svg viewBox="0 0 18 18"><polyline points="5,7 2,9 5,11" style="fill:none;stroke:#333;stroke-width:1.5"/><polyline points="13,7 16,9 13,11" style="fill:none;stroke:#333;stroke-width:1.5"/><line x1="11" x2="7" y1="4" y2="14" style="stroke:#333;stroke-width:1.5"/></svg>',
             quote:'<svg viewBox="0 0 18 18"><path d="M6,7H3A1,1,0,0,0,2,8v3a1,1,0,0,0,1,1H5l-1,2H6l1-2V8A1,1,0,0,0,6,7Z" style="fill:#333"/><path d="M13,7H10A1,1,0,0,0,9,8v3a1,1,0,0,0,1,1h2l-1,2h2l1-2V8A1,1,0,0,0,13,7Z" style="fill:#333"/></svg>',
+            table:'<svg viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="1" style="fill:none;stroke:#333;stroke-width:1.5"/><line x1="2" x2="16" y1="7" y2="7" style="stroke:#333;stroke-width:1.2"/><line x1="2" x2="16" y1="12" y2="12" style="stroke:#333;stroke-width:1.2"/><line x1="7" x2="7" y1="2" y2="16" style="stroke:#333;stroke-width:1.2"/><line x1="12" x2="12" y1="2" y2="16" style="stroke:#333;stroke-width:1.2"/></svg>',
             clean:'<svg viewBox="0 0 18 18"><line x1="5" x2="13" y1="3" y2="3" style="stroke:#333;stroke-width:1.5"/><line x1="9" x2="9" y1="3" y2="13" style="stroke:#333;stroke-width:1.5"/><line x1="5" x2="13" y1="15" y2="15" style="stroke:#333;stroke-width:1.5"/><line x1="3" x2="6" y1="12" y2="15" style="stroke:#c23934;stroke-width:1.5"/></svg>'
         };
         function btn(cmd, val, icon, title) {
@@ -168,7 +181,8 @@
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
             + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
-                + btn('code-block','',ic.code,'Code Block') + btn('blockquote','',ic.quote,'Blockquote')
+                + btn('table','',ic.table,'Insert Table')
+                + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
     },
@@ -253,6 +267,102 @@
                     var cf2=quill.getFormat(); quill.format('blockquote',!cf2.blockquote);
                 } else if (cmd==='code-block') {
                     var cf3=quill.getFormat(); quill.format('code-block',!cf3['code-block']);
+                } else if (cmd==='table') {
+                    // Lưu selection trước khi mở modal
+                    var savedRange = null;
+                    try {
+                        var selNow = window.getSelection();
+                        if (selNow && selNow.rangeCount > 0) savedRange = selNow.getRangeAt(0).cloneRange();
+                    } catch(e) {}
+
+                    // Show table size picker (rows x cols)
+                    var tblOverlay = document.createElement('div');
+                    tblOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999998;display:flex;align-items:center;justify-content:center;';
+                    var tblModal = document.createElement('div');
+                    tblModal.style.cssText = 'background:#fff;border-radius:8px;padding:24px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.25);';
+                    tblModal.innerHTML = '<div style="font-size:17px;font-weight:600;margin-bottom:16px;color:#16325c">Insert Table</div>'
+                        +'<div style="display:flex;gap:12px;margin-bottom:16px;">'
+                        +'<div style="flex:1"><label style="font-size:13px;font-weight:600;color:#444;display:block;margin-bottom:4px">Rows</label>'
+                        +'<input id="fec-tbl-rows" type="number" min="1" max="20" value="3" style="width:100%;box-sizing:border-box;border:1px solid #c8c8c8;border-radius:4px;padding:8px 10px;font-size:13px;outline:none;" /></div>'
+                        +'<div style="flex:1"><label style="font-size:13px;font-weight:600;color:#444;display:block;margin-bottom:4px">Columns</label>'
+                        +'<input id="fec-tbl-cols" type="number" min="1" max="20" value="3" style="width:100%;box-sizing:border-box;border:1px solid #c8c8c8;border-radius:4px;padding:8px 10px;font-size:13px;outline:none;" /></div>'
+                        +'</div>'
+                        +'<div style="display:flex;justify-content:flex-end;gap:8px;">'
+                        +'<button id="fec-tbl-cancel" style="padding:7px 18px;border:1px solid #c8c8c8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#333;">Cancel</button>'
+                        +'<button id="fec-tbl-insert" style="padding:7px 18px;border:none;border-radius:20px;background:#0070d2;color:#fff;cursor:pointer;font-size:13px;">Insert</button>'
+                        +'</div>';
+                    tblOverlay.appendChild(tblModal);
+                    document.body.appendChild(tblOverlay);
+                    document.getElementById('fec-tbl-rows').focus();
+                    document.getElementById('fec-tbl-cancel').addEventListener('click', function() { document.body.removeChild(tblOverlay); });
+                    document.getElementById('fec-tbl-insert').addEventListener('click', function() {
+                        var rows = Math.max(1, Math.min(20, parseInt(document.getElementById('fec-tbl-rows').value, 10) || 3));
+                        var cols = Math.max(1, Math.min(20, parseInt(document.getElementById('fec-tbl-cols').value, 10) || 3));
+                        document.body.removeChild(tblOverlay);
+
+                        // Build table node trực tiếp
+                        var tbl = document.createElement('table');
+                        tbl.style.cssText = 'border-collapse:collapse;width:100%;margin:8px 0;';
+                        for (var r = 0; r < rows; r++) {
+                            var tr = document.createElement('tr');
+                            for (var c = 0; c < cols; c++) {
+                                var td = document.createElement('td');
+                                td.style.cssText = 'border:1px solid #999;padding:6px 10px;min-width:60px;';
+                                td.setAttribute('contenteditable', 'true');
+                                td.innerHTML = '\u00a0';
+                                tr.appendChild(td);
+                            }
+                            tbl.appendChild(tr);
+                        }
+                        var br = document.createElement('p');
+                        br.innerHTML = '<br>';
+
+                        // Lấy selection hiện tại trong quill.root
+                        var editorEl = quill.root;
+                        var sel = window.getSelection();
+                        var inserted = false;
+                        // Dùng savedRange nếu có (selection trước khi mở modal)
+                        var insertRange = savedRange;
+                        if (!insertRange && sel && sel.rangeCount > 0) {
+                            insertRange = sel.getRangeAt(0);
+                        }
+                        if (insertRange && editorEl.contains(insertRange.commonAncestorContainer)) {
+                            insertRange.deleteContents();
+                            insertRange.insertNode(br);
+                            insertRange.insertNode(tbl);
+                            var newRange = document.createRange();
+                            newRange.setStartAfter(br);
+                            newRange.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(newRange);
+                            inserted = true;
+                        }
+                        if (!inserted) {
+                            editorEl.appendChild(tbl);
+                            editorEl.appendChild(br);
+                        }
+
+                        // Dùng setTimeout để đảm bảo Quill không reset sau insert
+                        window.setTimeout(function() {
+                            // Xóa class ql-blank để ẩn placeholder
+                            editorEl.classList.remove('ql-blank');
+                            // Nếu table bị Quill xóa, append lại
+                            if (!editorEl.contains(tbl)) {
+                                editorEl.appendChild(tbl);
+                                editorEl.appendChild(br);
+                            }
+                            // Focus vào cell đầu tiên
+                            var firstTd = tbl.querySelector('td');
+                            if (firstTd) {
+                                firstTd.focus();
+                                var r2 = document.createRange();
+                                r2.selectNodeContents(firstTd);
+                                r2.collapse(false);
+                                var s2 = window.getSelection();
+                                if (s2) { s2.removeAllRanges(); s2.addRange(r2); }
+                            }
+                        }, 100);                    });
+                    tblOverlay.addEventListener('click', function(ev) { if(ev.target===tblOverlay) document.body.removeChild(tblOverlay); });
                 } else if (cmd==='clean') {
                     var r=quill.getSelection(); if(r) quill.removeFormat(r.index,r.length);
                 } else if (cmd==='link') {
@@ -457,6 +567,75 @@
             });
         });
 
+        // Close dropdown on scroll (reposition or close)
+        function onScroll() {
+            if (activePk) {
+                var rect2 = activePk.getBoundingClientRect();
+                ddEl.style.left = rect2.left + 'px';
+                ddEl.style.top = (rect2.bottom + 2) + 'px';
+                var ddH2 = ddEl.offsetHeight;
+                if (rect2.bottom + ddH2 + 2 > window.innerHeight) {
+                    ddEl.style.top = (rect2.top - ddH2 - 2) + 'px';
+                }
+            }
+        }
+        window.addEventListener('scroll', onScroll, true);
+
+        // Keyboard handler: xử lý table + Backspace/Delete
+        quill.root.addEventListener('keydown', function(e) {
+            var sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            var range = sel.getRangeAt(0);
+            var editorEl = quill.root;
+
+            // Kiểm tra cursor/selection có trong table không
+            var anchorNode = range.commonAncestorContainer;
+            var cur = anchorNode.nodeType === 3 ? anchorNode.parentNode : anchorNode;
+            var inTable = false;
+            var tmp = cur;
+            while (tmp && tmp !== editorEl) {
+                if (tmp.tagName === 'TABLE' || tmp.tagName === 'TD' || tmp.tagName === 'TH') {
+                    inTable = true; break;
+                }
+                tmp = tmp.parentNode;
+            }
+
+            if (inTable) {
+                // Trong table: stop Quill intercept tất cả key trừ Backspace/Delete (để native xử lý)
+                if (e.keyCode !== 8 && e.keyCode !== 46) {
+                    e.stopImmediatePropagation();
+                }
+                // Backspace/Delete trong table → native browser xử lý bình thường
+                return;
+            }
+
+            // Ngoài table, chỉ xử lý Backspace/Delete
+            if (e.keyCode !== 8 && e.keyCode !== 46) return;
+
+            // Case A: có selection (bôi đen) chứa table → xóa table trước, để browser xóa text
+            if (!range.collapsed) {
+                var frag = range.cloneContents();
+                if (frag.querySelector('table')) {
+                    editorEl.querySelectorAll('table').forEach(function(t) {
+                        if (range.intersectsNode(t)) t.parentNode.removeChild(t);
+                    });
+                    // Không preventDefault → browser xóa phần text còn lại trong selection
+                }
+                return; // luôn để browser xử lý phần text
+            }
+
+            // Case B: cursor collapsed, liền kề table
+            var startEl = range.startContainer.nodeType === 3 ? range.startContainer.parentNode : range.startContainer;
+            // Tìm sibling trực tiếp hoặc qua parent
+            var sib = e.keyCode === 8 ? startEl.previousSibling : startEl.nextSibling;
+            if (!sib && startEl.parentNode && startEl.parentNode !== editorEl) {
+                sib = e.keyCode === 8 ? startEl.parentNode.previousSibling : startEl.parentNode.nextSibling;
+            }
+            if (sib && sib.tagName === 'TABLE') {
+                e.preventDefault();
+                sib.parentNode.removeChild(sib);
+            }
+        }, true);
         // Close on outside click
         document.addEventListener('mousedown', function(e) {
             if (clrDDEl && !clrDDEl.contains(e.target) && !tbEl.contains(e.target)) closeClrDD();
@@ -496,6 +675,11 @@
             '.fec-ed .ql-editor p{margin:0!important;padding:0!important;line-height:1.5!important}',
             '.fec-ed .ql-editor p+p{margin-top:0!important}',
             '.fec-ed .ql-editor.ql-blank::before{color:#aaa;font-style:normal}',
+            // Ẩn placeholder khi editor có table (table nằm ngoài Quill delta)
+            '.fec-ed .ql-editor:has(table)::before{display:none!important}',
+            // Table borders
+            '.fec-ed .ql-editor table{border-collapse:collapse!important;width:100%!important;margin:8px 0!important}',
+            '.fec-ed .ql-editor table td,.fec-ed .ql-editor table th{border:1px solid #999!important;padding:6px 10px!important;min-width:60px!important}',
             // Dropdown item hover
             '.fec-dd-it{padding:5px 12px;font-size:13px;color:#333;cursor:pointer;white-space:nowrap}',
             '.fec-dd-it:hover{background:#e8f0fe;color:#1a73e8}'
@@ -557,6 +741,7 @@
     },
 
     loadFromAddresses: function(component, incomingToAddress) {
+        var self = this;
         var a = component.get('c.getFromAddresses');
         a.setParams({ caseId: component.get('v.recordId') });
         a.setCallback(this, function(r) {
@@ -576,6 +761,9 @@
                 var toSelect = matchIncoming.length > 0 ? matchIncoming[0].value : queueDefault;
                 component.set('v.fromEmail', toSelect);
 
+                // Reload templates filtered by selected from address
+                self.loadTemplates(component, toSelect);
+
                 // Sync native <select>
                 function syncSelect() {
                     var el = component.getElement();
@@ -594,20 +782,95 @@
         $A.enqueueAction(a);
     },
 
-    loadTemplates: function(component) {
-        var a = component.get('c.getEmailTemplates');
-        a.setStorable(); // Cache kết quả để tránh gọi lại Apex mỗi lần load
+    showPreviewModal: function(body) {
+        var existing = document.getElementById('fec-preview-overlay');
+        if (existing) existing.parentNode.removeChild(existing);
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-preview-overlay';
+        overlay.setAttribute('style', [
+            'position:fixed','top:0','left:0','right:0','bottom:0',
+            'width:100vw','height:100vh',
+            'background:rgba(0,0,0,.55)',
+            'z-index:2147483647',
+            'display:flex','align-items:center','justify-content:center'
+        ].join('!important;') + '!important;');
+
+        var modal = document.createElement('div');
+        modal.setAttribute('style', [
+            'background:#fff','border-radius:8px',
+            'width:760px','max-width:92vw','max-height:88vh',
+            'display:flex','flex-direction:column',
+            'box-shadow:0 8px 32px rgba(0,0,0,.35)',
+            'overflow:hidden','position:relative'
+        ].join('!important;') + '!important;');
+
+        var header = document.createElement('div');
+        header.setAttribute('style','display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e5e5;flex-shrink:0;');
+        var title = document.createElement('span');
+        title.textContent = 'Preview email';
+        title.setAttribute('style','font-size:17px;font-weight:600;color:#16325c;flex:1;text-align:center;');
+        var closeBtn = document.createElement('span');
+        closeBtn.innerHTML = '&#x2715;';
+        closeBtn.setAttribute('style','cursor:pointer;font-size:20px;color:#706e6b;line-height:1;padding:2px 6px;position:absolute;right:16px;top:14px;');
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
+        bodyDiv.innerHTML = body || '';
+
+        var footer = document.createElement('div');
+        footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
+        var footCloseBtn = document.createElement('button');
+        footCloseBtn.textContent = 'Close';
+        footCloseBtn.setAttribute('style','padding:8px 24px;border:none;border-radius:20px;background:#0070d2;color:#fff;font-size:14px;cursor:pointer;font-weight:500;');
+        footer.appendChild(footCloseBtn);
+
+        modal.appendChild(header);
+        modal.appendChild(bodyDiv);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        function closeModal() {
+            var el = document.getElementById('fec-preview-overlay');
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        closeBtn.addEventListener('click', closeModal);
+        footCloseBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+    },
+
+    loadTemplates: function(component, mailboxAddress) {
+        var actionName = mailboxAddress ? 'c.getEmailTemplatesByMailbox' : 'c.getEmailTemplates';
+        var a = component.get(actionName);
+        if (mailboxAddress) {
+            a.setParams({ mailboxAddress: mailboxAddress });
+        }
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
-                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={};
+                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={}, headers={}, footers={};
                 data.forEach(function(t){
-                    opts.push({label:t.FEC_Template_Name__c||t.Name, value:t.Id});
+                    opts.push({label:t.Name, value:t.Id});
                     bodies[t.Id] = t.FEC_Body__c || '';
                     subjects[t.Id] = t.FEC_Subject_Line__c || '';
+                    var lh = t.FEC_Enhanced_Letterhead__r;
+                    headers[t.Id] = (lh && lh.FEC_Header__c) ? lh.FEC_Header__c : '';
+                    footers[t.Id] = (lh && lh.FEC_Footer__c) ? lh.FEC_Footer__c : '';
                 });
                 component.set('v.templateOptions',opts);
                 component.set('v.templateBodies',bodies);
                 component.set('v.templateSubjects',subjects);
+                component.set('v.templateHeaders',headers);
+                component.set('v.templateFooters',footers);
+                // Reset template selection nếu template hiện tại không còn trong list
+                var currentTemplate = component.get('v.replyTemplate');
+                if (currentTemplate && !bodies[currentTemplate]) {
+                    component.set('v.replyTemplate', '');
+                    component.set('v.body', '');
+                    if (window._fecQuill) window._fecQuill.root.innerHTML = '';
+                }
             }
         });
         $A.enqueueAction(a);
@@ -692,7 +955,8 @@
                     ccAddress: component.get('v.ccEmail') || '',
                     subject: sentSubject.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim(),
                     subjectPreview: sentSubject.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim(),
-                    bodyFull: body.replace(/<[^>]+>/g, ''),
+                    bodyFull: body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').trim(),
+                    bodyHtml: body,
                     messageDate: ds,
                     messageRawDate: now.toISOString(),
                     expanded: false,
@@ -712,9 +976,11 @@
                 this.loadEmails(component);
             } else {
                 var errors = response.getError();
-                var msg = 'Gửi email thất bại.';
-                if (errors && errors[0]) {
-                    msg = errors[0].message || errors[0].pageErrors && errors[0].pageErrors[0] && errors[0].pageErrors[0].message || msg;
+                var msg = 'Failed to send email.';
+                if (state === 'INCOMPLETE') {
+                    msg = 'Communication error, please retry or reload the page.';
+                } else if (errors && errors[0]) {
+                    msg = errors[0].message || (errors[0].pageErrors && errors[0].pageErrors[0] && errors[0].pageErrors[0].message) || msg;
                 }
                 console.error('sendEmail error state=' + state + ' msg=' + msg, errors);
                 component.set('v.errorMsg', msg);
@@ -747,9 +1013,10 @@
                         var h12=h%12||12, minStr=min<10?'0'+min:min;
                         ds = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' at '+h12+':'+minStr+' '+ampm;
                     }
-                    var rb=(m.TextBody||'').replace(/<[^>]+>/g,''), subj=m.Subject||'';
+                    var rb=(m.TextBody||m.HtmlBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+                    var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
-                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
+                    return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,bodyHtml:m.HtmlBody||'',messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
                 });
                 // Sort
                 list.sort(function(a,b){

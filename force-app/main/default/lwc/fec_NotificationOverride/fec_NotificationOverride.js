@@ -48,13 +48,13 @@ import {
   MANUAL_NOTIFICATION_TYPE
 } from "c/fec_CommonConst";
 
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { getRecord } from 'lightning/uiRecordApi';
 import FEC_Notification_Channel_Disabled_Msg from "@salesforce/label/c.FEC_Notification_Channel_Disabled_Msg";
 
 const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
-
-const FIELDS = [CURRENT_STATUS_FIELD, CHANGED_STATUS_FIELD];
+/** Nhiều FEC_Case_Status__c.Name trên FEC_Current_Status__c / FEC_Changed_Status__c */
+const CASE_STATUS_NAME_DELIMITER = ",";
 
 /**
  * FEC Notification Override
@@ -73,8 +73,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @track initialCurrentStatus = [];
   @track initialChangedStatus = [];
   @track initialAssignedToQueue = [];
-  @track initialCurrentStatus = [];
-  @track initialChangedStatus = [];
 
   showChannelWarning = false;
   selectedNotiChannelId = null;
@@ -136,9 +134,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedAssignedToQueueId = null;
 
-  /** Phase 1: CSV of FEC_Case_Status__c Ids (comma-separated). Undefined = user has not changed lookup (preserve on edit). */
-  selectedCurrentStatusCsv;
-  selectedChangedStatusCsv;
+  /** Lưu chuỗi Name (FEC_Case_Status__c.Name), nhiều giá trị phân tách bằng ',' — khớp field text trên notification. */
   // Track Status selections
   selectedCurrentStatus = null;
   selectedChangedStatus = null;
@@ -147,50 +143,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
   objectInfo;
-
-  @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
-  wiredRecord({ error, data }) {
-    if (data) {
-      // 1. Auto-fill Current Status
-      let currentStatusStr = getFieldValue(data, CURRENT_STATUS_FIELD);
-      if (currentStatusStr) {
-        // Salesforce Multi-Select Picklists use ';' as a delimiter. 
-        // Change to ',' if your field uses comma separation.
-        let statusArray = currentStatusStr.split(';');
-
-        this.initialCurrentStatus = statusArray.map(status => {
-          return {
-            id: status,
-            title: status,
-            subtitle: 'Case Status'
-          };
-        });
-
-        // Keep the string for your save operation
-        this.selectedCurrentStatus = currentStatusStr;
-      }
-
-      // 2. Auto-fill Changed Status
-      let changedStatusStr = getFieldValue(data, CHANGED_STATUS_FIELD);
-      if (changedStatusStr) {
-        let changedArray = changedStatusStr.split(';');
-
-        this.initialChangedStatus = changedArray.map(status => {
-          let trimmedStatus = status.trim();
-          return {
-            id: trimmedStatus,
-            title: trimmedStatus,
-            subtitle: 'Case Status'
-          };
-        });
-
-        // Keep the string for your save operation
-        this.selectedChangedStatus = changedStatusStr;
-      }
-    } else if (error) {
-      console.error('Error fetching existing record values', error);
-    }
-  }
 
   @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
   wiredChannelStatus({ error, data }) {
@@ -218,17 +170,43 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     return this.objectInfo?.data?.label;
   }
 
+  /** @param {Array<{id?: string, title?: string, subtitle?: string}>|undefined} rows từ Apex getNotificationById */
+  _mapCaseStatusPills(rows, fallbackCsv) {
+    const subtitle = 'FEC Case Status';
+    if (rows && rows.length) {
+      return rows.map((p) => ({
+        id: p.id,
+        title: p.title,
+        subtitle: p.subtitle || subtitle
+      }));
+    }
+    if (!fallbackCsv) {
+      return [];
+    }
+    return fallbackCsv
+      .split(CASE_STATUS_NAME_DELIMITER)
+      .map((s) => (s || '').trim())
+      .filter(Boolean)
+      .map((t) => ({ id: t, title: t, subtitle }));
+  }
+
   handleSelected(event) {
     const ids = (event.detail || []).map((e) => e?.id);
     const joined = ids.join(',');
     const dataId = event.currentTarget?.dataset?.id;
 
     if (dataId === 'currentStatus') {
-      this.selectedCurrentStatus = ids.join(';') || null;
-      return; 
+      const names = (event.detail || [])
+        .map((e) => (e?.title != null ? String(e.title).trim() : ''))
+        .filter(Boolean);
+      this.selectedCurrentStatus = names.length ? names.join(CASE_STATUS_NAME_DELIMITER) : null;
+      return;
     }
     if (dataId === 'changedStatus') {
-      this.selectedChangedStatus = ids.join(';') || null;
+      const names = (event.detail || [])
+        .map((e) => (e?.title != null ? String(e.title).trim() : ''))
+        .filter(Boolean);
+      this.selectedChangedStatus = names.length ? names.join(CASE_STATUS_NAME_DELIMITER) : null;
       return;
     }
 
@@ -453,13 +431,15 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
                 }));
             }
 
-            // Populating UI Pills for Multi-Select Case Statuses (split by semicolon)
-            if (res.FEC_Current_Status__c) {
-                this.initialCurrentStatus = res.FEC_Current_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
-            }
-            if (res.FEC_Changed_Status__c) {
-                this.initialChangedStatus = res.FEC_Changed_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
-            }
+            // Multi-select FEC_Case_Status__c: Apex trả Id + Name để lookup loại trừ đúng; fallback split Name nếu không có pill
+            this.initialCurrentStatus = this._mapCaseStatusPills(
+              response.currentStatusPills,
+              res.FEC_Current_Status__c
+            );
+            this.initialChangedStatus = this._mapCaseStatusPills(
+              response.changedStatusPills,
+              res.FEC_Changed_Status__c
+            );
 
             // Populating UI Pills for Single-Select Lookups
             if (res.FEC_Product_Type__c) {

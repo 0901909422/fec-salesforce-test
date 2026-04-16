@@ -1,0 +1,25 @@
+.table-user-container {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Fixed-height Add Users Modal */
+.custom-add-users-modal {
+    /* viewport-based fixed height */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make modal content scroll inside fixed container */
+.custom-add-users-modal .slds-modal__content {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+/* Optional: ensure header/footer don’t shrink */
+.custom-add-users-modal .slds-modal__header,
+.custom-add-users-modal .slds-modal__footer {
+    flex: 0 0 auto;
+}

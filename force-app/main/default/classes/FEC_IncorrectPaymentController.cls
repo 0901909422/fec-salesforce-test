@@ -13,16 +13,6 @@ public with sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String particulars;
     }
 
-    public class SubCodeConfigDTO {
-        @AuraEnabled public String subCode;
-        @AuraEnabled public String incorrectContractNumber;
-        @AuraEnabled public String paymentMethod;
-        @AuraEnabled public String billDate;
-        @AuraEnabled public Decimal billAmount;
-        @AuraEnabled public String correctContractNumber;
-        @AuraEnabled public Decimal adjustedAmount;
-    }
-
     public class AdjustmentDTO {
         @AuraEnabled public String correctContract { get; set; }
         @AuraEnabled public Decimal adjustedAmount { get; set; }
@@ -32,6 +22,17 @@ public with sharing class FEC_IncorrectPaymentController {
             this.correctContract = null;
             this.adjustedAmount = null;
         }
+    }
+
+    public class SubCodeConfigDTO {
+        @AuraEnabled public String subCode;
+        @AuraEnabled public String incorrectContractNumber;
+        @AuraEnabled public String paymentMethod;
+        @AuraEnabled public String billDate;
+        @AuraEnabled public Decimal billAmount;
+        @AuraEnabled public String correctContractNumber;
+        @AuraEnabled public Decimal adjustedAmount;
+        @AuraEnabled public List<AdjustmentDTO> adjustmentRows;
     }
 
     @AuraEnabled
@@ -87,10 +88,12 @@ public with sharing class FEC_IncorrectPaymentController {
         dto.billAmount = null;
         dto.correctContractNumber = FEC_ConstantCommon.STR_EMPTY;
         dto.adjustedAmount = null;
+        dto.adjustmentRows = null;
         if (caseId == null) return dto;
         List<Case> cases = [
             SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
-                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c
+                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c,
+                FEC_Incorrect_Payment_Adj_Rows__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -102,6 +105,17 @@ public with sharing class FEC_IncorrectPaymentController {
         dto.billAmount = cases[0].FEC_Bill_Amount__c;
         dto.correctContractNumber = cases[0].FEC_Correct_Contract_Number__c != null ? cases[0].FEC_Correct_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
         dto.adjustedAmount = cases[0].FEC_Adjusted_Amount__c;
+        String adjRowsJson = cases[0].FEC_Incorrect_Payment_Adj_Rows__c;
+        if (String.isNotBlank(adjRowsJson)) {
+            try {
+                List<AdjustmentDTO> parsedRows = (List<AdjustmentDTO>) JSON.deserialize(adjRowsJson.trim(), List<AdjustmentDTO>.class);
+                if (parsedRows != null && !parsedRows.isEmpty()) {
+                    dto.adjustmentRows = parsedRows;
+                }
+            } catch (Exception parseEx) {
+                dto.adjustmentRows = null;
+            }
+        }
         if (cases[0].FEC_SubCode__c == null) return dto;
         Id subCodeId = cases[0].FEC_SubCode__c;
         List<FEC_Nature_of_Case__c> nocs = [
@@ -237,7 +251,8 @@ public with sharing class FEC_IncorrectPaymentController {
             }
         }
         List<Case> cases = [
-            SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c
+            SELECT Id, FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
+                FEC_Incorrect_Payment_Adj_Rows__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -265,14 +280,9 @@ public with sharing class FEC_IncorrectPaymentController {
         c.FEC_Payment_Method__c = paymentMethod != null ? paymentMethod.trim() : null;
         c.FEC_Correct_Contract_Number__c = String.isNotBlank(first.correctContract) ? first.correctContract.trim() : null;
         c.FEC_Adjusted_Amount__c = first.adjustedAmount != null ? first.adjustedAmount : null;
-        List<Case> toUpdate = new List<Case>{ c };
-        toUpdate = (List<Case>) Security.stripInaccessible(AccessType.UPDATABLE, toUpdate).getRecords();
-        if (toUpdate.isEmpty()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access);
-        }
-        
+        c.FEC_Incorrect_Payment_Adj_Rows__c = JSON.serialize(validAdjs);
         try {
-            update toUpdate;
+            update new List<Case>{ c };
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }
@@ -323,14 +333,8 @@ public with sharing class FEC_IncorrectPaymentController {
         c.FEC_Correct_Contract_Number__c = String.isNotBlank(correctContract) ? correctContract.trim() : null;
         c.FEC_Adjusted_Amount__c = adjustedAmount != null ? adjustedAmount : null;
 
-        List<Case> toUpdate = new List<Case>{ c };
-        toUpdate = (List<Case>) Security.stripInaccessible(AccessType.UPDATABLE, toUpdate).getRecords();
-        if (toUpdate.isEmpty()) {
-            throw new AuraHandledException(Label.FEC_MSG_IncorrectPayment_No_Update_Case_Fields_Access);
-        }
-
         try {
-            update toUpdate;
+            update new List<Case>{ c };
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         }

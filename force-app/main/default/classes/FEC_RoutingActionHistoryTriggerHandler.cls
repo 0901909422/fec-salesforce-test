@@ -108,8 +108,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
         for (FEC_Notification__c notif : activeNotifications) {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
-            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c) == true)
-                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c) == true)
+            Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
+                && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
@@ -358,7 +358,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
       return;
     }
-    String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId);
+    String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId)?.replaceAll('\\W+', '').trim();
 
     String currentTeamsStr = caseRecord.FEC_Team__c;
     Set<String> teamSet = new Set<String>();
@@ -367,7 +367,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
       ) {
         if (String.isNotBlank(t)) {
-          teamSet.add(t.trim());
+          teamSet.add(t.replaceAll('\\W+', '').trim());
         }
       }
     }
