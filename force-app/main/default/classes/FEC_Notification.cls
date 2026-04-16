@@ -8,13 +8,17 @@ public without sharing class FEC_Notification {
         public Id caseId;
         public String toEmail;
         public String subject;
+        public String header;
         public String body;
+        public String footer;
 
-        public EmailInfo(Id caseId, String toEmail, String subject, String body) {
+        public EmailInfo(Id caseId, String toEmail, String subject, String header, String body, String footer) {
             this.caseId = caseId;
             this.toEmail = toEmail;
             this.subject = subject;
+            this.header = header;
             this.body = body;
+            this.footer = footer;
         }
     }
     
@@ -236,18 +240,19 @@ public without sharing class FEC_Notification {
         if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
             senderEmail = systemConfig.FEC_Sender_Email__c;
         }
-
-        String subject = String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-        String fullBody = '';
+        String header = '';
+        String footer = '';
+        String subject = String.isNotBlank(template.FEC_Subject_Line__c)
+            ? template.FEC_Subject_Line__c
+            : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
-            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
+            header += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
         }
-        fullBody += String.isNotBlank(template.FEC_Body__c) ? template.FEC_Body__c : '';
         if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
-            fullBody += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+            footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
         }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, fullBody);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, header, template.FEC_Body__c, footer);
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
         }
@@ -417,10 +422,11 @@ public without sharing class FEC_Notification {
         // 2. Gom dữ liệu vào List thay vì thực thi ngay
         for (EmailInfo info : emailsToSend) {
             // Build Email
+            String fullBody = info.header + info.body + info.footer;
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(info.toEmail.split(','));
             mail.setSubject(info.subject);
-            mail.setHtmlBody(info.body != null ? info.body.replace('\n', '<br/>') : '');
+            mail.setHtmlBody(info.body != null ? fullBody?.replace('\n', '<br/>') : '');
             mail.setWhatId(info.caseId);
             mail.setSaveAsActivity(false); 
             
@@ -461,8 +467,8 @@ public without sharing class FEC_Notification {
     // =========================================================
     // 3. HÀM CHO LWC (Cập nhật để gọi chung hàm Bulk ở trên)
     // =========================================================
-    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String body) {
-        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, body);
+    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String header, String body, String footer) {
+        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, header, body, footer);
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
@@ -479,7 +485,7 @@ public without sharing class FEC_Notification {
                 senderEmail = systemConfig.FEC_Sender_Email__c;
             }
 
-            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, body);
+            EmailInfo previewEmail = new EmailInfo(caseId, '', subject, '', body, '');
             bulkResolveMergeFields(new List<EmailInfo>{ previewEmail }, senderEmail);
 
             template.FEC_Subject_Line__c = previewEmail.subject;

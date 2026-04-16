@@ -164,7 +164,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 relatedCase.Id,
                 targetEmailAddress,
                 String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
-                template.FEC_Body__c
+                '',
+                template.FEC_Body__c,
+                ''
             ));
         }
     }
