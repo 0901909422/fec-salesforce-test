@@ -84,6 +84,10 @@ const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
 
+const PROCESS_BLOCK_CARD = "Card Block";
+const PROCESS_UNBLOCK_CARD = "Card Unblock";
+const PROCESS_PIN_REISSUE = "PIN Replacement";
+
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
   ACTION_ESCALATE,
@@ -1102,13 +1106,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // check show button process action PIN Reissue
-        const processActions = this.business.processActionlst || [];
-        processActions.forEach(processAction => {
-          if (processAction.value === ACTION_BLOCK_CARD || processAction.value === ACTION_PIN_REISSUE) {
-            this.showProcessAction = true;
-          }
-        });
+        // show button process action with process Block Card and PIN Reissue
+        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
+          this.showProcessAction = true;
+        }
 
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
@@ -1494,6 +1495,11 @@ export default class Fec_CaseBussiness extends LightningElement {
           toRouteTo = TYPE_QUALIFIED == value;
 
           toRevert = TYPE_UNQUALIFIED == value;
+          // PhuongNT add for Unblock Card
+          if (this.business?.code === PROCESS_UNBLOCK_CARD) {
+            this.showProcessAction = TYPE_QUALIFIED == value;
+          }
+          
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
@@ -1675,7 +1681,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     const refundReqEl = this._getRefundRequestFormEl();
-    if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
+    if (refundReqEl && typeof refundReqEl.validateForSubmit === "function") {
+      if (!refundReqEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    } else if (refundReqEl && typeof refundReqEl.validateRefund === "function") {
       if (!refundReqEl.validateRefund()) {
         isAllValid = false;
       }
@@ -1802,7 +1812,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     const host = wrap && wrap.firstElementChild;
     if (
       host &&
-      (typeof host.validateRefund === "function" ||
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.validateRefund === "function" ||
+        typeof host.saveDraftIfApplicable === "function" ||
+        typeof host.saveRefundDataIfApplicable === "function" ||
         typeof host.saveRefundDataIfVisible === "function")
     ) {
       return host;
@@ -1810,12 +1823,26 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
-  _saveRefundRequestIfApplicable() {
+  _saveRefundRequestDraftIfApplicable() {
     const el = this._getRefundRequestFormEl();
-    if (!el || typeof el.saveRefundDataIfVisible !== "function") {
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
-    return el.saveRefundDataIfVisible();
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveRefundRequestIfApplicable() {
+    const el = this._getRefundRequestFormEl();
+    if (!el) {
+      return Promise.resolve();
+    }
+    if (typeof el.saveRefundDataIfApplicable === "function") {
+      return el.saveRefundDataIfApplicable();
+    }
+    if (typeof el.saveRefundDataIfVisible === "function") {
+      return el.saveRefundDataIfVisible();
+    }
+    return Promise.resolve();
   }
   /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
@@ -1948,7 +1975,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveIPPClosureIfApplicable(),
         this._saveBeneficiaryBankInfoDraftIfApplicable(),
         this._saveCardClosureRefundDraftIfApplicable(),
-        this._saveRefundRequestIfApplicable(),
+        this._saveRefundRequestDraftIfApplicable(),
       ]);
     if (total === 0) {
       return afterForms();

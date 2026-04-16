@@ -11,7 +11,6 @@ import FEC_MSG_IPP_Closure_Select_One from '@salesforce/label/c.FEC_MSG_IPP_Clos
 import FEC_MSG_IPP_Closure_No_Eligible from '@salesforce/label/c.FEC_MSG_IPP_Closure_No_Eligible';
 import LBL_LOADING from '@salesforce/label/c.Loading';
 import FEC_SPINNER_SAVING from '@salesforce/label/c.FEC_Spinner_Saving';
-import FEC_LBL_IPP_Closure_Heading from '@salesforce/label/c.FEC_LBL_IPP_Closure_Heading';
 import FEC_LBL_IPP_Closure_Col_IppRecordNo from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppRecordNo';
 import FEC_LBL_IPP_Closure_Col_IppPlan from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppPlan';
 import FEC_LBL_IPP_Closure_Col_IppOpenDate from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppOpenDate';
@@ -62,7 +61,6 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     labelLoading = LBL_LOADING;
     labelSaving = FEC_SPINNER_SAVING;
-    headingText = FEC_LBL_IPP_Closure_Heading;
 
     ippColumns = [
         { label: FEC_LBL_IPP_Closure_Col_IppRecordNo, fieldName: 'ippRecordNo', type: 'text', sortable: true },
