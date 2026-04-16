@@ -312,11 +312,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Case_NFU_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -342,11 +337,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Last_Modified_Date__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -358,11 +348,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_User__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -708,11 +693,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Template__c.FEC_Template_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
