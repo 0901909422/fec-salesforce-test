@@ -369,7 +369,7 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-      typeof o.fecMasterDataSettingIsEdit === "boolean"
+        typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : false,
   };
@@ -401,6 +401,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   routingAccordionSectionKey = "routing-action";
 
+  @track addressUpdateClickCount = 0;
+
   _ippClosureHasEligibleRows = false;
 
   // get eyeIcon() {
@@ -421,7 +423,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
-  
+
   @wire(MessageContext)
   messageContext;
 
@@ -964,7 +966,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           section.id = crypto.randomUUID();
 
           sectionlst.push(section.id);
-          
+
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
@@ -976,12 +978,12 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.value == null || field.value === undefined) {
                   field.value = STR_EMPTY;
                 }
-               if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+                if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
                   field.isInternalRequest = field.value === INTERNAL_REQUEST;
                 }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
-                if(field.hidden) {
+                if (field.hidden) {
                   field.className += ' slds-hide';
                 }
 
@@ -1006,15 +1008,15 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.isHidden =
                       !assignmentType || assignmentType === TYPE_DISAGREE;
-                } else {
-                  field.isHidden = false;
+                  } else {
+                    field.isHidden = false;
+                  }
                 }
-              }
 
-              if (!this.isEdit) {
-                field.readonly = true;
-                field.editable = false;
-              }
+                if (!this.isEdit) {
+                  field.readonly = true;
+                  field.editable = false;
+                }
 
                 field.original = field.value;
 
@@ -1053,26 +1055,26 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.value = this._maskDisplayPhone(field.original);
                   } else {
-                  switch (field.maskingType) {
-                    case MASKING_TYPE_PASSPORT:
-                        if (isOnlyNumber(field.original)) {
-                        field.value = mask(field.original, 3, 3);
-                      } else {
-                        field.value = mask(field.original, 2, 3);
-                      }
-                      break;
-                    default:
-                      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                    switch (field.maskingType) {
+                      case MASKING_TYPE_PASSPORT:
                         if (isOnlyNumber(field.original)) {
                           field.value = mask(field.original, 3, 3);
                         } else {
                           field.value = mask(field.original, 2, 3);
                         }
-                      } else {
-                        field.value = mask(field.original, 4, 4);
-                      }
-                      break;
-                  }
+                        break;
+                      default:
+                        if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                          if (isOnlyNumber(field.original)) {
+                            field.value = mask(field.original, 3, 3);
+                          } else {
+                            field.value = mask(field.original, 2, 3);
+                          }
+                        } else {
+                          field.value = mask(field.original, 4, 4);
+                        }
+                        break;
+                    }
                   }
                 }
 
@@ -1109,7 +1111,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyRemovePhonePlacement();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
-        this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
+        this.activeSectionlst = [...this.activeSectionlst, ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
@@ -1355,7 +1357,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         // }));
         // this.business = { ...this.business };
       }
-      
+
       if (field.isDate) {
         field.displayValue = formatToDDMMYYYY(value);
       }
@@ -1480,7 +1482,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (this.business?.code === PROCESS_UNBLOCK_CARD) {
             this.showProcessAction = TYPE_QUALIFIED == value;
           }
-          
+
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
@@ -1873,7 +1875,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */									
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */
   handleIppClosureLoad(event) {
     const d = event.detail || {};
     this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
@@ -1916,7 +1918,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
     Promise.resolve().then(() => {
-      this._applyIppClosureRouteToWhenEditable();				   
+      this._applyIppClosureRouteToWhenEditable();
     });
   }
 
@@ -2106,6 +2108,26 @@ export default class Fec_CaseBussiness extends LightningElement {
   handleProcessAction(e) {
     let method = e.target.dataset.id;
 
+    if (method === ACTION_ADDRESS_UPDATE) {
+      let processObj = this.business.processActionlst?.find(p => p.value === ACTION_ADDRESS_UPDATE);
+      if (processObj && processObj.disabled) {
+        return; // Prevent further action if already disabled
+      }
+      this.addressUpdateClickCount++;
+      if (this.addressUpdateClickCount >= 3) {
+        this.business.processActionlst = this.business.processActionlst.map(
+          (process) => {
+            if (process.value === ACTION_ADDRESS_UPDATE) {
+              return { ...process, disabled: true };
+            }
+            return process;
+          }
+        );
+        // Force LWC reactivity to re-render the button as disabled
+        this.business = { ...this.business };
+      }
+    }
+
     this.processActionMethod = method;
 
     let header;
@@ -2222,7 +2244,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
     }
-    
+
 
     // Address Update: Save chỉ lưu local, Process Action mới call API.
     // Các action khác: không đổi luồng gọi API.
@@ -2517,7 +2539,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             const layoutNum = Number(meta.fieldLayout);
             const layout =
               Number.isFinite(layoutNum) &&
-              SLDS_MEDIUM_SIZE_OF_12[layoutNum]
+                SLDS_MEDIUM_SIZE_OF_12[layoutNum]
                 ? layoutNum
                 : 12;
             const lwcColClassName =
@@ -2579,11 +2601,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     const draft = JSON.parse(localStorage.getItem(this.draftKey));
     if (!draft || !this.business) return;
     this.business.sectionlst.forEach(section => {
-        section.subSectionlst.forEach(sub => {
-            sub.objlst.forEach(obj => {
-                obj.fieldlst.forEach(field => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
             if (!field.editable) return; // ignore non editable
-                    const key = obj.id + '_' + field.apiName;
+            const key = obj.id + '_' + field.apiName;
             // if (draft[key] && !field.value) {
             if (draft[key]) { // still applyDraft with existing data
               field.value = draft[key];
@@ -2619,6 +2641,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
-   return this.isEdit && this.business?.hasRoutingAction;
+    return this.isEdit && this.business?.hasRoutingAction;
   }
 }
