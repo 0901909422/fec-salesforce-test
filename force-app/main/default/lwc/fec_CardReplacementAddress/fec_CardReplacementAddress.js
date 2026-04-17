@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { getRecord, getFieldValue, createRecord } from "lightning/uiRecordApi";
+import { getRecord, getFieldValue, createRecord, updateRecord, deleteRecord } from "lightning/uiRecordApi";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import ACCOUNT_OR_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Account_or_Contract__c";
 
@@ -33,6 +34,11 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     addressTypeOptions = [
         { label: 'Temporary Address', value: 'Temporary Address' },
     ];
+    newTempAddressOptions;
+    newAddressInfoId;
+    building;
+    numberValue;
+    street;
 
     customLabel = {
         btnAddTempAddress: FEC_LBL_ContractClosure_Add_Temp_Address,
@@ -45,6 +51,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         building: FEC_LBL_ContractClosure_Building,
         street: FEC_LBL_ContractClosure_Street,
         number: FEC_LBL_ContractClosure_Street_Number,
+        newTempAddress: FEC_LBL_ContractClosure_Modal_New_Temp_Address,
     }
 
     columns = [
@@ -111,7 +118,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         this.mailingWard = e.detail.value;
     }
 
-    handleClick() {
+    handleAddTempAddress() {
         this.isModalOpen = true;
     }
 
@@ -143,31 +150,77 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         }
         this.isLoading = true;
         const root = this.template.querySelector('.case-info__new-address-form');
-        const building = root.querySelector('lightning-input[data-id="building"]').value;
-        const number = root.querySelector('lightning-input[data-id="number"]').value;
-        const street = root.querySelector('lightning-input[data-id="street"]').value;
+        this.building = root.querySelector('lightning-input[data-id="building"]').value;
+        this.numberValue = root.querySelector('lightning-input[data-id="number"]').value;
+        this.street = root.querySelector('lightning-input[data-id="street"]').value;
         const ward = this.wardOptions.find(w => w.value === this.mailingWard)?.label;
         const province = this.provinceOptions.find(p => p.value === this.mailingCity)?.label;
-        const address = building + ', ' + number + ' ' + street + ', ' + ward + ', ' + province;
+        const address = this.building + ', ' + this.numberValue + ' ' + this.street + ', ' + ward + ', ' + province;
         const fields = {
             'FEC_Customer_History__c': this.customerHistoryId,
             'FEC_Address_Type__c': this.addressType,
             'FEC_Address__c': address,
             'FEC_Mailing_Address__c': true,
         };
-        const recordInput = { apiName: 'FEC_Address_Info__c', fields };
         try {
-            // Invoke createRecord
-            const addressInfo = await createRecord(recordInput);
-            console.log(JSON.stringify(addressInfo));
+            if (this.newAddressInfoId) {
+                delete fields['FEC_Customer_History__c'];
+                fields['Id'] = this.newAddressInfoId;
+                const recordUpdate = { fields };
+                await updateRecord(recordUpdate);
+            } else {
+                const recordInput = { apiName: 'FEC_Address_Info__c', fields };
+                const addressInfo = await createRecord(recordInput);
+                this.newAddressInfoId = addressInfo.id;
+            }
             this.handleGetAddressInfos();
             this.isModalOpen = false;
             this.isDisableBtnAddTempAddress = true;
+            this.newTempAddressOptions = [
+                { label: address, value: this.newAddressInfoId }
+            ];
         } catch (error) {
+            this.showToast('Error', this.handleError(error), 'error');
             console.log(error);
         } finally {
             this.isLoading = false;
         }
     }
 
+    handleEditTempAddress() {
+        this.isModalOpen = true;
+    }
+
+    async handleDeleteTempAddress() {
+        this.isLoading = true;
+        try {
+            await deleteRecord(this.newAddressInfoId);
+            this.handleGetAddressInfos();
+            this.isDisableBtnAddTempAddress = false;
+        } catch (error) {
+            this.showToast('Error', this.handleError(error), 'error');
+            console.log(error);
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    handleError(error) {
+        let msg = '';
+        if (Array.isArray(error?.body)) {
+            msg = error.body.map(e => e.message).join(', ');
+        } else if (typeof error?.body?.message === 'string') {
+            msg = error.body.message;
+        }
+        return msg;
+    }
+
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant
+        });
+        this.dispatchEvent(event);
+    }
 }
