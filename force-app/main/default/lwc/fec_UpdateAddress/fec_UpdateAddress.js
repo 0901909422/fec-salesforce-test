@@ -100,12 +100,33 @@ export default class Fec_UpdateAddress extends LightningElement {
         return this._recordId;
     }
     set recordId(value) {
-        this._recordId = value;
+        const prev = this._recordId;
+        const next =
+            value === null || value === undefined || value === ''
+                ? undefined
+                : value;
+        if (
+            prev &&
+            next &&
+            String(prev) !== String(next)
+        ) {
+            this.clearPendingAddressPayloads();
+        }
+        this._recordId = next;
         this._triggerLoadAfterCaseIdChange();
     }
 
-    // is-edit từ fec_CaseBussiness (giống fec_IPPClosureForm: không khởi tạo boolean @api)
-    @api isEdit;
+    _isEditRaw;
+    @api get isEdit() { return this._isEditRaw; }
+    set isEdit(value) {
+        this._isEditRaw = value;
+        console.log(`[DEBUG][fec_UpdateAddress] set isEdit — value=${JSON.stringify(value)} (type=${typeof value}), canEdit=${value !== false}`);
+    }
+
+    /** Chỉ ẩn bút chì / khóa handler khi parent tường minh truyền isEdit=false. undefined → cho phép edit. */
+    get canEdit() {
+        return this.isEdit !== false;
+    }
 
     /**
      * Gọi từ fec_CaseBussiness khi Process Action "Update customer info" thất bại
@@ -168,6 +189,14 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (next === this._caseIdFromPage) {
             return;
         }
+        const prevPage = this._caseIdFromPage;
+        if (
+            prevPage &&
+            next &&
+            String(prevPage) !== String(next)
+        ) {
+            this.clearPendingAddressPayloads();
+        }
         this._caseIdFromPage = next;
         this._triggerLoadAfterCaseIdChange();
     }
@@ -187,7 +216,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (rid) {
             this.originalAddressesSnapshot = undefined;
             this.originalSnapshotInitialized = false;
-            this.clearPendingAddressPayloads();
             this.loadAddressData();
         } else {
             this.isLoading = false;
@@ -239,7 +267,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track newAddrIsMailing = false;
 
     _lastFetchKey = 'fec-update-address-unset';
-    /** Payload pending: chỉ submit API khi user bấm Process Action. */
+    /** Payload pending: chỉ submit API khi user bấm Process Action / Submit Case. */
     _pendingAddressUpdateMap = {};
 
     labels = {
@@ -312,6 +340,8 @@ export default class Fec_UpdateAddress extends LightningElement {
                     );
                     this.originalSnapshotInitialized = true;
                 }
+                this._hydratePendingFromSessionIfNeeded();
+                this._reapplyMainInfoDisplayFromHydratedPending();
                 this.preloadProvinceOptions();
             })
             .catch((err) => {
@@ -352,11 +382,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get mailingRadiosDisabled() {
-        return (
-            this.isEdit === false ||
-            this.mailingSaveLoading ||
-            this.isLoading
-        );
+        return this.mailingSaveLoading || this.isLoading;
     }
 
     /**
@@ -404,7 +430,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get mailingSaveButtonDisabled() {
-        return this.mailingSaveOrFormBusy || this.isEdit === false;
+        return this.mailingSaveOrFormBusy;
     }
 
     get newAddressTypeOptions() {
@@ -426,7 +452,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get newAddressSubmitDisabled() {
-        return this.newAddressFormBusy || this.isEdit === false;
+        return this.newAddressFormBusy;
     }
 
     /** Chỉ cho sửa một dòng; ẩn tương tác bút chì dòng còn lại khi đang edit. */
@@ -540,11 +566,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get addNewAddressDisabled() {
-        return (
-            this.isEdit === false ||
-            this.isLoading ||
-            this.hasAllStandardAddressTypes
-        );
+        return this.isLoading || this.hasAllStandardAddressTypes;
     }
 
     formatAddress(addr) {
@@ -682,6 +704,18 @@ export default class Fec_UpdateAddress extends LightningElement {
         return {
             caseId: this.resolvedCaseId,
             sfAddressType,
+            cifNumber:
+                ctx.cifNumber != null && String(ctx.cifNumber).trim() !== ''
+                    ? String(ctx.cifNumber).trim()
+                    : '',
+            addressId:
+                ctx.addressId != null && String(ctx.addressId).trim() !== ''
+                    ? String(ctx.addressId).trim()
+                    : '',
+            addressType:
+                ctx.addressType != null && String(ctx.addressType).trim() !== ''
+                    ? String(ctx.addressType).trim()
+                    : '',
             number_x: ctx.number_x || '',
             building: ctx.building || '',
             street: ctx.street || '',
@@ -719,26 +753,128 @@ export default class Fec_UpdateAddress extends LightningElement {
                 caseId: this.resolvedCaseId
             }
         };
+        this._persistPendingAddressPayloadsToSession();
     }
 
-    hasPendingAddressUpdates() {
-        return Object.keys(this._pendingAddressUpdateMap || {}).length > 0;
-    }
-
-    getPendingAddressPayloadsInOrder() {
+    _collectPayloadsFromPendingMap() {
         const map = this._pendingAddressUpdateMap || {};
         const order = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
         const payloads = [];
         order.forEach((sfType) => {
             if (map[sfType]) {
-                payloads.push(map[sfType]);
+                payloads.push({ ...map[sfType] });
             }
         });
         return payloads;
     }
 
+    _sessionKeyPendingAddresses() {
+        const rid = this.resolvedCaseId;
+        return rid ? `fec_pending_addr_v1_${rid}` : null;
+    }
+
+    _persistPendingAddressPayloadsToSession() {
+        const k = this._sessionKeyPendingAddresses();
+        if (!k) {
+            return;
+        }
+        const list = this._collectPayloadsFromPendingMap();
+        try {
+            if (!list.length) {
+                sessionStorage.removeItem(k);
+                return;
+            }
+            sessionStorage.setItem(k, JSON.stringify(list));
+        } catch (e) {
+            /* quota / private mode */
+        }
+    }
+
+    _hydratePendingFromSessionIfNeeded() {
+        if (this._collectPayloadsFromPendingMap().length > 0) {
+            return;
+        }
+        const k = this._sessionKeyPendingAddresses();
+        if (!k) {
+            return;
+        }
+        let arr;
+        try {
+            const raw = sessionStorage.getItem(k);
+            if (!raw) {
+                return;
+            }
+            arr = JSON.parse(raw);
+        } catch (e) {
+            sessionStorage.removeItem(k);
+            return;
+        }
+        if (!Array.isArray(arr) || arr.length === 0) {
+            return;
+        }
+        const rid = this.resolvedCaseId;
+        const nextMap = {};
+        arr.forEach((p) => {
+            if (p && p.sfAddressType) {
+                nextMap[p.sfAddressType] = {
+                    ...p,
+                    caseId: rid != null ? String(rid) : p.caseId
+                };
+            }
+        });
+        if (Object.keys(nextMap).length === 0) {
+            return;
+        }
+        this._pendingAddressUpdateMap = nextMap;
+    }
+
+    _reapplyMainInfoDisplayFromHydratedPending() {
+        const payloads = this._collectPayloadsFromPendingMap();
+        if (!payloads.length || !this.mainInfoData) {
+            return;
+        }
+        let mailingRow = null;
+        payloads.forEach((p) => {
+            if (p && p.isMailingAddress === 'Y') {
+                mailingRow = this.rowFromSfAddressType(p.sfAddressType);
+            }
+        });
+        const order = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
+        order.forEach((sfType) => {
+            const p = this._pendingAddressUpdateMap?.[sfType];
+            if (!p) {
+                return;
+            }
+            const composed = this.composeAddressText(
+                p.building,
+                p.number_x,
+                p.street,
+                p.ward,
+                p.city
+            );
+            this.applyLocalAddressAndMailing(sfType, composed, mailingRow);
+        });
+    }
+
+    hasPendingAddressUpdates() {
+        return this.getPendingAddressPayloadsInOrder().length > 0;
+    }
+
+    getPendingAddressPayloadsInOrder() {
+        this._hydratePendingFromSessionIfNeeded();
+        return this._collectPayloadsFromPendingMap();
+    }
+
     clearPendingAddressPayloads() {
+        const k = this._sessionKeyPendingAddresses();
         this._pendingAddressUpdateMap = {};
+        if (k) {
+            try {
+                sessionStorage.removeItem(k);
+            } catch (e) {
+                /* ignore */
+            }
+        }
     }
 
     applyLocalAddressAndMailing(sfAddressType, addressText, selectedRow) {
@@ -818,6 +954,7 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (!this.hasPendingAddressUpdates()) {
             return {
                 success: false,
+                actionCount: 0,
                 errorMessage: LBL_Error
             };
         }
@@ -832,7 +969,7 @@ export default class Fec_UpdateAddress extends LightningElement {
             }
         }
         this.clearPendingAddressPayloads();
-        return lastResult || { success: true };
+        return lastResult || { success: true, actionCount: -1 };
     }
 
     sfTypeFromRow(row) {
@@ -892,11 +1029,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     handleEditMailing(event) {
-        if (this.isEdit === false) {
-            return;
-        }
         const row = event.currentTarget.dataset.row;
-        if (!this.resolvedCaseId || !row) {
+        if (!this.resolvedCaseId || !row || !this.canEdit) {
             return;
         }
         this.mailingEditRow = row;
@@ -1068,9 +1202,6 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     async handleSaveMailing() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (this.mailingSaveLoading) {
             return;
         }
@@ -1090,6 +1221,18 @@ export default class Fec_UpdateAddress extends LightningElement {
             const primaryInfo = {
                 caseId: this.resolvedCaseId,
                 sfAddressType: primarySfAddressType,
+                cifNumber:
+                    this.mailingCifNumber != null
+                        ? String(this.mailingCifNumber).trim()
+                        : '',
+                addressId:
+                    this.mailingAddressId != null
+                        ? String(this.mailingAddressId).trim()
+                        : '',
+                addressType:
+                    this.mailingAddressTypeApi != null
+                        ? String(this.mailingAddressTypeApi).trim()
+                        : '',
                 number_x: this.mailingNumber,
                 building: this.mailingBuilding,
                 street: this.mailingStreet,
@@ -1177,14 +1320,11 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     handleAddNewAddress() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (!this.resolvedCaseId) {
             this.showToast(LBL_Error, LBL_Error, 'error');
             return;
         }
-        if (this.hasAllStandardAddressTypes) {
+        if (this.hasAllStandardAddressTypes || !this.canEdit) {
             return;
         }
         this.resetNewAddressForm();
@@ -1292,9 +1432,6 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     async handleSaveNewAddress() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (this.newAddressSaveLoading) {
             return;
         }

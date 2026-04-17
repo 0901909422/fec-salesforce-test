@@ -592,6 +592,7 @@ public without sharing class FEC_CaseBusinessService {
                 'FEC_Sub_Section_Field_Layout__c'
               );
               lwcSlot.subSectionName = subSectionNameTemp;
+              lwcSlot.fecMasterDataSettingIsEdit = true;
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -2510,6 +2511,8 @@ public without sharing class FEC_CaseBusinessService {
     public Decimal fieldLayout;
     @AuraEnabled
     public String subSectionName;
+    @AuraEnabled
+    public Boolean fecMasterDataSettingIsEdit;
   }
 
   public class Section implements Comparable {
