@@ -1986,7 +1986,6 @@
         <field>ServiceResourceSkill.FEC_Skill_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Outbound Officer - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

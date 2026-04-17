@@ -1981,7 +1981,6 @@
         <field>ServiceResourceSkill.FEC_Skill_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Contract Processing User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
