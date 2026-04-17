@@ -429,4 +429,22 @@ public without sharing class FEC_CreateCaseHandler {
         insert c;
         return c.Id;
     }
+
+    // create CaseRecordTypeDevName
+    @AuraEnabled(cacheable=true)
+    public static String getCaseRecordTypeDevName(Id caseId) {
+        if (caseId == null) return null;
+
+        try {
+            Case c = [
+                SELECT RecordType.DeveloperName
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            return c.RecordType.DeveloperName;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }

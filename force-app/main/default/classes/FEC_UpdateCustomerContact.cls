@@ -330,11 +330,11 @@ public with sharing class FEC_UpdateCustomerContact {
     if (result.success) {
       selectedCase.FEC_Process_Action_Count__c = -1;
     } else {
-      if (selectedCase.FEC_Process_Action_Count__c == null) {
-        selectedCase.FEC_Process_Action_Count__c = 0;
+      Decimal failedCount = selectedCase.FEC_Process_Action_Count__c;
+      if (failedCount == null || failedCount < 0) {
+        failedCount = 0;
       }
-
-      selectedCase.FEC_Process_Action_Count__c += 1;
+      selectedCase.FEC_Process_Action_Count__c = Math.min(3, failedCount + 1);
     }
 
     update selectedCase;

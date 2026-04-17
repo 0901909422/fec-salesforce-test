@@ -176,6 +176,7 @@
 		<members>maskedToggleCell</members>
 		<members>fec_AppInfo</members>
 		<members>fec_RelatedListPaging</members>
+		<members>fec_MRC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -804,10 +805,6 @@
         <name>StaticResource</name>
     </types>
 	<types>
-		<members>FEC_Additional_Info__c.FEC_Last_Four_Digits</members>
-		<name>ValidationRule</name>
-	</types>
-	<types>
 		<members>FEC_PSG_RD_Card_Operations_User</members>
 		<members>FEC_PSG_RD_Collections_User</members>
 		<members>FEC_PSG_RD_Contract_Processing_User</members>
@@ -819,5 +816,6 @@
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
 	</types>
+
     <version>65.0</version>
 </Package>
