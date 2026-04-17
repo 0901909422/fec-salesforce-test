@@ -2221,7 +2221,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
     }
     
-    run({ method: this.processActionMethod, params })
+    let processActionPromise;
+    if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+      const cmp = this._getFecUpdateAddressCmp();
+      if (
+        cmp &&
+        typeof cmp.commitPendingAddressUpdatesForProcessAction === "function"
+      ) {
+        processActionPromise = cmp.commitPendingAddressUpdatesForProcessAction();
+      } else {
+        processActionPromise = Promise.resolve({ success: false });
+      }
+    } else {
+      processActionPromise = run({ method: this.processActionMethod, params });
+    }
+
+    processActionPromise
       .then((res) => {
         let isSuccess = res?.success;
         console.log('>>>>>>>isSuccess: ' + isSuccess);
