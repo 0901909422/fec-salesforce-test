@@ -975,4 +975,14 @@
         <tab>Templates</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Outbound_Email_Config__c.FEC_Email__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Outbound_Email_Config__c.FEC_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>
