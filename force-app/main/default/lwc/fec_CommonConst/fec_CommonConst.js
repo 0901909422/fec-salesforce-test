@@ -124,6 +124,7 @@ const SEARCH_PLACEHOLDER = 'Search User...';
 const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
+const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -209,5 +210,6 @@ export {
     SEARCH_INTERNAL_USERS,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
-    ERROR_TILE_SHOWTOAST
+    ERROR_TILE_SHOWTOAST,
+    MSG_ENTER_EMAIL_CORRECTLY
 };

@@ -11937,8 +11937,8 @@
         <fullName>FEC_Target_Email</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Target Email</shortDescription>
-        <value>Target Email</value>
+        <shortDescription>Email</shortDescription>
+        <value>Email</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Group</fullName>

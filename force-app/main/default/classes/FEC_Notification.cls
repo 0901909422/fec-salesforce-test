@@ -211,35 +211,41 @@ public without sharing class FEC_Notification {
                             
         // 2. Use helper method to calculate Target Email
         String targetEmail = getTargetEmailFromCase(currentCase);
-
-        String finalProductType = String.isNotBlank(productTypeId) ? productTypeId : currentCase.FEC_Product_Type__c;
-        String finalCategory = String.isNotBlank(categoryId) ? categoryId : currentCase.FEC_Category__c;
-        String finalSubCategory = String.isNotBlank(subCategoryId) ? subCategoryId : currentCase.FEC_SubCategory__c;
-        String finalSubCode = String.isNotBlank(subCodeId) ? subCodeId : currentCase.FEC_SubCode__c;
-
-        // 3. Query Notification satisfying conditions (FEC_Customer_Type__c = Multi-Select → INCLUDES)
         String caseCustomerType = currentCase.FEC_Customer_Type__c;
+        // 3. Query Notification satisfying conditions
+        String currentStage = currentCase.FEC_Current_Case_Stage__c;
+        String emailChannel = FEC_ConstantCommon.EMAIL;
+        
+        String query = 'SELECT Id, Name, FEC_Notification_Template__c, FEC_Customer_Type__c, ' +
+                       'FEC_Notification_Template__r.Name, ' +
+                       'FEC_Notification_Channel__r.Name, ' +
+                       'FEC_Target_Group__c ' +
+                       'FROM FEC_Notification__c ' +
+                       'WHERE FEC_Case_Stage__c = :currentStage  ' +
+                       'AND FEC_Notification_Status__c = true ' +
+                       'AND FEC_Notification_Channel__r.Name = :emailChannel';
+                       
+        if (String.isNotBlank(productTypeId)) {
+            query += ' AND FEC_Product_Type__c = :productTypeId';
+        }
+        if (String.isNotBlank(categoryId)) {
+            query += ' AND FEC_Category__c = :categoryId';
+        }
+        if (String.isNotBlank(subCategoryId)) {
+            query += ' AND FEC_SubCategory__c = :subCategoryId';
+        }
+        if (String.isNotBlank(subCodeId)) {
+            query += ' AND FEC_SubCode__c = :subCodeId';
+        }
 
-        // 3. Lọc NOC + stage + channel, sau đó lọc Customer Type (notification chứa giá trị Case hoặc All)
-        List<FEC_Notification__c> queried = [
-            SELECT Id, Name, FEC_Notification_Template__c, FEC_Notification_Template__r.Name,
-                   FEC_Notification_Channel__r.Name, FEC_Target_Group__c, FEC_Customer_Type__c
-            FROM FEC_Notification__c
-            WHERE FEC_Product_Type__c = :finalProductType
-              AND FEC_Category__c = :finalCategory
-              AND FEC_SubCategory__c = :finalSubCategory
-              AND FEC_SubCode__c = :finalSubCode
-              AND FEC_Case_Stage__c = :currentCase.FEC_Current_Case_Stage__c
-              AND FEC_Notification_Status__c = true
-              AND FEC_Notification_Channel__r.Name = :FEC_ConstantCommon.EMAIL
-        ];
-
+        List<FEC_Notification__c> queried = Database.query(query);
         List<FEC_Notification__c> validNotifs = new List<FEC_Notification__c>();
         for (FEC_Notification__c notif : queried) {
             if (notificationMatchesCaseCustomerType(notif.FEC_Customer_Type__c, caseCustomerType)) {
                 validNotifs.add(notif);
             }
         }
+        System.debug('--- [getAvailableNotifications] validNotifs: ' + validNotifs);
         
         List<Map<String, String>> options = new List<Map<String, String>>();
         
