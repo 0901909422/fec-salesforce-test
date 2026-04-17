@@ -545,8 +545,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
   }
 
-  /** Khi load màn: Action (Routing) khớp với CS Support đánh giá yêu cầu nếu đã có giá trị. */
-  /** Author: Toannd61 */
+  /** Khi load màn: đồng bộ hiển thị nút process theo CS Support đánh giá (không gán Action Routing). */
   _applyCsSupportAssessmentRoutingActionSync() {
     if (
       !this.isEdit ||
@@ -561,7 +560,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
 
-    const actions = this.business.routingActionlst || [];
     let assessmentVal;
 
     this.business.sectionlst?.forEach((section) => {
@@ -590,20 +588,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     this.showProcessAction = TYPE_QUALIFIED === assessmentVal;
-
-    if (
-      TYPE_QUALIFIED === assessmentVal &&
-      actions.some((a) => a.value === ACTION_RESOLVE)
-    ) {
-      this.actionValue = ACTION_RESOLVE;
-      return;
-    }
-    if (
-      TYPE_UNQUALIFIED === assessmentVal &&
-      actions.some((a) => a.value === ACTION_REJECT)
-    ) {
-      this.actionValue = ACTION_REJECT;
-    }
   }
 
   // Nghiệp vụ: Lấy Queue theo Team Queue và Group Member
@@ -1499,21 +1483,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
           this.showProcessAction = TYPE_QUALIFIED == value;
 
-          // Hợp lệ (Qualified) → Resolve; Không hợp lệ (Unqualified) → Reject
-          if (TYPE_QUALIFIED == value) {
-            const hasResolve = this.business.routingActionlst?.some(
-              (a) => a.value === ACTION_RESOLVE,
-            );
-            if (hasResolve) {
-              toResolve = true;
-            }
-          } else if (TYPE_UNQUALIFIED == value) {
-            const hasReject = this.business.routingActionlst?.some(
-              (a) => a.value === ACTION_REJECT,
-            );
-            if (hasReject) {
-              toReject = true;
-            }
+          if (TYPE_UNQUALIFIED == value) {
+            toRevert = true;
           }
           break;
 

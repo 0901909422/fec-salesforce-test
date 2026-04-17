@@ -688,7 +688,7 @@ public without sharing class FEC_CaseBusinessService {
       // ============================== GET ROUNTING AND PROCESS ACTION ===============================
       Boolean containProcessAction =
         selectedCase.FEC_Process_Action_Count__c != -1 &&
-        selectedCase.FEC_Process_Action_Count__c < 3;
+        selectedCase.FEC_Process_Action_Count__c != 3;
 
       List<String> validButtonTypelst = new List<String>{ 'Routing Action' };
 

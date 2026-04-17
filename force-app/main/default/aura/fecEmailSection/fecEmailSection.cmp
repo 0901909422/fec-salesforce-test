@@ -18,6 +18,7 @@
     <aura:attribute name="templateSubjects" type="Object" default="{}" />
     <aura:attribute name="templateHeaders" type="Object" default="{}" />
     <aura:attribute name="templateFooters" type="Object" default="{}" />
+    <aura:attribute name="templateAttachments" type="Object" default="{}" />
     <aura:attribute name="originalSubject" type="String" default="" />
     <aura:attribute name="emailList" type="List" default="[]" />
     <aura:attribute name="isLoading" type="Boolean" default="false" />
@@ -135,7 +136,7 @@
                     </div>
                     <!-- Subject -->
                     <div class="compose-row">
-                        <label class="compose-label">Subject</label>
+                        <label class="compose-label">Subject <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
                             <input type="text" class="compose-input" value="{!v.subject}"
                                    onchange="{!c.onSubjectChange}" placeholder="" />
@@ -234,7 +235,7 @@
                     </div>
                     <!-- Subject -->
                     <div class="compose-row">
-                        <label class="compose-label">Subject</label>
+                        <label class="compose-label">Subject <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
                             <input type="text" class="compose-input" value="{!v.subject}"
                                    onchange="{!c.onSubjectChange}" placeholder="" />
