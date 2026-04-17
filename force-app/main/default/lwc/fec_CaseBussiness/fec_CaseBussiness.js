@@ -370,7 +370,7 @@ function normalizeMasterDataLwcEntry(entry) {
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
       typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
-        : true,
+        : false,
   };
 }
 
@@ -808,7 +808,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master =
-          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
+          typeof d.fecMasterDataSettingIsEdit === "boolean"
+            ? d.fecMasterDataSettingIsEdit
+            : false;
         d.isEdit = this._isEdit && master;
       });
     });
@@ -2498,12 +2500,19 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
+            const dynLwcIsEdit = this._isEdit && fecMasterDataSettingIsEdit;
+            console.log("[fec_CaseBussiness] dynLwc isEdit", {
+              componentName: name,
+              _isEdit: this._isEdit,
+              fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
+            });
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
