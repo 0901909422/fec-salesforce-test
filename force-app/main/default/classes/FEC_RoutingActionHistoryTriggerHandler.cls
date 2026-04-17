@@ -58,7 +58,12 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void sendNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
-    // System.debug('--- [sendNotificationEmails] routing action history START');
+    if (newList == null || newList.isEmpty()) return;
+    System.enqueueJob(new FEC_SendNotificationEmailsQueueable(newList));
+  }
+
+  public static void processNotificationEmails(List<FEC_Routing_Action_History__c> newList) {
+     //System.debug('--- [processNotificationEmails] routing action history START');
     if (newList == null || newList.isEmpty()) return;   
     Set<Id> caseIds = new Set<Id>();
     for (FEC_Routing_Action_History__c history : newList) {
@@ -112,7 +117,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
             Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
-                && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
+                && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
                 && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
@@ -148,7 +153,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     Map<Id, FEC_Template__c> templateMap = new Map<Id, FEC_Template__c>();
     if (!templateIds.isEmpty()) {
         templateMap = new Map<Id, FEC_Template__c>([
-            SELECT Id, Name, FEC_Subject_Line__c, FEC_Body__c 
+            SELECT Id, Name, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c, FEC_Enhanced_Letterhead__r.FEC_Header__c, FEC_Enhanced_Letterhead__r.FEC_Footer__c
             FROM FEC_Template__c 
             WHERE Id IN :templateIds
         ]);
@@ -176,16 +181,17 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
         // Lấy Template tương ứng từ Map
         FEC_Template__c template = templateMap.get(matchedNotification.FEC_Notification_Template__c);
 
-        // System.debug('--- [sendNotificationEmails] targetEmailAddress: ' + targetEmailAddress);
-        // System.debug('--- [sendNotificationEmails] template: ' + template);
+         //System.debug('--- [sendNotificationEmails] targetEmailAddress: ' + targetEmailAddress);
+         //System.debug('--- [sendNotificationEmails] template: ' + template);
         if (String.isNotBlank(targetEmailAddress) && template != null) {
             listEmailsToProcess.add(new FEC_Notification.EmailInfo(
                 relatedCase.Id,
                 targetEmailAddress,
                 String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
-                '',
+                template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
                 template.FEC_Body__c,
-                ''
+                template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
+                template.Id
             ));
 
             FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();
