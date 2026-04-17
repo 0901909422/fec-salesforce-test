@@ -2425,7 +2425,6 @@
         <field>FEC_Customer_History__c.FEC_Zalo_Follower__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_KYC_Result__c.FEC_Editable__c</field>
