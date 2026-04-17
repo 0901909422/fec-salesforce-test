@@ -124,6 +124,13 @@ const SEARCH_PLACEHOLDER = 'Search User...';
 const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
+const MIN_FAST_CASH_REGISTRATION_VND = 2000000;
+const MAX_FAST_CASH_BLOCK_ATTEMPTS = 3;
+const FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX = 'fec_fc_noclock_';
+const FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX = 'fec_fc_blkfail_';
+const FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX = 'fec_fc_blkok_';
+const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
+const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -209,5 +216,5 @@ export {
     SEARCH_INTERNAL_USERS,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
-    ERROR_TILE_SHOWTOAST
+    PROFILE_RELEVANT_DEPTS
 };

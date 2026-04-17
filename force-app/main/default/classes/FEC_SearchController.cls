@@ -380,4 +380,12 @@ public with sharing class FEC_SearchController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    /**
+     * Lấy Profile name của current user để check permission
+     */
+    @AuraEnabled(cacheable=true)
+    public static String getCurrentUserProfileName() {
+        return FEC_CommonUltils.getCurrentUserProfileName();
+    }
 }

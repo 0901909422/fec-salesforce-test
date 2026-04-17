@@ -12492,4 +12492,11 @@
         <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
         <value>Mở khóa PIN thành công.</value>
     </labels>
+    <labels>
+        <fullName>FEC_No_Permission_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No permission toast message</shortDescription>
+        <value>Bạn không có quyền thực hiện thao tác này.</value>
+    </labels>
 </CustomLabels>
