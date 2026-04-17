@@ -70,8 +70,7 @@
             // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
             if (templateSubject) {
-                var prefix = component.get('v.replyPrefix') || '';
-                component.set('v.subject', prefix ? prefix + '<' + templateSubject + '>' : '<' + templateSubject + '>');
+                component.set('v.subject', templateSubject);
             }
             // Load attachments từ template (pre-loaded in templateAttachments cache)
             var allAtts = component.get('v.templateAttachments') || {};
@@ -81,6 +80,7 @@
             }));
         } else {
             component.set('v.body', '');
+            component.set('v.subject', '');
             component.set('v.attachments', []);
             if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
             // Khi bỏ chọn template, khôi phục subject gốc (RE:/FW: + originalSubject)

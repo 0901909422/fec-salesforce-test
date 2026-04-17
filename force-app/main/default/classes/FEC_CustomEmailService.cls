@@ -199,44 +199,6 @@ public without sharing class FEC_CustomEmailService {
     }
 
     /**
-     * Lấy danh sách file đính kèm của template (trả về base64 để attach vào email khi send)
-     */
-    @AuraEnabled
-    public static List<Map<String, String>> getTemplateAttachments(String templateId) {
-        List<Map<String, String>> result = new List<Map<String, String>>();
-        if (String.isBlank(templateId)) return result;
-        try {
-            Map<Id, Id> docToVersion = new Map<Id, Id>();
-            for (ContentDocumentLink link : [
-                SELECT ContentDocumentId, ContentDocument.LatestPublishedVersionId
-                FROM ContentDocumentLink WHERE LinkedEntityId = :templateId
-            ]) {
-                docToVersion.put(link.ContentDocumentId, link.ContentDocument.LatestPublishedVersionId);
-            }
-            if (docToVersion.isEmpty()) return result;
-            for (ContentVersion cv : [
-                SELECT Id, Title, FileExtension, VersionData, FileType
-                FROM ContentVersion WHERE Id IN :docToVersion.values()
-            ]) {
-                Map<String, String> att = new Map<String, String>();
-                att.put('fileName', cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
-                att.put('base64Data', EncodingUtil.base64Encode(cv.VersionData));
-                String mime = 'application/octet-stream';
-                if (cv.FileType == 'PDF') mime = 'application/pdf';
-                else if (cv.FileType == 'PNG') mime = 'image/png';
-                else if (cv.FileType == 'JPG' || cv.FileType == 'JPEG') mime = 'image/jpeg';
-                else if (cv.FileType == 'EXCEL_X' || cv.FileType == 'EXCEL') mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                else if (cv.FileType == 'WORD_X' || cv.FileType == 'WORD') mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                att.put('mimeType', mime);
-                result.add(att);
-            }
-        } catch (Exception e) {
-            System.debug('getTemplateAttachments error: ' + e.getMessage());
-        }
-        return result;
-    }
-
-    /**
      * Bulk load attachments cho nhiều templates cùng lúc
      * Trả về Map<templateId, List<attachmentInfo>>
      */
@@ -266,12 +228,12 @@ public without sharing class FEC_CustomEmailService {
             Map<String, String> att = new Map<String, String>();
             att.put('fileName', cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
             att.put('base64Data', EncodingUtil.base64Encode(cv.VersionData));
-            String mime = 'application/octet-stream';
-            if (cv.FileType == 'PDF') mime = 'application/pdf';
-            else if (cv.FileType == 'PNG') mime = 'image/png';
-            else if (cv.FileType == 'JPG' || cv.FileType == 'JPEG') mime = 'image/jpeg';
-            else if (cv.FileType == 'EXCEL_X' || cv.FileType == 'EXCEL') mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            else if (cv.FileType == 'WORD_X' || cv.FileType == 'WORD') mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            String mime = FEC_ConstantCommon.MIME_OCTET_STREAM;
+            if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PDF) mime = FEC_ConstantCommon.MIME_PDF;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PNG) mime = FEC_ConstantCommon.MIME_PNG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPG || cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPEG) mime = FEC_ConstantCommon.MIME_JPEG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL) mime = FEC_ConstantCommon.MIME_EXCEL;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD) mime = FEC_ConstantCommon.MIME_WORD;
             att.put('mimeType', mime);
             result.get(String.valueOf(tId)).add(att);
         }
