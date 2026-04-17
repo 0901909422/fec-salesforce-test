@@ -206,11 +206,11 @@ public without sharing class FEC_Notification {
 
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId) {
-        System.debug('--- [getAvailableNotifications] caseId: ' + caseId);
-        System.debug('--- [getAvailableNotifications] productTypeId: ' + productTypeId);
-        System.debug('--- [getAvailableNotifications] categoryId: ' + categoryId);
-        System.debug('--- [getAvailableNotifications] subCategoryId: ' + subCategoryId);
-        System.debug('--- [getAvailableNotifications] subCodeId: ' + subCodeId);
+        // System.debug('--- [getAvailableNotifications] caseId: ' + caseId);
+        // System.debug('--- [getAvailableNotifications] productTypeId: ' + productTypeId);
+        // System.debug('--- [getAvailableNotifications] categoryId: ' + categoryId);
+        // System.debug('--- [getAvailableNotifications] subCategoryId: ' + subCategoryId);
+        // System.debug('--- [getAvailableNotifications] subCodeId: ' + subCodeId);
         // 1. Fetch current Case with required fields for Notification and Email logic
         Case currentCase = [SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, 
                                    FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, 
@@ -219,6 +219,8 @@ public without sharing class FEC_Notification {
                                    FEC_Interaction__r.FEC_Interaction_Email__c,
                                    FEC_Case_Email__c 
                             FROM Case WHERE Id = :caseId LIMIT 1];
+
+        // System.debug('--- [getAvailableNotifications] currentCase: ' + currentCase);
                             
         // 2. Use helper method to calculate Target Email
         String targetEmail = getTargetEmailFromCase(currentCase);
@@ -227,15 +229,19 @@ public without sharing class FEC_Notification {
         String currentStage = currentCase.FEC_Current_Case_Stage__c;
         String emailChannel = FEC_ConstantCommon.EMAIL;
         
+        // System.debug('--- [getAvailableNotifications] currentStage: ' + currentStage);
+        // System.debug('--- [getAvailableNotifications] emailChannel: ' + emailChannel);
         String query = 'SELECT Id, Name, FEC_Notification_Template__c, FEC_Customer_Type__c, ' +
                        'FEC_Notification_Template__r.Name, ' +
                        'FEC_Notification_Channel__r.Name, ' +
                        'FEC_Target_Group__c ' +
                        'FROM FEC_Notification__c ' +
-                       'WHERE FEC_Case_Stage__c = :currentStage  ' +
-                       'AND FEC_Notification_Status__c = true ' +
+                       'WHERE FEC_Notification_Status__c = true ' +
                        'AND FEC_Notification_Channel__r.Name = :emailChannel';
-                       
+        
+        if (String.isNotBlank(currentStage)) {
+            query += ' AND FEC_Case_Stage__c = :currentStage';
+        }         
         if (String.isNotBlank(productTypeId)) {
             query += ' AND FEC_Product_Type__c = :productTypeId';
         }
