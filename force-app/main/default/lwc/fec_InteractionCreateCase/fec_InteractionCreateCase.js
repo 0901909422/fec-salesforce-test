@@ -73,6 +73,10 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     }
   }
 
+  get recordTypeDevName() {
+    return this.pageRef?.state?.c__recordTypeDevName;
+  }
+
   // @wire(CurrentPageReference)
   // setPageRef(pageRef) {
   //   if (pageRef) {
@@ -87,7 +91,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
 
   async connectedCallback() {
     this.isLoading = true;
-    if (this.isCreatedFromSearch === 'true' && this.recordId) {
+    if (this.isCreatedFromSearch === 'true' && this.recordId && this.recordTypeDevName === 'Internal_Case') {
         this.isLoading = false;
         if (this.isConsoleNavigation) {
             const allTabs = await getAllTabInfo();

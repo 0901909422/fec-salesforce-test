@@ -1028,6 +1028,10 @@ hasAnySearchCriteria(params) {
         });
       }
 
+      const devName = await getCaseRecordTypeDevName({
+        caseId: caseIdToUse
+      });
+
       this.dispatchEvent(
         new CustomEvent("createsuccess", {
           detail: {
@@ -1047,7 +1051,8 @@ hasAnySearchCriteria(params) {
           c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
-          c__isCreatedFromSearch: 'true'
+          c__isCreatedFromSearch: 'true',
+          c__recordTypeDevName: devName
         },
       });
     } catch (e) {
