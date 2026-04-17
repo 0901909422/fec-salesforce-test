@@ -176,6 +176,7 @@
 		<members>maskedToggleCell</members>
 		<members>fec_AppInfo</members>
 		<members>fec_RelatedListPaging</members>
+		<members>fec_MRC</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
