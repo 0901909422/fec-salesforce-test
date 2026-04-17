@@ -843,6 +843,7 @@
     },
 
     loadTemplates: function(component, mailboxAddress) {
+        var self = this;
         var actionName = mailboxAddress ? 'c.getEmailTemplatesByMailbox' : 'c.getEmailTemplates';
         var a = component.get(actionName);
         if (mailboxAddress) {
@@ -851,6 +852,7 @@
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
                 var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={}, headers={}, footers={};
+                var templateIds = [];
                 data.forEach(function(t){
                     opts.push({label:t.Name, value:t.Id});
                     bodies[t.Id] = t.FEC_Body__c || '';
@@ -858,6 +860,7 @@
                     var lh = t.FEC_Enhanced_Letterhead__r;
                     headers[t.Id] = (lh && lh.FEC_Header__c) ? lh.FEC_Header__c : '';
                     footers[t.Id] = (lh && lh.FEC_Footer__c) ? lh.FEC_Footer__c : '';
+                    templateIds.push(t.Id);
                 });
                 component.set('v.templateOptions',opts);
                 component.set('v.templateBodies',bodies);
@@ -870,6 +873,17 @@
                     component.set('v.replyTemplate', '');
                     component.set('v.body', '');
                     if (window._fecQuill) window._fecQuill.root.innerHTML = '';
+                }
+                // Pre-load attachments cho tất cả templates
+                if (templateIds.length > 0) {
+                    var attAction = component.get('c.getTemplateAttachmentsBulk');
+                    attAction.setParams({ templateIds: templateIds });
+                    attAction.setCallback(self, function(ar) {
+                        if (ar.getState() === 'SUCCESS') {
+                            component.set('v.templateAttachments', ar.getReturnValue() || {});
+                        }
+                    });
+                    $A.enqueueAction(attAction);
                 }
             }
         });

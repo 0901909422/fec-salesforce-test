@@ -1379,6 +1379,7 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1704,6 +1705,10 @@
 		<members>FEC_PSG_RD_Telesales_User_1</members>
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>FEC_PinReset</members>
+		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
 </Package>
