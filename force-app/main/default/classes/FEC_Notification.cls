@@ -409,14 +409,14 @@ public without sharing class FEC_Notification {
         String subject = String.isNotBlank(template.FEC_Subject_Line__c)
             ? template.FEC_Subject_Line__c
             : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
-            header += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
-        }
-        if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
-            footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
-        }
+        // if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
+        //     header += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
+        // }
+        // if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
+        //     footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
+        // }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, header, template.FEC_Body__c, footer);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, template?.FEC_Enhanced_Letterhead__r?.FEC_Header__c, template.FEC_Body__c, template?.FEC_Enhanced_Letterhead__r?.FEC_Footer__c);
             FEC_NotificationHistoryService.insertRow(
                 FEC_NotificationHistoryService.buildRow(
                     caseId,
@@ -605,6 +605,7 @@ public without sharing class FEC_Notification {
         String fromEmail,
         List<RoutingEmailHistoryInput> historyInputs
     ) {
+
         if (emailsToSend == null || emailsToSend.isEmpty()) return;
 
         // NEW: Resolve Merge Fields natively for the entire Bulk!
@@ -628,7 +629,12 @@ public without sharing class FEC_Notification {
         // 2. Gom dữ liệu vào List thay vì thực thi ngay
         for (EmailInfo info : emailsToSend) {
             // Build Email
-            String fullBody = info.header + info.body + info.footer;
+            String header = FEC_NotificationService.inlineImages(info.header);
+            //System.debug('--- [executeSendEmailsBulk] header=' + header);
+            String footer = FEC_NotificationService.inlineImages(info.footer);
+            //System.debug('--- [executeSendEmailsBulk] footer=' + footer);
+            String fullBody = header + info.body + footer;
+            //System.debug('--- [executeSendEmailsBulk] fullBody=' + fullBody);
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(info.toEmail.split(','));
             mail.setSubject(info.subject);
