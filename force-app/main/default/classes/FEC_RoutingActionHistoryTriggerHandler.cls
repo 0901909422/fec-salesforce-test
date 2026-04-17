@@ -117,7 +117,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
             // Logic so khớp điều kiện (Giữ nguyên logic cũ của bạn)
             Boolean isMatch = (String.isNotBlank(history.FEC_Current_Status__c) && notif.FEC_Current_Status__c?.contains(history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
-                && (notif.FEC_Customer_Type__c == relatedCase.FEC_Customer_Type__c)
+                && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
                 && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
                 && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
@@ -190,7 +190,8 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 String.isNotBlank(template.FEC_Subject_Line__c) ? template.FEC_Subject_Line__c : 'Notification',
                 template.FEC_Enhanced_Letterhead__r?.FEC_Header__c,
                 template.FEC_Body__c,
-                template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c
+                template.FEC_Enhanced_Letterhead__r?.FEC_Footer__c,
+                template.Id
             ));
 
             FEC_Notification.RoutingEmailHistoryInput hi = new FEC_Notification.RoutingEmailHistoryInput();

@@ -11,6 +11,7 @@ public without sharing class FEC_Notification {
         public String header;
         public String body;
         public String footer;
+        public Id templateId;
 
         public EmailInfo(Id caseId, String toEmail, String subject, String header, String body, String footer) {
             this.caseId = caseId;
@@ -19,6 +20,16 @@ public without sharing class FEC_Notification {
             this.header = header;
             this.body = body;
             this.footer = footer;
+        }
+
+        public EmailInfo(Id caseId, String toEmail, String subject, String header, String body, String footer, Id templateId) {
+            this.caseId = caseId;
+            this.toEmail = toEmail;
+            this.subject = subject;
+            this.header = header;
+            this.body = body;
+            this.footer = footer;
+            this.templateId = templateId;
         }
     }
 
@@ -239,6 +250,7 @@ public without sharing class FEC_Notification {
         }
 
         List<FEC_Notification__c> queried = Database.query(query);
+        System.debug('--- [getAvailableNotifications] queried: ' + queried);
         List<FEC_Notification__c> validNotifs = new List<FEC_Notification__c>();
         for (FEC_Notification__c notif : queried) {
             if (notificationMatchesCaseCustomerType(notif.FEC_Customer_Type__c, caseCustomerType)) {
@@ -416,7 +428,7 @@ public without sharing class FEC_Notification {
         //     footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
         // }
         try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, template?.FEC_Enhanced_Letterhead__r?.FEC_Header__c, template.FEC_Body__c, template?.FEC_Enhanced_Letterhead__r?.FEC_Footer__c);
+            executeSendEmail(caseId, senderEmail, targetEmail, subject, template?.FEC_Enhanced_Letterhead__r?.FEC_Header__c, template.FEC_Body__c, template?.FEC_Enhanced_Letterhead__r?.FEC_Footer__c, templateId);
             FEC_NotificationHistoryService.insertRow(
                 FEC_NotificationHistoryService.buildRow(
                     caseId,
@@ -623,6 +635,32 @@ public without sharing class FEC_Notification {
             }
         }
 
+        // Bulk query ContentDocumentLink for template attachments
+        Set<Id> templateIds = new Set<Id>();
+        for (EmailInfo info : emailsToSend) {
+            if (info.templateId != null) templateIds.add(info.templateId);
+        }
+        Map<Id, List<ContentVersion>> templateAttachments = new Map<Id, List<ContentVersion>>();
+        if (!templateIds.isEmpty()) {
+            Map<Id, Id> docToTemplate = new Map<Id, Id>();
+            for (ContentDocumentLink link : [
+                SELECT ContentDocumentId, LinkedEntityId, ContentDocument.LatestPublishedVersionId
+                FROM ContentDocumentLink WHERE LinkedEntityId IN :templateIds
+            ]) {
+                docToTemplate.put(link.ContentDocument.LatestPublishedVersionId, link.LinkedEntityId);
+            }
+            if (!docToTemplate.isEmpty()) {
+                for (ContentVersion cv : [
+                    SELECT Id, Title, FileExtension, VersionData
+                    FROM ContentVersion WHERE Id IN :docToTemplate.keySet()
+                ]) {
+                    Id tId = docToTemplate.get(cv.Id);
+                    if (!templateAttachments.containsKey(tId)) templateAttachments.put(tId, new List<ContentVersion>());
+                    templateAttachments.get(tId).add(cv);
+                }
+            }
+        }
+
         List<Messaging.SingleEmailMessage> mailList = new List<Messaging.SingleEmailMessage>();
         List<EmailMessage> emailMessageLogs = new List<EmailMessage>();
 
@@ -645,6 +683,19 @@ public without sharing class FEC_Notification {
             if (orgWideEmailId != null) {
                 mail.setOrgWideEmailAddressId(orgWideEmailId);
             }
+
+            // Attach files from template
+            if (info.templateId != null && templateAttachments.containsKey(info.templateId)) {
+                List<Messaging.EmailFileAttachment> attachments = new List<Messaging.EmailFileAttachment>();
+                for (ContentVersion cv : templateAttachments.get(info.templateId)) {
+                    Messaging.EmailFileAttachment att = new Messaging.EmailFileAttachment();
+                    att.setFileName(cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
+                    att.setBody(cv.VersionData);
+                    attachments.add(att);
+                }
+                if (!attachments.isEmpty()) mail.setFileAttachments(attachments);
+            }
+
             mailList.add(mail);
 
             // Build Audit Log (EmailMessage)
@@ -714,8 +765,8 @@ public without sharing class FEC_Notification {
     // =========================================================
     // 3. HÀM CHO LWC (Cập nhật để gọi chung hàm Bulk ở trên)
     // =========================================================
-    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String header, String body, String footer) {
-        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, header, body, footer);
+    public static void executeSendEmail(Id caseId, String fromEmail, String toEmail, String subject, String header, String body, String footer, Id templateId) {
+        EmailInfo singleEmail = new EmailInfo(caseId, toEmail, subject, header, body, footer, templateId);
         executeSendEmailsBulk(new List<EmailInfo>{ singleEmail }, fromEmail);
     }
 
