@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Payment Method --></label>
+    <name>FEC_Payment_Method__c</name>
+    <picklistValues>
+        <masterLabel>Bank Transfer</masterLabel>
+        <translation>Chuyển khoản ngân hàng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Other Channels</masterLabel>
+        <translation>Kênh khác</translation>
+    </picklistValues>
+</CustomFieldTranslation>
