@@ -282,7 +282,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
             console.log(
               "Update viewMode to review successfully in Fec_InteractionHighlightMain",
             );
-            this.handlePublishMode(this.viewMode === "handling");
+            // this.handlePublishMode(this.viewMode === "handling");
           })
           .catch((error) => {
             console.error("resetViewMode error:", error);
@@ -340,6 +340,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
     this.handlePublishMode(true);
+    await new Promise((r) => setTimeout(r, 200));
     if (this.isConsoleNavigation) {
       await openTab({
         url: urlCmpWithRecordId(
