@@ -106,6 +106,7 @@
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -817,5 +818,9 @@
 		<name>PermissionSetGroup</name>
 	</types>
 
+	<types>
+		<members>FEC_PinReset</members>
+		<name>LightningMessageChannel</name>
+	</types>
     <version>65.0</version>
 </Package>
