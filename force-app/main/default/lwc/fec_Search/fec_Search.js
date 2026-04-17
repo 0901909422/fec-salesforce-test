@@ -28,6 +28,7 @@ import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.che
 import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
+import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
 import {
   publish,
   MessageContext,
@@ -1027,6 +1028,10 @@ hasAnySearchCriteria(params) {
         });
       }
 
+      const devName = await getCaseRecordTypeDevName({
+        caseId: caseIdToUse
+      });
+
       this.dispatchEvent(
         new CustomEvent("createsuccess", {
           detail: {
@@ -1046,7 +1051,8 @@ hasAnySearchCriteria(params) {
           c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
-          c__isCreatedFromSearch: 'true'
+          c__isCreatedFromSearch: 'true',
+          c__recordTypeDevName: devName
         },
       });
     } catch (e) {
@@ -1399,6 +1405,7 @@ hasAnySearchCriteria(params) {
               "History created successfully",
               "success",
             );
+            await this._pollHistoryReady(res);
             if (this.recordId) {
                 //publish(this.messageContext, IS_MODE_EDIT, payload);
                 this.handlePublishMessageChanel();
@@ -1435,6 +1442,42 @@ hasAnySearchCriteria(params) {
         break;
     }
   }
+
+  async _pollHistoryReady(caseId) {
+      const MAX_ATTEMPTS = 4;
+      const INTERVAL_MS  = 1000;
+
+      let historyId = await this._getHistoryIdFromCase(caseId);
+      if (!historyId) return; 
+
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+          await new Promise(resolve => setTimeout(resolve, INTERVAL_MS));
+
+          try {
+              const status = await getHistoryStatus({ historyId });
+              if (status?.isReady) {
+                  return;
+              }
+          } catch (e) {
+              console.error('Polling error:', e);
+              return; 
+          }
+      }
+      console.warn('Polling timeout, refreshing anyway.');
+  }
+
+  async _getHistoryIdFromCase(caseId) {
+    try {
+        const result = await getCase({ caseId });
+        const histories = result?.Customer_Histories__r;
+        if (histories && histories.length > 0) {
+            return histories[histories.length - 1].Id;
+        }
+    } catch (e) {
+        console.error('_getHistoryIdFromCase error:', e);
+    }
+    return null;
+  } 
 
   get isDisplayCreateCase() {
     return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);

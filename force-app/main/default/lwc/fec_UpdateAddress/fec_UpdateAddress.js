@@ -9,7 +9,7 @@ import clearMainInfoCache from '@salesforce/apex/FEC_MainInfoController.clearMai
 import getMailingAddressUpdateContext from '@salesforce/apex/FEC_MainInfoController.getMailingAddressUpdateContext';
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
-import updateCustomerAddressParams from '@salesforce/apex/FEC_MainInfoController.updateCustomerAddressParams';
+import run from '@salesforce/apex/FEC_CaseBusinessService.run';
 
 import FEC_Permanent_Address from '@salesforce/label/c.FEC_Permanent_Address';
 import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
@@ -27,6 +27,8 @@ import FEC_LBL_UpdateAddress_Add_New_Address from '@salesforce/label/c.FEC_LBL_U
 import FEC_LBL_UpdateAddress_Edit_Mailing from '@salesforce/label/c.FEC_LBL_UpdateAddress_Edit_Mailing';
 import FEC_LBL_UpdateAddress_New_Address from '@salesforce/label/c.FEC_LBL_UpdateAddress_New_Address';
 import FEC_LBL_UpdateAddress_Province_Search_Placeholder from '@salesforce/label/c.FEC_LBL_UpdateAddress_Province_Search_Placeholder';
+import FEC_LBL_UpdateAddress_Original_Information from '@salesforce/label/c.FEC_LBL_UpdateAddress_Original_Information';
+import FEC_LBL_UpdateAddress_Updated_Information from '@salesforce/label/c.FEC_LBL_UpdateAddress_Updated_Information';
 import Loading from '@salesforce/label/c.Loading';
 import LBL_UpdateSuccessfully from '@salesforce/label/c.LBL_UpdateSuccessfully';
 import LBL_Error from '@salesforce/label/c.LBL_Error';
@@ -41,7 +43,9 @@ const ROW_PERMANENT = 'permanent';
 const ROW_CURRENT = 'current';
 const ROW_OFFICE = 'office';
 /** Thứ tự hàng. */
-const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_CURRENT, ROW_OFFICE];
+const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_OFFICE, ROW_CURRENT];
+const ADDRESS_TYPE_DISPLAY_ORDER = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
+const ACTION_ADDRESS_UPDATE = 'Address Update';
 
 function cloneAddressesSnapshot(addresses) {
     if (!Array.isArray(addresses)) {
@@ -52,18 +56,6 @@ function cloneAddressesSnapshot(addresses) {
         address: a.address,
         mailingAddress: a.mailingAddress
     }));
-}
-
-function addressesHaveDisplayText(addresses) {
-    if (!Array.isArray(addresses)) {
-        return false;
-    }
-    return addresses.some(
-        (a) =>
-            a &&
-            a.address != null &&
-            String(a.address).trim() !== ''
-    );
 }
 
 /**
@@ -115,6 +107,55 @@ export default class Fec_UpdateAddress extends LightningElement {
     // is-edit từ fec_CaseBussiness (giống fec_IPPClosureForm: không khởi tạo boolean @api)
     @api isEdit;
 
+    /**
+     * Gọi từ fec_CaseBussiness khi Process Action "Update customer info" thất bại
+     * (FEC_MSG_ACTION_PHONE_UPDATE_ERROR): khôi phục cột Updated Information về snapshot
+     * địa chỉ lúc load Case (cùng dữ liệu với cột Original) và đóng form sửa.
+     */
+    @api revertUpdatedInformationToOriginal() {
+        if (!this.mainInfoData) {
+            return;
+        }
+        const snap = this.originalAddressesSnapshot;
+        if (!Array.isArray(snap)) {
+            return;
+        }
+        this.mainInfoData = {
+            ...this.mainInfoData,
+            addresses: cloneAddressesSnapshot(snap)
+        };
+        this.syncMailingSelectionFromData();
+        this.mailingEditRow = undefined;
+        this.resetMailingForm();
+        this.newAddressModalOpen = false;
+        this.resetNewAddressForm();
+        this.clearPendingAddressPayloads();
+    }
+
+    /**
+     * Gọi từ fec_CaseBussiness khi Process Action thành công (FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS):
+     * xóa cache Main Info, load lại địa chỉ + mailing từ server và gán lại snapshot Original
+     * theo dữ liệu mới (Updated Information = trạng thái đã commit).
+     */
+    @api refreshUpdatedInformationAfterProcessSuccess() {
+        const caseId = this.resolvedCaseId;
+        if (!caseId) {
+            return Promise.resolve();
+        }
+        this.mailingEditRow = undefined;
+        this.resetMailingForm();
+        this.newAddressModalOpen = false;
+        this.resetNewAddressForm();
+        this.clearPendingAddressPayloads();
+        this.originalSnapshotInitialized = false;
+        this.originalAddressesSnapshot = undefined;
+        return clearMainInfoCache({ caseId })
+            .catch(() => {
+                /* vẫn load lại địa chỉ */
+            })
+            .then(() => this.loadAddressData());
+    }
+
     /** Fallback khi LWC nằm trong parent không truyền record-id (trang Case vẫn có Id trên URL). */
     @track _caseIdFromPage;
 
@@ -145,11 +186,15 @@ export default class Fec_UpdateAddress extends LightningElement {
         this._lastFetchKey = key;
         if (rid) {
             this.originalAddressesSnapshot = undefined;
+            this.originalSnapshotInitialized = false;
+            this.clearPendingAddressPayloads();
             this.loadAddressData();
         } else {
             this.isLoading = false;
             this.mainInfoData = null;
             this.originalAddressesSnapshot = undefined;
+            this.originalSnapshotInitialized = false;
+            this.clearPendingAddressPayloads();
             this.loadError = undefined;
         }
     }
@@ -157,6 +202,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track mainInfoData;
     /** Snapshot địa chỉ lần load đầu theo recordId — cột Original không đổi khi user sửa qua Updated. */
     @track originalAddressesSnapshot;
+    @track originalSnapshotInitialized = false;
     @track loadError;
     @track isLoading = true;
 
@@ -176,9 +222,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track mailingCifNumber;
     @track mailingAddressId;
     @track mailingAddressTypeApi;
-    /** Một trong hai địa chỉ được chọn làm giao phát (radio). */
-    @track mailingSelectedRow = ROW_PERMANENT;
-    @track mailingSelectionBusy = false;
+    /** Dòng được chọn làm mailing (`permanent` / `current` / `office`), hoặc `null` nếu không chọn. */
+    @track mailingSelectedRow = null;
 
     /** Popup thêm/sửa địa chỉ (Original > Add New Address). */
     @track newAddressModalOpen = false;
@@ -194,6 +239,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track newAddrIsMailing = false;
 
     _lastFetchKey = 'fec-update-address-unset';
+    /** Payload pending: chỉ submit API khi user bấm Process Action. */
+    _pendingAddressUpdateMap = {};
 
     labels = {
         mailingAddress: FEC_LBL_ContractClosure_Mailing_Address_Col,
@@ -212,7 +259,9 @@ export default class Fec_UpdateAddress extends LightningElement {
         loading: Loading,
         newAddressTitle: FEC_LBL_UpdateAddress_New_Address,
         addressTypeLabel: FEC_LBL_ContractClosure_Address_Type,
-        currentAddressOption: FEC_Current_Address
+        currentAddressOption: FEC_Current_Address,
+        originalInformation: FEC_LBL_UpdateAddress_Original_Information,
+        updatedInformation: FEC_LBL_UpdateAddress_Updated_Information
     };
 
     connectedCallback() {
@@ -243,33 +292,25 @@ export default class Fec_UpdateAddress extends LightningElement {
             this.isLoading = false;
             this.mainInfoData = null;
             this.originalAddressesSnapshot = undefined;
-            return;
+            this.originalSnapshotInitialized = false;
+            return Promise.resolve();
         }
 
         this.isLoading = true;
         this.loadError = undefined;
 
-        loadMainInfo({ caseId: this.resolvedCaseId })
+        return loadMainInfo({ caseId: this.resolvedCaseId })
             .then((data) => {
                 /* Không gộp addresses từ lần load trước: dễ giữ bản sai / nhầm Case khi server trả [] hoặc sau khi xóa cache. */
                 this.mainInfoData = data;
                 this.loadError = undefined;
                 this.syncMailingSelectionFromData();
 
-                const dataHasText = addressesHaveDisplayText(data?.addresses);
-                const snap = this.originalAddressesSnapshot;
-                const snapHasText = addressesHaveDisplayText(snap);
-
-                if (dataHasText) {
-                    if (snap == null) {
-                        this.originalAddressesSnapshot = cloneAddressesSnapshot(
-                            data.addresses
-                        );
-                    } else if (!snapHasText) {
-                        this.originalAddressesSnapshot = cloneAddressesSnapshot(
-                            data.addresses
-                        );
-                    }
+                if (!this.originalSnapshotInitialized) {
+                    this.originalAddressesSnapshot = cloneAddressesSnapshot(
+                        data?.addresses
+                    );
+                    this.originalSnapshotInitialized = true;
                 }
                 this.preloadProvinceOptions();
             })
@@ -286,6 +327,26 @@ export default class Fec_UpdateAddress extends LightningElement {
         return !this.isLoading;
     }
 
+    get showAddressEligibilityBlock() {
+        const t = this.mainInfoData?.addressUpdateNotEligibleTitle;
+        return t != null && String(t).trim() !== '';
+    }
+
+    get addressEligibilityTitle() {
+        return this.mainInfoData?.addressUpdateNotEligibleTitle ?? '';
+    }
+
+    get addressEligibilityReasonLines() {
+        const reasons = this.mainInfoData?.addressUpdateNotEligibleReasons;
+        if (!Array.isArray(reasons) || reasons.length === 0) {
+            return [];
+        }
+        return reasons.map((text, index) => ({
+            key: `addr-elig-${index}`,
+            text: text != null ? String(text) : ''
+        }));
+    }
+
     get wardComboboxDisabled() {
         return !this.mailingCity;
     }
@@ -293,15 +354,14 @@ export default class Fec_UpdateAddress extends LightningElement {
     get mailingRadiosDisabled() {
         return (
             this.isEdit === false ||
-            this.mailingSelectionBusy ||
             this.mailingSaveLoading ||
             this.isLoading
         );
     }
 
     /**
-     * Checkbox mailing: chỉ bật trên đúng dòng đang edit (tránh gọi API đổi mailing
-     * sang type khác giữa lúc mở form — dễ lỗi / toast lệch).
+     * Checkbox mailing: chỉ bật trên đúng dòng đang edit (tránh đổi mailing sang
+     * type khác giữa lúc mở form). Lưu server khi bấm Save, không auto-save.
      */
     get permanentMailingCheckboxDisabled() {
         return (
@@ -355,10 +415,6 @@ export default class Fec_UpdateAddress extends LightningElement {
             },
             { label: this.labels.officeAddress, value: TYPE_OFFICE }
         ];
-    }
-
-    get newAddrProvinceOptionsForModal() {
-        return this.provinceOptions;
     }
 
     get newAddrWardComboboxDisabled() {
@@ -421,6 +477,49 @@ export default class Fec_UpdateAddress extends LightningElement {
         return list.find((a) => a.addressType === typeLabel) || null;
     }
 
+    /** Mảng địa chỉ cho cột Original — snapshot lần load; nếu chưa có thì dùng addresses từ Main Info (cùng nguồn GetAddressesList). */
+    get originalAddressesSourceList() {
+        if (this.originalSnapshotInitialized) {
+            return Array.isArray(this.originalAddressesSnapshot)
+                ? this.originalAddressesSnapshot
+                : [];
+        }
+        if (Array.isArray(this.originalAddressesSnapshot)) {
+            return this.originalAddressesSnapshot;
+        }
+        const live = this.mainInfoData?.addresses;
+        return Array.isArray(live) ? live : [];
+    }
+
+    /** Một hàng / phần tử DTO addresses; không có addressType thì bỏ qua. */
+    get originalInformationRows() {
+        const list = this.originalAddressesSourceList;
+        if (!Array.isArray(list) || list.length === 0) {
+            return [];
+        }
+        return list
+            .filter((a) => a && a.addressType)
+            .sort((a, b) => {
+                const idxA = ADDRESS_TYPE_DISPLAY_ORDER.indexOf(a.addressType);
+                const idxB = ADDRESS_TYPE_DISPLAY_ORDER.indexOf(b.addressType);
+                const rankA = idxA >= 0 ? idxA : Number.MAX_SAFE_INTEGER;
+                const rankB = idxB >= 0 ? idxB : Number.MAX_SAFE_INTEGER;
+                if (rankA !== rankB) {
+                    return rankA - rankB;
+                }
+                return String(a.addressType || '').localeCompare(
+                    String(b.addressType || ''),
+                    'vi'
+                );
+            })
+            .map((a, index) => ({
+                key: `fec-orig-${index}-${a.addressType}`,
+                typeLabel: a.addressType,
+                addressDisplay: this.formatAddress(a),
+                mailingChecked: this.isMailingFlagYes(a)
+            }));
+    }
+
     /** Đủ 3 loại trong danh sách địa chỉ Main Info — không cho Add New Address. */
     get hasAllStandardAddressTypes() {
         const list = this.mainInfoData?.addresses;
@@ -455,16 +554,12 @@ export default class Fec_UpdateAddress extends LightningElement {
         return addr.address;
     }
 
-    formatMailing(addr) {
-        if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
-            return '';
-        }
-        return addr.mailingAddress;
-    }
-
     /** Cờ địa chỉ giao phát (DTO map từ SF: có giá trị, thường là "Yes"). */
     isMailingFlagYes(addr) {
-        return this.formatMailing(addr) !== '';
+        if (!addr || addr.mailingAddress == null || addr.mailingAddress === '') {
+            return false;
+        }
+        return true;
     }
 
     /** Địa chỉ hiện tại (DTO); cột Updated ưu tiên DTO, sau đó preview form, cuối cùng đồng bộ với Original. */
@@ -493,19 +588,6 @@ export default class Fec_UpdateAddress extends LightningElement {
 
     get currentAddrOriginal() {
         return this.findAddress(TYPE_CURRENT, this.originalAddressesSnapshot);
-    }
-
-    get permanentOriginalDisplay() {
-        return (
-            this.formatAddress(this.permanentAddrOriginal) ||
-            this.emptyDisplay
-        );
-    }
-
-    get officeOriginalDisplay() {
-        return (
-            this.formatAddress(this.officeAddrOriginal) || this.emptyDisplay
-        );
     }
 
     get permanentUpdatedDisplay() {
@@ -572,14 +654,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         return parts.length ? parts.join(', ') : '';
     }
 
-    get permanentMailingCheckedOriginal() {
-        return this.isMailingFlagYes(this.permanentAddrOriginal);
-    }
-
-    get officeMailingCheckedOriginal() {
-        return this.isMailingFlagYes(this.officeAddrOriginal);
-    }
-
     /** Cột Original: checkbox mailing chỉ hiển thị (template không dùng literal {true}). */
     get originalMailingCheckboxDisabled() {
         return true;
@@ -595,12 +669,12 @@ export default class Fec_UpdateAddress extends LightningElement {
         const off = this.isMailingFlagYes(this.officeAddr);
         if (perm) {
             this.mailingSelectedRow = ROW_PERMANENT;
-        } else if (cur) {
-            this.mailingSelectedRow = ROW_CURRENT;
         } else if (off) {
             this.mailingSelectedRow = ROW_OFFICE;
+        } else if (cur) {
+            this.mailingSelectedRow = ROW_CURRENT;
         } else {
-            this.mailingSelectedRow = ROW_PERMANENT;
+            this.mailingSelectedRow = null;
         }
     }
 
@@ -617,10 +691,100 @@ export default class Fec_UpdateAddress extends LightningElement {
         };
     }
 
+    rowFromSfAddressType(sfAddressType) {
+        if (sfAddressType === TYPE_OFFICE) {
+            return ROW_OFFICE;
+        }
+        if (sfAddressType === TYPE_CURRENT) {
+            return ROW_CURRENT;
+        }
+        return ROW_PERMANENT;
+    }
+
+    composeAddressText(building, number_x, street, ward, city) {
+        return [building, number_x, street, ward, city]
+            .filter((p) => p != null && String(p).trim() !== '')
+            .join(', ');
+    }
+
+    queuePendingAddressPayload(info) {
+        if (!info || !info.sfAddressType) {
+            return;
+        }
+        const sfType = info.sfAddressType;
+        this._pendingAddressUpdateMap = {
+            ...(this._pendingAddressUpdateMap || {}),
+            [sfType]: {
+                ...info,
+                caseId: this.resolvedCaseId
+            }
+        };
+    }
+
+    hasPendingAddressUpdates() {
+        return Object.keys(this._pendingAddressUpdateMap || {}).length > 0;
+    }
+
+    getPendingAddressPayloadsInOrder() {
+        const map = this._pendingAddressUpdateMap || {};
+        const order = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
+        const payloads = [];
+        order.forEach((sfType) => {
+            if (map[sfType]) {
+                payloads.push(map[sfType]);
+            }
+        });
+        return payloads;
+    }
+
+    clearPendingAddressPayloads() {
+        this._pendingAddressUpdateMap = {};
+    }
+
+    applyLocalAddressAndMailing(sfAddressType, addressText, selectedRow) {
+        const list = Array.isArray(this.mainInfoData?.addresses)
+            ? this.mainInfoData.addresses
+            : [];
+        const finalSelectedRow = selectedRow || null;
+        const next = [];
+        let found = false;
+        list.forEach((item) => {
+            if (!item) {
+                return;
+            }
+            const isSameType = item.addressType === sfAddressType;
+            const row = this.rowFromSfAddressType(item.addressType);
+            const nextItem = {
+                ...item,
+                address: isSameType && String(addressText || '').trim() !== ''
+                    ? addressText
+                    : item.address,
+                mailingAddress: row === finalSelectedRow ? 'Y' : ''
+            };
+            found = found || isSameType;
+            next.push(nextItem);
+        });
+        if (!found && String(addressText || '').trim() !== '') {
+            next.push({
+                addressType: sfAddressType,
+                address: addressText,
+                mailingAddress:
+                    this.rowFromSfAddressType(sfAddressType) === finalSelectedRow
+                        ? 'Y'
+                        : ''
+            });
+        }
+        this.mainInfoData = {
+            ...(this.mainInfoData || {}),
+            addresses: next
+        };
+        this.mailingSelectedRow = finalSelectedRow;
+    }
+
     /** Gọi Apex bằng tham số primitive — tránh deserialize object lồng thành rỗng. */
     callUpdateCustomerAddress(info) {
         const x = info || {};
-        return updateCustomerAddressParams({
+        const params = {
             caseId: x.caseId != null ? String(x.caseId) : '',
             sfAddressType: x.sfAddressType ?? '',
             cifNumber: x.cifNumber ?? '',
@@ -638,19 +802,37 @@ export default class Fec_UpdateAddress extends LightningElement {
             isPrimary: x.isPrimary ?? '',
             receiveStatement: x.receiveStatement ?? '',
             cardDelivery: x.cardDelivery ?? ''
+        };
+        return run({
+            method: ACTION_ADDRESS_UPDATE,
+            params
         });
     }
 
-    /** Trace CIF merge: client gửi caseId+sfAddressType; Apex merge cif/addressId từ getMailingAddressUpdateContext. */
-    debugAddressUpdatePayload(phase, info) {
-        // eslint-disable-next-line no-console
-        console.debug('[fec_UpdateAddress] updateCustomerAddress', phase, {
-            caseId: info?.caseId,
-            sfAddressType: info?.sfAddressType,
-            hasCif: Boolean(info?.cifNumber),
-            hasAddressId: Boolean(info?.addressId),
-            hasAddressType: Boolean(info?.addressType)
-        });
+    /**
+     * Chỉ được gọi khi user bấm Process Action.
+     * Lúc này mới thực hiện API update địa chỉ theo các payload đã Save tạm trên UI.
+     */
+    @api
+    async commitPendingAddressUpdatesForProcessAction() {
+        if (!this.hasPendingAddressUpdates()) {
+            return {
+                success: false,
+                errorMessage: LBL_Error
+            };
+        }
+        const payloads = this.getPendingAddressPayloadsInOrder();
+        let lastResult = null;
+        for (const payload of payloads) {
+            // eslint-disable-next-line no-await-in-loop
+            const res = await this.callUpdateCustomerAddress(payload);
+            lastResult = res;
+            if (!res?.success) {
+                return res;
+            }
+        }
+        this.clearPendingAddressPayloads();
+        return lastResult || { success: true };
     }
 
     sfTypeFromRow(row) {
@@ -661,6 +843,20 @@ export default class Fec_UpdateAddress extends LightningElement {
             return TYPE_CURRENT;
         }
         return TYPE_PERMANENT;
+    }
+
+    getAddressByRow(row) {
+        if (row === ROW_OFFICE) {
+            return this.officeAddr;
+        }
+        if (row === ROW_CURRENT) {
+            return this.currentAddr;
+        }
+        return this.permanentAddr;
+    }
+
+    isRowMailingInData(row) {
+        return this.isMailingFlagYes(this.getAddressByRow(row));
     }
 
     ensurePicklistValue(options, value) {
@@ -842,91 +1038,11 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (checked) {
             if (this.mailingSelectedRow !== row) {
                 this.mailingSelectedRow = row;
-                this.persistMailingSelectionOnly();
             }
             return;
         }
         if (this.mailingSelectedRow === row) {
-            const idx = MAILING_ROW_ORDER.indexOf(row);
-            this.mailingSelectedRow =
-                MAILING_ROW_ORDER[(idx + 1) % MAILING_ROW_ORDER.length];
-            this.persistMailingSelectionOnly();
-        }
-    }
-
-    async persistMailingSelectionOnly() {
-        if (this.isEdit === false) {
-            return;
-        }
-        if (!this.resolvedCaseId || this.mailingSelectionBusy) {
-            return;
-        }
-        this.mailingSelectionBusy = true;
-        const rowTypes = [
-            { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
-            { row: ROW_CURRENT, sf: TYPE_CURRENT },
-            { row: ROW_OFFICE, sf: TYPE_OFFICE }
-        ];
-        try {
-            const contexts = await Promise.all(
-                rowTypes.map((t) =>
-                    getMailingAddressUpdateContext({
-                        caseId: this.resolvedCaseId,
-                        sfAddressType: t.sf
-                    })
-                )
-            );
-            const selected = this.mailingSelectedRow;
-            const selectedIdx = rowTypes.findIndex((t) => t.row === selected);
-            if (
-                selectedIdx < 0 ||
-                !contexts[selectedIdx] ||
-                !contexts[selectedIdx].found
-            ) {
-                this.syncMailingSelectionFromData();
-                this.showToast(
-                    LBL_Error,
-                    contexts[selectedIdx]?.message || LBL_Error,
-                    'error'
-                );
-                return;
-            }
-            for (let i = 0; i < rowTypes.length; i++) {
-                const ctx = contexts[i];
-                if (!ctx?.found) {
-                    continue;
-                }
-                const yn = rowTypes[i].row === selected ? 'Y' : 'N';
-                const info = this.buildInfoPayloadFromContext(
-                    ctx,
-                    rowTypes[i].sf,
-                    yn
-                );
-                this.debugAddressUpdatePayload(
-                    'persistMailingSelection ' + rowTypes[i].row,
-                    info
-                );
-                const r = await this.callUpdateCustomerAddress(info);
-                if (!r?.success) {
-                    this.syncMailingSelectionFromData();
-                    this.showToast(
-                        LBL_Error,
-                        r?.errorMessage || r?.description || LBL_Error,
-                        'error'
-                    );
-                    return;
-                }
-            }
-            await clearMainInfoCache({ caseId: this.resolvedCaseId });
-            this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
-            this.loadAddressData();
-        } catch (err) {
-            this.syncMailingSelectionFromData();
-            const msg =
-                err?.body?.message || err?.message || String(err);
-            this.showToast(LBL_Error, msg, 'error');
-        } finally {
-            this.mailingSelectionBusy = false;
+            this.mailingSelectedRow = null;
         }
     }
 
@@ -969,36 +1085,33 @@ export default class Fec_UpdateAddress extends LightningElement {
 
         this.mailingSaveLoading = true;
         try {
+            const selectedRow = this.mailingSelectedRow;
+            const primarySfAddressType = this.sfTypeFromRow(row);
             const primaryInfo = {
                 caseId: this.resolvedCaseId,
-                sfAddressType: this.sfTypeFromRow(row),
+                sfAddressType: primarySfAddressType,
                 number_x: this.mailingNumber,
                 building: this.mailingBuilding,
                 street: this.mailingStreet,
                 ward: this.mailingWard,
                 city: this.mailingCity,
                 isMailingAddress:
-                    this.mailingSelectedRow === row ? 'Y' : 'N'
+                    selectedRow === row ? 'Y' : 'N'
             };
-
-            this.debugAddressUpdatePayload('handleSaveMailing primary', primaryInfo);
-            const result = await this.callUpdateCustomerAddress(primaryInfo);
-            if (!result?.success) {
-                const msg =
-                    result?.errorMessage ||
-                    result?.description ||
-                    LBL_Error;
-                this.showToast(LBL_Error, msg, 'error');
-                return;
-            }
+            this.queuePendingAddressPayload(primaryInfo);
 
             const allRows = [
                 { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
-                { row: ROW_CURRENT, sf: TYPE_CURRENT },
-                { row: ROW_OFFICE, sf: TYPE_OFFICE }
+                { row: ROW_OFFICE, sf: TYPE_OFFICE },
+                { row: ROW_CURRENT, sf: TYPE_CURRENT }
             ];
             for (const { row: r, sf } of allRows) {
                 if (r === row) {
+                    continue;
+                }
+                const desiredYn = selectedRow === r ? 'Y' : 'N';
+                const currentYn = this.isRowMailingInData(r) ? 'Y' : 'N';
+                if (desiredYn === currentYn) {
                     continue;
                 }
                 const ctxOther = await getMailingAddressUpdateContext({
@@ -1011,30 +1124,26 @@ export default class Fec_UpdateAddress extends LightningElement {
                 const infoOther = this.buildInfoPayloadFromContext(
                     ctxOther,
                     sf,
-                    this.mailingSelectedRow === r ? 'Y' : 'N'
+                    desiredYn
                 );
-                this.debugAddressUpdatePayload(
-                    'handleSaveMailing other ' + r,
-                    infoOther
-                );
-                const resultOther = await this.callUpdateCustomerAddress(
-                    infoOther
-                );
-                if (!resultOther?.success) {
-                    const msg =
-                        resultOther?.errorMessage ||
-                        resultOther?.description ||
-                        LBL_Error;
-                    this.showToast(LBL_Error, msg, 'error');
-                    return;
-                }
+                this.queuePendingAddressPayload(infoOther);
             }
 
-            await clearMainInfoCache({ caseId: this.resolvedCaseId });
+            const composedAddress = this.composeAddressText(
+                this.mailingBuilding,
+                this.mailingNumber,
+                this.mailingStreet,
+                this.mailingWard,
+                this.mailingCity
+            );
+            this.applyLocalAddressAndMailing(
+                primarySfAddressType,
+                composedAddress,
+                selectedRow
+            );
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.mailingEditRow = undefined;
             this.resetMailingForm();
-            this.loadAddressData();
         } catch (err) {
             const msg =
                 err?.body?.message || err?.message || String(err);
@@ -1202,6 +1311,7 @@ export default class Fec_UpdateAddress extends LightningElement {
 
         this.newAddressSaveLoading = true;
         try {
+            let nextSelectedRow = this.mailingSelectedRow;
             const primaryInfo = {
                 caseId: this.resolvedCaseId,
                 sfAddressType: this.newAddrAddressType,
@@ -1212,17 +1322,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 city: this.newAddrCity,
                 isMailingAddress: this.newAddrIsMailing ? 'Y' : 'N'
             };
-
-            this.debugAddressUpdatePayload('handleSaveNewAddress primary', primaryInfo);
-            const result = await this.callUpdateCustomerAddress(primaryInfo);
-            if (!result?.success) {
-                const msg =
-                    result?.errorMessage ||
-                    result?.description ||
-                    LBL_Error;
-                this.showToast(LBL_Error, msg, 'error');
-                return;
-            }
+            this.queuePendingAddressPayload(primaryInfo);
 
             const primarySf = this.newAddrAddressType;
             const otherTypes = [
@@ -1259,35 +1359,31 @@ export default class Fec_UpdateAddress extends LightningElement {
                     sf,
                     yn
                 );
-                this.debugAddressUpdatePayload(
-                    'handleSaveNewAddress other ' + sf,
-                    infoOther
-                );
-                const resultOther = await this.callUpdateCustomerAddress(
-                    infoOther
-                );
-                if (!resultOther?.success) {
-                    const msg =
-                        resultOther?.errorMessage ||
-                        resultOther?.description ||
-                        LBL_Error;
-                    this.showToast(LBL_Error, msg, 'error');
-                    return;
-                }
+                this.queuePendingAddressPayload(infoOther);
             }
 
             if (this.newAddrIsMailing) {
-                this.mailingSelectedRow = primaryRow;
+                nextSelectedRow = primaryRow;
             } else if (isOffice) {
-                this.mailingSelectedRow = ROW_PERMANENT;
+                nextSelectedRow = ROW_PERMANENT;
             } else if (isCurrent) {
-                this.mailingSelectedRow = ROW_OFFICE;
+                nextSelectedRow = ROW_OFFICE;
             }
-            await clearMainInfoCache({ caseId: this.resolvedCaseId });
+            const composedAddress = this.composeAddressText(
+                this.newAddrBuilding,
+                this.newAddrNumber,
+                this.newAddrStreet,
+                this.newAddrWard,
+                this.newAddrCity
+            );
+            this.applyLocalAddressAndMailing(
+                this.newAddrAddressType,
+                composedAddress,
+                nextSelectedRow
+            );
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.newAddressModalOpen = false;
             this.resetNewAddressForm();
-            this.loadAddressData();
         } catch (err) {
             const msg =
                 err?.body?.message || err?.message || String(err);

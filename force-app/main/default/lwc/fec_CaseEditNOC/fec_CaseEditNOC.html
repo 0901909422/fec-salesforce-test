@@ -7,7 +7,7 @@
       <lightning-accordion-section name="noc" label={natureOfCaseLabel}>
         <template lwc:if={isEdit}>
           <lightning-layout multiple-rows>
-            <lightning-layout-item padding="around-small" size="6">
+            <lightning-layout-item padding="around-small" size="12">
               <!-- <lightning-record-picker
                 label="Product Type"
                 data-name="productType"
@@ -31,7 +31,7 @@
                 disabled={disableProdType}
               ></c-fec_-combo-box>
             </lightning-layout-item>
-            <lightning-layout-item padding="around-small" size="6">
+            <lightning-layout-item padding="around-small" size="12">
               <!-- <lightning-record-picker
                 label="Category"
                 data-name="category"
@@ -56,7 +56,7 @@
                 onchange={handleChangeCategory}
               ></c-fec_-combo-box>
             </lightning-layout-item>
-            <lightning-layout-item padding="around-small" size="6">
+            <lightning-layout-item padding="around-small" size="12">
               <!-- <lightning-record-picker
                 label="Sub-Category"
                 data-name="subCategory"
@@ -81,7 +81,7 @@
                 onchange={handleChangeSubCategory}
               ></c-fec_-combo-box>
             </lightning-layout-item>
-            <lightning-layout-item padding="around-small" size="6">
+            <lightning-layout-item padding="around-small" size="12">
               <!-- <lightning-record-picker
                 label="Sub-Code"
                 data-name="subCode"
@@ -114,25 +114,25 @@
             object-api-name="Case"
           >
             <lightning-layout multiple-rows>
-              <lightning-layout-item padding="around-small" size="6">
+              <lightning-layout-item padding="around-small" size="12">
                 <lightning-output-field
                   field-name="FEC_Product_Type__c"
                   class="slds-form-element_readonly"
                 ></lightning-output-field>
               </lightning-layout-item>
-              <lightning-layout-item padding="around-small" size="6">
+              <lightning-layout-item padding="around-small" size="12">
                 <lightning-output-field
                   field-name="FEC_Category__c"
                   class="slds-form-element_readonly"
                 ></lightning-output-field>
               </lightning-layout-item>
-              <lightning-layout-item padding="around-small" size="6">
+              <lightning-layout-item padding="around-small" size="12">
                 <lightning-output-field
                   field-name="FEC_SubCategory__c"
                   class="slds-form-element_readonly"
                 ></lightning-output-field>
               </lightning-layout-item>
-              <lightning-layout-item padding="around-small" size="6">
+              <lightning-layout-item padding="around-small" size="12">
                 <lightning-output-field
                   field-name="FEC_SubCode__c"
                   class="slds-form-element_readonly"
