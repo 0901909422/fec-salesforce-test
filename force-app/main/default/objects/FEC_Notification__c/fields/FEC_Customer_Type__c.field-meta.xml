@@ -6,9 +6,10 @@
     <required>false</required>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Picklist</type>
+    <type>MultiselectPicklist</type>
     <valueSet>
         <restricted>true</restricted>
         <valueSetName>Customer_Type</valueSetName>
     </valueSet>
+    <visibleLines>4</visibleLines>
 </CustomField>

@@ -191,7 +191,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
 
     // ===== BUSINESS NODE =====
     Dom.XmlNode cmsNode =
-        action.addChildElement('M_FAS_OUTSTANDING_AUTH_INQ', null, null);
+        action.addChildElement('M_CMS_CARD_TO_CARD_INQ_EMEA', null, null);
 
     Dom.XmlNode vmxRoot = cmsNode.addChildElement('VMX_ROOT', null, null);
     Dom.XmlNode msgIn   = vmxRoot.addChildElement('VMX_MSGIN', null, null);

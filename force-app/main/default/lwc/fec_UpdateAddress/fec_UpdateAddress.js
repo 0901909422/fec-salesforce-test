@@ -6,6 +6,7 @@ import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
 
 import loadMainInfo from '@salesforce/apex/FEC_MainInfoController.loadMainInfo';
 import clearMainInfoCache from '@salesforce/apex/FEC_MainInfoController.clearMainInfoCache';
+import syncLocalMailingAddressSelection from '@salesforce/apex/FEC_MainInfoController.syncLocalMailingAddressSelection';
 import getMailingAddressUpdateContext from '@salesforce/apex/FEC_MainInfoController.getMailingAddressUpdateContext';
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
@@ -43,7 +44,8 @@ const ROW_PERMANENT = 'permanent';
 const ROW_CURRENT = 'current';
 const ROW_OFFICE = 'office';
 /** Thứ tự hàng. */
-const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_CURRENT, ROW_OFFICE];
+const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_OFFICE, ROW_CURRENT];
+const ADDRESS_TYPE_DISPLAY_ORDER = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
 
 function cloneAddressesSnapshot(addresses) {
     if (!Array.isArray(addresses)) {
@@ -54,18 +56,6 @@ function cloneAddressesSnapshot(addresses) {
         address: a.address,
         mailingAddress: a.mailingAddress
     }));
-}
-
-function addressesHaveDisplayText(addresses) {
-    if (!Array.isArray(addresses)) {
-        return false;
-    }
-    return addresses.some(
-        (a) =>
-            a &&
-            a.address != null &&
-            String(a.address).trim() !== ''
-    );
 }
 
 /**
@@ -117,6 +107,53 @@ export default class Fec_UpdateAddress extends LightningElement {
     // is-edit từ fec_CaseBussiness (giống fec_IPPClosureForm: không khởi tạo boolean @api)
     @api isEdit;
 
+    /**
+     * Gọi từ fec_CaseBussiness khi Process Action "Update customer info" thất bại
+     * (FEC_MSG_ACTION_PHONE_UPDATE_ERROR): khôi phục cột Updated Information về snapshot
+     * địa chỉ lúc load Case (cùng dữ liệu với cột Original) và đóng form sửa.
+     */
+    @api revertUpdatedInformationToOriginal() {
+        if (!this.mainInfoData) {
+            return;
+        }
+        const snap = this.originalAddressesSnapshot;
+        if (!Array.isArray(snap)) {
+            return;
+        }
+        this.mainInfoData = {
+            ...this.mainInfoData,
+            addresses: cloneAddressesSnapshot(snap)
+        };
+        this.syncMailingSelectionFromData();
+        this.mailingEditRow = undefined;
+        this.resetMailingForm();
+        this.newAddressModalOpen = false;
+        this.resetNewAddressForm();
+    }
+
+    /**
+     * Gọi từ fec_CaseBussiness khi Process Action thành công (FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS):
+     * xóa cache Main Info, load lại địa chỉ + mailing từ server và gán lại snapshot Original
+     * theo dữ liệu mới (Updated Information = trạng thái đã commit).
+     */
+    @api refreshUpdatedInformationAfterProcessSuccess() {
+        const caseId = this.resolvedCaseId;
+        if (!caseId) {
+            return Promise.resolve();
+        }
+        this.mailingEditRow = undefined;
+        this.resetMailingForm();
+        this.newAddressModalOpen = false;
+        this.resetNewAddressForm();
+        this.originalSnapshotInitialized = false;
+        this.originalAddressesSnapshot = undefined;
+        return clearMainInfoCache({ caseId })
+            .catch(() => {
+                /* vẫn load lại địa chỉ */
+            })
+            .then(() => this.loadAddressData());
+    }
+
     /** Fallback khi LWC nằm trong parent không truyền record-id (trang Case vẫn có Id trên URL). */
     @track _caseIdFromPage;
 
@@ -147,11 +184,13 @@ export default class Fec_UpdateAddress extends LightningElement {
         this._lastFetchKey = key;
         if (rid) {
             this.originalAddressesSnapshot = undefined;
+            this.originalSnapshotInitialized = false;
             this.loadAddressData();
         } else {
             this.isLoading = false;
             this.mainInfoData = null;
             this.originalAddressesSnapshot = undefined;
+            this.originalSnapshotInitialized = false;
             this.loadError = undefined;
         }
     }
@@ -159,6 +198,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track mainInfoData;
     /** Snapshot địa chỉ lần load đầu theo recordId — cột Original không đổi khi user sửa qua Updated. */
     @track originalAddressesSnapshot;
+    @track originalSnapshotInitialized = false;
     @track loadError;
     @track isLoading = true;
 
@@ -178,9 +218,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track mailingCifNumber;
     @track mailingAddressId;
     @track mailingAddressTypeApi;
-    /** Một trong hai địa chỉ được chọn làm giao phát (radio). */
-    @track mailingSelectedRow = ROW_PERMANENT;
-    @track mailingSelectionBusy = false;
+    /** Dòng được chọn làm mailing (`permanent` / `current` / `office`), hoặc `null` nếu không chọn. */
+    @track mailingSelectedRow = null;
 
     /** Popup thêm/sửa địa chỉ (Original > Add New Address). */
     @track newAddressModalOpen = false;
@@ -247,33 +286,25 @@ export default class Fec_UpdateAddress extends LightningElement {
             this.isLoading = false;
             this.mainInfoData = null;
             this.originalAddressesSnapshot = undefined;
-            return;
+            this.originalSnapshotInitialized = false;
+            return Promise.resolve();
         }
 
         this.isLoading = true;
         this.loadError = undefined;
 
-        loadMainInfo({ caseId: this.resolvedCaseId })
+        return loadMainInfo({ caseId: this.resolvedCaseId })
             .then((data) => {
                 /* Không gộp addresses từ lần load trước: dễ giữ bản sai / nhầm Case khi server trả [] hoặc sau khi xóa cache. */
                 this.mainInfoData = data;
                 this.loadError = undefined;
                 this.syncMailingSelectionFromData();
 
-                const dataHasText = addressesHaveDisplayText(data?.addresses);
-                const snap = this.originalAddressesSnapshot;
-                const snapHasText = addressesHaveDisplayText(snap);
-
-                if (dataHasText) {
-                    if (snap == null) {
-                        this.originalAddressesSnapshot = cloneAddressesSnapshot(
-                            data.addresses
-                        );
-                    } else if (!snapHasText) {
-                        this.originalAddressesSnapshot = cloneAddressesSnapshot(
-                            data.addresses
-                        );
-                    }
+                if (!this.originalSnapshotInitialized) {
+                    this.originalAddressesSnapshot = cloneAddressesSnapshot(
+                        data?.addresses
+                    );
+                    this.originalSnapshotInitialized = true;
                 }
                 this.preloadProvinceOptions();
             })
@@ -317,15 +348,14 @@ export default class Fec_UpdateAddress extends LightningElement {
     get mailingRadiosDisabled() {
         return (
             this.isEdit === false ||
-            this.mailingSelectionBusy ||
             this.mailingSaveLoading ||
             this.isLoading
         );
     }
 
     /**
-     * Checkbox mailing: chỉ bật trên đúng dòng đang edit (tránh gọi API đổi mailing
-     * sang type khác giữa lúc mở form — dễ lỗi / toast lệch).
+     * Checkbox mailing: chỉ bật trên đúng dòng đang edit (tránh đổi mailing sang
+     * type khác giữa lúc mở form). Lưu server khi bấm Save, không auto-save.
      */
     get permanentMailingCheckboxDisabled() {
         return (
@@ -443,6 +473,11 @@ export default class Fec_UpdateAddress extends LightningElement {
 
     /** Mảng địa chỉ cho cột Original — snapshot lần load; nếu chưa có thì dùng addresses từ Main Info (cùng nguồn GetAddressesList). */
     get originalAddressesSourceList() {
+        if (this.originalSnapshotInitialized) {
+            return Array.isArray(this.originalAddressesSnapshot)
+                ? this.originalAddressesSnapshot
+                : [];
+        }
         if (Array.isArray(this.originalAddressesSnapshot)) {
             return this.originalAddressesSnapshot;
         }
@@ -458,6 +493,19 @@ export default class Fec_UpdateAddress extends LightningElement {
         }
         return list
             .filter((a) => a && a.addressType)
+            .sort((a, b) => {
+                const idxA = ADDRESS_TYPE_DISPLAY_ORDER.indexOf(a.addressType);
+                const idxB = ADDRESS_TYPE_DISPLAY_ORDER.indexOf(b.addressType);
+                const rankA = idxA >= 0 ? idxA : Number.MAX_SAFE_INTEGER;
+                const rankB = idxB >= 0 ? idxB : Number.MAX_SAFE_INTEGER;
+                if (rankA !== rankB) {
+                    return rankA - rankB;
+                }
+                return String(a.addressType || '').localeCompare(
+                    String(b.addressType || ''),
+                    'vi'
+                );
+            })
             .map((a, index) => ({
                 key: `fec-orig-${index}-${a.addressType}`,
                 typeLabel: a.addressType,
@@ -615,12 +663,12 @@ export default class Fec_UpdateAddress extends LightningElement {
         const off = this.isMailingFlagYes(this.officeAddr);
         if (perm) {
             this.mailingSelectedRow = ROW_PERMANENT;
-        } else if (cur) {
-            this.mailingSelectedRow = ROW_CURRENT;
         } else if (off) {
             this.mailingSelectedRow = ROW_OFFICE;
+        } else if (cur) {
+            this.mailingSelectedRow = ROW_CURRENT;
         } else {
-            this.mailingSelectedRow = ROW_PERMANENT;
+            this.mailingSelectedRow = null;
         }
     }
 
@@ -669,6 +717,20 @@ export default class Fec_UpdateAddress extends LightningElement {
             return TYPE_CURRENT;
         }
         return TYPE_PERMANENT;
+    }
+
+    getAddressByRow(row) {
+        if (row === ROW_OFFICE) {
+            return this.officeAddr;
+        }
+        if (row === ROW_CURRENT) {
+            return this.currentAddr;
+        }
+        return this.permanentAddr;
+    }
+
+    isRowMailingInData(row) {
+        return this.isMailingFlagYes(this.getAddressByRow(row));
     }
 
     ensurePicklistValue(options, value) {
@@ -850,87 +912,11 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (checked) {
             if (this.mailingSelectedRow !== row) {
                 this.mailingSelectedRow = row;
-                this.persistMailingSelectionOnly();
             }
             return;
         }
         if (this.mailingSelectedRow === row) {
-            const idx = MAILING_ROW_ORDER.indexOf(row);
-            this.mailingSelectedRow =
-                MAILING_ROW_ORDER[(idx + 1) % MAILING_ROW_ORDER.length];
-            this.persistMailingSelectionOnly();
-        }
-    }
-
-    async persistMailingSelectionOnly() {
-        if (this.isEdit === false) {
-            return;
-        }
-        if (!this.resolvedCaseId || this.mailingSelectionBusy) {
-            return;
-        }
-        this.mailingSelectionBusy = true;
-        const rowTypes = [
-            { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
-            { row: ROW_CURRENT, sf: TYPE_CURRENT },
-            { row: ROW_OFFICE, sf: TYPE_OFFICE }
-        ];
-        try {
-            const contexts = await Promise.all(
-                rowTypes.map((t) =>
-                    getMailingAddressUpdateContext({
-                        caseId: this.resolvedCaseId,
-                        sfAddressType: t.sf
-                    })
-                )
-            );
-            const selected = this.mailingSelectedRow;
-            const selectedIdx = rowTypes.findIndex((t) => t.row === selected);
-            if (
-                selectedIdx < 0 ||
-                !contexts[selectedIdx] ||
-                !contexts[selectedIdx].found
-            ) {
-                this.syncMailingSelectionFromData();
-                this.showToast(
-                    LBL_Error,
-                    contexts[selectedIdx]?.message || LBL_Error,
-                    'error'
-                );
-                return;
-            }
-            for (let i = 0; i < rowTypes.length; i++) {
-                const ctx = contexts[i];
-                if (!ctx?.found) {
-                    continue;
-                }
-                const yn = rowTypes[i].row === selected ? 'Y' : 'N';
-                const info = this.buildInfoPayloadFromContext(
-                    ctx,
-                    rowTypes[i].sf,
-                    yn
-                );
-                const r = await this.callUpdateCustomerAddress(info);
-                if (!r?.success) {
-                    this.syncMailingSelectionFromData();
-                    this.showToast(
-                        LBL_Error,
-                        r?.errorMessage || r?.description || LBL_Error,
-                        'error'
-                    );
-                    return;
-                }
-            }
-            await clearMainInfoCache({ caseId: this.resolvedCaseId });
-            this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
-            this.loadAddressData();
-        } catch (err) {
-            this.syncMailingSelectionFromData();
-            const msg =
-                err?.body?.message || err?.message || String(err);
-            this.showToast(LBL_Error, msg, 'error');
-        } finally {
-            this.mailingSelectionBusy = false;
+            this.mailingSelectedRow = null;
         }
     }
 
@@ -997,11 +983,16 @@ export default class Fec_UpdateAddress extends LightningElement {
 
             const allRows = [
                 { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
-                { row: ROW_CURRENT, sf: TYPE_CURRENT },
-                { row: ROW_OFFICE, sf: TYPE_OFFICE }
+                { row: ROW_OFFICE, sf: TYPE_OFFICE },
+                { row: ROW_CURRENT, sf: TYPE_CURRENT }
             ];
             for (const { row: r, sf } of allRows) {
                 if (r === row) {
+                    continue;
+                }
+                const desiredYn = this.mailingSelectedRow === r ? 'Y' : 'N';
+                const currentYn = this.isRowMailingInData(r) ? 'Y' : 'N';
+                if (desiredYn === currentYn) {
                     continue;
                 }
                 const ctxOther = await getMailingAddressUpdateContext({
@@ -1014,7 +1005,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 const infoOther = this.buildInfoPayloadFromContext(
                     ctxOther,
                     sf,
-                    this.mailingSelectedRow === r ? 'Y' : 'N'
+                    desiredYn
                 );
                 const resultOther = await this.callUpdateCustomerAddress(
                     infoOther
@@ -1029,6 +1020,12 @@ export default class Fec_UpdateAddress extends LightningElement {
                 }
             }
 
+            await syncLocalMailingAddressSelection({
+                caseId: this.resolvedCaseId,
+                selectedSfAddressType: this.mailingSelectedRow
+                    ? this.sfTypeFromRow(this.mailingSelectedRow)
+                    : null
+            });
             await clearMainInfoCache({ caseId: this.resolvedCaseId });
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.mailingEditRow = undefined;
@@ -1277,6 +1274,12 @@ export default class Fec_UpdateAddress extends LightningElement {
             } else if (isCurrent) {
                 this.mailingSelectedRow = ROW_OFFICE;
             }
+            await syncLocalMailingAddressSelection({
+                caseId: this.resolvedCaseId,
+                selectedSfAddressType: this.mailingSelectedRow
+                    ? this.sfTypeFromRow(this.mailingSelectedRow)
+                    : null
+            });
             await clearMainInfoCache({ caseId: this.resolvedCaseId });
             this.showToast(LBL_UpdateSuccessfully, LBL_UpdateSuccessfully, 'success');
             this.newAddressModalOpen = false;

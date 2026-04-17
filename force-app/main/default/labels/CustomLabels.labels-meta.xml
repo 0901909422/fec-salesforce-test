@@ -9807,7 +9807,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Danh xung label</shortDescription>
-        <value>Danh xưng</value>
+        <value>Title</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh_Chi</fullName>
@@ -11937,8 +11937,8 @@
         <fullName>FEC_Target_Email</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Target Email</shortDescription>
-        <value>Target Email</value>
+        <shortDescription>Email</shortDescription>
+        <value>Email</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Group</fullName>
@@ -12470,5 +12470,26 @@
         <protected>false</protected>
         <shortDescription>Không tìm thấy kết quả (Application History)</shortDescription>
         <value>Không tìm thấy kết quả</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RESET_PIN_ERROR</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RESET_PIN_ERROR</shortDescription>
+        <value>Mở khóa PIN thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RESET_PIN_FAILED</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RESET_PIN_FAILED</shortDescription>
+        <value>Mở khóa PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RESET_PIN_SUCCESS</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
+        <value>Mở khóa PIN thành công.</value>
     </labels>
 </CustomLabels>
