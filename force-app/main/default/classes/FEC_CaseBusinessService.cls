@@ -2281,15 +2281,11 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * fecMasterDataSettingIsEdit — (1) ReadOnly=true -> false. (2) Editable=true va khong ReadOnly -> true chi khi UserGroup khop FEC_Editable_User_Group__c. (3) Field_Status=false khong load (SOQL getData). (4) Ten stage co "Stage N" voi N!=1 -> false; Stage 1 hoac khong co cap trong ten -> khong ep.
    */
-  private static final Pattern PAT_STAGE_NAME_WITH_NUMBER = Pattern.compile(
-    '(?i)[\\s-]stage ([0-9]+)( -|$)'
-  );
-
   private static Boolean isCaseStageNameForcingDynLwcReadonly(String stageName) {
     if (String.isBlank(stageName)) {
       return false;
     }
-    Matcher m = PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName.trim());
+    Matcher m = FEC_ConstantCommon.PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName.trim());
     if (!m.find()) {
       return false;
     }
