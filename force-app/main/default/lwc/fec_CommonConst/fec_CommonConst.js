@@ -131,7 +131,6 @@ const FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX = 'fec_fc_blkfail_';
 const FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX = 'fec_fc_blkok_';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
-const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -218,7 +217,6 @@ export {
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
     ERROR_TILE_SHOWTOAST,
-    MSG_ENTER_EMAIL_CORRECTLY
-    ERROR_TILE_SHOWTOAST,
+    MSG_ENTER_EMAIL_CORRECTLY,
     PROFILE_RELEVANT_DEPTS
 };
