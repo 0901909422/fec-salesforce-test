@@ -42,6 +42,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
                    FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__c,
                    FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
