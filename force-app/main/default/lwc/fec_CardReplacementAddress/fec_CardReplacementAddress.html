@@ -1,4 +1,5 @@
 <template>
+  <lightning-spinner lwc:if={isLoading} size="medium" variant="brand"></lightning-spinner>
   <div class="slds-card slds-p-around--small">
     <lightning-accordion
       allow-multiple-sections-open
@@ -17,9 +18,21 @@
           <lightning-button 
             variant="brand"
             label={customLabel.btnAddTempAddress}
-            onclick={handleClick} 
+            onclick={handleAddTempAddress} 
             disabled={isDisableBtnAddTempAddress}
           ></lightning-button>
+        </div>
+        <div class="slds-p-top_x-small slds-list_horizontal" lwc:if={isDisableBtnAddTempAddress}>
+          <lightning-radio-group
+            name="radioGroup"
+            label={customLabel.newTempAddress}
+            options={newTempAddressOptions}
+            value={newAddressInfoId}
+            type="radio"
+            disabled
+          ></lightning-radio-group>
+          <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
+          <lightning-button-icon icon-name="utility:delete" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
         </div>
       </lightning-accordion-section>
     </lightning-accordion>
@@ -47,6 +60,7 @@
             data-id="building"
             type="text"
             label={customLabel.building}
+            value={building}
             required
           ></lightning-input>
         </lightning-layout-item>
@@ -63,6 +77,7 @@
             data-id="number"
             type="text"
             label={customLabel.number}
+            value={numberValue}
             required
           ></lightning-input>
         </lightning-layout-item>
@@ -80,6 +95,7 @@
             data-id="street"
             type="text"
             label={customLabel.street}
+            value={street}
             required
           ></lightning-input>
         </lightning-layout-item>

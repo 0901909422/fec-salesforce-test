@@ -1444,8 +1444,8 @@ hasAnySearchCriteria(params) {
   }
 
   async _pollHistoryReady(caseId) {
-      const MAX_ATTEMPTS = 15;
-      const INTERVAL_MS  = 2000;
+      const MAX_ATTEMPTS = 4;
+      const INTERVAL_MS  = 1000;
 
       let historyId = await this._getHistoryIdFromCase(caseId);
       if (!historyId) return; 
