@@ -2221,6 +2221,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
     }
     
+
+    // Address Update: Save chỉ lưu local, Process Action mới call API.
+    // Các action khác: không đổi luồng gọi API.
+    // Author: Toannd61
     let processActionPromise;
     if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
       const cmp = this._getFecUpdateAddressCmp();
