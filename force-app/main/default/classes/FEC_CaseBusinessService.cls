@@ -18,6 +18,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String FULLNAME_UPDATE = 'Full Name Update';
   public static final String DOB_UPDATE = 'Date of Birth Update';
   public static final String GENDER_UPDATE = 'Gender Update';
+  public static final String ADDRESS_UPDATE = 'Address Update';
   public static final String IDENTIFICATION_UPDATE = 'National ID Update';
   public static final String OC_001 = 'Outbound Campaign - OU01';
   public static final String BLOCK_CARD = 'Block Card';
@@ -63,6 +64,7 @@ public without sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE,
     DOB_UPDATE,
     GENDER_UPDATE,
+    ADDRESS_UPDATE,
     IDENTIFICATION_UPDATE,
     OC_001,
     BLOCK_CARD,
@@ -86,6 +88,7 @@ public without sharing class FEC_CaseBusinessService {
     FULLNAME_UPDATE => Method.FULLNAME_UPDATE,
     DOB_UPDATE => Method.DOB_UPDATE,
     GENDER_UPDATE => Method.GENDER_UPDATE,
+    ADDRESS_UPDATE => Method.ADDRESS_UPDATE,
     IDENTIFICATION_UPDATE => Method.IDENTIFICATION_UPDATE,
     OC_001 => Method.OC_001,
     BLOCK_CARD => Method.BLOCK_CARD,
@@ -1124,6 +1127,13 @@ public without sharing class FEC_CaseBusinessService {
         }
         when GENDER_UPDATE {
           return FEC_UpdateCustomerBasicInfo.updateValue(caseId, GENDER_UPDATE);
+        }
+        when ADDRESS_UPDATE {
+          return FEC_UpdateCustomerAddress.updateValue(
+            caseId,
+            params,
+            ADDRESS_UPDATE
+          );
         }
         when OC_001 {
           System.debug(OC_001);

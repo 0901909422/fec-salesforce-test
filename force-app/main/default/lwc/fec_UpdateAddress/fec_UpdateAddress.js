@@ -10,7 +10,7 @@ import syncLocalMailingAddressSelection from '@salesforce/apex/FEC_MainInfoContr
 import getMailingAddressUpdateContext from '@salesforce/apex/FEC_MainInfoController.getMailingAddressUpdateContext';
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
-import updateCustomerAddressParams from '@salesforce/apex/FEC_MainInfoController.updateCustomerAddressParams';
+import run from '@salesforce/apex/FEC_CaseBusinessService.run';
 
 import FEC_Permanent_Address from '@salesforce/label/c.FEC_Permanent_Address';
 import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
@@ -46,6 +46,7 @@ const ROW_OFFICE = 'office';
 /** Thứ tự hàng. */
 const MAILING_ROW_ORDER = [ROW_PERMANENT, ROW_OFFICE, ROW_CURRENT];
 const ADDRESS_TYPE_DISPLAY_ORDER = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
+const ACTION_ADDRESS_UPDATE = 'Address Update';
 
 function cloneAddressesSnapshot(addresses) {
     if (!Array.isArray(addresses)) {
@@ -688,7 +689,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     /** Gọi Apex bằng tham số primitive — tránh deserialize object lồng thành rỗng. */
     callUpdateCustomerAddress(info) {
         const x = info || {};
-        return updateCustomerAddressParams({
+        const params = {
             caseId: x.caseId != null ? String(x.caseId) : '',
             sfAddressType: x.sfAddressType ?? '',
             cifNumber: x.cifNumber ?? '',
@@ -706,6 +707,10 @@ export default class Fec_UpdateAddress extends LightningElement {
             isPrimary: x.isPrimary ?? '',
             receiveStatement: x.receiveStatement ?? '',
             cardDelivery: x.cardDelivery ?? ''
+        };
+        return run({
+            method: ACTION_ADDRESS_UPDATE,
+            params
         });
     }
 

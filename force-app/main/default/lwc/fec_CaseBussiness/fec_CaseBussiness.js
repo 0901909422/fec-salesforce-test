@@ -67,6 +67,7 @@ const ACTION_EMAIL_UPDATE = "Email Update";
 const ACTION_FULLNAME_UPDATE = "Full Name Update";
 const ACTION_DOB_UPDATE = "Date of Birth Update";
 const ACTION_GENDER_UPDATE = "Gender Update";
+const ACTION_ADDRESS_UPDATE = "Address Update";
 const OC_001 = "Outbound Campaign - OU01";
 
 const ACTION_ROUTE_TO = "Route to";
@@ -253,7 +254,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
-  fec_CardBlock: () => import('c/fec_CardBlock'),
+  fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
@@ -2165,6 +2166,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         break;
 
       case ACTION_GENDER_UPDATE:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
+      case ACTION_ADDRESS_UPDATE:
         params = {
           caseId: this.recordId,
         };
