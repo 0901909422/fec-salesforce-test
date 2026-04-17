@@ -524,6 +524,67 @@ public without sharing class FEC_MainInfoController {
         );
     }
 
+    /**
+     * Đồng bộ cờ mailing trong local SF theo lựa chọn UI:
+     * - selectedSfAddressType có giá trị: chỉ đúng 1 dòng type đó = true, các dòng còn lại = false.
+     * - selectedSfAddressType rỗng: set tất cả địa chỉ = false.
+     */
+    @AuraEnabled
+    public static void syncLocalMailingAddressSelection(
+        Id caseId,
+        String selectedSfAddressType
+    ) {
+        if (caseId == null) {
+            return;
+        }
+        Set<String> allowedTypes = new Set<String>{
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_PERMANENT,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_OFFICE,
+            FEC_ConstantCommon.SF_ADDRESS_TYPE_CURRENT
+        };
+        String targetType = String.isBlank(selectedSfAddressType)
+            ? null
+            : selectedSfAddressType.trim();
+        if (targetType != null && !allowedTypes.contains(targetType)) {
+            return;
+        }
+
+        Case c = [
+            SELECT FEC_Account_or_Contract__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (c.FEC_Account_or_Contract__c == null) {
+            return;
+        }
+
+        List<FEC_Address_Info__c> rows = [
+            SELECT Id, FEC_Address_Type__c, FEC_Mailing_Address__c
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :c.FEC_Account_or_Contract__c
+        ];
+        if (rows.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Address_Info__c> toUpdate = new List<FEC_Address_Info__c>();
+        for (FEC_Address_Info__c row : rows) {
+            Boolean shouldMailing = (targetType != null && row.FEC_Address_Type__c == targetType);
+            Boolean currentMailing = row.FEC_Mailing_Address__c == true;
+            if (currentMailing != shouldMailing) {
+                toUpdate.add(new FEC_Address_Info__c(
+                    Id = row.Id,
+                    FEC_Mailing_Address__c = shouldMailing
+                ));
+            }
+        }
+
+        if (!toUpdate.isEmpty()) {
+            update toUpdate;
+        }
+    }
+
     @AuraEnabled
     public static void logSensitiveFromMainInfo(
         String section,
@@ -770,7 +831,7 @@ public without sharing class FEC_MainInfoController {
             addr.FEC_Number__c   = ai.NumberStr;
             addr.FEC_Street__c   = ai.Street;
             addr.FEC_ZipCode__c  = ai.ZipCode;
-            addr.FEC_Mailing_Address__c = true;
+            /* Không override cờ Mailing từ local state: API GetAddressesList không trả cờ này. */
 
             /* ===== WARD ===== */
             if (String.isNotBlank(ai.Ward) && wardMap.containsKey(ai.Ward)) {

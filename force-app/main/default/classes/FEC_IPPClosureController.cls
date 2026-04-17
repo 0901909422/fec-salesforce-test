@@ -61,6 +61,8 @@ public with sharing class FEC_IPPClosureController {
                    FEC_IPP_Current_Term__c, FEC_Customer_History__c
             FROM FEC_IPP__c
             WHERE FEC_Customer_History__c = :customerHistoryId
+              AND FEC_IPP_Current_Balance__c != null
+              AND FEC_IPP_Current_Balance__c != 0
             ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
         ];
         SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, ipps);
