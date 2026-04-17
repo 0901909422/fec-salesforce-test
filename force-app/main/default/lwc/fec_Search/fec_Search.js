@@ -1028,6 +1028,10 @@ hasAnySearchCriteria(params) {
         });
       }
 
+      const devName = await getCaseRecordTypeDevName({
+        caseId: caseIdToUse
+      });
+
       this.dispatchEvent(
         new CustomEvent("createsuccess", {
           detail: {
@@ -1047,7 +1051,8 @@ hasAnySearchCriteria(params) {
           c__recordId: caseIdToUse,
           c__customerName: this.custNameForCreate,
           c__identityNo: this.nationalIdForCreate,
-          c__isCreatedFromSearch: 'true'
+          c__isCreatedFromSearch: 'true',
+          c__recordTypeDevName: devName
         },
       });
     } catch (e) {
@@ -1439,8 +1444,8 @@ hasAnySearchCriteria(params) {
   }
 
   async _pollHistoryReady(caseId) {
-      const MAX_ATTEMPTS = 15;
-      const INTERVAL_MS  = 2000;
+      const MAX_ATTEMPTS = 4;
+      const INTERVAL_MS  = 1000;
 
       let historyId = await this._getHistoryIdFromCase(caseId);
       if (!historyId) return; 

@@ -2,6 +2,7 @@ import { LightningElement, api, track } from 'lwc';
 import updateMRCRecord from '@salesforce/apex/FEC_GetMRCInfo.updateMRCRecord';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { formatDate } from 'c/fec_CommonUtils';
+import { STR_EMPTY } from 'c/fec_CommonConst';
 
 import FEC_Original_MRC from '@salesforce/label/c.FEC_Original_MRC';
 import FEC_Notarized_MRC from '@salesforce/label/c.FEC_Notarized_MRC';
@@ -34,14 +35,16 @@ const MrcFields = {
     ZONE: 'FEC_MRC_Zone__c',
     AREA: 'FEC_Area__c',
     PLATE: 'FEC_Plate_Number__c',
-    STATUS: 'FEC_Status__c',
+    STATUS: 'FEC_MRC_Status__c',
     STATUS_ID: 'FEC_Status_ID__c',
     ID: 'FEC_ID__c',
-    REMARK: 'FEC_Remark__c',
+    REMARK_ORIGINAL: 'FEC_Original_MRC_Remark__c',
+    REMARK_NOTARIZED: 'FEC_Notarized_MRC_Remark__c',
     MODIFIED_DATE: 'FEC_Modified_Date__c',
     DELIVERY_DATE: 'FEC_Delivery_Date__c',
     RECEIVED_DATE: 'FEC_Received_Date__c',
-    RECEIVER: 'FEC_Receiver__c',
+    RECEIVER_ORIGINAL: 'FEC_Original_MRC_Receiver__c',
+    RECEIVER_NOTARIZED: 'FEC_Notarized_MRC_Receiver__c',
     POSTED_DATE: 'FEC_Posted_Date__c',
     POSTAL_CODE: 'FEC_Postal_Code__c',
     PROVIDED_NUMBER: 'FEC_Provided_Number__c'
@@ -109,16 +112,16 @@ export default class Fec_MRC extends LightningElement {
 
         return [
             this.buildField(this.customLabel.mrcZoneLabel, this.accountData?.[MrcFields.ZONE], MrcFields.ZONE),
-            this.buildField(this.customLabel.areaLabel, this.accountData?.[MrcFields.AREA], MrcFields.AREA),
-            this.buildField(this.customLabel.plateNumberLabel, this.accountData?.[MrcFields.PLATE], MrcFields.PLATE),
             this.buildField(this.customLabel.statusLabel, this.accountData?.[MrcFields.STATUS], MrcFields.STATUS),
-            this.buildField(this.customLabel.statusIDLabel, this.accountData?.[MrcFields.STATUS_ID], MrcFields.STATUS_ID),
-            this.buildField(this.customLabel.idLabel, this.accountData?.[MrcFields.ID], MrcFields.ID),
-            this.buildField(this.customLabel.remarkLabel, this.accountData?.[MrcFields.REMARK], MrcFields.REMARK),
-            this.buildField(this.customLabel.modifiedDateLabel, formatDate(this.accountData?.[MrcFields.MODIFIED_DATE]), MrcFields.MODIFIED_DATE),
             this.buildField(this.customLabel.deliveryDateLabel, formatDate(this.accountData?.[MrcFields.DELIVERY_DATE]), MrcFields.DELIVERY_DATE),
+            this.buildField(this.customLabel.areaLabel, this.accountData?.[MrcFields.AREA], MrcFields.AREA),
+            this.buildField(this.customLabel.statusIDLabel, this.accountData?.[MrcFields.STATUS_ID], MrcFields.STATUS_ID),
             this.buildField(this.customLabel.receivedDateLabel, formatDate(this.accountData?.[MrcFields.RECEIVED_DATE]), MrcFields.RECEIVED_DATE),
-            this.buildField(this.customLabel.receiverLabel, this.accountData?.[MrcFields.RECEIVER], MrcFields.RECEIVER)
+            this.buildField(this.customLabel.plateNumberLabel, this.accountData?.[MrcFields.PLATE], MrcFields.PLATE),
+            this.buildField(this.customLabel.modifiedDateLabel, formatDate(this.accountData?.[MrcFields.MODIFIED_DATE]), MrcFields.MODIFIED_DATE),
+            this.buildField(this.customLabel.receiverLabel, this.accountData?.[MrcFields.RECEIVER_ORIGINAL], MrcFields.RECEIVER_ORIGINAL),
+            this.buildField(this.customLabel.idLabel, this.accountData?.[MrcFields.ID], MrcFields.ID),
+            this.buildField(this.customLabel.remarkLabel, this.accountData?.[MrcFields.REMARK_ORIGINAL], MrcFields.REMARK_ORIGINAL)
         ];
     }
 
@@ -127,10 +130,12 @@ export default class Fec_MRC extends LightningElement {
 
         return [
             this.buildField(this.customLabel.postedDateLabel, formatDate(this.accountData?.[MrcFields.POSTED_DATE]), MrcFields.POSTED_DATE),
-            this.buildField(this.customLabel.postalCodeLabel, this.accountData?.[MrcFields.POSTAL_CODE], MrcFields.POSTAL_CODE),
-            this.buildField(this.customLabel.remarkLabel, this.accountData?.[MrcFields.REMARK], MrcFields.REMARK),
             this.buildField(this.customLabel.providedNumberLabel, this.accountData?.[MrcFields.PROVIDED_NUMBER], MrcFields.PROVIDED_NUMBER),
-            this.buildField(this.customLabel.receiverLabel, this.accountData?.[MrcFields.RECEIVER], MrcFields.RECEIVER)
+            this.buildField(STR_EMPTY, STATUS.EMPTY, 'EMPTY_NOTARIZED_1'),
+            this.buildField(this.customLabel.postalCodeLabel, this.accountData?.[MrcFields.POSTAL_CODE], MrcFields.POSTAL_CODE),
+            this.buildField(this.customLabel.receiverLabel, this.accountData?.[MrcFields.RECEIVER_NOTARIZED], MrcFields.RECEIVER_NOTARIZED),
+            this.buildField(STR_EMPTY, STATUS.EMPTY, 'EMPTY_NOTARIZED_2'),
+            this.buildField(this.customLabel.remarkLabel, this.accountData?.[MrcFields.REMARK_NOTARIZED], MrcFields.REMARK_NOTARIZED)
         ];
     }
 

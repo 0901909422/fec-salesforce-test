@@ -20,9 +20,19 @@ import {
 import FEC_RESET_PIN_SUCCESS from "@salesforce/label/c.FEC_RESET_PIN_SUCCESS";
 import FEC_RESET_PIN_ERROR from "@salesforce/label/c.FEC_RESET_PIN_ERROR";
 import FEC_RESET_PIN_FAILED from "@salesforce/label/c.FEC_RESET_PIN_FAILED";
-
+import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+  publish,
+} from "lightning/messageService";
 export default class Fec_PinResetView extends LightningElement {
   @api recordId;
+
+  @wire(MessageContext)
+  messageContext;
 
   cardNumber;
   cifNumber;
@@ -142,8 +152,11 @@ export default class Fec_PinResetView extends LightningElement {
         console.log("res from api: ", JSON.stringify(res));
         if (res.RespCode != "1") {
           this.successReset = true;
+          this.publishResetResult("SUCCESS");
         } else {
           this.successReset = false;
+
+          this.publishResetResult("ERROR", res.RespDesc || res.errorMessage);
           this.showToast(
             ERROR_MODAL_TITLE,
             res.RespDesc || res.errorMessage,
@@ -153,6 +166,7 @@ export default class Fec_PinResetView extends LightningElement {
       })
       .catch((err) => {
         console.error("error from resetPin: ", JSON.stringify(err));
+        this.publishResetResult("ERROR", err?.body?.message);
         this.showToast(ERROR_MODAL_TITLE, err?.body?.message, ERROR_TOAST_TYPE);
       })
       .finally(() => {
@@ -170,5 +184,15 @@ export default class Fec_PinResetView extends LightningElement {
         variant,
       }),
     );
+  }
+
+  async publishResetResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PIN_RESET_CHANNEL, payload);
   }
 }

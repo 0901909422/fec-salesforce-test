@@ -460,10 +460,11 @@ public without sharing class FEC_CaseBusinessService {
           'SELECT Id, Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Active__c = TRUE '; 
+          // +
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
@@ -472,10 +473,11 @@ public without sharing class FEC_CaseBusinessService {
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          'AND FEC_Default_Stage__c = TRUE ';
+          // + 
+          // 'AND FEC_User_Group__c INCLUDES (\'' +
+          // String.join(new List<String>(rolelst), '\',\'') +
+          // '\')';
 
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
@@ -587,6 +589,11 @@ public without sharing class FEC_CaseBusinessService {
                 'FEC_Sub_Section_Field_Layout__c'
               );
               lwcSlot.subSectionName = subSectionNameTemp;
+              lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
+                item,
+                currentUser.FEC_User_Group__c,
+                selectedStage.Name
+              );
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -2271,6 +2278,59 @@ public without sharing class FEC_CaseBusinessService {
     return result;
   }
 
+  /**
+   * fecMasterDataSettingIsEdit — (1) ReadOnly=true -> false. (2) Editable=true va khong ReadOnly -> true chi khi UserGroup khop FEC_Editable_User_Group__c. (3) Field_Status=false khong load (SOQL getData). (4) Ten stage co "Stage N" voi N!=1 -> false; Stage 1 hoac khong co cap trong ten -> khong ep.
+   */
+  private static Boolean isCaseStageNameForcingDynLwcReadonly(String stageName) {
+    if (String.isBlank(stageName)) {
+      return false;
+    }
+    Matcher m = FEC_ConstantCommon.PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName.trim());
+    if (!m.find()) {
+      return false;
+    }
+    Integer stageNum = Integer.valueOf(m.group(1));
+    return stageNum != 1;
+  }
+
+  private static Boolean isLwcDynamicMasterInEditMode(
+    SObject masterDataItem,
+    String userGroup,
+    String caseStageName
+  ) {
+    String lwcNm = (String) masterDataItem.get('FEC_LWC_Name__c');
+    Boolean dynLwcStgReadOnly = isCaseStageNameForcingDynLwcReadonly(caseStageName);
+    Boolean isReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
+    Boolean isEditable = (Boolean) masterDataItem.get('FEC_Field_Editable__c');
+    String editableGr = (String) masterDataItem.get('FEC_Editable_User_Group__c');
+    Boolean out;
+    if (dynLwcStgReadOnly) {
+      out = false;
+    } else if (isReadOnly == true) {
+      out = false;
+    } else if (isEditable != true) {
+      out = false;
+    } else if (String.isBlank(editableGr) || String.isBlank(userGroup)) {
+      out = false;
+    } else {
+      out = editableGr.contains(userGroup);
+    }
+    System.debug(
+      LoggingLevel.DEBUG,
+      'FEC_DYN_LWC_EDIT lwc=' +
+        lwcNm +
+        ' stgReadOnly=' +
+        dynLwcStgReadOnly +
+        ' readOnly=' +
+        isReadOnly +
+        ' editable=' +
+        isEditable +
+        ' ->' +
+        out
+    );
+    return out;
+  }
+
   private static Field transform(
     Sobject masterDataItem,
     SObject objTemp,
@@ -2498,6 +2558,8 @@ public without sharing class FEC_CaseBusinessService {
     public Decimal fieldLayout;
     @AuraEnabled
     public String subSectionName;
+    @AuraEnabled
+    public Boolean fecMasterDataSettingIsEdit;
   }
 
   public class Section implements Comparable {
