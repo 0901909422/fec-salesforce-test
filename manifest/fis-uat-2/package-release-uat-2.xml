@@ -1379,6 +1379,7 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
         <name>ApexClass</name>
     </types>
 	<types>
