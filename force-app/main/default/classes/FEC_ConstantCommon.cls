@@ -470,5 +470,23 @@ public with sharing class FEC_ConstantCommon {
     public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
-    
+
+    /** MIME types for file attachments */
+    public static final String MIME_OCTET_STREAM = 'application/octet-stream';
+    public static final String MIME_PDF = 'application/pdf';
+    public static final String MIME_PNG = 'image/png';
+    public static final String MIME_JPEG = 'image/jpeg';
+    public static final String MIME_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    public static final String MIME_WORD = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    /** FileType values for ContentVersion */
+    public static final String FILE_TYPE_PDF = 'PDF';
+    public static final String FILE_TYPE_PNG = 'PNG';
+    public static final String FILE_TYPE_JPG = 'JPG';
+    public static final String FILE_TYPE_JPEG = 'JPEG';
+    public static final String FILE_TYPE_EXCEL_X = 'EXCEL_X';
+    public static final String FILE_TYPE_EXCEL = 'EXCEL';
+    public static final String FILE_TYPE_WORD_X = 'WORD_X';
+    public static final String FILE_TYPE_WORD = 'WORD';
+
 }
