@@ -1655,10 +1655,6 @@
 		<name>Translations</name>
 	</types>
 	<types>
-		<members>FEC_Additional_Info__c.FEC_Last_Four_Digits</members>
-		<name>ValidationRule</name>
-	</types>
-	<types>
         <members>FEC_RD_Card_Operations_User_Customer_360</members>
         <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
         <members>FEC_RD_Card_Operations_User_Master_Data_Management</members>
@@ -1709,6 +1705,5 @@
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
 	</types>
-
     <version>65.0</version>
 </Package>
