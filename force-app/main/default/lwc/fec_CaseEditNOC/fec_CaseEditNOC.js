@@ -4,12 +4,13 @@ import {
   unsubscribe,
   APPLICATION_SCOPE,
   MessageContext,
-  publish
+  publish,
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
-
+//HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
 // import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
 // import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
 // import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
@@ -24,15 +25,15 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import { 
-  ACTION_REOPEN, 
+import {
+  ACTION_REOPEN,
   ACTION_RECALL,
-  // RECORD_TYPE_INTERNAL_CASE, 
-  VIEW_MODE_HANDLING, 
-  VIEW_MODE_REVIEW, 
-  // STR_UNDEFINED, 
-  INTERNAL_REQUEST, 
-  INTERNAL_UBANK
+  // RECORD_TYPE_INTERNAL_CASE,
+  VIEW_MODE_HANDLING,
+  VIEW_MODE_REVIEW,
+  // STR_UNDEFINED,
+  INTERNAL_REQUEST,
+  INTERNAL_UBANK,
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
@@ -48,8 +49,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _internalApplied = false;
 
   get isEdit() {
-    
-    const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
+    const defaultEdit =
+      this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING
+        ? true
+        : false;
     return defaultEdit && !this.isSubmited;
   }
 
@@ -61,20 +64,21 @@ export default class Fec_CaseEditNOC extends LightningElement {
   messageContext;
 
   @track productTypeFilter = {
-    criteria: []
+    criteria: [],
   };
   @track categoryFilter = {
-    criteria: []
+    criteria: [],
   };
   @track subCategoryFilter = {
-    criteria: []
+    criteria: [],
   };
   @track subCodeFilter = {
-    criteria: []
+    criteria: [],
   };
 
   subscription = null;
   subscriptionNOC = null;
+  subscriptionResetPin = null;
 
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -120,7 +124,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   renderedCallback() {
     if (this._internalProductTypeId && !this._internalApplied) {
-      const el = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
+      const el = this.template.querySelector(
+        `c-fec_-combo-box[data-id="prod-type"]`,
+      );
       if (el) {
         el.value = this._internalProductTypeId;
         el.disabled = true;
@@ -135,7 +141,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       viewMode: VIEW_MODE_REVIEW,
     });
     this.subscribeToMessageChannel();
-    
+
     getCase({ recordId: this.recordId })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
@@ -150,7 +156,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
-        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this._isInternalRequest =
+          res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -162,23 +169,22 @@ export default class Fec_CaseEditNOC extends LightningElement {
           categoryId: this.categorySelectedId,
           subCategoryId: this.subCategorySelectedId,
           subCodeId: this.subCodeSelectedId,
-        })
-          .then((res) => {
-            if (!res) return;
+        }).then((res) => {
+          if (!res) return;
 
-            let business = { ...res };
-            const actions = business.routingActionlst || [];
-            const foundActions = [];
+          let business = { ...res };
+          const actions = business.routingActionlst || [];
+          const foundActions = [];
 
-            if (actions.some((a) => a.value === ACTION_REOPEN))
-              foundActions.push(ACTION_REOPEN);
-            if (actions.some((a) => a.value === ACTION_RECALL))
-              foundActions.push(ACTION_RECALL);
+          if (actions.some((a) => a.value === ACTION_REOPEN))
+            foundActions.push(ACTION_REOPEN);
+          if (actions.some((a) => a.value === ACTION_RECALL))
+            foundActions.push(ACTION_RECALL);
 
-            this.updateRoutingActionDisplay(
-              foundActions.length > 0 ? foundActions.join(";") : ""
-            );
-          });
+          this.updateRoutingActionDisplay(
+            foundActions.length > 0 ? foundActions.join(";") : "",
+          );
+        });
       })
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ connectedCallback ~ err:", err);
@@ -207,6 +213,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
     unsubscribe(this.subscriptionNOC);
     this.subscriptionNOC = null;
 
+    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+    unsubscribe(this.subscriptionResetPin);
+    this.subscriptionResetPin = null;
+
     this.modeEditCase = false;
   }
 
@@ -215,29 +225,42 @@ export default class Fec_CaseEditNOC extends LightningElement {
       this.messageContext,
       IS_MODE_EDIT,
       (message) => this.handleMessage(message),
-      { scope: APPLICATION_SCOPE }
+      { scope: APPLICATION_SCOPE },
     );
 
     this.subscriptionNOC = subscribe(
       this.messageContext,
       CASE_NOC,
       (message) => this.handleCaseNOCMessage(message),
-      { scope: APPLICATION_SCOPE }
+      { scope: APPLICATION_SCOPE },
+    );
+
+    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+    this.subscriptionResetPin = subscribe(
+      this.messageContext,
+      PIN_RESET_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
     );
   }
 
   handleCaseNOCMessage(message) {
-    if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
+    if (!Object.prototype.hasOwnProperty.call(message, "accountType")) return;
 
     const accountType = message.accountType;
-    const isInternalType = accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
+    const isInternalType =
+      accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
     const hasExistingNOCSelection =
       !!this.productTypeSelectedId ||
       !!this.categorySelectedId ||
       !!this.subCategorySelectedId ||
       !!this.subCodeSelectedId;
 
-    if (this._incomingAccountType == null && hasExistingNOCSelection && !isInternalType) {
+    if (
+      this._incomingAccountType == null &&
+      hasExistingNOCSelection &&
+      !isInternalType
+    ) {
       this._incomingAccountType = accountType;
       return;
     }
@@ -263,8 +286,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     this.natureOfCase = null;
 
-    ['prod-type', 'category', 'sub-category', 'sub-code'].forEach(id => {
-      const el = this.template.querySelector(`c-fec_-combo-box[data-id="${id}"]`);
+    ["prod-type", "category", "sub-category", "sub-code"].forEach((id) => {
+      const el = this.template.querySelector(
+        `c-fec_-combo-box[data-id="${id}"]`,
+      );
       if (el) el.clear();
     });
 
@@ -272,7 +297,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       this._isInternalRequest = accountType === INTERNAL_REQUEST;
 
       const option = this.productTypeOptionlst?.find(
-        (opt) => opt.label === accountType
+        (opt) => opt.label === accountType,
       );
 
       if (option) {
@@ -282,16 +307,27 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this._internalProductTypeId = option.value;
           this._internalApplied = false;
 
-          const categoryEl = this.template.querySelector(`c-fec_-combo-box[data-id="category"]`);
+          const categoryEl = this.template.querySelector(
+            `c-fec_-combo-box[data-id="category"]`,
+          );
           if (categoryEl) categoryEl.disabled = false;
 
           this.getCategory();
         }, 50);
       }
     } else {
-      this.handleDisable('category');
-      this.handleDisable('sub-category');
-      this.handleDisable('sub-code');
+      this.handleDisable("category");
+      this.handleDisable("sub-category");
+      this.handleDisable("sub-code");
+    }
+  }
+
+  //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+  handleMessageResetPin(message) {
+    if (message.status === "SUCCESS") {
+      this.handleDisableResetPinSuccess("category");
+      this.handleDisableResetPinSuccess("sub-category");
+      this.handleDisableResetPinSuccess("sub-code");
     }
   }
 
@@ -301,7 +337,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       categoryId: this.categorySelectedId,
       subCategoryId: this.subCategorySelectedId,
       subCodeId: this.subCodeSelectedId,
-      natureOfCaseId: this.natureOfCase?.Id
+      natureOfCaseId: this.natureOfCase?.Id,
     };
 
     publish(this.messageContext, CASE_NOC, payload);
@@ -331,7 +367,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
-        this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this._isInternalRequest =
+          res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -465,17 +502,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
     getProductTypelst({ recordId: this.recordId }).then((res) => {
       console.log(
         "🚀 ~ Fec_CaseEditNOC ~ getProdType ~ res:",
-        JSON.stringify(res)
+        JSON.stringify(res),
       );
       this.productTypeOptionlst = res;
       if (this._isInternalRequest && !this.productTypeSelectedId) {
-        const internalOption = res?.find((opt) => opt.label === INTERNAL_REQUEST);
+        const internalOption = res?.find(
+          (opt) => opt.label === INTERNAL_REQUEST,
+        );
 
         if (internalOption) {
           this.productTypeSelectedId = internalOption.value;
           this.disableProdType = true;
           this._internalProductTypeId = internalOption.value;
-          this._internalApplied = false; 
+          this._internalApplied = false;
           this.getCategory();
           this.getSubCategory();
           this.getSubCode();
@@ -487,12 +526,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
   getCategory() {
     getCategorylst({
       recordId: this.recordId,
-      productTypeId: this.productTypeSelectedId
+      productTypeId: this.productTypeSelectedId,
     })
       .then((res) => {
         console.log(
           "🚀 ~ Fec_CaseEditNOC ~ getCategory ~ res:",
-          JSON.stringify(res)
+          JSON.stringify(res),
         );
         this.categoryOptionlst = res;
 
@@ -507,12 +546,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
     getSubCategorylst({
       recordId: this.recordId,
       productTypeId: this.productTypeSelectedId,
-      categoryId: this.categorySelectedId
+      categoryId: this.categorySelectedId,
     })
       .then((res) => {
         console.log(
           "🚀 ~ Fec_CaseEditNOC ~ getSubCategory ~ res:",
-          JSON.stringify(res)
+          JSON.stringify(res),
         );
         this.subCategoryOptionlst = res;
 
@@ -528,12 +567,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
       recordId: this.recordId,
       productTypeId: this.productTypeSelectedId,
       categoryId: this.categorySelectedId,
-      subCategoryId: this.subCategorySelectedId
+      subCategoryId: this.subCategorySelectedId,
     })
       .then((res) => {
         console.log(
           "🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ res:",
-          JSON.stringify(res)
+          JSON.stringify(res),
         );
 
         this.subCodeOptionlst = res;
@@ -547,7 +586,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleRemoveProdType() {
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="prod-type"]`
+      `c-fec_-combo-box[data-id="prod-type"]`,
     );
 
     if (element) {
@@ -570,7 +609,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleRemoveSubCode() {
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="sub-code"]`
+      `c-fec_-combo-box[data-id="sub-code"]`,
     );
 
     if (element) {
@@ -601,7 +640,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.subCodeSelectedId = e.detail.value;
 
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="sub-code"]`
+      `c-fec_-combo-box[data-id="sub-code"]`,
     );
 
     if (element) {
@@ -613,7 +652,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         productTypeId: this.productTypeSelectedId,
         categoryId: this.categorySelectedId,
         subCategoryId: this.subCategorySelectedId,
-        subCodeId: this.subCodeSelectedId
+        subCodeId: this.subCodeSelectedId,
       })
         .then((result) => {
           this.natureOfCase = result;
@@ -627,7 +666,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleDisable(id) {
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="${id}"]`
+      `c-fec_-combo-box[data-id="${id}"]`,
     );
 
     if (element) {
@@ -637,9 +676,20 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
+  //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+  handleDisableResetPinSuccess(id) {
+    let element = this.template.querySelector(
+      `c-fec_-combo-box[data-id="${id}"]`,
+    );
+
+    if (element) {
+      element.disabled = true;
+    }
+  }
+
   handleEnable(id) {
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="${id}"]`
+      `c-fec_-combo-box[data-id="${id}"]`,
     );
 
     if (element) {
@@ -663,7 +713,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleChangeOption(id, optionlst) {
     let element = this.template.querySelector(
-      `c-fec_-combo-box[data-id="${id}"]`
+      `c-fec_-combo-box[data-id="${id}"]`,
     );
 
     if (element) {
