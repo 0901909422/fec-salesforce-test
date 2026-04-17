@@ -178,6 +178,28 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentInstanceProperties>
+                    <name>recordId</name>
+                </componentInstanceProperties>
+                <componentName>fecInteractionChatInfo</componentName>
+                <identifier>c_fecInteractionChatInfo</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>false</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_KYC</componentName>
                 <identifier>c_fec_KYC</identifier>
                 <visibilityRule>
@@ -849,7 +871,13 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
-        <name>Facet-a9b3182d-454e-420a-b5bf-15b7522e9754</name>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionChatConversations</componentName>
+                <identifier>c_fecInteractionChatConversations2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-rrxgsr9ruhg</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1047,6 +1075,27 @@
                 </visibilityRule>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-rrxgsr9ruhg</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Conversations</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab32</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-51e81dc4-03cd-49ef-9915-964748bf0442</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -1107,6 +1156,19 @@
             <componentInstance>
                 <componentName>fecRelevantInteractionCase</componentName>
                 <identifier>c_fecRelevantInteractionCase</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionChatConversations</componentName>
+                <identifier>c_fecInteractionChatConversations</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>

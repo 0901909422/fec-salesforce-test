@@ -13519,4 +13519,28 @@
         <shortDescription>Relevant Ticket save success</shortDescription>
         <value>Relevant Ticket was created successfully.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Chat_Conversations_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Conversations section label</shortDescription>
+        <value>Conversations</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_History_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Chat History field label</shortDescription>
+        <value>Chat History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Save_Failed</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Save failed error message</shortDescription>
+        <value>Save failed. Please try again.</value>
+    </labels>
 </CustomLabels>
