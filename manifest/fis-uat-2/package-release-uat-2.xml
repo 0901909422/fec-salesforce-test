@@ -1705,5 +1705,9 @@
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
 	</types>
+	<types>
+		<members>FEC_PinReset</members>
+		<name>LightningMessageChannel</name>
+	</types>
     <version>65.0</version>
 </Package>
