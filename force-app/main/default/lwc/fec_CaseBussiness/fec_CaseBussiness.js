@@ -1482,6 +1482,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
           this.showProcessAction = TYPE_QUALIFIED == value;
+
+          if (TYPE_UNQUALIFIED == value) {
+            toRevert = true;
+          }
           break;
 
         case CASE_CONFIRM_D2C_ASSESMENT:
