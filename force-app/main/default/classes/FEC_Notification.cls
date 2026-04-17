@@ -216,7 +216,7 @@ public without sharing class FEC_Notification {
         String currentStage = currentCase.FEC_Current_Case_Stage__c;
         String emailChannel = FEC_ConstantCommon.EMAIL;
         
-        String query = 'SELECT Id, Name, FEC_Notification_Template__c, ' +
+        String query = 'SELECT Id, Name, FEC_Notification_Template__c, FEC_Customer_Type__c, ' +
                        'FEC_Notification_Template__r.Name, ' +
                        'FEC_Notification_Channel__r.Name, ' +
                        'FEC_Target_Group__c ' +
