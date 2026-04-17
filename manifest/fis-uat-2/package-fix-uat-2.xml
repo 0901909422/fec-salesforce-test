@@ -106,6 +106,8 @@
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
+		<members>FEC_CardReplacementAddressController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -177,6 +179,8 @@
 		<members>fec_AppInfo</members>
 		<members>fec_RelatedListPaging</members>
 		<members>fec_MRC</members>
+		<members>fec_Modal</members>
+		<members>fec_CardReplacementAddress</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -696,6 +700,7 @@
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Address_Type__c</members>
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
@@ -817,5 +822,9 @@
 		<name>PermissionSetGroup</name>
 	</types>
 
+	<types>
+		<members>FEC_PinReset</members>
+		<name>LightningMessageChannel</name>
+	</types>
     <version>65.0</version>
 </Package>

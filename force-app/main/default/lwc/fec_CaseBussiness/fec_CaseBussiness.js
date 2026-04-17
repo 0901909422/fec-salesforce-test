@@ -253,7 +253,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
-  fec_CardBlock: () => import('c/fec_CardBlock'),
+  fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
@@ -370,7 +370,7 @@ function normalizeMasterDataLwcEntry(entry) {
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
       typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
-        : true,
+        : false,
   };
 }
 
@@ -545,8 +545,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
   }
 
-  /** Khi load màn: Action (Routing) khớp với CS Support đánh giá yêu cầu nếu đã có giá trị. */
-  /** Author: Toannd61 */
+  /** Khi load màn: đồng bộ hiển thị nút process theo CS Support đánh giá (không gán Action Routing). */
   _applyCsSupportAssessmentRoutingActionSync() {
     if (
       !this.isEdit ||
@@ -561,7 +560,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
 
-    const actions = this.business.routingActionlst || [];
     let assessmentVal;
 
     this.business.sectionlst?.forEach((section) => {
@@ -590,20 +588,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     this.showProcessAction = TYPE_QUALIFIED === assessmentVal;
-
-    if (
-      TYPE_QUALIFIED === assessmentVal &&
-      actions.some((a) => a.value === ACTION_RESOLVE)
-    ) {
-      this.actionValue = ACTION_RESOLVE;
-      return;
-    }
-    if (
-      TYPE_UNQUALIFIED === assessmentVal &&
-      actions.some((a) => a.value === ACTION_REJECT)
-    ) {
-      this.actionValue = ACTION_REJECT;
-    }
   }
 
   // Nghiệp vụ: Lấy Queue theo Team Queue và Group Member
@@ -824,7 +808,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master =
-          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
+          typeof d.fecMasterDataSettingIsEdit === "boolean"
+            ? d.fecMasterDataSettingIsEdit
+            : false;
         d.isEdit = this._isEdit && master;
       });
     });
@@ -1499,21 +1485,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
           this.showProcessAction = TYPE_QUALIFIED == value;
 
-          // Hợp lệ (Qualified) → Resolve; Không hợp lệ (Unqualified) → Reject
-          if (TYPE_QUALIFIED == value) {
-            const hasResolve = this.business.routingActionlst?.some(
-              (a) => a.value === ACTION_RESOLVE,
-            );
-            if (hasResolve) {
-              toResolve = true;
-            }
-          } else if (TYPE_UNQUALIFIED == value) {
-            const hasReject = this.business.routingActionlst?.some(
-              (a) => a.value === ACTION_REJECT,
-            );
-            if (hasReject) {
-              toReject = true;
-            }
+          if (TYPE_UNQUALIFIED == value) {
+            toRevert = true;
           }
           break;
 
@@ -2527,12 +2500,19 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
+            const dynLwcIsEdit = this._isEdit && fecMasterDataSettingIsEdit;
+            console.log("[fec_CaseBussiness] dynLwc isEdit", {
+              componentName: name,
+              _isEdit: this._isEdit,
+              fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
+            });
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
