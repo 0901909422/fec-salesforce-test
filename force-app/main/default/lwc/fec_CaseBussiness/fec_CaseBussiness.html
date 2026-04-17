@@ -21,172 +21,177 @@
           </template>
         </div>
 
-        <!-- Dynamic LWC components from section.componentlst (FEC_LWC_Name__c, FEC_Type__c = LWC) -->
-        <template if:true={section.resolvedComponentlst}>
-          <template for:each={section.resolvedComponentlst} for:item="dynCmp">
-            <div key={dynCmp.key} class="slds-m-top_medium" data-fec-lwc={dynCmp.componentName}>
-              <lwc:component lwc:is={dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} is-edit={isEdit}></lwc:component>
-            </div>
-          </template>
-        </template>
-
         <div class="slds-grid slds-wrap slds-m-top--small">
-          <!-- subsection -->
-          <template for:each={section.subSectionlst} for:item="subSection">
-            <div key={subSection.name} class={subSection.className}>
-              <p class="sub-section">{subSection.name}</p>
+          <template for:each={section.sortedSectionContentlst} for:item="row">
+            <div key={row.rowKey} class={row.outerClass}>
+              <template if:true={row.isFields}>
+                <p class="sub-section">{row.sub.name}</p>
 
-              <template for:each={subSection.objlst} for:item="obj">
-                <lightning-record-edit-form
-                  key={obj.id}
-                  object-api-name={obj.name}
-                  onsuccess={handleSuccess}
-                  onerror={handleFormError}
-                  record-id={obj.id}
-                >
-                  <div class="slds-grid slds-wrap">
-                    <template for:each={obj.fieldlst} for:item="field">
-                      <!-- editable -->
-                      <div
-                        key={field.apiName}
-                        if:false={field.isHidden}
-                        class={field.className}
-                      >
+                <template for:each={row.sub.objlst} for:item="obj">
+                  <lightning-record-edit-form
+                    key={obj.id}
+                    object-api-name={obj.name}
+                    onsuccess={handleSuccess}
+                    onerror={handleFormError}
+                    record-id={obj.id}
+                  >
+                    <div class="slds-grid slds-wrap">
+                      <template for:each={obj.fieldlst} for:item="field">
                         <!-- editable -->
                         <div
-                          if:true={field.editable}
-                          class={field.editWrapperClass}
+                          key={field.apiName}
+                          if:false={field.isHidden}
+                          class={field.className}
                         >
-                          <p class="label">
-                            <abbr if:true={field.mandatory} title="*">*</abbr>
-                            {field.label}
-                            <lightning-helptext
-                              if:true={field.hasHelpText}
-                              class="slds-m-left--x-small"
-                              content={field.helpText}
-                            ></lightning-helptext>
-                          </p>
+                          <!-- editable -->
+                          <div
+                            if:true={field.editable}
+                            class={field.editWrapperClass}
+                          >
+                            <p class="label">
+                              <abbr if:true={field.mandatory} title="*">*</abbr>
+                              {field.label}
+                              <lightning-helptext
+                                if:true={field.hasHelpText}
+                                class="slds-m-left--x-small"
+                                content={field.helpText}
+                              ></lightning-helptext>
+                            </p>
 
-                          <template if:true={field.isDate}>
-                            <lightning-input
-                              type="date"
-                              date-style="short"
-                              placeholder="DD/MM/YYYY"
-                              value={field.value}
-                              data-section={section.id}
-                              data-sub={subSection.name}
-                              data-obj-name={obj.name}
-                              data-field={field.apiName}
-                              data-obj={obj.id}
-                              data-field-type="date"
-                              variant="label-hidden"
-                              required={field.mandatory}
-                              onchange={handleChangeInput}
-                              onpaste={handlePaste}
-                            >
-                            </lightning-input>
-                            <lightning-input-field
-                              field-name={field.apiName}
-                              value={field.value}
-                              class="slds-hide"
-                              variant="label-hidden"
-                              data-is-date-field 
-                              onchange={handleDateChange}
-                              data-obj={obj.id}
-                            >
-                            </lightning-input-field>
-                          </template>
-                          <template if:true={field.isPhone}>
-                            <lightning-input
-                              type="tel"
-                              value={field.value}
-                              maxlength="11"
-                              data-section={section.id}
-                              data-sub={subSection.name}
-                              data-obj-name={obj.name}
-                              data-field={field.apiName}
-                              data-obj={obj.id}
-                              data-is-phone-field
-                              variant="label-hidden"
-                              required={field.mandatory}
-                              onchange={handleChangeInput}
-                              onkeydown={handleInputKeydown}
-                              onpaste={handlePaste}
-                            >
-                            </lightning-input>
-                            <lightning-input-field
-                              field-name={field.apiName}
-                              value={field.value}
-                              class="slds-hide"
-                              variant="label-hidden"
-                              data-is-phone-field
-                              onchange={handlePhoneChange}
-                              data-obj={obj.id}
-                            >
-                            </lightning-input-field>
-                          </template>
-                          <template if:false={field.isDate}>
-                            <template if:false={field.isPhone}>
-                              <lightning-input-field
+                            <template if:true={field.isDate}>
+                              <lightning-input
+                                type="date"
+                                date-style="short"
+                                placeholder="DD/MM/YYYY"
+                                value={field.value}
                                 data-section={section.id}
-                                data-sub={subSection.name}
-                                data-obj={obj.id}
-                                data-field={field.apiName}
+                                data-sub={row.sub.name}
                                 data-obj-name={obj.name}
+                                data-field={field.apiName}
+                                data-obj={obj.id}
+                                data-field-type="date"
                                 variant="label-hidden"
-                                field-name={field.apiName}
                                 required={field.mandatory}
-                                disabled={field.isInternalRequest}
+                                onchange={handleChangeInput}
+                                onpaste={handlePaste}
+                              >
+                              </lightning-input>
+                              <lightning-input-field
+                                field-name={field.apiName}
+                                value={field.value}
+                                class="slds-hide"
+                                variant="label-hidden"
+                                data-is-date-field 
+                                onchange={handleDateChange}
+                                data-obj={obj.id}
+                              >
+                              </lightning-input-field>
+                            </template>
+                            <template if:true={field.isPhone}>
+                              <lightning-input
+                                type="tel"
+                                value={field.value}
+                                maxlength="11"
+                                data-section={section.id}
+                                data-sub={row.sub.name}
+                                data-obj-name={obj.name}
+                                data-field={field.apiName}
+                                data-obj={obj.id}
+                                data-is-phone-field
+                                variant="label-hidden"
+                                required={field.mandatory}
                                 onchange={handleChangeInput}
                                 onkeydown={handleInputKeydown}
                                 onpaste={handlePaste}
+                              >
+                              </lightning-input>
+                              <lightning-input-field
+                                field-name={field.apiName}
                                 value={field.value}
-                                >
+                                class="slds-hide"
+                                variant="label-hidden"
+                                data-is-phone-field
+                                onchange={handlePhoneChange}
+                                data-obj={obj.id}
+                              >
                               </lightning-input-field>
-                              <!-- value={field.value} -->
                             </template>
-                          </template>
+                            <template if:false={field.isDate}>
+                              <template if:false={field.isPhone}>
+                                <lightning-input-field
+                                  data-section={section.id}
+                                  data-sub={row.sub.name}
+                                  data-obj={obj.id}
+                                  data-field={field.apiName}
+                                  data-obj-name={obj.name}
+                                  variant="label-hidden"
+                                  field-name={field.apiName}
+                                  required={field.mandatory}
+                                  disabled={field.isInternalRequest}
+                                  onchange={handleChangeInput}
+                                  onkeydown={handleInputKeydown}
+                                  onpaste={handlePaste}
+                                  value={field.value}
+                                  >
+                                </lightning-input-field>
+                              </template>
+                            </template>
+                            <div
+                              if:true={field.customError}
+                              class="slds-form-element__help slds-m-top_x-small phone-error"
+                            >
+                              {field.customError}
+                            </div>
+                          </div>
+
+                          <!-- readonly -->
                           <div
-                            if:true={field.customError}
-                            class="slds-form-element__help slds-m-top_x-small phone-error"
+                            if:true={field.readonly}
+                            class="read slds-border--bottom slds-m-around--x-small"
                           >
-                            {field.customError}
+                            <p class="label">
+                              {field.label}
+                              <lightning-helptext
+                                if:true={field.hasHelpText}
+                                class="slds-m-left--x-small"
+                                content={field.helpText}
+                              ></lightning-helptext>
+                            </p>
+                            <p class="value">
+                              {field.readonlyDisplayValue}
+                              <lightning-icon
+                                if:true={field.masked}
+                                data-section={section.id}
+                                data-sub={row.sub.name}
+                                data-obj={obj.id}
+                                data-field={field.apiName}
+                                icon-name={iconHideConst}
+                                size="x-small"
+                                class="slds-m-left--small"
+                                onclick={handleToggleMask}
+                              >
+                              </lightning-icon>
+                            </p>
                           </div>
                         </div>
-
-                        <!-- readonly -->
-                        <div
-                          if:true={field.readonly}
-                          class="read slds-border--bottom slds-m-around--x-small"
-                        >
-                          <p class="label">
-                            {field.label}
-                            <lightning-helptext
-                              if:true={field.hasHelpText}
-                              class="slds-m-left--x-small"
-                              content={field.helpText}
-                            ></lightning-helptext>
-                          </p>
-                          <p class="value">
-                            {field.readonlyDisplayValue}
-                            <lightning-icon
-                              if:true={field.masked}
-                              data-section={section.id}
-                              data-sub={subSection.name}
-                              data-obj={obj.id}
-                              data-field={field.apiName}
-                              icon-name={iconHideConst}
-                              size="x-small"
-                              class="slds-m-left--small"
-                              onclick={handleToggleMask}
-                            >
-                            </lightning-icon>
-                          </p>
-                        </div>
-                      </div>
-                    </template>
+                      </template>
+                    </div>
+                  </lightning-record-edit-form>
+                </template>
+                <template if:true={row.sub.showRemovePhoneAfter}>
+                  <div class="slds-m-top_medium">
+                    <c-fec_-remove-phone-form is-edit={isEdit}></c-fec_-remove-phone-form>
                   </div>
-                </lightning-record-edit-form>
+                </template>
+              </template>
+
+              <template if:true={row.isLwc}>
+                <template if:true={row.showLwcSubHeading}>
+                  <p class="sub-section">{row.dynCmp.subSectionName}</p>
+                </template>
+                <div data-fec-lwc={row.dynCmp.componentName}>
+                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} is-edit={row.dynCmp.isEdit}></lwc:component>
+                </div>
               </template>
             </div>
           </template>
@@ -203,6 +208,7 @@
                 onclick={handleProcessAction}
                 class="slds-m-right_x-small"
                 data-id={process.value}
+                disabled={process.disabled}
               ></lightning-button>
             </template>
           </div>
@@ -229,7 +235,7 @@
     <!-- routing action -->
     <lightning-accordion-section
       key={routingAccordionSectionKey}
-      if:true={business.hasRoutingAction}
+      if:true={showRoutingSection}
       name="routing-action"
       label={customLabel.routingActionLabel}
     >
@@ -241,7 +247,8 @@
             value={actionValue}
             options={business.routingActionlst}
             onchange={handleChangeAction}
-            required
+            disabled={isRoutingActionDisabled}
+            required={isEdit}
           ></lightning-select>
         </div>
 

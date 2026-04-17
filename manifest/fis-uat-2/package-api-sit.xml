@@ -25,6 +25,7 @@
 		<members>FEC_ResponseLog</members>
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_GetCSAttachedFile</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -41,6 +42,7 @@
 		<members>FEC_API_Config.FEC_Get_Removable_Phone_Status</members>
 		<members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_Ps_DNB</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>

@@ -94,7 +94,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
     public static final String MERGE_FIELD_OPEN = '{{{';
     public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String MERGE_FIELD_NORMALIZE_REPLACEMENT = '{{{$1}}}';
     public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_FLEXIBLE_BRACES = '\\{\\{+([^{}]+)\\}\\}+';
+
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
+    public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
+    public static final String PATTERN_CLEAN_TEXT = '[^a-zA-Z0-9-_]';
+    /** Nhận diện "Stage N" trong tên stage Case (dyn LWC FEC_CaseBusinessService). */
+    public static final Pattern PAT_STAGE_NAME_WITH_NUMBER = Pattern.compile('(?i)[\\s-]stage ([0-9]+)( -|$)');
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
@@ -121,7 +131,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
+    public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -412,4 +425,35 @@ public with sharing class FEC_ConstantCommon {
       'Task Under Review' => 'TaskUnderReview'
     };
     
+    public static final String CASE_ALL_REQUEST = 'All';
+
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+    
+    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
+
+    /** MIME types for file attachments */
+    public static final String MIME_OCTET_STREAM = 'application/octet-stream';
+    public static final String MIME_PDF = 'application/pdf';
+    public static final String MIME_PNG = 'image/png';
+    public static final String MIME_JPEG = 'image/jpeg';
+    public static final String MIME_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    public static final String MIME_WORD = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    /** FileType values for ContentVersion */
+    public static final String FILE_TYPE_PDF = 'PDF';
+    public static final String FILE_TYPE_PNG = 'PNG';
+    public static final String FILE_TYPE_JPG = 'JPG';
+    public static final String FILE_TYPE_JPEG = 'JPEG';
+    public static final String FILE_TYPE_EXCEL_X = 'EXCEL_X';
+    public static final String FILE_TYPE_EXCEL = 'EXCEL';
+    public static final String FILE_TYPE_WORD_X = 'WORD_X';
+    public static final String FILE_TYPE_WORD = 'WORD';
+
 }

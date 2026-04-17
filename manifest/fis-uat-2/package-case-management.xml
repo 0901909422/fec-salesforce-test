@@ -184,7 +184,7 @@
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_InteractionCreateCase</members>
-		<members>fec_CardBlock</members>
+		<!--<members>fec_CardBlock</members>-->
 		<members>fecInteractionInfo</members>
 		<name>LightningComponentBundle</name>
 	</types>
