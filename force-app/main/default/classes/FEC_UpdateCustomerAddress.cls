@@ -197,6 +197,79 @@ public with sharing class FEC_UpdateCustomerAddress {
     return updateCustomerAddress(info);
   }
 
+  public static UpdateResult updateValue(
+    String caseId,
+    Map<String, String> params,
+    String method
+  ) {
+    if (String.isBlank(caseId)) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
+      );
+    }
+    List<Case> caselst = [
+      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty()) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case Id' })
+      );
+    }
+
+    Map<String, String> p = (params == null) ? new Map<String, String>() : params;
+    UpdateResult result;
+    try {
+      result = updateCustomerAddressParams(
+        String.isNotBlank(p.get('caseId')) ? p.get('caseId') : caseId,
+        p.get('sfAddressType'),
+        p.get('cifNumber'),
+        p.get('addressId'),
+        p.get('addressType'),
+        p.get('number_x'),
+        p.get('building'),
+        p.get('street'),
+        p.get('ward'),
+        p.get('city'),
+        p.get('propertyStatus'),
+        p.get('years'),
+        p.get('months'),
+        p.get('isMailingAddress'),
+        p.get('isPrimary'),
+        p.get('receiveStatement'),
+        p.get('cardDelivery')
+      );
+    } finally {
+      logApiResponse();
+    }
+
+    Case selectedCase = caselst[0];
+    if (result != null && result.success == true) {
+      selectedCase.FEC_Process_Action_Count__c = -1;
+    } else {
+      if (selectedCase.FEC_Process_Action_Count__c == null) {
+        selectedCase.FEC_Process_Action_Count__c = 0;
+      }
+      selectedCase.FEC_Process_Action_Count__c += 1;
+    }
+    FEC_CaseTriggerHandler.isExecuting = true;
+    update selectedCase;
+    if (result == null) {
+      result = new UpdateResult();
+      result.success = false;
+      result.errorMessage = System.Label.FEC_MSG_Response_Null;
+    }
+    result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+    FEC_CommonUltils.createProcessActionHistory(
+      String.isNotBlank(method) ? method : API_NAME,
+      selectedCase,
+      result.success == true
+    );
+    return result;
+  }
+
   public static UpdateResult parseResponse(String xml, Integer httpStatus) {
     UpdateResult result = new UpdateResult();
     result.httpStatus = httpStatus;
