@@ -333,7 +333,6 @@ public with sharing class FEC_UpdateCustomerContact {
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;
       }
-
       selectedCase.FEC_Process_Action_Count__c += 1;
     }
 

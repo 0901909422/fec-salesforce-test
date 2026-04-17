@@ -28,3 +28,8 @@
 .button-container {
     margin-top: 8px;
 }
+
+.success-text {
+    color: #08C434;
+    font-weight: 500; /* bold */
+}
