@@ -67,6 +67,7 @@ const ACTION_EMAIL_UPDATE = "Email Update";
 const ACTION_FULLNAME_UPDATE = "Full Name Update";
 const ACTION_DOB_UPDATE = "Date of Birth Update";
 const ACTION_GENDER_UPDATE = "Gender Update";
+const ACTION_ADDRESS_UPDATE = "Address Update";
 const OC_001 = "Outbound Campaign - OU01";
 
 const ACTION_ROUTE_TO = "Route to";
@@ -253,7 +254,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_IPPClosureForm: () => import('c/fec_IPPClosureForm'),
   fec_CardClosureRefundForm: () => import('c/fec_CardClosureRefundForm'),
   fec_PinResetHandling: () => import('c/fec_PinResetHandling'),
-  fec_CardBlock: () => import('c/fec_CardBlock'),
+  fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
   fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
@@ -370,7 +371,7 @@ function normalizeMasterDataLwcEntry(entry) {
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
       typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
-        : true,
+        : false,
   };
 }
 
@@ -808,7 +809,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master =
-          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
+          typeof d.fecMasterDataSettingIsEdit === "boolean"
+            ? d.fecMasterDataSettingIsEdit
+            : false;
         d.isEdit = this._isEdit && master;
       });
     });
@@ -2170,6 +2173,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_ADDRESS_UPDATE:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       case OC_001:
         params = {
           caseId: this.recordId,
@@ -2214,7 +2223,26 @@ export default class Fec_CaseBussiness extends LightningElement {
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
     }
     
-    run({ method: this.processActionMethod, params })
+
+    // Address Update: Save chỉ lưu local, Process Action mới call API.
+    // Các action khác: không đổi luồng gọi API.
+    // Author: Toannd61
+    let processActionPromise;
+    if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+      const cmp = this._getFecUpdateAddressCmp();
+      if (
+        cmp &&
+        typeof cmp.commitPendingAddressUpdatesForProcessAction === "function"
+      ) {
+        processActionPromise = cmp.commitPendingAddressUpdatesForProcessAction();
+      } else {
+        processActionPromise = Promise.resolve({ success: false });
+      }
+    } else {
+      processActionPromise = run({ method: this.processActionMethod, params });
+    }
+
+    processActionPromise
       .then((res) => {
         let isSuccess = res?.success;
         console.log('>>>>>>>isSuccess: ' + isSuccess);
@@ -2498,12 +2526,19 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
+            const dynLwcIsEdit = this._isEdit && fecMasterDataSettingIsEdit;
+            console.log("[fec_CaseBussiness] dynLwc isEdit", {
+              componentName: name,
+              _isEdit: this._isEdit,
+              fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
+            });
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
+              isEdit: dynLwcIsEdit,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
