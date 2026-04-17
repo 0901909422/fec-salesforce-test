@@ -178,6 +178,7 @@
 		<members>fec_AppInfo</members>
 		<members>fec_RelatedListPaging</members>
 		<members>fec_MRC</members>
+		<members>fec_MultiPicklistInput</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
