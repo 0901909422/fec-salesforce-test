@@ -817,5 +817,9 @@
 		<name>PermissionSetGroup</name>
 	</types>
 
+	<types>
+		<members>FEC_PinReset</members>
+		<name>LightningMessageChannel</name>
+	</types>
     <version>65.0</version>
 </Package>
