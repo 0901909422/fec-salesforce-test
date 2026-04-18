@@ -1322,4 +1322,17 @@ public with sharing class FEC_CommonUltils {
       System.debug('Log Exception Error:' + ex.getMessage());
     }
   }
+
+  /**
+   * Lấy Profile name của current user
+   */
+  public static String getCurrentUserProfileName() {
+    try {
+      User u = [SELECT Profile.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+      return u.Profile.Name;
+    } catch (Exception e) {
+      System.debug('getCurrentUserProfileName error: ' + e.getMessage());
+      return null;
+    }
+  }
 }

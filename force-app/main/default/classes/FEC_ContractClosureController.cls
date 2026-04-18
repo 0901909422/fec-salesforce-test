@@ -1,4 +1,4 @@
-public with sharing class FEC_ContractClosureController {
+public without sharing class FEC_ContractClosureController {
 
     public static final String MSG_NOTI_01 = System.Label.FEC_MSG_ContractClosure_Required_Fields;
     public static final String MSG_NOTI_02 = System.Label.FEC_MSG_ContractClosure_Delivery_Invalid;

@@ -100,7 +100,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
                 this.showNoEligibleWarning = rows.length === 0;
                 this.loadSucceeded = true;
                 this.savedIppToCloseOnCase = data && data.savedIppToCloseOnCase ? data.savedIppToCloseOnCase : null;
-                if (this.savedIppToCloseOnCase && rows.length === 1) {
+                if (this.savedIppToCloseOnCase && rows.some((r) => r.Id === this.savedIppToCloseOnCase)) {
                     this.selectedIppId = this.savedIppToCloseOnCase;
                 }
                 const hasEligibleRows = rows.length > 0;
