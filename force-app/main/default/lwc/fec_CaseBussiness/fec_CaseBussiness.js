@@ -7,6 +7,8 @@ import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
+import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
+import checkProcessAction from "@salesforce/apex/FEC_CardReplacementAddressController.checkProcessAction";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
@@ -57,16 +59,21 @@ import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_RE
 import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
 import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
 import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
+import FEC_ACTION_CARD_REPLACEMENT_HEADER from "@salesforce/label/c.FEC_ACTION_CARD_REPLACEMENT_HEADER";
+import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
-
+import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
 const ACTION_FULLNAME_UPDATE = "Full Name Update";
 const ACTION_DOB_UPDATE = "Date of Birth Update";
 const ACTION_GENDER_UPDATE = "Gender Update";
+const ACTION_ADDRESS_UPDATE = "Address Update";
 const OC_001 = "Outbound Campaign - OU01";
 
 const ACTION_ROUTE_TO = "Route to";
@@ -83,10 +90,12 @@ const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
+const ACTION_REPLACE_CARD = "Replace Card";
 
 const PROCESS_BLOCK_CARD = "Card Block";
 const PROCESS_UNBLOCK_CARD = "Card Unblock";
 const PROCESS_PIN_REISSUE = "PIN Replacement";
+const PROCESS_CARD_REPLACEMENT = "Card Replacement";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -237,6 +246,7 @@ const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
 const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 
 /**
  * Registry of dynamically loadable components.
@@ -368,9 +378,9 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-      typeof o.fecMasterDataSettingIsEdit === "boolean"
+        typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
-        : false,
+        : true,
   };
 }
 
@@ -400,6 +410,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   routingAccordionSectionKey = "routing-action";
 
+  @track addressUpdateClickCount = 0;
+
   _ippClosureHasEligibleRows = false;
 
   // get eyeIcon() {
@@ -420,7 +432,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
-  
+
   @wire(MessageContext)
   messageContext;
 
@@ -647,6 +659,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   processActionMsg;
   isProcessActionSuccessed = false;
   isProcessActionFailed = false;
+  isProcessActionInfo = false;
 
   showProcessAction = false;
   isProcessActionValid = true;
@@ -765,14 +778,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this.business ?? null;
   }
 
-  /** true = bị chặn (đã show toast), false = được submit. Chỉ xét cặp Original/Updated đang hiển thị. */
   @api async checkSubmitBlock() {
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
       this._getCheckNoUpdateInSubmitOptions(),
     );
-    if (noUpdate) {
+    const cmp = this._getFecUpdateAddressCmp();
+    const hasAddressUpdate = cmp && typeof cmp.hasPendingAddressUpdates === 'function' && cmp.hasPendingAddressUpdates();
+
+    if (noUpdate && !hasAddressUpdate) {
       this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return true;
     }
@@ -808,9 +823,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
         const master =
-          typeof d.fecMasterDataSettingIsEdit === "boolean"
-            ? d.fecMasterDataSettingIsEdit
-            : false;
+          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
         d.isEdit = this._isEdit && master;
       });
     });
@@ -963,7 +976,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           section.id = crypto.randomUUID();
 
           sectionlst.push(section.id);
-          
+
           section.isLastSection = index === this.business.sectionlst.length - 1;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
@@ -975,12 +988,12 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.value == null || field.value === undefined) {
                   field.value = STR_EMPTY;
                 }
-               if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
+                if (field.apiName === FIELD_ACCOUNT_CONTRACT_NUMBER_PL) {
                   field.isInternalRequest = field.value === INTERNAL_REQUEST;
                 }
 
                 field.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[field.layout] || SLDS_MEDIUM_SIZE_OF_12[12]);
-                if(field.hidden) {
+                if (field.hidden) {
                   field.className += ' slds-hide';
                 }
 
@@ -1005,15 +1018,15 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.isHidden =
                       !assignmentType || assignmentType === TYPE_DISAGREE;
-                } else {
-                  field.isHidden = false;
+                  } else {
+                    field.isHidden = false;
+                  }
                 }
-              }
 
-              if (!this.isEdit) {
-                field.readonly = true;
-                field.editable = false;
-              }
+                if (!this.isEdit) {
+                  field.readonly = true;
+                  field.editable = false;
+                }
 
                 field.original = field.value;
 
@@ -1052,26 +1065,26 @@ export default class Fec_CaseBussiness extends LightningElement {
                   ) {
                     field.value = this._maskDisplayPhone(field.original);
                   } else {
-                  switch (field.maskingType) {
-                    case MASKING_TYPE_PASSPORT:
-                        if (isOnlyNumber(field.original)) {
-                        field.value = mask(field.original, 3, 3);
-                      } else {
-                        field.value = mask(field.original, 2, 3);
-                      }
-                      break;
-                    default:
-                      if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                    switch (field.maskingType) {
+                      case MASKING_TYPE_PASSPORT:
                         if (isOnlyNumber(field.original)) {
                           field.value = mask(field.original, 3, 3);
                         } else {
                           field.value = mask(field.original, 2, 3);
                         }
-                      } else {
-                        field.value = mask(field.original, 4, 4);
-                      }
-                      break;
-                  }
+                        break;
+                      default:
+                        if (NATIONAL_ID_PASSPORT_FIELDS.has(field.apiName)) {
+                          if (isOnlyNumber(field.original)) {
+                            field.value = mask(field.original, 3, 3);
+                          } else {
+                            field.value = mask(field.original, 2, 3);
+                          }
+                        } else {
+                          field.value = mask(field.original, 4, 4);
+                        }
+                        break;
+                    }
                   }
                 }
 
@@ -1086,9 +1099,13 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // show button process action with process Block Card and PIN Reissue
+        // PhuongNT add show button process action with process Block Card and PIN Reissue
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
           this.showProcessAction = true;
+        }
+        // PhuongNT add show button process action with process Card Replacement
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+          this.handleCheckProcessAction();
         }
 
         const actions = this.business.routingActionlst || [];
@@ -1108,13 +1125,17 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyRemovePhonePlacement();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
-        this.activeSectionlst = [ ...this.activeSectionlst , ...sectionlst];
+        this.activeSectionlst = [...this.activeSectionlst, ...sectionlst];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
         this._applyCsSupportAssessmentRoutingActionSync();
         // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
+        // PhuongNT add get current card status for Card Block/Unblock
+        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
+          this.handleGetCardStatus();
+        }
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
 
       })
@@ -1354,7 +1375,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         // }));
         // this.business = { ...this.business };
       }
-      
+
       if (field.isDate) {
         field.displayValue = formatToDDMMYYYY(value);
       }
@@ -1479,7 +1500,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (this.business?.code === PROCESS_UNBLOCK_CARD) {
             this.showProcessAction = TYPE_QUALIFIED == value;
           }
-          
+
           break;
 
         case CASE_CS_SUPPORT_ASSESMENT_TYPE:
@@ -1872,7 +1893,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
-  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */									
+  /* IPP Closure: không đủ IPP → auto Reject; Case đã có IPP chọn → auto Route to */
   handleIppClosureLoad(event) {
     const d = event.detail || {};
     this._ippClosureHasEligibleRows = !!d.hasEligibleRows;
@@ -1915,7 +1936,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
     Promise.resolve().then(() => {
-      this._applyIppClosureRouteToWhenEditable();				   
+      this._applyIppClosureRouteToWhenEditable();
     });
   }
 
@@ -2015,10 +2036,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._getCaseFieldValue.bind(this),
       this._getCheckNoUpdateInSubmitOptions(),
     );
+    const cmp = this._getFecUpdateAddressCmp();
+    const hasAddressUpdate = cmp && typeof cmp.hasPendingAddressUpdates === 'function' && cmp.hasPendingAddressUpdates();
+
     // Chỉ chặn khi có dropdown routing và user chưa cập nhật bất kỳ trường Updated nào.
-    if (routeToEle && noUpdate) {
+    if (routeToEle && noUpdate && !hasAddressUpdate) {
       this.showToast(FEC_Warning_Title, FEC_MSG_UPDATED_INFO_NOT_UPDATED, "warning");
       return false;
+    }
+
+    if (hasAddressUpdate) {
+      const res = await cmp.commitPendingAddressUpdatesForProcessAction();
+      if (!res?.success) {
+        this.showToast(FEC_Error_Title, res?.errorMessage || FEC_Error_Title, "error");
+        return false;
+      }
+      this._refreshFecUpdateAddressAfterProcessSuccess();
     }
 
     await this._submitFormsPromise();
@@ -2105,6 +2138,26 @@ export default class Fec_CaseBussiness extends LightningElement {
   handleProcessAction(e) {
     let method = e.target.dataset.id;
 
+    if (method === ACTION_ADDRESS_UPDATE) {
+      let processObj = this.business.processActionlst?.find(p => p.value === ACTION_ADDRESS_UPDATE);
+      if (processObj && processObj.disabled) {
+        return; // Prevent further action if already disabled
+      }
+      this.addressUpdateClickCount++;
+      if (this.addressUpdateClickCount >= 3) {
+        this.business.processActionlst = this.business.processActionlst.map(
+          (process) => {
+            if (process.value === ACTION_ADDRESS_UPDATE) {
+              return { ...process, disabled: true };
+            }
+            return process;
+          }
+        );
+        // Force LWC reactivity to re-render the button as disabled
+        this.business = { ...this.business };
+      }
+    }
+
     this.processActionMethod = method;
 
     let header;
@@ -2118,6 +2171,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (method == ACTION_PIN_REISSUE) {
       header = FEC_ACTION_PIN_REISSUE_HEADER;
       content = FEC_MSG_ACTION_PIN_REISSUE;
+    } else if (method == ACTION_REPLACE_CARD) {
+      header = FEC_ACTION_CARD_REPLACEMENT_HEADER;
+      content = FEC_MSG_ACTION_CARD_REPLACEMENT;
     } else {
       header = FEC_ACTION_PHONE_UPDATE_HEADER;
       content = FEC_MSG_ACTION_PHONE_UPDATE;
@@ -2172,6 +2228,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_ADDRESS_UPDATE:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       case OC_001:
         params = {
           caseId: this.recordId,
@@ -2196,6 +2258,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_REPLACE_CARD:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
@@ -2211,12 +2279,34 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
       msgSuccess = FEC_MSG_ACTION_PIN_REISSUE_SUCCESS;
       msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR;
+    } else if (this.processActionMethod == ACTION_REPLACE_CARD) {
+      msgSuccess = FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS;
+      msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR;
     } else {
       msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
     }
-    
-    run({ method: this.processActionMethod, params })
+
+
+    // Address Update: Save chỉ lưu local, Process Action mới call API.
+    // Các action khác: không đổi luồng gọi API.
+    // Author: Toannd61
+    let processActionPromise;
+    if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+      const cmp = this._getFecUpdateAddressCmp();
+      if (
+        cmp &&
+        typeof cmp.commitPendingAddressUpdatesForProcessAction === "function"
+      ) {
+        processActionPromise = cmp.commitPendingAddressUpdatesForProcessAction();
+      } else {
+        processActionPromise = Promise.resolve({ success: false });
+      }
+    } else {
+      processActionPromise = run({ method: this.processActionMethod, params });
+    }
+
+    processActionPromise
       .then((res) => {
         let isSuccess = res?.success;
         console.log('>>>>>>>isSuccess: ' + isSuccess);
@@ -2240,6 +2330,11 @@ export default class Fec_CaseBussiness extends LightningElement {
           // thangtv update logic for Jira KH-931
           this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
 
+          // thangtv send message re-isuse pin success to NOC component
+          if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              this.publishPinReissueResult("SUCCESS");
+          }
+
           if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
             this._refreshFecUpdateAddressAfterProcessSuccess();
           }
@@ -2250,6 +2345,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.isProcessActionFailed = true;
           if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
             this._revertFecUpdateAddressAfterProcessFailure();
+          }
+          // thangtv send message re-isuse pin error to NOC component
+          if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              this.publishPinReissueResult("ERROR",msgError);
           }
         }
 
@@ -2491,7 +2590,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             const layoutNum = Number(meta.fieldLayout);
             const layout =
               Number.isFinite(layoutNum) &&
-              SLDS_MEDIUM_SIZE_OF_12[layoutNum]
+                SLDS_MEDIUM_SIZE_OF_12[layoutNum]
                 ? layoutNum
                 : 12;
             const lwcColClassName =
@@ -2500,19 +2599,12 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
-            const dynLwcIsEdit = this._isEdit && fecMasterDataSettingIsEdit;
-            console.log("[fec_CaseBussiness] dynLwc isEdit", {
-              componentName: name,
-              _isEdit: this._isEdit,
-              fecMasterDataSettingIsEdit,
-              isEdit: dynLwcIsEdit,
-            });
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
               fecMasterDataSettingIsEdit,
-              isEdit: dynLwcIsEdit,
+              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
@@ -2553,11 +2645,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     const draft = JSON.parse(localStorage.getItem(this.draftKey));
     if (!draft || !this.business) return;
     this.business.sectionlst.forEach(section => {
-        section.subSectionlst.forEach(sub => {
-            sub.objlst.forEach(obj => {
-                obj.fieldlst.forEach(field => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
             if (!field.editable) return; // ignore non editable
-                    const key = obj.id + '_' + field.apiName;
+            const key = obj.id + '_' + field.apiName;
             // if (draft[key] && !field.value) {
             if (draft[key]) { // still applyDraft with existing data
               field.value = draft[key];
@@ -2593,6 +2685,55 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
-   return this.isEdit && this.business?.hasRoutingAction;
+    return this.isEdit && this.business?.hasRoutingAction;
+  }
+
+  // PhuongNT add get current card status for Card Block/Unblock
+  async handleGetCardStatus() {
+    const result = await getCardStatus({ recordId: this.recordId });
+    console.log('>>>>>handleGetCardStatus: ' + JSON.stringify(result));
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.editable) return; // ignore editable
+            if (field.apiName === FIELD_CURRENT_CARD_STATUS) {
+              field.value = result?.currentCardStatus;
+              field.displayValue = field.value;
+              field.readonlyDisplayValue = field.value;
+            }
+          });
+        });
+      });
+    });
+  }
+
+  // PhuongNT add check process action Card Replacement
+  handleCheckProcessAction() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = '';
+    checkProcessAction({ caseId: this.recordId })
+    .then((result) => {
+      if (result.isShowAction) {
+        this.showProcessAction = true;
+      } else {
+        this.isProcessActionInfo = true;
+        this.processActionMsg = result.strMsg;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+  // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
+  async publishPinReissueResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
   }
 }

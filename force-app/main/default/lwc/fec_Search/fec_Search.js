@@ -29,6 +29,7 @@ import SkipModal from "c/fec_SkipModal";
 import createInternalCase from "@salesforce/apex/FEC_CreateCaseHandler.createInternalCase";
 import createInternalCaseOnSkip from "@salesforce/apex/FEC_SearchController.createInternalCaseOnSkip";
 import getHistoryStatus from '@salesforce/apex/FEC_SearchController.getHistoryStatus';
+import getCaseRecordTypeDevName from "@salesforce/apex/FEC_CreateCaseHandler.getCaseRecordTypeDevName";
 import {
   publish,
   MessageContext,

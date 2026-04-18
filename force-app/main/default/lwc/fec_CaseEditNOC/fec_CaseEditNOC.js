@@ -11,6 +11,8 @@ import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
 import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
+//Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
+import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
 // import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
 // import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
 // import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
@@ -77,6 +79,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscription = null;
   subscriptionNOC = null;
   subscriptionResetPin = null;
+  subscriptionPinReissue = null;
 
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -235,6 +238,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.subscriptionResetPin = subscribe(
       this.messageContext,
       PIN_RESET_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
+    );
+    //Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
+    this.subscriptionPinReissue = subscribe(
+      this.messageContext,
+      PIN_REISSUE_MESSAGE_CHANNEL,
       (message) => this.handleMessageResetPin(message),
       { scope: APPLICATION_SCOPE },
     );
