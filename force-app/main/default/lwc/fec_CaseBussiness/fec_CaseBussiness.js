@@ -7,6 +7,7 @@ import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
+import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
@@ -238,6 +239,7 @@ const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
 const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 
 /**
  * Registry of dynamically loadable components.
@@ -1118,6 +1120,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyCsSupportAssessmentRoutingActionSync();
         // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
+        // PhuongNT add get current card status for Card Block/Unblock
+        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
+          this.handleGetCardStatus();
+        }
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
 
       })
@@ -2642,5 +2648,25 @@ export default class Fec_CaseBussiness extends LightningElement {
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
     return this.isEdit && this.business?.hasRoutingAction;
+  }
+
+  // PhuongNT add get current card status for Card Block/Unblock
+  async handleGetCardStatus() {
+    const result = await getCardStatus({ recordId: this.recordId });
+    console.log('>>>>>handleGetCardStatus: ' + JSON.stringify(result));
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.editable) return; // ignore editable
+            if (field.apiName === FIELD_CURRENT_CARD_STATUS) {
+              field.value = result?.currentCardStatus;
+              field.displayValue = field.value;
+              field.readonlyDisplayValue = field.value;
+            }
+          });
+        });
+      });
+    });
   }
 }
