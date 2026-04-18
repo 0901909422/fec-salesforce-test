@@ -2091,14 +2091,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       return false;
     }
 
-    if (hasAddressUpdate) {
-      const res = await cmp.commitPendingAddressUpdatesForProcessAction();
-      if (!res?.success) {
-        this.showToast(FEC_Error_Title, res?.errorMessage || FEC_Error_Title, "error");
-        return false;
-      }
-      this._refreshFecUpdateAddressAfterProcessSuccess();
-    }
+    // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
+    // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
     await Promise.all([
