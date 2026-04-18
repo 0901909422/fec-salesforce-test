@@ -266,15 +266,7 @@ public without sharing class FEC_IncorrectPaymentController {
         
         // Update Case fields
         Case c = cases[0];
-        if (String.isNotBlank(billDate)) {
-            try {
-                c.FEC_Bill_Date__c = Date.valueOf(billDate);
-            } catch (Exception e) {
-                c.FEC_Bill_Date__c = null;
-            }
-        } else {
-            c.FEC_Bill_Date__c = null;
-        }
+        c.FEC_Bill_Date__c = FEC_CommonUltils.toDateStr(billDate);
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = paymentMethod != null ? paymentMethod.trim() : null;
@@ -318,15 +310,7 @@ public without sharing class FEC_IncorrectPaymentController {
         }
 
         Case c = cases[0];
-        if (String.isNotBlank(billDate)) {
-            try {
-                c.FEC_Bill_Date__c = Date.valueOf(billDate);
-            } catch (Exception e) {
-                c.FEC_Bill_Date__c = null;
-            }
-        } else {
-            c.FEC_Bill_Date__c = null;
-        }
+        c.FEC_Bill_Date__c = FEC_CommonUltils.toDateStr(billDate);
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = String.isNotBlank(paymentMethod) ? paymentMethod.trim() : null;
