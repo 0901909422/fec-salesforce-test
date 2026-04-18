@@ -2378,6 +2378,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
             this._refreshFecUpdateAddressAfterProcessSuccess();
           }
+          }
 
         } else {
           this.isProcessActionSuccessed = false;
