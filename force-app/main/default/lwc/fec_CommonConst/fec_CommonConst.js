@@ -125,6 +125,8 @@ const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
+const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+const FEC_SENT_SUCCESS = 'Notification sent successfully';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -211,5 +213,7 @@ export {
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
     ERROR_TILE_SHOWTOAST,
-    MSG_ENTER_EMAIL_CORRECTLY
+    MSG_ENTER_EMAIL_CORRECTLY,
+    NOTIFICATION_CHANNEL_SF_APP,
+    FEC_SENT_SUCCESS
 };

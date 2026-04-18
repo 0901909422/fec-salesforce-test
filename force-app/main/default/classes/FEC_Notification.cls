@@ -226,7 +226,7 @@ public without sharing class FEC_Notification {
         String targetEmail = getTargetEmailFromCase(currentCase);
         String caseCustomerType = currentCase.FEC_Customer_Type__c;
         // 3. Query Notification satisfying conditions
-        String emailChannel = FEC_ConstantCommon.EMAIL;
+        //String emailChannel = FEC_ConstantCommon.EMAIL;
         
         // System.debug('--- [getAvailableNotifications] currentStage: ' + currentStage);
         // System.debug('--- [getAvailableNotifications] emailChannel: ' + emailChannel);
@@ -235,8 +235,7 @@ public without sharing class FEC_Notification {
                        'FEC_Notification_Channel__r.Name, ' +
                        'FEC_Target_Group__c ' +
                        'FROM FEC_Notification__c ' +
-                       'WHERE FEC_Notification_Status__c = true ' +
-                       'AND FEC_Notification_Channel__r.Name = :emailChannel';
+                       'WHERE FEC_Notification_Status__c = true ';
         
         if (String.isNotBlank(stageId)) {
             query += ' AND FEC_Case_Stage__c = :stageId';
@@ -295,7 +294,7 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled
-    public static void sendManualEmail(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId) {
+    public static void sendManualNotification(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId) {
         User sendingUser = [
             SELECT Email, UserRole.Name
             FROM User
@@ -421,55 +420,140 @@ public without sharing class FEC_Notification {
         if (String.isNotBlank(systemConfig?.FEC_Sender_Email__c)) {
             senderEmail = systemConfig.FEC_Sender_Email__c;
         }
-        String header = '';
-        String footer = '';
+
         String subject = String.isNotBlank(template.FEC_Subject_Line__c)
             ? template.FEC_Subject_Line__c
             : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-        // if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Header__c)) {
-        //     header += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Header__c) ;
-        // }
-        // if (template.FEC_Enhanced_Letterhead__r != null && String.isNotBlank(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c)) {
-        //     footer += FEC_NotificationService.inlineImages(template.FEC_Enhanced_Letterhead__r.FEC_Footer__c);
-        // }
-        try {
-            executeSendEmail(caseId, senderEmail, targetEmail, subject, template?.FEC_Enhanced_Letterhead__r?.FEC_Header__c, template.FEC_Body__c, template?.FEC_Enhanced_Letterhead__r?.FEC_Footer__c, templateId);
-            FEC_NotificationHistoryService.insertRow(
-                FEC_NotificationHistoryService.buildRow(
-                    caseId,
-                  notifRule != null ? notifRule.Id : null,
-                    c.FEC_Stage_Name__c,
-                    template.Name,
-                    notifRuleName,
-                    channelLabel,
-                    targetGrp,
-                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
-                    FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
-                    null,
-                    manualUserLocal,
-                    manualUserRole,
-                    System.now()
-                )
-            );
-        } catch (Exception e) {
-            FEC_NotificationHistoryService.insertRow(
-                FEC_NotificationHistoryService.buildRow(
-                    caseId,
-                  notifRule != null ? notifRule.Id : null,
-                    c.FEC_Stage_Name__c,
-                    template != null ? template.Name : null,
-                    notifRuleName,
-                    channelLabel,
-                    targetGrp,
-                    FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
-                    FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
-                    e.getMessage(),
-                    manualUserLocal,
-                    manualUserRole,
-                    System.now()
-                )
-            );
-            throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
+
+        if (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_SF_APP) {
+            List<User> targetUsers = [SELECT Id FROM User WHERE Email = :targetEmail AND IsActive = true LIMIT 1];
+            if (targetUsers.isEmpty()) {
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                        notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        'Target User not found',
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+                throw new AuraHandledException('Target User not found');
+            }
+            Id targetUserId = targetUsers[0].Id;
+
+            EmailInfo previewContent = new EmailInfo(caseId, targetEmail, subject, '', template.FEC_Body__c, '');
+            bulkResolveMergeFields(new List<EmailInfo>{ previewContent }, senderEmail);
+
+            String resolvedSubject = previewContent.subject;
+            String resolvedBody = previewContent.body;
+            if (String.isNotBlank(resolvedBody)) {
+                resolvedBody = resolvedBody.replaceAll('(?i)<br\\s*/?>', '\n');
+                resolvedBody = resolvedBody.replaceAll('(?i)</p>', '\n');
+                resolvedBody = resolvedBody.replaceAll('<[^>]+>', '');
+                resolvedBody = resolvedBody.unescapeHtml4();
+            }
+
+            CustomNotificationType customNotificationType;
+            try {
+                customNotificationType = [SELECT Id FROM CustomNotificationType WHERE DeveloperName = 'Custom_Notification' LIMIT 1];
+            } catch (Exception e) {
+                throw new AuraHandledException('CustomNotificationType not found.');
+            }
+
+            Messaging.CustomNotification notification = new Messaging.CustomNotification();
+            notification.setTitle(resolvedSubject);
+            notification.setBody(resolvedBody);
+            notification.setNotificationTypeId(customNotificationType.Id);
+            notification.setTargetId(caseId);
+
+            try {
+                notification.send(new Set<String>{ targetUserId });
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                        notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
+                        null,
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+            } catch (Exception e) {
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                        notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        e.getMessage(),
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+                throw new AuraHandledException('Notification send failed: ' + e.getMessage());
+            }
+
+        } else {
+            try {
+                executeSendEmail(caseId, senderEmail, targetEmail, subject, template?.FEC_Enhanced_Letterhead__r?.FEC_Header__c, template.FEC_Body__c, template?.FEC_Enhanced_Letterhead__r?.FEC_Footer__c, templateId);
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                      notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template.Name,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_SUCCESS,
+                        null,
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+            } catch (Exception e) {
+                FEC_NotificationHistoryService.insertRow(
+                    FEC_NotificationHistoryService.buildRow(
+                        caseId,
+                      notifRule != null ? notifRule.Id : null,
+                        c.FEC_Stage_Name__c,
+                        template != null ? template.Name : null,
+                        notifRuleName,
+                        channelLabel,
+                        targetGrp,
+                        FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
+                        FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        e.getMessage(),
+                        manualUserLocal,
+                        manualUserRole,
+                        System.now()
+                    )
+                );
+                throw new AuraHandledException(System.Label.FEC_Email_Send_Error + ': ' + e.getMessage());
+            }
         }
     }
 
