@@ -265,14 +265,18 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   @api checkValidity() {
     if (this.required && this.selectedlst.length == 0) {
-      this.formElement.classList.add("has-error");
+      if (this.formElement) {
+        this.formElement.classList.add("has-error");
+      }
       this.isError = true;
 
       return false;
     }
 
     this.isError = false;
-    this.formElement.classList.remove("has-error");
+    if (this.formElement) {
+      this.formElement.classList.remove("has-error");
+    }
 
     return true;
   }
@@ -284,12 +288,6 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
     this.timeoutHandler = setTimeout(() => {
       let keyword = target.value;
-
-      if (keyword && keyword.trim() != "") {
-        this.isAll = false;
-      } else {
-        this.isAll = true;
-      }
 
       this.optionlst.forEach((item) => {
         if (keyword && keyword.trim() != "") {

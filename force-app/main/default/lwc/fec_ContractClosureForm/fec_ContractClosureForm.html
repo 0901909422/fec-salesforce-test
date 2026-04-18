@@ -1,5 +1,6 @@
 <template>
   <div class="fec-closure-form">
+    <template if:true={isContractClosureVisible}>
     <template if:true={loading}>
       <lightning-spinner alternative-text={customLabel.loadingAlt}></lightning-spinner>
     </template>
@@ -19,7 +20,6 @@
                 value={selectedDeliveryValues}
                 required
                 is-search
-                is-all
                 onchange={handlePicklistChange}
               ></c-fec_-multi-picklist-input>
             </div>
@@ -310,6 +310,7 @@
         </div>
       </section>
       <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </template>
     </template>
   </div>
 </template>
