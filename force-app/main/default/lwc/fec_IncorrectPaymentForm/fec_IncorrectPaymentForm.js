@@ -710,6 +710,36 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             }));
             return false;
         }
+        if (!(this.paymentMethod && String(this.paymentMethod).trim())) {
+            const pmEl = this.template.querySelector('lightning-combobox[name="paymentMethod"]');
+            if (pmEl && pmEl.reportValidity) {
+                pmEl.reportValidity();
+            }
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_LBL_Select_Payment_Method,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
+        }
+
+        if (this.showManualBill) {
+            const billAmtSel = 'lightning-input[data-id="manual-bill-amount"]';
+            const billAmtOk = this.validateFields([billAmtSel]);
+            const billAmtMissing = this.manualBillAmount == null;
+            if (!billAmtOk || billAmtMissing) {
+                const billAmtEl = this.template.querySelector(billAmtSel);
+                if (billAmtEl && billAmtEl.reportValidity) {
+                    billAmtEl.reportValidity();
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Validation_Title,
+                    message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
+                    variant: CONST.VARIANT_WARNING
+                }));
+                return false;
+            }
+        }
 
         this.clearAdjustmentFieldsCustomValidity();
         const incompleteRows = [];
@@ -763,14 +793,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
 
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
-        if (this.showManualBill && !this.validateFields(['lightning-input[name="manualBillAmount"]'])) {
-            this.dispatchEvent(new ShowToastEvent({
-                title: FEC_Toast_Validation_Title,
-                message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
-                variant: CONST.VARIANT_WARNING
-            }));
-            return false;
-        }
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
             return { skipApex: true, valid, billDate, billAmount };
         }
@@ -796,9 +818,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunIncorrectPaymentSave()) {
-            return true;
-        }
+        // Submit always validates; _shouldRunIncorrectPaymentSave is only for skipping Apex on empty section.
         const ctx = this._performClientSaveValidation();
         return ctx !== false;
     }

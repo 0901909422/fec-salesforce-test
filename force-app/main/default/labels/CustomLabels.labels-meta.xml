@@ -13453,4 +13453,11 @@
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</shortDescription>
         <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS Support xử lý.</value>
     </labels>
+    <labels>
+        <fullName>FEC_No_Permission_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No permission toast message</shortDescription>
+        <value>Bạn không có quyền thực hiện thao tác này.</value>
+    </labels>
 </CustomLabels>
