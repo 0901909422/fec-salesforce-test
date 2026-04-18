@@ -12524,4 +12524,20 @@
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
         <value>Thay thế thẻ thất bại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_D2C</shortDescription>
+        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS D2C xử lý.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</shortDescription>
+        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS Support xử lý.</value>
+    </labels>
 </CustomLabels>

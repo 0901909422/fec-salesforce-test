@@ -35,18 +35,18 @@ public with sharing class FEC_CardReplacementAddressController {
                 || (String.isNotBlank(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c)
                     && inValidBlockCode1.contains(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c))) {
                 result.isShowAction = false;
-                result.strMsg = 'Yêu cầu thay thế thẻ sẽ được chuyển đến CS D2C xử lý.';
+                result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
                 List<Case> cases = [
                     SELECT Id 
                     FROM Case 
                     WHERE FEC_Interaction__c = :objCase.FEC_Interaction__c
-                        AND (FEC_SubCode__r.FEC_Code__c = 'RC09.01'
-                        OR FEC_SubCode__r.FEC_Code__c = 'RC09.02')
+                        AND (FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_MOBILE
+                        OR FEC_SubCode__r.FEC_Code__c = :FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS)
                 ];
                 if (!cases.isEmpty()) {
                     result.isShowAction = false;
-                    result.strMsg = 'Yêu cầu thay thế thẻ sẽ được chuyển đến CS Support xử lý.';
+                    result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT;
                 }
             }
             if (String.isBlank(result.strMsg)) {

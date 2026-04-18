@@ -459,4 +459,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String FILE_TYPE_WORD_X = 'WORD_X';
     public static final String FILE_TYPE_WORD = 'WORD';
 
+    public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
+    public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+
 }
