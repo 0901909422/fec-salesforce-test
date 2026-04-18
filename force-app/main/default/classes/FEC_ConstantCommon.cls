@@ -476,6 +476,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
 
+    /** Profile names */
+    public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+
     /** MIME types for file attachments */
     public static final String MIME_OCTET_STREAM = 'application/octet-stream';
     public static final String MIME_PDF = 'application/pdf';

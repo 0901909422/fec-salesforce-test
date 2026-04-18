@@ -11,63 +11,17 @@
         <lightning-layout multiple-rows>
           <lightning-layout-item size="12" padding="around-small">
             <div class="fec-delivery-field-slot">
-            <div
-              class="slds-combobox_container fec-delivery-combobox-container"
-            >
-              <div class={deliveryComboboxDivClass} data-delivery-root>
-                <lightning-input
-                  type="text"
-                  label={customLabel.deliveryOption}
-                  value={deliveryOptionDisplay}
-                  placeholder={customLabel.placeholderDelivery}
-                  readonly
-                  required
-                  onclick={toggleDeliveryDrop}
-                ></lightning-input>
-                <div
-                  class="slds-dropdown slds-dropdown_length-5 fec-delivery-dropdown"
-                  role="listbox"
-                >
-                      <ul
-                        class="slds-listbox slds-listbox_vertical"
-                        role="presentation"
-                      >
-                        <li class="slds-listbox__item" role="presentation">
-                          <div class="slds-p-around_xx-small">
-                            <lightning-input
-                              type="checkbox"
-                              label={labelEmail}
-                              checked={deliveryEmailSelected}
-                              onchange={handleToggleEmail}
-                            ></lightning-input>
-                          </div>
-                        </li>
-                        <li class="slds-listbox__item" role="presentation">
-                          <div class="slds-p-around_xx-small">
-                            <lightning-input
-                              type="checkbox"
-                              label={labelAddress}
-                              checked={deliveryAddressSelected}
-                              disabled={lockAddressCb}
-                              onchange={handleToggleAddress}
-                            ></lightning-input>
-                          </div>
-                        </li>
-                        <li class="slds-listbox__item" role="presentation">
-                          <div class="slds-p-around_xx-small">
-                            <lightning-input
-                              type="checkbox"
-                              label={labelOffice}
-                              checked={deliveryOfficeSelected}
-                              disabled={lockOfficeCb}
-                              onchange={handleToggleOffice}
-                            ></lightning-input>
-                          </div>
-                        </li>
-                      </ul>
-                </div>
-              </div>
-            </div>
+              <c-fec_-multi-picklist-input
+                data-fec-field="deliveryPicklist"
+                label={customLabel.deliveryOption}
+                placeholder={customLabel.placeholderDelivery}
+                options={deliveryPicklistOptions}
+                value={selectedDeliveryValues}
+                required
+                is-search
+                is-all
+                onchange={handlePicklistChange}
+              ></c-fec_-multi-picklist-input>
             </div>
           </lightning-layout-item>
 

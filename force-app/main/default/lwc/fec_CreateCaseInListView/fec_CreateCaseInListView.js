@@ -8,30 +8,36 @@ import {
 } from "lightning/messageService";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
-
 import CREATE_CASE_INTERNAL from '@salesforce/label/c.FEC_Create_Case_Btn_Label';
+import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
+import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
+import { PROFILE_RELEVANT_DEPTS } from 'c/fec_CommonConst';
 
 export default class Fec_CreateCaseInListView extends NavigationMixin(LightningElement) {
     @api recordId;
 
-    // Modal & state
     isShowModal = true;
     isCreating = false;
     showSkip = true;
-
-    // Selected data
     fullName = '';
     nationalId = '';
-    labels = {
-        CREATE_CASE_INTERNAL
-    }
+    labels = { CREATE_CASE_INTERNAL };
     newCaseId;
     currentTabId;
+    _userProfile;
 
     @wire(IsConsoleNavigation) isConsoleNavigation;
-
-    @wire(MessageContext)
-    messageContext;
+    @wire(MessageContext) messageContext;
+    @wire(getCurrentUserProfileName)
+    wiredProfile({ data }) {
+        if (data) {
+            this._userProfile = data;
+            if (data === PROFILE_RELEVANT_DEPTS) {
+                this.isShowModal = false;
+                this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+            }
+        }
+    }
 
     async connectedCallback() {
         try {
