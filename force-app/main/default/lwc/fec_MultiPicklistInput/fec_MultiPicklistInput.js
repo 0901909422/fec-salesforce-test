@@ -289,12 +289,6 @@ export default class Fec_MultiPicklistInput extends LightningElement {
     this.timeoutHandler = setTimeout(() => {
       let keyword = target.value;
 
-      if (keyword && keyword.trim() != "") {
-        this.isAll = false;
-      } else {
-        this.isAll = true;
-      }
-
       this.optionlst.forEach((item) => {
         if (keyword && keyword.trim() != "") {
           item.isHidden = !item.label
