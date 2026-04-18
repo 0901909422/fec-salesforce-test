@@ -3238,7 +3238,6 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * Lấy First/Middle/Last Name từ Customer History (FEC_Account_or_Contract__c)
    * và cập nhật vào các trường FEC_Original_Info_* trên Case.
-   * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void fullNameUpdate(Case selectedCase) {
     SObject accountOrContract = selectedCase.getSObject(
@@ -3273,7 +3272,6 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * Lấy FEC_Email__c từ Customer History (FEC_Account_or_Contract__c)
    * và cập nhật vào trường FEC_Original_Info_Email__c trên Case.
-   * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void emailUpdate(Case selectedCase) {
     SObject accountOrContract = selectedCase.getSObject(
@@ -3297,7 +3295,6 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * Lấy FEC_Date_of_Birth__c từ Customer History (FEC_Account_or_Contract__c)
    * và cập nhật vào trường FEC_Original_Info_Date_of_Birth__c trên Case.
-   * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void dobUpdate(Case selectedCase) {
     SObject accountOrContract = selectedCase.getSObject(
@@ -3321,7 +3318,6 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * Lấy FEC_Gender__c từ Customer History (FEC_Account_or_Contract__c)
    * và cập nhật vào trường FEC_Original_Info_Gender__c trên Case.
-   * Chỉ gán Updated = Original khi chưa có giá trị (giữ bản nháp sau Save & Close khi bấm Execute lại).
    */
   private static void genderUpdate(Case selectedCase) {
     SObject accountOrContract = selectedCase.getSObject(

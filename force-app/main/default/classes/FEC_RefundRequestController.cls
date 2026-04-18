@@ -3,7 +3,7 @@
  * Description  : Refund Request LWC — draft JSON on Case; submit writes Case amount + FEC_Case_Refund_Details__c and clears draft.
  ****************************************************************************************/
 
-public with sharing class FEC_RefundRequestController {
+public without sharing class FEC_RefundRequestController {
 
     public class ReceiptLineDTO {
         @AuraEnabled public String detailId { get; set; }
