@@ -439,13 +439,13 @@ public without sharing class FEC_Notification {
                         targetGrp,
                         FEC_NotificationHistoryService.SEND_TYPE_MANUAL,
                         FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
-                        'Target User not found',
+                        FEC_ConstantCommon.TARGET_USER_NOT_FOUND,
                         manualUserLocal,
                         manualUserRole,
                         System.now()
                     )
                 );
-                throw new AuraHandledException('Target User not found');
+                throw new AuraHandledException(FEC_ConstantCommon.TARGET_USER_NOT_FOUND);
             }
             Id targetUserId = targetUsers[0].Id;
 
@@ -455,9 +455,9 @@ public without sharing class FEC_Notification {
             String resolvedSubject = previewContent.subject;
             String resolvedBody = previewContent.body;
             if (String.isNotBlank(resolvedBody)) {
-                resolvedBody = resolvedBody.replaceAll('(?i)<br\\s*/?>', '\n');
-                resolvedBody = resolvedBody.replaceAll('(?i)</p>', '\n');
-                resolvedBody = resolvedBody.replaceAll('<[^>]+>', '');
+                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.BR_TAG_REGEX, '\n');
+                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.P_TAG_REGEX, '\n');
+                resolvedBody = resolvedBody.replaceAll(FEC_ConstantCommon.HTML_TAG_REGEX, '');
                 resolvedBody = resolvedBody.unescapeHtml4();
             }
 
@@ -465,7 +465,7 @@ public without sharing class FEC_Notification {
             try {
                 customNotificationType = [SELECT Id FROM CustomNotificationType WHERE DeveloperName = 'Custom_Notification' LIMIT 1];
             } catch (Exception e) {
-                throw new AuraHandledException('CustomNotificationType not found.');
+                throw new AuraHandledException(FEC_ConstantCommon.CUSTOM_NOTIFICATION_TYPE_NOT_FOUND);
             }
 
             Messaging.CustomNotification notification = new Messaging.CustomNotification();
@@ -511,7 +511,7 @@ public without sharing class FEC_Notification {
                         System.now()
                     )
                 );
-                throw new AuraHandledException('Notification send failed: ' + e.getMessage());
+                throw new AuraHandledException(FEC_ConstantCommon.NOTIFICATION_SEND_FAILED + e.getMessage());
             }
 
         } else {
