@@ -441,6 +441,12 @@
 		<members>FEC_RESET_PIN_SUCCESS</members>
         <members>FEC_RESET_PIN_ERROR</members>
         <members>FEC_RESET_PIN_FAILED</members>
+		<members>FEC_ACTION_CARD_REPLACEMENT_HEADER</members>
+		<members>FEC_MSG_ACTION_CARD_REPLACEMENT</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -645,6 +651,7 @@
 		<members>FEC_System_Config__c</members>
 		<members>FEC_Hold_Case_Config__c</members>
 		<members>FEC_Log__c</members>
+		<members>FEC_Customer_History__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -740,6 +747,63 @@
 		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
 		<members>FEC_Additional_Info__c.FEC_Last_4_Digits__c</members>
 		<members>FEC_Additional_Info__c.FEC_Conversion_Rate__c</members>
+		<members>Case.FEC_Coll_Action_Code__c</members>
+		<members>Case.FEC_Coll_Action_Date__c</members>
+		<members>Case.FEC_Coll_Agent__c</members>
+		<members>Case.FEC_Coll_Remarks__c</members>
+		<members>Case.FEC_Coll_Sub_Action_Code__c</members>
+		<members>Case.FEC_Failure_Reason__c</members>
+		<members>Case.FEC_NFU_Code__c</members>
+		<members>Case.FEC_NFU_Expiry_Date__c</members>
+		<members>Case.FEC_NFU_Reason__c</members>
+		<members>Case.FEC_NFU_Started_Date__c</members>
+		<members>Case.FEC_NFU_Status__c</members>
+		<members>Case.FEC_Remark_for_Collections__c</members>
+		<members>Case.FEC_Transfer_Data_to_Collections__c</members>
+		<members>Case.FEC_Transfer_Status__c</members>
+		<members>Case.FEC_Transfer_Time__c</members>
+		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
+		<members>FEC_Customer_History__c.FEC_Received_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Total_Interest_Paid__c</members>
+		<members>FEC_Customer_History__c.FEC_Provided_Number__c</members>
+		<members>FEC_Customer_History__c.FEC_MRC_Zone__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_Overdue__c</members>
+		<members>FEC_Customer_History__c.FEC_Termination_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Plate_Number__c</members>
+		<members>FEC_Customer_History__c.FEC_LPI_Paid__c</members>
+		<members>FEC_Customer_History__c.FEC_Overdue_Penalty__c</members>
+		<members>FEC_Customer_History__c.FEC_Status_ID__c</members>
+		<members>FEC_Customer_History__c.FEC_Original_MRC_Receiver__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_Outstanding_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Penalty_Fee_Overdue__c</members>
+		<members>FEC_Customer_History__c.FEC_Repayment_Fee_Overdue__c</members>
+		<members>FEC_Customer_History__c.FEC_ID__c</members>
+		<members>FEC_Customer_History__c.FEC_Installments_Overdue__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Pending_Penal_Interest__c</members>
+		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Remark__c</members>
+		<members>FEC_Customer_History__c.FEC_Repayment_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Receiver__c</members>
+		<members>FEC_Customer_History__c.FEC_Current_Balance_Principal__c</members>
+		<members>FEC_Customer_History__c.FEC_Area__c</members>
+		<members>FEC_Customer_History__c.FEC_MRC_Status__c</members>
+		<members>FEC_Customer_History__c.FEC_Delivery_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Original_MRC_Remark__c</members>
+		<members>FEC_Customer_History__c.FEC_Principal_Overdue__c</members>
+		<members>FEC_Customer_History__c.FEC_Excess_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Total_Principal_Paid__c</members>
+		<members>FEC_Customer_History__c.FEC_Total_Overdue_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Interest_On_Termination__c</members>
+		<members>FEC_Customer_History__c.FEC_Modified_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Repayment_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Repayment_Outstanding_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Total_Installment_Paid__c</members>
+		<members>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</members>
+		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Type__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -824,6 +888,7 @@
 
 	<types>
 		<members>FEC_PinReset</members>
+		<members>FEC_PinReissue</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>

@@ -208,6 +208,7 @@
                 onclick={handleProcessAction}
                 class="slds-m-right_x-small"
                 data-id={process.value}
+                disabled={process.disabled}
               ></lightning-button>
             </template>
           </div>
@@ -224,6 +225,13 @@
           <div
             if:true={isProcessActionSuccessed}
             class="process-action-result process-action-result--success"
+          >
+            <p>{processActionMsg}</p>
+          </div>
+
+          <div
+            if:true={isProcessActionInfo}
+            class="process-action-result process-action-result--info"
           >
             <p>{processActionMsg}</p>
           </div>

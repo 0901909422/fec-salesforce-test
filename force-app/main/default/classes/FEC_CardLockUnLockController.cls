@@ -70,10 +70,70 @@ public with sharing class FEC_CardLockUnLockController {
         return result;
     }
 
+    @AuraEnabled
+    public static ResponseResult getCardStatus(String recordId) {
+        ResponseResult result = new ResponseResult();
+        try {
+            Case objCasse = [
+                SELECT Id,
+                    FEC_Account_Number__c,
+                    FEC_Customer_Name__c
+                FROM Case
+                WHERE Id = :recordId
+            ];
+            String transId = FEC_CommonUltils.generateTransactionUUID();
+            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+            String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
+            String vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA_CARD;
+            String context = FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
+            String signOnName = FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
+            String org = FEC_ConstantCommon.REQUESTOR_ORG_EMEA_CARD;
+            String accNumber = objCasse.FEC_Account_Number__c;
+            String cusName = objCasse.FEC_Customer_Name__c;
+            FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper res = FEC_MCMSCARDTOCARDINQEMEA.callService(
+                transId,
+                requestorId,
+                dateTimeStr,
+                vmxVersion,
+                context,
+                signOnName,
+                org,
+                accNumber,
+                cusName
+            );
+            if (res?.Sys?.Code == 1) {
+                for (FEC_MCMSCARDTOCARDINQEMEA.OutputData outputData : res?.VMXMsgOut?.OUTPUT_AREA?.OUTPUT_DATA) {
+                    if (String.isNotBlank(outputData.BLK_CD)) {
+                        result.isSuccess = true;
+                        result.currentCardStatus = 'Blocked';
+                    }
+                }
+            }
+            if (!result.isSuccess) {
+                result.currentCardStatus = 'Not Blocked';
+            }
+        } catch (Exception ex) {
+            FEC_CommonUltils.logException(
+                'FEC_CardLockUnLockController', 
+                'getCardStatus', 
+                ex.getMessage(),
+                ex.getStackTraceString()
+            );
+        }
+        return result;
+    }
+
     public class UpdateResult {
         @AuraEnabled
         public Boolean success { get; set; }
         @AuraEnabled
         public Decimal actionCount { get; set; }
+    }
+
+    public class ResponseResult {
+        @AuraEnabled
+        public Boolean isSuccess { get; set; }
+        @AuraEnabled
+        public String currentCardStatus { get; set; }
     }
 }
