@@ -172,11 +172,11 @@ public without sharing class FEC_ContractClosureController {
                 if (
                     Schema.sObjectType.FEC_Address_Info__c.isAccessible() &&
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address_Type__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Full_Address__c.isAccessible() &&
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
                 ) {
                     for (FEC_Address_Info__c a : [
-                        SELECT Id, FEC_Address_Type__c, FEC_Address__c, FEC_Mailing_Address__c
+                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c
                         FROM FEC_Address_Info__c
                         WHERE FEC_Customer_History__c = :histId
                         ORDER BY FEC_Address_Type__c
@@ -184,7 +184,7 @@ public without sharing class FEC_ContractClosureController {
                         AddressRowDTO row = new AddressRowDTO();
                         row.id = a.Id;
                         row.addressType = a.FEC_Address_Type__c;
-                        row.address = a.FEC_Address__c;
+                        row.address = a.FEC_Full_Address__c;
                         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
                             ? FEC_ConstantCommon.STR_EMPTY
                             : String.valueOf(a.FEC_Mailing_Address__c);
@@ -425,7 +425,6 @@ public without sharing class FEC_ContractClosureController {
             putIfUpdateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
         }
         if (forInsert) {
-            putIfCreateable(addr, 'FEC_Address__c', line);
             putIfCreateable(addr, 'FEC_Building__c', t.building.trim());
             putIfCreateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfCreateable(addr, 'FEC_Number__c', t.streetNumber.trim());
@@ -434,7 +433,6 @@ public without sharing class FEC_ContractClosureController {
             putIfCreateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfCreateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         } else {
-            putIfUpdateable(addr, 'FEC_Address__c', line);
             putIfUpdateable(addr, 'FEC_Building__c', t.building.trim());
             putIfUpdateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfUpdateable(addr, 'FEC_Number__c', t.streetNumber.trim());

@@ -1696,6 +1696,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       isAllValid = false;
     }
 
+    const contractClosureEl = this._getContractClosureFormEl();
+    if (
+      contractClosureEl &&
+      typeof contractClosureEl.validateForSubmit === "function"
+    ) {
+      if (!contractClosureEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1744,6 +1754,29 @@ export default class Fec_CaseBussiness extends LightningElement {
       return host;
     }
     return null;
+  }
+
+  _getContractClosureFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_ContractClosureForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveToCase === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveContractClosureIfApplicable() {
+    const el = this._getContractClosureFormEl();
+    if (!el || typeof el.saveToCase !== "function") {
+      return Promise.resolve({ valid: true, messages: [] });
+    }
+    return el.saveToCase();
   }
 
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
@@ -2017,7 +2050,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveCardClosureRefundDraftIfApplicable(),
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
-      ]);
+      ])
+        .then(() => this._saveContractClosureIfApplicable())
+        .then((closureRes) => {
+          if (closureRes && closureRes.valid === false) {
+            return Promise.reject(new Error("FEC_CONTRACT_CLOSURE_SAVE_FAILED"));
+          }
+        });
     if (total === 0) {
       return afterForms();
     }
@@ -2076,6 +2115,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
     ]);
+    const closureSaveRes = await this._saveContractClosureIfApplicable();
+    if (closureSaveRes && closureSaveRes.valid === false) {
+      return false;
+    }
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;

@@ -1,5 +1,6 @@
 <template>
   <div class="fec-closure-form">
+    <template if:true={isContractClosureVisible}>
     <template if:true={loading}>
       <lightning-spinner alternative-text={customLabel.loadingAlt}></lightning-spinner>
     </template>
@@ -310,6 +311,7 @@
         </div>
       </section>
       <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </template>
     </template>
   </div>
 </template>

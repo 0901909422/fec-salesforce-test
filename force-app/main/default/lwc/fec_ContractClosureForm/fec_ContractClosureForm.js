@@ -6,6 +6,7 @@ import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_MSG_ContractClosure_Required_Fields from '@salesforce/label/c.FEC_MSG_ContractClosure_Required_Fields';
 import FEC_MSG_ContractClosure_Phone_Invalid from '@salesforce/label/c.FEC_MSG_ContractClosure_Phone_Invalid';
+import FEC_MSG_ContractClosure_Delivery_Invalid from '@salesforce/label/c.FEC_MSG_ContractClosure_Delivery_Invalid';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
 import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
 import FEC_LBL_Province_City from '@salesforce/label/c.FEC_LBL_Province_City';
@@ -61,6 +62,12 @@ const CC_MSG_LOAD_FAILED = 'Load failed';
 
 export default class Fec_ContractClosureForm extends LightningElement {
     @api recordId;
+    /** Từ cha (vd. fec_CaseBussiness lwc:component is-edit). undefined = hiển thị như cũ (Record Page). */
+    @api isEdit;
+
+    get isContractClosureVisible() {
+        return this.isEdit !== false;
+    }
 
     loading = true;
     loadError;
@@ -144,7 +151,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
     /** Thông báo validate / toast — đồng bộ Custom Label, dễ tra trong template. */
     validationLabels = {
         requiredFields: FEC_MSG_ContractClosure_Required_Fields,
-        phoneInvalid: FEC_MSG_ContractClosure_Phone_Invalid
+        phoneInvalid: FEC_MSG_ContractClosure_Phone_Invalid,
+        deliveryRequired: FEC_MSG_ContractClosure_Delivery_Invalid
     };
 
     resolvedEmailValue;
@@ -549,10 +557,39 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     assertDeliveryPicklistValid() {
         const el = this.template.querySelector('[data-fec-field="deliveryPicklist"]');
-        if (!el) {
+        let ok = true;
+        if (el && typeof el.checkValidity === 'function') {
+            ok = el.checkValidity();
+        } else {
+            ok =
+                this.deliveryEmailSelected === true ||
+                this.deliveryAddressSelected === true ||
+                this.deliveryOfficeSelected === true;
+        }
+        if (!ok && this.isContractClosureVisible) {
+            this.showToast(this.customLabel.errorTitle, this.validationLabels.deliveryRequired, 'error');
+        }
+        return ok;
+    }
+
+    @api
+    validateForSubmit() {
+        if (!this.isContractClosureVisible) {
             return true;
         }
-        return el.checkValidity();
+        if (this.loading === true) {
+            return true;
+        }
+        if (this.loadError) {
+            return false;
+        }
+        if (!this.assertDeliveryPicklistValid()) {
+            return false;
+        }
+        if (!this.assertRecipientPhoneInputValid()) {
+            return false;
+        }
+        return true;
     }
 
     ensureSelectedComboboxOption(optionRows, selectedValue, selectedLabel) {
@@ -792,6 +829,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     async validateBeforeComplete() {
         this.showValidateBanner = false;
         this.lastValidationMessages = [];
+        if (!this.isContractClosureVisible) {
+            return { valid: true, messages: [] };
+        }
         if (!this.assertDeliveryPicklistValid()) {
             return { valid: false, messages: [] };
         }
@@ -819,6 +859,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     @api
     async saveToCase() {
+        if (!this.isContractClosureVisible) {
+            return { valid: true, messages: [] };
+        }
         if (!this.assertDeliveryPicklistValid()) {
             return { valid: false, messages: [] };
         }
