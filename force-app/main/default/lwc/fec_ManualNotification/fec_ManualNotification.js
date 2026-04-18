@@ -2,6 +2,7 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
 import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
+import CASE_NOTIFICATION from '@salesforce/messageChannel/FEC_Case_Notification__c';
 import getCase from '@salesforce/apex/FEC_CaseEditNOCController.getCase';
 import { VIEW_MODE_HANDLING } from 'c/fec_CommonConst';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -68,7 +69,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     messageContext;
     
     subscriptionMode = null;
-    subscriptionNOC = null;
+    //subscriptionNOC = null;
     
     @track modeEditCase = false;
     @track isSubmited = true;
@@ -78,6 +79,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track categoryId = null;
     @track subCategoryId = null;
     @track subCodeId = null;
+    @track stageId = null;
     @track isDropdownOpen = false;
     @track isSearching = false;
     @track userSearchResults = [];
@@ -119,8 +121,13 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         unsubscribe(this.subscriptionMode);
         this.subscriptionMode = null;
 
-        unsubscribe(this.subscriptionNOC);
-        this.subscriptionNOC = null;
+        // unsubscribe(this.subscriptionNOC);
+        // this.subscriptionNOC = null;
+
+        if (this.subscriptionCaseNotif) {
+            unsubscribe(this.subscriptionCaseNotif);
+            this.subscriptionCaseNotif = null;
+        }
     }
 
     subscribeToMessageChannel() {
@@ -131,10 +138,17 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             { scope: APPLICATION_SCOPE }
         );
 
-        this.subscriptionNOC = subscribe(
+        // this.subscriptionNOC = subscribe(
+        //     this.messageContext,
+        //     CASE_NOC,
+        //     (message) => this.handleNOCMessage(message),
+        //     { scope: APPLICATION_SCOPE }
+        // );
+
+        this.subscriptionCaseNotif = subscribe(
             this.messageContext,
-            CASE_NOC,
-            (message) => this.handleNOCMessage(message),
+            CASE_NOTIFICATION,
+            (message) => this.handleCaseNotifMessage(message),
             { scope: APPLICATION_SCOPE }
         );
     }
@@ -144,12 +158,14 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         this.modeEditCase = message.isModeEdit === true;
     }
 
-    handleNOCMessage(message) {
+
+    handleCaseNotifMessage(message) {
         if (!message) return;
         this.productTypeId = message?.productTypeId;
         this.categoryId = message?.categoryId;
         this.subCategoryId = message?.subCategoryId;
         this.subCodeId = message?.subCodeId;
+        this.stageId = message?.stageId;
         this.fetchNotifications();
     }
 
@@ -161,7 +177,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 productTypeId: this.productTypeId, 
                 categoryId: this.categoryId, 
                 subCategoryId: this.subCategoryId, 
-                subCodeId: this.subCodeId 
+                subCodeId: this.subCodeId,
+                stageId: this.stageId
             });
             console.log('--- [fetchNotifications] data: ' + JSON.stringify(data));
             this.rawNotifications = data;

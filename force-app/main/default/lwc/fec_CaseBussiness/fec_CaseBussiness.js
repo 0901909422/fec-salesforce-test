@@ -62,6 +62,7 @@ import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
+import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
@@ -1125,7 +1126,13 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.handleGetCardStatus();
         }
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
-
+        publish(this.messageContext, CASE_NOTIFICATION, {
+            productTypeId: productTypeId,
+            categoryId: categoryId,
+            subCategoryId: subCategoryId,
+            subCodeId: subCodeId,
+            stageId: res.stage
+        });
       })
       .catch((err) => {
         console.error(

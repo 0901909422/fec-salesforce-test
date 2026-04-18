@@ -882,6 +882,7 @@
 
 	<types>
 		<members>FEC_PinReset</members>
+		<members>FEC_Case_Notification</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>

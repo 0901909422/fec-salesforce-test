@@ -205,7 +205,7 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<Map<String, String>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId) {
+    public static List<Map<String, String>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId, String stageId) {
         // System.debug('--- [getAvailableNotifications] caseId: ' + caseId);
         // System.debug('--- [getAvailableNotifications] productTypeId: ' + productTypeId);
         // System.debug('--- [getAvailableNotifications] categoryId: ' + categoryId);
@@ -226,7 +226,6 @@ public without sharing class FEC_Notification {
         String targetEmail = getTargetEmailFromCase(currentCase);
         String caseCustomerType = currentCase.FEC_Customer_Type__c;
         // 3. Query Notification satisfying conditions
-        String currentStage = currentCase.FEC_Current_Case_Stage__c;
         String emailChannel = FEC_ConstantCommon.EMAIL;
         
         // System.debug('--- [getAvailableNotifications] currentStage: ' + currentStage);
@@ -239,8 +238,8 @@ public without sharing class FEC_Notification {
                        'WHERE FEC_Notification_Status__c = true ' +
                        'AND FEC_Notification_Channel__r.Name = :emailChannel';
         
-        if (String.isNotBlank(currentStage)) {
-            query += ' AND FEC_Case_Stage__c = :currentStage';
+        if (String.isNotBlank(stageId)) {
+            query += ' AND FEC_Case_Stage__c = :stageId';
         }         
         if (String.isNotBlank(productTypeId)) {
             query += ' AND FEC_Product_Type__c = :productTypeId';
