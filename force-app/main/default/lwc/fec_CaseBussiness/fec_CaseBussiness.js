@@ -1108,9 +1108,13 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // show button process action with process Block Card and PIN Reissue
+        // PhuongNT add show button process action with process Block Card and PIN Reissue
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
           this.showProcessAction = true;
+        }
+        // PhuongNT add show button process action with process Card Replacement
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+          this.handleCheckProcessAction();
         }
 
         const actions = this.business.routingActionlst || [];
@@ -2371,6 +2375,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             this.processActionMethod === ACTION_ADDRESS_UPDATE ||
             msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS
           ) {
+          if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
             this._refreshFecUpdateAddressAfterProcessSuccess();
           }
 
@@ -2384,6 +2389,10 @@ export default class Fec_CaseBussiness extends LightningElement {
             if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
               this._revertFecUpdateAddressAfterProcessFailure();
             }
+          }
+          // thangtv send message re-isuse pin error to NOC component
+          if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              this.publishPinReissueResult("ERROR",msgError);
           }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
@@ -2780,6 +2789,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
   }
+
   // PhuongNT add get current card status for Card Block/Unblock
   async handleGetCardStatus() {
     const result = await getCardStatus({ recordId: this.recordId });
@@ -2817,5 +2827,15 @@ export default class Fec_CaseBussiness extends LightningElement {
     .catch((error) => {
       console.log(error);
     });
+  }
+  // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
+  async publishPinReissueResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
   }
 }

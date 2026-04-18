@@ -1301,6 +1301,7 @@
 		<members>FEC_Additional_Info__c</members>
 		<members>FEC_System_Config__c</members>
 		<members>FEC_Log__c</members>
+		<members>FEC_Customer_History__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1322,6 +1323,7 @@
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Address_Type__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
@@ -1379,6 +1381,8 @@
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
 		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
+		<members>FEC_CardReplacementAddressController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1570,6 +1574,12 @@
 		<members>FEC_RESET_PIN_SUCCESS</members>
         <members>FEC_RESET_PIN_ERROR</members>
         <members>FEC_RESET_PIN_FAILED</members>
+		<members>FEC_ACTION_CARD_REPLACEMENT_HEADER</members>
+		<members>FEC_MSG_ACTION_CARD_REPLACEMENT</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1596,6 +1606,8 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_Modal</members>
+		<members>fec_CardReplacementAddress</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1704,6 +1716,11 @@
 		<members>FEC_PSG_RD_Telesales_User_1</members>
 		<members>FEC_PSG_RD_Telesales_User_2</members>
 		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>FEC_PinReset</members>
+		<members>FEC_PinReissue</members>
+		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
 </Package>
