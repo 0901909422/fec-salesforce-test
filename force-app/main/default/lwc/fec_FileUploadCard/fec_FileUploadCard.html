@@ -1,0 +1,98 @@
+<template>
+  <div class="fec-card">
+    <div class="fec-card__header">
+      <div class="fec-card__title-group">
+        <span class="fec-card__title-icon" aria-hidden="true">
+          <lightning-icon
+            icon-name="doctype:attachment"
+            size="x-small"
+            alternative-text="Files"
+          ></lightning-icon>
+        </span>
+        <span class="fec-card__title">{titleLabel}</span>
+      </div>
+      <button
+        type="button"
+        class="fec-pill-btn"
+        aria-label="Add files"
+        onclick={handleAddFilesClick}
+        disabled={disabled}
+      >
+        Add Files
+      </button>
+    </div>
+
+    <template lwc:if={multiple}>
+      <input
+        type="file"
+        class="fec-file-input"
+        data-id="file-input"
+        aria-label="Choose files to upload"
+        accept={inputAccept}
+        multiple
+        onchange={handleInputChange}
+        disabled={disabled}
+      />
+    </template>
+    <template lwc:else>
+      <input
+        type="file"
+        class="fec-file-input"
+        data-id="file-input"
+        aria-label="Choose file to upload"
+        accept={inputAccept}
+        onchange={handleInputChange}
+        disabled={disabled}
+      />
+    </template>
+
+    <div
+      class={dropZoneClass}
+      ondragenter={handleDragEnter}
+      ondragleave={handleDragLeave}
+      ondragover={handleDragOver}
+      ondrop={handleDrop}
+    >
+      <button
+        type="button"
+        class="fec-pill-btn fec-pill-btn_primary"
+        aria-label="Upload files"
+        onclick={handleUploadClick}
+        disabled={disabled}
+      >
+        <lightning-icon
+          class="fec-upload-icon"
+          icon-name="utility:upload"
+          size="x-small"
+          alternative-text="Upload"
+        ></lightning-icon>
+        <span>Upload Files</span>
+      </button>
+      <p class="fec-drop-hint">Or drop files</p>
+    </div>
+
+    <template lwc:if={fileCount}>
+      <ul class="fec-file-list">
+        <template for:each={fileRows} for:item="row">
+          <li key={row.id} class="fec-file-list__item">
+            <span class="fec-file-list__name" title={row.file.name}>{row.file.name}</span>
+            <button
+              type="button"
+              class="fec-file-list__remove"
+              data-index={row.index}
+              onclick={handleRemoveFile}
+              disabled={disabled}
+              title="Remove"
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                size="xx-small"
+                alternative-text="Remove"
+              ></lightning-icon>
+            </button>
+          </li>
+        </template>
+      </ul>
+    </template>
+  </div>
+</template>
