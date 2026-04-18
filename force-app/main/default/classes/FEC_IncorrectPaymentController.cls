@@ -3,7 +3,7 @@
  * Description  : Controller for Incorrect Payment Handling LWC - GetLoanSecInfo (PaymentHistories), subcode config, save adjustments.
  ****************************************************************************************/
 
-public with sharing class FEC_IncorrectPaymentController {
+public without sharing class FEC_IncorrectPaymentController {
     public class PaymentDTO {
         @AuraEnabled public String id;
         @AuraEnabled public String paymentNo;

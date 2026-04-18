@@ -3,7 +3,7 @@
  * Description  : Controller for IPP Closure. Eligible IPPs for selection exclude Pending- cases on other records; if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
  ****************************************************************************************/
 
-public with sharing class FEC_IPPClosureController {
+public without sharing class FEC_IPPClosureController {
 
     public class IPPClosureDTO {
         @AuraEnabled public String Id;
