@@ -1719,6 +1719,7 @@
 	</types>
 	<types>
 		<members>FEC_PinReset</members>
+		<members>FEC_PinReissue</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
