@@ -46,6 +46,10 @@
   color: #00cc00;
 }
 
+.process-action-result--info {
+  color: #0000ff;
+}
+
 .t-a-c {
   text-align: center;
 }
