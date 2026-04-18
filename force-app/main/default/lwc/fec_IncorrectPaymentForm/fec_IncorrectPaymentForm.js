@@ -796,9 +796,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunIncorrectPaymentSave()) {
-            return true;
-        }
+        // Submit always validates; _shouldRunIncorrectPaymentSave is only for skipping Apex on empty section.
         const ctx = this._performClientSaveValidation();
         return ctx !== false;
     }
