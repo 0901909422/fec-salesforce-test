@@ -123,13 +123,8 @@ export default class Fec_UpdateAddress extends LightningElement {
         this._isEditRaw = value;
     }
 
-    /**
-     * Luôn cho phép edit (hiện icon bút chì, handler, Add New Address).
-     * fec_UpdateAddress tự quản lý quyền edit nội bộ; isEdit từ parent chỉ
-     * dùng cho field-level readonly, không dùng để ẩn pencil icon.
-     */
     get canEdit() {
-        return true;
+        return this._isEditRaw === true || this._isEditRaw === 'true';
     }
 
     /**
@@ -629,7 +624,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get addNewAddressDisabled() {
-        return this.isLoading || this.hasAllStandardAddressTypes;
+        return this.isLoading || this.hasAllStandardAddressTypes || !this.canEdit;
     }
 
     formatAddress(addr) {
