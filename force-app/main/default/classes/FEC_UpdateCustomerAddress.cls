@@ -266,6 +266,25 @@ public with sharing class FEC_UpdateCustomerAddress {
 
     if (result != null && result.success == true) {
       selectedCase.FEC_Process_Action_Count__c = -1;
+
+      // Sync FEC_Mailing_Address__c trong FEC_Address_Info__c dựa trên isMailingAddress trong pending JSON
+      // vì API GetAddressesList không trả cờ mailing, nên phải sync trước khi xóa pending fields
+      String selectedMailingSfType = null;
+      for (String sfType : pendingFieldBySfType.keySet()) {
+        String pendingJson = pendingFieldBySfType.get(sfType);
+        if (String.isBlank(pendingJson)) continue;
+        try {
+          Map<String, Object> d = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
+          if ('Y'.equals((String) d.get('isMailingAddress'))) {
+            selectedMailingSfType = sfType;
+            break;
+          }
+        } catch (Exception ex) {
+          System.debug('### syncMailing parse error: ' + ex.getMessage());
+        }
+      }
+      FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);
+
       selectedCase.FEC_Updated_Info_Permanent_Address__c = null;
       selectedCase.FEC_Updated_Info_Office_Address__c    = null;
       selectedCase.FEC_Updated_Info_Current_Address__c   = null;
