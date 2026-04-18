@@ -2316,9 +2316,11 @@ public without sharing class FEC_CaseBusinessService {
     String caseStageName
   ) {
     String lwcNm = (String) masterDataItem.get('FEC_LWC_Name__c');
+
     // Tam thoi: khong ep dynLwcStgReadOnly theo ten stage (DB da cau hinh).
     // Boolean dynLwcStgReadOnly = isCaseStageNameForcingDynLwcReadonly(caseStageName);
     Boolean dynLwcStgReadOnly = false;
+
     Boolean isReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
     Boolean isEditable = (Boolean) masterDataItem.get('FEC_Field_Editable__c');
     String editableGr = (String) masterDataItem.get('FEC_Editable_User_Group__c');

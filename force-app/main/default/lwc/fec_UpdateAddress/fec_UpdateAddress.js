@@ -10,6 +10,7 @@ import getMailingAddressUpdateContext from '@salesforce/apex/FEC_MainInfoControl
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
 import run from '@salesforce/apex/FEC_CaseBusinessService.run';
+import savePendingAddress from '@salesforce/apex/FEC_MainInfoController.savePendingAddress';
 
 import FEC_Permanent_Address from '@salesforce/label/c.FEC_Permanent_Address';
 import FEC_Office_Address from '@salesforce/label/c.FEC_Office_Address';
@@ -100,12 +101,31 @@ export default class Fec_UpdateAddress extends LightningElement {
         return this._recordId;
     }
     set recordId(value) {
-        this._recordId = value;
+        const prev = this._recordId;
+        const next =
+            value === null || value === undefined || value === ''
+                ? undefined
+                : value;
+        if (
+            prev &&
+            next &&
+            String(prev) !== String(next)
+        ) {
+            this.clearPendingAddressPayloads();
+        }
+        this._recordId = next;
         this._triggerLoadAfterCaseIdChange();
     }
 
-    // is-edit từ fec_CaseBussiness (giống fec_IPPClosureForm: không khởi tạo boolean @api)
-    @api isEdit;
+    _isEditRaw;
+    @api get isEdit() { return this._isEditRaw; }
+    set isEdit(value) {
+        this._isEditRaw = value;
+    }
+
+    get canEdit() {
+        return this._isEditRaw === true || this._isEditRaw === 'true';
+    }
 
     /**
      * Gọi từ fec_CaseBussiness khi Process Action "Update customer info" thất bại
@@ -168,6 +188,14 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (next === this._caseIdFromPage) {
             return;
         }
+        const prevPage = this._caseIdFromPage;
+        if (
+            prevPage &&
+            next &&
+            String(prevPage) !== String(next)
+        ) {
+            this.clearPendingAddressPayloads();
+        }
         this._caseIdFromPage = next;
         this._triggerLoadAfterCaseIdChange();
     }
@@ -187,7 +215,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (rid) {
             this.originalAddressesSnapshot = undefined;
             this.originalSnapshotInitialized = false;
-            this.clearPendingAddressPayloads();
             this.loadAddressData();
         } else {
             this.isLoading = false;
@@ -239,8 +266,10 @@ export default class Fec_UpdateAddress extends LightningElement {
     @track newAddrIsMailing = false;
 
     _lastFetchKey = 'fec-update-address-unset';
-    /** Payload pending: chỉ submit API khi user bấm Process Action. */
+    /** Payload pending: chỉ submit API khi user bấm Process Action / Submit Case. */
     _pendingAddressUpdateMap = {};
+    /** Flag: có dữ liệu địa chỉ pending đang được lưu trên Case DB (Case.FEC_Updated_Info_*_Address__c). */
+    _hasPendingDbDraft = false;
 
     labels = {
         mailingAddress: FEC_LBL_ContractClosure_Mailing_Address_Col,
@@ -305,6 +334,11 @@ export default class Fec_UpdateAddress extends LightningElement {
                 this.mainInfoData = data;
                 this.loadError = undefined;
                 this.syncMailingSelectionFromData();
+                this._hasPendingDbDraft = !!(
+                    data?.pendingPermanentAddressJson ||
+                    data?.pendingOfficeAddressJson ||
+                    data?.pendingCurrentAddressJson
+                );
 
                 if (!this.originalSnapshotInitialized) {
                     this.originalAddressesSnapshot = cloneAddressesSnapshot(
@@ -312,6 +346,11 @@ export default class Fec_UpdateAddress extends LightningElement {
                     );
                     this.originalSnapshotInitialized = true;
                 }
+
+                if (this._hasPendingDbDraft) {
+                    this._applyPendingAddressTextsToDisplay(data);
+                }
+
                 this.preloadProvinceOptions();
             })
             .catch((err) => {
@@ -321,6 +360,57 @@ export default class Fec_UpdateAddress extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
+    }
+
+    /**
+     * Sau khi loadMainInfo trả về dữ liệu, mainInfoData.addresses vẫn chứa dữ liệu cũ
+     * từ FEC_Full_Address__c (CIF cache). Nếu Case có pending address JSON đã được save
+     * vào FEC_Updated_Info_*_Address__c, parse và cập nhật address text lẫn mailingAddress
+     * tương ứng trong mainInfoData.addresses để cột "Updated Information" hiển thị đúng.
+     * Sau khi áp dụng, gọi lại syncMailingSelectionFromData để cập nhật trạng thái checkbox.
+     */
+    _applyPendingAddressTextsToDisplay(data) {
+        const pendingEntries = [
+            { json: data?.pendingPermanentAddressJson, sfType: TYPE_PERMANENT },
+            { json: data?.pendingOfficeAddressJson,    sfType: TYPE_OFFICE    },
+            { json: data?.pendingCurrentAddressJson,   sfType: TYPE_CURRENT   }
+        ];
+        const addresses = Array.isArray(this.mainInfoData?.addresses)
+            ? this.mainInfoData.addresses.map((a) => ({ ...a }))
+            : [];
+        let dirty = false;
+        for (const { json, sfType } of pendingEntries) {
+            if (!json) {
+                continue;
+            }
+            let p;
+            try {
+                p = JSON.parse(json);
+            } catch (e) {
+                continue;
+            }
+            if (!p) {
+                continue;
+            }
+            const composed = this.composeAddressText(
+                p.building, p.number_x, p.street, p.ward, p.city
+            );
+            if (!composed) {
+                continue;
+            }
+            const mailingFlag = p.isMailingAddress === 'Y' ? 'Y' : '';
+            const idx = addresses.findIndex((a) => a && a.addressType === sfType);
+            if (idx >= 0) {
+                addresses[idx] = { ...addresses[idx], address: composed, mailingAddress: mailingFlag };
+            } else {
+                addresses.push({ addressType: sfType, address: composed, mailingAddress: mailingFlag });
+            }
+            dirty = true;
+        }
+        if (dirty) {
+            this.mainInfoData = { ...(this.mainInfoData || {}), addresses };
+            this.syncMailingSelectionFromData();
+        }
     }
 
     get isLoaded() {
@@ -352,11 +442,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get mailingRadiosDisabled() {
-        return (
-            this.isEdit === false ||
-            this.mailingSaveLoading ||
-            this.isLoading
-        );
+        return this.mailingSaveLoading || this.isLoading;
     }
 
     /**
@@ -404,7 +490,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get mailingSaveButtonDisabled() {
-        return this.mailingSaveOrFormBusy || this.isEdit === false;
+        return this.mailingSaveOrFormBusy;
     }
 
     get newAddressTypeOptions() {
@@ -426,7 +512,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get newAddressSubmitDisabled() {
-        return this.newAddressFormBusy || this.isEdit === false;
+        return this.newAddressFormBusy;
     }
 
     /** Chỉ cho sửa một dòng; ẩn tương tác bút chì dòng còn lại khi đang edit. */
@@ -540,11 +626,7 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     get addNewAddressDisabled() {
-        return (
-            this.isEdit === false ||
-            this.isLoading ||
-            this.hasAllStandardAddressTypes
-        );
+        return this.isLoading || this.hasAllStandardAddressTypes || !this.canEdit;
     }
 
     formatAddress(addr) {
@@ -682,6 +764,18 @@ export default class Fec_UpdateAddress extends LightningElement {
         return {
             caseId: this.resolvedCaseId,
             sfAddressType,
+            cifNumber:
+                ctx.cifNumber != null && String(ctx.cifNumber).trim() !== ''
+                    ? String(ctx.cifNumber).trim()
+                    : '',
+            addressId:
+                ctx.addressId != null && String(ctx.addressId).trim() !== ''
+                    ? String(ctx.addressId).trim()
+                    : '',
+            addressType:
+                ctx.addressType != null && String(ctx.addressType).trim() !== ''
+                    ? String(ctx.addressType).trim()
+                    : '',
             number_x: ctx.number_x || '',
             building: ctx.building || '',
             street: ctx.street || '',
@@ -722,22 +816,11 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     hasPendingAddressUpdates() {
-        return Object.keys(this._pendingAddressUpdateMap || {}).length > 0;
-    }
-
-    getPendingAddressPayloadsInOrder() {
-        const map = this._pendingAddressUpdateMap || {};
-        const order = [TYPE_PERMANENT, TYPE_OFFICE, TYPE_CURRENT];
-        const payloads = [];
-        order.forEach((sfType) => {
-            if (map[sfType]) {
-                payloads.push(map[sfType]);
-            }
-        });
-        return payloads;
+        return this._hasPendingDbDraft;
     }
 
     clearPendingAddressPayloads() {
+        this._hasPendingDbDraft = false;
         this._pendingAddressUpdateMap = {};
     }
 
@@ -781,34 +864,6 @@ export default class Fec_UpdateAddress extends LightningElement {
         this.mailingSelectedRow = finalSelectedRow;
     }
 
-    /** Gọi Apex bằng tham số primitive — tránh deserialize object lồng thành rỗng. */
-    callUpdateCustomerAddress(info) {
-        const x = info || {};
-        const params = {
-            caseId: x.caseId != null ? String(x.caseId) : '',
-            sfAddressType: x.sfAddressType ?? '',
-            cifNumber: x.cifNumber ?? '',
-            addressId: x.addressId ?? '',
-            addressType: x.addressType ?? '',
-            number_x: x.number_x ?? '',
-            building: x.building ?? '',
-            street: x.street ?? '',
-            ward: x.ward ?? '',
-            city: x.city ?? '',
-            propertyStatus: x.propertyStatus ?? '',
-            years: x.years ?? '',
-            months: x.months ?? '',
-            isMailingAddress: x.isMailingAddress ?? '',
-            isPrimary: x.isPrimary ?? '',
-            receiveStatement: x.receiveStatement ?? '',
-            cardDelivery: x.cardDelivery ?? ''
-        };
-        return run({
-            method: ACTION_ADDRESS_UPDATE,
-            params
-        });
-    }
-
     /**
      * Chỉ được gọi khi user bấm Process Action.
      * Lúc này mới thực hiện API update địa chỉ theo các payload đã Save tạm trên UI.
@@ -818,21 +873,18 @@ export default class Fec_UpdateAddress extends LightningElement {
         if (!this.hasPendingAddressUpdates()) {
             return {
                 success: false,
+                actionCount: 0,
                 errorMessage: LBL_Error
             };
         }
-        const payloads = this.getPendingAddressPayloadsInOrder();
-        let lastResult = null;
-        for (const payload of payloads) {
-            // eslint-disable-next-line no-await-in-loop
-            const res = await this.callUpdateCustomerAddress(payload);
-            lastResult = res;
-            if (!res?.success) {
-                return res;
-            }
+        const res = await run({
+            method: ACTION_ADDRESS_UPDATE,
+            params: { caseId: this.resolvedCaseId }
+        });
+        if (res?.success) {
+            this._hasPendingDbDraft = false;
         }
-        this.clearPendingAddressPayloads();
-        return lastResult || { success: true };
+        return res || { success: false };
     }
 
     sfTypeFromRow(row) {
@@ -892,11 +944,8 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     handleEditMailing(event) {
-        if (this.isEdit === false) {
-            return;
-        }
         const row = event.currentTarget.dataset.row;
-        if (!this.resolvedCaseId || !row) {
+        if (!this.resolvedCaseId || !row || !this.canEdit) {
             return;
         }
         this.mailingEditRow = row;
@@ -1068,9 +1117,6 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     async handleSaveMailing() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (this.mailingSaveLoading) {
             return;
         }
@@ -1090,6 +1136,18 @@ export default class Fec_UpdateAddress extends LightningElement {
             const primaryInfo = {
                 caseId: this.resolvedCaseId,
                 sfAddressType: primarySfAddressType,
+                cifNumber:
+                    this.mailingCifNumber != null
+                        ? String(this.mailingCifNumber).trim()
+                        : '',
+                addressId:
+                    this.mailingAddressId != null
+                        ? String(this.mailingAddressId).trim()
+                        : '',
+                addressType:
+                    this.mailingAddressTypeApi != null
+                        ? String(this.mailingAddressTypeApi).trim()
+                        : '',
                 number_x: this.mailingNumber,
                 building: this.mailingBuilding,
                 street: this.mailingStreet,
@@ -1098,7 +1156,13 @@ export default class Fec_UpdateAddress extends LightningElement {
                 isMailingAddress:
                     selectedRow === row ? 'Y' : 'N'
             };
-            this.queuePendingAddressPayload(primaryInfo);
+            // eslint-disable-next-line no-await-in-loop
+            await savePendingAddress({
+                caseId: this.resolvedCaseId,
+                sfAddressType: primarySfAddressType,
+                jsonPayload: JSON.stringify(primaryInfo)
+            });
+            this._hasPendingDbDraft = true;
 
             const allRows = [
                 { row: ROW_PERMANENT, sf: TYPE_PERMANENT },
@@ -1126,7 +1190,12 @@ export default class Fec_UpdateAddress extends LightningElement {
                     sf,
                     desiredYn
                 );
-                this.queuePendingAddressPayload(infoOther);
+                // eslint-disable-next-line no-await-in-loop
+                await savePendingAddress({
+                    caseId: this.resolvedCaseId,
+                    sfAddressType: sf,
+                    jsonPayload: JSON.stringify(infoOther)
+                });
             }
 
             const composedAddress = this.composeAddressText(
@@ -1177,14 +1246,11 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     handleAddNewAddress() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (!this.resolvedCaseId) {
             this.showToast(LBL_Error, LBL_Error, 'error');
             return;
         }
-        if (this.hasAllStandardAddressTypes) {
+        if (this.hasAllStandardAddressTypes || !this.canEdit) {
             return;
         }
         this.resetNewAddressForm();
@@ -1292,9 +1358,6 @@ export default class Fec_UpdateAddress extends LightningElement {
     }
 
     async handleSaveNewAddress() {
-        if (this.isEdit === false) {
-            return;
-        }
         if (this.newAddressSaveLoading) {
             return;
         }
