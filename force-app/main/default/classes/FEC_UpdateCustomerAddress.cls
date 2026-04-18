@@ -128,7 +128,7 @@ public with sharing class FEC_UpdateCustomerAddress {
 
   /**
    * Giống updateCustomerAddress; tham số primitive để LWC deserialize.
-   * cifNumber/addressId/addressType lấy trực tiếp từ JSON pending — không fallback sang API.
+   * Thiếu CIF/AddressId/AddressType có thể merge từ getMailingAddressUpdateContext (caseId + sfAddressType).
    */
   public static UpdateResult updateCustomerAddressParams(
     String caseId,
@@ -149,10 +149,39 @@ public with sharing class FEC_UpdateCustomerAddress {
     String receiveStatement,
     String cardDelivery
   ) {
+    String cif = cifNumber;
+    String addrId = addressId;
+    String addrType = addressType;
+    Boolean needMerge = String.isBlank(cif) || String.isBlank(addrId) || String.isBlank(addrType);
+    Id caseIdVal;
+    if (String.isNotBlank(caseId)) {
+      try {
+        caseIdVal = Id.valueOf(caseId.trim());
+      } catch (Exception e) {
+        caseIdVal = null;
+      }
+    }
+    if (needMerge && caseIdVal != null && String.isNotBlank(sfAddressType)) {
+      FEC_MainInfoController.MailingAddressContextDTO ctx = FEC_MainInfoController.getMailingAddressUpdateContext(
+        caseIdVal,
+        sfAddressType
+      );
+      if (ctx != null && ctx.found == true) {
+        if (String.isBlank(cif)) {
+          cif = ctx.cifNumber;
+        }
+        if (String.isBlank(addrId)) {
+          addrId = ctx.addressId;
+        }
+        if (String.isBlank(addrType)) {
+          addrType = ctx.addressType;
+        }
+      }
+    }
     CustomerAddressInfo info = new CustomerAddressInfo();
-    info.cifNumber = cifNumber;
-    info.addressId = addressId;
-    info.addressType = addressType;
+    info.cifNumber = cif;
+    info.addressId = addrId;
+    info.addressType = addrType;
     info.number_x = number_x;
     info.building = building;
     info.street = street;
