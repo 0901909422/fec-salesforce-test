@@ -1608,6 +1608,7 @@
 		<members>maskedToggleCell</members>
 		<members>fec_Modal</members>
 		<members>fec_CardReplacementAddress</members>
+		<members>fec_MultiPicklistInput</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
