@@ -8,6 +8,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPaymentHistoryFromSOAP from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP';
 import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.getSubCodeConfig';
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
+import getCorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getCorrectContractOptions';
 import getPaymentMethodOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentMethodOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
 import saveAdjustmentDraft from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustmentDraft';
@@ -92,6 +93,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
+    @track correctContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = CONST.EMPTY;
     _pendingSelectedPaymentId = null;
@@ -229,7 +231,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get correctContractOptions() {
-        return this.incorrectContractOptionlst || [];
+        return this.correctContractOptionlst || [];
     }
 
     connectedCallback() {
@@ -354,13 +356,19 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     this.manualBillAmount = null;
                 }
                 
-                // Load contract options
-                const contractPromise = getIncorrectContractOptions({ caseId: this.recordId })
+                const incorrectContractPromise = getIncorrectContractOptions({ caseId: this.recordId })
                     .then((contractOpts) => {
                         this.incorrectContractOptionlst = contractOpts || [];
                     })
                     .catch(() => {
                         this.incorrectContractOptionlst = [];
+                    });
+                const correctContractPromise = getCorrectContractOptions()
+                    .then((pickOpts) => {
+                        this.correctContractOptionlst = pickOpts || [];
+                    })
+                    .catch(() => {
+                        this.correctContractOptionlst = [];
                     });
                 
                 // Load payment method options
@@ -372,7 +380,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                         this.paymentMethodOptionlst = [];
                     });
                 
-                return Promise.all([contractPromise, paymentMethodPromise]);
+                return Promise.all([incorrectContractPromise, correctContractPromise, paymentMethodPromise]);
             })
             .then(() => {
                 this.applyLocalDraftIfAny();
@@ -385,6 +393,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.configLoaded = true;
                 this.subCode = CONST.EMPTY;
                 this.incorrectContractOptionlst = [];
+                this.correctContractOptionlst = [];
                 this.paymentMethodOptionlst = [];
             });
     }
