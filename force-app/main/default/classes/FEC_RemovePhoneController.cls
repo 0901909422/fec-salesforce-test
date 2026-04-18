@@ -1,4 +1,4 @@
-public with sharing class FEC_RemovePhoneController {
+public without sharing class FEC_RemovePhoneController {
 
     private static final Pattern PHONE_VALID_PATTERN = Pattern.compile(FEC_ConstantCommon.PATTERN_PHONE_NUMBER);
 

@@ -125,6 +125,7 @@ const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
+const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -211,5 +212,6 @@ export {
     ERROR_TILE_SHOWTOAST,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
-    MSG_ENTER_EMAIL_CORRECTLY
+    MSG_ENTER_EMAIL_CORRECTLY,
+    PROFILE_RELEVANT_DEPTS
 };

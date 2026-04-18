@@ -36,6 +36,8 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @track isBankManualInput = false;
     @track isBankBranchManualInput = false;
     @track isBusy = false;
+    shouldFocusBankManualInput = false;
+    shouldFocusBranchManualInput = false;
     customLabel = {
         beneficiaryName: FEC_LBL_Beneficiary_Name,
         beneficiaryAccount: FEC_LBL_Beneficiary_Account,
@@ -85,6 +87,23 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
 
     connectedCallback() {
         this._loadBeneficiaryFormDefaults();
+    }
+
+    renderedCallback() {
+        if (this.shouldFocusBankManualInput) {
+            this.shouldFocusBankManualInput = false;
+            const bankInput = this.template.querySelector('lightning-input[data-id="bank-manual-input"]');
+            if (bankInput && typeof bankInput.focus === "function") {
+                bankInput.focus();
+            }
+        }
+        if (this.shouldFocusBranchManualInput) {
+            this.shouldFocusBranchManualInput = false;
+            const branchInput = this.template.querySelector('lightning-input[data-id="branch-manual-input"]');
+            if (branchInput && typeof branchInput.focus === "function") {
+                branchInput.focus();
+            }
+        }
     }
 
     _loadBeneficiaryFormDefaults() {
@@ -230,7 +249,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return false;
         }
         const normalizedValue = toUpperNoVietnameseAccent(value).trim();
-        return (options || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim() === normalizedValue || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim() === normalizedValue));
+        return (options || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim().includes(normalizedValue) || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim().includes(normalizedValue)));
     }
 
     _syncBankInputMode() {
@@ -316,6 +335,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return;
         }
         this.isBankManualInput = true;
+        this.shouldFocusBankManualInput = true;
         this.bankComboValue = toUpperNoVietnameseAccent(inputValue);
         this.bankBranch = STR_EMPTY;
         this.isBankBranchManualInput = false;
@@ -332,6 +352,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return;
         }
         this.isBankBranchManualInput = true;
+        this.shouldFocusBranchManualInput = true;
         this.bankBranch = toUpperNoVietnameseAccent(inputValue);
     }
 

@@ -39,23 +39,8 @@
   width: 2.5rem;
 }
 
-.fec-closure-form .fec-delivery-combo {
-  position: relative;
-  max-width: 100%;
-}
-
 .fec-closure-form .fec-delivery-field-slot {
   max-width: 24rem;
-}
-
-.fec-closure-form .fec-delivery-combobox-container {
-  max-width: 100%;
-}
-
-.fec-closure-form .fec-delivery-dropdown {
-  left: 50px;
-  right: auto;
-  max-width: 100%;
 }
 
 .fec-closure-form .btn-delete {

@@ -87,7 +87,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     selectedAddressRowId;
     addrRenderKey = 0;
 
-    deliveryDropdownOpen = false;
     addressSortAsc = true;
 
     temporaryAddressDisplay = STR_EMPTY;
@@ -153,62 +152,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     resolvedOfficeValue;
 
     addressTypeTemporaryLabel = CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY;
-
-    connectedCallback() {
-        this._onDocClickDelivery = this.onDocClickDelivery.bind(this);
-        document.addEventListener('click', this._onDocClickDelivery, false);
-    }
-
-    disconnectedCallback() {
-        document.removeEventListener('click', this._onDocClickDelivery, false);
-    }
-
-    onDocClickDelivery(event) {
-        if (!this.deliveryDropdownOpen) {
-            return;
-        }
-        const root = this.template.querySelector('[data-delivery-root]');
-        if (!root) {
-            this.deliveryDropdownOpen = false;
-            return;
-        }
-        const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-        const inside =
-            path.length > 0
-                ? path.some((el) => el && el.nodeType === 1 && root.contains(el))
-                : root.contains(event.target);
-        if (inside) {
-            return;
-        }
-        this.deliveryDropdownOpen = false;
-    }
-
-    toggleDeliveryDrop(event) {
-        if (event) {
-            event.stopPropagation();
-        }
-        this.deliveryDropdownOpen = !this.deliveryDropdownOpen;
-    }
-
-    get deliveryComboboxDivClass() {
-        const base =
-            'slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click fec-delivery-combo';
-        return this.deliveryDropdownOpen ? base + ' slds-is-open' : base;
-    }
-
-    get deliveryOptionDisplay() {
-        const parts = [];
-        if (this.deliveryEmailSelected) {
-            parts.push(this.labelEmail);
-        }
-        if (this.deliveryAddressSelected) {
-            parts.push(this.labelAddress);
-        }
-        if (this.deliveryOfficeSelected) {
-            parts.push(this.labelOffice);
-        }
-        return parts.join('; ');
-    }
 
     get emailRadioOptions() {
         const opts = [];
@@ -380,6 +323,60 @@ export default class Fec_ContractClosureForm extends LightningElement {
         });
     }
 
+    get deliveryPicklistOptions() {
+        const rows = [];
+        const ev = this.resolvedEmailValue;
+        const av = this.resolvedAddressValue;
+        const ov = this.resolvedOfficeValue;
+        if (ev) {
+            rows.push({ label: this.labelEmail, value: ev });
+        }
+        if (av) {
+            rows.push({ label: this.labelAddress, value: av });
+        }
+        if (ov) {
+            rows.push({ label: this.labelOffice, value: ov });
+        }
+        return rows;
+    }
+
+    get selectedDeliveryValues() {
+        const vals = [];
+        if (this.deliveryEmailSelected && this.resolvedEmailValue) {
+            vals.push(this.resolvedEmailValue);
+        }
+        if (this.deliveryAddressSelected && this.resolvedAddressValue) {
+            vals.push(this.resolvedAddressValue);
+        }
+        if (this.deliveryOfficeSelected && this.resolvedOfficeValue) {
+            vals.push(this.resolvedOfficeValue);
+        }
+        return vals;
+    }
+
+    handlePicklistChange(event) {
+        let ids = event.detail && event.detail.ids ? [...event.detail.ids] : [];
+        const av = this.resolvedAddressValue;
+        const ov = this.resolvedOfficeValue;
+        const hasA = av && ids.includes(av);
+        const hasO = ov && ids.includes(ov);
+        if (hasA && hasO) {
+            const hadA = this.deliveryAddressSelected;
+            const hadO = this.deliveryOfficeSelected;
+            if (hadA && !hadO) {
+                ids = ids.filter((v) => v !== av);
+            } else if (hadO && !hadA) {
+                ids = ids.filter((v) => v !== ov);
+            } else {
+                ids = ids.filter((v) => v !== ov);
+            }
+        }
+        const ev = this.resolvedEmailValue;
+        this.deliveryEmailSelected = !!(ev && ids.includes(ev));
+        this.deliveryAddressSelected = !!(av && ids.includes(av));
+        this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
+    }
+
     get labelEmail() {
         const o = this.pickDeliveryMeta('EMAIL');
         return o ? o.label : this.customLabel.emailLabel;
@@ -393,22 +390,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     get labelOffice() {
         const o = this.pickDeliveryMeta('OFFICE');
         return o ? o.label : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
-    }
-
-    get disableAddressCheckbox() {
-        return this.deliveryOfficeSelected === true;
-    }
-
-    get disableOfficeCheckbox() {
-        return this.deliveryAddressSelected === true;
-    }
-
-    get lockAddressCb() {
-        return this.disableAddressCheckbox;
-    }
-
-    get lockOfficeCb() {
-        return this.disableOfficeCheckbox;
     }
 
     get lockAddTempEmailBtn() {
@@ -499,26 +480,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
         return tempMail ? CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY : STR_EMPTY;
     }
 
-    handleToggleEmail(event) {
-        this.deliveryEmailSelected = event.target.checked;
-    }
-
-    handleToggleAddress(event) {
-        const checked = event.target.checked;
-        if (checked) {
-            this.deliveryOfficeSelected = false;
-        }
-        this.deliveryAddressSelected = checked;
-    }
-
-    handleToggleOffice(event) {
-        const checked = event.target.checked;
-        if (checked) {
-            this.deliveryAddressSelected = false;
-        }
-        this.deliveryOfficeSelected = checked;
-    }
-
     handleAddTempEmail() {
         this.useExistingEmail = false;
         this.showTempEmailRow = true;
@@ -584,6 +545,14 @@ export default class Fec_ContractClosureForm extends LightningElement {
             return false;
         }
         return true;
+    }
+
+    assertDeliveryPicklistValid() {
+        const el = this.template.querySelector('[data-fec-field="deliveryPicklist"]');
+        if (!el) {
+            return true;
+        }
+        return el.checkValidity();
     }
 
     ensureSelectedComboboxOption(optionRows, selectedValue, selectedLabel) {
@@ -823,6 +792,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     async validateBeforeComplete() {
         this.showValidateBanner = false;
         this.lastValidationMessages = [];
+        if (!this.assertDeliveryPicklistValid()) {
+            return { valid: false, messages: [] };
+        }
         if (!this.assertRecipientPhoneInputValid()) {
             return { valid: false, messages: [] };
         }
@@ -847,6 +819,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     @api
     async saveToCase() {
+        if (!this.assertDeliveryPicklistValid()) {
+            return { valid: false, messages: [] };
+        }
         if (!this.assertRecipientPhoneInputValid()) {
             return { valid: false, messages: [] };
         }
