@@ -84,10 +84,10 @@ public with sharing class FEC_CardLockUnLockController {
             String transId = FEC_CommonUltils.generateTransactionUUID();
             String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
             String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
-            String vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+            String vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA_CARD;
             String context = FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
             String signOnName = FEC_ConstantCommon.REQUESTOR_VMX_CONTEXT;
-            String org = FEC_ConstantCommon.REQUESTOR_CRM;
+            String org = FEC_ConstantCommon.REQUESTOR_ORG_EMEA_CARD;
             String accNumber = objCasse.FEC_Account_Number__c;
             String cusName = objCasse.FEC_Customer_Name__c;
             FEC_MCMSCARDTOCARDINQEMEA.ResponseWrapper res = FEC_MCMSCARDTOCARDINQEMEA.callService(
