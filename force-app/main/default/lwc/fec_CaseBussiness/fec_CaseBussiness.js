@@ -143,6 +143,8 @@ const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
 const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const OBJ_FEC_ADDITIONAL_INFO = "FEC_Additional_Info__c";
+const FIELD_FEC_REF_NUMBER = "FEC_REF_Number__c";
 const NATIONAL_ID_PASSPORT_FIELDS = new Set([
   FIELD_ORIGINAL_INFO_NATIONAL_ID,
   FIELD_UPDATED_INFO_NATIONAL_ID,
@@ -829,6 +831,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         const master =
           typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
         d.isEdit = this._isEdit && master;
+        console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", _isEdit=${this._isEdit}, master=${master}, finalIsEdit=${d.isEdit}`);
       });
     });
   }
@@ -1464,6 +1467,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       const idResult = validateIdNumber(value);
       field.customError =
         trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
+      field.editWrapperClass =
+        "edit slds-m-around--small slds-p-around--x-small" +
+        (field.customError ? " slds-has-error" : STR_EMPTY);
+      this.business = { ...this.business };
+    }
+    if (obj && obj.name === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER && field) {
+      const trimmed =
+        value == null || value === STR_EMPTY ? STR_EMPTY : String(value).trim();
+      field.customError =
+        trimmed === STR_EMPTY ? null : /^\d+$/.test(trimmed) ? null : FEC_MSG_Param_Must_Number.replace("{0}", field.label || FIELD_FEC_REF_NUMBER);
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);
