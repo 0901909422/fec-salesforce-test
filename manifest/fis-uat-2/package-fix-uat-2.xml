@@ -450,6 +450,8 @@
         <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
         <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
         <members>FEC_No_Permission_Msg</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
