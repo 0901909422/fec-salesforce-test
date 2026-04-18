@@ -182,6 +182,7 @@
 		<members>fec_MultiPicklistInput</members>
 		<members>fec_Modal</members>
 		<members>fec_CardReplacementAddress</members>
+		<members>fecInteractionCreationHighlight</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -448,6 +449,7 @@
         <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</members>
         <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
         <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
+        <members>FEC_No_Permission_Msg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -653,6 +655,7 @@
 		<members>FEC_Hold_Case_Config__c</members>
 		<members>FEC_Log__c</members>
 		<members>FEC_Customer_History__c</members>
+		<members>FEC_Outbound_Email_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>

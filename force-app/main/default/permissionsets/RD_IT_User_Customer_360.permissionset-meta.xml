@@ -1812,6 +1812,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+<<<<<<< force-app/main/default/permissionsets/RD_IT_User_Customer_360.permissionset-meta.xml
         <field>FEC_IPP__c.FEC_IPP_Closure_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2594,16 +2595,6 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_MRC__c</object>
-        <viewAllFields>false</viewAllFields>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
         <object>FEC_Other_Card__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
@@ -2698,10 +2689,6 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Asset__c</tab>
-        <visibility>Visible</visibility>
-    </tabSettings>
-    <tabSettings>
-        <tab>FEC_MRC__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
