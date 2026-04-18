@@ -1574,6 +1574,10 @@
 		<members>FEC_RESET_PIN_SUCCESS</members>
         <members>FEC_RESET_PIN_ERROR</members>
         <members>FEC_RESET_PIN_FAILED</members>
+		<members>FEC_ACTION_CARD_REPLACEMENT_HEADER</members>
+		<members>FEC_MSG_ACTION_CARD_REPLACEMENT</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

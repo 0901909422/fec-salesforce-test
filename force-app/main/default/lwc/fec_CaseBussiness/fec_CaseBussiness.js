@@ -8,6 +8,7 @@ import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
+import checkProcessAction from "@salesforce/apex/FEC_CardReplacementAddressController.checkProcessAction";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
@@ -58,6 +59,10 @@ import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_RE
 import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
 import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
 import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
+import FEC_ACTION_CARD_REPLACEMENT_HEADER from "@salesforce/label/c.FEC_ACTION_CARD_REPLACEMENT_HEADER";
+import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -85,10 +90,12 @@ const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 const ACTION_BLOCK_CARD = "Block Card";
 const ACTION_UNBLOCK_CARD = "Unblock Card";
 const ACTION_PIN_REISSUE = "Reissue PIN";
+const ACTION_REPLACE_CARD = "Replace Card";
 
 const PROCESS_BLOCK_CARD = "Card Block";
 const PROCESS_UNBLOCK_CARD = "Card Unblock";
 const PROCESS_PIN_REISSUE = "PIN Replacement";
+const PROCESS_CARD_REPLACEMENT = "Card Replacement";
 
 /** Các action không tự lưu NOC trong run() - cần gọi saveCaseNOC trước khi run */
 const ACTIONS_NEED_NOC_BEFORE_RUN = [
@@ -652,6 +659,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   processActionMsg;
   isProcessActionSuccessed = false;
   isProcessActionFailed = false;
+  isProcessActionInfo = false;
 
   showProcessAction = false;
   isProcessActionValid = true;
@@ -1091,9 +1099,13 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // show button process action with process Block Card and PIN Reissue
+        // PhuongNT add show button process action with process Block Card and PIN Reissue
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
           this.showProcessAction = true;
+        }
+        // PhuongNT add show button process action with process Card Replacement
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+          this.handleCheckProcessAction();
         }
 
         const actions = this.business.routingActionlst || [];
@@ -2147,6 +2159,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (method == ACTION_PIN_REISSUE) {
       header = FEC_ACTION_PIN_REISSUE_HEADER;
       content = FEC_MSG_ACTION_PIN_REISSUE;
+    } else if (method == ACTION_REPLACE_CARD) {
+      header = FEC_ACTION_CARD_REPLACEMENT_HEADER;
+      content = FEC_MSG_ACTION_CARD_REPLACEMENT;
     } else {
       header = FEC_ACTION_PHONE_UPDATE_HEADER;
       content = FEC_MSG_ACTION_PHONE_UPDATE;
@@ -2231,6 +2246,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         };
         break;
 
+      case ACTION_REPLACE_CARD:
+        params = {
+          caseId: this.recordId,
+        };
+        break;
+
       default:
         break;
     }
@@ -2246,6 +2267,9 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
       msgSuccess = FEC_MSG_ACTION_PIN_REISSUE_SUCCESS;
       msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR;
+    } else if (this.processActionMethod == ACTION_REPLACE_CARD) {
+      msgSuccess = FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS;
+      msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR;
     } else {
       msgSuccess = FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS;
       msgError = FEC_MSG_ACTION_PHONE_UPDATE_ERROR;
@@ -2667,6 +2691,25 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
       });
+    });
+  }
+
+  // PhuongNT add check process action Card Replacement
+  handleCheckProcessAction() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = '';
+    checkProcessAction({ caseId: this.recordId })
+    .then((result) => {
+      if (result.isShowAction) {
+        this.showProcessAction = true;
+      } else {
+        this.isProcessActionInfo = true;
+        this.processActionMsg = result.strMsg;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
     });
   }
 }

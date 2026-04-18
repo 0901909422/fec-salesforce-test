@@ -228,6 +228,13 @@
           >
             <p>{processActionMsg}</p>
           </div>
+
+          <div
+            if:true={isProcessActionInfo}
+            class="process-action-result process-action-result--info"
+          >
+            <p>{processActionMsg}</p>
+          </div>
         </template>
       </lightning-accordion-section>
     </template>
