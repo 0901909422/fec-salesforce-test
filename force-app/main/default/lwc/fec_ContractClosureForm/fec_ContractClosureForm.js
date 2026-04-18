@@ -918,6 +918,16 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
+                this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
+                this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
+                this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
+                this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                try {
+                    if (this.wiredInitResult) {
+                        await refreshApex(this.wiredInitResult);
+                    }
+                } catch (ignore) {
+                }
                 this.showToast(this.customLabel.successTitle, this.customLabel.toastSaveSuccess, 'success');
             }
             return r;
@@ -983,6 +993,17 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 const m =
                     msgs.length > 0 ? msgs.join(', ') : this.customLabel.errorTitle;
                 this.showToast(this.customLabel.errorTitle, m, 'error');
+            } else {
+                this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
+                this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
+                this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
+                this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                try {
+                    if (this.wiredInitResult) {
+                        await refreshApex(this.wiredInitResult);
+                    }
+                } catch (ignore) {
+                }
             }
             return r;
         } catch (e) {
