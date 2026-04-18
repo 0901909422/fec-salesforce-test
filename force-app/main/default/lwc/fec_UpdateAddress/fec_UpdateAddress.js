@@ -365,9 +365,9 @@ export default class Fec_UpdateAddress extends LightningElement {
     /**
      * Sau khi loadMainInfo trả về dữ liệu, mainInfoData.addresses vẫn chứa dữ liệu cũ
      * từ FEC_Full_Address__c (CIF cache). Nếu Case có pending address JSON đã được save
-     * vào FEC_Updated_Info_*_Address__c, parse và cập nhật phần address text tương ứng
-     * trong mainInfoData.addresses để cột "Updated Information" hiển thị đúng.
-     * Không thay đổi mailingAddress flag (đã được xử lý bởi syncMailingSelectionFromData).
+     * vào FEC_Updated_Info_*_Address__c, parse và cập nhật address text lẫn mailingAddress
+     * tương ứng trong mainInfoData.addresses để cột "Updated Information" hiển thị đúng.
+     * Sau khi áp dụng, gọi lại syncMailingSelectionFromData để cập nhật trạng thái checkbox.
      */
     _applyPendingAddressTextsToDisplay(data) {
         const pendingEntries = [
@@ -398,16 +398,18 @@ export default class Fec_UpdateAddress extends LightningElement {
             if (!composed) {
                 continue;
             }
+            const mailingFlag = p.isMailingAddress === 'Y' ? 'Y' : '';
             const idx = addresses.findIndex((a) => a && a.addressType === sfType);
             if (idx >= 0) {
-                addresses[idx] = { ...addresses[idx], address: composed };
+                addresses[idx] = { ...addresses[idx], address: composed, mailingAddress: mailingFlag };
             } else {
-                addresses.push({ addressType: sfType, address: composed, mailingAddress: '' });
+                addresses.push({ addressType: sfType, address: composed, mailingAddress: mailingFlag });
             }
             dirty = true;
         }
         if (dirty) {
             this.mainInfoData = { ...(this.mainInfoData || {}), addresses };
+            this.syncMailingSelectionFromData();
         }
     }
 
