@@ -837,6 +837,7 @@
         <members>FEC_IPP__c.FEC_Total_IPP_Monthly_Interest__c</members>
         <members>FEC_IPP__c.FEC_Total_IPP_Monthly_Principal__c</members>
         <members>FEC_IPP__c.FEC_Total_IPP_Payment_Amount__c</members>
+        <members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
         <members>FEC_Integration_Admin_Recipient__mdt.FEC_Email__c</members>
         <members>FEC_Integration_Case_Info__c.FEC_Info_ID__c</members>
         <members>FEC_Integration_Case_Info__c.FEC_Info_Value__c</members>
