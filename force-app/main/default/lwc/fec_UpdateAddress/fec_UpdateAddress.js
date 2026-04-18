@@ -120,12 +120,16 @@ export default class Fec_UpdateAddress extends LightningElement {
     @api get isEdit() { return this._isEditRaw; }
     set isEdit(value) {
         this._isEditRaw = value;
-        console.log(`[DEBUG][fec_UpdateAddress] set isEdit — value=${JSON.stringify(value)} (type=${typeof value}), canEdit=${value !== false}`);
+        console.log(`[DEBUG][fec_UpdateAddress] set isEdit — value=${JSON.stringify(value)} (type=${typeof value}), canEdit=true (always)`);
     }
 
-    /** Chỉ ẩn bút chì / khóa handler khi parent tường minh truyền isEdit=false. undefined → cho phép edit. */
+    /**
+     * Luôn cho phép edit (hiện icon bút chì, handler, Add New Address).
+     * fec_UpdateAddress tự quản lý quyền edit nội bộ; isEdit từ parent chỉ
+     * dùng cho field-level readonly, không dùng để ẩn pencil icon.
+     */
     get canEdit() {
-        return this.isEdit !== false;
+        return true;
     }
 
     /**
