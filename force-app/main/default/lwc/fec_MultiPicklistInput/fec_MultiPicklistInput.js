@@ -33,6 +33,7 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   @api required;
   @api isSearch = false;
+  @api readOnly = false;
 
   _isAll;
   @api
@@ -76,6 +77,10 @@ export default class Fec_MultiPicklistInput extends LightningElement {
     return this.selectedlst.length === this.optionlst.length;
   }
 
+  get comboboxTabIndex() {
+    return this.readOnly ? -1 : 0;
+  }
+
   timeoutHandler;
 
   errorMsg;
@@ -113,16 +118,25 @@ export default class Fec_MultiPicklistInput extends LightningElement {
   }
 
   handleMouseOver() {
+    if (this.readOnly) {
+      return;
+    }
     this.isFocus = true;
   }
 
   handleMouseLeave() {
+    if (this.readOnly) {
+      return;
+    }
     this.combobox.focus();
     this.isFocus = false;
   }
 
   handleFocus(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
 
     if (this.isSearch) {
       this.combobox.classList.add("slds-is-open");
@@ -138,6 +152,9 @@ export default class Fec_MultiPicklistInput extends LightningElement {
   }
 
   handleBlur(e) {
+    if (this.readOnly) {
+      return;
+    }
     if (this.isSearch) {
       if (!this.isFocus) this.combobox.classList.remove("slds-is-open");
     } else {
@@ -166,6 +183,9 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   handleChooseOptionClick(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
 
     if (e.target.closest(".slds-checkbox")) {
       return;
@@ -177,6 +197,9 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   handleChooseOptionChange(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
 
     let dataId = e.target.dataset.id;
     let checked = e.target.checked;
@@ -253,6 +276,9 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   handleDeleteOption(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
     let dataId = e.currentTarget.dataset.id;
 
     let index = this.selectedIdlst.indexOf(dataId);
@@ -264,32 +290,40 @@ export default class Fec_MultiPicklistInput extends LightningElement {
   }
 
   @api checkValidity() {
+    if (this.readOnly) {
+      this.isError = false;
+      if (this.formElement) {
+        this.formElement.classList.remove("has-error");
+      }
+      return true;
+    }
     if (this.required && this.selectedlst.length == 0) {
-      this.formElement.classList.add("has-error");
+      if (this.formElement) {
+        this.formElement.classList.add("has-error");
+      }
       this.isError = true;
 
       return false;
     }
 
     this.isError = false;
-    this.formElement.classList.remove("has-error");
+    if (this.formElement) {
+      this.formElement.classList.remove("has-error");
+    }
 
     return true;
   }
 
   handleChange(e) {
+    if (this.readOnly) {
+      return;
+    }
     let target = e.target;
 
     clearTimeout(this.timeoutHandler);
 
     this.timeoutHandler = setTimeout(() => {
       let keyword = target.value;
-
-      if (keyword && keyword.trim() != "") {
-        this.isAll = false;
-      } else {
-        this.isAll = true;
-      }
 
       this.optionlst.forEach((item) => {
         if (keyword && keyword.trim() != "") {
@@ -326,11 +360,17 @@ export default class Fec_MultiPicklistInput extends LightningElement {
 
   handleSelectAllChange(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
     this.applySelectAll(e.target.checked);
   }
 
   handleSelectAllRow(e) {
     e.stopPropagation();
+    if (this.readOnly) {
+      return;
+    }
 
     if (e.target.closest(".slds-checkbox")) {
       return;

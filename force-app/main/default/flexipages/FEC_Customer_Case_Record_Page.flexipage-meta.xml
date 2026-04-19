@@ -169,12 +169,6 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_ContractClosureForm</componentName>
-                <identifier>c_fec_ContractClosureForm</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
                 <componentInstanceProperties>
                     <name>modeEditCase</name>
                     <value>false</value>
