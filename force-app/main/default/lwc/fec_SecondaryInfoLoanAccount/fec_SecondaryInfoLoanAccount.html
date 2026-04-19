@@ -1,124 +1,67 @@
 <template>
-    <template if:true={isLoading}>
-        <div class="slds-accordion secondary-info-loading">
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                            <span>{customLabel.disbursementLabel}</span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content">
-                    <div class="fec-section-spinner-wrapper">
-                        <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
-                    </div>
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                            <span>{customLabel.collectionInfoLabel}</span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content">
-                    <div class="fec-section-spinner-wrapper">
-                        <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
-                    </div>
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                            <span>{customLabel.salesInfoLabel}</span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content">
-                    <div class="fec-section-spinner-wrapper">
-                        <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </template>
-    <template if:false={isLoading}>
-        <template if:true={hasData}>
-            <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
-                <c-fec_-common-record-detail-section section-title={customLabel.disbursementLabel} fields={disbursementFields}
-                    columns="3">
+    <div class="slds-accordion fec-secondary-loan-accordion">
+        <section class={disbursementSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleDisbursementToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={disbursementIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>{disbursementHeaderText}</span>
+                    </span>
+                </h3>
+            </div>
+            <div class={disbursementContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.disbursementLabel}
+                    fields={disbursementFields} section-loading={isLoadingDisbursement} columns="3">
                 </c-fec_-common-record-detail-section>
-                <c-fec_-common-record-detail-section section-title={customLabel.collectionInfoLabel} fields={collectionInfoFields}
-                    columns="3">
+            </div>
+        </section>
+
+        <section class={collectionsSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleCollectionsToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={collectionsIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.collectionInfoLabel}
+                            <template if:true={collectionsSectionLabelError}>
+                                <span class="fec-secondary-loan-header-error"> - {collectionsSectionLabelError}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={collectionsContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.collectionInfoLabel}
+                    fields={collectionInfoFields} section-loading={isLoadingCollections} columns="3">
                 </c-fec_-common-record-detail-section>
-                <c-fec_-common-record-detail-section section-title={customLabel.salesInfoLabel} fields={salesInfoFields}
-                    columns="3">
+            </div>
+        </section>
+
+        <section class={salesSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleSalesToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={salesIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.salesInfoLabel}
+                            <template if:true={salesSectionLabelError}>
+                                <span class="fec-secondary-loan-header-error"> - {salesSectionLabelError}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={salesContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.salesInfoLabel}
+                    fields={salesInfoFields} section-loading={isLoadingSales} columns="3">
                 </c-fec_-common-record-detail-section>
-            </lightning-accordion>
-        </template>
-        <template if:false={hasData}>
-        <div class="slds-accordion">
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
-                            </lightning-icon>
-                            <span>
-                                {customLabel.disbursementLabel}&nbsp;-&nbsp;
-                                <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
-                                </span>
-                            </span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content slds-hide">
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
-                            </lightning-icon>
-                            <span>
-                                {customLabel.collectionInfoLabel}&nbsp;-&nbsp;
-                                <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
-                                </span>
-                            </span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content slds-hide">
-                </div>
-            </section>
-            <section class="slds-accordion__section slds-is-open">
-                <div class="slds-accordion__summary">
-                    <h3 class="slds-accordion__summary-heading">
-                        <span class="slds-accordion__summary-content slds-grid">
-                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
-                            </lightning-icon>
-                            <span>
-                                {customLabel.salesInfoLabel}&nbsp;-&nbsp;
-                                <span class="sync-fail-text">
-                                    {customLabel.msgErrorAPI}
-                                </span>
-                            </span>
-                        </span>
-                    </h3>
-                </div>
-                <div class="slds-accordion__content slds-hide">
-                </div>
-            </section>
-        </div>
-        </template>
-    </template>
+            </div>
+        </section>
+    </div>
 </template>

@@ -48,6 +48,21 @@ const formatDateTimeVN = (val) => {
 
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
+
+/**
+ * Format date-time as DD/MM/YYYY, HH:mm (no seconds, VN display)
+ */
+const formatDateTimeVNShort = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return val;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year}, ${h}:${m}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -150,7 +165,7 @@ const maskWorkPhone = (phone) => {
   const v = String(phone).trim();
   if (v.length < 7) return v;
 
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
@@ -183,11 +198,11 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE bắt đầu bằng 84 (11 số)
-   * Hiển thị: 5 số đầu + 3 số cuối
+   * PHONE bắt đầu bằng 84 (≥11 số: 84 + ít nhất 9 chữ số)
+   * Hiển thị: 5 số đầu + 3 số cuối (chuỗi dài hơn 11 vẫn cùng rule)
    * Ví dụ: 84123***456
    * ===================== */
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
@@ -225,6 +240,20 @@ const maskValue = (value, showFull) => {
  * - Bắt đầu bằng 0: đúng 10 ký tự.
  * - Bắt đầu bằng 84: đúng 11 ký tự.
  * ========================= */
+const normalizePhone = (raw) => {
+  if (!raw) {
+    return STR_EMPTY;
+  }
+  let s = String(raw).replace(/\s/g, "");
+  if (s.startsWith("+84")) {
+    s = "84" + s.substring(3);
+  }
+  if (/^\d{10}$/.test(s) && s.startsWith("0")) {
+    s = "84" + s.substring(1);
+  }
+  return s;
+};
+
 const validateUpdatedInfoPhone = (phone) => {
   if (phone == null || typeof phone !== "string") return null;
 
@@ -754,6 +783,20 @@ const formatThousandsFromDigits = (digits) => {
   }).format(n);
 };
 
+const formatThousandsFromDigitsEnUs = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
 const toUpperNoVietnameseAccent = (str) => {
   if (!str) {
     return STR_EMPTY;
@@ -788,12 +831,14 @@ export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
+  formatDateTimeVNShort,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
   parseDateVNI,
   maskWorkPhone,
   maskValue,
+  normalizePhone,
   validateUpdatedInfoPhone,
   applyPhoneInputMaxLength,
   validateUpdatedInfoEmail,
@@ -813,6 +858,7 @@ export {
   getCaseIdNumber,
   sortByStringField,
   formatThousandsFromDigits,
+  formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
   toUpperNoVietnameseAccent

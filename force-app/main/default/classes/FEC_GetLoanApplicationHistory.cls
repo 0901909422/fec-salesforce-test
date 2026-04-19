@@ -153,7 +153,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
       String endpoint = baseEndpoint + '?APPLICATION_ID=' + req.applicationId;
-      String transId = FEC_CommonUltils.generateTransactionId();
+      String transId = FEC_CommonUltils.generateTransactionUUID();
 
       Map<String, String> headers = new Map<String, String>{
         'TransID'      => transId,
@@ -215,6 +215,12 @@ public with sharing class FEC_GetLoanApplicationHistory {
       FROM Case
       WHERE Id = :caseId
     ];
+      
+	  List<FEC_Customer_History__c> histories = [
+        SELECT Id, Name, FEC_Application_ID__c
+        FROM FEC_Customer_History__c
+        WHERE FEC_Case__c = :caseId
+    ];
 
     if (cases.isEmpty()) {
       throw new AuraHandledException(
@@ -225,7 +231,7 @@ public with sharing class FEC_GetLoanApplicationHistory {
       );
     }
 
-    if (String.isBlank(cases[0].FEC_Application_ID__c) && String.isBlank(cases[0].FEC_Search_Application_ID__c)) {
+    if (String.isBlank(cases[0].FEC_Application_ID__c) && String.isBlank(cases[0].FEC_Search_Application_ID__c)  && String.isBlank(histories[0].FEC_Application_ID__c)) {
       throw new AuraHandledException(
         String.format(
           System.Label.FEC_MSG_Invalid,
@@ -239,21 +245,22 @@ public with sharing class FEC_GetLoanApplicationHistory {
     req.applicationId = cases[0].FEC_Application_ID__c;
     if (String.isBlank(req.applicationId)) {
         req.applicationId = cases[0].FEC_Search_Application_ID__c;
+        if (String.isBlank(req.applicationId)) {
+            req.applicationId = histories[0].FEC_Application_ID__c;
+        }
     }
     LoanApplicationHistoryResult response = getLoanApplicationHistory(req);
 
-    if (
-      response == null ||
-      !response.success ||
-      response.histories == null ||
-      response.histories.isEmpty()
-    ) {
+    if (response == null || !response.success) {
       throw new AuraHandledException(
-        response != null &&
-          response.errorMessage != null
+        response != null && response.errorMessage != null
           ? response.errorMessage
           : System.Label.FEC_MSG_Error_API_Label
       );
+    }
+
+    if (response.histories == null || response.histories.isEmpty()) {
+      return null;
     }
 
     List<FEC_Application_History__c> historiesToUpdate = [

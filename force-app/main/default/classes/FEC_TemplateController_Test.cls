@@ -55,7 +55,7 @@ private class FEC_TemplateController_Test {
         String json = JSON.serialize(newTmpl);
 
         Test.startTest();
-        Id savedId = FEC_TemplateController.saveTemplate(json, null);
+        Id savedId = FEC_TemplateController.saveTemplate(json, null, null);
         Test.stopTest();
 
         Assert.isNotNull(savedId);
@@ -98,5 +98,28 @@ private class FEC_TemplateController_Test {
 
         Assert.isNotNull(results);
         Assert.areEqual(0, results.size(), 'No content history in test setup');
+    }
+
+    @IsTest
+    static void testCreateDraftTemplate() {
+        Test.startTest();
+        Id draftId = FEC_TemplateController.createDraftTemplate();
+        Test.stopTest();
+
+        Assert.isNotNull(draftId, 'Controller should return a draft Id');
+        FEC_Template__c draft = [SELECT Name FROM FEC_Template__c WHERE Id = :draftId];
+        Assert.isTrue(draft.Name.startsWith('Draft-'), 'Draft name should start with Draft-');
+    }
+
+    @IsTest
+    static void testDeleteDraftTemplate() {
+        Id draftId = FEC_TemplateController.createDraftTemplate();
+
+        Test.startTest();
+        FEC_TemplateController.deleteDraftTemplate(draftId);
+        Test.stopTest();
+
+        Integer count = [SELECT COUNT() FROM FEC_Template__c WHERE Id = :draftId];
+        Assert.areEqual(0, count, 'Draft should be deleted via controller');
     }
 }

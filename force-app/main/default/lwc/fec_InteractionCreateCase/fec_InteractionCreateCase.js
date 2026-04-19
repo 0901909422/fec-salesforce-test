@@ -12,6 +12,9 @@ import { publish, MessageContext } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import createCustomerCaseFromCase from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCase";
 import createCustomerCaseFromCaseNonExistingCustomer from "@salesforce/apex/FEC_CreateCaseInteractionController.createCustomerCaseFromCaseNonExistingCustomer";
+import {
+  setMode,
+} from "c/fec_CustomerCaseModeStore";
 // import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 // import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 // import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
@@ -70,6 +73,10 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     }
   }
 
+  get recordTypeDevName() {
+    return this.pageRef?.state?.c__recordTypeDevName;
+  }
+
   // @wire(CurrentPageReference)
   // setPageRef(pageRef) {
   //   if (pageRef) {
@@ -84,6 +91,46 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
 
   async connectedCallback() {
     this.isLoading = true;
+    if (this.isCreatedFromSearch === 'true' && this.recordId && this.recordTypeDevName === 'Internal_Case') {
+        this.isLoading = false;
+        if (this.isConsoleNavigation) {
+            const allTabs = await getAllTabInfo();
+            const componentTab = allTabs.find(t =>
+                t.pageReference?.type === 'standard__component' &&
+                t.pageReference?.attributes?.componentName === 'c__fec_InteractionCreateCase'
+            );
+
+            const focusedTab = await getFocusedTabInfo();
+            if (focusedTab?.parentTabId) {
+                await openSubtab(focusedTab.parentTabId, {
+                    recordId: this.recordId,
+                    focus: true,
+                });
+            } else {
+                await openTab({
+                    recordId: this.recordId,
+                    focus: true,
+                });
+            }
+
+            setTimeout(async () => {
+                await this.handlePublishMessageChanel();
+                if (componentTab?.tabId) {
+                    closeTab(componentTab.tabId);
+                }
+            }, 2000);
+        } else {
+            this[NavigationMixin.Navigate]({
+                type: "standard__recordPage",
+                attributes: {
+                    recordId: this.recordId,
+                    objectApiName: "Case",
+                    actionName: "view",
+                },
+            });
+        }
+      return;
+    }
     if (!this.isNonExistingCustomer) {
       createCustomerCaseFromCase({ caseId: this.recordId })
         .then(async (newCaseId) => {
@@ -184,6 +231,7 @@ export default class Fec_InteractionCreateCase extends NavigationMixin(
     const payload = {
       isModeEdit: true,
     };
+    setMode(true);
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 }

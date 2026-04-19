@@ -1,337 +1,518 @@
-import { LightningElement, api, track, wire } from "lwc";
-import { refreshApex } from "@salesforce/apex";
-import getRefundFormDefaults from "@salesforce/apex/FEC_RefundRequestController.getRefundFormDefaults";
-import getExistingReceiptLines from "@salesforce/apex/FEC_RefundRequestController.getExistingReceiptLines";
-import getBankNamePicklistOptions from "@salesforce/apex/FEC_RefundRequestController.getBankNamePicklistOptions";
-import getProvinceCityOptions from "@salesforce/apex/FEC_RefundRequestController.getProvinceCityOptions";
-import getBankBranchOptions from "@salesforce/apex/FEC_RefundRequestController.getBankBranchOptions";
-import saveRefundRequest from "@salesforce/apex/FEC_RefundRequestController.saveRefundRequest";
-import FEC_LBL_Add_Item from "@salesforce/label/c.FEC_LBL_Add_Item";
-import FEC_LBL_Remove_Row from "@salesforce/label/c.FEC_LBL_Remove_Row";
-import FEC_LBL_Refund_Amount from "@salesforce/label/c.FEC_LBL_Refund_Amount";
-import FEC_LBL_Receipt_Date from "@salesforce/label/c.FEC_LBL_Receipt_Date";
-import FEC_LBL_Receipt_Amount from "@salesforce/label/c.FEC_LBL_Receipt_Amount";
-import FEC_LBL_Transaction_No from "@salesforce/label/c.FEC_LBL_Transaction_No";
-import FEC_Repay_Payment_Channel_Label from "@salesforce/label/c.FEC_Repay_Payment_Channel_Label";
-import FEC_LBL_Beneficiary_Name from "@salesforce/label/c.FEC_LBL_Beneficiary_Name";
-import FEC_LBL_Beneficiary_Account from "@salesforce/label/c.FEC_LBL_Beneficiary_Account";
-import FEC_LBL_Bank_Name from "@salesforce/label/c.FEC_LBL_Bank_Name";
-import FEC_LBL_Bank_Branch from "@salesforce/label/c.FEC_LBL_Bank_Branch";
-import FEC_LBL_Province_City from "@salesforce/label/c.FEC_LBL_Province_City";
-import { STR_EMPTY } from "c/fec_CommonConst";
-import { formatThousandsFromDigits, stripToIntString, todayIso, toUpperNoVietnameseAccent } from "c/fec_CommonUtils";
+/****************************************************************************************
+ * File Name    : fec_RefundRequestForm.js
+ * Description  : Refund Request — same row pattern as fec_IncorrectPaymentForm adjustments (numeric id, data-id-value, findIndex + spread).
+ ****************************************************************************************/
 
-const MSG_REFUND_RECEIPT_AMOUNT_POSITIVE =
-    "Vui lòng nhập số tiền biên lai lớn hơn 0.";
-const MSG_REFUND_REQUEST_RECEIPT_DATE_FUTURE =
-    "Ngày biên lai không được lớn hơn ngày hiện tại.";
+import { LightningElement, api, track } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getRefundRequestData from '@salesforce/apex/FEC_RefundRequestController.getRefundRequestData';
+import saveRefundRequest from '@salesforce/apex/FEC_RefundRequestController.saveRefundRequest';
+import saveRefundRequestDraft from '@salesforce/apex/FEC_RefundRequestController.saveRefundRequestDraft';
+import FEC_LBL_Add_Item from '@salesforce/label/c.FEC_LBL_Add_Item';
+import FEC_LBL_Remove_Row from '@salesforce/label/c.FEC_LBL_Remove_Row';
+import FEC_LBL_Refund_Amount from '@salesforce/label/c.FEC_LBL_Refund_Amount';
+import FEC_LBL_Receipt_Date from '@salesforce/label/c.FEC_LBL_Receipt_Date';
+import FEC_LBL_Receipt_Amount from '@salesforce/label/c.FEC_LBL_Receipt_Amount';
+import FEC_LBL_Transaction_No from '@salesforce/label/c.FEC_LBL_Transaction_No';
+import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
+import FEC_MSG_Refund_Request_Refund_Amount_Positive from '@salesforce/label/c.FEC_MSG_Refund_Request_Refund_Amount_Positive';
+import FEC_MSG_Refund_Request_Receipt_Amount_Positive from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Amount_Positive';
+import FEC_MSG_Refund_Request_Receipt_Date_Future from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Date_Future';
+import FEC_MSG_Refund_Request_Receipt_Lines_Required from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Lines_Required';
+import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
+import FEC_Toast_Save_Success from '@salesforce/label/c.FEC_Toast_Save_Success';
+import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
+import FEC_Toast_Save_Error_Message from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
+import Loading from '@salesforce/label/c.Loading';
+import { todayIso } from 'c/fec_CommonUtils';
 
-let rowSeq = 0;
+const CONST = {
+    EMPTY: '',
+    VARIANT_ERROR: 'error',
+    VARIANT_SUCCESS: 'success',
+    VARIANT_WARNING: 'warning'
+};
 
 export default class Fec_RefundRequestForm extends LightningElement {
-    @api recordId;
 
-    @track manualRefundAmountDisplay = STR_EMPTY;
-    @track receiptRows = [];
-    @track beneficiaryName = STR_EMPTY;
-    @track beneficiaryAccount = STR_EMPTY;
-    @track bankComboValue = STR_EMPTY;
-    @track bankBranch = STR_EMPTY;
-    @track provinceComboValue = STR_EMPTY;
-    @track bankOptions = [];
-    @track provinceOptions = [];
-    @track bankBranchOptions = [];
+    _recordId;
+    _connected = false;
 
-    _wiredDefaults;
+    @api
+    get recordId() {
+        return this._recordId;
+    }
+    set recordId(value) {
+        const prev = this._recordId;
+        this._recordId = value;
+        if (prev === value) {
+            return;
+        }
+        if (!this._connected) {
+            return;
+        }
+        if (value) {
+            this.configLoaded = false;
+            this.loadRefundRequestData();
+        } else {
+            this._resetStateForEmptyCase();
+            this.configLoaded = true;
+        }
+    }
+
+    @api isEdit;
+
+    @track configLoaded = false;
+    @track isLoadingData = false;
+    @track refundAmount = null;
+    @track receiptLines = [];
+    @track nextLineId = 1;
 
     customLabel = {
+        loading: Loading,
         refundAmount: FEC_LBL_Refund_Amount,
         receiptDate: FEC_LBL_Receipt_Date,
         receiptAmount: FEC_LBL_Receipt_Amount,
         transactionNo: FEC_LBL_Transaction_No,
         paymentChannel: FEC_Repay_Payment_Channel_Label,
-        beneficiaryName: FEC_LBL_Beneficiary_Name,
-        beneficiaryAccount: FEC_LBL_Beneficiary_Account,
-        bankName: FEC_LBL_Bank_Name,
-        bankBranch: FEC_LBL_Bank_Branch,
-        provinceCity: FEC_LBL_Province_City,
-        removeRow: FEC_LBL_Remove_Row
+        removeRow: FEC_LBL_Remove_Row,
+        addItem: FEC_LBL_Add_Item
     };
 
     get addItemLabel() {
         return FEC_LBL_Add_Item;
     }
 
-    get msgReceiptDateFuture() {
-        return MSG_REFUND_REQUEST_RECEIPT_DATE_FUTURE;
-    }
-
-    @wire(getBankNamePicklistOptions)
-    wiredBanks({ data, error }) {
-        if (data) {
-            this.bankOptions = data.map((r) => ({ label: r.label, value: r.value }));
-        } else if (error) {
-            this.bankOptions = [];
-        }
-    }
-
-    @wire(getProvinceCityOptions)
-    wiredProvinces({ data, error }) {
-        if (data) {
-            this.provinceOptions = data.map((r) => ({ label: r.label, value: r.value }));
-        } else if (error) {
-            this.provinceOptions = [];
-        }
-    }
-
-    @wire(getBankBranchOptions)
-    wiredBankBranches({ data, error }) {
-        if (data) {
-            this.bankBranchOptions = data.map((r) => ({ label: r.label, value: r.value }));
-        } else if (error) {
-            this.bankBranchOptions = [];
-        }
-    }
-
-    @wire(getRefundFormDefaults, { caseId: "$recordId" })
-    wiredFormDefaults(result) {
-        this._wiredDefaults = result;
-        const { data, error } = result;
-        if (data) {
-            this.beneficiaryName = data.beneficiaryName || data.defaultBeneficiaryUpperNoAccent || STR_EMPTY;
-            this.beneficiaryAccount = data.beneficiaryAccount || STR_EMPTY;
-            this.bankComboValue = data.bankPicklistValue || STR_EMPTY;
-            this.bankBranch = data.bankBranch || STR_EMPTY;
-            this.provinceComboValue = data.provinceCity || STR_EMPTY;
-            this.hydrateReceiptLinesFromServer();
-        } else if (error) {
-            this.receiptRows = [];
-        }
-    }
-
-    hydrateReceiptLinesFromServer() {
-        if (!this.recordId) {
-            return;
-        }
-        getExistingReceiptLines({ caseId: this.recordId })
-            .then((data) => {
-                if (!data || data.length === 0) {
-                    this.receiptRows = [];
-                    return;
-                }
-                this.receiptRows = data.map((line) => {
-                    rowSeq += 1;
-                    const digits =
-                        line.receiptAmount != null
-                            ? String(Math.round(Number(line.receiptAmount))).replace(/\D/g, "")
-                            : STR_EMPTY;
-                    return {
-                        rowId: "r-" + rowSeq,
-                        receiptDateIso: line.receiptDateIso || null,
-                        receiptAmountDigits: digits,
-                        receiptAmountDisplay: formatThousandsFromDigits(digits),
-                        transactionNo: line.transactionNo || STR_EMPTY,
-                        paymentChannel: line.paymentChannel || STR_EMPTY
-                    };
-                });
-            })
-            .catch(() => {
-                this.receiptRows = [];
-            });
+    get isReadOnly() {
+        return this.isEdit === false;
     }
 
     get maxDateIso() {
         return todayIso();
     }
 
-    get computedRefundTotalDisplay() {
-        if (!this.receiptRows || this.receiptRows.length === 0) {
-            return STR_EMPTY;
-        }
-        let sum = 0;
-        this.receiptRows.forEach((row) => {
-            if (row.receiptAmountDigits) {
-                const n = parseInt(row.receiptAmountDigits, 10);
-                if (!isNaN(n)) {
-                    sum += n;
-                }
-            }
-        });
-        if (sum === 0) {
-            return STR_EMPTY;
-        }
-        return formatThousandsFromDigits(String(sum));
-    }
-
     get hasReceiptRows() {
-        return Array.isArray(this.receiptRows) && this.receiptRows.length > 0;
+        return Array.isArray(this.receiptLines) && this.receiptLines.length > 0;
     }
 
-    handleAddItem() {
-        rowSeq += 1;
-        this.receiptRows = [
-            ...this.receiptRows,
+    connectedCallback() {
+        this._connected = true;
+        if (this.recordId) {
+            this.loadRefundRequestData();
+        } else {
+            this.configLoaded = true;
+        }
+    }
+
+    _resetStateForEmptyCase() {
+        this.refundAmount = null;
+        this.receiptLines = [];
+        this.nextLineId = 1;
+    }
+
+    loadRefundRequestData() {
+        if (!this.recordId) {
+            this.configLoaded = true;
+            return Promise.resolve();
+        }
+        this.isLoadingData = true;
+        return getRefundRequestData({ caseId: this.recordId })
+            .then((data) => {
+                this._applyServerData(data);
+            })
+            .catch(() => {
+                this._resetStateForEmptyCase();
+            })
+            .finally(() => {
+                this.isLoadingData = false;
+                this.configLoaded = true;
+            });
+    }
+
+    _normReceiptDateIso(raw) {
+        if (raw == null || raw === CONST.EMPTY) {
+            return null;
+        }
+        const s = String(raw).trim();
+        if (s.length >= 10) {
+            return s.substring(0, 10);
+        }
+        return s || null;
+    }
+
+    _applyServerData(data) {
+        if (!data) {
+            this._resetStateForEmptyCase();
+            return;
+        }
+        if (data.refundAmount != null && data.refundAmount !== undefined) {
+            const n = Number(data.refundAmount);
+            this.refundAmount = isNaN(n) ? null : n;
+        } else {
+            this.refundAmount = null;
+        }
+        const lines = data.receiptLines;
+        if (lines && lines.length > 0) {
+            this.receiptLines = lines.map((line, index) => ({
+                id: index + 1,
+                detailId: line.detailId || null,
+                receiptDateIso: this._normReceiptDateIso(line.receiptDateIso),
+                receiptAmount: line.receiptAmount != null && line.receiptAmount !== undefined ? Number(line.receiptAmount) : null,
+                transactionNo: line.transactionNo != null ? String(line.transactionNo) : CONST.EMPTY,
+                paymentChannel: line.paymentChannel != null ? String(line.paymentChannel) : CONST.EMPTY
+            }));
+            this.nextLineId = this.receiptLines.length + 1;
+        } else {
+            this.receiptLines = [];
+            this.nextLineId = 1;
+        }
+    }
+
+    _lineHasAnyInput(row) {
+        if (!row) {
+            return false;
+        }
+        if (row.receiptDateIso) {
+            return true;
+        }
+        if (row.receiptAmount != null && row.receiptAmount !== 0) {
+            return true;
+        }
+        if (row.transactionNo && String(row.transactionNo).trim()) {
+            return true;
+        }
+        if (row.paymentChannel && String(row.paymentChannel).trim()) {
+            return true;
+        }
+        return false;
+    }
+
+    _lineSubmitComplete(row) {
+        if (!row) {
+            return false;
+        }
+        const dIso = this._normReceiptDateIso(row.receiptDateIso);
+        if (!dIso || dIso > todayIso()) {
+            return false;
+        }
+        if (row.receiptAmount == null || row.receiptAmount <= 0) {
+            return false;
+        }
+        if (!row.transactionNo || !String(row.transactionNo).trim()) {
+            return false;
+        }
+        if (!row.paymentChannel || !String(row.paymentChannel).trim()) {
+            return false;
+        }
+        return true;
+    }
+
+    _shouldRunRefundSave(isDraft) {
+        if (this.refundAmount != null && this.refundAmount > 0) {
+            return true;
+        }
+        const rows = this.receiptLines || [];
+        if (isDraft) {
+            return rows.length > 0;
+        }
+        return rows.some((r) => this._lineHasAnyInput(r));
+    }
+
+    handleAddReceiptLine() {
+        this.receiptLines = [
+            ...this.receiptLines,
             {
-                rowId: "r-" + rowSeq,
+                id: this.nextLineId,
+                detailId: null,
                 receiptDateIso: null,
-                receiptAmountDigits: STR_EMPTY,
-                receiptAmountDisplay: STR_EMPTY,
-                transactionNo: STR_EMPTY,
-                paymentChannel: STR_EMPTY
+                receiptAmount: null,
+                transactionNo: CONST.EMPTY,
+                paymentChannel: CONST.EMPTY
             }
         ];
+        this.nextLineId += 1;
     }
 
-    handleDeleteRow(event) {
-        const id = event.currentTarget.dataset.rowId;
-        this.receiptRows = this.receiptRows.filter((r) => r.rowId !== id);
+    handleRemoveReceiptLine(event) {
+        const id = Number(event.currentTarget.dataset.id);
+        if (isNaN(id)) {
+            return;
+        }
+        const filtered = this.receiptLines.filter((r) => r.id !== id);
+        this.receiptLines = filtered;
     }
 
-    handleRowDateChange(event) {
-        const id = event.currentTarget.dataset.rowId;
-        const val = event.target.value;
-        this.receiptRows = this.receiptRows.map((r) => {
-            if (r.rowId !== id) {
-                return r;
-            }
-            const next = {
-                ...r,
-                receiptDateIso: val || null
-            };
-            return next;
-        });
+    handleRefundAmountChange(event) {
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        this.refundAmount = v === CONST.EMPTY || v == null || v === '' ? null : (Number(v) || null);
     }
 
-    handleRowAmountInput(event) {
-        const id = event.currentTarget.dataset.rowId;
-        const digits = stripToIntString(event.target.value);
-        this.receiptRows = this.receiptRows.map((r) => {
-            if (r.rowId !== id) {
-                return r;
-            }
-            return {
-                ...r,
-                receiptAmountDigits: digits,
-                receiptAmountDisplay: formatThousandsFromDigits(digits)
-            };
-        });
+    handleReceiptDateChange(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const idx = this.receiptLines.findIndex((r) => r.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        const raw = v || null;
+        const next = [...this.receiptLines];
+        next[idx] = { ...next[idx], receiptDateIso: this._normReceiptDateIso(raw) };
+        this.receiptLines = next;
+        const cmp = event.currentTarget;
+        if (cmp && cmp.setCustomValidity) {
+            cmp.setCustomValidity('');
+            cmp.reportValidity();
+        }
     }
 
-    handleRowTransactionInput(event) {
-        const id = event.currentTarget.dataset.rowId;
-        const val = event.target.value;
-        this.receiptRows = this.receiptRows.map((r) => (r.rowId === id ? { ...r, transactionNo: val } : r));
-    }
-
-    handleRowPaymentChannelInput(event) {
-        const id = event.currentTarget.dataset.rowId;
-        const val = event.target.value;
-        this.receiptRows = this.receiptRows.map((r) => (r.rowId === id ? { ...r, paymentChannel: val } : r));
-    }
-
-    handleRefundAmountInput(event) {
-        const digits = stripToIntString(event.target.value);
-        this.manualRefundAmountDisplay = formatThousandsFromDigits(digits);
-    }
-
-    handleBeneficiaryInput(event) {
-        this.beneficiaryName = toUpperNoVietnameseAccent(event.target.value);
-    }
-
-    handleBeneficiaryAccountInput(event) {
-        this.beneficiaryAccount = event.target.value;
-    }
-
-    handleBankComboChange(event) {
-        this.bankComboValue = event.detail.value;
-    }
-
-    handleBankBranchInput(event) {
-        this.bankBranch = event.detail.value;
-    }
-
-    handleProvinceChange(event) {
-        this.provinceComboValue = event.detail.value;
-    }
-
-    @api
-    validateRefund() {
-        const root = this.template;
-
-        root.querySelectorAll("lightning-input").forEach((el) => {
-            if (typeof el.setCustomValidity === "function") {
-                el.setCustomValidity("");
-            }
-        });
-
-        let sumAmt = 0;
-        this.receiptRows.forEach((row) => {
-            if (row.receiptAmountDigits) {
-                sumAmt += parseInt(row.receiptAmountDigits, 10) || 0;
-            }
-        });
-        const firstAmtEl = root.querySelector('lightning-input[data-input="receiptAmount"]');
-        if (firstAmtEl && typeof firstAmtEl.setCustomValidity === "function") {
-            if (this.receiptRows.length > 0 && sumAmt <= 0) {
-                firstAmtEl.setCustomValidity(MSG_REFUND_RECEIPT_AMOUNT_POSITIVE);
+    handleReceiptAmountChange(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const idx = this.receiptLines.findIndex((r) => r.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        let amt = null;
+        if (v !== CONST.EMPTY && v != null && v !== '') {
+            const n = Number(v);
+            if (!isNaN(n)) {
+                amt = n;
             }
         }
-        this.receiptRows.forEach((row) => {
-            const dateEl = root.querySelector('lightning-input[data-input="receiptDate"][data-row-id="' + row.rowId + '"]');
-            if (!dateEl || typeof dateEl.setCustomValidity !== "function") {
-                return;
-            }
-            if (row.receiptDateIso > todayIso()) {
-                dateEl.setCustomValidity(MSG_REFUND_REQUEST_RECEIPT_DATE_FUTURE);
+        const next = [...this.receiptLines];
+        next[idx] = { ...next[idx], receiptAmount: amt };
+        this.receiptLines = next;
+        const cmp = event.currentTarget;
+        if (cmp && cmp.setCustomValidity) {
+            cmp.setCustomValidity('');
+            cmp.reportValidity();
+        }
+    }
+
+    handleTransactionChange(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const idx = this.receiptLines.findIndex((r) => r.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        const next = [...this.receiptLines];
+        next[idx] = { ...next[idx], transactionNo: v != null ? String(v) : CONST.EMPTY };
+        this.receiptLines = next;
+    }
+
+    handlePaymentChannelChange(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const idx = this.receiptLines.findIndex((r) => r.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        const next = [...this.receiptLines];
+        next[idx] = { ...next[idx], paymentChannel: v != null ? String(v) : CONST.EMPTY };
+        this.receiptLines = next;
+    }
+
+    _rowToApexDto(row) {
+        return {
+            detailId: row.detailId != null && String(row.detailId).trim() !== CONST.EMPTY ? String(row.detailId).trim() : null,
+            receiptDateIso: row.receiptDateIso,
+            receiptAmount: row.receiptAmount,
+            transactionNo: row.transactionNo,
+            paymentChannel: row.paymentChannel
+        };
+    }
+
+    _receiptLinesForPayload(isDraft) {
+        const src = this.receiptLines || [];
+        const rows = isDraft
+            ? src.filter(Boolean)
+            : src.filter((row) => row && this._lineSubmitComplete(row));
+        return rows.map((row) => this._rowToApexDto(row));
+    }
+
+    _refundSavePayload(isDraft) {
+        return {
+            refundAmount: this.refundAmount != null && this.refundAmount > 0 ? this.refundAmount : null,
+            receiptLines: this._receiptLinesForPayload(!!isDraft)
+        };
+    }
+
+    clearReceiptLineCustomValidity() {
+        const rows = this.receiptLines || [];
+        rows.forEach((r) => {
+            const dateEl = this.template.querySelector('lightning-input[data-id-value="' + r.id + '"][data-field="receiptDate"]');
+            const amtEl = this.template.querySelector('lightning-input[data-id-value="' + r.id + '"][data-field="receiptAmount"]');
+            const txnEl = this.template.querySelector('lightning-input[data-id-value="' + r.id + '"][data-field="transactionNo"]');
+            const payEl = this.template.querySelector('lightning-input[data-id-value="' + r.id + '"][data-field="paymentChannel"]');
+            [dateEl, amtEl, txnEl, payEl].forEach((el) => {
+                if (el && el.setCustomValidity) {
+                    el.setCustomValidity('');
+                }
+            });
+        });
+    }
+
+    _performClientSaveValidation(showToastOnFail) {
+        const root = this.template;
+        root.querySelectorAll('lightning-input').forEach((el) => {
+            if (typeof el.setCustomValidity === 'function') {
+                el.setCustomValidity('');
             }
         });
+        this.clearReceiptLineCustomValidity();
+
+        let sumAmt = 0;
+        this.receiptLines.forEach((row) => {
+            if (row.receiptAmount != null && !isNaN(Number(row.receiptAmount))) {
+                sumAmt += Number(row.receiptAmount);
+            }
+        });
+        const firstRow = this.receiptLines[0];
+        const firstAmtEl = firstRow
+            ? root.querySelector('lightning-input[data-id-value="' + firstRow.id + '"][data-field="receiptAmount"]')
+            : null;
+        if (firstAmtEl && typeof firstAmtEl.setCustomValidity === 'function') {
+            if (this.receiptLines.length > 0 && sumAmt <= 0) {
+                firstAmtEl.setCustomValidity(FEC_MSG_Refund_Request_Receipt_Amount_Positive);
+            }
+        }
+        this.receiptLines.forEach((row) => {
+            const dateEl = root.querySelector('lightning-input[data-id-value="' + row.id + '"][data-field="receiptDate"]');
+            if (!dateEl || typeof dateEl.setCustomValidity !== 'function') {
+                return;
+            }
+            const dIso = this._normReceiptDateIso(row.receiptDateIso);
+            if (dIso && dIso > todayIso()) {
+                dateEl.setCustomValidity(FEC_MSG_Refund_Request_Receipt_Date_Future);
+            }
+        });
+
+        const refundAmtEl = root.querySelector('lightning-input[name="refundAmount"]');
+        if (refundAmtEl && typeof refundAmtEl.setCustomValidity === 'function') {
+            if (this.refundAmount != null && (isNaN(Number(this.refundAmount)) || this.refundAmount <= 0)) {
+                refundAmtEl.setCustomValidity(FEC_MSG_Refund_Request_Refund_Amount_Positive);
+            }
+        }
 
         let ok = true;
         if (!this.hasReceiptRows) {
             ok = false;
         }
-        const fields = [
-            ...root.querySelectorAll("lightning-input"),
-            ...root.querySelectorAll("lightning-combobox")
-        ];
-        fields.forEach((el) => {
-            if (typeof el.reportValidity === "function" && !el.reportValidity()) {
+        if (this.receiptLines.length > 0 && sumAmt <= 0) {
+            ok = false;
+        }
+        this.receiptLines.forEach((row) => {
+            if (this._lineHasAnyInput(row) && !this._lineSubmitComplete(row)) {
                 ok = false;
             }
         });
+        root.querySelectorAll('lightning-input').forEach((el) => {
+            if (typeof el.reportValidity === 'function' && !el.reportValidity()) {
+                ok = false;
+            }
+        });
+
+        if (!ok && showToastOnFail) {
+            const toastMsg = !this.hasReceiptRows
+                ? FEC_MSG_Refund_Request_Receipt_Lines_Required
+                : FEC_Complete_This_Field;
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: toastMsg,
+                variant: CONST.VARIANT_WARNING
+            }));
+        }
         return ok;
     }
 
     @api
-    saveRefundDataIfVisible() {
+    validateForSubmit() {
+        if (this.isReadOnly) {
+            return true;
+        }
+        if (!this._shouldRunRefundSave(false)) {
+            return true;
+        }
+        return this._performClientSaveValidation(true);
+    }
+
+    @api
+    validateRefund() {
+        if (this.isReadOnly) {
+            return true;
+        }
+        return this._performClientSaveValidation(false);
+    }
+
+    @api
+    saveDraftIfApplicable() {
+        if (this.isReadOnly) {
+            return Promise.resolve();
+        }
+        if (!this._shouldRunRefundSave(true)) {
+            return Promise.resolve();
+        }
         if (!this.recordId) {
             return Promise.resolve();
         }
-        const refundAmountDigits = stripToIntString(this.manualRefundAmountDisplay);
-        const refundAmount = refundAmountDigits ? parseInt(refundAmountDigits, 10) : null;
-        const lines = this.receiptRows.map((row) => ({
-            receiptDateIso: row.receiptDateIso,
-            receiptAmount: row.receiptAmountDigits ? parseInt(row.receiptAmountDigits, 10) : null,
-            transactionNo: row.transactionNo,
-            paymentChannel: row.paymentChannel
-        }));
-        return saveRefundRequest({
-            caseId: this.recordId,
-            refundAmount: refundAmount,
-            receiptLines: lines,
-            beneficiaryName: this.beneficiaryName,
-            beneficiaryAccount: this.beneficiaryAccount,
-            bankPicklistValue: this.bankComboValue || null,
-            bankBranch: this.bankBranch,
-            provinceCity: this.provinceComboValue
-        }).then((res) => {
-            if (!res || !res.success) {
-                return Promise.reject(new Error((res && res.errorMessage) || "Save failed"));
-            }
-            if (this._wiredDefaults) {
-                return refreshApex(this._wiredDefaults).then(() => this.hydrateReceiptLinesFromServer());
-            }
-            return this.hydrateReceiptLinesFromServer();
-        });
+        const p = this._refundSavePayload(true);
+        return saveRefundRequestDraft({ caseId: this.recordId, refundAmount: p.refundAmount, receiptLines: p.receiptLines })
+            .catch((err) => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Error,
+                    message: (err.body && err.body.message) ? err.body.message : err.message || FEC_Toast_Save_Error_Message,
+                    variant: CONST.VARIANT_ERROR
+                }));
+                return Promise.reject(err);
+            });
+    }
+
+    @api
+    saveRefundDataIfApplicable() {
+        if (this.isReadOnly) {
+            return Promise.resolve();
+        }
+        if (!this._shouldRunRefundSave(false)) {
+            return Promise.resolve();
+        }
+        return this.saveRefundRequest();
+    }
+
+    @api
+    saveRefundDataIfVisible() {
+        return this.saveRefundDataIfApplicable();
+    }
+
+    saveRefundRequest() {
+        if (this.isReadOnly) {
+            return Promise.reject(new Error('readonly'));
+        }
+        if (!this._performClientSaveValidation(true)) {
+            return Promise.reject(new Error('validation'));
+        }
+        if (!this.recordId) {
+            return Promise.reject(new Error('missing case'));
+        }
+        const p = this._refundSavePayload(false);
+        return saveRefundRequest({ caseId: this.recordId, refundAmount: p.refundAmount, receiptLines: p.receiptLines })
+            .then(() => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Success_Title,
+                    message: FEC_Toast_Save_Success,
+                    variant: CONST.VARIANT_SUCCESS
+                }));
+                return this.loadRefundRequestData();
+            })
+            .catch((err) => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Error,
+                    message: (err.body && err.body.message) ? err.body.message : err.message || FEC_Toast_Save_Error_Message,
+                    variant: CONST.VARIANT_ERROR
+                }));
+                return Promise.reject(err);
+            });
     }
 }

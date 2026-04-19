@@ -1,4 +1,7 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import FEC_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Account_or_Contract__c';
+import FEC_CONTRACT_NUMBER from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getSectionData from '@salesforce/apex/FEC_RepaySchedPayHistController.getSectionData';
 import FEC_Repayment_Schedule_Label from '@salesforce/label/c.FEC_Repayment_Schedule_Label';
@@ -68,6 +71,9 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     @track isRefreshingRealTime = false;
     refreshStatusMap = { realTimePayment: 'NONE' };
     pageSizeOptions = [12, 24, 36, 48];
+
+    /** Tránh load trùng LDS; đổi khi đổi hợp đồng Loan. */
+    _caseContractSignature;
 
     customLabel = {
         repaymentSchedule: FEC_Repayment_Schedule_Label,
@@ -377,7 +383,22 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         }));
     }
 
-    connectedCallback() {
+    @wire(getRecord, {
+        recordId: '$recordId',
+        fields: [FEC_ACCOUNT_OR_CONTRACT, FEC_CONTRACT_NUMBER],
+    })
+    wiredCaseForLoanRefresh({ data, error }) {
+        if (!this.recordId || !data || error) {
+            return;
+        }
+        const historyId = getFieldValue(data, FEC_ACCOUNT_OR_CONTRACT);
+        const contractNo = getFieldValue(data, FEC_CONTRACT_NUMBER);
+        const signature = `${this.recordId}|${historyId || ''}|${contractNo || ''}`;
+        if (this._caseContractSignature === signature) {
+            return;
+        }
+        this._caseContractSignature = signature;
+        this.refreshStatusMap = { realTimePayment: 'NONE' };
         this.loadData();
     }
 

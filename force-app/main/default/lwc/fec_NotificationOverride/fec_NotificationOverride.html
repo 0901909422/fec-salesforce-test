@@ -118,11 +118,11 @@
             <div class="slds-col slds-size_1-of-2 column">
               <template if:true={showStatusPair}>
                 <c-fec_-lookup label="Current Status" placeholder="Search Status..." is-multi-select data-id="currentStatus"
-                  object-api-name="Case.Status" field-api-name="Status" icon-name="standard:case"
+                  object-api-name="FEC_Case_Status__c" field-api-name="Name" icon-name="standard:picklist"
                   onselect={handleSelected} required value={initialCurrentStatus}></c-fec_-lookup>
             
                 <c-fec_-lookup label="Changed Status" placeholder="Search Status..." is-multi-select data-id="changedStatus"
-                  object-api-name="Case.Status" field-api-name="Status" icon-name="standard:case"
+                  object-api-name="FEC_Case_Status__c" field-api-name="Name" icon-name="standard:picklist"
                   onselect={handleSelected} required value={initialChangedStatus}></c-fec_-lookup>
               </template>
             
@@ -173,10 +173,9 @@
 
       <!-- Actions -->
       <div class="slds-col slds-m-top_medium submit">
-        <lightning-button label={Cancel} class="cancel-button" onclick={handleCancel}></lightning-button>
+        <lightning-button label={Cancel} onclick={handleCancel}></lightning-button>
         <template if:true={isCreate}>
-          <lightning-button type="submit" label={FEC_Button_SaveAndNew} onclick={handleSaveAndNew} variant="neutral"
-            class="slds-m-horizontal_x-small">
+          <lightning-button type="submit" label={FEC_Button_SaveAndNew} onclick={handleSaveAndNew} variant="neutral">
           </lightning-button>
         </template>
         <lightning-button type="submit" variant="brand" label={FEC_Save}></lightning-button>

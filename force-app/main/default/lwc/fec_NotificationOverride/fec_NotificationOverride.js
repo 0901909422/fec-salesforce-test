@@ -45,16 +45,21 @@ import {
   AUTO_NOTIFICATION_HEADER_VI,
   MANUAL_NOTIFICATION_HEADER_VI,
   AUTO_NOTIFICATION_TYPE,
-  MANUAL_NOTIFICATION_TYPE
+  MANUAL_NOTIFICATION_TYPE,
+  TARGET_GROUP_INTERNAL_USER
 } from "c/fec_CommonConst";
 
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { getRecord } from 'lightning/uiRecordApi';
 import FEC_Notification_Channel_Disabled_Msg from "@salesforce/label/c.FEC_Notification_Channel_Disabled_Msg";
 
 const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
+/** Nhiều FEC_Case_Status__c.Name trên FEC_Current_Status__c / FEC_Changed_Status__c */
+const CASE_STATUS_NAME_DELIMITER = ",";
 
-const FIELDS = [CURRENT_STATUS_FIELD, CHANGED_STATUS_FIELD];
+/** FEC_Customer_Type__c (multi-select): cả 3 giá trị khi Target Group = Internal User (API value theo value set). */
+const DEFAULT_INTERNAL_USER_CUSTOMER_TYPES =
+  "All;Existing;Non-existing";
 
 /**
  * FEC Notification Override
@@ -73,8 +78,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   @track initialCurrentStatus = [];
   @track initialChangedStatus = [];
   @track initialAssignedToQueue = [];
-  @track initialCurrentStatus = [];
-  @track initialChangedStatus = [];
 
   showChannelWarning = false;
   selectedNotiChannelId = null;
@@ -136,9 +139,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   selectedAssignedToQueueId = null;
 
-  /** Phase 1: CSV of FEC_Case_Status__c Ids (comma-separated). Undefined = user has not changed lookup (preserve on edit). */
-  selectedCurrentStatusCsv;
-  selectedChangedStatusCsv;
+  /** Lưu chuỗi Name (FEC_Case_Status__c.Name), nhiều giá trị phân tách bằng ',' — khớp field text trên notification. */
   // Track Status selections
   selectedCurrentStatus = null;
   selectedChangedStatus = null;
@@ -147,50 +148,6 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   @wire(getObjectInfo, { objectApiName: '$notificationObject' })
   objectInfo;
-
-  @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
-  wiredRecord({ error, data }) {
-    if (data) {
-      // 1. Auto-fill Current Status
-      let currentStatusStr = getFieldValue(data, CURRENT_STATUS_FIELD);
-      if (currentStatusStr) {
-        // Salesforce Multi-Select Picklists use ';' as a delimiter. 
-        // Change to ',' if your field uses comma separation.
-        let statusArray = currentStatusStr.split(';');
-
-        this.initialCurrentStatus = statusArray.map(status => {
-          return {
-            id: status,
-            title: status,
-            subtitle: 'Case Status'
-          };
-        });
-
-        // Keep the string for your save operation
-        this.selectedCurrentStatus = currentStatusStr;
-      }
-
-      // 2. Auto-fill Changed Status
-      let changedStatusStr = getFieldValue(data, CHANGED_STATUS_FIELD);
-      if (changedStatusStr) {
-        let changedArray = changedStatusStr.split(';');
-
-        this.initialChangedStatus = changedArray.map(status => {
-          let trimmedStatus = status.trim();
-          return {
-            id: trimmedStatus,
-            title: trimmedStatus,
-            subtitle: 'Case Status'
-          };
-        });
-
-        // Keep the string for your save operation
-        this.selectedChangedStatus = changedStatusStr;
-      }
-    } else if (error) {
-      console.error('Error fetching existing record values', error);
-    }
-  }
 
   @wire(getRecord, { recordId: '$selectedNotiChannelId', fields: ['FEC_Notification_Channel__c.FEC_Noti_Channel_Status__c'] })
   wiredChannelStatus({ error, data }) {
@@ -218,17 +175,43 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     return this.objectInfo?.data?.label;
   }
 
+  /** @param {Array<{id?: string, title?: string, subtitle?: string}>|undefined} rows từ Apex getNotificationById */
+  _mapCaseStatusPills(rows, fallbackCsv) {
+    const subtitle = 'FEC Case Status';
+    if (rows && rows.length) {
+      return rows.map((p) => ({
+        id: p.id,
+        title: p.title,
+        subtitle: p.subtitle || subtitle
+      }));
+    }
+    if (!fallbackCsv) {
+      return [];
+    }
+    return fallbackCsv
+      .split(CASE_STATUS_NAME_DELIMITER)
+      .map((s) => (s || '').trim())
+      .filter(Boolean)
+      .map((t) => ({ id: t, title: t, subtitle }));
+  }
+
   handleSelected(event) {
     const ids = (event.detail || []).map((e) => e?.id);
     const joined = ids.join(',');
     const dataId = event.currentTarget?.dataset?.id;
 
     if (dataId === 'currentStatus') {
-      this.selectedCurrentStatus = ids.join(';') || null;
-      return; 
+      const names = (event.detail || [])
+        .map((e) => (e?.title != null ? String(e.title).trim() : ''))
+        .filter(Boolean);
+      this.selectedCurrentStatus = names.length ? names.join(CASE_STATUS_NAME_DELIMITER) : null;
+      return;
     }
     if (dataId === 'changedStatus') {
-      this.selectedChangedStatus = ids.join(';') || null;
+      const names = (event.detail || [])
+        .map((e) => (e?.title != null ? String(e.title).trim() : ''))
+        .filter(Boolean);
+      this.selectedChangedStatus = names.length ? names.join(CASE_STATUS_NAME_DELIMITER) : null;
       return;
     }
 
@@ -243,13 +226,28 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
         this.selectedAssignedToQueueId = joined || null;
         break;
       case PRODUCT_TYPE_FIELD.fieldApiName:
-        this.selectedProductTypeId = joined || null;
+        if (this.selectedProductTypeId !== joined) {
+           this.selectedProductTypeId = joined || null;
+           // Cascade reset children
+           this.selectedCategoryId = null; this.initialCategory = [];
+           this.selectedSubCategoryId = null; this.initialSubCategory = [];
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case CATEGORY_FIELD.fieldApiName:
-        this.selectedCategoryId = joined || null;
+        if (this.selectedCategoryId !== joined) {
+           this.selectedCategoryId = joined || null;
+           // Cascade reset children
+           this.selectedSubCategoryId = null; this.initialSubCategory = [];
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case SUB_CATEGORY_OBJECT:
-        this.selectedSubCategoryId = joined || null;
+        if (this.selectedSubCategoryId !== joined) {
+           this.selectedSubCategoryId = joined || null;
+           // Cascade reset down to sub code
+           this.selectedSubCodeId = null; this.initialSubCode = [];
+        }
         break;
       case SUB_CODE_OBJECT:
         this.selectedSubCodeId = joined || null;
@@ -329,7 +327,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   get isInternal() {
-    return this.targetGroup === 'Internal User';
+    return this.targetGroup === TARGET_GROUP_INTERNAL_USER;
   }
 
   get isDisplay() {
@@ -337,7 +335,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   // ====== FIELD VISIBILITY RULES ======
-  // A. Customer Type: show when sending to Customer (Auto & Manual)
+  // A. Customer Type: chỉ khi Target Group = Customer (Internal User: gán ẩn trong handleSubmit)
   get showCustomerType() {
     return this.isCustomer;
   }
@@ -364,7 +362,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // G. Receivers: when sending to Internal User (Auto or Manual)
   get showReceivers() {
-    return this.isInternal;
+    return this.isInternal && this.isAuto;
   }
 
   // H & I. Schedule Start/End Time: Auto + Internal User
@@ -420,7 +418,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
             // Map data to local tracking variables for saving and logic
             this.headerLabel = 'Edit ' + res.Name;
             this.targetGroup = res.FEC_Target_Group__c;
-            this.recordType.DeveloperName = res.RecordType.DeveloperName;
+            this.recordType.DeveloperName = res?.RecordType?.DeveloperName;
             this.recordTypeId = res.RecordTypeId;
             this.selectedNotiChannelId = res.FEC_Notification_Channel__c;
             this.selectedChannelId = res.FEC_Channel__c;
@@ -438,31 +436,33 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
                 }));
             }
 
-            // Populating UI Pills for Multi-Select Case Statuses (split by semicolon)
-            if (res.FEC_Current_Status__c) {
-                this.initialCurrentStatus = res.FEC_Current_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
-            }
-            if (res.FEC_Changed_Status__c) {
-                this.initialChangedStatus = res.FEC_Changed_Status__c.split(';').map(s => ({ id: s, title: s, subtitle: 'Status' }));
-            }
+            // Multi-select FEC_Case_Status__c: Apex trả Id + Name để lookup loại trừ đúng; fallback split Name nếu không có pill
+            this.initialCurrentStatus = this._mapCaseStatusPills(
+              response.currentStatusPills,
+              res.FEC_Current_Status__c
+            );
+            this.initialChangedStatus = this._mapCaseStatusPills(
+              response.changedStatusPills,
+              res.FEC_Changed_Status__c
+            );
 
             // Populating UI Pills for Single-Select Lookups
             if (res.FEC_Product_Type__c) {
-                this.initialProductType = [{ id: res.FEC_Product_Type__c, title: res.FEC_Product_Type__r.Name }];
+                this.initialProductType = [{ id: res.FEC_Product_Type__c, title: res?.FEC_Product_Type__r?.Name }];
             }
             if (res.FEC_Category__c) {
-                this.initialCategory = [{ id: res.FEC_Category__c, title: res.FEC_Category__r.Name }];
+                this.initialCategory = [{ id: res.FEC_Category__c, title: res?.FEC_Category__r?.Name }];
             }
             if (res.FEC_SubCategory__c) {
-                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res.FEC_SubCategory__r.Name }];
+                this.initialSubCategory = [{ id: res.FEC_SubCategory__c, title: res?.FEC_SubCategory__r?.Name }];
             }
             if (res.FEC_SubCode__c) {
-                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res.FEC_SubCode__r.Name }];
+                this.initialSubCode = [{ id: res.FEC_SubCode__c, title: res?.FEC_SubCode__r?.Name }];
             }
             if (res.FEC_Assigned_to_Queue__c && response.queue) {
                 this.initialAssignedToQueue = [{ 
-                    id: response.queue.DeveloperName, 
-                    title: response.queue.Name, 
+                    id: response?.queue?.DeveloperName, 
+                    title: response?.queue?.Name, 
                     subtitle: 'Group' 
                 }];
             }
@@ -474,7 +474,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // Keep compatibility in case template uses onchange={handleChange}
   handleChange(event) {
-    this.targetGroup = event.target.value;
+    const v = event.detail?.value !== undefined ? event.detail.value : event.target?.value;
+    this.targetGroup = v;
   }
 
   async handleSubmit(event) {
@@ -494,6 +495,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     }
     if (this.selectedChangedStatus !== null) {
       fields[CHANGED_STATUS_FIELD.fieldApiName] = this.selectedChangedStatus;
+    }
+    if (this.targetGroup === TARGET_GROUP_INTERNAL_USER) {
+      fields[CUSTOMER_TYPE_FIELD.fieldApiName] = DEFAULT_INTERNAL_USER_CUSTOMER_TYPES;
     }
 
     let isFormValid = true;

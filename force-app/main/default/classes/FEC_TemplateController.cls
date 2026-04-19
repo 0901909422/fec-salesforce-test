@@ -48,12 +48,12 @@ public with sharing class FEC_TemplateController {
      * @return Id of the saved record
      */
     @AuraEnabled
-    public static Id saveTemplate(String templateJson, String oldBody) {
+    public static Id saveTemplate(String templateJson, String oldBody, List<Id> deletedAttachmentIds) {
         try {
             FEC_Template__c tmpl = (FEC_Template__c) JSON.deserialize(
                 templateJson, FEC_Template__c.class
             );
-            return FEC_TemplateService.saveTemplate(tmpl, oldBody);
+            return FEC_TemplateService.saveTemplate(tmpl, oldBody, deletedAttachmentIds);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -67,6 +67,34 @@ public with sharing class FEC_TemplateController {
     public static void deleteTemplate(Id templateId) {
         try {
             FEC_TemplateService.deleteTemplate(templateId);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Create a draft template so the New Template form has a record Id
+     * for file uploads before the user saves.
+     * @return Id of the draft record
+     */
+    @AuraEnabled
+    public static Id createDraftTemplate() {
+        try {
+            return FEC_TemplateService.createDraftTemplate();
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Delete a draft template and its uploaded files when the user
+     * cancels the New Template form.
+     * @param draftId  The draft template record Id
+     */
+    @AuraEnabled
+    public static void deleteDraftTemplate(Id draftId) {
+        try {
+            FEC_TemplateService.deleteDraftTemplate(draftId);
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

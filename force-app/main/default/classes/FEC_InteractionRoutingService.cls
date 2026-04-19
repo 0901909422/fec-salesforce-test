@@ -140,12 +140,13 @@ public with sharing class FEC_InteractionRoutingService {
         Map<Id, Case> candidateCases = new Map<Id, Case>();
         Set<Id> parentIds = new Set<Id>();
 
+        String routingEmail = getRoutingEmail();
         for (Case c : newCases) {
             if (c.RecordTypeId == interactionRtId &&
                 c.OwnerId == queueId && ((
                     !c.FEC_Is_Reply_Interaction_email__c &&
                     c.FEC_Channel__c == FEC_ConstantCommon.EMAIL &&
-                    c.FEC_Send_To__c == System.Label.UBankCustomberServiceEmail
+                    c.FEC_Send_To__c == routingEmail
                 ) || (c.FEC_Is_Reply_Interaction_email__c && c.ParentId != null))
                 ) {
                 candidateCases.put(c.Id, c);
@@ -300,13 +301,14 @@ public with sharing class FEC_InteractionRoutingService {
         Map<Id, Integer> agentCaseCount = new Map<Id, Integer>();
         Set<String> interationStatuslst = new Set<String>{ 'Open' };
 
+        String routingEmail = getRoutingEmail();
         for (AggregateResult ar : [
             SELECT OwnerId ownerId, COUNT(Id) total
             FROM Case
             WHERE RecordTypeId = :interactionRtId
             AND FEC_Channel__c = :FEC_ConstantCommon.EMAIL
             AND FEC_On_Hold__c = false
-            AND FEC_Send_To__c = :System.Label.UBankCustomberServiceEmail
+            AND FEC_Send_To__c = :routingEmail
             AND OwnerId IN :agentUserIds
             AND IsClosed = false
             AND FEC_Interaction_Status__c  IN :interationStatuslst
@@ -315,5 +317,14 @@ public with sharing class FEC_InteractionRoutingService {
             agentCaseCount.put((Id) ar.get('ownerId'), (Integer) ar.get('total'));
         }
         return agentCaseCount;
+    }
+
+    /**
+     * @description Lấy email routing từ Custom Setting (FEC_System_Config__c)
+     * Fallback về Custom Label nếu chưa cấu hình.
+     */
+    private static String getRoutingEmail() {
+        FEC_System_Config__c sysConfig = FEC_System_Config__c.getOrgDefaults();
+        return sysConfig != null ? sysConfig.FEC_Send_To_Email_Ubank__c : null;
     }
 }

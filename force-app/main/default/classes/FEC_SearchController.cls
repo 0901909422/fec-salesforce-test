@@ -33,7 +33,8 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, String customerName, Boolean isListView ) {
+    public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
+                String customerName, Boolean isListView, String policyNumber, String buyerNID ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -74,6 +75,12 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Product_Type__c = productTypeId;
         objCase.FEC_Customer_Name__c = customerName;
         objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_EXISTING_CUSTOMER;
+        // 15/04/2026 PhuongNT add
+        objCase.FEC_Recipient_Name__c = customerName;
+
+        if (fieldName == 'UserId') {
+            objCase.FEC_Contract_Number__c = policyNumber;
+        }
         if (fieldName == 'AccountNumber') {
             objCase.FEC_Account_Number__c = value;
         }
@@ -84,27 +91,51 @@ public with sharing class FEC_SearchController {
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
 
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+            FEC_Case__c = objCase.Id
+        );
+        insert newInfo;
+
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
-        rec.FEC_Account_Number__c = value;
+        if (fieldName == 'AccountNumber') {
+            rec.FEC_Account_Number__c = value;
+        } else if (fieldName == 'ContractNumber') {
+            rec.FEC_Contract_Number__c = value;
+        } else if (fieldName == 'UserId') {
+            List<Case> cases = [SELECT Id, FEC_Search_Phone_Number__c, FEC_Search_National_ID__c FROM Case WHERE Id = :caseId LIMIT 1];
+            rec.FEC_Primary_Phone__c = cases != null && !cases.isEmpty() ? cases.get(0).FEC_Search_Phone_Number__c : null;
+            rec.FEC_National_ID_Passport_ID__c =cases != null && !cases.isEmpty() ? cases.get(0).FEC_Search_National_ID__c : null;
+            rec.FEC_Buyer_NID__c = buyerNID;
+            rec.FEC_Contract_Number__c = policyNumber;
+            System.debug('>>>>FEC_Primary_Phone__c: ' + rec.FEC_Primary_Phone__c);
+            System.debug('>>>>FEC_National_ID_Passport_ID__c: ' + rec.FEC_National_ID_Passport_ID__c);
+            System.debug('>>>>FEC_Contract_Number__c: ' + policyNumber);
+            
+        }
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
         rec.FEC_Work_Phone__c = phone;
         rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER;
+        //HieuTT7: Sửa gán thêm product type cho history để tiện tracking (ngày 10/04/2026)
+        rec.FEC_Product_Code__c   = selectedType;
         rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
-
+ System.debug('>>>>rec: ' + json.serializePretty(rec));
         insert rec;
 
         // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
+        // 15/04/2026 PhuongNT add
+        objCase.FEC_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
+        objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
         update objCase;
-        
+
         // ===== CALL API Demographic  =====
        System.enqueueJob(
             new FEC_FullCustomerIntegrationJob(
-                rec.Id,      
-                cifNumber,
-                phone,
+            rec.Id,
+            cifNumber,
+            phone,
                 fieldName == 'AccountNumber' ? value : null
                 )
         );
@@ -129,7 +160,7 @@ public with sharing class FEC_SearchController {
                 for (FEC_GetLoanApplicationHistory.ApplicationHistory h : res.histories) {
                     rows.add(new Map<String, String>{
                         'user'     => h.userName,
-                        'activity' => h.activityName,
+                        'activity' => h.activityId,
                         'status'   => h.statusId,
                         'editDate' => h.editDate
                     });
@@ -212,7 +243,7 @@ public with sharing class FEC_SearchController {
     }
 
     @AuraEnabled
-    public static void revealNationalId(Id recordId) {
+    public static void revealNationalId(Id recordId, String fieldLabel) {
         
         try {
             Case c = [
@@ -228,11 +259,11 @@ public with sharing class FEC_SearchController {
             WHERE Id = :UserInfo.getUserId()
             ];
             
-            
+            String searchField = String.isBlank(fieldLabel) ? FEC_ConstantCommon.SECTION_NATIONAL_PASSPORT : fieldLabel;
             // 🔐 Audit sensitive access
             FEC_CommonUltils.logSensitiveAccess(
                 FEC_ConstantCommon.SECTION_SEARCH_INFORMARION,
-                FEC_ConstantCommon.SECTION_NATIONAL_PASSPORT,
+                searchField,
                 u.Username.split('@')[0],
                 u.UserRole != null ? u.UserRole.Name : null,
                 c.Id);
@@ -283,15 +314,29 @@ public with sharing class FEC_SearchController {
     public static Id createInternalCaseOnSkip() {
         try {
             Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME);
+            List<FEC_Product_Type__c> productTypes = [
+                SELECT Id 
+                FROM FEC_Product_Type__c 
+                WHERE FEC_Code__c = :FEC_ConstantCommon.CASE_INTERNAL_REQUEST
+                LIMIT 1
+            ];
 
             Case c = new Case();
             c.RecordTypeId = recordTypeId;
-            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
             c.FEC_Account_Contract_Number_PL__c = FEC_ConstantCommon.CASE_INTERNAL_REQUEST;
             c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
             c.FEC_Skip_Search_Internal_Case__c = true;
+            if (!productTypes.isEmpty()) {
+                c.FEC_Product_Type__c = productTypes.get(0).Id;
+            }
 
             insert c;
+
+            FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+                FEC_Case__c = c.Id
+            );
+            insert newInfo;
 
             return c.Id;
 
@@ -302,5 +347,44 @@ public with sharing class FEC_SearchController {
                 ' | Msg: ' + e.getMessage()
             );
         }
+    }
+
+    @AuraEnabled
+    public static Map<String, Object> getHistoryStatus(Id historyId) {
+        try {
+            FEC_Customer_History__c hist = [
+                SELECT Id,
+                    FEC_Customer_Name__c,
+                    FEC_National_ID_Passport_ID__c,
+                    FEC_Gender__c,
+                    FEC_Date_of_Birth__c,
+                    FEC_Primary_Phone__c,
+                    FEC_Email__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :historyId
+                LIMIT 1
+            ];
+
+          Boolean isReady = hist != null && hist.Id != null;
+            return new Map<String, Object>{
+                'isReady'      => isReady,
+                'customerName' => hist.FEC_Customer_Name__c,
+                'nationalId'   => hist.FEC_National_ID_Passport_ID__c,
+                'gender'       => hist.FEC_Gender__c,
+                'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
+                'primaryPhone' => hist.FEC_Primary_Phone__c,
+                'email'        => hist.FEC_Email__c
+            };
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
+     * Lấy Profile name của current user để check permission
+     */
+    @AuraEnabled(cacheable=true)
+    public static String getCurrentUserProfileName() {
+        return FEC_CommonUltils.getCurrentUserProfileName();
     }
 }

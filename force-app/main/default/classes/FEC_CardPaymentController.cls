@@ -647,8 +647,8 @@ public with sharing class FEC_CardPaymentController {
             Decimal ippAccruedInterest = p.additionalAccruedInt != null ? p.additionalAccruedInt : 0;
             
             record.FEC_Current_Balance__c = currentBalance;       // PlanCurrentBalance
-            // API trả BaseRate scale x100 (vd: 2920000 = 29200.00%) -> chia 100 để hiển thị đúng
-            record.FEC_Base_Rate__c = (p.baseRate != null ? p.baseRate / 100 : null);
+            // baseRate đã chuẩn hóa từ XML: 4 ký tự đầu / 100 (vd 1000000 → 10%)
+            record.FEC_Base_Rate__c = p.baseRate;
             record.FEC_Deferred_Interest__c = deferredInterest;   // DeferredInterest
             record.FEC_Accrued_Interest__c = accruedInterest;     // AccruedInterest
             record.FEC_Per_Diem__c = perDiem;                     // PerDiem

@@ -1,5 +1,6 @@
 <template>
   <section class="slds-modal slds-fade-in-open slds-modal_medium">
+    <lightning-spinner lwc:if={isLoading} size="medium" variant="brand"></lightning-spinner>
     <div class="slds-modal__container">
       <button
         class="slds-button slds-button_icon slds-modal__close"

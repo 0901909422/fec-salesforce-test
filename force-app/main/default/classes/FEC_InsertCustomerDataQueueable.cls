@@ -32,10 +32,25 @@ public class FEC_InsertCustomerDataQueueable implements Queueable {
         }
 
         if (!currentBatch.isEmpty()) {
-            try {
-                insert currentBatch;
-            } catch (Exception e) {
-                System.debug('Lỗi Insert Queueable: ' + e.getMessage());
+            List<Database.UpsertResult> results = Database.upsert(
+                currentBatch,
+                FEC_CustomerAdditionalInfo__c.FEC_CompositeKey__c,
+                false
+            );
+
+            Boolean hasErrors = false;
+            for (Database.UpsertResult sr : results) {
+                if (!sr.isSuccess()) {
+                    hasErrors = true;
+                    for (Database.Error err : sr.getErrors()) {
+                        System.debug('Upsert error: ' + err.getStatusCode() + ' - ' + err.getMessage());
+                    }
+                }
+            }
+
+            if (hasErrors) {
+                updateConfigsToFailure();
+                return;
             }
         }
 
@@ -86,6 +101,24 @@ public class FEC_InsertCustomerDataQueueable implements Queueable {
             }
         } catch (Exception e) {
             System.debug('Lỗi Finalize: ' + e.getMessage());
+        }
+    }
+
+    private void updateConfigsToFailure() {
+        if (configIds == null || configIds.isEmpty()) {
+            return;
+        }
+        try {
+            List<FEC_CustomerAdditionalInfoConfig__c> configsToUpdate = new List<FEC_CustomerAdditionalInfoConfig__c>();
+            for (Id cfgId : configIds) {
+                configsToUpdate.add(new FEC_CustomerAdditionalInfoConfig__c(
+                    Id = cfgId,
+                    FEC_Status__c = FEC_ConstantCommon.FAILURE_STATUS
+                ));
+            }
+            update configsToUpdate;
+        } catch (Exception e) {
+            System.debug('Lỗi updateConfigsToFailure: ' + e.getMessage());
         }
     }
 }
