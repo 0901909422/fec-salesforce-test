@@ -70,12 +70,18 @@
             // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
             if (templateSubject) {
-                var prefix = component.get('v.replyPrefix') || '';
-                component.set('v.subject', prefix ? prefix + templateSubject : templateSubject);
+                component.set('v.subject', templateSubject);
             }
-            // Nếu template không có subject thì giữ nguyên subject hiện tại
+            // Load attachments từ template (pre-loaded in templateAttachments cache)
+            var allAtts = component.get('v.templateAttachments') || {};
+            var tmplAtts = allAtts[templateId] || [];
+            component.set('v.attachments', tmplAtts.map(function(a) {
+                return { name: a.fileName, size: 0, _fromTemplate: true, _base64: a.base64Data, _mime: a.mimeType };
+            }));
         } else {
             component.set('v.body', '');
+            component.set('v.subject', '');
+            component.set('v.attachments', []);
             if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
             // Khi bỏ chọn template, khôi phục subject gốc (RE:/FW: + originalSubject)
             var prefix2 = component.get('v.replyPrefix') || '';
@@ -88,7 +94,7 @@
 
     openCompose: function(component, event, helper) {
         var orig = component.get('v.originalSubject');
-        component.set('v.replyPrefix', '');
+        component.set('v.replyPrefix', 'RE: ');
         component.set('v.subject', orig ? 'RE: ' + orig : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
@@ -270,12 +276,24 @@
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
         if (!files || files.length === 0) return;
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB
         var existing = component.get('v.attachments') || [];
         var newList = existing.slice();
+        var hasError = false;
         for (var i = 0; i < files.length; i++) {
-            newList.push({ name: files[i].name, size: files[i].size, file: files[i] });
+            if (files[i].size > MAX_SIZE) {
+                hasError = true;
+                try {
+                    var t = $A.get('e.force:showToast');
+                    if (t) { t.setParams({ title: 'File too large', message: files[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 }); t.fire(); }
+                } catch(e) {}
+            } else {
+                newList.push({ name: files[i].name, size: files[i].size, file: files[i] });
+            }
         }
         component.set('v.attachments', newList);
+        // Reset input so same file can be re-selected
+        event.target.value = '';
     },
 
     removeAttachment: function(component, event, helper) {
@@ -369,6 +387,22 @@
             try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:'We hit a snag',message:'Review the errors on this page. Subject is required.',type:'error',duration:4000});ts.fire();} } catch(e){}
             return;
         }
+        // Validate CC format
+        var ccRaw = (component.get('v.ccEmail') || '').trim();
+        if (ccRaw) {
+            var emailReCC = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var ccNormalized = ccRaw.replace(/;/g, ',').replace(/,\s*/g, ',');
+            var ccList = ccNormalized.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e; });
+            var invalidCC = null;
+            for (var ci = 0; ci < ccList.length; ci++) {
+                if (!emailReCC.test(ccList[ci])) { invalidCC = ccList[ci]; break; }
+            }
+            if (invalidCC) {
+                component.set('v.errorMsg', '"' + invalidCC + '" is not a valid CC email address.');
+                try { var tcc=$A.get('e.force:showToast'); if(tcc){tcc.setParams({title:'Invalid format',message:'"' + invalidCC + '" is not a valid CC email address.',type:'error',duration:4000});tcc.fire();} } catch(e){}
+                return;
+            }
+        }
         var bodyText = window._fecQuill ? window._fecQuill.getText().trim() : (body || '').replace(/<[^>]+>/g,'').trim();
         if (!bodyText && window._fecQuill) {
             var hasTable = window._fecQuill.root.querySelector('table') !== null;
@@ -395,41 +429,53 @@
             helper.doSendEmail(component, finalToEmail, subject, body, []);
             return;
         }
-
-        // Convert File objects to base64
         var converted = [];
-        var pending = attachments.length;
+        var pending = 0;
         var MAX_SIZE = 25 * 1024 * 1024; // 25MB
+        // Separate template attachments (already base64) from user-uploaded files
+        var templateAtts = [];
+        var fileAtts = [];
         for (var i = 0; i < attachments.length; i++) {
-            if (attachments[i].size > MAX_SIZE) {
-                component.set('v.isSending', false);
-                var toastSize = $A.get('e.force:showToast');
-                if (toastSize) {
-                    toastSize.setParams({ title: 'File too large', message: attachments[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 });
-                    toastSize.fire();
+            if (attachments[i]._fromTemplate) {
+                templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
+            } else {
+                if (attachments[i].size > MAX_SIZE) {
+                    component.set('v.isSending', false);
+                    var toastSize = $A.get('e.force:showToast');
+                    if (toastSize) {
+                        toastSize.setParams({ title: 'File too large', message: attachments[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 });
+                        toastSize.fire();
+                    }
+                    return;
                 }
-                return;
+                fileAtts.push(attachments[i]);
             }
         }
-        attachments.forEach(function(att, idx) {
+        if (fileAtts.length === 0) {
+            helper.doSendEmail(component, finalToEmail, subject, body, templateAtts);
+            return;
+        }
+        pending = fileAtts.length;
+        var fileConverted = [];
+        fileAtts.forEach(function(att, idx) {
             var reader = new FileReader();
             reader.onload = $A.getCallback(function(e) {
-                var dataUrl = e.target.result; // data:<mime>;base64,<data>
+                var dataUrl = e.target.result;
                 var parts = dataUrl.split(',');
                 var mimeMatch = parts[0].match(/:(.*?);/);
-                converted[idx] = {
+                fileConverted[idx] = {
                     fileName: att.name,
                     base64Data: parts[1],
                     mimeType: mimeMatch ? mimeMatch[1] : 'application/octet-stream'
                 };
                 pending--;
                 if (pending === 0) {
-                    helper.doSendEmail(component, finalToEmail, subject, body, converted);
+                    helper.doSendEmail(component, finalToEmail, subject, body, templateAtts.concat(fileConverted));
                 }
             });
             reader.onerror = $A.getCallback(function() {
                 component.set('v.isSending', false);
-                component.set('v.errorMsg', 'Lỗi đọc file đính kèm: ' + att.name);
+                component.set('v.errorMsg', 'Error reading attachment: ' + att.name);
             });
             reader.readAsDataURL(att.file);
         });

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Adjustment Method --></label>
+    <name>FEC_Adjustment_Method__c</name>
+    <picklistValues>
+        <masterLabel>Different contract owner</masterLabel>
+        <translation>Cùng chủ hợp đồng</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Same contract owner</masterLabel>
+        <translation>Khác chủ hợp đồng</translation>
+    </picklistValues>
+</CustomFieldTranslation>

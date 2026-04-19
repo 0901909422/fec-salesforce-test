@@ -3,7 +3,7 @@
  * Description  : Controller for Incorrect Payment Handling LWC - GetLoanSecInfo (PaymentHistories), subcode config, save adjustments.
  ****************************************************************************************/
 
-public with sharing class FEC_IncorrectPaymentController {
+public without sharing class FEC_IncorrectPaymentController {
     public class PaymentDTO {
         @AuraEnabled public String id;
         @AuraEnabled public String paymentNo;
@@ -146,10 +146,9 @@ public with sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+    public static List<FEC_CommonUltils.PicklistOption> getCorrectContractOptions() {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
         
-        // Get picklist values from field metadata
         Schema.DescribeFieldResult fieldResult = Case.FEC_Correct_Contract_Number__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
         
@@ -159,30 +158,35 @@ public with sharing class FEC_IncorrectPaymentController {
             }
         }
         
-        // Also add contract numbers from Case if available
-        if (caseId != null && Schema.sObjectType.Case.isAccessible()) {
-            List<Case> cases = [
-                SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                    FEC_Account_or_Contract__r.FEC_Contract_Number__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
-            
-            if (!cases.isEmpty()) {
-                Case c = cases[0];
-                Set<String> existingValues = new Set<String>();
-                for (FEC_CommonUltils.PicklistOption opt : result) {
-                    existingValues.add(opt.value);
-                }
-                
-                // Add contract numbers from Case if not already in picklist
-                addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
-                addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
-                if (c.FEC_Account_or_Contract__r != null) {
-                    addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
-                }
-            }
+        return result;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+        List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
+        
+        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+            return result;
+        }
+        List<Case> cases = [
+            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
+                FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
+        if (cases.isEmpty()) {
+            return result;
+        }
+        
+        Case c = cases[0];
+        Set<String> existingValues = new Set<String>();
+        
+        addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
+        addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
+        if (c.FEC_Account_or_Contract__r != null) {
+            addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
         }
         
         return result;
@@ -266,15 +270,7 @@ public with sharing class FEC_IncorrectPaymentController {
         
         // Update Case fields
         Case c = cases[0];
-        if (String.isNotBlank(billDate)) {
-            try {
-                c.FEC_Bill_Date__c = Date.valueOf(billDate);
-            } catch (Exception e) {
-                c.FEC_Bill_Date__c = null;
-            }
-        } else {
-            c.FEC_Bill_Date__c = null;
-        }
+        c.FEC_Bill_Date__c = FEC_CommonUltils.toDateStr(billDate);
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = paymentMethod != null ? paymentMethod.trim() : null;
@@ -318,15 +314,7 @@ public with sharing class FEC_IncorrectPaymentController {
         }
 
         Case c = cases[0];
-        if (String.isNotBlank(billDate)) {
-            try {
-                c.FEC_Bill_Date__c = Date.valueOf(billDate);
-            } catch (Exception e) {
-                c.FEC_Bill_Date__c = null;
-            }
-        } else {
-            c.FEC_Bill_Date__c = null;
-        }
+        c.FEC_Bill_Date__c = FEC_CommonUltils.toDateStr(billDate);
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = String.isNotBlank(paymentMethod) ? paymentMethod.trim() : null;

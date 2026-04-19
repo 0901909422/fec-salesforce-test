@@ -8,7 +8,8 @@ import {
 } from "lightning/platformWorkspaceApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import createInteractionManual from "@salesforce/apex/FEC_CreateInteractionManualHandler.createInteractionManual";
-import { CHANNEL_OPTIONS, SUB_CHANNEL_MAP } from "c/fec_CommonConst";
+import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
+import { CHANNEL_OPTIONS, SUB_CHANNEL_MAP, PROFILE_RELEVANT_DEPTS } from "c/fec_CommonConst";
 
 //==================== LABELS ====================
 import FEC_CREATE_INTERACTION_LABEL from "@salesforce/label/c.FEC_Create_Interaction_In_List_View_Label";
@@ -21,6 +22,7 @@ import FEC_Complete_field_msg from "@salesforce/label/c.FEC_Complete_field_msg";
 import FEC_Create_Interaction_Failed_MSG from "@salesforce/label/c.FEC_Create_Interaction_Failed_MSG";
 import FEC_Interaction_Title_Label from "@salesforce/label/c.FEC_Interaction_Title_Label";
 import FEC_Create_Successfully_MSG from "@salesforce/label/c.FEC_Create_Successfully_MSG";
+import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
 
 export default class Fec_CreateCaseInListView extends NavigationMixin(
   LightningElement,
@@ -29,6 +31,7 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
 
   isShowModal = true;
   isLoading = false;
+  _userProfile;
 
   channelOptions = CHANNEL_OPTIONS;
   subChannelOptions = [];
@@ -37,6 +40,16 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
   selectedSubChannel;
 
   @wire(IsConsoleNavigation) isConsoleNavigation;
+  @wire(getCurrentUserProfileName)
+  wiredProfile({ data }) {
+    if (data) {
+      this._userProfile = data;
+      if (data === PROFILE_RELEVANT_DEPTS) {
+        this.isShowModal = false;
+        this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+      }
+    }
+  }
 
   currentTabId;
   newCaseId;
@@ -200,5 +213,9 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
 
   showToast(title, message, variant) {
     this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+  }
+
+  _showNoPermissionToast() {
+    this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
   }
 }

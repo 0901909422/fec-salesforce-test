@@ -427,6 +427,30 @@ public without sharing class FEC_CreateCaseHandler {
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         
         insert c;
+        
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+        FEC_Case__c = c.Id
+        );
+        insert newInfo;
+
         return c.Id;
+    }
+
+    // create CaseRecordTypeDevName
+    @AuraEnabled(cacheable=true)
+    public static String getCaseRecordTypeDevName(Id caseId) {
+        if (caseId == null) return null;
+
+        try {
+            Case c = [
+                SELECT RecordType.DeveloperName
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            return c.RecordType.DeveloperName;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
 }

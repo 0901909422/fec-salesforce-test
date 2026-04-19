@@ -113,6 +113,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
     public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
     public static final String PATTERN_CLEAN_TEXT = '[^a-zA-Z0-9-_]';
+    /** Nhận diện "Stage N" trong tên stage Case (dyn LWC FEC_CaseBusinessService). */
+    public static final Pattern PAT_STAGE_NAME_WITH_NUMBER = Pattern.compile('(?i)[\\s-]stage ([0-9]+)( -|$)');
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
@@ -141,7 +143,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
     public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_VMXVERSION_EMEA_CARD = 'E8V2';
+    public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
+    public static final String REQUESTOR_ORG_EMEA_CARD = '150';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -470,5 +475,35 @@ public with sharing class FEC_ConstantCommon {
     public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
-    
+
+    /** Profile names */
+    public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+
+    /** MIME types for file attachments */
+    public static final String MIME_OCTET_STREAM = 'application/octet-stream';
+    public static final String MIME_PDF = 'application/pdf';
+    public static final String MIME_PNG = 'image/png';
+    public static final String MIME_JPEG = 'image/jpeg';
+    public static final String MIME_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    public static final String MIME_WORD = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    /** FileType values for ContentVersion */
+    public static final String FILE_TYPE_PDF = 'PDF';
+    public static final String FILE_TYPE_PNG = 'PNG';
+    public static final String FILE_TYPE_JPG = 'JPG';
+    public static final String FILE_TYPE_JPEG = 'JPEG';
+    public static final String FILE_TYPE_EXCEL_X = 'EXCEL_X';
+    public static final String FILE_TYPE_EXCEL = 'EXCEL';
+    public static final String FILE_TYPE_WORD_X = 'WORD_X';
+    public static final String FILE_TYPE_WORD = 'WORD';
+
+    public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
+    public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+
+    public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
+    public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
+    public static final String P_TAG_REGEX = '(?i)</p>';
+    public static final String HTML_TAG_REGEX = '<[^>]+>';
+    public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
+    public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
 }
