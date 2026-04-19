@@ -3,7 +3,7 @@
  * Description  : Controller for IPP Conversion (RC34.01 Retail, RC34.02 Balance). Eligible transactions, Check IPP Details, Convert IPP (AddIPP).
  ****************************************************************************************/
 
-public with sharing class FEC_IPPConversionController {
+public without sharing class FEC_IPPConversionController {
 
     public static final Integer MAX_RETRY_COUNT = 3;
 
