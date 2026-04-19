@@ -45,7 +45,8 @@ import {
   AUTO_NOTIFICATION_HEADER_VI,
   MANUAL_NOTIFICATION_HEADER_VI,
   AUTO_NOTIFICATION_TYPE,
-  MANUAL_NOTIFICATION_TYPE
+  MANUAL_NOTIFICATION_TYPE,
+  TARGET_GROUP_INTERNAL_USER
 } from "c/fec_CommonConst";
 
 import { getRecord } from 'lightning/uiRecordApi';
@@ -55,6 +56,10 @@ const SUB_CATEGORY_OBJECT = "FEC_Sub_Category__c";
 const SUB_CODE_OBJECT = "FEC_Sub_Code__c";
 /** Nhiều FEC_Case_Status__c.Name trên FEC_Current_Status__c / FEC_Changed_Status__c */
 const CASE_STATUS_NAME_DELIMITER = ",";
+
+/** FEC_Customer_Type__c (multi-select): cả 3 giá trị khi Target Group = Internal User (API value theo value set). */
+const DEFAULT_INTERNAL_USER_CUSTOMER_TYPES =
+  "All;Existing;Non-existing";
 
 /**
  * FEC Notification Override
@@ -322,7 +327,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   get isInternal() {
-    return this.targetGroup === 'Internal User';
+    return this.targetGroup === TARGET_GROUP_INTERNAL_USER;
   }
 
   get isDisplay() {
@@ -330,7 +335,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
   }
 
   // ====== FIELD VISIBILITY RULES ======
-  // A. Customer Type: show when sending to Customer (Auto & Manual)
+  // A. Customer Type: chỉ khi Target Group = Customer (Internal User: gán ẩn trong handleSubmit)
   get showCustomerType() {
     return this.isCustomer;
   }
@@ -357,7 +362,7 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // G. Receivers: when sending to Internal User (Auto or Manual)
   get showReceivers() {
-    return this.isInternal;
+    return this.isInternal && this.isAuto;
   }
 
   // H & I. Schedule Start/End Time: Auto + Internal User
@@ -469,7 +474,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
 
   // Keep compatibility in case template uses onchange={handleChange}
   handleChange(event) {
-    this.targetGroup = event.target.value;
+    const v = event.detail?.value !== undefined ? event.detail.value : event.target?.value;
+    this.targetGroup = v;
   }
 
   async handleSubmit(event) {
@@ -489,6 +495,9 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     }
     if (this.selectedChangedStatus !== null) {
       fields[CHANGED_STATUS_FIELD.fieldApiName] = this.selectedChangedStatus;
+    }
+    if (this.targetGroup === TARGET_GROUP_INTERNAL_USER) {
+      fields[CUSTOMER_TYPE_FIELD.fieldApiName] = DEFAULT_INTERNAL_USER_CUSTOMER_TYPES;
     }
 
     let isFormValid = true;

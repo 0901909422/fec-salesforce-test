@@ -33,7 +33,11 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @track bankOptions = [];
     @track provinceOptions = [];
     @track bankBranchOptions = [];
+    @track isBankManualInput = false;
+    @track isBankBranchManualInput = false;
     @track isBusy = false;
+    shouldFocusBankManualInput = false;
+    shouldFocusBranchManualInput = false;
     customLabel = {
         beneficiaryName: FEC_LBL_Beneficiary_Name,
         beneficiaryAccount: FEC_LBL_Beneficiary_Account,
@@ -66,6 +70,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     wiredBanks({ data, error }) {
         if (data) {
             this.bankOptions = data.map((r) => ({ label: r.label, value: r.value }));
+            this._syncBankInputMode();
         } else if (error) {
             this.bankOptions = [];
         }
@@ -82,6 +87,23 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
 
     connectedCallback() {
         this._loadBeneficiaryFormDefaults();
+    }
+
+    renderedCallback() {
+        if (this.shouldFocusBankManualInput) {
+            this.shouldFocusBankManualInput = false;
+            const bankInput = this.template.querySelector('lightning-input[data-id="bank-manual-input"]');
+            if (bankInput && typeof bankInput.focus === "function") {
+                bankInput.focus();
+            }
+        }
+        if (this.shouldFocusBranchManualInput) {
+            this.shouldFocusBranchManualInput = false;
+            const branchInput = this.template.querySelector('lightning-input[data-id="branch-manual-input"]');
+            if (branchInput && typeof branchInput.focus === "function") {
+                branchInput.focus();
+            }
+        }
     }
 
     _loadBeneficiaryFormDefaults() {
@@ -101,6 +123,8 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
                     this.bankBranch = data.bankBranch || STR_EMPTY;
                     this.provinceComboValue = data.provinceCity || STR_EMPTY;
                     this.refreshBranchOptions().then(() => {
+                        this._syncBankInputMode();
+                        this._syncBankBranchInputMode();
                         this.applyLocalDraftIfAny();
                     });
                 }
@@ -178,9 +202,11 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         }
         if (draft.bankPicklistValue != null) {
             this.bankComboValue = draft.bankPicklistValue;
+            this._syncBankInputMode();
         }
         if (draft.bankBranch != null) {
             this.bankBranch = draft.bankBranch;
+            this._syncBankBranchInputMode();
         }
         if (draft.provinceCity != null) {
             this.provinceComboValue = draft.provinceCity;
@@ -203,10 +229,35 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         return getBankBranchPicklistOptions({ bankNameNoaccent: bank })
             .then((list) => {
                 this.bankBranchOptions = (list || []).map((r) => ({ label: r.label, value: r.value }));
+                this._syncBankBranchInputMode();
             })
             .catch(() => {
                 this.bankBranchOptions = [];
+                this._syncBankBranchInputMode();
             });
+    }
+
+    _hasPicklistOption(options, value) {
+        if (!value) {
+            return false;
+        }
+        return (options || []).some((o) => o && o.value === value);
+    }
+
+    _hasPicklistOptionByText(options, value) {
+        if (!value) {
+            return false;
+        }
+        const normalizedValue = toUpperNoVietnameseAccent(value).trim();
+        return (options || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim().includes(normalizedValue) || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim().includes(normalizedValue)));
+    }
+
+    _syncBankInputMode() {
+        this.isBankManualInput = !!(this.bankComboValue && !this._hasPicklistOption(this.bankOptions, this.bankComboValue));
+    }
+
+    _syncBankBranchInputMode() {
+        this.isBankBranchManualInput = !!(this.bankBranch && !this._hasPicklistOption(this.bankBranchOptions, this.bankBranch));
     }
 
     handleBeneficiaryInput(event) {
@@ -231,10 +282,17 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (!v) {
             return;
         }
+        if (!this._hasPicklistOption(this.bankOptions, v)) {
+            this.isBankManualInput = true;
+            this.bankComboValue = toUpperNoVietnameseAccent(v);
+            return;
+        }
         const prev = this.bankComboValue;
+        this.isBankManualInput = false;
         this.bankComboValue = v;
         if (v !== prev) {
             this.bankBranch = STR_EMPTY;
+            this.isBankBranchManualInput = false;
             this._clearPickCombo("branch");
             this.refreshBranchOptions();
         }
@@ -244,6 +302,8 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         this.bankComboValue = STR_EMPTY;
         this.bankBranch = STR_EMPTY;
         this.bankBranchOptions = [];
+        this.isBankManualInput = false;
+        this.isBankBranchManualInput = false;
         this._clearPickCombo("branch");
     }
 
@@ -252,11 +312,48 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (!v) {
             return;
         }
+        if (!this._hasPicklistOption(this.bankBranchOptions, v)) {
+            this.isBankBranchManualInput = true;
+            this.bankBranch = toUpperNoVietnameseAccent(v);
+            return;
+        }
+        this.isBankBranchManualInput = false;
         this.bankBranch = v;
     }
 
     handleBankBranchRemove() {
         this.bankBranch = STR_EMPTY;
+        this.isBankBranchManualInput = false;
+    }
+
+    handleBankSearchChange(event) {
+        const inputValue = event.detail.value;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasPicklistOptionByText(this.bankOptions, inputValue)) {
+            return;
+        }
+        this.isBankManualInput = true;
+        this.shouldFocusBankManualInput = true;
+        this.bankComboValue = toUpperNoVietnameseAccent(inputValue);
+        this.bankBranch = STR_EMPTY;
+        this.isBankBranchManualInput = false;
+        this.bankBranchOptions = [];
+        this._clearPickCombo("branch");
+    }
+
+    handleBankBranchSearchChange(event) {
+        const inputValue = event.detail.value;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasPicklistOptionByText(this.bankBranchOptions, inputValue)) {
+            return;
+        }
+        this.isBankBranchManualInput = true;
+        this.shouldFocusBranchManualInput = true;
+        this.bankBranch = toUpperNoVietnameseAccent(inputValue);
     }
 
     handleProvincePickFromCombo(event) {
@@ -269,6 +366,26 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
 
     handleProvinceRemove() {
         this.provinceComboValue = STR_EMPTY;
+    }
+
+    handleBankInput(event) {
+        const v = toUpperNoVietnameseAccent(event.target.value);
+        this.bankComboValue = v;
+        if (!v) {
+            this.isBankManualInput = false;
+            this.bankBranch = STR_EMPTY;
+            this.isBankBranchManualInput = false;
+            this.bankBranchOptions = [];
+            this._clearPickCombo("branch");
+            return;
+        }
+        this.isBankManualInput = true;
+    }
+
+    handleBankBranchInput(event) {
+        const v = toUpperNoVietnameseAccent(event.target.value);
+        this.bankBranch = v;
+        this.isBankBranchManualInput = !!v;
     }
 
     handleError(error) {

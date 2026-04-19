@@ -208,6 +208,7 @@
                 onclick={handleProcessAction}
                 class="slds-m-right_x-small"
                 data-id={process.value}
+                disabled={process.disabled}
               ></lightning-button>
             </template>
           </div>
@@ -227,6 +228,13 @@
           >
             <p>{processActionMsg}</p>
           </div>
+
+          <div
+            if:true={isProcessActionInfo}
+            class="process-action-result process-action-result--info"
+          >
+            <p>{processActionMsg}</p>
+          </div>
         </template>
       </lightning-accordion-section>
     </template>
@@ -234,7 +242,7 @@
     <!-- routing action -->
     <lightning-accordion-section
       key={routingAccordionSectionKey}
-      if:true={business.hasRoutingAction}
+      if:true={showRoutingSection}
       name="routing-action"
       label={customLabel.routingActionLabel}
     >

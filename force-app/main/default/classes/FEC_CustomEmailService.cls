@@ -124,37 +124,26 @@ public without sharing class FEC_CustomEmailService {
 
     @AuraEnabled
     public static List<SObject> getEmailTemplates() {
-        // Lấy email của các Queue mà user đang là member
+        // Lấy email từ FEC_Outbound_Email_Config__c theo User Group của current user
         Set<String> userMailboxEmails = new Set<String>();
         try {
-            Set<Id> queueIds = new Set<Id>();
-            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
-                queueIds.add(gm.GroupId);
-            }
-            if (!queueIds.isEmpty()) {
-                Set<String> queueNames = new Set<String>();
-                for (Group q : [SELECT Name FROM Group WHERE Id IN :queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
-                    queueNames.add(q.Name);
-                }
-                if (!queueNames.isEmpty()) {
-                    // Query trực tiếp theo PersonalName = tên Queue
-                    for (SObject r : Database.query(
-                        'SELECT Address, PersonalName FROM EmailRoutingAddress WHERE PersonalName IN :queueNames'
-                    )) {
-                        String addr = (String) r.get('Address');
-                        if (String.isNotBlank(addr)) {
-                            userMailboxEmails.add(addr.toLowerCase());
-                        }
-                    }
+            Id userId = UserInfo.getUserId();
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :userId LIMIT 1];
+            String userGroup = currentUser.FEC_User_Group__c;
+            if (String.isNotBlank(userGroup)) {
+                for (SObject cfg : Database.query(
+                    'SELECT FEC_Email__c FROM FEC_Outbound_Email_Config__c WHERE FEC_User_Group__c = :userGroup AND FEC_Email__c != null'
+                )) {
+                    String email = (String) cfg.get('FEC_Email__c');
+                    if (String.isNotBlank(email)) userMailboxEmails.add(email.toLowerCase());
                 }
             }
         } catch (Exception e) {
-            System.debug('getEmailTemplates queue lookup failed: ' + e.getMessage());
+            System.debug('getEmailTemplates lookup failed: ' + e.getMessage());
         }
 
         if (userMailboxEmails.isEmpty()) return new List<FEC_Template__c>();
 
-        // Chỉ query template có FEC_Applicable_For_Mailbox__c chứa email của user
         String includesVal = String.join(new List<String>(userMailboxEmails), ',');
         return [
             SELECT Id, Name, FEC_Subject_Line__c, FEC_Body__c, FEC_Enhanced_Letterhead__c,
@@ -210,110 +199,94 @@ public without sharing class FEC_CustomEmailService {
     }
 
     /**
-     * Lấy From picklist: full list EmailRoutingAddress + OrgWide.
-     * Nếu Case owner là Queue và email match → lên đầu + selected.
+     * Bulk load attachments cho nhiều templates cùng lúc
+     * Trả về Map<templateId, List<attachmentInfo>>
+     */
+    @AuraEnabled
+    public static Map<String, List<Map<String, String>>> getTemplateAttachmentsBulk(List<String> templateIds) {
+        Map<String, List<Map<String, String>>> result = new Map<String, List<Map<String, String>>>();
+        if (templateIds == null || templateIds.isEmpty()) return result;
+        Set<Id> tIdSet = new Set<Id>();
+        for (String tid : templateIds) {
+            if (String.isNotBlank(tid)) tIdSet.add(Id.valueOf(tid));
+        }
+        // Init empty lists
+        for (Id tid : tIdSet) result.put(String.valueOf(tid), new List<Map<String, String>>());
+        Map<Id, Id> docToTemplate = new Map<Id, Id>();
+        for (ContentDocumentLink link : [
+            SELECT ContentDocumentId, LinkedEntityId, ContentDocument.LatestPublishedVersionId
+            FROM ContentDocumentLink WHERE LinkedEntityId IN :tIdSet
+        ]) {
+            docToTemplate.put(link.ContentDocument.LatestPublishedVersionId, link.LinkedEntityId);
+        }
+        if (docToTemplate.isEmpty()) return result;
+        for (ContentVersion cv : [
+            SELECT Id, Title, FileExtension, VersionData, FileType
+            FROM ContentVersion WHERE Id IN :docToTemplate.keySet()
+        ]) {
+            Id tId = docToTemplate.get(cv.Id);
+            Map<String, String> att = new Map<String, String>();
+            att.put('fileName', cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
+            att.put('base64Data', EncodingUtil.base64Encode(cv.VersionData));
+            String mime = FEC_ConstantCommon.MIME_OCTET_STREAM;
+            if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PDF) mime = FEC_ConstantCommon.MIME_PDF;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_PNG) mime = FEC_ConstantCommon.MIME_PNG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPG || cv.FileType == FEC_ConstantCommon.FILE_TYPE_JPEG) mime = FEC_ConstantCommon.MIME_JPEG;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_EXCEL) mime = FEC_ConstantCommon.MIME_EXCEL;
+            else if (cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD_X || cv.FileType == FEC_ConstantCommon.FILE_TYPE_WORD) mime = FEC_ConstantCommon.MIME_WORD;
+            att.put('mimeType', mime);
+            result.get(String.valueOf(tId)).add(att);
+        }
+        return result;
+    }
+
+    /**
+     * Lấy From picklist từ Outbound_Email_Config__c theo User Group của current user.
      */
     @AuraEnabled
     public static Map<String, Object> getFromAddresses(String caseId) {
         List<Map<String, String>> options = new List<Map<String, String>>();
         String defaultFrom = null;
 
-        // Lấy Queue mà current user là member → lấy email của Queue đó
-        Map<String, String> routingLabelMap = new Map<String, String>();
-        Map<String, String> routingAddrMap  = new Map<String, String>();
-        List<String> routingOrder = new List<String>();
-        String FIELD_ADDRESS = 'Address';
-        String FIELD_PERSONAL_NAME = 'PersonalName';
         try {
-            // Lấy Queue Id mà user đang là member
-            Set<Id> userQueueIds = new Set<Id>();
-            for (GroupMember gm : [SELECT GroupId FROM GroupMember WHERE UserOrGroupId = :UserInfo.getUserId()]) {
-                userQueueIds.add(gm.GroupId);
-            }
-            // Lấy EmailRoutingAddress của các Queue đó
-            if (!userQueueIds.isEmpty()) {
-                // Lấy tên và email của các Queue mà user là member
-                Set<String> queueNames = new Set<String>();
-                Set<String> queueEmails = new Set<String>();
-                for (Group q : [SELECT Name, Email FROM Group WHERE Id IN :userQueueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
-                    queueNames.add(q.Name);
-                    if (String.isNotBlank(q.Email)) queueEmails.add(q.Email.toLowerCase());
-                }
-                // 1 query duy nhất: lấy tất cả EmailRoutingAddress, filter theo tên Queue hoặc address Queue
-                if (!queueNames.isEmpty() || !queueEmails.isEmpty()) {
-                    for (SObject r : [
-                        SELECT Id, Address, PersonalName FROM EmailRoutingAddress
-                        WHERE PersonalName IN :queueNames OR Address IN :queueEmails
-                        ORDER BY PersonalName ASC
-                    ]) {
-                        String addr = (String) r.get(FIELD_ADDRESS);
-                        String name = (String) r.get(FIELD_PERSONAL_NAME);
-                        if (String.isNotBlank(addr)) {
-                            String lower = addr.toLowerCase();
-                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                            routingLabelMap.put(lower, lbl);
-                            routingAddrMap.put(lower, addr);
-                            routingOrder.add(lower);
-                        }
+            Id userId = UserInfo.getUserId();
+            User currentUser = [SELECT FEC_User_Group__c FROM User WHERE Id = :userId LIMIT 1];
+            String userGroup = currentUser.FEC_User_Group__c;
+
+            if (String.isNotBlank(userGroup)) {
+                for (SObject cfg : Database.query(
+                    'SELECT FEC_Email__c FROM FEC_Outbound_Email_Config__c WHERE FEC_User_Group__c = :userGroup AND FEC_Email__c != null ORDER BY FEC_Email__c ASC'
+                )) {
+                    String email = (String) cfg.get('FEC_Email__c');
+                    if (String.isNotBlank(email)) {
+                        options.add(new Map<String, String>{ 'label' => email, 'value' => email });
                     }
                 }
             }
         } catch (Exception e) {
-            System.debug('EmailRoutingAddress query failed: ' + e.getMessage());
+            System.debug('getFromAddresses error: ' + e.getMessage());
         }
 
-        // Xác định Queue email của Case
-        String queueEmail = null;
-        if (String.isNotBlank(caseId)) {
+        // Ưu tiên email khớp với Queue owner của Case lên đầu
+        if (String.isNotBlank(caseId) && !options.isEmpty()) {
             try {
                 Case c = [SELECT OwnerId, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
                 if (c.Owner.Type == FEC_ConstantCommon.GROUP_TYPE_QUEUE) {
-                    Group q = [SELECT Id, Name, Email FROM Group WHERE Id = :c.OwnerId LIMIT 1];
-                    if (String.isNotBlank(q.Email)) queueEmail = q.Email;
-                }
-            } catch (Exception e) {
-                System.debug('Queue lookup failed: ' + e.getMessage());
-            }
-        }
-
-        // Queue match → lên đầu + selected
-        String qLower = queueEmail != null ? queueEmail.toLowerCase() : null;
-        if (qLower != null && routingAddrMap.containsKey(qLower)) {
-            String addr = routingAddrMap.get(qLower);
-            options.add(new Map<String, String>{ 'label' => routingLabelMap.get(qLower), 'value' => addr });
-            defaultFrom = addr;
-            routingOrder.remove(routingOrder.indexOf(qLower));
-        }
-
-        // Thêm phần còn lại routing
-        for (String lower : routingOrder) {
-            options.add(new Map<String, String>{
-                'label' => routingLabelMap.get(lower),
-                'value' => routingAddrMap.get(lower)
-            });
-        }
-
-        // Nếu user không thuộc Queue nào → fallback lấy EmailRoutingAddress của Queue owner của Case
-        if (options.isEmpty() && String.isNotBlank(queueEmail)) {
-            try {
-                List<OrgWideEmailAddress> owas = [SELECT Id, Address, DisplayName FROM OrgWideEmailAddress WHERE Address = :queueEmail LIMIT 1];
-                if (!owas.isEmpty()) {
-                    String lbl = String.isNotBlank(owas[0].DisplayName) ? owas[0].DisplayName + ' <' + owas[0].Address + '>' : owas[0].Address;
-                    options.add(new Map<String, String>{ 'label' => lbl, 'value' => owas[0].Address });
-                    defaultFrom = owas[0].Address;
-                } else {
-                    for (SObject r : [SELECT Id, Address, PersonalName FROM EmailRoutingAddress WHERE Address = :queueEmail LIMIT 1]) {
-                        String addr = (String) r.get(FIELD_ADDRESS);
-                        String name = (String) r.get(FIELD_PERSONAL_NAME);
-                        if (String.isNotBlank(addr)) {
-                            String lbl = (String.isNotBlank(name) ? name + ' <' + addr + '>' : addr);
-                            options.add(new Map<String, String>{ 'label' => lbl, 'value' => addr });
-                            defaultFrom = addr;
+                    Group q = [SELECT Email FROM Group WHERE Id = :c.OwnerId LIMIT 1];
+                    if (String.isNotBlank(q.Email)) {
+                        String qLower = q.Email.toLowerCase();
+                        for (Integer i = 0; i < options.size(); i++) {
+                            if (options[i].get('value').toLowerCase() == qLower) {
+                                Map<String, String> matched = options.remove(i);
+                                options.add(0, matched);
+                                defaultFrom = matched.get('value');
+                                break;
+                            }
                         }
                     }
                 }
             } catch (Exception e) {
-                System.debug('Fallback routing lookup failed: ' + e.getMessage());
+                System.debug('Queue match failed: ' + e.getMessage());
             }
         }
 

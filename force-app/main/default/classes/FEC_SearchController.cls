@@ -91,6 +91,11 @@ public with sharing class FEC_SearchController {
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
 
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+            FEC_Case__c = objCase.Id
+        );
+        insert newInfo;
+
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         if (fieldName == 'AccountNumber') {
@@ -121,8 +126,8 @@ public with sharing class FEC_SearchController {
         // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
         // 15/04/2026 PhuongNT add
-        objCase.FEC_Phone_Number__c = rec.FEC_Primary_Phone__c;
-        objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c;
+        objCase.FEC_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
+        objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
         update objCase;
 
         // ===== CALL API Demographic  =====
@@ -328,6 +333,11 @@ public with sharing class FEC_SearchController {
 
             insert c;
 
+            FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+                FEC_Case__c = c.Id
+            );
+            insert newInfo;
+
             return c.Id;
 
         } catch (Exception e) {
@@ -349,21 +359,13 @@ public with sharing class FEC_SearchController {
                     FEC_Gender__c,
                     FEC_Date_of_Birth__c,
                     FEC_Primary_Phone__c,
-                    FEC_Email__c,
-                    FEC_Zalo_Follower__c,
-                    FEC_Website_Account__c,
-                    FEC_Mobile_App_Account__c
+                    FEC_Email__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :historyId
                 LIMIT 1
             ];
 
-           Boolean isReady = String.isNotBlank(hist.FEC_Customer_Name__c)
-            && (
-                String.isNotBlank(hist.FEC_Gender__c) ||
-                hist.FEC_Date_of_Birth__c != null ||
-                String.isNotBlank(hist.FEC_Primary_Phone__c)
-            );
+          Boolean isReady = hist != null && hist.Id != null;
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,
@@ -371,13 +373,18 @@ public with sharing class FEC_SearchController {
                 'gender'       => hist.FEC_Gender__c,
                 'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
                 'primaryPhone' => hist.FEC_Primary_Phone__c,
-                'email'        => hist.FEC_Email__c,
-                'zalo'         => hist.FEC_Zalo_Follower__c,
-                'website'      => hist.FEC_Website_Account__c,
-                'mobileApp'    => hist.FEC_Mobile_App_Account__c
+                'email'        => hist.FEC_Email__c
             };
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    /**
+     * Lấy Profile name của current user để check permission
+     */
+    @AuraEnabled(cacheable=true)
+    public static String getCurrentUserProfileName() {
+        return FEC_CommonUltils.getCurrentUserProfileName();
     }
 }

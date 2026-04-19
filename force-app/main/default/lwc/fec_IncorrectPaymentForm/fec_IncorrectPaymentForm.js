@@ -8,6 +8,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPaymentHistoryFromSOAP from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP';
 import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.getSubCodeConfig';
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
+import getCorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getCorrectContractOptions';
 import getPaymentMethodOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentMethodOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
 import saveAdjustmentDraft from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustmentDraft';
@@ -92,6 +93,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
+    @track correctContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = CONST.EMPTY;
     _pendingSelectedPaymentId = null;
@@ -229,7 +231,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get correctContractOptions() {
-        return this.incorrectContractOptionlst || [];
+        return this.correctContractOptionlst || [];
     }
 
     connectedCallback() {
@@ -354,13 +356,19 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     this.manualBillAmount = null;
                 }
                 
-                // Load contract options
-                const contractPromise = getIncorrectContractOptions({ caseId: this.recordId })
+                const incorrectContractPromise = getIncorrectContractOptions({ caseId: this.recordId })
                     .then((contractOpts) => {
                         this.incorrectContractOptionlst = contractOpts || [];
                     })
                     .catch(() => {
                         this.incorrectContractOptionlst = [];
+                    });
+                const correctContractPromise = getCorrectContractOptions()
+                    .then((pickOpts) => {
+                        this.correctContractOptionlst = pickOpts || [];
+                    })
+                    .catch(() => {
+                        this.correctContractOptionlst = [];
                     });
                 
                 // Load payment method options
@@ -372,7 +380,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                         this.paymentMethodOptionlst = [];
                     });
                 
-                return Promise.all([contractPromise, paymentMethodPromise]);
+                return Promise.all([incorrectContractPromise, correctContractPromise, paymentMethodPromise]);
             })
             .then(() => {
                 this.applyLocalDraftIfAny();
@@ -385,6 +393,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.configLoaded = true;
                 this.subCode = CONST.EMPTY;
                 this.incorrectContractOptionlst = [];
+                this.correctContractOptionlst = [];
                 this.paymentMethodOptionlst = [];
             });
     }
@@ -710,6 +719,36 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             }));
             return false;
         }
+        if (!(this.paymentMethod && String(this.paymentMethod).trim())) {
+            const pmEl = this.template.querySelector('lightning-combobox[name="paymentMethod"]');
+            if (pmEl && pmEl.reportValidity) {
+                pmEl.reportValidity();
+            }
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_LBL_Select_Payment_Method,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
+        }
+
+        if (this.showManualBill) {
+            const billAmtSel = 'lightning-input[data-id="manual-bill-amount"]';
+            const billAmtOk = this.validateFields([billAmtSel]);
+            const billAmtMissing = this.manualBillAmount == null;
+            if (!billAmtOk || billAmtMissing) {
+                const billAmtEl = this.template.querySelector(billAmtSel);
+                if (billAmtEl && billAmtEl.reportValidity) {
+                    billAmtEl.reportValidity();
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Validation_Title,
+                    message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
+                    variant: CONST.VARIANT_WARNING
+                }));
+                return false;
+            }
+        }
 
         this.clearAdjustmentFieldsCustomValidity();
         const incompleteRows = [];
@@ -763,14 +802,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
 
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
-        if (this.showManualBill && !this.validateFields(['lightning-input[name="manualBillAmount"]'])) {
-            this.dispatchEvent(new ShowToastEvent({
-                title: FEC_Toast_Validation_Title,
-                message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
-                variant: CONST.VARIANT_WARNING
-            }));
-            return false;
-        }
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
             return { skipApex: true, valid, billDate, billAmount };
         }
@@ -796,9 +827,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunIncorrectPaymentSave()) {
-            return true;
-        }
+        // Submit always validates; _shouldRunIncorrectPaymentSave is only for skipping Apex on empty section.
         const ctx = this._performClientSaveValidation();
         return ctx !== false;
     }

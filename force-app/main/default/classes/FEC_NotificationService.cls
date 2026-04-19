@@ -38,8 +38,12 @@ public without sharing class FEC_NotificationService {
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
+                   Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
+                   FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__c,
+                   FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
@@ -48,6 +52,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Category__c,
                    FEC_SubCategory__c,
                    FEC_SubCode__c,
+                   FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
@@ -76,8 +81,27 @@ public without sharing class FEC_NotificationService {
 
         if (queueIdToNotifs.isEmpty()) return;
 
+        Set<Id> routedCaseIds = new Set<Id>();
+        for (Case rc : routedCases) {
+            routedCaseIds.add(rc.Id);
+        }
+        Map<Id, Case> caseStageById = routedCaseIds.isEmpty()
+            ? new Map<Id, Case>()
+            : new Map<Id, Case>([
+                  SELECT Id,
+                         FEC_Stage_Name__c,
+                         FEC_Customer_Type__c,
+                         FEC_Product_Type__c,
+                         FEC_Category__c,
+                         FEC_SubCategory__c,
+                         FEC_SubCode__c
+                  FROM Case
+                  WHERE Id IN :routedCaseIds
+              ]);
+
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
         List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
+        List<AutoEmailHistoryMeta> emailHistoryMetas = new List<AutoEmailHistoryMeta>();
 
         // Lấy OrgWide sender 1 lần cho toàn bộ emails
         Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
@@ -117,7 +141,8 @@ public without sharing class FEC_NotificationService {
             if (candidates == null || candidates.isEmpty()) continue;
 
             for (FEC_Notification__c n : candidates) {
-                Boolean natureOk = matchesNatureOfCase(c, n);
+                Case cNature = caseStageById.get(c.Id);
+                Boolean natureOk = matchesNatureOfCase(cNature != null ? cNature : c, n);
                 Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
                 System.debug('--- notif=' + n.Id + ' natureOk=' + natureOk + ' scheduleOk=' + scheduleOk);
                 if (!natureOk) continue;
@@ -171,12 +196,35 @@ public without sharing class FEC_NotificationService {
                 }
 
                 emailsToSend.add(mail);
+                Case cStageRow = caseStageById.get(c.Id);
+                String stageNm = cStageRow != null ? cStageRow.FEC_Stage_Name__c : null;
+                String tmplNm = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
+                String chNm = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
+                    ? n.FEC_Notification_Channel__r.Name
+                    : channelEmail;
+                AutoEmailHistoryMeta histMeta = new AutoEmailHistoryMeta();
+                histMeta.caseId = c.Id;
+                histMeta.notificationRuleId = n.Id;
+                histMeta.stageName = stageNm;
+                histMeta.templateName = tmplNm;
+                histMeta.notificationRuleName = n.Name;
+                histMeta.channelName = chNm;
+                histMeta.targetGroup = targetInternal;
+                emailHistoryMetas.add(histMeta);
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
 
         System.debug('--- [sendEmailNotifications] sending ' + emailsToSend.size() + ' emails');
-        FEC_CommonUltils.sendEmails(emailsToSend);
+        List<Messaging.SendEmailResult> emailResults = new List<Messaging.SendEmailResult>();
+        if (emailsToSend != null && !emailsToSend.isEmpty()) {
+            try {
+                emailResults = Messaging.sendEmail(emailsToSend, false);
+            } catch (Exception e) {
+                System.debug('FEC_NotificationService.sendEmailNotifications: ' + e.getMessage());
+            }
+        }
+        persistAutoEmailNotificationHistory(emailResults, emailHistoryMetas);
     }
 
     /**
@@ -203,8 +251,11 @@ public without sharing class FEC_NotificationService {
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
+                   Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
+                   FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
@@ -212,6 +263,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Category__c,
                    FEC_SubCategory__c,
                    FEC_SubCode__c,
+                   FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
@@ -236,6 +288,24 @@ public without sharing class FEC_NotificationService {
         }
 
         if (queueIdToNotifs.isEmpty()) return;
+
+        Set<Id> routedCaseIdsSf = new Set<Id>();
+        for (Case rc2 : routedCases) {
+            routedCaseIdsSf.add(rc2.Id);
+        }
+        Map<Id, Case> caseStageByIdSf = routedCaseIdsSf.isEmpty()
+            ? new Map<Id, Case>()
+            : new Map<Id, Case>([
+                  SELECT Id,
+                         FEC_Stage_Name__c,
+                         FEC_Customer_Type__c,
+                         FEC_Product_Type__c,
+                         FEC_Category__c,
+                         FEC_SubCategory__c,
+                         FEC_SubCode__c
+                  FROM Case
+                  WHERE Id IN :routedCaseIdsSf
+              ]);
 
         // Collect all receiver emails to bulk-query User IDs
         Set<String> allEmails = new Set<String>();
@@ -263,13 +333,15 @@ public without sharing class FEC_NotificationService {
         }
 
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
+        List<FEC_Notification_History__c> sfAppHistoryRows = new List<FEC_Notification_History__c>();
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
             if (candidates == null || candidates.isEmpty()) continue;
 
             for (FEC_Notification__c n : candidates) {
-                if (!matchesNatureOfCase(c, n)) continue;
+                Case cNatureSf = caseStageByIdSf.get(c.Id);
+                if (!matchesNatureOfCase(cNatureSf != null ? cNatureSf : c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
                 List<String> receiverEmails = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
@@ -287,9 +359,33 @@ public without sharing class FEC_NotificationService {
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
                     : '';
 
-                FEC_CommonUltils.notifyUsers(recipientIds, c.Id, null, title, body, notifType);
+                Boolean sentOk = sendCustomAppNotification(recipientIds, c.Id, title, body, notifType);
+                Case cSfSt = caseStageByIdSf.get(c.Id);
+                String stNameSf = cSfSt != null ? cSfSt.FEC_Stage_Name__c : null;
+                String tmplNmSf = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
+                String chNmSf = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
+                    ? n.FEC_Notification_Channel__r.Name
+                    : channelSfApp;
+                sfAppHistoryRows.add(
+                    FEC_NotificationHistoryService.buildRow(
+                        c.Id,
+                        n.Id,
+                        stNameSf,
+                        tmplNmSf,
+                        n.Name,
+                        chNmSf,
+                        targetInternal,
+                        FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                        sentOk ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        sentOk ? null : 'Salesforce App notification send failed',
+                        FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                        null,
+                        System.now()
+                    )
+                );
             }
         }
+        FEC_NotificationHistoryService.insertRows(sfAppHistoryRows);
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
@@ -347,6 +443,9 @@ public without sharing class FEC_NotificationService {
      * Nếu Notification không set field nào → match all (wildcard).
      */
     private static Boolean matchesNatureOfCase(Case c, FEC_Notification__c n) {
+        if (String.isNotBlank(n.FEC_Customer_Type__c) && !FEC_CommonUltils.notificationCustomerTypeMatchesCase(n.FEC_Customer_Type__c, c.FEC_Customer_Type__c)) {
+            return false;
+        }
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
         if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
@@ -480,5 +579,88 @@ public without sharing class FEC_NotificationService {
             System.debug('resolveTemplate exception: ' + e.getMessage());
             return template;
         }
+    }
+
+    private class AutoEmailHistoryMeta {
+        public Id caseId;
+        public Id notificationRuleId;
+        public String stageName;
+        public String templateName;
+        public String notificationRuleName;
+        public String channelName;
+        public String targetGroup;
+    }
+
+    /**
+     * Gửi Custom Notification (Salesforce App) và trả về true nếu send thành công.
+     */
+    private static Boolean sendCustomAppNotification(
+        Set<String> recipientIds,
+        Id targetRecordId,
+        String title,
+        String body,
+        CustomNotificationType notificationType
+    ) {
+        if (notificationType == null || recipientIds == null || recipientIds.isEmpty()) {
+            return false;
+        }
+        Messaging.CustomNotification notification = new Messaging.CustomNotification();
+        notification.setTitle(title);
+        notification.setBody(body);
+        notification.setNotificationTypeId(notificationType.Id);
+        if (targetRecordId != null) {
+            notification.setTargetId(targetRecordId);
+        }
+        try {
+            notification.send(recipientIds);
+            return true;
+        } catch (Exception e) {
+            System.debug('FEC_NotificationService.sendCustomAppNotification: ' + e.getMessage());
+            return false;
+        }
+    }
+
+    private static void persistAutoEmailNotificationHistory(
+        List<Messaging.SendEmailResult> results,
+        List<AutoEmailHistoryMeta> metas
+    ) {
+        if (metas == null || metas.isEmpty()) {
+            return;
+        }
+        List<FEC_Notification_History__c> rows = new List<FEC_Notification_History__c>();
+        Integer n = metas.size();
+        for (Integer i = 0; i < n; i++) {
+            AutoEmailHistoryMeta m = metas[i];
+            Boolean ok = (results != null && i < results.size()) && results[i].isSuccess();
+            String failMsg = '';
+            if (!ok) {
+                if (results != null && i < results.size()) {
+                    failMsg = FEC_NotificationHistoryService.joinSendEmailErrors(results[i]);
+                } else {
+                    failMsg = 'Messaging.sendEmail returned no result or threw exception';
+                }
+                if (String.isBlank(failMsg)) {
+                    failMsg = 'Email send failed';
+                }
+            }
+            rows.add(
+                FEC_NotificationHistoryService.buildRow(
+                    m.caseId,
+                    m.notificationRuleId,
+                    m.stageName,
+                    m.templateName,
+                    m.notificationRuleName,
+                    m.channelName,
+                    m.targetGroup,
+                    FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                    ok ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    ok ? null : failMsg,
+                    FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                    null,
+                    System.now()
+                )
+            );
+        }
+        FEC_NotificationHistoryService.insertRows(rows);
     }
 }

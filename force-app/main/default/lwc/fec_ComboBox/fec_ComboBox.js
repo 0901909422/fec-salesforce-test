@@ -8,6 +8,7 @@ export default class Fec_ComboBox extends LightningElement {
   @api placeholder;
   @api disabled;
   @api required;
+  @api enableSearchChange = false;
 
   openSearch = false;
   @api searchKey;
@@ -114,15 +115,26 @@ export default class Fec_ComboBox extends LightningElement {
     e.preventDefault();
     e.stopPropagation();
 
-    this.searchKey = e.target.value?.toLowerCase()?.trim();
+    const inputValue = e?.detail?.value !== undefined ? e.detail.value : e.target.value;
+    this.searchKey = inputValue?.toLowerCase()?.trim();
+    this.dispatchSearchChange(inputValue);
+  }
 
-    // if (searchKey) {
-    //   this.filteredOptionlst = this.optionlst.filter((item) => {
-    //     return item.label.toLowerCase().includes(searchKey);
-    //   });
-    // } else {
-    //   this.filteredOptionlst = [...this.optionlst];
-    // }
+  handleSearchInput(e) {
+    const inputValue = e?.detail?.value !== undefined ? e.detail.value : e.target.value;
+    this.searchKey = inputValue?.toLowerCase()?.trim();
+  }
+
+  dispatchSearchChange(inputValue) {
+    if (!this.enableSearchChange) {
+      return;
+    }
+    const event = new CustomEvent("searchchange", {
+      detail: {
+        value: inputValue
+      }
+    });
+    this.dispatchEvent(event);
   }
 
   handleFocus(e) {
