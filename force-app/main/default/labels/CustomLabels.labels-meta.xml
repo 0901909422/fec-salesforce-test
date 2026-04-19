@@ -12179,6 +12179,14 @@
         <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Row_Empty</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract closure — đã chọn dòng địa chỉ nhưng cột địa chỉ trống</shortDescription>
+        <value>Dòng địa chỉ đã chọn chưa có nội dung. Vui lòng chọn địa chỉ khác hoặc nhập địa chỉ tạm thời.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
