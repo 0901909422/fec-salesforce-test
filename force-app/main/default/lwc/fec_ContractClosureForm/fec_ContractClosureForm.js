@@ -550,7 +550,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.temporaryEmail = event.target.value;
         const inp = this.template.querySelector('lightning-input[data-fec-field="temporaryEmail"]');
         if (inp) {
-            inp.setCustomValidity('');
+            inp.setCustomValidity(STR_EMPTY);
         }
     }
 
@@ -562,7 +562,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.recipientPhone = event.target.value;
         const inp = this.template.querySelector('lightning-input[data-fec-field="recipientPhone"]');
         if (inp) {
-            inp.setCustomValidity('');
+            inp.setCustomValidity(STR_EMPTY);
         }
     }
 
@@ -573,11 +573,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
         }
         const n = normalizePhone(this.recipientPhone);
         if (!n) {
-            inp.setCustomValidity('');
+            inp.setCustomValidity(STR_EMPTY);
         } else if (!PATTERN_PHONE_VN_FEC.test(n)) {
             inp.setCustomValidity(this.validationLabels.phoneInvalid);
         } else {
-            inp.setCustomValidity('');
+            inp.setCustomValidity(STR_EMPTY);
         }
         return inp;
     }
@@ -647,7 +647,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (usingC360) {
             const inpClear = this.template.querySelector('lightning-input[data-fec-field="temporaryEmail"]');
             if (inpClear) {
-                inpClear.setCustomValidity('');
+                inpClear.setCustomValidity(STR_EMPTY);
             }
             return true;
         }
@@ -655,11 +655,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
         const tm = (this.temporaryEmail || STR_EMPTY).trim();
         if (inp) {
             if (!tm) {
-                inp.setCustomValidity('');
+                inp.setCustomValidity(STR_EMPTY);
             } else if (!PATTERN_EMAIL_FEC_STRICT.test(tm)) {
                 inp.setCustomValidity(this.validationLabels.emailInvalid);
             } else {
-                inp.setCustomValidity('');
+                inp.setCustomValidity(STR_EMPTY);
             }
             if (!inp.checkValidity()) {
                 inp.reportValidity();
