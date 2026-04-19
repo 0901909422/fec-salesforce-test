@@ -500,4 +500,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
 
+    public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
+    public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
+    public static final String P_TAG_REGEX = '(?i)</p>';
+    public static final String HTML_TAG_REGEX = '<[^>]+>';
+    public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
+    public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
 }

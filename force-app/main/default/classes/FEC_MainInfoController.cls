@@ -35,6 +35,12 @@ public without sharing class FEC_MainInfoController {
         @AuraEnabled public String addressUpdateNotEligibleTitle;
         /** Các dòng lí do; mỗi phần tử đã gồm tiền tố "Lí do: …". */
         @AuraEnabled public List<String> addressUpdateNotEligibleReasons;
+        /** JSON payload địa chỉ thường trú đang chờ xác nhận (từ Case.FEC_Updated_Info_Permanent_Address__c). */
+        @AuraEnabled public String pendingPermanentAddressJson;
+        /** JSON payload địa chỉ công ty đang chờ xác nhận (từ Case.FEC_Updated_Info_Office_Address__c). */
+        @AuraEnabled public String pendingOfficeAddressJson;
+        /** JSON payload địa chỉ hiện tại đang chờ xác nhận (từ Case.FEC_Updated_Info_Current_Address__c). */
+        @AuraEnabled public String pendingCurrentAddressJson;
     }
 
     public class AddressDTO {
@@ -81,7 +87,10 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== LOAD CASE ===== */
         Case c = [
-            SELECT Id, FEC_Account_or_Contract__c,FEC_Product_Type__r.Name
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Product_Type__r.Name,
+                   FEC_Updated_Info_Permanent_Address__c,
+                   FEC_Updated_Info_Office_Address__c,
+                   FEC_Updated_Info_Current_Address__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -135,6 +144,7 @@ public without sharing class FEC_MainInfoController {
             cached.addresses = buildAddressDTOListFromHistory(hist.Id);
             if (cached.addresses != null && !cached.addresses.isEmpty()) {
                 applyAddressEligibilityToDto(cached, hist.Id, null);
+                applyPendingAddressFields(cached, c);
                 return cached;
             }
             /* Còn cache thông tin KH nhưng đã xóa hết địa chỉ trên SF — phải gọi lại GetAddressesList, không return sớm với mảng rỗng. */
@@ -154,6 +164,7 @@ public without sharing class FEC_MainInfoController {
             } else {
                 applyAddressEligibilityToDto(cached, hist.Id, null);
             }
+            applyPendingAddressFields(cached, c);
             return cached;
         }
 
@@ -242,6 +253,7 @@ public without sharing class FEC_MainInfoController {
         update hist;
 
         applyAddressEligibilityToDto(dto, hist.Id, addrResult);
+        applyPendingAddressFields(dto, c);
         return dto;
     }
 
@@ -946,6 +958,36 @@ public without sharing class FEC_MainInfoController {
             out.add(ai);
         }
         return out;
+    }
+
+    /**
+     * Lưu JSON payload địa chỉ pending vào trường tương ứng trên Case.
+     * sfAddressType: "Permanent Address" | "Office Address" | "Current Address".
+     */
+    @AuraEnabled
+    public static void savePendingAddress(Id caseId, String sfAddressType, String jsonPayload) {
+        if (caseId == null || String.isBlank(sfAddressType)) {
+            throw new AuraHandledException('caseId and sfAddressType are required');
+        }
+        Case c = new Case(Id = caseId);
+        if ('Permanent Address'.equals(sfAddressType)) {
+            c.FEC_Updated_Info_Permanent_Address__c = jsonPayload;
+        } else if ('Office Address'.equals(sfAddressType)) {
+            c.FEC_Updated_Info_Office_Address__c = jsonPayload;
+        } else if ('Current Address'.equals(sfAddressType)) {
+            c.FEC_Updated_Info_Current_Address__c = jsonPayload;
+        } else {
+            throw new AuraHandledException('Unknown sfAddressType: ' + sfAddressType);
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        update c;
+    }
+
+    /** Gán 3 pending address fields từ Case vào DTO (luôn gọi sau cache/API, không đưa vào cache). */
+    private static void applyPendingAddressFields(MainInfoDTO dto, Case c) {
+        dto.pendingPermanentAddressJson = c.FEC_Updated_Info_Permanent_Address__c;
+        dto.pendingOfficeAddressJson    = c.FEC_Updated_Info_Office_Address__c;
+        dto.pendingCurrentAddressJson   = c.FEC_Updated_Info_Current_Address__c;
     }
 
     private static MainInfoDTO mapToDTO(FEC_Customer_History__c h) {
