@@ -1798,11 +1798,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       host &&
       (typeof host.validateForSubmit === "function" ||
-        typeof host.saveToCase === "function")
+        typeof host.saveToCase === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
     ) {
       return host;
     }
     return null;
+  }
+
+  _saveContractClosureDraftIfApplicable() {
+    const el = this._getContractClosureFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve({ valid: true, messages: [] });
+    }
+    return el.saveDraftIfApplicable();
   }
 
   _saveContractClosureIfApplicable() {
@@ -2085,7 +2094,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
       ])
-        .then(() => this._saveContractClosureIfApplicable())
+        .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
           if (closureRes && closureRes.valid === false) {
             return Promise.reject(new Error("FEC_CONTRACT_CLOSURE_SAVE_FAILED"));
