@@ -153,14 +153,14 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
     this.isLoading = true;
 
     try {
-      // const result = await getAccountNumberCustomerCase({
-      //   caseId: this.recordId,
-      //   customerHistoryId: this.customerHistoryId,
-      // });
-
-      const result = await getInteractionAccountNumber({
-        caseId: this.interactionId,
+      const result = await getAccountNumberCustomerCase({
+        caseId: this.recordId,
+        customerHistoryId: this.customerHistoryId,
       });
+
+      // const result = await getInteractionAccountNumber({
+      //   caseId: this.interactionId,
+      // });
 
       const parsed = result ? JSON.parse(result) : {};
 

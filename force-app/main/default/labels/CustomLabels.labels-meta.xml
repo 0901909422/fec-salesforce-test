@@ -2989,6 +2989,22 @@
         <value>Customer information update failed. Please try again</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
