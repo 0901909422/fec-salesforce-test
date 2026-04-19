@@ -1,4 +1,4 @@
-import { LightningElement, api, wire } from "lwc";
+﻿import { LightningElement, api, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import {
   updateRecord,
@@ -15,7 +15,7 @@ import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts
 import searchByListNIDs from "@salesforce/apex/FEC_SearchByListNIDsServiceCallout.searchByListNIDs";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
-import getBancaInsurance from "@salesforce/apex/FEC_SearchByListNIDs.searchByNIDs";
+
 
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
@@ -918,7 +918,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 async fetchBancaInsurance(nids) {
     console.log('fetchBancaInsurance called with nids:', nids);
     try {
-        const results = await getBancaInsurance({ nationalIds: nids });
+        const results = await searchByListNIDs({ nationalIds: nids });
         console.log('fetchBancaInsurance results:', results);
         if (!results || results.length === 0) return;
         this.insuranceData = results.map(r => ({
