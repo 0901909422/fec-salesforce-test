@@ -1,315 +1,331 @@
 <template>
   <div class="fec-closure-form">
-    <template if:true={loading}>
-      <lightning-spinner alternative-text={customLabel.loadingAlt}></lightning-spinner>
-    </template>
-    <template if:false={loading}>
-      <template if:true={loadError}>
-        <p class="msg-error">{loadError}</p>
+      <template if:true={loading}>
+        <lightning-spinner
+          alternative-text={customLabel.loadingAlt}
+        ></lightning-spinner>
       </template>
-      <template if:false={loadError}>
-        <lightning-layout multiple-rows>
-          <lightning-layout-item size="12" padding="around-small">
-            <div class="fec-delivery-field-slot">
-              <c-fec_-multi-picklist-input
-                data-fec-field="deliveryPicklist"
-                label={customLabel.deliveryOption}
-                placeholder={customLabel.placeholderDelivery}
-                options={deliveryPicklistOptions}
-                value={selectedDeliveryValues}
-                required
-                is-search
-                is-all
-                onchange={handlePicklistChange}
-              ></c-fec_-multi-picklist-input>
-            </div>
-          </lightning-layout-item>
-
-          <template if:true={showEmailSection}>
+      <template if:false={loading}>
+        <template if:true={loadError}>
+          <p class="msg-error">{loadError}</p>
+        </template>
+        <template if:false={loadError}>
+          <lightning-layout multiple-rows>
             <lightning-layout-item size="12" padding="around-small">
-              <lightning-button
-                variant="brand"
-                label={customLabel.addTempEmail}
-                disabled={lockAddTempEmailBtn}
-                onclick={handleAddTempEmail}
-              ></lightning-button>
-            </lightning-layout-item>
-            <lightning-layout-item size="12" padding="around-small">
-              <div class="fec-email-box">
-                <p class="slds-text-title slds-m-bottom_x-small">{customLabel.emailLabel}</p>
-                <template if:true={hasEmailRadioOptions}>
-                  <lightning-radio-group
-                    name="fecClosureEmailPick"
-                    label={customLabel.emailLabel}
-                    options={emailRadioOptions}
-                    value={emailRadioValue}
-                    type="radio"
-                    variant="label-hidden"
-                    onchange={handleEmailRadioChange}
-                  ></lightning-radio-group>
-                </template>
-                <template if:false={hasEmailRadioOptions}>
-                  <template if:true={showNoC360EmailHint}>
-                    <p class="slds-text-color_weak">
-                      {customLabel.msgNoC360Email}
-                    </p>
-                  </template>
-                </template>
-                <template if:true={showTempEmailRow}>
-                  <lightning-layout
-                    class="slds-m-top_small"
-                    vertical-align="end"
-                  >
-                    <lightning-layout-item size="6" padding="around-small">
-                      <lightning-input
-                        type="email"
-                        label={customLabel.newTempEmail}
-                        value={temporaryEmail}
-                        onchange={handleTempEmailChange}
-                      ></lightning-input>
-                    </lightning-layout-item>
-                    <lightning-layout-item
-                      size="1"
-                      padding="around-small"
-                      class="btn-delete"
-                    >
-                      <lightning-button-icon
-                        icon-name="utility:delete"
-                        variant="border"
-                        alternative-text={customLabel.altRemove}
-                        title={customLabel.altRemove}
-                        onclick={handleRemoveTempEmail}
-                      ></lightning-button-icon>
-                    </lightning-layout-item>
-                  </lightning-layout>
-                </template>
+              <div class="fec-delivery-field-slot">
+                <c-fec_-multi-picklist-input
+                  data-fec-field="deliveryPicklist"
+                  label={customLabel.deliveryOption}
+                  placeholder={customLabel.placeholderDelivery}
+                  options={deliveryPicklistOptions}
+                  value={selectedDeliveryValues}
+                  required={closureFieldRequired}
+                  read-only={closureFieldsReadonly}
+                  is-search
+                  onchange={handlePicklistChange}
+                ></c-fec_-multi-picklist-input>
               </div>
             </lightning-layout-item>
-          </template>
 
-          <template if:true={showAddressSection}>
-            <lightning-layout-item size="6" padding="around-small">
-              <lightning-input
-                type="text"
-                label={customLabel.recipientName}
-                value={recipientName}
-                required
-                onchange={handleRecipientNameChange}
-              ></lightning-input>
-            </lightning-layout-item>
-            <lightning-layout-item size="6" padding="around-small">
-              <lightning-input
-                data-fec-field="recipientPhone"
-                type="tel"
-                label={customLabel.recipientPhone}
-                value={recipientPhone}
-                required
-                onchange={handleRecipientPhoneChange}
-                onblur={handleRecipientPhoneBlur}
-              ></lightning-input>
-            </lightning-layout-item>
-            <lightning-layout-item size="12" padding="around-small">
-              <div class="fec-table-wrap">
-                <p
-                  class="slds-text-body_small slds-m-bottom_x-small fec-address-table-meta"
-                >
-                  {addressTableMeta}
-                </p>
-                <table
-                  class="slds-table slds-table_cell-buffer slds-table_bordered"
-                >
-                  <thead>
-                    <tr class="slds-line-height_reset">
-                      <th class="fec-col-select" scope="col">
-                        <span class="slds-assistive-text">{selectionAssistiveText}</span>
-                      </th>
-                      <th
-                        class="fec-sortable-th"
-                        scope="col"
-                        onclick={handleToggleAddressSort}
-                      >
-                        <span class="fec-th-sort">
-                          <span>{customLabel.addressType}</span>
-                          <lightning-icon
-                            icon-name={addressSortIconName}
-                            size="xx-small"
-                            class="slds-m-left_xx-small fec-sort-icon"
-                            alternative-text={sortAddressTypeAlt}
-                          ></lightning-icon>
-                        </span>
-                      </th>
-                      <th scope="col">{customLabel.addressCol}</th>
-                      <th scope="col">{customLabel.mailingAddressCol}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <template for:each={addressRows} for:item="row">
-                      <tr key={row.id}>
-                        <td>
-                          <input
-                            type="radio"
-                            name="fecAddrSel"
-                            class="slds-m-right_xx-small"
-                            data-row-id={row.id}
-                            checked={row.selected}
-                            onchange={handlePickAddr}
-                          />
-                        </td>
-                        <td>{row.addressType}</td>
-                        <td>{row.address}</td>
-                        <td>{row.mailingAddressLabel}</td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </div>
-            </lightning-layout-item>
-            <lightning-layout-item size="12" padding="around-small">
-              <lightning-button
-                variant="brand"
-                label={customLabel.addTempAddress}
-                disabled={lockAddTempAddrBtn}
-                onclick={handleOpenTempAddressModal}
-              ></lightning-button>
-            </lightning-layout-item>
-            <template if:true={temporaryAddressDisplay}>
+            <template if:true={showEmailSection}>
               <lightning-layout-item size="12" padding="around-small">
-                <div
-                  class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center"
-                >
-                  <div class="slds-col slds-size_5-of-6">
-                    <lightning-input
-                      type="text"
-                      label={tempAddressFieldLabel}
-                      value={temporaryAddressDisplay}
-                      readonly
-                    ></lightning-input>
-                  </div>
-                  <div class="slds-col slds-size_1-of-6 slds-text-align_right">
-                    <lightning-button-icon
-                      icon-name="utility:edit"
-                      alternative-text={customLabel.altEdit}
-                      onclick={handleEditTempAddress}
-                      class="slds-m-right_xx-small"
-                    ></lightning-button-icon>
-                    <lightning-button-icon
-                      icon-name="utility:delete"
-                      alternative-text={customLabel.altRemove}
-                      onclick={handleRemoveTempAddress}
-                    ></lightning-button-icon>
-                  </div>
+                <lightning-button
+                  variant="brand"
+                  label={customLabel.addTempEmail}
+                  disabled={lockAddTempEmailBtn}
+                  onclick={handleAddTempEmail}
+                ></lightning-button>
+              </lightning-layout-item>
+              <lightning-layout-item size="12" padding="around-small">
+                <div class="fec-email-box">
+                  <p class="slds-text-title slds-m-bottom_x-small">
+                    {customLabel.emailLabel}
+                  </p>
+                  <template if:true={hasEmailRadioOptions}>
+                    <lightning-radio-group
+                      name="fecClosureEmailPick"
+                      label={customLabel.emailLabel}
+                      options={emailRadioOptions}
+                      value={emailRadioValue}
+                      type="radio"
+                      variant="label-hidden"
+                      disabled={closureFieldsReadonly}
+                      onchange={handleEmailRadioChange}
+                    ></lightning-radio-group>
+                  </template>
+                  <template if:false={hasEmailRadioOptions}>
+                    <template if:true={showNoC360EmailHint}>
+                      <p class="slds-text-color_weak">
+                        {customLabel.msgNoC360Email}
+                      </p>
+                    </template>
+                  </template>
+                  <template if:true={showTempEmailRow}>
+                    <lightning-layout
+                      class="slds-m-top_small"
+                      vertical-align="end"
+                    >
+                      <lightning-layout-item size="6" padding="around-small">
+                        <lightning-input
+                          type="email"
+                          label={customLabel.newTempEmail}
+                          value={temporaryEmail}
+                          readonly={closureFieldsReadonly}
+                          onchange={handleTempEmailChange}
+                        ></lightning-input>
+                      </lightning-layout-item>
+                      <lightning-layout-item
+                        size="1"
+                        padding="around-small"
+                        class="btn-delete"
+                      >
+                        <lightning-button-icon
+                          icon-name="utility:delete"
+                          variant="border"
+                          alternative-text={customLabel.altRemove}
+                          title={customLabel.altRemove}
+                          disabled={closureFieldsReadonly}
+                          onclick={handleRemoveTempEmail}
+                        ></lightning-button-icon>
+                      </lightning-layout-item>
+                    </lightning-layout>
+                  </template>
                 </div>
               </lightning-layout-item>
             </template>
-          </template>
 
-          <lightning-layout-item size="12" padding="around-small">
-            <template if:true={showValidateBanner}>
-              <template for:each={validationMessageItems} for:item="row">
-                <span key={row.key} class="msg-error">{row.text}</span>
+            <template if:true={showAddressSection}>
+              <lightning-layout-item size="6" padding="around-small">
+                <lightning-input
+                  type="text"
+                  label={customLabel.recipientName}
+                  value={recipientName}
+                  required={closureFieldRequired}
+                  readonly={closureFieldsReadonly}
+                  onchange={handleRecipientNameChange}
+                ></lightning-input>
+              </lightning-layout-item>
+              <lightning-layout-item size="6" padding="around-small">
+                <lightning-input
+                  data-fec-field="recipientPhone"
+                  type="tel"
+                  label={customLabel.recipientPhone}
+                  value={recipientPhone}
+                  required={closureFieldRequired}
+                  readonly={closureFieldsReadonly}
+                  onchange={handleRecipientPhoneChange}
+                  onblur={handleRecipientPhoneBlur}
+                ></lightning-input>
+              </lightning-layout-item>
+              <lightning-layout-item size="12" padding="around-small">
+                <div class="fec-table-wrap">
+                  <p
+                    class="slds-text-body_small slds-m-bottom_x-small fec-address-table-meta"
+                  >
+                    {addressTableMeta}
+                  </p>
+                  <table
+                    class="slds-table slds-table_cell-buffer slds-table_bordered"
+                  >
+                    <thead>
+                      <tr class="slds-line-height_reset">
+                        <th class="fec-col-select" scope="col">
+                          <span class="slds-assistive-text"
+                            >{selectionAssistiveText}</span
+                          >
+                        </th>
+                        <th
+                          class="fec-sortable-th"
+                          scope="col"
+                          onclick={handleToggleAddressSort}
+                        >
+                          <span class="fec-th-sort">
+                            <span>{customLabel.addressType}</span>
+                            <lightning-icon
+                              icon-name={addressSortIconName}
+                              size="xx-small"
+                              class="slds-m-left_xx-small fec-sort-icon"
+                              alternative-text={sortAddressTypeAlt}
+                            ></lightning-icon>
+                          </span>
+                        </th>
+                        <th scope="col">{customLabel.addressCol}</th>
+                        <th scope="col">{customLabel.mailingAddressCol}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template for:each={addressRows} for:item="row">
+                        <tr key={row.id}>
+                          <td>
+                            <input
+                              type="radio"
+                              name="fecAddrSel"
+                              class="slds-m-right_xx-small"
+                              data-row-id={row.id}
+                              checked={row.selected}
+                              disabled={closureFieldsReadonly}
+                              onchange={handlePickAddr}
+                            />
+                          </td>
+                          <td>{row.addressType}</td>
+                          <td>{row.address}</td>
+                          <td>{row.mailingAddressLabel}</td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </lightning-layout-item>
+              <lightning-layout-item size="12" padding="around-small">
+                <lightning-button
+                  variant="brand"
+                  label={customLabel.addTempAddress}
+                  disabled={lockAddTempAddrBtn}
+                  onclick={handleOpenTempAddressModal}
+                ></lightning-button>
+              </lightning-layout-item>
+              <template if:true={temporaryAddressDisplay}>
+                <lightning-layout-item size="12" padding="around-small">
+                  <div
+                    class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center"
+                  >
+                    <div class="slds-col slds-size_5-of-6">
+                      <lightning-input
+                        type="text"
+                        label={tempAddressFieldLabel}
+                        value={temporaryAddressDisplay}
+                        readonly
+                      ></lightning-input>
+                    </div>
+                    <div
+                      class="slds-col slds-size_1-of-6 slds-text-align_right"
+                    >
+                      <lightning-button-icon
+                        icon-name="utility:edit"
+                        alternative-text={customLabel.altEdit}
+                        disabled={closureFieldsReadonly}
+                        onclick={handleEditTempAddress}
+                        class="slds-m-right_xx-small"
+                      ></lightning-button-icon>
+                      <lightning-button-icon
+                        icon-name="utility:delete"
+                        alternative-text={customLabel.altRemove}
+                        disabled={closureFieldsReadonly}
+                        onclick={handleRemoveTempAddress}
+                      ></lightning-button-icon>
+                    </div>
+                  </div>
+                </lightning-layout-item>
               </template>
             </template>
-          </lightning-layout-item>
-        </lightning-layout>
-      </template>
-    </template>
 
-    <template if:true={showTempAddressModal}>
-      <section
-        role="dialog"
-        tabindex="-1"
-        aria-modal="true"
-        aria-labelledby="modal-heading-contract-closure"
-        class="slds-modal slds-fade-in-open"
-      >
-        <div class="slds-modal__container">
-          <div class="slds-modal__header">
-            <h1
-              id="modal-heading-contract-closure"
-              class="slds-modal__title slds-hyphenate"
-              tabindex="-1"
+            <lightning-layout-item size="12" padding="around-small">
+              <template if:true={showValidateBanner}>
+                <template for:each={validationMessageItems} for:item="row">
+                  <span key={row.key} class="msg-error">{row.text}</span>
+                </template>
+              </template>
+            </lightning-layout-item>
+          </lightning-layout>
+        </template>
+      </template>
+
+      <template if:true={showTempAddressModal}>
+        <section
+          role="dialog"
+          tabindex="-1"
+          aria-modal="true"
+          aria-labelledby="modal-heading-contract-closure"
+          class="slds-modal slds-fade-in-open"
+        >
+          <div class="slds-modal__container">
+            <div class="slds-modal__header">
+              <h1
+                id="modal-heading-contract-closure"
+                class="slds-modal__title slds-hyphenate"
+                tabindex="-1"
+              >
+                {tempAddressModalTitle}
+              </h1>
+            </div>
+            <div
+              class="slds-modal__content slds-p-around_medium"
+              id="modal-content-contract-closure"
             >
-              {tempAddressModalTitle}
-            </h1>
+              <lightning-layout multiple-rows>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-input
+                    label={customLabel.addressType}
+                    value={addressTypeTemporaryLabel}
+                    readonly
+                    required
+                  ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-input
+                    label={customLabel.building}
+                    value={modalBuilding}
+                    required
+                    onchange={handleModalBuilding}
+                  ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-combobox
+                    label={customLabel.provinceCityLabel}
+                    value={modalProvinceId}
+                    placeholder={customLabel.placeholderAdmin}
+                    options={provinceOptions}
+                    onchange={handleModalProvincePick}
+                    required
+                  ></lightning-combobox>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-input
+                    label={customLabel.streetNumber}
+                    value={modalNumber}
+                    required
+                    onchange={handleModalNumber}
+                  ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-combobox
+                    label={customLabel.ward}
+                    value={modalWardId}
+                    placeholder={customLabel.placeholderAdmin}
+                    options={wardOptions}
+                    onchange={handleModalWardPick}
+                    required
+                  ></lightning-combobox>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                  <lightning-input
+                    label={customLabel.street}
+                    value={modalStreet}
+                    required
+                    onchange={handleModalStreet}
+                  ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item size="6" padding="around-small">
+                </lightning-layout-item>
+              </lightning-layout>
+            </div>
+            <div class="slds-modal__footer slds-grid slds-grid_align-end">
+              <lightning-button
+                label={customLabel.cancelBtn}
+                onclick={handleModalCancel}
+              ></lightning-button>
+              <lightning-button
+                class="slds-m-left_x-small"
+                variant="brand"
+                label={customLabel.saveBtn}
+                onclick={handleModalSave}
+              ></lightning-button>
+            </div>
           </div>
-          <div
-            class="slds-modal__content slds-p-around_medium"
-            id="modal-content-contract-closure"
-          >
-            <lightning-layout multiple-rows>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-input
-                  label={customLabel.addressType}
-                  value={addressTypeTemporaryLabel}
-                  readonly
-                  required
-                ></lightning-input>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-input
-                  label={customLabel.building}
-                  value={modalBuilding}
-                  required
-                  onchange={handleModalBuilding}
-                ></lightning-input>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-combobox
-                  label={customLabel.provinceCityLabel}
-                  value={modalProvinceId}
-                  placeholder={customLabel.placeholderAdmin}
-                  options={provinceOptions}
-                  onchange={handleModalProvincePick}
-                  required
-                ></lightning-combobox>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-input
-                  label={customLabel.streetNumber}
-                  value={modalNumber}
-                  required
-                  onchange={handleModalNumber}
-                ></lightning-input>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-combobox
-                  label={customLabel.ward}
-                  value={modalWardId}
-                  placeholder={customLabel.placeholderAdmin}
-                  options={wardOptions}
-                  onchange={handleModalWardPick}
-                  required
-                ></lightning-combobox>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-                <lightning-input
-                  label={customLabel.street}
-                  value={modalStreet}
-                  required
-                  onchange={handleModalStreet}
-                ></lightning-input>
-              </lightning-layout-item>
-              <lightning-layout-item size="6" padding="around-small">
-              </lightning-layout-item>
-            </lightning-layout>
-          </div>
-          <div class="slds-modal__footer slds-grid slds-grid_align-end">
-            <lightning-button
-              label={customLabel.cancelBtn}
-              onclick={handleModalCancel}
-            ></lightning-button>
-            <lightning-button
-              class="slds-m-left_x-small"
-              variant="brand"
-              label={customLabel.saveBtn}
-              onclick={handleModalSave}
-            ></lightning-button>
-          </div>
-        </div>
-      </section>
-      <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
-    </template>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+      </template>
   </div>
 </template>

@@ -1812,6 +1812,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_IPP__c.FEC_IPP_Closure_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Other_Card__c.FEC_Block_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
