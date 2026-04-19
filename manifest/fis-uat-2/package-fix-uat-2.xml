@@ -813,6 +813,7 @@
 		<members>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</members>
 		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
+		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
