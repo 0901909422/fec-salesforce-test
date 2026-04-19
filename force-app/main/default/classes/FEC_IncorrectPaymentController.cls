@@ -146,10 +146,9 @@ public without sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+    public static List<FEC_CommonUltils.PicklistOption> getCorrectContractOptions() {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
         
-        // Get picklist values from field metadata
         Schema.DescribeFieldResult fieldResult = Case.FEC_Correct_Contract_Number__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
         
@@ -159,30 +158,35 @@ public without sharing class FEC_IncorrectPaymentController {
             }
         }
         
-        // Also add contract numbers from Case if available
-        if (caseId != null && Schema.sObjectType.Case.isAccessible()) {
-            List<Case> cases = [
-                SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                    FEC_Account_or_Contract__r.FEC_Contract_Number__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
-            
-            if (!cases.isEmpty()) {
-                Case c = cases[0];
-                Set<String> existingValues = new Set<String>();
-                for (FEC_CommonUltils.PicklistOption opt : result) {
-                    existingValues.add(opt.value);
-                }
-                
-                // Add contract numbers from Case if not already in picklist
-                addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
-                addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
-                if (c.FEC_Account_or_Contract__r != null) {
-                    addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
-                }
-            }
+        return result;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+        List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
+        
+        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+            return result;
+        }
+        List<Case> cases = [
+            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
+                FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
+        if (cases.isEmpty()) {
+            return result;
+        }
+        
+        Case c = cases[0];
+        Set<String> existingValues = new Set<String>();
+        
+        addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
+        addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
+        if (c.FEC_Account_or_Contract__r != null) {
+            addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
         }
         
         return result;

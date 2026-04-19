@@ -282,7 +282,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
             console.log(
               "Update viewMode to review successfully in Fec_InteractionHighlightMain",
             );
-            // this.handlePublishMode(this.viewMode === "handling");
+            // this.handlePublishMode(true);
           })
           .catch((error) => {
             console.error("resetViewMode error:", error);
