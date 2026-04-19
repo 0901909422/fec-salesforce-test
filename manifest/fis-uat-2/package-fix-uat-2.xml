@@ -108,6 +108,7 @@
 		<members>FEC_NotificationHistoryService</members>
 		<members>FEC_SendNotificationEmailsQueueable</members>
 		<members>FEC_CardReplacementAddressController</members>
+		<members>FEC_EmeaAccountInqService</members>
         <name>ApexClass</name>
     </types>
     <types>
