@@ -6,6 +6,7 @@ import FEC_Error_Title from '@salesforce/label/c.FEC_Error_Title';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_MSG_ContractClosure_Required_Fields from '@salesforce/label/c.FEC_MSG_ContractClosure_Required_Fields';
 import FEC_MSG_ContractClosure_Phone_Invalid from '@salesforce/label/c.FEC_MSG_ContractClosure_Phone_Invalid';
+import FEC_MSG_ContractClosure_Delivery_Invalid from '@salesforce/label/c.FEC_MSG_ContractClosure_Delivery_Invalid';
 import FEC_Termination_Loading_Alt from '@salesforce/label/c.FEC_Termination_Loading_Alt';
 import FEC_Email_Label from '@salesforce/label/c.FEC_Email_Label';
 import FEC_LBL_Province_City from '@salesforce/label/c.FEC_LBL_Province_City';
@@ -37,6 +38,7 @@ import FEC_Placeholder_ContractClosure_Select_Admin from '@salesforce/label/c.FE
 import getInitData from '@salesforce/apex/FEC_ContractClosureController.getInitData';
 import validateForComplete from '@salesforce/apex/FEC_ContractClosureController.validateForComplete';
 import saveForm from '@salesforce/apex/FEC_ContractClosureController.saveForm';
+import saveFormDraft from '@salesforce/apex/FEC_ContractClosureController.saveFormDraft';
 import upsertTemporaryAddress from '@salesforce/apex/FEC_ContractClosureController.upsertTemporaryAddress';
 import deleteTemporaryAddressRecord from '@salesforce/apex/FEC_ContractClosureController.deleteTemporaryAddressRecord';
 import searchAdministrativeUnits from '@salesforce/apex/FEC_ContractClosureController.searchAdministrativeUnits';
@@ -61,6 +63,21 @@ const CC_MSG_LOAD_FAILED = 'Load failed';
 
 export default class Fec_ContractClosureForm extends LightningElement {
     @api recordId;
+    /** Từ cha (vd. fec_CaseBussiness lwc:component is-edit). undefined = hiển thị như cũ (Record Page). */
+    @api isEdit;
+
+    /** false = chế độ xem: vẫn render form + dữ liệu; không validate/gọi save từ đây. */
+    get isClosureEditable() {
+        return this.isEdit !== false;
+    }
+
+    get closureFieldsReadonly() {
+        return this.isEdit === false;
+    }
+
+    get closureFieldRequired() {
+        return this.isClosureEditable;
+    }
 
     loading = true;
     loadError;
@@ -87,7 +104,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     selectedAddressRowId;
     addrRenderKey = 0;
 
-    deliveryDropdownOpen = false;
     addressSortAsc = true;
 
     temporaryAddressDisplay = STR_EMPTY;
@@ -145,7 +161,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
     /** Thông báo validate / toast — đồng bộ Custom Label, dễ tra trong template. */
     validationLabels = {
         requiredFields: FEC_MSG_ContractClosure_Required_Fields,
-        phoneInvalid: FEC_MSG_ContractClosure_Phone_Invalid
+        phoneInvalid: FEC_MSG_ContractClosure_Phone_Invalid,
+        deliveryRequired: FEC_MSG_ContractClosure_Delivery_Invalid
     };
 
     resolvedEmailValue;
@@ -153,62 +170,6 @@ export default class Fec_ContractClosureForm extends LightningElement {
     resolvedOfficeValue;
 
     addressTypeTemporaryLabel = CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY;
-
-    connectedCallback() {
-        this._onDocClickDelivery = this.onDocClickDelivery.bind(this);
-        document.addEventListener('click', this._onDocClickDelivery, false);
-    }
-
-    disconnectedCallback() {
-        document.removeEventListener('click', this._onDocClickDelivery, false);
-    }
-
-    onDocClickDelivery(event) {
-        if (!this.deliveryDropdownOpen) {
-            return;
-        }
-        const root = this.template.querySelector('[data-delivery-root]');
-        if (!root) {
-            this.deliveryDropdownOpen = false;
-            return;
-        }
-        const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-        const inside =
-            path.length > 0
-                ? path.some((el) => el && el.nodeType === 1 && root.contains(el))
-                : root.contains(event.target);
-        if (inside) {
-            return;
-        }
-        this.deliveryDropdownOpen = false;
-    }
-
-    toggleDeliveryDrop(event) {
-        if (event) {
-            event.stopPropagation();
-        }
-        this.deliveryDropdownOpen = !this.deliveryDropdownOpen;
-    }
-
-    get deliveryComboboxDivClass() {
-        const base =
-            'slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click fec-delivery-combo';
-        return this.deliveryDropdownOpen ? base + ' slds-is-open' : base;
-    }
-
-    get deliveryOptionDisplay() {
-        const parts = [];
-        if (this.deliveryEmailSelected) {
-            parts.push(this.labelEmail);
-        }
-        if (this.deliveryAddressSelected) {
-            parts.push(this.labelAddress);
-        }
-        if (this.deliveryOfficeSelected) {
-            parts.push(this.labelOffice);
-        }
-        return parts.join('; ');
-    }
 
     get emailRadioOptions() {
         const opts = [];
@@ -275,6 +236,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleEmailRadioChange(event) {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         const v = event.detail.value;
         if (v === 'c360') {
             this.useExistingEmail = true;
@@ -287,6 +251,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleToggleAddressSort() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         this.addressSortAsc = !this.addressSortAsc;
     }
 
@@ -380,6 +347,63 @@ export default class Fec_ContractClosureForm extends LightningElement {
         });
     }
 
+    get deliveryPicklistOptions() {
+        const rows = [];
+        const ev = this.resolvedEmailValue;
+        const av = this.resolvedAddressValue;
+        const ov = this.resolvedOfficeValue;
+        if (ev) {
+            rows.push({ label: this.labelEmail, value: ev });
+        }
+        if (av) {
+            rows.push({ label: this.labelAddress, value: av });
+        }
+        if (ov) {
+            rows.push({ label: this.labelOffice, value: ov });
+        }
+        return rows;
+    }
+
+    get selectedDeliveryValues() {
+        const vals = [];
+        if (this.deliveryEmailSelected && this.resolvedEmailValue) {
+            vals.push(this.resolvedEmailValue);
+        }
+        if (this.deliveryAddressSelected && this.resolvedAddressValue) {
+            vals.push(this.resolvedAddressValue);
+        }
+        if (this.deliveryOfficeSelected && this.resolvedOfficeValue) {
+            vals.push(this.resolvedOfficeValue);
+        }
+        return vals;
+    }
+
+    handlePicklistChange(event) {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
+        let ids = event.detail && event.detail.ids ? [...event.detail.ids] : [];
+        const av = this.resolvedAddressValue;
+        const ov = this.resolvedOfficeValue;
+        const hasA = av && ids.includes(av);
+        const hasO = ov && ids.includes(ov);
+        if (hasA && hasO) {
+            const hadA = this.deliveryAddressSelected;
+            const hadO = this.deliveryOfficeSelected;
+            if (hadA && !hadO) {
+                ids = ids.filter((v) => v !== av);
+            } else if (hadO && !hadA) {
+                ids = ids.filter((v) => v !== ov);
+            } else {
+                ids = ids.filter((v) => v !== ov);
+            }
+        }
+        const ev = this.resolvedEmailValue;
+        this.deliveryEmailSelected = !!(ev && ids.includes(ev));
+        this.deliveryAddressSelected = !!(av && ids.includes(av));
+        this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
+    }
+
     get labelEmail() {
         const o = this.pickDeliveryMeta('EMAIL');
         return o ? o.label : this.customLabel.emailLabel;
@@ -395,28 +419,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
         return o ? o.label : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
     }
 
-    get disableAddressCheckbox() {
-        return this.deliveryOfficeSelected === true;
-    }
-
-    get disableOfficeCheckbox() {
-        return this.deliveryAddressSelected === true;
-    }
-
-    get lockAddressCb() {
-        return this.disableAddressCheckbox;
-    }
-
-    get lockOfficeCb() {
-        return this.disableOfficeCheckbox;
-    }
-
     get lockAddTempEmailBtn() {
-        return this.disableAddTempEmail;
+        return this.disableAddTempEmail || this.closureFieldsReadonly;
     }
 
     get lockAddTempAddrBtn() {
-        return this.disableAddTempAddress;
+        return this.disableAddTempAddress || this.closureFieldsReadonly;
     }
 
     get validationMessageItems() {
@@ -499,32 +507,18 @@ export default class Fec_ContractClosureForm extends LightningElement {
         return tempMail ? CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY : STR_EMPTY;
     }
 
-    handleToggleEmail(event) {
-        this.deliveryEmailSelected = event.target.checked;
-    }
-
-    handleToggleAddress(event) {
-        const checked = event.target.checked;
-        if (checked) {
-            this.deliveryOfficeSelected = false;
-        }
-        this.deliveryAddressSelected = checked;
-    }
-
-    handleToggleOffice(event) {
-        const checked = event.target.checked;
-        if (checked) {
-            this.deliveryAddressSelected = false;
-        }
-        this.deliveryOfficeSelected = checked;
-    }
-
     handleAddTempEmail() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         this.useExistingEmail = false;
         this.showTempEmailRow = true;
     }
 
     handleRemoveTempEmail() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         this.showTempEmailRow = false;
         this.temporaryEmail = STR_EMPTY;
         if (this.hasDemographicEmail) {
@@ -586,6 +580,43 @@ export default class Fec_ContractClosureForm extends LightningElement {
         return true;
     }
 
+    assertDeliveryPicklistValid() {
+        const el = this.template.querySelector('[data-fec-field="deliveryPicklist"]');
+        let ok = true;
+        if (el && typeof el.checkValidity === 'function') {
+            ok = el.checkValidity();
+        } else {
+            ok =
+                this.deliveryEmailSelected === true ||
+                this.deliveryAddressSelected === true ||
+                this.deliveryOfficeSelected === true;
+        }
+        if (!ok && this.isClosureEditable) {
+            this.showToast(this.customLabel.errorTitle, this.validationLabels.deliveryRequired, 'error');
+        }
+        return ok;
+    }
+
+    @api
+    validateForSubmit() {
+        if (!this.isClosureEditable) {
+            return true;
+        }
+        if (this.loading === true) {
+            return true;
+        }
+        if (this.loadError) {
+            return false;
+        }
+        if (!this.assertDeliveryPicklistValid()) {
+            return false;
+        }
+        if (!this.assertRecipientPhoneInputValid()) {
+            return false;
+        }
+        return true;
+    }
+
     ensureSelectedComboboxOption(optionRows, selectedValue, selectedLabel) {
         const v = (selectedValue || STR_EMPTY).trim();
         const list = [...(optionRows || [])];
@@ -600,12 +631,18 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handlePickAddr(event) {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         const id = event.target.dataset.rowId;
         this.selectedAddressRowId = id;
         this.addrRenderKey++;
     }
 
     handleOpenTempAddressModal() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         this.tempAddressModalIsEdit = false;
         this.modalBuilding = STR_EMPTY;
         this.modalNumber = STR_EMPTY;
@@ -620,6 +657,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleEditTempAddress() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         this.tempAddressModalIsEdit = true;
         const p = this.lastTempAddressParts;
         if (p) {
@@ -721,6 +761,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     async handleModalSave() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         if (
             !this.modalBuilding ||
             !this.modalNumber ||
@@ -778,6 +821,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     async handleRemoveTempAddress() {
+        if (this.closureFieldsReadonly) {
+            return;
+        }
         if (this.tempAddressRecordId) {
             try {
                 await deleteTemporaryAddressRecord({
@@ -823,6 +869,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
     async validateBeforeComplete() {
         this.showValidateBanner = false;
         this.lastValidationMessages = [];
+        if (!this.isClosureEditable) {
+            return { valid: true, messages: [] };
+        }
+        if (!this.assertDeliveryPicklistValid()) {
+            return { valid: false, messages: [] };
+        }
         if (!this.assertRecipientPhoneInputValid()) {
             return { valid: false, messages: [] };
         }
@@ -847,6 +899,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     @api
     async saveToCase() {
+        if (!this.isClosureEditable) {
+            return { valid: true, messages: [] };
+        }
+        if (!this.assertDeliveryPicklistValid()) {
+            return { valid: false, messages: [] };
+        }
         if (!this.assertRecipientPhoneInputValid()) {
             return { valid: false, messages: [] };
         }
@@ -860,7 +918,92 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
+                this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
+                this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
+                this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
+                this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                try {
+                    if (this.wiredInitResult) {
+                        await refreshApex(this.wiredInitResult);
+                    }
+                } catch (ignore) {
+                }
                 this.showToast(this.customLabel.successTitle, this.customLabel.toastSaveSuccess, 'success');
+            }
+            return r;
+        } catch (e) {
+            const msg = this.handleError(e);
+            this.showToast(this.customLabel.errorTitle, msg, 'error');
+            return { valid: false, messages: [msg] };
+        }
+    }
+
+    _shouldRunContractClosureDraftSave() {
+        if (this.deliveryEmailSelected || this.deliveryAddressSelected || this.deliveryOfficeSelected) {
+            return true;
+        }
+        if ((this.recipientName || STR_EMPTY).trim()) {
+            return true;
+        }
+        if ((this.recipientPhone || STR_EMPTY).trim()) {
+            return true;
+        }
+        if ((this.temporaryEmail || STR_EMPTY).trim()) {
+            return true;
+        }
+        if (this.selectedAddressRowId) {
+            return true;
+        }
+        if ((this.temporaryAddressDisplay || STR_EMPTY).trim()) {
+            return true;
+        }
+        if (this.showTempEmailRow === true) {
+            return true;
+        }
+        return false;
+    }
+
+    @api
+    async saveDraftIfApplicable() {
+        if (!this.isClosureEditable) {
+            return { valid: true, messages: [] };
+        }
+        if (this.loading === true) {
+            return { valid: true, messages: [] };
+        }
+        if (!this._shouldRunContractClosureDraftSave()) {
+            return { valid: true, messages: [] };
+        }
+        if (this.loadError) {
+            return { valid: false, messages: [] };
+        }
+        if (!this.assertRecipientPhoneInputValid()) {
+            return { valid: false, messages: [] };
+        }
+        const payload = this.buildPayload();
+        try {
+            const r = await saveFormDraft({
+                caseId: this.recordId,
+                payloadJson: JSON.stringify(payload)
+            });
+            if (!r.valid) {
+                this.lastValidationMessages = r.messages || [];
+                this.showValidateBanner = true;
+                const msgs = r.messages || [];
+                const m =
+                    msgs.length > 0 ? msgs.join(', ') : this.customLabel.errorTitle;
+                this.showToast(this.customLabel.errorTitle, m, 'error');
+            } else {
+                this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
+                this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
+                this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
+                this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                try {
+                    if (this.wiredInitResult) {
+                        await refreshApex(this.wiredInitResult);
+                    }
+                } catch (ignore) {
+                }
             }
             return r;
         } catch (e) {

@@ -208,7 +208,10 @@ public with sharing class FEC_UpdateCustomerAddress {
       );
     }
     List<Case> caselst = [
-      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name
+      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name,
+             FEC_Updated_Info_Permanent_Address__c,
+             FEC_Updated_Info_Office_Address__c,
+             FEC_Updated_Info_Current_Address__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -219,35 +222,72 @@ public with sharing class FEC_UpdateCustomerAddress {
       );
     }
 
-    Map<String, String> p = (params == null) ? new Map<String, String>() : params;
+    Case selectedCase = caselst[0];
+    Map<String, String> pendingFieldBySfType = new Map<String, String>{
+      'Permanent Address' => selectedCase.FEC_Updated_Info_Permanent_Address__c,
+      'Office Address'    => selectedCase.FEC_Updated_Info_Office_Address__c,
+      'Current Address'   => selectedCase.FEC_Updated_Info_Current_Address__c
+    };
+
     UpdateResult result;
-    try {
-      result = updateCustomerAddressParams(
-        String.isNotBlank(p.get('caseId')) ? p.get('caseId') : caseId,
-        p.get('sfAddressType'),
-        p.get('cifNumber'),
-        p.get('addressId'),
-        p.get('addressType'),
-        p.get('number_x'),
-        p.get('building'),
-        p.get('street'),
-        p.get('ward'),
-        p.get('city'),
-        p.get('propertyStatus'),
-        p.get('years'),
-        p.get('months'),
-        p.get('isMailingAddress'),
-        p.get('isPrimary'),
-        p.get('receiveStatement'),
-        p.get('cardDelivery')
-      );
-    } finally {
-      logApiResponse();
+    for (String sfType : new List<String>{ 'Permanent Address', 'Office Address', 'Current Address' }) {
+      String pendingJson = pendingFieldBySfType.get(sfType);
+      if (String.isBlank(pendingJson)) {
+        continue;
+      }
+      try {
+        Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
+        result = updateCustomerAddressParams(
+          caseId,
+          sfType,
+          (String) data.get('cifNumber'),
+          (String) data.get('addressId'),
+          (String) data.get('addressType'),
+          (String) data.get('number_x'),
+          (String) data.get('building'),
+          (String) data.get('street'),
+          (String) data.get('ward'),
+          (String) data.get('city'),
+          (String) data.get('propertyStatus'),
+          (String) data.get('years'),
+          (String) data.get('months'),
+          (String) data.get('isMailingAddress'),
+          (String) data.get('isPrimary'),
+          (String) data.get('receiveStatement'),
+          (String) data.get('cardDelivery')
+        );
+      } finally {
+        logApiResponse();
+      }
+      if (result == null || result.success != true) {
+        break;
+      }
     }
 
-    Case selectedCase = caselst[0];
     if (result != null && result.success == true) {
       selectedCase.FEC_Process_Action_Count__c = -1;
+
+      // Sync FEC_Mailing_Address__c trong FEC_Address_Info__c dựa trên isMailingAddress trong pending JSON
+      // vì API GetAddressesList không trả cờ mailing, nên phải sync trước khi xóa pending fields
+      String selectedMailingSfType = null;
+      for (String sfType : pendingFieldBySfType.keySet()) {
+        String pendingJson = pendingFieldBySfType.get(sfType);
+        if (String.isBlank(pendingJson)) continue;
+        try {
+          Map<String, Object> d = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
+          if ('Y'.equals((String) d.get('isMailingAddress'))) {
+            selectedMailingSfType = sfType;
+            break;
+          }
+        } catch (Exception ex) {
+          System.debug('### syncMailing parse error: ' + ex.getMessage());
+        }
+      }
+      FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);
+
+      selectedCase.FEC_Updated_Info_Permanent_Address__c = null;
+      selectedCase.FEC_Updated_Info_Office_Address__c    = null;
+      selectedCase.FEC_Updated_Info_Current_Address__c   = null;
     } else {
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;

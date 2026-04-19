@@ -2989,6 +2989,22 @@
         <value>Customer information update failed. Please try again</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13404,6 +13420,61 @@
         <protected>false</protected>
         <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
         <value>Mở khóa PIN thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ACTION_CARD_REPLACEMENT_HEADER</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_ACTION_CARD_REPLACEMENT_HEADER</shortDescription>
+        <value>Card Replacement</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT</shortDescription>
+        <value>Bạn sắp thay thế thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</shortDescription>
+        <value>Thay thế thẻ thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
+        <value>Thay thế thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_D2C</shortDescription>
+        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS D2C xử lý.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</shortDescription>
+        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS Support xử lý.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Permission_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No permission toast message</shortDescription>
+        <value>Bạn không có quyền thực hiện thao tác này.</value>
     </labels>
     <labels>
         <fullName>FEC_Page_Number_Deals</fullName>

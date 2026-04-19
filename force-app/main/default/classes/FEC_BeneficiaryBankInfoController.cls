@@ -1,4 +1,4 @@
-public with sharing class FEC_BeneficiaryBankInfoController {
+public without sharing class FEC_BeneficiaryBankInfoController {
 
     private static final String OBJ_BANK_BRANCH = 'FEC_Bank_Branch__c';
     private static final String FLD_BANK_BRANCH_NAME_NOACCENT = 'FEC_Bank_Branch_Name_Noaccent__c';
@@ -233,10 +233,10 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         String bn = bankPicklistValue.trim();
         String br = bankBranch.trim();
         String pv = provinceCity.trim();
-        if (!isValidBeneficiaryMasterSelections(bn, br, pv)) {
+        if (!isValidProvinceNameVn(pv)) {
             res.errorMessage = String.format(
                 System.Label.FEC_MSG_Not_Found,
-                new List<String>{ System.Label.FEC_LBL_Bank_Name }
+                new List<String>{ System.Label.FEC_LBL_Province_City }
             );
             return res;
         }
@@ -320,29 +320,11 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             String br = String.isNotBlank(bankBranch) ? bankBranch.trim() : null;
             String pv = String.isNotBlank(provinceCity) ? provinceCity.trim() : null;
             if (String.isNotBlank(bn) && String.isNotBlank(br) && String.isNotBlank(pv)) {
-                if (!isValidBeneficiaryMasterSelections(bn, br, pv)) {
+                if (!isValidProvinceNameVn(pv)) {
                     throw new AuraHandledException(
                         String.format(
                             System.Label.FEC_MSG_Not_Found,
-                            new List<String>{ System.Label.FEC_LBL_Bank_Name }
-                        )
-                    );
-                }
-            } else if (String.isNotBlank(bn) && String.isNotBlank(br)) {
-                if (!isValidBankBranchForBank(bn, br)) {
-                    throw new AuraHandledException(
-                        String.format(
-                            System.Label.FEC_MSG_Not_Found,
-                            new List<String>{ System.Label.FEC_LBL_Bank_Name }
-                        )
-                    );
-                }
-            } else if (String.isNotBlank(bn)) {
-                if (!isValidBankNameNoaccent(bn)) {
-                    throw new AuraHandledException(
-                        String.format(
-                            System.Label.FEC_MSG_Not_Found,
-                            new List<String>{ System.Label.FEC_LBL_Bank_Name }
+                            new List<String>{ System.Label.FEC_LBL_Province_City }
                         )
                     );
                 }
@@ -383,44 +365,6 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         }
     }
 
-    private static Boolean isValidBankBranchForBank(String bankNameNoaccent, String branchNameNoaccent) {
-        if (
-            String.isBlank(bankNameNoaccent) ||
-            String.isBlank(branchNameNoaccent) ||
-            !Schema.sObjectType.FEC_Bank_Branch__c.isAccessible() ||
-            !isValidBankNameNoaccent(bankNameNoaccent)
-        ) {
-            return false;
-        }
-        String bn = bankNameNoaccent.trim();
-        String br = branchNameNoaccent.trim();
-        List<FEC_Bank_Branch__c> brRows = [
-            SELECT Id
-            FROM FEC_Bank_Branch__c
-            WHERE
-                FEC_Bank_Branch_Name_Noaccent__c = :br
-                AND FEC_Bank_Name__r.FEC_Bank_Name_Noaccent__c = :bn
-            LIMIT 1
-        ];
-        brRows = (List<FEC_Bank_Branch__c>) Security.stripInaccessible(AccessType.READABLE, brRows).getRecords();
-        return !brRows.isEmpty();
-    }
-
-    private static Boolean isValidBankNameNoaccent(String bankNameNoaccent) {
-        if (String.isBlank(bankNameNoaccent) || !Schema.sObjectType.FEC_Bank_Name__c.isAccessible()) {
-            return false;
-        }
-        String bn = bankNameNoaccent.trim();
-        List<FEC_Bank_Name__c> rows = [
-            SELECT Id
-            FROM FEC_Bank_Name__c
-            WHERE FEC_Bank_Name_Noaccent__c = :bn
-            LIMIT 1
-        ];
-        rows = (List<FEC_Bank_Name__c>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
-        return !rows.isEmpty();
-    }
-
     private static Boolean isValidProvinceNameVn(String nameVn) {
         if (String.isBlank(nameVn) || !Schema.sObjectType.FEC_Province__c.isAccessible()) {
             return false;
@@ -434,23 +378,5 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         ];
         rows = (List<FEC_Province__c>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
         return !rows.isEmpty();
-    }
-
-    private static Boolean isValidBeneficiaryMasterSelections(
-        String bankNameNoaccent,
-        String branchNameNoaccent,
-        String provinceNameVn
-    ) {
-        if (
-            String.isBlank(bankNameNoaccent) ||
-            String.isBlank(branchNameNoaccent) ||
-            String.isBlank(provinceNameVn)
-        ) {
-            return false;
-        }
-        if (!Schema.sObjectType.FEC_Province__c.isAccessible()) {
-            return false;
-        }
-        return isValidBankBranchForBank(bankNameNoaccent, branchNameNoaccent) && isValidProvinceNameVn(provinceNameVn);
     }
 }
