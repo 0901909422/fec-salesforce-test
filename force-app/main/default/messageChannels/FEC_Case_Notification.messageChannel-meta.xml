@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Channel for FEC Case Notification</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Product Type Id</description>
+        <fieldName>productTypeId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Category Id</description>
+        <fieldName>categoryId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Sub Category Id</description>
+        <fieldName>subCategoryId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Sub Code Id</description>
+        <fieldName>subCodeId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Stage Id</description>
+        <fieldName>stageId</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Case Notification</masterLabel>
+</LightningMessageChannel>

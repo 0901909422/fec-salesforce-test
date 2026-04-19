@@ -106,6 +106,7 @@ export default class Fec_templateEditor extends LightningElement {
     @track isActive              = false;
     @track emailBody             = '';
     @track attachments           = [];     // { id, name, size, type }
+    _deletedAttachmentIds        = [];
 
     /* Merge-field picker */
     @track isPickerOpen = false;
@@ -363,6 +364,7 @@ export default class Fec_templateEditor extends LightningElement {
 
     handleRemoveAttachment(event) {
         const attId = event.currentTarget.dataset.id;
+        this._deletedAttachmentIds.push(attId);
         this.attachments = this.attachments.filter((a) => a.id !== attId);
     }
 
@@ -538,7 +540,8 @@ export default class Fec_templateEditor extends LightningElement {
             // Pass null oldBody for new templates (draft→real) to skip content history
             const savedId = await saveTemplate({
                 templateJson: templateJson,
-                oldBody: this.isNewMode ? null : (this._originalBody || '')
+                oldBody: this.isNewMode ? null : (this._originalBody || ''),
+                deletedAttachmentIds: this._deletedAttachmentIds
             });
 
             // Draft is now the real record — clear the draft reference
@@ -656,6 +659,7 @@ export default class Fec_templateEditor extends LightningElement {
         this.isActive = false;
         this.emailBody = '';
         this.attachments = [];
+        this._deletedAttachmentIds = [];
         this.hasErrors = false;
         this.errorMessage = '';
         this._apiNameManuallySet = false;

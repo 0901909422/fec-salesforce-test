@@ -91,6 +91,11 @@ public with sharing class FEC_SearchController {
         // Thực hiện Upsert Case ngay để có Id
         upsert objCase;
 
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+            FEC_Case__c = objCase.Id
+        );
+        insert newInfo;
+
         // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         if (fieldName == 'AccountNumber') {
@@ -328,6 +333,11 @@ public with sharing class FEC_SearchController {
 
             insert c;
 
+            FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+                FEC_Case__c = c.Id
+            );
+            insert newInfo;
+
             return c.Id;
 
         } catch (Exception e) {
@@ -368,5 +378,13 @@ public with sharing class FEC_SearchController {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    /**
+     * Lấy Profile name của current user để check permission
+     */
+    @AuraEnabled(cacheable=true)
+    public static String getCurrentUserProfileName() {
+        return FEC_CommonUltils.getCurrentUserProfileName();
     }
 }
