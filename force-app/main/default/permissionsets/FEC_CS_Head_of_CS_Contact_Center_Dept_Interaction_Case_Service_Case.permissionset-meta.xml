@@ -862,6 +862,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Updated_Info_Current_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Updated_Info_Date_of_Birth__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -898,6 +903,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Updated_Info_National_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Updated_Info_Office_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Updated_Info_Permanent_Address__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
