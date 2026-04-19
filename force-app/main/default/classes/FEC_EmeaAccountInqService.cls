@@ -70,6 +70,19 @@
         @AuraEnabled public String naMobPh { get; set; }
         @AuraEnabled public String naCity { get; set; }
         @AuraEnabled public String naEmp { get; set; }
+
+        // Interest Status & Credit
+        @AuraEnabled public String intStat { get; set; }    
+        @AuraEnabled public Decimal availCr { get; set; }  
+
+        // Block Codes
+        @AuraEnabled public String blkCd1 { get; set; }
+        @AuraEnabled public String blkCd2 { get; set; }
+        @AuraEnabled public Date dtBlkCd1 { get; set; }
+        @AuraEnabled public Date dtBlkCd2 { get; set; }
+
+        // Warning Codes (list)
+        @AuraEnabled public List<String> warnCodes { get; set; }
     }
 
     // ==========================================
@@ -259,6 +272,28 @@
                         result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
                         result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
 
+                        // Interest + Credit
+                        result.intStat = FEC_CommonUltils.getXmlValue(acctBs, 'INT_STAT');
+                        result.availCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AVAIL_CR');
+
+                        // Block Codes
+                        result.blkCd1 = FEC_CommonUltils.getXmlValue(acctBs, 'BLK_CD_1');
+                        result.blkCd2 = FEC_CommonUltils.getXmlValue(acctBs, 'BLK_CD_2');
+                        result.dtBlkCd1 = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_BLK_CD_1');
+                        result.dtBlkCd2 = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_BLK_CD_2');
+
+                        result.warnCodes = new List<String>();
+                        Dom.XmlNode warnNode = acctBs.getChildElement('FAS_WARN_CD', null);
+                        if (warnNode != null) {
+                            for (Dom.XmlNode warnCdX : warnNode.getChildElements()) {
+                                String code = FEC_CommonUltils.getXmlValue(warnCdX, 'WARN_CD');
+
+                                if (String.isNotBlank(code)) {
+                                    result.warnCodes.add(code);
+                                }
+                            }
+                        }
+
                         // D. Parse NA_DATA_TBL -> NA_DATA 
                         Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
                         if (naTbl != null) {
@@ -318,6 +353,28 @@
                     result.dtOpened = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_OPENED');
                     result.dtPmtDue = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_PMT_DUE');
                     result.dtCardExp = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_CARD_EXP');
+
+                    // Interest + Credit
+                    result.intStat = FEC_CommonUltils.getXmlValue(acctBs, 'INT_STAT');
+                    result.availCr = FEC_CommonUltils.xmlValToDecimal(acctBs, 'AVAIL_CR');
+
+                    // Block Codes
+                    result.blkCd1 = FEC_CommonUltils.getXmlValue(acctBs, 'BLK_CD_1');
+                    result.blkCd2 = FEC_CommonUltils.getXmlValue(acctBs, 'BLK_CD_2');
+                    result.dtBlkCd1 = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_BLK_CD_1');
+                    result.dtBlkCd2 = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_BLK_CD_2');
+
+                    result.warnCodes = new List<String>();
+                        Dom.XmlNode warnNode = acctBs.getChildElement('FAS_WARN_CD', null);
+                        if (warnNode != null) {
+                            for (Dom.XmlNode warnCdX : warnNode.getChildElements()) {
+                                String code = FEC_CommonUltils.getXmlValue(warnCdX, 'WARN_CD');
+
+                                if (String.isNotBlank(code)) {
+                                    result.warnCodes.add(code);
+                                }
+                            }
+                        }
 
                     // D. Parse NA_DATA_TBL -> NA_DATA 
                     Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
