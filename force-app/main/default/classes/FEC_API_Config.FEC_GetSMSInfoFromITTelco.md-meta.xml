@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Get SMS Info From IT Telco</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Endpoint__c</field>
+        <value xsi:type="xsd:string">/esb/telecom/SMSLogWS/GetSMSInfoFromITTelco</value>
+    </values>
+    <values>
+        <field>FEC_SOAP_Action__c</field>
+        <value xsi:type="xsd:string"></value>
+    </values>
+</CustomMetadata>
