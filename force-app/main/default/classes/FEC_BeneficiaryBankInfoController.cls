@@ -1,4 +1,4 @@
-public with sharing class FEC_BeneficiaryBankInfoController {
+public without sharing class FEC_BeneficiaryBankInfoController {
 
     private static final String OBJ_BANK_BRANCH = 'FEC_Bank_Branch__c';
     private static final String FLD_BANK_BRANCH_NAME_NOACCENT = 'FEC_Bank_Branch_Name_Noaccent__c';
