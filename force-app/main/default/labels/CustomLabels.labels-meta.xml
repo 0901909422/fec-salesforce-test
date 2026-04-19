@@ -13484,4 +13484,25 @@
         <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
         <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No response from server</shortDescription>
+        <value>No response from server</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unexpected_SOAP_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected SOAP response</shortDescription>
+        <value>Unexpected SOAP response</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unknown Sys.Code</shortDescription>
+        <value>Unknown Sys.Code</value>
+    </labels>
 </CustomLabels>

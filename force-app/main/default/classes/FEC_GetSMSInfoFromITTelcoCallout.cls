@@ -15,9 +15,9 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
     public static final String API_CONFIG_NAME = 'FEC_GetSMSInfoFromITTelco';
     private static final String SERVICE_NS = 'http://esbservice.fecredit.org/SMSLogWS/';
 
-    public static final String SYS_CODE_DATA_FOUND     = '1';
-    public static final String SYS_CODE_ERROR          = '0';
-    public static final String SYS_CODE_DATA_NOT_FOUND = '3';
+    public static final String SYS_CODE_DATA_FOUND     = FEC_ConstantCommon.CODE_SUCCESS;     // '1'
+    public static final String SYS_CODE_ERROR          = FEC_ConstantCommon.CODE_SYS_ERROR;   // '0'
+    public static final String SYS_CODE_DATA_NOT_FOUND = FEC_ConstantCommon.CODE_FAILURE;     // '3'
 
     // =========================================================================
     // RESPONSE WRAPPERS
@@ -81,9 +81,9 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
-            String endpoint = (apiSetting != null && String.isNotBlank(apiSetting.FEC_Endpoint__c))
-                ? (apiSetting.FEC_Endpoint__c + (apiConfig != null ? apiConfig.FEC_Endpoint__c : ''))
-                : ('callout:FECredit_Service' + (apiConfig != null ? apiConfig.FEC_Endpoint__c : '/esb/telecom/SMSLogWS/GetSMSInfoFromITTelco'));
+            String endpoint = apiSetting != null && apiSetting.FEC_Call_Mock__c
+                ? FEC_MockupEndpoint.GET_SMS_INFO_FROM_IT_TELCO_ENDPOINT_MOCKUP
+                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
             // KH test thành công không set SOAPAction; chỉ gửi header khi CMDT có giá trị (một số gateway khác có thể cần)
             String soapAction = (apiConfig != null && String.isNotBlank(apiConfig.FEC_SOAP_Action__c))
@@ -121,12 +121,12 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
                 } else {
                     result.success = String.isNotBlank(result.sysCode);
                     if (!result.success && String.isBlank(result.errorMessage)) {
-                        result.errorMessage = 'Unknown Sys.Code: ' + result.sysCode;
+                        result.errorMessage = System.Label.FEC_MSG_Unknown_Sys_Code + ': ' + result.sysCode;
                     }
                 }
             } else {
                 result.httpStatus = (res != null) ? res.getStatusCode() : 0;
-                result.errorMessage = (res != null) ? res.getBody() : 'No response from server';
+                result.errorMessage = (res != null) ? res.getBody() : System.Label.FEC_MSG_No_Response;
             }
         } catch (Exception e) {
             result.success = false;
@@ -195,7 +195,7 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
                 if (fault != null) {
                     result.errorMessage = FEC_CommonUltils.getXmlValue(fault, 'faultstring');
                 } else {
-                    result.errorMessage = 'Unexpected SOAP response (no GetSMSInfoFromITTelcoResponse)';
+                    result.errorMessage = System.Label.FEC_MSG_Unexpected_SOAP_Response;
                 }
                 return result;
             }
