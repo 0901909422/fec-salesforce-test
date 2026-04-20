@@ -1322,4 +1322,16 @@ public with sharing class FEC_CommonUltils {
       System.debug('Log Exception Error:' + ex.getMessage());
     }
   }
+
+      public static String buildDatetimeForAPI() {
+        Datetime dt = Datetime.now();
+
+        String base = dt.format('yyyy-MM-dd\'T\'HH:mm:ss');
+        String ms = String.valueOf(dt.millisecond()).leftPad(3, '0');
+        String micro = ms + '000';
+        String tz = dt.format('XXX');
+
+        return base + '.' + micro + tz;
+    }
+    
 }

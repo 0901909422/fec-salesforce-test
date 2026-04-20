@@ -1,3 +1,15 @@
+/****************************************************************************************
+ * File Name    : FEC_SearchByListNIDsServiceCallout.Apex
+ * Author       : LongNH76
+ * Date         : 2026-04-21
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-04-21     LongNH76             Create
+ 
+****************************************************************************************/
 public with sharing class FEC_SearchByListNIDsServiceCallout {
   
     public class NIDsResponse {
@@ -39,6 +51,8 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
         @AuraEnabled public String transID2;
     }
     
+
+    
     //=============== MAIN CALL METHOD ===============//
     @AuraEnabled
     public static NIDsResponse searchByListNIDs(List<String> nationalIDs) {
@@ -59,12 +73,13 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
             + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
        
         Map<String, Object> bodyMap = new  Map<String, Object>();
+        
         bodyMap.put('sys', new Map<String, Object> {
-            'dateTime' => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
+            'dateTime' => FEC_CommonUltils.buildDatetimeForAPI(),
             'transID' => transactionId,
-            'requestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+            'requestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
         });
-        bodyMap.put('nationalIDs', nationalIDs);
+        bodyMap.put('nationalID', nationalIDs);
 
         // Build request
         String requestBody = JSON.serialize(bodyMap);
