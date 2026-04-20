@@ -157,7 +157,14 @@
                                 content={field.helpText}
                               ></lightning-helptext>
                             </p>
-                            <p class="value">
+                            <p class="value"
+                              data-id="field-read-only"
+                              data-record-id={obj.id}
+                              data-obj-name={obj.name}
+                              data-field={field.apiName}
+                              data-value={field.value}
+                              data-is-update-read-only={field.isUpdateReadOnly}
+                            >
                               {field.readonlyDisplayValue}
                               <lightning-icon
                                 if:true={field.masked}

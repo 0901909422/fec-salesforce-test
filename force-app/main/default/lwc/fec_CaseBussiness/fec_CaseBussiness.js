@@ -54,18 +54,22 @@ import FEC_Block_Card_Header from '@salesforce/label/c.FEC_Block_Card_Header';
 import FEC_Block_Card_Confirmation_Msg from '@salesforce/label/c.FEC_Block_Card_Confirmation_Msg';
 import FEC_Block_Card_Success from '@salesforce/label/c.FEC_Block_Card_Success';
 import FEC_Block_Card_Failed_Max from '@salesforce/label/c.FEC_Block_Card_Failed_Max';
+import FEC_Block_Card_Failed from '@salesforce/label/c.FEC_Block_Card_Failed';
 import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
 import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY";
 import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_REISSUE_HEADER";
 import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
 import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
 import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
+import FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY";
 import FEC_ACTION_CARD_REPLACEMENT_HEADER from "@salesforce/label/c.FEC_ACTION_CARD_REPLACEMENT_HEADER";
 import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -188,6 +192,7 @@ const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
 
 const TYPE_QUALIFIED = "Qualified";
+const TYPE_QUALIFIED_VN = "Hợp lệ";
 const TYPE_UNQUALIFIED = "Unqualified";
 const TYPE_AGREE = "Agree";
 const TYPE_DISAGREE = "Disagree";
@@ -254,6 +259,12 @@ const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
+
+const FIELD_READ_ONLY_UPDATE = [
+  FIELD_NEW_BLOCK_CODE,
+  FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
+  FIELD_CARD_REPLACEMENT_FEE,
+];
 
 /**
  * Registry of dynamically loadable components.
@@ -1016,13 +1027,14 @@ export default class Fec_CaseBussiness extends LightningElement {
                   assignmentType = field.value;
                 }
 
-                if (!field.readonly) {
+                // PhuongNT cmt, still process for field read only
+                // if (!field.readonly) {
                   if (
                     currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
                     currentField === CASE_CS_D2C_RISK_LEVEL
                   ) {
                     field.isHidden =
-                      !assignmentType || assignmentType === TYPE_QUALIFIED;
+                      !assignmentType || assignmentType === TYPE_QUALIFIED || assignmentType === TYPE_QUALIFIED_VN;
                   } else if (
                     currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
                   ) {
@@ -1031,7 +1043,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   } else {
                     field.isHidden = false;
                   }
-                }
+                // }
 
                 if (!this.isEdit) {
                   field.readonly = true;
@@ -1146,6 +1158,9 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
         }
+        // PhuongNT add handle set update field read only
+        this.handleSetUpdateFieldReadOnly();
+
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
             productTypeId: productTypeId,
@@ -1182,7 +1197,8 @@ export default class Fec_CaseBussiness extends LightningElement {
             ...field,
             isHidden: isInternal
               ? field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
-              : false,
+              // : false,
+              : field.isHidden, // PhuongNT modified
           })) || [],
         })) || [],
       })) || [],
@@ -2100,6 +2116,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             return Promise.reject(new Error("FEC_CONTRACT_CLOSURE_SAVE_FAILED"));
           }
         });
+
     if (total === 0) {
       return afterForms();
     }
@@ -2114,7 +2131,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    }).then(() => afterForms());
+    }).then(() => {
+      afterForms();
+      // PhuongNT add handle save data for fields readonly were changed data by another field
+      this.handleSaveFieldReadOnly();
+    });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -2144,6 +2165,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
+
+    // PhuongNT add handle save data for fields readonly were changed data by another field
+    this.handleSaveFieldReadOnly();
+    
     await Promise.all([
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),
@@ -2428,6 +2453,18 @@ export default class Fec_CaseBussiness extends LightningElement {
         } else {
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
+          // PhuongNT add set msg error for call api
+          if (this.isProcessActionValid) {
+            if (this.processActionMethod == ACTION_BLOCK_CARD) {
+              msgError = FEC_Block_Card_Failed;
+            } else if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+              msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_REPLACE_CARD) {
+              msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
+            }
+          }
           if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
             this._handleAddressUpdateFail();
           } else {
@@ -2870,4 +2907,57 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.log(error);
     });
   }
+  
+  // PhuongNT add handle set update field read only
+  handleSetUpdateFieldReadOnly() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.editable) return; // ignore editable
+            if (FIELD_READ_ONLY_UPDATE.includes(field.apiName)) {
+              field.isUpdateReadOnly = true;
+            }
+          });
+        });
+      });
+    });
+  }
+
+  // PhuongNT add handle save data for fields readonly were changed data by another field
+  async handleSaveFieldReadOnly() {
+    let mapRecord = new Map();
+    const els = this.template.querySelectorAll('[data-id="field-read-only"]');
+    els?.forEach(el => {
+      const isUpdateReadOnly = el.dataset.isUpdateReadOnly;
+      if (!isUpdateReadOnly) return; // ingnore
+
+      const fieldName = el.dataset.field;
+      const recordId = el.dataset.recordId;
+      const value = el.dataset.value;
+      
+      if (mapRecord.has(recordId)) {
+          mapRecord.get(recordId)[fieldName] = value;
+      } else {
+        let fields = {
+          'Id': recordId,
+          [fieldName]: value
+        };
+        mapRecord.set(recordId, fields);
+      }
+    });
+    if (mapRecord.size === 0) return;
+    try {
+      const updatePromises = Array.from(mapRecord.values()).map(fields => {
+        const recordInput = { fields };
+        console.log('>>>>recordInput: ', JSON.stringify(recordInput));
+        return updateRecord(recordInput);
+      });
+      await Promise.all(updatePromises);
+      console.log('Record updated successfully!');
+    } catch(error) {
+      console.error('Error updating record: ', error);
+    }
+  }
+
 }
