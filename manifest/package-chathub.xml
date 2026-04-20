@@ -14,7 +14,6 @@
     </types>
 
     <types>
-        <members>fecC360Info</members>
         <members>fecChatHistoryForCase</members>
         <members>fecChathubContainer</members>
         <members>fecChathubStatus</members>
@@ -31,14 +30,8 @@
 
     <types>
         <members>FEC_ChatHistory__c</members>
+        <members>FEC_SystemSetting__mdt</members>
         <name>CustomObject</name>
-    </types>
-
-    <types>
-        <members>FEC_ChatHub_Setting__mdt</members>
-        <members>FEC_ChatHubEncryptKey__mdt</members>
-        <members>FEC_ChatHubURL__mdt</members>
-        <name>CustomMetadata</name>
     </types>
 
     <types>
