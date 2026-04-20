@@ -12449,6 +12449,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</shortDescription>
+        <value>Mở khoá thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -12479,6 +12487,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</shortDescription>
+        <value>Thay thế mã PIN thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Data_Application_History</fullName>
@@ -12539,6 +12555,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
         <value>Thay thế thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</shortDescription>
+        <value>Thay thế thẻ thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>

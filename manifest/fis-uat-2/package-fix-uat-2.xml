@@ -453,6 +453,9 @@
         <members>FEC_No_Permission_Msg</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
