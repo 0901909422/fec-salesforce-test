@@ -85,7 +85,13 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
         bodyMap.put('RecordType', recordType);
         // Build request
         String requestBody = JSON.serialize(bodyMap);
-        
+        // ===== LOG REQUEST =====
+        System.debug('===== API REQUEST =====');
+        System.debug('ENDPOINT: ' + endpoint);
+        System.debug('METHOD: POST');
+        System.debug('HEADERS: ' + JSON.serialize(headers));
+        System.debug('BODY: ' + requestBody);
+
         try {
             HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, headers, requestBody);
 
