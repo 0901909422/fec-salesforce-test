@@ -1,15 +1,6 @@
-public with sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<SObject> {
+public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<SObject> {
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
-        if (!Schema.sObjectType.FEC_Routing_Action_History__c.isAccessible()
-            || !Schema.sObjectType.FEC_Routing_Action_History__c.fields.FEC_Changed_Status__c.isAccessible()) {
-            return Database.getQueryLocator([
-                SELECT Id
-                FROM FEC_Routing_Action_History__c
-                WHERE Id = NULL
-            ]);
-        }
-
         return Database.getQueryLocator([
             SELECT Id, FEC_Changed_Status__c
             FROM FEC_Routing_Action_History__c
@@ -19,10 +10,6 @@ public with sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<
     }
 
     public void execute(Database.BatchableContext bc, List<SObject> scope) {
-        if (scope == null || scope.isEmpty()) {
-            return;
-        }
-
         Set<String> statusNames = new Set<String>();
         for (SObject sob : scope) {
             FEC_Routing_Action_History__c rec = (FEC_Routing_Action_History__c)sob;
@@ -57,12 +44,7 @@ public with sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<
             }
         }
 
-        if (!toInsert.isEmpty()) {
-            List<SObject> sanitizedRecords = Security.stripInaccessible(AccessType.CREATABLE, toInsert).getRecords();
-            if (!sanitizedRecords.isEmpty()) {
-                insert sanitizedRecords;
-            }
-        }
+        insert toInsert;
     }
 
     public void finish(Database.BatchableContext bc) {
