@@ -13555,4 +13555,193 @@
         <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
         <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
     </labels>
+<labels>
+        <fullName>FEC_Account_Contract_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Number</shortDescription>
+        <value>Account/ Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address</shortDescription>
+        <value>Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent ID</shortDescription>
+        <value>Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Name</shortDescription>
+        <value>Agent Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Allocation_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Allocation Date</shortDescription>
+        <value>Allocation Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Name</shortDescription>
+        <value>Campaign Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Date</shortDescription>
+        <value>Communication Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Template</shortDescription>
+        <value>Communication Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Type</shortDescription>
+        <value>Communication Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contacted_Person</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contacted Person</shortDescription>
+        <value>Contacted Person</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Pool</shortDescription>
+        <value>Current Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Sub_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Sub Pool</shortDescription>
+        <value>Current Sub Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DPD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DPD</shortDescription>
+        <value>DPD</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Due_Reason</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Due Reason</shortDescription>
+        <value>Due Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Agent ID</shortDescription>
+        <value>Interacted Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Code</shortDescription>
+        <value>Interacted Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Date</shortDescription>
+        <value>Interacted Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Phone</shortDescription>
+        <value>Interacted Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Job</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Job</shortDescription>
+        <value>Job</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUExpiryDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUExpiryDate</shortDescription>
+        <value>NFU Expired Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStartDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStartDate</shortDescription>
+        <value>NFU Started Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStatus</shortDescription>
+        <value>NFU Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Next_Interaction_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next Interaction Date</shortDescription>
+        <value>Next Interaction Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Note</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Note</shortDescription>
+        <value>Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_POS</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POS</shortDescription>
+        <value>POS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Phone_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone Number</shortDescription>
+        <value>Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Promised_Repayment_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Promised Repayment Amount</shortDescription>
+        <value>Promised Repayment Amount</value>
+    </labels>
 </CustomLabels>

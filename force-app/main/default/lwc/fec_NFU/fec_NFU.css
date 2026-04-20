@@ -1,0 +1,39 @@
+:host {
+    display: block;
+}
+
+.fec-nfu-spinner {
+    display: flex;
+    justify-content: center;
+    padding: var(--lwc-spacingSmall, 0.75rem) 0;
+}
+
+/* Giống fec_Asset .sync-fail-text — nhãn lỗi API */
+.fec-nfu-sync-fail {
+    color: #c23934;
+    font-weight: 400;
+}
+
+/* Grid label/value (thay fec_CommonRecordDetailFields) */
+.fec-nfu-field-row {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.fec-nfu-label {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 55%;
+    margin-right: 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.fec-nfu-value {
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+    text-align: right;
+}
