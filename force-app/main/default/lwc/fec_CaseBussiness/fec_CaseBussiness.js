@@ -26,7 +26,8 @@ import {
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
   findPicklistOptionByRaw,
-  isOnlyNumber
+  isOnlyNumber,
+  formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
@@ -1116,6 +1117,12 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 field.editWrapperClass =
                   "edit slds-p-around--x-small";
+
+                // PhuongNT add handle set display value for field "Card Replacement Fee"
+                if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+                  field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
+                  field.readonlyDisplayValue = field.displayValue;
+                }
               });
             });
           });
