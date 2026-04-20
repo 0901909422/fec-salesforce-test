@@ -102,6 +102,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     recipientName = STR_EMPTY;
     recipientPhone = STR_EMPTY;
+    recipientNameDirty = false;
+    recipientPhoneDirty = false;
 
     addresses = [];
 
@@ -132,6 +134,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     lastTempAddressParts;
     tempAddressModalIsEdit = false;
+    pendingSelectTemporaryAddress = false;
 
     customLabel = {
         errorTitle: FEC_Error_Title,
@@ -297,10 +300,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.addresses = data.addresses || [];
             this.resolveDeliveryMeta();
             this.applySavedDelivery();
-            this.recipientName =
+            const serverRecipientName =
                 data.savedRecipientName || this.demographicCustomerName || STR_EMPTY;
-            this.recipientPhone =
+            const serverRecipientPhone =
                 data.savedRecipientPhone || this.demographicPrimaryPhone || STR_EMPTY;
+            this.syncRecipientNameFromServer(serverRecipientName);
+            this.syncRecipientPhoneFromServer(serverRecipientPhone);
             if (data.savedTemporaryEmail) {
                 this.temporaryEmail = data.savedTemporaryEmail;
                 this.showTempEmailRow = true;
@@ -505,17 +510,60 @@ export default class Fec_ContractClosureForm extends LightningElement {
 
     syncTemporaryAddressFromAddressRows() {
         const rows = this.addresses || [];
+        const hasSelectedRow = !!rows.find((r) => r && r.id === this.selectedAddressRowId);
+        if (this.selectedAddressRowId && !hasSelectedRow) {
+            this.selectedAddressRowId = undefined;
+            this.addrRenderKey++;
+        }
         const tempRow = rows.find((a) => /temporary/i.test(a.addressType || STR_EMPTY));
         if (!tempRow) {
             this.tempAddressRecordId = undefined;
             this.temporaryAddressDisplay = STR_EMPTY;
             this.disableAddTempAddress = false;
             this.lastTempAddressParts = undefined;
+            this.pendingSelectTemporaryAddress = false;
             return;
         }
         this.tempAddressRecordId = tempRow.id;
         this.temporaryAddressDisplay = tempRow.address || STR_EMPTY;
+        this.lastTempAddressParts = this.parseTemporaryAddressDisplay(tempRow.address);
         this.disableAddTempAddress = true;
+        if (this.pendingSelectTemporaryAddress === true || !this.selectedAddressRowId) {
+            this.selectedAddressRowId = tempRow.id;
+            this.addrRenderKey++;
+        }
+        this.pendingSelectTemporaryAddress = false;
+    }
+
+    parseTemporaryAddressDisplay(line) {
+        const raw = (line || STR_EMPTY).trim();
+        if (!raw) {
+            return undefined;
+        }
+        const chunks = raw
+            .split(',')
+            .map((s) => (s || STR_EMPTY).trim())
+            .filter((s) => !!s);
+        if (chunks.length < 5) {
+            return undefined;
+        }
+        const building = chunks[0] || STR_EMPTY;
+        const streetNumber = chunks[1] || STR_EMPTY;
+        const provinceLabel = chunks[chunks.length - 1] || STR_EMPTY;
+        const wardLabel = chunks[chunks.length - 2] || STR_EMPTY;
+        const street = chunks.slice(2, chunks.length - 2).join(', ');
+        if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
+            return undefined;
+        }
+        return {
+            building: building,
+            streetNumber: streetNumber,
+            street: street,
+            wardRecordId: wardLabel,
+            provinceRecordId: provinceLabel,
+            wardLabel: wardLabel,
+            provinceLabel: provinceLabel
+        };
     }
 
     resolveEmailDeliveryChannel() {
@@ -560,10 +608,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     handleRecipientNameChange(event) {
+        this.recipientNameDirty = true;
         this.recipientName = event.target.value;
     }
 
     handleRecipientPhoneChange(event) {
+        this.recipientPhoneDirty = true;
         this.recipientPhone = event.target.value;
         const inp = this.template.querySelector('lightning-input[data-fec-field="recipientPhone"]');
         if (inp) {
@@ -591,6 +641,28 @@ export default class Fec_ContractClosureForm extends LightningElement {
         const inp = this.applyRecipientPhoneCustomValidity();
         if (inp) {
             inp.reportValidity();
+        }
+    }
+
+    syncRecipientNameFromServer(serverValue) {
+        const nextValue = serverValue || STR_EMPTY;
+        if (!this.recipientNameDirty) {
+            this.recipientName = nextValue;
+            return;
+        }
+        if ((this.recipientName || STR_EMPTY).trim() === nextValue.trim()) {
+            this.recipientNameDirty = false;
+        }
+    }
+
+    syncRecipientPhoneFromServer(serverValue) {
+        const nextValue = serverValue || STR_EMPTY;
+        if (!this.recipientPhoneDirty) {
+            this.recipientPhone = nextValue;
+            return;
+        }
+        if (normalizePhone(this.recipientPhone) === normalizePhone(nextValue)) {
+            this.recipientPhoneDirty = false;
         }
     }
 
@@ -819,9 +891,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.modalBuilding = p.building || STR_EMPTY;
             this.modalNumber = p.streetNumber || STR_EMPTY;
             this.modalStreet = p.street || STR_EMPTY;
-            this.modalWardId = p.wardRecordId || STR_EMPTY;
+            this.modalWardId = p.wardRecordId || p.wardLabel || STR_EMPTY;
             this.modalWardLabel = p.wardLabel || STR_EMPTY;
-            this.modalProvinceId = p.provinceRecordId || STR_EMPTY;
+            this.modalProvinceId = p.provinceRecordId || p.provinceLabel || STR_EMPTY;
             this.modalProvinceLabel = p.provinceLabel || STR_EMPTY;
         } else {
             this.modalBuilding = STR_EMPTY;
@@ -946,6 +1018,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 payloadJson: JSON.stringify(payload)
             });
             this.tempAddressRecordId = newId;
+            this.pendingSelectTemporaryAddress = true;
             this.lastTempAddressParts = { ...parts };
             this.temporaryAddressDisplay = [
                 parts.building,
@@ -977,6 +1050,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.closureFieldsReadonly) {
             return;
         }
+        const removedTempId = this.tempAddressRecordId;
         if (this.tempAddressRecordId) {
             try {
                 await deleteTemporaryAddressRecord({
@@ -989,6 +1063,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.temporaryAddressDisplay = STR_EMPTY;
         this.lastTempAddressParts = undefined;
         this.disableAddTempAddress = false;
+        this.pendingSelectTemporaryAddress = false;
+        if (this.selectedAddressRowId && removedTempId && this.selectedAddressRowId === removedTempId) {
+            this.selectedAddressRowId = undefined;
+            this.addrRenderKey++;
+        }
         await this.refreshAddresses();
     }
 
@@ -1095,6 +1174,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
+                this.recipientNameDirty = false;
+                this.recipientPhoneDirty = false;
                 this.showSelectedAddressOnly = true;
                 this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
@@ -1172,6 +1253,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
                     msgs.length > 0 ? msgs.join(', ') : this.customLabel.errorTitle;
                 this.showToast(this.customLabel.errorTitle, m, 'error');
             } else {
+                this.recipientNameDirty = false;
+                this.recipientPhoneDirty = false;
                 this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
                 this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
