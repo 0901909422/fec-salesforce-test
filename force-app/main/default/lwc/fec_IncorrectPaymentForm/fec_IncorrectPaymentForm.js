@@ -39,6 +39,7 @@ import FEC_LBL_Adjusted_Amount from '@salesforce/label/c.FEC_LBL_Adjusted_Amount
 import FEC_LBL_Remove_Row from '@salesforce/label/c.FEC_LBL_Remove_Row';
 import FEC_LBL_Add_Item from '@salesforce/label/c.FEC_LBL_Add_Item';
 import FEC_MSG_Adjusted_Amount_Must_Equal_Payment from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Payment';
+import FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount';
 import FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row from '@salesforce/label/c.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row';
 import FEC_MSG_IncorrectPayment_Date_Not_After_Today from '@salesforce/label/c.FEC_MSG_IncorrectPayment_Date_Not_After_Today';
 import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Payment_Method_Bank_Transfer';
@@ -118,6 +119,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         removeRow: FEC_LBL_Remove_Row,
         addItem: FEC_LBL_Add_Item,
         adjustedAmountMustEqualPayment: FEC_MSG_Adjusted_Amount_Must_Equal_Payment,
+        adjustedAmountMustEqualExcessAmount: FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount,
         datePlaceholder: CONST.DATE_PLACEHOLDER
     };
 
@@ -192,6 +194,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     get adjustmentAmountFieldLabel() {
         return this.isTh2 ? this.customLabel.excessAmount : this.customLabel.adjustedAmount;
+    }
+
+    get adjustedAmountNoticeMessage() {
+        return this.isTh2 ? this.customLabel.adjustedAmountMustEqualExcessAmount : this.customLabel.adjustedAmountMustEqualPayment;
     }
 
     get displayExcessAmount() {
