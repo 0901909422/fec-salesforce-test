@@ -32,10 +32,6 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
     wiredProfile({ data }) {
         if (data) {
             this._userProfile = data;
-            if (data === PROFILE_RELEVANT_DEPTS) {
-                this.isShowModal = false;
-                this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
-            }
         }
     }
 
@@ -44,6 +40,27 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
             const { tabId } = await getFocusedTabInfo();
             this.currentTabId = tabId;
         } catch (e) {}
+        // Check profile on every mount
+    try {
+            const profile = await getCurrentUserProfileName();
+            this._userProfile = profile;
+            if (profile === PROFILE_RELEVANT_DEPTS) {
+                this.isShowModal = false;
+                this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+                // Get current tab BEFORE navigating
+                let tabToClose = this.currentTabId;
+                if (!tabToClose) {
+                    try { const { tabId } = await getFocusedTabInfo(); tabToClose = tabId; } catch(e) {}
+                }
+                this[NavigationMixin.Navigate]({
+                    type: 'standard__objectPage',
+                    attributes: { objectApiName: 'Case', actionName: 'list' }
+                });
+                setTimeout(async () => {
+                    try { if (tabToClose) await closeTab(tabToClose); } catch(e) {}
+                }, 3000);
+            }
+        } catch(e) {}
     }
 
     // ----------------------
