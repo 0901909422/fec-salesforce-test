@@ -45,6 +45,7 @@ import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Pa
 import FEC_LBL_Payment_Method_Other_Channels from '@salesforce/label/c.FEC_LBL_Payment_Method_Other_Channels';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
 import { STR_EMPTY } from 'c/fec_CommonConst';
+import { toUpperNoVietnameseAccent } from 'c/fec_CommonUtils';
 
 const CONST = {
     DATE_PLACEHOLDER: 'DD/MM/YYYY',
@@ -98,6 +99,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = STR_EMPTY;
     _pendingSelectedPaymentId = null;
+    _incorrectContractHistoryLoadTimer;
 
     customLabel = {
         loading: Loading,
@@ -220,11 +222,26 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const rows = this.adjustments || [];
         const baseAmountLabel = this.adjustmentAmountFieldLabel;
         const baseCorrectLabel = this.customLabel.correctContract;
-        return rows.map((row, index) => ({
-            ...row,
-            correctContractLabel: index === 0 ? baseCorrectLabel : `${baseCorrectLabel} ${index + 1}`,
-            adjustedAmountLabel: index === 0 ? baseAmountLabel : `${baseAmountLabel} ${index + 1}`
-        }));
+        const optsJson = JSON.stringify(this.correctContractOptionlst || []);
+        return rows.map((row, index) => {
+            const cc = row.correctContract != null ? String(row.correctContract).trim() : STR_EMPTY;
+            const isManual = !!(cc && !this._hasCorrectContractPicklistOption(cc));
+            return {
+                ...row,
+                correctContractLabel: index === 0 ? baseCorrectLabel : `${baseCorrectLabel} ${index + 1}`,
+                adjustedAmountLabel: index === 0 ? baseAmountLabel : `${baseAmountLabel} ${index + 1}`,
+                correctContractOptionsJson: optsJson,
+                isCorrectContractManualInput: isManual
+            };
+        });
+    }
+
+    get isIncorrectContractManualInput() {
+        const v = this.incorrectContract != null ? String(this.incorrectContract).trim() : STR_EMPTY;
+        if (!v) {
+            return false;
+        }
+        return !this._hasIncorrectContractPicklistOption(v);
     }
 
     get incorrectContractTrimmed() {
@@ -237,10 +254,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     get formattedIncorrectContractOption() {
         return JSON.stringify(this.incorrectContractOptionlst || []);
-    }
-
-    get correctContractOptions() {
-        return this.correctContractOptionlst || [];
     }
 
     connectedCallback() {
@@ -346,7 +359,9 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     this.nextAdjustmentId = this.adjustments.length + 1;
                 } else {
                     const adjRow = { id: 1, correctContract: STR_EMPTY, adjustedAmount: null };
-                    if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
+                    if (data.inputCorrectContractNumber != null && String(data.inputCorrectContractNumber).trim()) {
+                        adjRow.correctContract = String(data.inputCorrectContractNumber).trim();
+                    } else if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
                         adjRow.correctContract = String(data.correctContractNumber).trim();
                     }
                     if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
@@ -409,7 +424,97 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             });
     }
 
+    _hasIncorrectContractPicklistOption(value) {
+        if (!value) {
+            return false;
+        }
+        return (this.incorrectContractOptionlst || []).some((o) => o && o.value === value);
+    }
+
+    _hasIncorrectContractPicklistOptionByText(inputValue) {
+        if (!inputValue) {
+            return false;
+        }
+        const normalizedValue = toUpperNoVietnameseAccent(String(inputValue)).trim();
+        return (this.incorrectContractOptionlst || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim().includes(normalizedValue) || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim().includes(normalizedValue)));
+    }
+
+    _hasCorrectContractPicklistOption(value) {
+        if (!value) {
+            return false;
+        }
+        return (this.correctContractOptionlst || []).some((o) => o && o.value === value);
+    }
+
+    _hasCorrectContractPicklistOptionByText(inputValue) {
+        if (!inputValue) {
+            return false;
+        }
+        const normalizedValue = toUpperNoVietnameseAccent(String(inputValue)).trim();
+        return (this.correctContractOptionlst || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim().includes(normalizedValue) || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim().includes(normalizedValue)));
+    }
+
+    _clearIncorrectContractHistoryLoadTimer() {
+        if (this._incorrectContractHistoryLoadTimer) {
+            clearTimeout(this._incorrectContractHistoryLoadTimer);
+            this._incorrectContractHistoryLoadTimer = undefined;
+        }
+    }
+
+    _scheduleIncorrectContractPaymentHistoryLoad() {
+        this._clearIncorrectContractHistoryLoadTimer();
+        this._incorrectContractHistoryLoadTimer = setTimeout(() => {
+            this._incorrectContractHistoryLoadTimer = undefined;
+            const contract = (this.incorrectContract || STR_EMPTY).trim();
+            if (!contract || contract === this._lastLoadedContract) {
+                return;
+            }
+            this.loadPaymentHistory();
+        }, 450);
+    }
+
+    handleIncorrectContractSearchChange(event) {
+        const inputValue = event.detail != null && event.detail.value !== undefined ? event.detail.value : STR_EMPTY;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasIncorrectContractPicklistOptionByText(inputValue)) {
+            return;
+        }
+        this.incorrectContract = String(inputValue).trim();
+        this._scheduleIncorrectContractPaymentHistoryLoad();
+    }
+
+    handleIncorrectContractManualInput(event) {
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        this.incorrectContract = v != null ? String(v) : STR_EMPTY;
+        const contract = (this.incorrectContract || STR_EMPTY).trim();
+        if (!contract) {
+            this._clearIncorrectContractHistoryLoadTimer();
+            this.paymentHistory = [];
+            this.paymentHistoryTableKey += 1;
+            this.selectedPaymentId = null;
+            this.selectedRowIds = [];
+            this._lastLoadedContract = STR_EMPTY;
+            return;
+        }
+        this._scheduleIncorrectContractPaymentHistoryLoad();
+    }
+
+    handleIncorrectContractManualBlur() {
+        this._clearIncorrectContractHistoryLoadTimer();
+        const contract = (this.incorrectContract || STR_EMPTY).trim();
+        if (!contract) {
+            return;
+        }
+        if (contract === this._lastLoadedContract) {
+            return;
+        }
+        this.loadPaymentHistory();
+    }
+
     handleRemoveIncorrectContract() {
+        this._clearIncorrectContractHistoryLoadTimer();
         const element = this.template.querySelector(
             'c-fec_-combo-box[data-id="incorrect-contract"]'
         );
@@ -425,6 +530,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     handleChangeIncorrectContract(e) {
+        this._clearIncorrectContractHistoryLoadTimer();
         this.incorrectContract = e.detail.value || STR_EMPTY;
         const contract = (this.incorrectContract || STR_EMPTY).trim();
         if (!contract) {
@@ -619,22 +725,77 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
     }
 
-    handleAdjustmentCorrectContractChange(event) {
+    handleAdjustmentCorrectContractComboChange(event) {
         const id = Number(event.currentTarget.dataset.idValue);
-        const idx = this.adjustments.findIndex(a => a.id === id);
+        const idx = this.adjustments.findIndex((a) => a.id === id);
         if (idx < 0) {
             return;
         }
-        
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : STR_EMPTY;
+        if (!v) {
+            return;
+        }
         const next = [...this.adjustments];
-        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
         next[idx] = { ...next[idx], correctContract: v || STR_EMPTY };
         this.adjustments = next;
         const cmp = event.currentTarget;
         if (cmp && cmp.setCustomValidity) {
             cmp.setCustomValidity(STR_EMPTY);
-            cmp.reportValidity();
+            if (cmp.reportValidity) {
+                cmp.reportValidity();
+            }
         }
+    }
+
+    handleAdjustmentCorrectContractSearchChange(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const inputValue = event.detail != null && event.detail.value !== undefined ? event.detail.value : STR_EMPTY;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasCorrectContractPicklistOptionByText(inputValue)) {
+            return;
+        }
+        const idx = this.adjustments.findIndex((a) => a.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const next = [...this.adjustments];
+        next[idx] = { ...next[idx], correctContract: String(inputValue).trim() };
+        this.adjustments = next;
+    }
+
+    handleAdjustmentCorrectContractManualInput(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        const idx = this.adjustments.findIndex((a) => a.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
+        const next = [...this.adjustments];
+        next[idx] = { ...next[idx], correctContract: v != null ? String(v) : STR_EMPTY };
+        this.adjustments = next;
+        const cmp = event.currentTarget;
+        if (cmp && cmp.setCustomValidity) {
+            cmp.setCustomValidity(STR_EMPTY);
+            if (cmp.reportValidity) {
+                cmp.reportValidity();
+            }
+        }
+    }
+
+    handleAdjustmentCorrectContractRemove(event) {
+        const id = Number(event.currentTarget.dataset.idValue);
+        if (!id) {
+            return;
+        }
+        const idx = this.adjustments.findIndex((a) => a.id === id);
+        if (idx < 0) {
+            return;
+        }
+        const next = [...this.adjustments];
+        next[idx] = { ...next[idx], correctContract: STR_EMPTY };
+        this.adjustments = next;
     }
 
     handleAdjustmentAmountChange(event) {
@@ -675,10 +836,14 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     clearAdjustmentFieldsCustomValidity() {
         const rows = this.adjustments || [];
         rows.forEach((a) => {
-            const combobox = this.template.querySelector('lightning-combobox[data-id-value="' + a.id + '"]');
-            const input = this.template.querySelector('lightning-input[data-id-value="' + a.id + '"]');
-            if (combobox && combobox.setCustomValidity) {
-                combobox.setCustomValidity(STR_EMPTY);
+            const comboCorrect = this.template.querySelector('c-fec_-combo-box[data-id-value="' + a.id + '"]');
+            const manualCorrect = this.template.querySelector('lightning-input[data-id="correct-contract-manual"][data-id-value="' + a.id + '"]');
+            const input = this.template.querySelector('lightning-input[data-id-value="' + a.id + '"]:not([data-id="correct-contract-manual"])');
+            if (comboCorrect && comboCorrect.setCustomValidity) {
+                comboCorrect.setCustomValidity(STR_EMPTY);
+            }
+            if (manualCorrect && manualCorrect.setCustomValidity) {
+                manualCorrect.setCustomValidity(STR_EMPTY);
             }
             if (input && input.setCustomValidity) {
                 input.setCustomValidity(STR_EMPTY);
@@ -694,11 +859,15 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 return;
             }
             const id = adj.id;
-            const combobox = this.template.querySelector('lightning-combobox[data-id-value="' + id + '"]');
-            const input = this.template.querySelector('lightning-input[data-id-value="' + id + '"]');
+            const comboCorrect = this.template.querySelector('c-fec_-combo-box[data-id-value="' + id + '"]');
+            const manualCorrect = this.template.querySelector('lightning-input[data-id="correct-contract-manual"][data-id-value="' + id + '"]');
+            const input = this.template.querySelector('lightning-input[data-id-value="' + id + '"]:not([data-id="correct-contract-manual"])');
             if (r.hasContract && !r.hasAmount) {
-                if (combobox && combobox.setCustomValidity) {
-                    combobox.setCustomValidity(STR_EMPTY);
+                if (comboCorrect && comboCorrect.setCustomValidity) {
+                    comboCorrect.setCustomValidity(STR_EMPTY);
+                }
+                if (manualCorrect && manualCorrect.setCustomValidity) {
+                    manualCorrect.setCustomValidity(STR_EMPTY);
                 }
                 if (input && input.setCustomValidity) {
                     input.setCustomValidity(msg);
@@ -708,9 +877,17 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 if (input && input.setCustomValidity) {
                     input.setCustomValidity(STR_EMPTY);
                 }
-                if (combobox && combobox.setCustomValidity) {
-                    combobox.setCustomValidity(msg);
-                    combobox.reportValidity();
+                if (manualCorrect && manualCorrect.setCustomValidity) {
+                    manualCorrect.setCustomValidity(msg);
+                    if (manualCorrect.reportValidity) {
+                        manualCorrect.reportValidity();
+                    }
+                }
+                if (comboCorrect && comboCorrect.setCustomValidity) {
+                    comboCorrect.setCustomValidity(msg);
+                    if (comboCorrect.reportValidity) {
+                        comboCorrect.reportValidity();
+                    }
                 }
             }
         });
@@ -722,10 +899,14 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             return;
         }
         const id = first.id;
-        const combobox = this.template.querySelector('lightning-combobox[data-id-value="' + id + '"]');
-        const input = this.template.querySelector('lightning-input[data-id-value="' + id + '"]');
-        if (combobox && combobox.reportValidity) {
-            combobox.reportValidity();
+        const comboCorrect = this.template.querySelector('c-fec_-combo-box[data-id-value="' + id + '"]');
+        const manualCorrect = this.template.querySelector('lightning-input[data-id="correct-contract-manual"][data-id-value="' + id + '"]');
+        const input = this.template.querySelector('lightning-input[data-id-value="' + id + '"]:not([data-id="correct-contract-manual"])');
+        if (comboCorrect && comboCorrect.reportValidity) {
+            comboCorrect.reportValidity();
+        }
+        if (manualCorrect && manualCorrect.reportValidity) {
+            manualCorrect.reportValidity();
         }
         if (input && input.reportValidity) {
             input.reportValidity();
@@ -962,6 +1143,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.isReadOnly) {
             return Promise.reject(new Error('readonly'));
         }
+        this._clearIncorrectContractHistoryLoadTimer();
+        const ic = (this.incorrectContract || STR_EMPTY).trim();
+        const syncHistory = ic && ic !== this._lastLoadedContract
+            ? this.loadPaymentHistory()
+            : Promise.resolve();
+        return syncHistory.then(() => {
         const ctx = this._performClientSaveValidation();
         if (ctx === false) {
             return Promise.reject(new Error('validation'));
@@ -1005,5 +1192,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 }));
                 return Promise.reject(err);
             });
+        });
     }
 }
