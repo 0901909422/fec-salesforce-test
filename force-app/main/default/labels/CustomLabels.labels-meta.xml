@@ -13555,4 +13555,12 @@
         <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
         <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
     </labels>
+    <labels>
+        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+    </labels>
 </CustomLabels>
