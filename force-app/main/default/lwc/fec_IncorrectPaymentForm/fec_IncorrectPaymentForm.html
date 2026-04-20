@@ -71,10 +71,11 @@
       <template if:true={showManualBill}>
         <lightning-layout-item size="6" padding="around-small">
           <lightning-input
+            data-id="manual-bill-date"
             type="date"
             date-style="short"
             placeholder={customLabel.datePlaceholder}
-            label={customLabel.billDate}
+            label={manualBillDateLabel}
             value={manualBillDate}
             disabled={isReadOnly}
             onchange={handleManualBillDateChange}
@@ -86,7 +87,7 @@
             data-id="manual-bill-amount"
             name="manualBillAmount"
             type="number"
-            label={customLabel.billAmount}
+            label={manualBillAmountLabel}
             value={manualBillAmount}
             disabled={isReadOnly}
             onchange={handleManualBillAmountChange}
