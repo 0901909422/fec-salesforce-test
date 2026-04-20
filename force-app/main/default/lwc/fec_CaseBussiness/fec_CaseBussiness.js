@@ -443,6 +443,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   userGroup;
 
+  assignmentType; // PhuongNT add
+
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
     if (data) {
@@ -1002,7 +1004,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           section.subSectionlst?.forEach((sub, subIndex) => {
             sub.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[sub.layout] || SLDS_MEDIUM_SIZE_OF_12[12]) + ' slds-m-top_medium';
             sub.objlst.forEach((obj) => {
-              let assignmentType;
+              // let assignmentType; // PhuongNT cmt
 
               obj.fieldlst?.forEach((field) => {
                 if (field.value == null || field.value === undefined) {
@@ -1023,25 +1025,28 @@ export default class Fec_CaseBussiness extends LightningElement {
                   currentField == CASE_CS_D2C_ASSIGNMENT_TYPE ||
                   currentField == CASE_CONFIRM_D2C_ASSESMENT
                 ) {
-                  assignmentType = field.value;
+                  // PhuongNT modified
+                  // assignmentType = field.value;
+                  this.assignmentType = field.value;
                 }
 
-                if (!field.readonly) {
-                  if (
-                    currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
-                    currentField === CASE_CS_D2C_RISK_LEVEL
-                  ) {
-                    field.isHidden =
-                      !assignmentType || assignmentType === TYPE_QUALIFIED;
-                  } else if (
-                    currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
-                  ) {
-                    field.isHidden =
-                      !assignmentType || assignmentType === TYPE_DISAGREE;
-                  } else {
-                    field.isHidden = false;
-                  }
-                }
+                // PhuongNT cmt, move process to another
+                // if (!field.readonly) {
+                  // if (
+                  //   currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
+                  //   currentField === CASE_CS_D2C_RISK_LEVEL
+                  // ) {
+                  //   field.isHidden =
+                  //     !assignmentType || assignmentType === TYPE_QUALIFIED;
+                  // } else if (
+                  //   currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
+                  // ) {
+                  //   field.isHidden =
+                  //     !assignmentType || assignmentType === TYPE_DISAGREE;
+                  // } else {
+                  //   field.isHidden = false;
+                  // }
+                // }
 
                 if (!this.isEdit) {
                   field.readonly = true;
@@ -1158,6 +1163,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
         // PhuongNT add handle set update field read only
         this.handleSetUpdateFieldReadOnly();
+        // PhuongNT add handle set field hidden
+        this.handleSetFieldHidden();
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
@@ -2955,5 +2962,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     } catch(error) {
       console.error('Error updating record: ', error);
     }
+  }
+
+  // PhuongNT add handle set field hidden
+  handleSetFieldHidden() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (
+              field.apiName === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
+              field.apiName === CASE_CS_D2C_RISK_LEVEL
+            ) {
+              field.isHidden = !this.assignmentType || this.assignmentType === TYPE_QUALIFIED;
+            } else if (
+              field.apiName === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
+            ) {
+              field.isHidden = !this.assignmentType || this.assignmentType === TYPE_DISAGREE;
+            }
+          });
+        });
+      });
+    });
   }
 }
