@@ -1,4 +1,4 @@
-public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<FEC_Routing_Action_History__c> {
+public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<SObject> {
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
         return Database.getQueryLocator([
@@ -43,7 +43,9 @@ public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchab
             }
         }
 
-        insert toInsert;
+        if (!toInsert.isEmpty()) {
+            insert toInsert;
+        }
     }
 
     public void finish(Database.BatchableContext bc) {

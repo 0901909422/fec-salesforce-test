@@ -1,4 +1,4 @@
-public with sharing class FEC_SyncCaseStatusScheduler implements Schedulable {
+public without sharing class FEC_SyncCaseStatusScheduler implements Schedulable {
 
     public static final String DAILY_MIDNIGHT_CRON = '0 0 0 * * ?';
 
