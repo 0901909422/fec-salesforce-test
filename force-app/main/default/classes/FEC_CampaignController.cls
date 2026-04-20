@@ -11,7 +11,8 @@ public with sharing class FEC_CampaignController {
                     FEC_Campaign__c, FEC_Campaign__r.Name, FEC_Campaign__r.FEC_CampaignId__c,
                     FEC_ScheduleCampaign__c, 
                     FEC_SaturdaySchedule__c, 
-                    FEC_SundaySchedule__c 
+                    FEC_SundaySchedule__c,
+                    FEC_RecordLifeTime__c 
                 FROM FEC_CS_Campaign__c];
     }
 
@@ -115,7 +116,7 @@ public with sharing class FEC_CampaignController {
                     FEC_Campaign__r.Name, FEC_Campaign__r.FEC_CampaignId__c,
                     FEC_Campaign__r.FEC_CampaignCallingList__c,
                     FEC_Campaign__r.FEC_MaxCallingAttempt__c,
-                    FEC_Campaign__r.FEC_RecordLifeTime__c
+                    FEC_RecordLifeTime__c
                 FROM FEC_CS_Campaign__c
                 WHERE Id = :csCampaignId LIMIT 1
             ];
@@ -158,7 +159,7 @@ public with sharing class FEC_CampaignController {
 
 
     @AuraEnabled
-    public static void saveConfigurationDetails(Id mappingId, Boolean isSchedule, Boolean isSaturday, Boolean isSunday) {
+    public static void saveConfigurationDetails(Id mappingId, Boolean isSchedule, Boolean isSaturday, Boolean isSunday, Integer recordLifetime) {
         try {
             FEC_CS_Campaign__c mapping = [SELECT Id, FEC_Campaign__c FROM FEC_CS_Campaign__c WHERE Id = :mappingId LIMIT 1];
             if (mapping != null) {
@@ -166,7 +167,8 @@ public with sharing class FEC_CampaignController {
                     Id = mapping.Id,
                     FEC_ScheduleCampaign__c = isSchedule,
                     FEC_SaturdaySchedule__c = isSaturday,
-                    FEC_SundaySchedule__c = isSunday
+                    FEC_SundaySchedule__c = isSunday,
+                    FEC_RecordLifeTime__c = recordLifetime
                 );
                 update campaignToUpdate;
             } else {
@@ -222,7 +224,7 @@ public with sharing class FEC_CampaignController {
             FEC_RecordStatus__c = FEC_Constants.CAMPAIGN_STATUS_NEW,
             FEC_CampaignCallingList__c = cmp.FEC_Campaign__r.FEC_CampaignCallingList__c,
             FEC_MaxCallAttempt__c = cmp.FEC_Campaign__r.FEC_MaxCallingAttempt__c != null ? cmp.FEC_Campaign__r.FEC_MaxCallingAttempt__c : FEC_Constants.MAX_CALL_ATTEMPTS,
-            FEC_RecordLifetime__c = cmp.FEC_Campaign__r.FEC_RecordLifeTime__c != null ? cmp.FEC_Campaign__r.FEC_RecordLifeTime__c : FEC_Constants.CAMPAIGN_LIFETIME,
+            FEC_RecordLifetime__c = getEffectiveRecordLifetime(cmp.FEC_RecordLifeTime__c),
             FEC_CurrentCallAttempt__c = FEC_Constants.CURRENT_CALL_ATTEMPT,
             FEC_RecordCurrentLifetime__c = FEC_Constants.RECORD_CURRENT_LIFETIME
         );
@@ -235,5 +237,25 @@ public with sharing class FEC_CampaignController {
         } else {
             FEC_Util.throwCreateException(msg != null ? msg : FEC_Constants.MSG_FILE_ERR);
         }
+    }
+
+    private static Integer getEffectiveRecordLifetime(Decimal csLifetime) {
+        if (csLifetime != null) {
+            return csLifetime.intValue();
+        }
+        return getDefaultRecordLifetime();
+    }
+
+    private static Integer getDefaultRecordLifetime() {
+        List<FEC_Campaign_Config__mdt> configs = [
+            SELECT FEC_Default_Record_Lifetime__c
+            FROM FEC_Campaign_Config__mdt
+            WHERE DeveloperName = 'FEC_Default_Campaign_Config'
+            LIMIT 1
+        ];
+        if (!configs.isEmpty() && configs[0].FEC_Default_Record_Lifetime__c != null) {
+            return configs[0].FEC_Default_Record_Lifetime__c.intValue();
+        }
+        return FEC_Constants.CAMPAIGN_LIFETIME;
     }
 }

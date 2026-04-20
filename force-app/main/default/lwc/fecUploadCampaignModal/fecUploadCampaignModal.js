@@ -70,11 +70,20 @@ export default class FecUploadCampaignModal extends LightningElement {
             wch: header.length + 4
         }));
 
-        // Style header cells
+        // Style definitions
         const borderStyle = { style: 'thin', color: { rgb: '000000' } };
         const headerStyle = {
-            fill: { fgColor: { rgb: '4472C4' } },
+            fill: { fgColor: { rgb: 'BDD7EE' } },
             font: { color: { rgb: '000000' } },
+            border: {
+                top: borderStyle,
+                bottom: borderStyle,
+                left: borderStyle,
+                right: borderStyle
+            },
+            alignment: { vertical: 'center' }
+        };
+        const emptyCellStyle = {
             border: {
                 top: borderStyle,
                 bottom: borderStyle,
@@ -83,19 +92,45 @@ export default class FecUploadCampaignModal extends LightningElement {
             }
         };
 
+        // Merge header cells across 3 rows (row 0-2) for each column
+        worksheet['!merges'] = [];
         for (let col = 0; col < CAMPAIGN_EXCEL_HEADERS.length; col++) {
+            worksheet['!merges'].push({
+                s: { r: 0, c: col },
+                e: { r: 2, c: col }
+            });
+            // Style the header cell (row 0)
             const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
             if (worksheet[cellRef]) {
                 worksheet[cellRef].s = headerStyle;
-                // Set text format for string-type columns
+                if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
+                    worksheet[cellRef].z = '@';
+                }
+            }
+            // Style merged rows 1-2 with same header style
+            for (let row = 1; row <= 2; row++) {
+                const mergedRef = XLSX.utils.encode_cell({ r: row, c: col });
+                worksheet[mergedRef] = { v: '', t: 's', s: headerStyle };
+            }
+        }
+
+        // Add borders for 40 empty data rows below header (starting from row 3)
+        for (let row = 3; row <= 42; row++) {
+            for (let col = 0; col < CAMPAIGN_EXCEL_HEADERS.length; col++) {
+                const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                worksheet[cellRef] = { v: '', t: 's', s: emptyCellStyle };
                 if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
                     worksheet[cellRef].z = '@';
                 }
             }
         }
 
+        // Set range to include header (3 rows) + 40 empty rows
+        worksheet['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 42, c: CAMPAIGN_EXCEL_HEADERS.length - 1 } });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
         XLSX.writeFile(workbook, "OutboundCampaignManualUpload_Template.xlsx");
     }
 

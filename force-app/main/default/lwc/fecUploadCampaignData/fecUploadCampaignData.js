@@ -30,6 +30,7 @@ import lblSaturday from '@salesforce/label/c.FEC_Lbl_Saturday';
 import lblSunday from '@salesforce/label/c.FEC_Lbl_Sunday';
 import btnPushRecord from '@salesforce/label/c.FEC_Btn_Push_Record';
 import lblUploadCampaignData from '@salesforce/label/c.FEC_Lbl_Upload_Campaign_Data';
+import lblRecordLifetime from '@salesforce/label/c.FEC_Lbl_Record_Lifetime';
 
 export default class FecUploadCampaignData extends LightningElement {
     label = {
@@ -45,12 +46,14 @@ export default class FecUploadCampaignData extends LightningElement {
         lblSaturday,
         lblSunday,
         btnPushRecord,
-        lblUploadCampaignData
+        lblUploadCampaignData,
+        lblRecordLifetime
     };
 
     @track blnIsScheduleEnabled = false;
     @track blnRunSaturday = false;
     @track blnRunSunday = false;
+    @track recordLifetime = null;
     @track isSaving = false;
     @track blnIsModalOpen = false;
     @track inProgressCount = 0;
@@ -121,6 +124,7 @@ export default class FecUploadCampaignData extends LightningElement {
             this.inProgressCount = 0;
             this.inProgressData = null;
             this.selectedMappingId = '';
+            this.recordLifetime = null;
             return; 
         }
 
@@ -131,11 +135,13 @@ export default class FecUploadCampaignData extends LightningElement {
             this.blnIsScheduleEnabled = selectedRecord.FEC_ScheduleCampaign__c || false;
             this.blnRunSaturday = selectedRecord.FEC_SaturdaySchedule__c || false;
             this.blnRunSunday = selectedRecord.FEC_SundaySchedule__c || false;
+            this.recordLifetime = selectedRecord.FEC_RecordLifeTime__c ?? null;
         } else {
             // Reset về false nếu không tìm thấy dữ liệu liên quan
             this.blnIsScheduleEnabled = false;
             this.blnRunSaturday = false;
             this.blnRunSunday = false;
+            this.recordLifetime = null;
         }
         await this.refreshInProgressDetails();
     }
@@ -160,100 +166,127 @@ export default class FecUploadCampaignData extends LightningElement {
     }
 
     handleDownloadExcel() {
-        if (!this.librariesLoaded || !window.XLSX) {
-            this.showToast(FAIL_TITLE, errorLoadExcelLib, 'error');
-            return;
-        }
-        
-        if (!this.inProgressData || this.inProgressData.length === 0) {
-            this.showToast(WARNING_TITLE, noContentMsg, 'info');
-            return;
-        }
-    
-        const XLSX = window.XLSX;
-        const headers = CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
-    
-        const ws_data = [headers];
-    
-        this.inProgressData.forEach(item => {
-            ws_data.push([
-                item.FEC_ProductLine__c || '',               // ProductLine
-                item.FEC_AppId__c || '',                     // App ID
-                item.FEC_AccountOrContractNumber__c || '',   // Account or Contract number
-                this.findCSCampaignLabel(this.selectedMappingId) || '', // Campaign ID
-                item.FEC_DateTime1__c || '',                 // DateTime 1
-                item.FEC_DateTime2__c || '',                 // DateTime 2
-                item.FEC_DateTime3__c || '',                 // DateTime 3
-                item.FEC_Number1__c ?? 0,                    // Number 1
-                item.FEC_Number2__c ?? 0,                    // Number 2
-                item.FEC_Number3__c ?? 0,                    // Number 3
-                item.FEC_Number4__c ?? 0,                    // Number 4
-                item.FEC_Number5__c ?? 0,                    // Number 5
-                item.FEC_String1__c || '',                   // String 1
-                item.FEC_String2__c || '',                   // String 2
-                item.FEC_String3__c || '',                   // String 3
-                item.FEC_String4__c || '',                   // String 4
-                item.FEC_String5__c || '',                   // String 5
-                this.formatTimestamp(item.CreatedDate),       // Uploaded Time
-                this.formatTimestamp(item.FEC_InsertionDate__c) // Inserted Time
-            ]);
-        });
-    
-        const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
-
-        // Auto column width based on header text length
-        worksheet['!cols'] = headers.map(header => ({
-            wch: header.length + 4
-        }));
-
-        // Style header and data cells
-        const borderStyle = { style: 'thin', color: { rgb: '000000' } };
-        const headerStyle = {
-            fill: { fgColor: { rgb: '4472C4' } },
-            font: { color: { rgb: '000000' } },
-            border: {
-                top: borderStyle,
-                bottom: borderStyle,
-                left: borderStyle,
-                right: borderStyle
+            if (!this.librariesLoaded || !window.XLSX) {
+                this.showToast(FAIL_TITLE, errorLoadExcelLib, 'error');
+                return;
             }
-        };
-        const dataCellStyle = {
-            border: {
-                top: borderStyle,
-                bottom: borderStyle,
-                left: borderStyle,
-                right: borderStyle
-            }
-        };
 
-        // Apply header styling
-        for (let col = 0; col < headers.length; col++) {
-            const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
-            if (worksheet[cellRef]) {
-                worksheet[cellRef].s = headerStyle;
-                if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
-                    worksheet[cellRef].z = '@';
+            if (!this.inProgressData || this.inProgressData.length === 0) {
+                this.showToast(WARNING_TITLE, noContentMsg, 'info');
+                return;
+            }
+
+            const XLSX = window.XLSX;
+            const headers = CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
+            const HEADER_ROWS = 3;
+
+            // Build data: row 0 = header, row 1-2 = empty (merged), row 3+ = data
+            const ws_data = [headers, [], []];
+
+            this.inProgressData.forEach(item => {
+                ws_data.push([
+                    item.FEC_ProductLine__c || '',
+                    item.FEC_AppId__c || '',
+                    item.FEC_AccountOrContractNumber__c || '',
+                    this.findCSCampaignLabel(this.selectedMappingId) || '',
+                    item.FEC_DateTime1__c || '',
+                    item.FEC_DateTime2__c || '',
+                    item.FEC_DateTime3__c || '',
+                    item.FEC_Number1__c ?? 0,
+                    item.FEC_Number2__c ?? 0,
+                    item.FEC_Number3__c ?? 0,
+                    item.FEC_Number4__c ?? 0,
+                    item.FEC_Number5__c ?? 0,
+                    item.FEC_String1__c || '',
+                    item.FEC_String2__c || '',
+                    item.FEC_String3__c || '',
+                    item.FEC_String4__c || '',
+                    item.FEC_String5__c || '',
+                    this.formatTimestamp(item.CreatedDate),
+                    this.formatTimestamp(item.FEC_InsertionDate__c)
+                ]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
+
+            // Auto column width
+            worksheet['!cols'] = headers.map(header => ({
+                wch: header.length + 4
+            }));
+
+            // Style definitions
+            const borderStyle = { style: 'thin', color: { rgb: '000000' } };
+            const headerStyle = {
+                fill: { fgColor: { rgb: 'BDD7EE' } },
+                font: { color: { rgb: '000000' } },
+                border: {
+                    top: borderStyle,
+                    bottom: borderStyle,
+                    left: borderStyle,
+                    right: borderStyle
+                },
+                alignment: { vertical: 'center' }
+            };
+            const dataCellStyle = {
+                border: {
+                    top: borderStyle,
+                    bottom: borderStyle,
+                    left: borderStyle,
+                    right: borderStyle
                 }
-            }
-        }
+            };
 
-        // Apply borders to all data cells
-        for (let row = 1; row < ws_data.length; row++) {
+            // Merge header cells across 3 rows for each column
+            worksheet['!merges'] = [];
             for (let col = 0; col < headers.length; col++) {
-                const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                worksheet['!merges'].push({
+                    s: { r: 0, c: col },
+                    e: { r: 2, c: col }
+                });
+                const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
                 if (worksheet[cellRef]) {
-                    worksheet[cellRef].s = dataCellStyle;
+                    worksheet[cellRef].s = headerStyle;
+                    if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
+                        worksheet[cellRef].z = '@';
+                    }
+                }
+                for (let row = 1; row <= 2; row++) {
+                    const mergedRef = XLSX.utils.encode_cell({ r: row, c: col });
+                    worksheet[mergedRef] = { v: '', t: 's', s: headerStyle };
                 }
             }
+
+            // Apply borders to all data cells (starting from row 3)
+            for (let row = HEADER_ROWS; row < ws_data.length; row++) {
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                    if (worksheet[cellRef]) {
+                        worksheet[cellRef].s = dataCellStyle;
+                    }
+                }
+            }
+
+            // Add 40 extra empty rows with borders after last data row
+            const extraRowStart = ws_data.length;
+            const extraRowEnd = extraRowStart + 40;
+            for (let row = extraRowStart; row < extraRowEnd; row++) {
+                for (let col = 0; col < headers.length; col++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+                    worksheet[cellRef] = { v: '', t: 's', s: dataCellStyle };
+                }
+            }
+
+            // Set range including extra rows
+            const lastRow = extraRowEnd - 1;
+            worksheet['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: headers.length - 1 } });
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "InProgress_Records");
+
+            const fileName = `Campaign_InProgress_${new Date().getTime()}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
         }
 
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "InProgress_Records");
-    
-        const fileName = `Campaign_InProgress_${new Date().getTime()}.xlsx`;
-        XLSX.writeFile(workbook, fileName);
-    }
 
     handleToggleSchedule(event) {
         this.blnIsScheduleEnabled = event.target.checked;
@@ -266,6 +299,12 @@ export default class FecUploadCampaignData extends LightningElement {
     handleDayChange(event) {
         if (event.target.name === 'saturday') this.blnRunSaturday = event.target.checked;
         if (event.target.name === 'sunday') this.blnRunSunday = event.target.checked;
+    }
+
+    handleRecordLifetimeChange(event) {
+        const val = event.detail.value;
+        this.recordLifetime = val !== '' && val !== null && val !== undefined
+            ? parseInt(val, 10) : null;
     }
 
     get isPushDisabled() {
@@ -288,7 +327,8 @@ export default class FecUploadCampaignData extends LightningElement {
                 mappingId: this.selectedMappingId,
                 isSchedule: this.blnIsScheduleEnabled,
                 isSaturday: this.blnRunSaturday,
-                isSunday: this.blnRunSunday
+                isSunday: this.blnRunSunday,
+                recordLifetime: this.recordLifetime
             });
             
             await refreshApex(this.wiredMappingResult);

@@ -1,9 +1,9 @@
 /**
  * FEC_GetCallingListResultBatch
- * Batch job to retrieve calling list results from external API and update records.
+ * Batch job to retrieve calling list results from OData external object and update records.
  * Refactored to use shared service classes and constants.
  */
-public with sharing class FEC_GetCallingListResultBatch implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
+public with sharing class FEC_GetCallingListResultBatch implements Database.Batchable<sObject>, Database.Stateful {
 
     private Id batchLogId;
     private Integer processedCount = 0;
@@ -35,29 +35,34 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
     }
 
     public void execute(Database.BatchableContext BC, List<FEC_DataCampaign__c> scope) {
+        System.debug('>>> [GetCallingListResult] execute() — scope size: ' + scope.size());
         Set<String> accountSet = collectAccountNumbers(scope);
+        System.debug('>>> [GetCallingListResult] accountSet size: ' + accountSet.size());
         if (accountSet.isEmpty()) {
+            System.debug('>>> [GetCallingListResult] accountSet is empty — skipping');
             return;
         }
 
         try {
-            FEC_CampaignApiResponse.CallingListResponse apiResponse =
-                FEC_CampaignApiCaller.getCallingListResult(accountSet);
+            String query = 'SELECT ExternalId, CONTRACT_NUMBER__c, CALL_TIME__c, ' +
+                'ATTEMPT__c, AGENT_ID__c, CALL_RESULT__c ' +
+                'FROM CommdbPegaCsResultTable__x ' +
+                'WHERE CONTRACT_NUMBER__c IN :accountSet';
+            System.debug('>>> [GetCallingListResult] OData query: ' + query);
+            List<SObject> odataResults = Database.query(query);
+            System.debug('>>> [GetCallingListResult] OData results returned: ' + odataResults.size());
 
-            if (apiResponse == null || apiResponse.status != FEC_Constants.API_STATUS_OK
-                || apiResponse.data == null) {
-                handleApiError(apiResponse, scope.size());
-                return;
-            }
-
-            List<FEC_DataCampaign__c> recordsToUpdate = processCallingListResponse(apiResponse, scope);
+            List<FEC_DataCampaign__c> recordsToUpdate = processODataResults(odataResults, scope);
+            System.debug('>>> [GetCallingListResult] records to update: ' + recordsToUpdate.size());
             if (!recordsToUpdate.isEmpty()) {
                 update recordsToUpdate;
+                System.debug('>>> [GetCallingListResult] DML update completed');
             }
             this.processedCount += scope.size();
         } catch (Exception ex) {
             this.errorCount += scope.size();
             this.errorDetails += ex.getMessage() + '\n';
+            System.debug('>>> [GetCallingListResult] ERROR: ' + ex.getMessage() + ' | StackTrace: ' + ex.getStackTraceString());
             FEC_CampaignBatchLogger.logException(
                 this.batchLogId, 'FEC_GetCallingListResultBatch', ex, scope.size()
             );
@@ -86,33 +91,21 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
         return accountSet;
     }
 
-    private void handleApiError(
-        FEC_CampaignApiResponse.CallingListResponse apiResponse, Integer scopeSize
-    ) {
-        this.errorCount += scopeSize;
-        String msg = (apiResponse != null) ? apiResponse.message : 'Null API response';
-        this.errorDetails += 'API Error: ' + msg + '\n';
-    }
-
-    private List<FEC_DataCampaign__c> processCallingListResponse(
-        FEC_CampaignApiResponse.CallingListResponse apiResponse,
-        List<FEC_DataCampaign__c> scope
-    ) {
-        Map<String, FEC_CampaignApiResponse.CallingListRecordData> responseMap =
-            new Map<String, FEC_CampaignApiResponse.CallingListRecordData>();
-
-        for (FEC_CampaignApiResponse.CallingListRecordData apiRec : apiResponse.data) {
-            if (String.isNotBlank(apiRec.accountOrContractNumber)) {
-                responseMap.put(apiRec.accountOrContractNumber, apiRec);
+    @TestVisible
+    private List<FEC_DataCampaign__c> processODataResults(List<SObject> odataResults, List<FEC_DataCampaign__c> scope) {
+        Map<String, SObject> resultMap = new Map<String, SObject>();
+        for (SObject odataRec : odataResults) {
+            String contractNumber = (String) odataRec.get('CONTRACT_NUMBER__c');
+            if (String.isNotBlank(contractNumber)) {
+                resultMap.put(contractNumber, odataRec);
             }
         }
 
         List<FEC_DataCampaign__c> recordsToUpdate = new List<FEC_DataCampaign__c>();
         for (FEC_DataCampaign__c rec : scope) {
-            if (responseMap.containsKey(rec.FEC_AccountOrContractNumber__c)) {
-                FEC_CampaignApiResponse.CallingListRecordData apiData =
-                    responseMap.get(rec.FEC_AccountOrContractNumber__c);
-                if (applyCallingListUpdate(rec, apiData)) {
+            if (resultMap.containsKey(rec.FEC_AccountOrContractNumber__c)) {
+                SObject odataData = resultMap.get(rec.FEC_AccountOrContractNumber__c);
+                if (applyODataUpdate(rec, odataData)) {
                     recordsToUpdate.add(rec);
                 }
             }
@@ -120,34 +113,29 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
         return recordsToUpdate;
     }
 
-    private Boolean applyCallingListUpdate(
-        FEC_DataCampaign__c rec,
-        FEC_CampaignApiResponse.CallingListRecordData apiData
-    ) {
-        if (String.isBlank(apiData.callResult)) {
+    @TestVisible
+    private Boolean applyODataUpdate(FEC_DataCampaign__c rec, SObject odataData) {
+        Object callResultVal = odataData.get('CALL_RESULT__c');
+        if (callResultVal == null) {
+            System.debug('>>> [GetCallingListResult] applyODataUpdate — CALL_RESULT__c is null for contract: ' + rec.FEC_AccountOrContractNumber__c + ' — skipping');
             return false;
         }
 
-        rec.FEC_AgentID__c = apiData.agentId;
+        rec.FEC_CallTime__c = (DateTime) odataData.get('CALL_TIME__c');
+        rec.FEC_Attempt__c = (Decimal) odataData.get('ATTEMPT__c');
+        rec.FEC_AgentID__c = (String) odataData.get('AGENT_ID__c');
+        rec.FEC_CallResult__c = (Decimal) callResultVal;
 
-        if (String.isNotBlank(apiData.attempt)) {
-            rec.FEC_Attempt__c = Decimal.valueOf(apiData.attempt);
-        }
-        if (String.isNotBlank(apiData.callResult)) {
-            rec.FEC_CallResult__c = Decimal.valueOf(apiData.callResult);
-        }
-        if (String.isNotBlank(apiData.callTime)) {
-            rec.FEC_CallTime__c = (DateTime) JSON.deserialize(
-                '"' + apiData.callTime + '"', DateTime.class
-            );
-        }
-
-        String newStatus = FEC_CampaignBatchService.evaluateCallStatus(apiData.callResult);
+        String newStatus = FEC_CampaignBatchService.evaluateCallStatus(String.valueOf(callResultVal));
         rec.FEC_CallStatus__c = newStatus;
 
         if (newStatus == FEC_Constants.CAMPAIGN_STATUS_RESOLVED_CANCELLED) {
             rec.FEC_RecordStatus__c = newStatus;
         }
+
+        System.debug('>>> [GetCallingListResult] applyODataUpdate — contract: ' + rec.FEC_AccountOrContractNumber__c +
+            ' | callResult: ' + callResultVal + ' | status: ' + newStatus +
+            ' | attempt: ' + rec.FEC_Attempt__c + ' | agent: ' + rec.FEC_AgentID__c);
 
         return true;
     }

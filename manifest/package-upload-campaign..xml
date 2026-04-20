@@ -42,11 +42,16 @@
         <members>FEC_DataCampaign__c</members>
         <members>FEC_Campaign__c</members>
         <members>FEC_Batch_Log__c</members>
+        <members>FEC_Campaign_Config__mdt</members>
         <name>CustomObject</name>
     </types>
     <types>
         <members>*</members>
         <name>CustomLabel</name>
+    </types>
+    <types>
+        <members>FEC_Campaign_Config.FEC_Default_Campaign_Config</members>
+        <name>CustomMetadata</name>
     </types>
     <types>
         <members>FEC_SheetJSStyle</members>

@@ -11,8 +11,7 @@ private class FEC_CampaignControllerTest {
         FEC_Campaign__c campaign = new FEC_Campaign__c(
             FEC_CampaignId__c = 'CTRL001',
             FEC_CampaignCallingList__c = 'CL001',
-            FEC_MaxCallingAttempt__c = 3,
-            FEC_RecordLifeTime__c = 2
+            FEC_MaxCallingAttempt__c = 3
         );
         insert campaign;
 
@@ -23,7 +22,8 @@ private class FEC_CampaignControllerTest {
             FEC_PushInstant__c = true,
             FEC_ScheduleCampaign__c = false,
             FEC_SaturdaySchedule__c = false,
-            FEC_SundaySchedule__c = false
+            FEC_SundaySchedule__c = false,
+            FEC_RecordLifeTime__c = 2
         );
         insert csMapping;
     }
@@ -265,7 +265,7 @@ private class FEC_CampaignControllerTest {
 
         Test.startTest();
         FEC_CampaignController.saveConfigurationDetails(
-            csMapping.Id, true, true, false
+            csMapping.Id, true, true, false, 2
         );
         Test.stopTest();
 

@@ -12826,4 +12826,11 @@
         <shortDescription>Empty File Message</shortDescription>
         <value>The uploaded file contains no data rows. Please add data and try again.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Lbl_Record_Lifetime</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Record Lifetime</shortDescription>
+        <value>Record Lifetime</value>
+    </labels>
 </CustomLabels>
