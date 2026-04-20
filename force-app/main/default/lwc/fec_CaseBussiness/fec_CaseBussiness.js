@@ -2422,9 +2422,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             this.processActionMethod === ACTION_ADDRESS_UPDATE ||
             msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS
           ) {
-          if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
             this._refreshFecUpdateAddressAfterProcessSuccess();
-          }
           }
 
         } else {
@@ -2437,10 +2435,6 @@ export default class Fec_CaseBussiness extends LightningElement {
             if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
               this._revertFecUpdateAddressAfterProcessFailure();
             }
-          }
-          // thangtv send message re-isuse pin error to NOC component
-          if (this.processActionMethod == ACTION_PIN_REISSUE) {
-              this.publishPinReissueResult("ERROR",msgError);
           }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
@@ -2825,7 +2819,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
-    return this.isEdit && this.business?.hasRoutingAction;
+   return this.isEdit && this.business?.hasRoutingAction;
   }
   // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
   async publishPinReissueResult(status, message = "") {
@@ -2875,15 +2869,5 @@ export default class Fec_CaseBussiness extends LightningElement {
     .catch((error) => {
       console.log(error);
     });
-  }
-  // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
-  async publishPinReissueResult(status, message = "") {
-    const payload = {
-      status, // "SUCCESS" | "ERROR"
-      caseId: this.recordId,
-      message,
-    };
-
-    publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
   }
 }
