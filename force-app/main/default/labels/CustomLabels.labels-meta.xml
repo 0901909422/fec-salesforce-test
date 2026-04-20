@@ -11600,6 +11600,14 @@
         <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_IncorrectPayment_Date_Not_After_Today</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_Date_Not_After_Today</shortDescription>
+        <value>Date cannot be later than the current date.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -12994,6 +13002,14 @@
         <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Row_Empty</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract closure — đã chọn dòng địa chỉ nhưng cột địa chỉ trống</shortDescription>
+        <value>Dòng địa chỉ đã chọn chưa có nội dung. Vui lòng chọn địa chỉ khác hoặc nhập địa chỉ tạm thời.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
@@ -13362,6 +13378,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</shortDescription>
+        <value>Mở khoá thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13392,6 +13416,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</shortDescription>
+        <value>Thay thế mã PIN thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Data_Application_History</fullName>
@@ -13452,6 +13484,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
         <value>Thay thế thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</shortDescription>
+        <value>Thay thế thẻ thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
