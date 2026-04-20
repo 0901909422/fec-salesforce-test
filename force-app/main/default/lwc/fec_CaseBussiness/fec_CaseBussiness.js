@@ -54,18 +54,22 @@ import FEC_Block_Card_Header from '@salesforce/label/c.FEC_Block_Card_Header';
 import FEC_Block_Card_Confirmation_Msg from '@salesforce/label/c.FEC_Block_Card_Confirmation_Msg';
 import FEC_Block_Card_Success from '@salesforce/label/c.FEC_Block_Card_Success';
 import FEC_Block_Card_Failed_Max from '@salesforce/label/c.FEC_Block_Card_Failed_Max';
+import FEC_Block_Card_Failed from '@salesforce/label/c.FEC_Block_Card_Failed';
 import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
 import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY";
 import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_REISSUE_HEADER";
 import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
 import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
 import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
+import FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY";
 import FEC_ACTION_CARD_REPLACEMENT_HEADER from "@salesforce/label/c.FEC_ACTION_CARD_REPLACEMENT_HEADER";
 import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -2446,6 +2450,18 @@ export default class Fec_CaseBussiness extends LightningElement {
         } else {
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
+          // PhuongNT add set msg error for call api
+          if (this.isProcessActionValid) {
+            if (this.processActionMethod == ACTION_BLOCK_CARD) {
+              msgError = FEC_Block_Card_Failed;
+            } else if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+              msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_REPLACE_CARD) {
+              msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
+            }
+          }
           if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
             this._handleAddressUpdateFail();
           } else {
