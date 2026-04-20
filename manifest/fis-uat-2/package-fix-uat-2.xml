@@ -453,7 +453,7 @@
         <members>FEC_No_Permission_Msg</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
-		<members>FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today</members>
+		<members>FEC_MSG_IncorrectPayment_Date_Not_After_Today</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

@@ -11422,12 +11422,12 @@
         <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today</fullName>
+        <fullName>FEC_MSG_IncorrectPayment_Date_Not_After_Today</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today</shortDescription>
-        <value>Bill Date cannot be later than the current date.</value>
+        <shortDescription>FEC_MSG_IncorrectPayment_Date_Not_After_Today</shortDescription>
+        <value>Date cannot be later than the current date.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>

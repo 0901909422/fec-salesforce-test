@@ -40,7 +40,7 @@ import FEC_LBL_Remove_Row from '@salesforce/label/c.FEC_LBL_Remove_Row';
 import FEC_LBL_Add_Item from '@salesforce/label/c.FEC_LBL_Add_Item';
 import FEC_MSG_Adjusted_Amount_Must_Equal_Payment from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Payment';
 import FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row from '@salesforce/label/c.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row';
-import FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today from '@salesforce/label/c.FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today';
+import FEC_MSG_IncorrectPayment_Date_Not_After_Today from '@salesforce/label/c.FEC_MSG_IncorrectPayment_Date_Not_After_Today';
 import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Payment_Method_Bank_Transfer';
 import FEC_LBL_Payment_Method_Other_Channels from '@salesforce/label/c.FEC_LBL_Payment_Method_Other_Channels';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
@@ -663,7 +663,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     _sanitizeTh1ManualBillDateIfFuture() {
-        if (!this.isTh1 || !this.manualBillDate) {
+        if ((!this.isTh1 && !this.isTh2) || !this.manualBillDate) {
             return;
         }
         if (this._isTh1BillDateIsoAfterToday(this.manualBillDate)) {
@@ -679,12 +679,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (!el || !el.setCustomValidity) {
             return;
         }
-        if (!this.isTh1) {
+        if (!this.isTh1 && !this.isTh2) {
             el.setCustomValidity(STR_EMPTY);
             return;
         }
         if (this.manualBillDate && this._isTh1BillDateIsoAfterToday(this.manualBillDate)) {
-            el.setCustomValidity(FEC_MSG_IncorrectPayment_Bill_Date_Not_After_Today);
+            el.setCustomValidity(FEC_MSG_IncorrectPayment_Date_Not_After_Today);
         } else {
             el.setCustomValidity(STR_EMPTY);
         }
@@ -987,7 +987,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.showManualBill) {
             const billAmtSel = 'lightning-input[data-id="manual-bill-amount"]';
             const dateSel = 'lightning-input[data-id="manual-bill-date"]';
-            if (this.isTh1) {
+            if (this.isTh1 || this.isTh2) {
                 this._syncTh1ManualBillDateFieldValidity();
                 const dateOk = this.validateFields([dateSel]);
                 if (!dateOk) {
