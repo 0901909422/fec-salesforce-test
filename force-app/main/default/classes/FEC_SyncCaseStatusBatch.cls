@@ -1,4 +1,4 @@
-public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<SObject> {
+public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchable<FEC_Routing_Action_History__c> {
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
         return Database.getQueryLocator([
@@ -9,10 +9,9 @@ public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchab
         ]);
     }
 
-    public void execute(Database.BatchableContext bc, List<SObject> scope) {
+    public void execute(Database.BatchableContext bc, List<FEC_Routing_Action_History__c> scope) {
         Set<String> statusNames = new Set<String>();
-        for (SObject sob : scope) {
-            FEC_Routing_Action_History__c rec = (FEC_Routing_Action_History__c)sob;
+        for (FEC_Routing_Action_History__c rec : scope) {
             if (String.isNotBlank(rec.FEC_Changed_Status__c)) {
                 statusNames.add(rec.FEC_Changed_Status__c.trim());
             }
