@@ -673,7 +673,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
             return true;
         }
         if (!tm) {
-            this.showToast(this.customLabel.errorTitle, this.validationLabels.completeThisField, 'error');
+            this.showToast(this.customLabel.errorTitle, this.customLabel.msgNoC360Email, 'error');
             return false;
         }
         if (!PATTERN_EMAIL_FEC_STRICT.test(tm)) {
