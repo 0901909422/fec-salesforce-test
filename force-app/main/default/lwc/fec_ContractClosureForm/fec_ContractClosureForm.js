@@ -110,6 +110,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     addrRenderKey = 0;
 
     addressSortAsc = true;
+    showSelectedAddressOnly = false;
 
     temporaryAddressDisplay = STR_EMPTY;
     tempAddressRecordId;
@@ -486,7 +487,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
             );
             return asc ? cmp : -cmp;
         });
-        return rows.map((r) => ({
+        const visibleRows =
+            this.showSelectedAddressOnly && sel
+                ? rows.filter((r) => r.id === sel)
+                : rows;
+        return visibleRows.map((r) => ({
             ...r,
             selected: r.id === sel
         }));
@@ -685,7 +690,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (!this.showAddressSection) {
             return true;
         }
-        const hasTempLine = (this.temporaryAddressDisplay || STR_EMPTY).trim().length > 0;
+        const hasTempLine = this.hasUsableTemporaryAddressLine();
         const selId = this.selectedAddressRowId;
         if (!selId) {
             if (!hasTempLine) {
@@ -695,6 +700,21 @@ export default class Fec_ContractClosureForm extends LightningElement {
             return true;
         }
         return true;
+    }
+
+    hasUsableTemporaryAddressLine() {
+        const normalize = (value) => (value || STR_EMPTY).trim().toLowerCase();
+        const tempType = normalize(this.addressTypeTemporaryLabel);
+        const displayLine = normalize(this.temporaryAddressDisplay);
+        if (displayLine && displayLine !== tempType) {
+            return true;
+        }
+        const rows = this.addresses || [];
+        const tempRows = rows.filter((row) => normalize(row && row.addressType).includes('temporary'));
+        return tempRows.some((row) => {
+            const line = normalize(row && row.address);
+            return !!line && line !== tempType;
+        });
     }
 
     assertClosureAddressRowLineValid() {
@@ -1075,6 +1095,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.lastValidationMessages = r.messages || [];
                 this.showValidateBanner = true;
             } else {
+                this.showSelectedAddressOnly = true;
                 this.savedDeliveryOption = payload.deliveryOptionCombined || STR_EMPTY;
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
                 this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
