@@ -87,7 +87,7 @@
             var prefix2 = component.get('v.replyPrefix') || '';
             var orig = component.get('v.originalSubject') || '';
             if (prefix2 && orig) {
-                component.set('v.subject', prefix2 + orig);
+                component.set('v.subject', prefix2 + '<' + orig + '>');
             }
         }
     },
@@ -95,7 +95,7 @@
     openCompose: function(component, event, helper) {
         var orig = component.get('v.originalSubject');
         component.set('v.replyPrefix', 'RE: ');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         var isServiceCase = component.get('v.isServiceCase');
@@ -118,7 +118,7 @@
         var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
         var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.replyPrefix', 'RE: ');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         if (isServiceCase) {
@@ -140,7 +140,7 @@
         var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
         var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.replyPrefix', 'RE: ');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         if (isServiceCase) {
@@ -160,7 +160,7 @@
         var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
         var orig = emailSubject || component.get('v.originalSubject');
         component.set('v.replyPrefix', 'FW: ');
-        component.set('v.subject', orig ? 'FW: ' + orig : '');
+        component.set('v.subject', orig ? 'FW: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         component.set('v.toTags', []);
