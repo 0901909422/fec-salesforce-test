@@ -23,6 +23,7 @@ import FEC_ACCOUNT_CONTRACT_NUMBER_LABEL from "@salesforce/label/c.FEC_Account_C
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import getInteractionIdFromCustomerCase from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionIdFromCustomerCase";
 import CASE_ID from "@salesforce/schema/Case.Id";
+import getInteractionFirstCustomerHistoryAccountNumber from "@salesforce/apex/FEC_AccountOrContractPicklistHandler.getInteractionFirstCustomerHistoryAccountNumber";
 export default class AccountOrContractPicklistCustomerCase extends LightningElement {
   labels = {
     accountContractNumber: FEC_ACCOUNT_CONTRACT_NUMBER_LABEL,
@@ -136,6 +137,9 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
         caseId: this.recordId,
       });
 
+      console.log("interactionId:", this.interactionId);
+      console.log("interactionCustomerType:", this.interactionCustomerType);
+      console.log("customerHistoryId:", this.customerHistoryId);
       // 2. load account data
       await this.loadAccountData();
     } catch (e) {
@@ -150,13 +154,17 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
 
     try {
       const result = await getAccountNumberCustomerCase({
-        caseId: this.interactionId,
+        caseId: this.recordId,
         customerHistoryId: this.customerHistoryId,
       });
 
+      // const result = await getInteractionAccountNumber({
+      //   caseId: this.interactionId,
+      // });
+
       const parsed = result ? JSON.parse(result) : {};
 
-      console.log("DATA:", JSON.stringify(parsed));
+      console.log("DATA final customer case:", JSON.stringify(parsed));
 
       // ❗ nếu chưa có data → retry
       if (!parsed.accountNumber && retry < 3) {
@@ -175,6 +183,7 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
       this.cifNumber = parsed.cifNumber;
       this.hasAccountOrContact = parsed.hasContractAccount;
       this.phone = parsed.phone || "";
+      await this.getInteractionFirstCustomerHistoryAccountNumber();
       if (this.isNonExistingCustomer) {
         this.initAccountDataNonExisting();
       } else {
@@ -185,6 +194,18 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
     } finally {
       this.isLoading = false;
     }
+  }
+
+  async getInteractionFirstCustomerHistoryAccountNumber() {
+    if (!this.interactionId) return;
+
+    const result = await getInteractionFirstCustomerHistoryAccountNumber({
+      caseId: this.interactionId,
+    });
+
+    console.log("AccountNumber:", result);
+
+    this.firstAccountContractNumber = result || "";
   }
 
   async getProductsList() {
@@ -298,8 +319,22 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
           selectedType: selectedRow.product,
         });
       } else {
+        if (selectedRow.product === UBANK_PRODUCT_NAME) {
+          this.selectedValue = this.firstAccountContractNumber;
+        }
+
+        console.log(
+          "Creating history with:",
+          JSON.stringify({
+            caseId: this.recordId,
+            selectedAccountContractNumber: this.selectedValue,
+            selectedType: selectedRow.product,
+            cifNumber: this.cifNumber,
+            phone: this.phone,
+          }),
+        );
         await createHistory({
-          caseId: this.interactionId,
+          caseId: this.recordId,
           selectedAccountContractNumber: this.selectedValue,
           selectedType: selectedRow.product,
           cifNumber: this.cifNumber,

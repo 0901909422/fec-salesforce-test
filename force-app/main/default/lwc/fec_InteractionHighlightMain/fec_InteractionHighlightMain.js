@@ -1,5 +1,10 @@
 import { LightningElement, api, track, wire } from "lwc";
-import { IsConsoleNavigation, openTab, EnclosingTabId, setTabLabel } from "lightning/platformWorkspaceApi";
+import {
+  IsConsoleNavigation,
+  openTab,
+  EnclosingTabId,
+  setTabLabel,
+} from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
@@ -42,7 +47,12 @@ import {
   RECORD_TYPE_CUSTOMER_CASE,
   RECORD_TYPE_INTERNAL_CASE,
 } from "c/fec_CommonConst";
-
+import {
+  getMode,
+  setMode,
+  subscribeMode,
+  unsubscribeMode,
+} from "c/fec_InteractionCaseModeStore";
 export default class Fec_InteractionHighlightMain extends NavigationMixin(
   LightningElement,
 ) {
@@ -103,7 +113,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
       INTERACTION_RECORD_ID,
       CUSTOMER_TYPE,
       OWNERID,
-      FEC_ID_SEARCH
+      FEC_ID_SEARCH,
     ],
   })
   wiredCase({ data, error }) {
@@ -135,10 +145,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   @wire(getRecord, {
     recordId: "$interactionRecordId",
-    fields: [
-      ISCLOSED,
-      OWNERID
-    ],
+    fields: [ISCLOSED, OWNERID],
   })
   getInteraction({ data, error }) {
     if (data) {
@@ -183,8 +190,9 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
     // 2. Trạng thái bản ghi (Interaction/Case) hiện tại phải đang mở (Open)
     // Nếu có Interaction đính kèm thì dùng isInteractionClosed để xét.
     // Nếu undefined thì dùng trạng thái của parent Case (isCaseClosed).
-    const isRecordOpen = (this.isInteractionCase && !this.isCaseClosed)
-      || !this.isInteractionClosed;
+    const isRecordOpen =
+      (this.isInteractionCase && !this.isCaseClosed) ||
+      !this.isInteractionClosed;
 
     if (!isRecordOpen) {
       return false;
@@ -274,7 +282,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
             console.log(
               "Update viewMode to review successfully in Fec_InteractionHighlightMain",
             );
-            this.handlePublishMode(this.viewMode === "handling");
+            // this.handlePublishMode(true);
           })
           .catch((error) => {
             console.error("resetViewMode error:", error);
@@ -331,9 +339,14 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
 
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
+    this.handlePublishMode(true);
+    await new Promise((r) => setTimeout(r, 200));
     if (this.isConsoleNavigation) {
       await openTab({
-        url: urlCmpWithRecordId("fec_InteractionCreateCase", this.createCaseSourceId),
+        url: urlCmpWithRecordId(
+          "fec_InteractionCreateCase",
+          this.createCaseSourceId,
+        ),
         focus: true,
       });
     } else {
@@ -350,10 +363,10 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   async handlePublishMode(isEdit) {
+    setMode(isEdit);
     const payload = {
       isModeEdit: isEdit,
     };
-
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
@@ -380,7 +393,7 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
         this.messageContext,
         IS_MODE_EDIT,
         (message) => this.handleMessage(message),
-        { scope: APPLICATION_SCOPE }
+        { scope: APPLICATION_SCOPE },
       );
     }
   }
@@ -391,8 +404,12 @@ export default class Fec_InteractionHighlightMain extends NavigationMixin(
   }
 
   handleMessage(message) {
-    if (!this.isInteractionCase && message && typeof message.isModeEdit !== 'undefined') {
-      this.viewMode = message.isModeEdit ? 'handling' : 'review';
+    if (
+      !this.isInteractionCase &&
+      message &&
+      typeof message.isModeEdit !== "undefined"
+    ) {
+      this.viewMode = message.isModeEdit ? "handling" : "review";
     }
   }
 }

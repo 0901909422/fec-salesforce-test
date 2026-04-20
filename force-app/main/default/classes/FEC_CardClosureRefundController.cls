@@ -1,4 +1,4 @@
-public with sharing class FEC_CardClosureRefundController {
+public without sharing class FEC_CardClosureRefundController {
 
     private static final String BLOCK_CODE_CARD = 'C';
     private static final String FUNC_BLOCK = 'B';
@@ -284,13 +284,13 @@ public with sharing class FEC_CardClosureRefundController {
         FEC_Customer_History__c customerHistory = historyRows[0];
         String accountNumber = String.isNotBlank(customerHistory.FEC_Account_Number__c) ? customerHistory.FEC_Account_Number__c : c.FEC_Account_Number__c;
         if (String.isBlank(accountNumber)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'AccountNumber' });
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Account Number' });
             return dto;
         }
 
         String last4Digit = getLast4Digit(customerHistory.FEC_Card_Number__c);
         if (String.isBlank(last4Digit)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Last4Digit' });
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return dto;
         }
 

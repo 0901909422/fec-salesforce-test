@@ -421,11 +421,36 @@ public without sharing class FEC_CreateCaseHandler {
         c.OwnerId = UserInfo.getUserId();
         c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
         c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+        c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
         c.FEC_Customer_Name__c = customerName;
         c.FEC_National_ID_Passport_ID__c = nationalId;
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         
         insert c;
+        
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+        FEC_Case__c = c.Id
+        );
+        insert newInfo;
+
         return c.Id;
+    }
+
+    // create CaseRecordTypeDevName
+    @AuraEnabled(cacheable=true)
+    public static String getCaseRecordTypeDevName(Id caseId) {
+        if (caseId == null) return null;
+
+        try {
+            Case c = [
+                SELECT RecordType.DeveloperName
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            return c.RecordType.DeveloperName;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
     }
 }

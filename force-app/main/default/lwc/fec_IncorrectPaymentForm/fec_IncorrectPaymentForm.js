@@ -8,6 +8,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPaymentHistoryFromSOAP from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentHistoryFromSOAP';
 import getSubCodeConfig from '@salesforce/apex/FEC_IncorrectPaymentController.getSubCodeConfig';
 import getIncorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getIncorrectContractOptions';
+import getCorrectContractOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getCorrectContractOptions';
 import getPaymentMethodOptions from '@salesforce/apex/FEC_IncorrectPaymentController.getPaymentMethodOptions';
 import saveAdjustment from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustment';
 import saveAdjustmentDraft from '@salesforce/apex/FEC_IncorrectPaymentController.saveAdjustmentDraft';
@@ -92,6 +93,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
+    @track correctContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = CONST.EMPTY;
     _pendingSelectedPaymentId = null;
@@ -229,7 +231,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get correctContractOptions() {
-        return this.incorrectContractOptionlst || [];
+        return this.correctContractOptionlst || [];
     }
 
     connectedCallback() {
@@ -320,15 +322,29 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.subCode = data.subCode || CONST.EMPTY;
                 this.incorrectContract = data.incorrectContractNumber != null ? data.incorrectContractNumber : CONST.EMPTY;
                 this.paymentMethod = data.paymentMethod != null && data.paymentMethod !== undefined ? data.paymentMethod : CONST.EMPTY;
-                const adjRow = { id: 1, correctContract: CONST.EMPTY, adjustedAmount: null };
-                if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
-                    adjRow.correctContract = String(data.correctContractNumber).trim();
+                const rowsFromCase = data.adjustmentRows && Array.isArray(data.adjustmentRows) && data.adjustmentRows.length > 0
+                    ? data.adjustmentRows
+                    : null;
+                if (rowsFromCase) {
+                    this.adjustments = rowsFromCase.map((r, index) => ({
+                        id: index + 1,
+                        correctContract: r.correctContract != null && String(r.correctContract).trim()
+                            ? String(r.correctContract).trim()
+                            : CONST.EMPTY,
+                        adjustedAmount: r.adjustedAmount != null && r.adjustedAmount !== undefined ? r.adjustedAmount : null
+                    }));
+                    this.nextAdjustmentId = this.adjustments.length + 1;
+                } else {
+                    const adjRow = { id: 1, correctContract: CONST.EMPTY, adjustedAmount: null };
+                    if (data.correctContractNumber != null && String(data.correctContractNumber).trim()) {
+                        adjRow.correctContract = String(data.correctContractNumber).trim();
+                    }
+                    if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
+                        adjRow.adjustedAmount = data.adjustedAmount;
+                    }
+                    this.adjustments = [adjRow];
+                    this.nextAdjustmentId = 2;
                 }
-                if (data.adjustedAmount != null && data.adjustedAmount !== undefined) {
-                    adjRow.adjustedAmount = data.adjustedAmount;
-                }
-                this.adjustments = [adjRow];
-                this.nextAdjustmentId = 2;
                 if (data.billDate != null && String(data.billDate).trim()) {
                     this.manualBillDate = String(data.billDate).trim();
                 } else {
@@ -340,13 +356,19 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                     this.manualBillAmount = null;
                 }
                 
-                // Load contract options
-                const contractPromise = getIncorrectContractOptions({ caseId: this.recordId })
+                const incorrectContractPromise = getIncorrectContractOptions({ caseId: this.recordId })
                     .then((contractOpts) => {
                         this.incorrectContractOptionlst = contractOpts || [];
                     })
                     .catch(() => {
                         this.incorrectContractOptionlst = [];
+                    });
+                const correctContractPromise = getCorrectContractOptions()
+                    .then((pickOpts) => {
+                        this.correctContractOptionlst = pickOpts || [];
+                    })
+                    .catch(() => {
+                        this.correctContractOptionlst = [];
                     });
                 
                 // Load payment method options
@@ -358,7 +380,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                         this.paymentMethodOptionlst = [];
                     });
                 
-                return Promise.all([contractPromise, paymentMethodPromise]);
+                return Promise.all([incorrectContractPromise, correctContractPromise, paymentMethodPromise]);
             })
             .then(() => {
                 this.applyLocalDraftIfAny();
@@ -371,6 +393,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.configLoaded = true;
                 this.subCode = CONST.EMPTY;
                 this.incorrectContractOptionlst = [];
+                this.correctContractOptionlst = [];
                 this.paymentMethodOptionlst = [];
             });
     }
@@ -548,7 +571,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const idx = this.adjustments.findIndex(a => a.id === id);
         if (idx < 0) return;
         const v = event.detail != null && event.detail.value !== undefined ? event.detail.value : event.target.value;
-        const amount = v === CONST.EMPTY || v == null ? null : (Number(v) || null);
+        let amount = null;
+        if (v !== CONST.EMPTY && v != null && v !== '') {
+            const n = Number(v);
+            if (!isNaN(n)) {
+                amount = n;
+            }
+        }
         const next = [...this.adjustments];
         next[idx] = { ...next[idx], adjustedAmount: amount };
         this.adjustments = next;
@@ -636,7 +665,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         const hasPaymentMethod = !!(this.paymentMethod && String(this.paymentMethod).trim());
         const hasCompleteRow = (this.adjustments || []).some((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
             return hasCorrectContract && hasAdjustedAmount;
         });
         return hasPaymentMethod || hasCompleteRow;
@@ -690,12 +719,42 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             }));
             return false;
         }
+        if (!(this.paymentMethod && String(this.paymentMethod).trim())) {
+            const pmEl = this.template.querySelector('lightning-combobox[name="paymentMethod"]');
+            if (pmEl && pmEl.reportValidity) {
+                pmEl.reportValidity();
+            }
+            this.dispatchEvent(new ShowToastEvent({
+                title: FEC_Toast_Validation_Title,
+                message: FEC_LBL_Select_Payment_Method,
+                variant: CONST.VARIANT_WARNING
+            }));
+            return false;
+        }
+
+        if (this.showManualBill) {
+            const billAmtSel = 'lightning-input[data-id="manual-bill-amount"]';
+            const billAmtOk = this.validateFields([billAmtSel]);
+            const billAmtMissing = this.manualBillAmount == null;
+            if (!billAmtOk || billAmtMissing) {
+                const billAmtEl = this.template.querySelector(billAmtSel);
+                if (billAmtEl && billAmtEl.reportValidity) {
+                    billAmtEl.reportValidity();
+                }
+                this.dispatchEvent(new ShowToastEvent({
+                    title: FEC_Toast_Validation_Title,
+                    message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
+                    variant: CONST.VARIANT_WARNING
+                }));
+                return false;
+            }
+        }
 
         this.clearAdjustmentFieldsCustomValidity();
         const incompleteRows = [];
         this.adjustments.forEach((a, index) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
 
             if ((hasCorrectContract && !hasAdjustedAmount) || (!hasCorrectContract && hasAdjustedAmount)) {
                 incompleteRows.push({
@@ -718,7 +777,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
         const valid = this.adjustments.filter((a) => {
             const hasCorrectContract = a.correctContract && String(a.correctContract).trim();
-            const hasAdjustedAmount = a.adjustedAmount != null && a.adjustedAmount !== 0;
+            const hasAdjustedAmount = a.adjustedAmount != null;
             return hasCorrectContract && hasAdjustedAmount;
         });
 
@@ -743,14 +802,6 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
 
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;
-        if (this.showManualBill && !this.validateFields(['lightning-input[name="manualBillAmount"]'])) {
-            this.dispatchEvent(new ShowToastEvent({
-                title: FEC_Toast_Validation_Title,
-                message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
-                variant: CONST.VARIANT_WARNING
-            }));
-            return false;
-        }
         if (!billFieldsRendered && (billAmount == null || billAmount === 0)) {
             return { skipApex: true, valid, billDate, billAmount };
         }
@@ -776,9 +827,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunIncorrectPaymentSave()) {
-            return true;
-        }
+        // Submit always validates; _shouldRunIncorrectPaymentSave is only for skipping Apex on empty section.
         const ctx = this._performClientSaveValidation();
         return ctx !== false;
     }

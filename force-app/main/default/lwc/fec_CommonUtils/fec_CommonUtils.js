@@ -48,6 +48,21 @@ const formatDateTimeVN = (val) => {
 
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
+
+/**
+ * Format date-time as DD/MM/YYYY, HH:mm (no seconds, VN display)
+ */
+const formatDateTimeVNShort = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return val;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year}, ${h}:${m}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -768,6 +783,20 @@ const formatThousandsFromDigits = (digits) => {
   }).format(n);
 };
 
+const formatThousandsFromDigitsEnUs = (digits) => {
+  if (!digits) {
+    return STR_EMPTY;
+  }
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
 const toUpperNoVietnameseAccent = (str) => {
   if (!str) {
     return STR_EMPTY;
@@ -802,6 +831,7 @@ export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
+  formatDateTimeVNShort,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
@@ -828,6 +858,7 @@ export {
   getCaseIdNumber,
   sortByStringField,
   formatThousandsFromDigits,
+  formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
   toUpperNoVietnameseAccent

@@ -8,14 +8,15 @@
       <lightning-input type="text" label={customLabel.beneficiaryAccount} value={beneficiaryAccount} required disabled={isReadOnly} onchange={handleBeneficiaryAccountInput}></lightning-input>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
-      <c-fec_-combo-box data-pick="bank" label={customLabel.bankName} option={bankOptionsJson} value={bankComboValue} required={comboRequired} disabled={isReadOnly} onchange={handleBankPickFromCombo} onremove={handleBankRemove}></c-fec_-combo-box>
+      <lightning-input lwc:if={isBankManualInput} data-id="bank-manual-input" type="text" label={customLabel.bankName} value={bankComboValue} required={comboRequired} disabled={isReadOnly} onchange={handleBankInput}></lightning-input>
+      <c-fec_-combo-box lwc:else data-pick="bank" label={customLabel.bankName} option={bankOptionsJson} value={bankComboValue} required={comboRequired} disabled={isReadOnly} enable-search-change onchange={handleBankPickFromCombo} onsearchchange={handleBankSearchChange} onremove={handleBankRemove}></c-fec_-combo-box>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
-      <c-fec_-combo-box data-pick="branch" label={customLabel.bankBranch} option={bankBranchOptionsJson} value={bankBranch} required={comboRequired} disabled={isReadOnly} onchange={handleBankBranchPickFromCombo} onremove={handleBankBranchRemove}></c-fec_-combo-box>
+      <lightning-input lwc:if={isBankBranchManualInput} data-id="branch-manual-input" type="text" label={customLabel.bankBranch} value={bankBranch} required={comboRequired} disabled={isReadOnly} onchange={handleBankBranchInput}></lightning-input>
+      <c-fec_-combo-box lwc:else data-pick="branch" label={customLabel.bankBranch} option={bankBranchOptionsJson} value={bankBranch} required={comboRequired} disabled={isReadOnly} enable-search-change onchange={handleBankBranchPickFromCombo} onsearchchange={handleBankBranchSearchChange} onremove={handleBankBranchRemove}></c-fec_-combo-box>
     </lightning-layout-item>
     <lightning-layout-item size="6" padding="around-small">
       <c-fec_-combo-box data-pick="province" label={customLabel.provinceCity} option={provinceOptionsJson} value={provinceComboValue} required={comboRequired} disabled={isReadOnly} onchange={handleProvincePickFromCombo} onremove={handleProvinceRemove}></c-fec_-combo-box>
     </lightning-layout-item>
-    <lightning-layout-item size="6" padding="around-small"></lightning-layout-item>
   </lightning-layout>
 </template>

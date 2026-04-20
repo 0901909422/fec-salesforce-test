@@ -14,14 +14,13 @@ import FEC_LBL_Province_City from "@salesforce/label/c.FEC_LBL_Province_City";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 import FEC_Toast_Save_Success_Title from "@salesforce/label/c.FEC_Toast_Save_Success_Title";
 import FEC_Toast_Save_Success from "@salesforce/label/c.FEC_Toast_Save_Success";
-import FEC_MSG_Param_Required from "@salesforce/label/c.FEC_MSG_Param_Required";
 import FEC_Toast_Validation_Message from "@salesforce/label/c.FEC_Toast_Validation_Message";
 import FEC_Toast_Validation_Title from "@salesforce/label/c.FEC_Toast_Validation_Title";
 import { STR_EMPTY } from "c/fec_CommonConst";
 import { toUpperNoVietnameseAccent } from "c/fec_CommonUtils";
 
 const DRAFT_KEY_PREFIX = "fec-beneficiary-bank-draft-";
-const ERR_BENEFICIARY_SAVE_ALREADY_TOASTED = "fec_beneficiary_save_dto";
+const ERR_BENEFICIARY_SAVE_ALREADY_TOASTED = "Beneficiary Save Error";
 
 export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @api recordId;
@@ -34,7 +33,11 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     @track bankOptions = [];
     @track provinceOptions = [];
     @track bankBranchOptions = [];
+    @track isBankManualInput = false;
+    @track isBankBranchManualInput = false;
     @track isBusy = false;
+    shouldFocusBankManualInput = false;
+    shouldFocusBranchManualInput = false;
     customLabel = {
         beneficiaryName: FEC_LBL_Beneficiary_Name,
         beneficiaryAccount: FEC_LBL_Beneficiary_Account,
@@ -67,6 +70,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
     wiredBanks({ data, error }) {
         if (data) {
             this.bankOptions = data.map((r) => ({ label: r.label, value: r.value }));
+            this._syncBankInputMode();
         } else if (error) {
             this.bankOptions = [];
         }
@@ -81,20 +85,53 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         }
     }
 
-    @wire(getBeneficiaryFormDefaults, { caseId: "$recordId" })
-    wiredFormDefaults({ data, error }) {
-        if (data) {
-            this.beneficiaryName = data.beneficiaryName || data.defaultBeneficiaryUpperNoAccent || STR_EMPTY;
-            this.beneficiaryAccount = data.beneficiaryAccount || STR_EMPTY;
-            this.bankComboValue = data.bankPicklistValue || STR_EMPTY;
-            this.bankBranch = data.bankBranch || STR_EMPTY;
-            this.provinceComboValue = data.provinceCity || STR_EMPTY;
-            this.refreshBranchOptions().then(() => {
-                this.applyLocalDraftIfAny();
-            });
-        } else if (error) {
-            this.bankBranchOptions = [];
+    connectedCallback() {
+        this._loadBeneficiaryFormDefaults();
+    }
+
+    renderedCallback() {
+        if (this.shouldFocusBankManualInput) {
+            this.shouldFocusBankManualInput = false;
+            const bankInput = this.template.querySelector('lightning-input[data-id="bank-manual-input"]');
+            if (bankInput && typeof bankInput.focus === "function") {
+                bankInput.focus();
+            }
         }
+        if (this.shouldFocusBranchManualInput) {
+            this.shouldFocusBranchManualInput = false;
+            const branchInput = this.template.querySelector('lightning-input[data-id="branch-manual-input"]');
+            if (branchInput && typeof branchInput.focus === "function") {
+                branchInput.focus();
+            }
+        }
+    }
+
+    _loadBeneficiaryFormDefaults() {
+        if (!this.recordId) {
+            return;
+        }
+        const caseId = this.recordId;
+        getBeneficiaryFormDefaults({ caseId: caseId })
+            .then((data) => {
+                if (this.recordId !== caseId) {
+                    return;
+                }
+                if (data) {
+                    this.beneficiaryName = data.beneficiaryName || data.defaultBeneficiaryUpperNoAccent || STR_EMPTY;
+                    this.beneficiaryAccount = data.beneficiaryAccount || STR_EMPTY;
+                    this.bankComboValue = data.bankPicklistValue || STR_EMPTY;
+                    this.bankBranch = data.bankBranch || STR_EMPTY;
+                    this.provinceComboValue = data.provinceCity || STR_EMPTY;
+                    this.refreshBranchOptions().then(() => {
+                        this._syncBankInputMode();
+                        this._syncBankBranchInputMode();
+                        this.applyLocalDraftIfAny();
+                    });
+                }
+            })
+            .catch(() => {
+                this.bankBranchOptions = [];
+            });
     }
 
     get draftStorageKey() {
@@ -165,9 +202,11 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         }
         if (draft.bankPicklistValue != null) {
             this.bankComboValue = draft.bankPicklistValue;
+            this._syncBankInputMode();
         }
         if (draft.bankBranch != null) {
             this.bankBranch = draft.bankBranch;
+            this._syncBankBranchInputMode();
         }
         if (draft.provinceCity != null) {
             this.provinceComboValue = draft.provinceCity;
@@ -190,10 +229,35 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         return getBankBranchPicklistOptions({ bankNameNoaccent: bank })
             .then((list) => {
                 this.bankBranchOptions = (list || []).map((r) => ({ label: r.label, value: r.value }));
+                this._syncBankBranchInputMode();
             })
             .catch(() => {
                 this.bankBranchOptions = [];
+                this._syncBankBranchInputMode();
             });
+    }
+
+    _hasPicklistOption(options, value) {
+        if (!value) {
+            return false;
+        }
+        return (options || []).some((o) => o && o.value === value);
+    }
+
+    _hasPicklistOptionByText(options, value) {
+        if (!value) {
+            return false;
+        }
+        const normalizedValue = toUpperNoVietnameseAccent(value).trim();
+        return (options || []).some((o) => o && (toUpperNoVietnameseAccent(o.value || STR_EMPTY).trim().includes(normalizedValue) || toUpperNoVietnameseAccent(o.label || STR_EMPTY).trim().includes(normalizedValue)));
+    }
+
+    _syncBankInputMode() {
+        this.isBankManualInput = !!(this.bankComboValue && !this._hasPicklistOption(this.bankOptions, this.bankComboValue));
+    }
+
+    _syncBankBranchInputMode() {
+        this.isBankBranchManualInput = !!(this.bankBranch && !this._hasPicklistOption(this.bankBranchOptions, this.bankBranch));
     }
 
     handleBeneficiaryInput(event) {
@@ -218,10 +282,17 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (!v) {
             return;
         }
+        if (!this._hasPicklistOption(this.bankOptions, v)) {
+            this.isBankManualInput = true;
+            this.bankComboValue = toUpperNoVietnameseAccent(v);
+            return;
+        }
         const prev = this.bankComboValue;
+        this.isBankManualInput = false;
         this.bankComboValue = v;
         if (v !== prev) {
             this.bankBranch = STR_EMPTY;
+            this.isBankBranchManualInput = false;
             this._clearPickCombo("branch");
             this.refreshBranchOptions();
         }
@@ -231,6 +302,8 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         this.bankComboValue = STR_EMPTY;
         this.bankBranch = STR_EMPTY;
         this.bankBranchOptions = [];
+        this.isBankManualInput = false;
+        this.isBankBranchManualInput = false;
         this._clearPickCombo("branch");
     }
 
@@ -239,11 +312,48 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (!v) {
             return;
         }
+        if (!this._hasPicklistOption(this.bankBranchOptions, v)) {
+            this.isBankBranchManualInput = true;
+            this.bankBranch = toUpperNoVietnameseAccent(v);
+            return;
+        }
+        this.isBankBranchManualInput = false;
         this.bankBranch = v;
     }
 
     handleBankBranchRemove() {
         this.bankBranch = STR_EMPTY;
+        this.isBankBranchManualInput = false;
+    }
+
+    handleBankSearchChange(event) {
+        const inputValue = event.detail.value;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasPicklistOptionByText(this.bankOptions, inputValue)) {
+            return;
+        }
+        this.isBankManualInput = true;
+        this.shouldFocusBankManualInput = true;
+        this.bankComboValue = toUpperNoVietnameseAccent(inputValue);
+        this.bankBranch = STR_EMPTY;
+        this.isBankBranchManualInput = false;
+        this.bankBranchOptions = [];
+        this._clearPickCombo("branch");
+    }
+
+    handleBankBranchSearchChange(event) {
+        const inputValue = event.detail.value;
+        if (!inputValue) {
+            return;
+        }
+        if (this._hasPicklistOptionByText(this.bankBranchOptions, inputValue)) {
+            return;
+        }
+        this.isBankBranchManualInput = true;
+        this.shouldFocusBranchManualInput = true;
+        this.bankBranch = toUpperNoVietnameseAccent(inputValue);
     }
 
     handleProvincePickFromCombo(event) {
@@ -256,6 +366,26 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
 
     handleProvinceRemove() {
         this.provinceComboValue = STR_EMPTY;
+    }
+
+    handleBankInput(event) {
+        const v = toUpperNoVietnameseAccent(event.target.value);
+        this.bankComboValue = v;
+        if (!v) {
+            this.isBankManualInput = false;
+            this.bankBranch = STR_EMPTY;
+            this.isBankBranchManualInput = false;
+            this.bankBranchOptions = [];
+            this._clearPickCombo("branch");
+            return;
+        }
+        this.isBankManualInput = true;
+    }
+
+    handleBankBranchInput(event) {
+        const v = toUpperNoVietnameseAccent(event.target.value);
+        this.bankBranch = v;
+        this.isBankBranchManualInput = !!v;
     }
 
     handleError(error) {
@@ -295,17 +425,19 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
             return true;
         }
         const fields = [...this.template.querySelectorAll("lightning-input")];
+        const combos = [...this.template.querySelectorAll("c-fec_-combo-box")];
         let ok = true;
         fields.forEach((el) => {
             if (typeof el.reportValidity === "function" && !el.reportValidity()) {
                 ok = false;
             }
         });
+        combos.forEach((el) => {
+            if (typeof el.reportValidity === "function" && !el.reportValidity()) {
+                ok = false;
+            }
+        });
         if (!ok) {
-            return false;
-        }
-        const nz = (s) => !!(s && String(s).trim());
-        if (!nz(this.bankComboValue) || !nz(this.bankBranch) || !nz(this.provinceComboValue)) {
             return false;
         }
         return true;
@@ -317,9 +449,6 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunBeneficiaryDraftOrSubmit()) {
-            return true;
-        }
         if (!this.reportValidity()) {
             this.showToast(FEC_Toast_Validation_Title, FEC_Toast_Validation_Message, "warning");
             return false;
@@ -327,7 +456,7 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
         return true;
     }
 
-    /** Save & Close: localStorage + Apex nháp khi có ít nhất một trường có giá trị. */
+    /** Save & Close: localStorage + Apex nháp (Case) khi có ít nhất một trường có giá trị. */
     @api
     saveDraftIfApplicable() {
         if (this.isReadOnly) {
@@ -395,51 +524,6 @@ export default class Fec_BeneficiaryBankInfoBlock extends LightningElement {
                 }
                 this.showToast(FEC_Error_Title, this.handleError(error), "error");
                 return Promise.reject(error);
-            })
-            .finally(() => {
-                this.isBusy = false;
-            });
-    }
-
-    @api
-    saveBeneficiaryToCustomerHistory() {
-        if (this.isReadOnly) {
-            return Promise.resolve();
-        }
-        if (!this.recordId) {
-            return Promise.resolve({
-                success: false,
-                errorMessage: FEC_MSG_Param_Required.replace("{0}", "Case Id")
-            });
-        }
-        if (!this.reportValidity()) {
-            return Promise.resolve({
-                success: false,
-                errorMessage: FEC_Toast_Validation_Message
-            });
-        }
-        const v = this.getFieldValues();
-        this.isBusy = true;
-        return saveBeneficiaryBankInfo({
-            caseId: this.recordId,
-            beneficiaryName: v.beneficiaryName,
-            beneficiaryAccount: v.beneficiaryAccount,
-            bankPicklistValue: v.bankPicklistValue,
-            bankBranch: v.bankBranch,
-            provinceCity: v.provinceCity
-        })
-            .then((res) => {
-                if (res && res.success) {
-                    this.clearLocalDraft();
-                    this.showToast(FEC_Toast_Save_Success_Title, FEC_Toast_Save_Success, "success");
-                } else if (res && res.errorMessage) {
-                    this.showToast(FEC_Error_Title, res.errorMessage, "error");
-                }
-                return res;
-            })
-            .catch((error) => {
-                this.showToast(FEC_Error_Title, this.handleError(error), "error");
-                return { success: false, errorMessage: this.handleError(error) };
             })
             .finally(() => {
                 this.isBusy = false;

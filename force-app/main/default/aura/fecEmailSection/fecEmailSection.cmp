@@ -12,9 +12,13 @@
     <aura:attribute name="isSending" type="Boolean" default="false" />
     <aura:attribute name="titleReply" type="String" default="Anh/ Chi" />
     <aura:attribute name="replyTemplate" type="String" default="" />
+    <aura:attribute name="replyPrefix" type="String" default="" />
     <aura:attribute name="templateOptions" type="List" default="[]" />
     <aura:attribute name="templateBodies" type="Object" default="{}" />
     <aura:attribute name="templateSubjects" type="Object" default="{}" />
+    <aura:attribute name="templateHeaders" type="Object" default="{}" />
+    <aura:attribute name="templateFooters" type="Object" default="{}" />
+    <aura:attribute name="templateAttachments" type="Object" default="{}" />
     <aura:attribute name="originalSubject" type="String" default="" />
     <aura:attribute name="emailList" type="List" default="[]" />
     <aura:attribute name="isLoading" type="Boolean" default="false" />
@@ -69,16 +73,15 @@
 
             <!-- ===== SERVICE CASE COMPOSE ===== -->
             <aura:if isTrue="{!v.isServiceCase}">
-            <!-- Row: Danh xung + Reply Template (giống Interaction) -->
+            <!-- Row: Title (không bắt buộc) + Reply Template -->
             <div class="field-row">
                 <div class="field-col">
-                    <label class="field-label">
-                        <abbr title="required" class="required">*</abbr> {!$Label.c.FEC_Email_Label_Danh_Xung}
-                    </label>
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
-                        <option value="Anh/ Chi">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
-                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
-                        <option value="Chi">{!$Label.c.FEC_Email_Option_Chi}</option>
+                        <option value="">{!$Label.c.FEC_Email_Option_None}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh}">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Chi}">{!$Label.c.FEC_Email_Option_Chi}</option>
                     </lightning:select>
                 </div>
                 <div class="field-col">
@@ -119,11 +122,8 @@
                     <div class="compose-row">
                         <label class="compose-label">{!$Label.c.FEC_Email_Label_To} <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
-                            <input type="email" class="compose-input" value="{!v.serviceCaseToEmail}"
-                                   onchange="{!c.onServiceCaseToChange}" placeholder="Enter recipient email" />
-                            <aura:if isTrue="{!v.serviceCaseToError}">
-                                <span class="fec-error-text">{!v.serviceCaseToError}</span>
-                            </aura:if>
+                            <input type="text" class="compose-input" value="{!v.serviceCaseToEmail}"
+                                   onchange="{!c.onServiceCaseToChange}" placeholder="Enter recipient email(s)" />
                         </div>
                     </div>
                     <!-- CC -->
@@ -136,7 +136,7 @@
                     </div>
                     <!-- Subject -->
                     <div class="compose-row">
-                        <label class="compose-label">Subject</label>
+                        <label class="compose-label">Subject <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
                             <input type="text" class="compose-input" value="{!v.subject}"
                                    onchange="{!c.onSubjectChange}" placeholder="" />
@@ -181,13 +181,12 @@
             <!-- ===== INTERACTION COMPOSE (không sửa) ===== -->
             <div class="field-row">
                 <div class="field-col">
-                    <label class="field-label">
-                        <abbr title="required" class="required">*</abbr> {!$Label.c.FEC_Email_Label_Danh_Xung}
-                    </label>
+                    <label class="field-label">{!$Label.c.FEC_Email_Label_Danh_Xung}</label>
                     <lightning:select name="titleReply" label="" value="{!v.titleReply}" onchange="{!c.onTitleChange}" class="field-select">
-                        <option value="Anh/ Chi">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
-                        <option value="Anh">{!$Label.c.FEC_Email_Option_Anh}</option>
-                        <option value="Chi">{!$Label.c.FEC_Email_Option_Chi}</option>
+                        <option value="">{!$Label.c.FEC_Email_Option_None}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh_Chi}">{!$Label.c.FEC_Email_Option_Anh_Chi}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Anh}">{!$Label.c.FEC_Email_Option_Anh}</option>
+                        <option value="{!$Label.c.FEC_Email_Option_Chi}">{!$Label.c.FEC_Email_Option_Chi}</option>
                     </lightning:select>
                 </div>
                 <div class="field-col">
@@ -236,7 +235,7 @@
                     </div>
                     <!-- Subject -->
                     <div class="compose-row">
-                        <label class="compose-label">Subject</label>
+                        <label class="compose-label">Subject <abbr title="required" style="color:#c23934">*</abbr></label>
                         <div class="compose-field-wrap">
                             <input type="text" class="compose-input" value="{!v.subject}"
                                    onchange="{!c.onSubjectChange}" placeholder="" />
@@ -408,12 +407,11 @@
                                                 <span class="fec-info-val">{!email.fromName}</span>
                                             </div>
                                             <div class="fec-info-divider"></div>
-                                            <a class="fec-info-link" onclick="{!c.previewEmail}">View Email</a>
+                                            <a class="fec-info-link" data-body="{!email.bodyHtml}" onclick="{!c.previewFeedEmail}">View Email</a>
                                         </div>
                                     </span>
                                 </div>
                                 <div class="feed-body-full">{!email.bodyFull}</div>
-                                <a class="feed-expand-link" onclick="{!c.openCompose}">Expand Email</a>
                                 <div class="feed-actions">
                                     <div class="compose-footer-reply">
                                         <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-subject="{!email.subject}" onclick="{!c.handleReply}" title="Reply">

@@ -38,15 +38,21 @@ public without sharing class FEC_NotificationService {
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
+                   Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
+                   FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__c,
+                   FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
+                   FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
                    FEC_SubCategory__c,
                    FEC_SubCode__c,
+                   FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
@@ -75,11 +81,59 @@ public without sharing class FEC_NotificationService {
 
         if (queueIdToNotifs.isEmpty()) return;
 
+        Set<Id> routedCaseIds = new Set<Id>();
+        for (Case rc : routedCases) {
+            routedCaseIds.add(rc.Id);
+        }
+        Map<Id, Case> caseStageById = routedCaseIds.isEmpty()
+            ? new Map<Id, Case>()
+            : new Map<Id, Case>([
+                  SELECT Id,
+                         FEC_Stage_Name__c,
+                         FEC_Customer_Type__c,
+                         FEC_Product_Type__c,
+                         FEC_Category__c,
+                         FEC_SubCategory__c,
+                         FEC_SubCode__c
+                  FROM Case
+                  WHERE Id IN :routedCaseIds
+              ]);
+
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
         List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
+        List<AutoEmailHistoryMeta> emailHistoryMetas = new List<AutoEmailHistoryMeta>();
 
         // Lấy OrgWide sender 1 lần cho toàn bộ emails
         Id orgWideId = FEC_CommonUltils.getOrgWideEmailIdForNotification();
+
+        // Cache letterhead đã xử lý để tránh query nhiều lần
+        Map<Id, FEC_Enhanced_Letterhead__c> letterheadCache = new Map<Id, FEC_Enhanced_Letterhead__c>();
+
+        // Bulk query ContentDocumentLink cho tất cả template
+        Set<Id> templateIds = new Set<Id>();
+        for (FEC_Notification__c n : notifications) {
+            if (n.FEC_Notification_Template__c != null) templateIds.add(n.FEC_Notification_Template__c);
+        }
+        Map<Id, List<ContentVersion>> templateAttachments = new Map<Id, List<ContentVersion>>();
+        if (!templateIds.isEmpty()) {
+            Map<Id, Id> docToTemplate = new Map<Id, Id>();
+            for (ContentDocumentLink link : [
+                SELECT ContentDocumentId, LinkedEntityId, ContentDocument.LatestPublishedVersionId
+                FROM ContentDocumentLink WHERE LinkedEntityId IN :templateIds
+            ]) {
+                docToTemplate.put(link.ContentDocument.LatestPublishedVersionId, link.LinkedEntityId);
+            }
+            if (!docToTemplate.isEmpty()) {
+                for (ContentVersion cv : [
+                    SELECT Id, Title, FileExtension, VersionData
+                    FROM ContentVersion WHERE Id IN :docToTemplate.keySet()
+                ]) {
+                    Id tId = docToTemplate.get(cv.Id);
+                    if (!templateAttachments.containsKey(tId)) templateAttachments.put(tId, new List<ContentVersion>());
+                    templateAttachments.get(tId).add(cv);
+                }
+            }
+        }
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
@@ -87,7 +141,8 @@ public without sharing class FEC_NotificationService {
             if (candidates == null || candidates.isEmpty()) continue;
 
             for (FEC_Notification__c n : candidates) {
-                Boolean natureOk = matchesNatureOfCase(c, n);
+                Case cNature = caseStageById.get(c.Id);
+                Boolean natureOk = matchesNatureOfCase(cNature != null ? cNature : c, n);
                 Boolean scheduleOk = FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c);
                 System.debug('--- notif=' + n.Id + ' natureOk=' + natureOk + ' scheduleOk=' + scheduleOk);
                 if (!natureOk) continue;
@@ -102,16 +157,74 @@ public without sharing class FEC_NotificationService {
                 if (!templateActive) continue;
 
                 String subject = resolveTemplate(n.FEC_Notification_Template__r.FEC_Subject_Line__c, c);
-                String body = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
+                String bodyContent = String.isNotBlank(n.FEC_Notification_Template__r?.FEC_Body__c)
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c) : '';
 
-                emailsToSend.add(FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, body, orgWideId));
+                // Wrap body với letterhead header/footer nếu có
+                Id lhId = n.FEC_Notification_Template__r?.FEC_Enhanced_Letterhead__c;
+                if (lhId != null) {
+                    if (!letterheadCache.containsKey(lhId)) {
+                        try {
+                            FEC_Enhanced_Letterhead__c lh = [SELECT Id, FEC_Header__c, FEC_Footer__c FROM FEC_Enhanced_Letterhead__c WHERE Id = :lhId LIMIT 1];
+                            letterheadCache.put(lhId, lh);
+                        } catch (Exception e) {
+                            System.debug('FEC Letterhead query failed: ' + e.getMessage());
+                            letterheadCache.put(lhId, null);
+                        }
+                    }
+                    FEC_Enhanced_Letterhead__c lh = letterheadCache.get(lhId);
+                    if (lh != null) {
+                        String header = String.isNotBlank(lh.FEC_Header__c) ? inlineImages(lh.FEC_Header__c) : '';
+                        String footer = String.isNotBlank(lh.FEC_Footer__c) ? inlineImages(lh.FEC_Footer__c) : '';
+                        bodyContent = header + bodyContent + footer;
+                    }
+                }
+
+                Messaging.SingleEmailMessage mail = FEC_CommonUltils.buildEmailWithSender(toAddresses, subject, bodyContent, orgWideId);
+
+                // Attach files từ ContentDocumentLink của template (đã bulk query)
+                Id templateId = n.FEC_Notification_Template__c;
+                if (templateId != null && templateAttachments.containsKey(templateId)) {
+                    List<Messaging.EmailFileAttachment> attachments = new List<Messaging.EmailFileAttachment>();
+                    for (ContentVersion cv : templateAttachments.get(templateId)) {
+                        Messaging.EmailFileAttachment att = new Messaging.EmailFileAttachment();
+                        att.setFileName(cv.Title + (String.isNotBlank(cv.FileExtension) ? '.' + cv.FileExtension : ''));
+                        att.setBody(cv.VersionData);
+                        attachments.add(att);
+                    }
+                    if (!attachments.isEmpty()) mail.setFileAttachments(attachments);
+                }
+
+                emailsToSend.add(mail);
+                Case cStageRow = caseStageById.get(c.Id);
+                String stageNm = cStageRow != null ? cStageRow.FEC_Stage_Name__c : null;
+                String tmplNm = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
+                String chNm = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
+                    ? n.FEC_Notification_Channel__r.Name
+                    : channelEmail;
+                AutoEmailHistoryMeta histMeta = new AutoEmailHistoryMeta();
+                histMeta.caseId = c.Id;
+                histMeta.notificationRuleId = n.Id;
+                histMeta.stageName = stageNm;
+                histMeta.templateName = tmplNm;
+                histMeta.notificationRuleName = n.Name;
+                histMeta.channelName = chNm;
+                histMeta.targetGroup = targetInternal;
+                emailHistoryMetas.add(histMeta);
                 System.debug('--- email queued to=' + toAddresses + ' subject=' + subject);
             }
         }
 
         System.debug('--- [sendEmailNotifications] sending ' + emailsToSend.size() + ' emails');
-        FEC_CommonUltils.sendEmails(emailsToSend);
+        List<Messaging.SendEmailResult> emailResults = new List<Messaging.SendEmailResult>();
+        if (emailsToSend != null && !emailsToSend.isEmpty()) {
+            try {
+                emailResults = Messaging.sendEmail(emailsToSend, false);
+            } catch (Exception e) {
+                System.debug('FEC_NotificationService.sendEmailNotifications: ' + e.getMessage());
+            }
+        }
+        persistAutoEmailNotificationHistory(emailResults, emailHistoryMetas);
     }
 
     /**
@@ -138,8 +251,11 @@ public without sharing class FEC_NotificationService {
 
         List<FEC_Notification__c> notifications = [
             SELECT Id,
+                   Name,
                    FEC_Assigned_to_Queue__c,
                    FEC_Receivers__c,
+                   FEC_Notification_Channel__r.Name,
+                   FEC_Notification_Template__r.Name,
                    FEC_Notification_Template__r.FEC_Subject_Line__c,
                    FEC_Notification_Template__r.FEC_Body__c,
                    FEC_Notification_Template__r.FEC_Active__c,
@@ -147,6 +263,7 @@ public without sharing class FEC_NotificationService {
                    FEC_Category__c,
                    FEC_SubCategory__c,
                    FEC_SubCode__c,
+                   FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
             FROM FEC_Notification__c
@@ -171,6 +288,24 @@ public without sharing class FEC_NotificationService {
         }
 
         if (queueIdToNotifs.isEmpty()) return;
+
+        Set<Id> routedCaseIdsSf = new Set<Id>();
+        for (Case rc2 : routedCases) {
+            routedCaseIdsSf.add(rc2.Id);
+        }
+        Map<Id, Case> caseStageByIdSf = routedCaseIdsSf.isEmpty()
+            ? new Map<Id, Case>()
+            : new Map<Id, Case>([
+                  SELECT Id,
+                         FEC_Stage_Name__c,
+                         FEC_Customer_Type__c,
+                         FEC_Product_Type__c,
+                         FEC_Category__c,
+                         FEC_SubCategory__c,
+                         FEC_SubCode__c
+                  FROM Case
+                  WHERE Id IN :routedCaseIdsSf
+              ]);
 
         // Collect all receiver emails to bulk-query User IDs
         Set<String> allEmails = new Set<String>();
@@ -198,13 +333,15 @@ public without sharing class FEC_NotificationService {
         }
 
         Time nowTime = FEC_CommonUltils.getCurrentLocalTime();
+        List<FEC_Notification_History__c> sfAppHistoryRows = new List<FEC_Notification_History__c>();
 
         for (Case c : routedCases) {
             List<FEC_Notification__c> candidates = queueIdToNotifs.get(c.OwnerId);
             if (candidates == null || candidates.isEmpty()) continue;
 
             for (FEC_Notification__c n : candidates) {
-                if (!matchesNatureOfCase(c, n)) continue;
+                Case cNatureSf = caseStageByIdSf.get(c.Id);
+                if (!matchesNatureOfCase(cNatureSf != null ? cNatureSf : c, n)) continue;
                 if (!FEC_CommonUltils.isWithinSchedule(nowTime, n.FEC_Schedule_Start_Time__c, n.FEC_Schedule_End_Time__c)) continue;
 
                 List<String> receiverEmails = FEC_CommonUltils.parseReceivers(n.FEC_Receivers__c);
@@ -222,9 +359,33 @@ public without sharing class FEC_NotificationService {
                     ? resolveTemplate(n.FEC_Notification_Template__r.FEC_Body__c, c)
                     : '';
 
-                FEC_CommonUltils.notifyUsers(recipientIds, c.Id, null, title, body, notifType);
+                Boolean sentOk = sendCustomAppNotification(recipientIds, c.Id, title, body, notifType);
+                Case cSfSt = caseStageByIdSf.get(c.Id);
+                String stNameSf = cSfSt != null ? cSfSt.FEC_Stage_Name__c : null;
+                String tmplNmSf = n.FEC_Notification_Template__r != null ? n.FEC_Notification_Template__r.Name : null;
+                String chNmSf = (n.FEC_Notification_Channel__r != null && String.isNotBlank(n.FEC_Notification_Channel__r.Name))
+                    ? n.FEC_Notification_Channel__r.Name
+                    : channelSfApp;
+                sfAppHistoryRows.add(
+                    FEC_NotificationHistoryService.buildRow(
+                        c.Id,
+                        n.Id,
+                        stNameSf,
+                        tmplNmSf,
+                        n.Name,
+                        chNmSf,
+                        targetInternal,
+                        FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                        sentOk ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                        sentOk ? null : 'Salesforce App notification send failed',
+                        FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                        null,
+                        System.now()
+                    )
+                );
             }
         }
+        FEC_NotificationHistoryService.insertRows(sfAppHistoryRows);
     }
 
     // ─── Private helpers ────────────────────────────────────────────────────
@@ -282,6 +443,9 @@ public without sharing class FEC_NotificationService {
      * Nếu Notification không set field nào → match all (wildcard).
      */
     private static Boolean matchesNatureOfCase(Case c, FEC_Notification__c n) {
+        if (String.isNotBlank(n.FEC_Customer_Type__c) && !FEC_CommonUltils.notificationCustomerTypeMatchesCase(n.FEC_Customer_Type__c, c.FEC_Customer_Type__c)) {
+            return false;
+        }
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
         if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
@@ -290,14 +454,213 @@ public without sharing class FEC_NotificationService {
     }
 
     /**
+     * Convert rtaImage URLs trong HTML sang base64 inline để email client hiển thị được.
+     * Tự detect org domain nên không cần hardcode URL.
+     */
+    public static String inlineImages(String html) {
+        if (String.isBlank(html)) return html;
+        // Tìm tất cả src="...rtaImage..." và replace bằng base64
+        Pattern p = Pattern.compile('src="(https?://[^"]*rtaImage[^"]*)"');
+        Matcher m = p.matcher(html);
+        String result = html;
+        while (m.find()) {
+            String rawUrl = m.group(1);
+            // Decode HTML entities trong URL (&amp; → &)
+            String url = rawUrl.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>');
+            System.debug('--- [inlineImages] Processing URL: ' + url);
+            try {
+                PageReference pr = new PageReference(url);
+                Blob imageBlob = Test.isRunningTest() ? Blob.valueOf('Mock Image') : pr.getContent();
+                if (imageBlob != null && imageBlob.size() > 0) {
+                    String contentType = 'image/png';
+                    String b64 = EncodingUtil.base64Encode(imageBlob);
+                    String dataUri = 'data:' + contentType + ';base64,' + b64;
+                    result = result.replace(rawUrl, dataUri);
+                    System.debug('--- [inlineImages] SUCCESS: Inlined URL using PageReference: ' + url);
+                } else {
+                    // Không inline được ảnh, giữ nguyên URL gốc trong HTML
+                    System.debug('inlineImages: skip inline for url=' + url + ' | empty blob');
+                }
+            } catch (Exception e) {
+                System.debug('inlineImages failed for url: ' + url + ' | ' + e.getMessage());
+            }
+        }
+        System.debug('--- [inlineImages] Final Result (first 200 chars): ' + result);
+        return result;
+    }
+
+    /**
      * Thay thế placeholder {{FieldName}} trong template bằng giá trị từ Case
      */
     private static String resolveTemplate(String template, Case c) {
         if (String.isBlank(template)) return template;
         try {
-            return FEC_CommonUltils.resolveTemplate(template, c);
+            // Normalize: convert {{{...}}} → {{...}}
+            template = template.replaceAll(FEC_ConstantCommon.PATTERN_TRIPLE_BRACE, '{{$1}}');
+            System.debug('resolveTemplate after triple convert: ' + template.left(100));
+            // Resolve User.* fields từ current user
+            Pattern userPat = Pattern.compile(FEC_ConstantCommon.PATTERN_USER_MERGE_FIELD);
+            Matcher userMat = userPat.matcher(template);
+            if (userMat.find()) {
+                // Collect all User field names needed
+                Set<String> userFieldNames = new Set<String>{'Id'};
+                Matcher userMatCollect = userPat.matcher(template);
+                while (userMatCollect.find()) { userFieldNames.add(userMatCollect.group(1)); }
+                // Dynamic query to get all needed fields
+                String userSoql = 'SELECT ' + String.join(new List<String>(userFieldNames), ', ') + ' FROM User WHERE Id = :userId LIMIT 1';
+                Id userId = UserInfo.getUserId();
+                List<User> users = new List<User>();
+                try { users = Database.query(userSoql); } catch(Exception qEx) {
+                    // Fallback: query standard fields only
+                    users = [SELECT Id, Name, FirstName, LastName, Email, Phone, Title, Department, AboutMe, MobilePhone FROM User WHERE Id = :userId LIMIT 1];
+                }
+                if (!users.isEmpty()) {
+                    User u = users[0];
+                    Matcher userMat2 = userPat.matcher(template);
+                    while (userMat2.find()) {
+                        String fieldName = userMat2.group(1);
+                        String val = '';
+                        try { Object fv = u.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                        template = template.replace('{{User.' + fieldName + '}}', val);
+                    }
+                }
+                System.debug('resolveTemplate after user resolve: ' + template.left(100));
+            }
+            // Re-query Case với dynamic fields từ template
+            if (c != null && c.Id != null && template.contains('{{')) {
+                try {
+                    // Extract tất cả Case.* fields từ template
+                    Pattern casePat = Pattern.compile(FEC_ConstantCommon.PATTERN_CASE_MERGE_FIELD);
+                    Matcher caseMat = casePat.matcher(template);
+                    Set<String> caseFields = new Set<String>{'Id'};
+                    while (caseMat.find()) { caseFields.add(caseMat.group(1)); }
+
+                    // Build dynamic SOQL
+                    String caseSoql = 'SELECT ' + String.join(new List<String>(caseFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1';
+                    Id cId = c.Id;
+                    List<Case> caseList = new List<Case>();
+                    try {
+                        caseList = Database.query(caseSoql);
+                    } catch(Exception qEx) {
+                        // Fallback nếu có field không hợp lệ: query từng field, bỏ qua field lỗi
+                        Set<String> validFields = new Set<String>{'Id'};
+                        for (String f : caseFields) {
+                            if (f == 'Id') continue;
+                            try {
+                                Database.query('SELECT ' + f + ' FROM Case WHERE Id = :cId LIMIT 1');
+                                validFields.add(f);
+                            } catch(Exception fe) {}
+                        }
+                        caseList = Database.query('SELECT ' + String.join(new List<String>(validFields), ', ') + ' FROM Case WHERE Id = :cId LIMIT 1');
+                    }
+
+                    if (!caseList.isEmpty()) {
+                        Case fullCase = caseList[0];
+                        // Replace {{Case.FieldName}} với giá trị thực
+                        Matcher caseMat2 = casePat.matcher(template);
+                        while (caseMat2.find()) {
+                            String fieldName = caseMat2.group(1);
+                            String val = '';
+                            try { Object fv = fullCase.get(fieldName); val = fv != null ? String.valueOf(fv) : ''; } catch(Exception ex) {}
+                            template = template.replace('{{Case.' + fieldName + '}}', val);
+                        }
+                        // Tiếp tục resolve các object khác (FEC_Additional_Info__c, FEC_Customer_History__c...)
+                        template = FEC_CommonUltils.resolveTemplate(template, fullCase);
+                    }
+                    System.debug('resolveTemplate final: ' + template.left(100));
+                    return template;
+                } catch (Exception ex) { System.debug('fullCase query error: ' + ex.getMessage()); }
+            }
+            if (c != null) {
+                return FEC_CommonUltils.resolveTemplate(template, c);
+            }
+            return template;
         } catch (Exception e) {
+            System.debug('resolveTemplate exception: ' + e.getMessage());
             return template;
         }
+    }
+
+    private class AutoEmailHistoryMeta {
+        public Id caseId;
+        public Id notificationRuleId;
+        public String stageName;
+        public String templateName;
+        public String notificationRuleName;
+        public String channelName;
+        public String targetGroup;
+    }
+
+    /**
+     * Gửi Custom Notification (Salesforce App) và trả về true nếu send thành công.
+     */
+    private static Boolean sendCustomAppNotification(
+        Set<String> recipientIds,
+        Id targetRecordId,
+        String title,
+        String body,
+        CustomNotificationType notificationType
+    ) {
+        if (notificationType == null || recipientIds == null || recipientIds.isEmpty()) {
+            return false;
+        }
+        Messaging.CustomNotification notification = new Messaging.CustomNotification();
+        notification.setTitle(title);
+        notification.setBody(body);
+        notification.setNotificationTypeId(notificationType.Id);
+        if (targetRecordId != null) {
+            notification.setTargetId(targetRecordId);
+        }
+        try {
+            notification.send(recipientIds);
+            return true;
+        } catch (Exception e) {
+            System.debug('FEC_NotificationService.sendCustomAppNotification: ' + e.getMessage());
+            return false;
+        }
+    }
+
+    private static void persistAutoEmailNotificationHistory(
+        List<Messaging.SendEmailResult> results,
+        List<AutoEmailHistoryMeta> metas
+    ) {
+        if (metas == null || metas.isEmpty()) {
+            return;
+        }
+        List<FEC_Notification_History__c> rows = new List<FEC_Notification_History__c>();
+        Integer n = metas.size();
+        for (Integer i = 0; i < n; i++) {
+            AutoEmailHistoryMeta m = metas[i];
+            Boolean ok = (results != null && i < results.size()) && results[i].isSuccess();
+            String failMsg = '';
+            if (!ok) {
+                if (results != null && i < results.size()) {
+                    failMsg = FEC_NotificationHistoryService.joinSendEmailErrors(results[i]);
+                } else {
+                    failMsg = 'Messaging.sendEmail returned no result or threw exception';
+                }
+                if (String.isBlank(failMsg)) {
+                    failMsg = 'Email send failed';
+                }
+            }
+            rows.add(
+                FEC_NotificationHistoryService.buildRow(
+                    m.caseId,
+                    m.notificationRuleId,
+                    m.stageName,
+                    m.templateName,
+                    m.notificationRuleName,
+                    m.channelName,
+                    m.targetGroup,
+                    FEC_NotificationHistoryService.SEND_TYPE_AUTO,
+                    ok ? FEC_NotificationHistoryService.SEND_STATUS_SUCCESS : FEC_NotificationHistoryService.SEND_STATUS_FAILURE,
+                    ok ? null : failMsg,
+                    FEC_NotificationHistoryService.SEND_USER_SYSTEM,
+                    null,
+                    System.now()
+                )
+            );
+        }
+        FEC_NotificationHistoryService.insertRows(rows);
     }
 }

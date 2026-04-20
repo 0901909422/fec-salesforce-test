@@ -591,6 +591,7 @@
     <tabs>FEC_KYC__c</tabs>
     <tabs>FEC_Channel__c</tabs>
     <tabs>FEC_Notification_Channel__c</tabs>
+    <tabs>FEC_Notification__c</tabs>
     <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
@@ -643,6 +644,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Notification_Channel__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Notification__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Product_Type__c</tab>

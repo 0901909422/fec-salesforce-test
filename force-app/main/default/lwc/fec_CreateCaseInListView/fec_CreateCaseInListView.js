@@ -8,45 +8,52 @@ import {
 } from "lightning/messageService";
 
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
-
 import CREATE_CASE_INTERNAL from '@salesforce/label/c.FEC_Create_Case_Btn_Label';
+import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
+import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
+import { PROFILE_RELEVANT_DEPTS } from 'c/fec_CommonConst';
 
 export default class Fec_CreateCaseInListView extends NavigationMixin(LightningElement) {
     @api recordId;
 
-    // Modal & state
     isShowModal = true;
     isCreating = false;
     showSkip = true;
-
-    // Selected data
     fullName = '';
     nationalId = '';
-    labels = {
-        CREATE_CASE_INTERNAL
-    }
+    labels = { CREATE_CASE_INTERNAL };
     newCaseId;
     currentTabId;
+    _userProfile;
 
     @wire(IsConsoleNavigation) isConsoleNavigation;
-
-    @wire(MessageContext)
-    messageContext;
+    @wire(MessageContext) messageContext;
+    @wire(getCurrentUserProfileName)
+    wiredProfile({ data }) {
+        if (data) {
+            this._userProfile = data;
+            if (data === PROFILE_RELEVANT_DEPTS) {
+                this.isShowModal = false;
+                this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+            }
+        }
+    }
 
     async connectedCallback() {
-        if (!this.isConsoleNavigation) return;
-        const { tabId } = await getFocusedTabInfo();
-        this.currentTabId = tabId;
+        try {
+            const { tabId } = await getFocusedTabInfo();
+            this.currentTabId = tabId;
+        } catch (e) {}
     }
 
     // ----------------------
     // Utility functions
     // ----------------------
-    // async handleCloseTab() {
-    //     if (!this.isConsoleNavigation) return;
-    //     const { tabId } = await getFocusedTabInfo();
-    //     await closeTab(tabId);
-    // }
+    async handleCloseTab() {
+        if (!this.isConsoleNavigation) return;
+        const { tabId } = await getFocusedTabInfo();
+        await closeTab(tabId);
+    }
 
     async handleCloseModal(event) {
         this.isShowModal = false;
@@ -60,12 +67,46 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
         await this.handleClose();
     }
 
-    async handleCreateSuccess(){
+    async handleCreateSuccess(event) {
         this.isShowModal = false;
-        await this.handleClose();
+        await this.handleCloseButtonCancel();
     }
-    
+
     async handleClose() {
+        this.isShowModal = false;
+
+        let tabToClose = this.currentTabId;
+        if (!tabToClose) {
+            try {
+                const { tabId } = await getFocusedTabInfo();
+                tabToClose = tabId;
+            } catch (e) { }
+        }
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__objectPage',
+            attributes: {
+                objectApiName: 'Case',
+                actionName: 'list'
+            }
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await openTab({
+            recordId: this.newCaseId,
+            focus: true,
+        });
+
+        setTimeout(async () => {
+            await this.handlePublishMessageChanel();
+            if (tabToClose) {
+                await closeTab(tabToClose);
+            }
+        }, 1000);
+    }
+
+    async handleCloseButtonCancel() {
         this.isShowModal = false;
 
         this[NavigationMixin.Navigate]({
@@ -75,19 +116,8 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(LightningE
                 actionName: 'list'
             }
         });
-        
-        // await this.handleCloseTab();
 
-        await openTab({
-            recordId: this.newCaseId,
-            focus: true,
-        });
-        setTimeout(async () => {
-            await this.handlePublishMessageChanel();
-            if (this.currentTabId) {
-                closeTab(this.currentTabId);
-            }
-        }, 3000);
+        await this.handleCloseTab();
     }
 
     showToast(title, message, variant) {
