@@ -1590,6 +1590,7 @@
         <members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</members>
         <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
         <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
+        <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
