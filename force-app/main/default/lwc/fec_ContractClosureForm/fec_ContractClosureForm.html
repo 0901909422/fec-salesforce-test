@@ -74,6 +74,7 @@
                           readonly={closureFieldsReadonly}
                           required={temporaryEmailRequired}
                           message-when-value-missing={validationLabels.completeThisField}
+                          oninput={handleTempEmailChange}
                           onchange={handleTempEmailChange}
                         ></lightning-input>
                       </lightning-layout-item>

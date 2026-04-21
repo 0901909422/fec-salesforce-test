@@ -26,7 +26,8 @@ import {
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
   findPicklistOptionByRaw,
-  isOnlyNumber
+  isOnlyNumber,
+  formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
@@ -190,6 +191,8 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
+
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1057,7 +1060,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.isPhone =
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER;
+                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
+                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1116,6 +1120,12 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 field.editWrapperClass =
                   "edit slds-p-around--x-small";
+
+                // PhuongNT add handle set display value for field "Card Replacement Fee"
+                if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+                  field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
+                  field.readonlyDisplayValue = field.displayValue;
+                }
               });
             });
           });
@@ -1230,6 +1240,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       FIELD_UPDATED_INFO_PHONE_NUMBER,
       FIELD_REGISTERED_PHONE_NUMBER,
       FIELD_CASE_PHONE_NUMBER,
+      FIELD_RECIPIENT_PHONE_NUMBER,
     ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
@@ -1366,7 +1377,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER
+      fieldName === FIELD_CASE_PHONE_NUMBER ||
+      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1441,7 +1453,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER) &&
+        fieldName === FIELD_CASE_PHONE_NUMBER ||
+        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
