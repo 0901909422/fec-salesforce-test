@@ -12,6 +12,52 @@
 		<name>CustomField</name>
 	</types>
     <types>
+		<members>FEC_FetchCollectionDataServiceCallout</members>
+		<members>FEC_FetchCollectionDataService_Test</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_Account_Contract_Number</members>
+		<members>FEC_Address</members>
+		<members>FEC_Agent_ID</members>
+		<members>FEC_Agent_Name</members>
+		<members>FEC_Allocation_Date</members>
+		<members>FEC_Campaign_Name</members>
+		<members>FEC_Communication_Date</members>
+		<members>FEC_Communication_Template</members>
+		<members>FEC_Communication_Type</members>
+		<members>FEC_Contacted_Person</members>
+		<members>FEC_Current_Pool</members>
+		<members>FEC_Current_Sub_Pool</members>
+		<members>FEC_DPD</members>
+		<members>FEC_Due_Reason</members>
+		<members>FEC_Interacted_Agent_ID</members>
+		<members>FEC_Interacted_Code</members>
+		<members>FEC_Interacted_Date</members>
+		<members>FEC_Interacted_Phone</members>
+		<members>FEC_Job</members>
+		<members>FEC_NFUExpiryDate</members>
+		<members>FEC_NFUStartDate</members>
+		<members>FEC_NFUStatus</members>
+		<members>FEC_Next_Interaction_Date</members>
+		<members>FEC_Note</members>
+		<members>FEC_POS</members>
+		<members>FEC_Phone_Number</members>
+		<members>FEC_Promised_Repayment_Amount</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_Interaction_Case_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>fec_CollectionInteractions</members>
+		<members>fec_NFU</members>
+		<members>fec_allocationHistory</members>
+		<members>fec_communicationHistory</members>
+		<name>LightningComponentBundle</name>
+	</types>
+    <types>
         <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
     </types>
