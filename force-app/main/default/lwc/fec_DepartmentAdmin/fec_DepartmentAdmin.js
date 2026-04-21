@@ -49,9 +49,8 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     selectedQueueId;
     selectedQueueName;
     selectedQueueLabelStatus;
-    pageSize = 100; // Number of users to load per page
+    pageSize = parseInt(this.customLabels.CS_OrgChart_Table_UserTable_Page_Size) || 100; // Number of users to load per page
     lastUserId = null; // For keyset pagination
-    sortOrder = 'ASC';
     hasMore = false;
 
     // Datatable columns (Full Name, Username, Email, Profile, Role)
@@ -154,8 +153,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
                 this.dispatchEvent(new ShowToastEvent({ 
                     title: this.customLabels.CS_OrgChart_Text_Save_Waning_Title, 
                     message: this.customLabels.CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected, 
-                    variant: 'warning', 
-                    mode: 'dismissible' 
+                    variant: 'warning'
                 }));
                 return;
             }
@@ -220,12 +218,10 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.curentTeamId = curentTeamId;
         this.selectedQueueId = qid;
         this.isLoadQueue = true;
-        console.log('Selected Queue ID:', qid);
         
         // Get queue name using the new Apex method
         try {
             const queueInfo = await getQueueValidBaseNameOrId({ developerName: null, queueId: qid });
-            console.log('Queue Info:', JSON.stringify(queueInfo));
             this.editTeamQueueRecordId = teamQueueRecordID;
             if (queueInfo && queueInfo.name) {
                 this.selectedQueueName = queueInfo.name;
@@ -284,6 +280,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     }
 
     async loadUsers() {
+        console.log('Page size for user loading:', this.pageSize);
         if (!this.selectedQueueId) return;
         this.isLoadingUsers = true;
         this.usersError = undefined;

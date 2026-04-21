@@ -204,7 +204,7 @@ public with sharing class FEC_TeamQueue {
         List<Group> queuesToDelete = [
             SELECT Id 
             FROM Group 
-            WHERE Type = 'Queue' 
+            WHERE Type = :QUEUE_TYPE 
             AND (DeveloperName = :queueDeveloperName OR Id = :QueueId)
             LIMIT 1
         ];

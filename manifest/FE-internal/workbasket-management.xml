@@ -120,6 +120,8 @@
         <members>CS_OrgChart_Text_EditQueueModal_Input_Queue_Status</members>
         <members>CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder</members>
         <members>CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected</members>
+        <members>CS_OrgChart_Text_Save_Waning_Title</members>
+        <members>CS_OrgChart_Table_UserTable_Page_Size</members>
         <name>CustomLabel</name>
     </types>
     <types>

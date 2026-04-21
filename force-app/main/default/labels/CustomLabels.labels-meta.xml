@@ -13268,6 +13268,13 @@
         <value>warning</value>
     </labels>
     <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Page_Size</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Number of users to load per page</shortDescription>
+        <value>100</value>
+    </labels>
+    <labels>
         <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
         <categories>Label</categories>
         <language>en_US</language>

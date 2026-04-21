@@ -93,6 +93,7 @@ import CS_OrgChart_Text_EditQueueModal_Input_Queue_Status from '@salesforce/labe
 import CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder from '@salesforce/label/c.CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder';
 import CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected from '@salesforce/label/c.CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected';
 import CS_OrgChart_Text_Save_Waning_Title from '@salesforce/label/c.CS_OrgChart_Text_Save_Waning_Title';
+import CS_OrgChart_Table_UserTable_Page_Size from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Page_Size';
 
 export const customLabels = {
     CS_OrgChart_Text_header,
@@ -189,5 +190,6 @@ export const customLabels = {
     CS_OrgChart_Text_EditQueueModal_Input_Queue_Status,
     CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder,
     CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected,
-    CS_OrgChart_Text_Save_Waning_Title
+    CS_OrgChart_Text_Save_Waning_Title,
+    CS_OrgChart_Table_UserTable_Page_Size
 };
