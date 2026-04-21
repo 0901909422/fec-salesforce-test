@@ -3143,8 +3143,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     } catch(error) {
       console.error('Error updating record: ', error);
     }
-=======
->>>>>>> force-app/main/default/lwc/fec_CaseBussiness/fec_CaseBussiness.js
   }
 
   // PhuongNT add handle save data for fields readonly were changed data by another field
