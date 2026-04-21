@@ -3,8 +3,6 @@ import Toast from "lightning/toast";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
-// import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
-import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions"; // tungnm37 thêm: import getTeamQueueOptions cho Manual Assignment
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
@@ -73,9 +71,6 @@ import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
-import FEC_Add_Item_Label from "@salesforce/label/c.FEC_Add_Item_Label";
-import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Remark_Label";
-import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -657,15 +652,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track actionValue;
 
-  // Manual Route to
-  @track showManualForm = false;
-  @track manualRouteItems = [];
-  @track manualTeamValue = '';
-  @track manualQueueValue = '';
-  @track manualRemarkValue = '';
-  @track _allQueues = [];
-  _manualItemCounter = 0;
-
   isModalOpen = false;
   header;
   content;
@@ -676,92 +662,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
-  }
-
-  // tungnm37 thêm: showManualAddItem - chỉ hiện ở Stage 2 (Case đã Submit VÀ Queue tiếp theo là DQ - CS Support)
-  get showManualAddItem() {
-    return (
-      this.showRouteTo &&
-      this.business?.isSubmited === true &&
-      this.business?.nextQueue?.label === 'DQ - CS Support'
-    );
-  }
-
-  get hasManualRouteItems() {
-    return this.manualRouteItems.length > 0;
-  }
-
-  get manualTeamOptions() {
-    const teams = [...new Set(this._allQueues.map(q => q.teamName).filter(Boolean))];
-    return teams.map(t => ({ label: t, value: t }));
-  }
-
-  get manualQueueOptions() {
-    if (!this.manualTeamValue) return [];
-    return this._allQueues
-      .filter(q => q.teamName === this.manualTeamValue)
-      .map(q => ({ label: q.queueName, value: q.queueName }));
-  }
-
-  handleToggleManualForm() {
-    this.showManualForm = !this.showManualForm;
-    if (this.showManualForm && this._allQueues.length === 0) {
-      this._loadQueues();
-    }
-  }
-
-  async _loadQueues() {
-    try {
-      const data = await getTeamQueueOptions();
-      // data: [{teamName, queueName}]
-      this._allQueues = data || [];
-    } catch (e) {
-      console.error('_loadQueues error', e);
-    }
-  }
-
-  handleManualTeamChange(e) {
-    this.manualTeamValue = e.detail.value;
-    this.manualQueueValue = '';
-  }
-
-  handleManualQueueChange(e) {
-    this.manualQueueValue = e.detail.value;
-  }
-
-  handleManualRemarkChange(e) {
-    this.manualRemarkValue = e.detail.value;
-  }
-
-  handleManualConfirm() {
-    if (!this.manualTeamValue || !this.manualQueueValue || !this.manualRemarkValue) {
-      Toast.show({ label: this.customLabel.assignmentRemarkLabel, message: '', variant: 'error' }, this);
-      return;
-    }
-    const queueOption = this.manualQueueOptions.find(o => o.value === this.manualQueueValue);
-    this.manualRouteItems = [
-      ...this.manualRouteItems,
-      {
-        id: ++this._manualItemCounter,
-        teamLabel: this.manualTeamValue,
-        queueName: this.manualQueueValue,
-        queueLabel: this.manualQueueValue,
-        remark: this.manualRemarkValue
-      }
-    ];
-    this.manualTeamValue = '';
-    this.manualQueueValue = '';
-    this.manualRemarkValue = '';
-    this.showManualForm = false;
-  }
-
-  handleRemoveManualItem(e) {
-    const id = parseInt(e.currentTarget.dataset.id, 10);
-    this.manualRouteItems = this.manualRouteItems.filter(item => item.id !== id);
-  }
-
-  @api getManualRouteItems() {
-    return this.manualRouteItems;
   }
 
   get showRevert() {
@@ -798,10 +698,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     decisionLabel: FEC_Decision_Label,
     chooseDecisionLabel: FEC_Choose_Decision_Label,
     subDecisionLabel: FEC_Sub_Decision_Label,
-    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
-    addItemLabel: FEC_Add_Item_Label,
-    assignmentRemarkLabel: FEC_Assignment_Remark_Label,
-    confirmLabel: FEC_Confirm_Label
+    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label
   }
 
   @api getNatureOfCaseId() {
