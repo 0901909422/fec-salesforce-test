@@ -13611,5 +13611,4 @@
         <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
         <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
     </labels>
-
 </CustomLabels>
