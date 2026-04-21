@@ -1,0 +1,123 @@
+import { LightningElement, api, wire, track } from 'lwc';
+import { getRecord } from 'lightning/uiRecordApi';
+import { STR_EMPTY } from 'c/fec_CommonConst';
+import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
+import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+
+import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_NFUStatus from '@salesforce/label/c.FEC_NFUStatus';
+import FEC_NFUStartDate from '@salesforce/label/c.FEC_NFUStartDate';
+import FEC_NFU_Reason from '@salesforce/label/c.FEC_NFU_Reason';
+import FEC_NFU_Code from '@salesforce/label/c.FEC_NFU_Code';
+import FEC_NFUExpiryDate from '@salesforce/label/c.FEC_NFUExpiryDate';
+
+const FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+
+const SECTION_LABEL = 'NFU';
+const EMPTY = '-';
+
+/** Mẫu để test UI (bật Preview trên App Builder) */
+const PREVIEW_NFU = {
+    NFUStatus: 'No',
+    NFUStartDate: '05/01/2024 05:01:10',
+    NFUExpiryDate: '06/01/2024 05:01:10',
+    NFUCode: 'CS_NFU_COMPLAINT30',
+    NFUReason: 'KH khiếu nại và cần xác minh từ các Đơn vị liên quan'
+};
+
+export default class Fec_NFU extends LightningElement {
+    @api recordId;
+
+    /** Bật trên App Builder: bỏ qua API, hiển thị lưới với dữ liệu mẫu (chỉ để test FE). */
+    @api previewSampleData = false;
+
+    _contractNumber;
+    _recordTypeName;
+
+    @track nfuData;
+    @track isLoading = true;
+
+    sectionTitleText = SECTION_LABEL;
+    labelMsgApiError = FEC_MSG_Error_API_Label;
+
+    connectedCallback() {
+        if (this.previewSampleData) {
+            this.nfuData = { ...PREVIEW_NFU };
+            this.isLoading = false;
+        }
+    }
+
+    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+    wiredCase({ data, error }) {
+        if (this.previewSampleData) {
+            this.nfuData = { ...PREVIEW_NFU };
+            this.isLoading = false;
+            return;
+        }
+        if (data) {
+            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
+            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this.loadNfu();
+        } else if (error) {
+            this.nfuData = null;
+            this.isLoading = false;
+        }
+    }
+
+    async loadNfu() {
+        if (this.previewSampleData) {
+            this.nfuData = { ...PREVIEW_NFU };
+            this.isLoading = false;
+            return;
+        }
+
+        this.isLoading = true;
+
+        try {
+            if (!this._contractNumber || !this._recordTypeName) {
+                this.nfuData = null;
+                return;
+            }
+
+            const response = await fetchCollectionData({
+                contractNumber: this._contractNumber,
+                recordType: this._recordTypeName
+            });
+
+            if (!response || response.Success === false || response.NFU == null) {
+                this.nfuData = null;
+            } else {
+                this.nfuData = response.NFU;
+            }
+        } catch (e) {
+            this.nfuData = null;
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    get nfuFields() {
+        const d = this.nfuData;
+        if (!d) {
+            return [];
+        }
+
+        const val = (api) => {
+            const raw = d[api];
+            return raw != null && String(raw).trim() !== STR_EMPTY ? raw : EMPTY;
+        };
+
+        return [
+            this.buildField('NFUStatus', FEC_NFUStatus, val('NFUStatus')),
+            this.buildField('NFUStartDate', FEC_NFUStartDate, val('NFUStartDate')),
+            this.buildField('NFUReason', FEC_NFU_Reason, val('NFUReason')),
+            this.buildField('NFUCode', FEC_NFU_Code, val('NFUCode')),
+            this.buildField('NFUExpiryDate', FEC_NFUExpiryDate, val('NFUExpiryDate'))
+        ];
+    }
+
+    buildField(key, label, value) {
+        return { key, label, value };
+    }
+}

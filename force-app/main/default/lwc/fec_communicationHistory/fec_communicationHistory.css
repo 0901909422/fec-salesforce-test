@@ -1,0 +1,14 @@
+:host {
+    display: block;
+}
+
+.ci-spinner {
+    display: flex;
+    justify-content: center;
+    padding: var(--lwc-spacingSmall, 0.75rem) 0;
+}
+
+.ci-sync-fail {
+    color: #c23934;
+    font-weight: 400;
+}
