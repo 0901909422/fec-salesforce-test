@@ -2,41 +2,11 @@ import { LightningElement, api, track } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getLinkedFilesForCase from "@salesforce/apex/FEC_CaseLinkedFilesController.getLinkedFilesForCase";
-
-function formatBytes(bytes) {
-  const n = Number(bytes);
-  if (!n || n <= 0) {
-    return "0 B";
-  }
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(n) / Math.log(k));
-  return `${(n / k ** i).toFixed(i > 0 ? 1 : 0)} ${sizes[i]}`;
-}
-
-function formatShortDate(dt) {
-  if (!dt) {
-    return "";
-  }
-  try {
-    const d = new Date(dt);
-    return d.toLocaleDateString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-  } catch (e) {
-    return "";
-  }
-}
-
-function extensionBadge(ext) {
-  const e = (ext || "").toLowerCase().replace(/^\./, "");
-  if (!e) {
-    return "FILE";
-  }
-  return e.length <= 4 ? e.toUpperCase() : e.slice(0, 4).toUpperCase();
-}
+import {
+  formatBytes,
+  formatShortDate,
+  extensionBadge
+} from "c/fec_CommonUtils";
 
 export default class Fec_FileUploadCard extends NavigationMixin(
   LightningElement

@@ -125,7 +125,6 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
-const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
@@ -196,8 +195,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-
-const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1165,8 +1162,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.isPhone =
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
-                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
+                  field.apiName === FIELD_CASE_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1345,7 +1341,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       FIELD_UPDATED_INFO_PHONE_NUMBER,
       FIELD_REGISTERED_PHONE_NUMBER,
       FIELD_CASE_PHONE_NUMBER,
-      FIELD_RECIPIENT_PHONE_NUMBER,
     ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
@@ -1482,8 +1477,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER ||
-      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
+      fieldName === FIELD_CASE_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1558,8 +1552,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER ||
-        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
+        fieldName === FIELD_CASE_PHONE_NUMBER) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
@@ -2622,6 +2615,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
               this._revertFecUpdateAddressAfterProcessFailure();
             }
+          }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
               this.publishPinReissueResult("ERROR",msgError);
