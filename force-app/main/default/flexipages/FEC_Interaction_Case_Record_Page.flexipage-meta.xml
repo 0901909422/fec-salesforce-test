@@ -871,6 +871,7 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
+        <name>Facet-a9b3182d-454e-420a-b5bf-15b7522e9754</name>
         <itemInstances>
             <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>

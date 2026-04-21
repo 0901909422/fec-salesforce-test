@@ -511,7 +511,7 @@
                             <value>FEC_Status__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Account_Contract_Number__c</value>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FE_Category_Relevant__c</value>
@@ -602,7 +602,7 @@
                             <value>FEC_Status__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Account_Contract_Number__c</value>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FE_Category_Relevant__c</value>
@@ -1486,6 +1486,12 @@
                 </componentInstanceProperties>
                 <componentName>fec_CaseEditNOC</componentName>
                 <identifier>c_fec_CaseEditNOC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Chathub</componentName>
+                <identifier>c_fec_Chathub</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
