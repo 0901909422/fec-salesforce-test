@@ -114,4 +114,5 @@
 .error-msg {
   grid-column: 1;
   grid-row: 3;
+  color: var(--lwc-colorTextError, #ea001e);
 }
