@@ -24,13 +24,29 @@ public with sharing class FEC_GetUnbilledTransactions {
         try {
  
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+
+            // =====================================================
+            // ENV OVERRIDE 
+            // =====================================================
+            FEC_API_Setting__c systemConfig = FEC_API_Setting__c.getOrgDefaults();
+
+            String accountNumberParam;
+
+            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c)
+                && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+
+                accountNumberParam = FEC_ConstantCommon.CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER;
+
+            } else {
+                accountNumberParam = accountNumber;
+            }
             
             // ================= SOAP REQUEST BODY =================
             String soapBody = buildSoapBody(
                 transId, 
                 requestorId, 
                 dateTimeStr, 
-                accountNumber
+                accountNumberParam
                 );
             
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
