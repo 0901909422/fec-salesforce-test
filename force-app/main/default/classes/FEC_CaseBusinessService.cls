@@ -24,6 +24,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String BLOCK_CARD = 'Block Card';
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
+  public static final String REPLACE_CARD = 'Replace Card';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -69,7 +70,8 @@ public without sharing class FEC_CaseBusinessService {
     OC_001,
     BLOCK_CARD,
     UNBLOCK_CARD,
-    PIN_REISSUE
+    PIN_REISSUE,
+    REPLACE_CARD
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -93,7 +95,8 @@ public without sharing class FEC_CaseBusinessService {
     OC_001 => Method.OC_001,
     BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
-    PIN_REISSUE => Method.PIN_REISSUE
+    PIN_REISSUE => Method.PIN_REISSUE,
+    REPLACE_CARD => Method.REPLACE_CARD
   };
 
   @AuraEnabled
@@ -1310,6 +1313,9 @@ public without sharing class FEC_CaseBusinessService {
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
+        }
+        when REPLACE_CARD {
+          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, '', '', null);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
