@@ -446,6 +446,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track subDecisionOptions = [];
 
   userGroup;
+  newBlockCode;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -663,6 +664,39 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
+  }
+  
+  //linhdev: logic cho phép xử lý action có label hoặc value dựa vào field FEC_Custom_Action_Button_Label__c
+  _resolveRoutingMethodByAction(action) {
+    const customActionLabel = action?.label?.trim();
+    let resolvedMethod;
+    if (
+      [
+        ACTION_ROUTE_TO,
+        ACTION_REVERT,
+        ACTION_TRANSFER,
+        ACTION_UPDATE,
+        ACTION_ESCALATE,
+        ACTION_REJECT,
+        ACTION_RESOLVE,
+        ACTION_CANCEL,
+      ].includes(customActionLabel)
+    ) {
+      resolvedMethod = customActionLabel;
+    } else {
+      resolvedMethod = action?.value;
+    }
+    console.log(
+      "FEC_DEBUG _resolveRoutingMethodByAction",
+      JSON.stringify({
+        actionId: action?.id,
+        actionValue: action?.value,
+        actionLabel: action?.label,
+        customActionLabel,
+        resolvedMethod,
+      }),
+    );
+    return resolvedMethod;
   }
 
   get showRevert() {
@@ -2278,6 +2312,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.processActionMethod = method;
 
+    // PhuongNT add handle get field value
+    this.handleGetFieldValue();
+
     let header;
     let content;
     if (method == ACTION_BLOCK_CARD) {
@@ -2361,12 +2398,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_BLOCK_CARD:
         params = {
           caseId: this.recordId,
+          blockCode: this.newBlockCode,
         };
         break;
 
       case ACTION_UNBLOCK_CARD:
         params = {
           caseId: this.recordId,
+          blockCode: this.newBlockCode,
         };
         break;
 
@@ -2971,6 +3010,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     } catch(error) {
       console.error('Error updating record: ', error);
     }
+  }
+
+  // PhuongNT add handle get field value
+  handleGetFieldValue() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+              this.newBlockCode = field.value;
+            }
+          });
+        });
+      });
+    });
   }
 
 }
