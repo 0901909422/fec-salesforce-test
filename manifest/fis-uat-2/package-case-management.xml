@@ -190,6 +190,7 @@
 	<types>
 		<members>FEC_Interaction_Case_Record_Page</members>
 		<members>FEC_Internal_Case_Record_Page</members>
+		<members>FEC_Assignment_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
