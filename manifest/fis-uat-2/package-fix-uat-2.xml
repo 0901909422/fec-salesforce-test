@@ -453,6 +453,12 @@
         <members>FEC_No_Permission_Msg</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
         <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
+		<members>FEC_MSG_IncorrectPayment_Date_Not_After_Today</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
+        <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -772,6 +778,7 @@
 		<members>Case.FEC_Updated_Info_Permanent_Address__c</members>
 		<members>Case.FEC_Updated_Info_Office_Address__c</members>
 		<members>Case.FEC_Updated_Info_Current_Address__c</members>
+		<members>Case.FEC_Input_Correct_Contract_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
 		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
 		<members>FEC_Customer_History__c.FEC_Received_Date__c</members>
