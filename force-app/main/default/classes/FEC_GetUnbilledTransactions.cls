@@ -32,10 +32,10 @@ public with sharing class FEC_GetUnbilledTransactions {
 
             String accountNumberParam;
 
-            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c)
-                && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+            if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+                && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
 
-                accountNumberParam = FEC_ConstantCommon.CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER;
+                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
 
             } else {
                 accountNumberParam = accountNumber;
