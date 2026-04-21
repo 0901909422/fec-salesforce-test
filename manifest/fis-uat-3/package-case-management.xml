@@ -6,6 +6,7 @@
 		<members>FEC_FastCashCaseController</members>
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
+		<members>FEC_CustomerAdditionalDataController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -33,6 +34,7 @@
 		<members>fec_NFU</members>
 		<members>fec_allocationHistory</members>
 		<members>fec_communicationHistory</members>
+		<members>fec_customerAdditionalData</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
