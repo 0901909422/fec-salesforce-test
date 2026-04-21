@@ -1321,7 +1321,6 @@ public with sharing class FEC_CommonUltils {
     } catch (Exception ex) {
       System.debug('Log Exception Error:' + ex.getMessage());
     }
-  }
 
       public static String buildDatetimeForAPI() {
         Datetime dt = Datetime.now();
@@ -1334,4 +1333,16 @@ public with sharing class FEC_CommonUltils {
         return base + '.' + micro + tz;
     }
     
+  /**
+   * Lấy Profile name của current user
+   */
+  public static String getCurrentUserProfileName() {
+    try {
+      User u = [SELECT Profile.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+      return u.Profile.Name;
+    } catch (Exception e) {
+      System.debug('getCurrentUserProfileName error: ' + e.getMessage());
+      return null;
+    }
+  }
 }

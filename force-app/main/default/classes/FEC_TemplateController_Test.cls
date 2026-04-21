@@ -55,7 +55,7 @@ private class FEC_TemplateController_Test {
         String json = JSON.serialize(newTmpl);
 
         Test.startTest();
-        Id savedId = FEC_TemplateController.saveTemplate(json, null);
+        Id savedId = FEC_TemplateController.saveTemplate(json, null, null);
         Test.stopTest();
 
         Assert.isNotNull(savedId);

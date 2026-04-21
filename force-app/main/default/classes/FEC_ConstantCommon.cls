@@ -143,7 +143,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
     public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
+    public static final String REQUESTOR_VMXVERSION_EMEA_CARD = 'E8V2';
+    public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
+    public static final String REQUESTOR_ORG_EMEA_CARD = '150';
     
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
@@ -473,6 +476,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
     public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
 
+    /** Profile names */
+    public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+
     /** MIME types for file attachments */
     public static final String MIME_OCTET_STREAM = 'application/octet-stream';
     public static final String MIME_PDF = 'application/pdf';
@@ -491,4 +497,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String FILE_TYPE_WORD_X = 'WORD_X';
     public static final String FILE_TYPE_WORD = 'WORD';
 
+    public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
+    public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+
+    public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
+    public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
+    public static final String P_TAG_REGEX = '(?i)</p>';
+    public static final String HTML_TAG_REGEX = '<[^>]+>';
+    public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
+    public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
 }
