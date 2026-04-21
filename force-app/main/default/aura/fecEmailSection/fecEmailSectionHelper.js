@@ -769,6 +769,10 @@
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
                 component.set('v.incomingToAddress', d.fromEmail||'');
+                // tungnm37 thêm: load templates theo fromEmail của Interaction (giống Service Case)
+                if (d.fromEmail) {
+                    self.loadTemplates(component, d.fromEmail);
+                }
             }
         });
         $A.enqueueAction(a1);

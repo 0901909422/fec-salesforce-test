@@ -12688,4 +12688,32 @@
         <shortDescription>CS Support queue name for Manual Assignment check</shortDescription>
         <value>DQ - CS Support</value>
     </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup title</shortDescription>
+        <value>Discard Draft?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup message</shortDescription>
+        <value>Recipients, subject, body text, and attachments are removed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Discard</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard button label</shortDescription>
+        <value>Discard</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Cancel button label (English, not translated)</shortDescription>
+        <value>Cancel</value>
+    </labels>
 </CustomLabels>
