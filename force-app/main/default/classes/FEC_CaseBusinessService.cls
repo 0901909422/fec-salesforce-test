@@ -975,6 +975,158 @@ public without sharing class FEC_CaseBusinessService {
       : (String.isNotBlank(u.Name) ? u.Name : fallbackName);
   }
 
+  //thangtv: Sau Route to / Revert - nếu Owner là User thuộc CS Frontline thì map sang Queue chính của user đó
+  /**
+   * Sau Route to / Revert: nếu Owner không phải Queue mà là User có
+   * FEC_User_Division_Group__c = CS Frontline, gán Owner = Queue có
+   * DeveloperName = User.FEC_Main_Queue__c.
+   */
+  private static Id applyFrontlineMainQueueIfUserOwner(Id ownerId) {
+    if (ownerId == null) {
+      return null;
+    }
+    if (ownerId.getSobjectType() == Group.SObjectType) {
+      List<Group> grp = [
+        SELECT Id, Type
+        FROM Group
+        WHERE Id = :ownerId
+        LIMIT 1
+      ];
+      if (
+        !grp.isEmpty() &&
+        FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type)
+      ) {
+        return ownerId;
+      }
+      return ownerId;
+    }
+    if (ownerId.getSobjectType() != User.SObjectType) {
+      return ownerId;
+    }
+    User u = [
+      SELECT FEC_User_Division_Group__c, FEC_Main_Queue__c
+      FROM User
+      WHERE Id = :ownerId
+      LIMIT 1
+    ];
+    if (
+      !FRONT_LINE.equals(u.FEC_User_Division_Group__c) ||
+      String.isBlank(u.FEC_Main_Queue__c)
+    ) {
+      return ownerId;
+    }
+    List<Group> qs = [
+      SELECT Id
+      FROM Group
+      WHERE
+        Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+        AND DeveloperName = :u.FEC_Main_Queue__c
+      LIMIT 1
+    ];
+    return qs.isEmpty() ? ownerId : qs[0].Id;
+  }
+
+  //thangtv: overload String cho applyFrontlineMainQueueIfUserOwner
+  private static String applyFrontlineMainQueueIfUserOwner(String ownerIdStr) {
+    if (String.isBlank(ownerIdStr)) {
+      return ownerIdStr;
+    }
+    try {
+      Id oid = Id.valueOf(ownerIdStr.trim());
+      Id resolved = applyFrontlineMainQueueIfUserOwner(oid);
+      return resolved != null ? String.valueOf(resolved) : ownerIdStr;
+    } catch (Exception e) {
+      return ownerIdStr;
+    }
+  }
+
+  //thangtv: kiểm tra Owner có phải Queue hay không
+  /** Owner là Queue (Group Type = Queue). */
+  private static Boolean isQueueOwnerId(Id ownerId) {
+    if (ownerId == null || ownerId.getSobjectType() != Group.SObjectType) {
+      return false;
+    }
+    List<Group> grp = [
+      SELECT Type
+      FROM Group
+      WHERE Id = :ownerId
+      LIMIT 1
+    ];
+    return !grp.isEmpty() &&
+      FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type);
+  }
+
+  //thangtv: khi Owner hiện tại là Queue, tra FEC_Routing_Action_History__c để tìm User thực sự
+  /**
+   * Sau Route to / Revert: nếu Owner hiện tại là Queue, tìm trên FEC_Routing_Action_History__c
+   * bản mới nhất có FEC_Original_User_Queue__c = Name của queue đó và cùng Case;
+   * nếu FEC_Updated_User_Queue_ID__c trỏ tới User (không phải Queue) thì gán Owner = User đó.
+   */
+  private static String applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(
+    String caseId,
+    String ownerIdStr
+  ) {
+    if (String.isBlank(caseId) || String.isBlank(ownerIdStr)) {
+      return ownerIdStr;
+    }
+    Id ownerId;
+    try {
+      ownerId = Id.valueOf(ownerIdStr.trim());
+    } catch (Exception e) {
+      return ownerIdStr;
+    }
+    if (!isQueueOwnerId(ownerId)) {
+      return ownerIdStr;
+    }
+    List<Group> q = [
+      SELECT Name
+      FROM Group
+      WHERE Id = :ownerId AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+      LIMIT 1
+    ];
+    if (q.isEmpty() || String.isBlank(q[0].Name)) {
+      return ownerIdStr;
+    }
+    String queueName = q[0].Name.trim();
+
+    List<FEC_Routing_Action_History__c> hist = [
+      SELECT FEC_Updated_User_Queue_ID__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Original_User_Queue__c = :queueName
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    if (hist.isEmpty() || String.isBlank(hist[0].FEC_Updated_User_Queue_ID__c)) {
+      return ownerIdStr;
+    }
+    Id updatedId;
+    try {
+      updatedId = Id.valueOf(hist[0].FEC_Updated_User_Queue_ID__c.trim());
+    } catch (Exception e) {
+      return ownerIdStr;
+    }
+    if (updatedId.getSobjectType() == User.SObjectType) {
+      return String.valueOf(updatedId);
+    }
+    if (updatedId.getSobjectType() == Group.SObjectType) {
+      List<Group> g2 = [
+        SELECT Type
+        FROM Group
+        WHERE Id = :updatedId
+        LIMIT 1
+      ];
+      if (
+        !g2.isEmpty() &&
+        FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(g2[0].Type)
+      ) {
+        return ownerIdStr;
+      }
+    }
+    return ownerIdStr;
+  }
+
   /**
    * Khớp công thức Case.FEC_Final_Status__c (Pending → "Pending - " + FEC_Team__c, không Pending → Status).
    * Dùng cho trigger Change Owner khi cần snapshot từ Status + FEC_Team__c.
@@ -1278,29 +1430,12 @@ public without sharing class FEC_CaseBusinessService {
       );
       Id currentOwnerId = updatedCase.OwnerId;
 
-      List<String> validActionlst = new List<String>{ REVERT };
-
-      List<FEC_Routing_Action_History__c> historylst = [
-        SELECT
-          Id,
-          FEC_Previous_Stage__c,
-          FEC_Routing_Action__c,
-          FEC_Perform_User__c,
-          FEC_Next_Stage__c,
-          CreatedDate
-        FROM FEC_Routing_Action_History__c
-        WHERE
-          FEC_Routing_Action__c IN :validActionlst
-          AND FEC_Case__c = :caseId
-        ORDER BY CreatedDate DESC, Id DESC
-        LIMIT 1
-      ];
-
-      if (!historylst.isEmpty()) {
-        if (REVERT.equals(historylst.get(0).FEC_Routing_Action__c)) {
-          queueId = historylst.get(0).FEC_Perform_User__c;
-        }
-      }
+      //thangtv: fix bug - không ghi đè queueId từ lịch sử Revert cũ
+      // Truy vấn "Routing History mới nhất có action = Revert" luôn trả về lần revert gần nhất
+      // trong cả lifecycle Case (vd sau S2→S1 revert), kể cả khi đã có Route to mới hơn (S1→S2).
+      // Gán queueId = FEC_Perform_User__c của revert đó làm mọi Route to sau đó sai Owner
+      // (thường trùng user hiện tại → đổi Stage nhưng không đổi Owner).
+      // queueId đúng = FEC_Next_Queue__c theo stage hiện tại (getByCase / LWC).
 
       List<FEC_Stage_Change__c> changelst = [
         SELECT
@@ -1340,6 +1475,11 @@ public without sharing class FEC_CaseBusinessService {
 
         cloneMasterDataSetting(tgt.Id, natureOfCaseId);
       }
+
+      //thangtv: nếu Owner là Frontline User thì map sang Queue chính
+      queueId = applyFrontlineMainQueueIfUserOwner(queueId);
+      //thangtv: fallback Queue->latest history updated user mapping
+      queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
 
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
@@ -2003,6 +2143,20 @@ public without sharing class FEC_CaseBusinessService {
               history.FEC_Perform_User__r,
               history.FEC_Perform_User__r?.Name
             );
+          }
+
+          //thangtv: resolve owner sau revert - Frontline User → map sang Queue chính
+          queueId = applyFrontlineMainQueueIfUserOwner(queueId);
+          //thangtv: fallback Queue->latest history updated user mapping
+          queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+          if (String.isNotBlank(queueId)) {
+            try {
+              nextUser = resolveRoutingHistoryOwnerLabel(
+                Id.valueOf(queueId.trim()),
+                null
+              );
+            } catch (Exception ignore) {
+            }
           }
 
           List<User> userlst = [

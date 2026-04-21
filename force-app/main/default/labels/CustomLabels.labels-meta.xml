@@ -11584,6 +11584,14 @@
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</shortDescription>
+        <value>Tổng số tiền điều chỉnh phải bằng số tiền dư</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
