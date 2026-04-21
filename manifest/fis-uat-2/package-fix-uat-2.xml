@@ -688,6 +688,7 @@
 		<members>FEC_Log__c</members>
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
+		<members>FEC_Block_Code_Matrix__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
