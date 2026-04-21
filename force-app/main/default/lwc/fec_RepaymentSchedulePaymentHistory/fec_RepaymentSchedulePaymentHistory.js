@@ -55,6 +55,22 @@ const isPaymentHistoryMeaningfulRow = (row) => {
 
 import { toSortDateStr } from 'c/fec_CommonUtils';
 
+/** Currency(18,0): phân cách hàng nghìn, không thập phân. VD: 8,200,000 */
+const formatCurrency0 = (value) => {
+    if (value == null || value === '' || value === '-') return '-';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '-';
+    return Math.round(num).toLocaleString('en-US');
+};
+
+/** Currency(16,2): phân cách hàng nghìn, 2 thập phân. VD: 5,526,000.00 */
+const formatCurrency2 = (value) => {
+    if (value == null || value === '' || value === '-') return '-';
+    const num = Number(value);
+    if (Number.isNaN(num)) return '-';
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
  * Repayment Schedule, Payment History, Real-Time Payment, Repayment Schedule & Payment History
@@ -105,17 +121,17 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get repaymentScheduleTotalInstallment() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalInstallmentAmount != null && t.totalInstallmentAmount !== '' ? t.totalInstallmentAmount : '-';
+        return formatCurrency0(t.totalInstallmentAmount);
     }
 
     get repaymentScheduleTotalPrincipal() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalPrincipal != null && t.totalPrincipal !== '' ? t.totalPrincipal : '-';
+        return formatCurrency0(t.totalPrincipal);
     }
 
     get repaymentScheduleTotalInterest() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalInterest != null && t.totalInterest !== '' ? t.totalInterest : '-';
+        return formatCurrency0(t.totalInterest);
     }
 
     /* Repayment Schedule bảng – 12 dòng/trang, sort theo Installment Due Date (cũ → mới). */
@@ -168,7 +184,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     /* Payment History: Total Payment Amount (màu đỏ) + bảng 6 cột */
     get paymentHistoryTotalAmount() {
         const totals = this.sectionData.paymentHistoryTotals || {};
-        return totals.totalPaymentAmount != null && totals.totalPaymentAmount !== '' ? totals.totalPaymentAmount : '-';
+        return formatCurrency2(totals.totalPaymentAmount);
     }
 
     /* Payment History bảng – related-list-addresses-paging */
@@ -212,7 +228,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             if (ta == null && tb != null) return 1;
             if (ta != null && tb == null) return -1;
             if (ta == null && tb == null) return 0;
-            return ta - tb;
+            return tb - ta;
         });
 
         return sorted.map((row, i) => {
@@ -249,7 +265,29 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get realTimePaymentPagingRecords() {
         const data = Array.isArray(this.sectionData.realTimePaymentTable) ? this.sectionData.realTimePaymentTable : [];
-        return data.map((row, i) => ({
+        const toTime = (value) => {
+            if (!value || value === '-') return null;
+            const s = String(value).trim();
+            const parts = s.split('/');
+            if (parts.length === 3) {
+                const d = Number(parts[0]);
+                const m = Number(parts[1]);
+                const y = Number(parts[2]);
+                const t = new Date(y, m - 1, d).getTime();
+                return Number.isNaN(t) ? null : t;
+            }
+            const t = Date.parse(s);
+            return Number.isNaN(t) ? null : t;
+        };
+        const sorted = [...data].sort((a, b) => {
+            const ta = toTime(a?.paymentDate);
+            const tb = toTime(b?.paymentDate);
+            if (ta == null && tb != null) return 1;
+            if (ta != null && tb == null) return -1;
+            if (ta == null && tb == null) return 0;
+            return tb - ta;
+        });
+        return sorted.map((row, i) => ({
             Id: 'rt-' + (row.rowIndex != null ? row.rowIndex : i + 1),
             ...row,
         }));
