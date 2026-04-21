@@ -130,11 +130,8 @@ public without sharing class FEC_CheckEligibleCallout {
             reqWrapper.headers.put('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
             reqWrapper.headers.put('TransID', generateTransactionId());
             // API Gateway (apigw): consumer_name — giá trị trên Custom Metadata FEC_CheckEligible.FEC_Consumer_Name__c (dùng get() để deploy class trước field vẫn compile)
-            if (apiConfig != null) {
-                String consumerName = (String) apiConfig.get('FEC_Consumer_Name__c');
-                if (String.isNotBlank(consumerName)) {
-                    reqWrapper.headers.put('consumer_name', consumerName.trim());
-                }
+            if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Consumer_Name__c)) {
+                reqWrapper.headers.put('consumer_name', apiConfig.FEC_Consumer_Name__c.trim());
             }
 
             String requestBodyJson = JSON.serialize(reqWrapper);
