@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-	
+	   <types>
+        <members>fecNewRelevantTicketAction</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+
+    <types>
+        <members>FEC_InteractionInforHandler</members>
+        <members>FEC_RelevantTicketController</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <members>FEC_Internal_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <types>
+        <members>CustomLabels</members>
+        <name>CustomLabels</name>
+    </types>
+
+    <types>
+        <members>fecInteractionChatConversations</members>
+        <members>fecInteractionChatInfo</members>
+        <name>LightningComponentBundle</name>
+    </types>
 	<version>66.0</version>
 </Package>
