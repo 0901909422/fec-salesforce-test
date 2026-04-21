@@ -107,6 +107,15 @@
         <members>FEC_CS_Unit_Head_of_CS_Support_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Unit_Head_of_Customer_Care_Interaction_Case_Service_Case</members>
         <members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Collections_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Contract_Processing_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Credit_Assessment_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Direct_Sales_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Internal_Audit_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Payment_User_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
+		<members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <name>PermissionSet</name>
     </types>
