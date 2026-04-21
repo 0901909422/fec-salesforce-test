@@ -3,6 +3,8 @@ import Toast from "lightning/toast";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
+// import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
+import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions"; // tungnm37 thêm: import getTeamQueueOptions cho Manual Assignment
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
@@ -124,6 +126,7 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
@@ -194,8 +197,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-
-const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -295,6 +296,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
   fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
+  // DungLT — đăng ký LWC upload file động (master data)
   fec_FileUploadCard: () => import('c/fec_FileUploadCard')
 };
 
@@ -403,7 +405,7 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-      typeof o.fecMasterDataSettingIsEdit === "boolean"
+        typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
   };
@@ -657,6 +659,15 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track actionValue;
 
+  // Manual Route to
+  @track showManualForm = false;
+  @track manualRouteItems = [];
+  @track manualTeamValue = '';
+  @track manualQueueValue = '';
+  @track manualRemarkValue = '';
+  @track _allQueues = [];
+  _manualItemCounter = 0;
+
   isModalOpen = false;
   header;
   content;
@@ -667,6 +678,92 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
+  }
+
+  // tungnm37 thêm: showManualAddItem - chỉ hiện ở Stage 2 (Case đã Submit VÀ Queue tiếp theo là DQ - CS Support)
+  get showManualAddItem() {
+    return (
+      this.showRouteTo &&
+      this.business?.isSubmited === true &&
+      this.business?.nextQueue?.label === 'DQ - CS Support'
+    );
+  }
+
+  get hasManualRouteItems() {
+    return this.manualRouteItems.length > 0;
+  }
+
+  get manualTeamOptions() {
+    const teams = [...new Set(this._allQueues.map(q => q.teamName).filter(Boolean))];
+    return teams.map(t => ({ label: t, value: t }));
+  }
+
+  get manualQueueOptions() {
+    if (!this.manualTeamValue) return [];
+    return this._allQueues
+      .filter(q => q.teamName === this.manualTeamValue)
+      .map(q => ({ label: q.queueName, value: q.queueName }));
+  }
+
+  handleToggleManualForm() {
+    this.showManualForm = !this.showManualForm;
+    if (this.showManualForm && this._allQueues.length === 0) {
+      this._loadQueues();
+    }
+  }
+
+  async _loadQueues() {
+    try {
+      const data = await getTeamQueueOptions();
+      // data: [{teamName, queueName}]
+      this._allQueues = data || [];
+    } catch (e) {
+      console.error('_loadQueues error', e);
+    }
+  }
+
+  handleManualTeamChange(e) {
+    this.manualTeamValue = e.detail.value;
+    this.manualQueueValue = '';
+  }
+
+  handleManualQueueChange(e) {
+    this.manualQueueValue = e.detail.value;
+  }
+
+  handleManualRemarkChange(e) {
+    this.manualRemarkValue = e.detail.value;
+  }
+
+  handleManualConfirm() {
+    if (!this.manualTeamValue || !this.manualQueueValue || !this.manualRemarkValue) {
+      Toast.show({ label: this.customLabel.assignmentRemarkLabel, message: '', variant: 'error' }, this);
+      return;
+    }
+    const queueOption = this.manualQueueOptions.find(o => o.value === this.manualQueueValue);
+    this.manualRouteItems = [
+      ...this.manualRouteItems,
+      {
+        id: ++this._manualItemCounter,
+        teamLabel: this.manualTeamValue,
+        queueName: this.manualQueueValue,
+        queueLabel: this.manualQueueValue,
+        remark: this.manualRemarkValue
+      }
+    ];
+    this.manualTeamValue = '';
+    this.manualQueueValue = '';
+    this.manualRemarkValue = '';
+    this.showManualForm = false;
+  }
+
+  handleRemoveManualItem(e) {
+    const id = parseInt(e.currentTarget.dataset.id, 10);
+    this.manualRouteItems = this.manualRouteItems.filter(item => item.id !== id);
+  }
+
+  @api getManualRouteItems() {
+    return this.manualRouteItems;
   }
 
   get showRevert() {
@@ -2105,6 +2202,28 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * DungLT — Đẩy file từ các slot `fec_FileUploadCard` lên Case (ContentVersion) khi Save & Close / Submit.
+   */
+  _uploadFecFileUploadCardsIfApplicable() {
+    const wrappers = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_FileUploadCard"]',
+    );
+    if (!wrappers || !wrappers.length) {
+      return Promise.resolve();
+    }
+    const promises = [];
+    wrappers.forEach((wrap) => {
+      const el =
+        wrap.querySelector("c-fec_-file-upload-card") ||
+        wrap.querySelector("c-fec-file-upload-card");
+      if (el && typeof el.flushUploadsToCase === "function") {
+        promises.push(Promise.resolve(el.flushUploadsToCase()));
+      }
+    });
+    return promises.length ? Promise.all(promises) : Promise.resolve();
+  }
+
+  /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
@@ -2138,6 +2257,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
 
     if (total === 0) {
+      // DungLT — flush upload file trước khi lưu form
       return this._uploadFecFileUploadCardsIfApplicable()
         .then(() => afterForms())
         .then(() => {
@@ -2156,6 +2276,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         item.submit();
       });
     })
+      // DungLT — flush upload file sau khi submit record forms
       .then(() => this._uploadFecFileUploadCardsIfApplicable())
       .then(() => {
         afterForms();
@@ -2196,10 +2317,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._refreshFecUpdateAddressAfterProcessSuccess();
     }
 
-    // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
-    // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
-
     await this._submitFormsPromise();
+    // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
 
     // PhuongNT add handle save data for fields readonly were changed data by another field
@@ -2295,7 +2414,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (method === ACTION_ADDRESS_UPDATE) {
       let processObj = this.business.processActionlst?.find(p => p.value === ACTION_ADDRESS_UPDATE);
       if (processObj && processObj.disabled) {
-        return;
+        return; // Prevent further action if already disabled
+      }
+      this.addressUpdateClickCount++;
+      if (this.addressUpdateClickCount >= 3) {
+        this.business.processActionlst = this.business.processActionlst.map(
+          (process) => {
+            if (process.value === ACTION_ADDRESS_UPDATE) {
+              return { ...process, disabled: true };
+            }
+            return process;
+          }
+        );
+        // Force LWC reactivity to re-render the button as disabled
+        this.business = { ...this.business };
       }
     }
 
@@ -2487,6 +2619,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
 
         } else {
+          this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
           // PhuongNT add set msg error for call api
@@ -2501,13 +2634,8 @@ export default class Fec_CaseBussiness extends LightningElement {
               msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
             }
           }
-          if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
-            this._handleAddressUpdateFail();
-          } else {
-            this.processActionMsg = msgError;
-            if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-              this._revertFecUpdateAddressAfterProcessFailure();
-            }
+          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+            this._revertFecUpdateAddressAfterProcessFailure();
           }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
@@ -2531,13 +2659,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
-        if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
-          this._handleAddressUpdateFail();
-        } else {
-          this.processActionMsg = msgError;
-          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-            this._revertFecUpdateAddressAfterProcessFailure();
-          }
+        this.processActionMsg = msgError;
+        if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+          this._revertFecUpdateAddressAfterProcessFailure();
         }
       })
       .finally(() => {
@@ -2545,22 +2669,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
   }
 
-  _handleAddressUpdateFail() {
-    this.addressUpdateFailCount++;
-    if (this.addressUpdateFailCount >= 3) {
-      this.business.processActionlst = (this.business.processActionlst || []).filter(
-        (p) => p.value !== ACTION_ADDRESS_UPDATE
-      );
-      this.business = { ...this.business };
-      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL;
-      this._revertFecUpdateAddressAfterProcessFailure();
-    } else {
-      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR;
-    }
-  }
-
   _getFecUpdateAddressCmp() {
-    const host = this._findFecUpdateAddressHostEl();
+    const host = this.template.querySelector(
+      '[data-fec-lwc="fec_UpdateAddress"]',
+    );
     if (!host) {
       return null;
     }
@@ -2850,28 +2962,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
-   * Đẩy file từ các slot `fec_FileUploadCard` (chế độ local) lên Case khi Save & Close / Submit — nếu LWC expose flush.
-   */
-  _uploadFecFileUploadCardsIfApplicable() {
-    const wrappers = this.template.querySelectorAll(
-      '[data-fec-lwc="fec_FileUploadCard"]',
-    );
-    if (!wrappers || !wrappers.length) {
-      return Promise.resolve();
-    }
-    const promises = [];
-    wrappers.forEach((wrap) => {
-      const el =
-        wrap.querySelector("c-fec_-file-upload-card") ||
-        wrap.querySelector("c-fec-file-upload-card");
-      if (el && typeof el.flushUploadsToCase === "function") {
-        promises.push(Promise.resolve(el.flushUploadsToCase()));
-      }
-    });
-    return promises.length ? Promise.all(promises) : Promise.resolve();
-  }
-
-  /**
    * Tìm mọi instance fec_FileUploadCard (tag có thể là c-fec_-file-upload-card hoặc c-fec-file-upload-card tùy runtime).
    */
   _queryFecFileUploadCardElements() {
@@ -2891,7 +2981,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     return out;
   }
 
-  /** Sau khi dynamic LWC (lwc:is) mount — reload danh sách file trên fec_FileUploadCard. */
+  /** DungLT — Sau khi dynamic LWC (lwc:is) mount — reload danh sách file trên fec_FileUploadCard. */
   _scheduleRefreshFileUploadCards() {
     const run = () => {
       this._queryFecFileUploadCardElements().forEach((el) => {
@@ -2904,6 +2994,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     setTimeout(run, 400);
   }
 
+  /** DungLT — gọi từ parent (vd. Case Detail) sau submit để refresh danh sách file. */
   @api
   refreshFileUploadCards() {
     this._scheduleRefreshFileUploadCards();
@@ -3056,5 +3147,4 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error('Error updating record: ', error);
     }
   }
-
 }
