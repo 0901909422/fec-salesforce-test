@@ -46,5 +46,43 @@
 		<members>fec_communicationHistory</members>
 		<name>LightningComponentBundle</name>
 	</types>
+    <types>
+        <members>fecNewRelevantTicketAction</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+
+    <types>
+        <members>FEC_InteractionInforHandler</members>
+        <members>FEC_RelevantTicketController</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <members>FEC_Internal_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <types>
+        <members>FEC_RelevantTicket_Title</members>
+        <members>FEC_RelevantTicket_Section_Information</members>
+        <members>FEC_RelevantTicket_Field_Interaction</members>
+        <members>FEC_RelevantTicket_Search_Placeholder</members>
+        <members>FEC_RelevantTicket_No_Results</members>
+        <members>FEC_RelevantTicket_Select_Required</members>
+        <members>FEC_RelevantTicket_Case_Not_Found</members>
+        <members>FEC_RelevantTicket_Save_Error</members>
+        <members>FEC_RelevantTicket_Save_Success</members>
+        <members>FEC_Chat_Conversations_Label</members>
+        <members>FEC_Chat_History_Label</members>
+        <members>FEC_Chat_Save_Failed</members>
+        <name>CustomLabel</name>
+    </types>
+
+    <types>
+        <members>fecInteractionChatConversations</members>
+        <members>fecInteractionChatInfo</members>
+        <name>LightningComponentBundle</name>
+    </types>
 	<version>66.0</version>
 </Package>

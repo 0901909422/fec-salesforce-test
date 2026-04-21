@@ -133,6 +133,10 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get isNotRelevantDepts() {
+    return this._userProfile !== PROFILE_RELEVANT_DEPTS;
+  }
+
   // ===============================
   // GETTERS
   // ===============================

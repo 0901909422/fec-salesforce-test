@@ -67,10 +67,14 @@
                     >
                       <lightning-layout-item size="6" padding="around-small">
                         <lightning-input
+                          data-fec-field="temporaryEmail"
                           type="email"
                           label={customLabel.newTempEmail}
                           value={temporaryEmail}
                           readonly={closureFieldsReadonly}
+                          required={temporaryEmailRequired}
+                          message-when-value-missing={validationLabels.completeThisField}
+                          oninput={handleTempEmailChange}
                           onchange={handleTempEmailChange}
                         ></lightning-input>
                       </lightning-layout-item>
@@ -97,6 +101,7 @@
             <template if:true={showAddressSection}>
               <lightning-layout-item size="6" padding="around-small">
                 <lightning-input
+                  data-fec-field="recipientName"
                   type="text"
                   label={customLabel.recipientName}
                   value={recipientName}
