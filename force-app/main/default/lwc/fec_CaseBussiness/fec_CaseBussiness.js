@@ -71,6 +71,7 @@ import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
+
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -190,6 +191,7 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1059,7 +1061,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.isPhone =
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER;
+                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
+                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1238,6 +1241,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       FIELD_UPDATED_INFO_PHONE_NUMBER,
       FIELD_REGISTERED_PHONE_NUMBER,
       FIELD_CASE_PHONE_NUMBER,
+      FIELD_RECIPIENT_PHONE_NUMBER,
     ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
@@ -1374,7 +1378,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER
+      fieldName === FIELD_CASE_PHONE_NUMBER ||
+      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1449,7 +1454,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER) &&
+        fieldName === FIELD_CASE_PHONE_NUMBER ||
+        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
