@@ -1,10 +1,12 @@
 /**
- * Callout: Disb_Status_Inquiry / GetDisbInfoByAcct (JSON envelope: headers, parameters, body).
+ * Callout: Disb_Status_Inquiry / GetDisbInfoByAcct (JSON body + HTTP headers).
  * Maps response Applications[].Application to FEC_Pending_Disbursement__c fields at integration layer.
  */
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
+    private static final Integer DEFAULT_AGE_OF_RECORDS = 30;
+    private static final Integer REQUEST_TIMEOUT_MS = 30000;
 
     private static ResponseLog responseLog;
 
@@ -153,37 +155,18 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         String accountNumber,
         Integer ageOfRecords
     ) {
-        Map<String, Object> headerMap = new Map<String, Object>{
-            'TransID' => transId,
-            'DateTime' => dateTimeHeader,
-            'RequestorID' => requestorId,
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+        Integer resolvedAgeOfRecords = ageOfRecords == null ? DEFAULT_AGE_OF_RECORDS : ageOfRecords;
+        Map<String, Object> bodyMap = new Map<String, Object>{
+            'AgeOfRecords' => resolvedAgeOfRecords,
+            'AccountNumber' => accountNumber
         };
-        Map<String, Object> bodyMap;
-        if (ageOfRecords != null) {
-            bodyMap = new Map<String, Object>{
-                'AgeOfRecords' => ageOfRecords,
-                'AccountNumber' => accountNumber
-            };
-        } else {
-            bodyMap = new Map<String, Object>{
-                'AccountNumber' => accountNumber
-            };
-        }
-        Map<String, Object> root = new Map<String, Object>{
-            'headers' => headerMap,
-            'parameters' => new List<Object>(),
-            'body' => bodyMap
-        };
-        return JSON.serialize(root);
+        return JSON.serialize(bodyMap);
     }
 
     private static String resolveDisbInfoEndpoint() {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-        return apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_DISB_INFO_BY_ACCT_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        return apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
     }
 
     private static GetDisbInfoByAcctResponse disbErrorResponse(String errorCode, String errorMessage) {
@@ -200,21 +183,17 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         String requestorId
     ) {
         String endpoint = resolveDisbInfoEndpoint();
-
-        Map<String, String> httpHeaders = new Map<String, String>{
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            'TransID' => transId,
-            'DateTime' => dateTimeHeader,
-            'RequestorID' => requestorId
-        };
-
-        return FEC_CommonUltils.calloutApiWithHeaders(
-            endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            httpHeaders,
-            jsonPayload
-        );
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(endpoint);
+        request.setMethod(FEC_ConstantCommon.API_METHOD_POST);
+        request.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
+        request.setHeader('TransID', transId);
+        request.setHeader('RequestorID', requestorId);
+        request.setHeader('DateTime', dateTimeHeader);
+        request.setTimeout(REQUEST_TIMEOUT_MS);
+        request.setBody(jsonPayload);
+        Http http = new Http();
+        return http.send(request);
     }
 
     public static GetDisbInfoByAcctResponse parseResponseBody(String responseBody, Integer httpStatus) {
