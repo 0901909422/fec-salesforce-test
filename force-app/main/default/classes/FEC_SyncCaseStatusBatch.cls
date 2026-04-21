@@ -17,14 +17,6 @@ public without sharing class FEC_SyncCaseStatusBatch implements Database.Batchab
             }
         }
 
-        if (statusNames.isEmpty()
-            || !Schema.sObjectType.FEC_Case_Status__c.isAccessible()
-            || !Schema.sObjectType.FEC_Case_Status__c.fields.Name.isAccessible()
-            || !Schema.sObjectType.FEC_Case_Status__c.isCreateable()
-            || !Schema.sObjectType.FEC_Case_Status__c.fields.Name.isCreateable()) {
-            return;
-        }
-
         Map<String, FEC_Case_Status__c> existingByName = new Map<String, FEC_Case_Status__c>();
         for (FEC_Case_Status__c statusRec : [
             SELECT Id, Name
