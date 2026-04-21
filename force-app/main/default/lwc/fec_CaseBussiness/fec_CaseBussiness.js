@@ -674,7 +674,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         ACTION_ESCALATE,
         ACTION_REJECT,
         ACTION_RESOLVE,
-        ACTION_RECALL,
         ACTION_CANCEL,
         ACTION_REOPEN,
       ].includes(customActionLabel)
