@@ -8,7 +8,9 @@ public with sharing class FEC_CardLockUnLockController {
                     FEC_Account_Number__c,
                     FEC_New_Block_Code__c,
                     FEC_Account_or_Contract__r.FEC_Card_Number__c,
-                    FEC_Process_Action_Count__c
+                    FEC_Process_Action_Count__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -109,7 +111,7 @@ public with sharing class FEC_CardLockUnLockController {
                     }
                 }
             }
-            if (!result.isSuccess) {
+            if (result.isSuccess == null || !result.isSuccess) {
                 result.currentCardStatus = 'Not Blocked';
             }
         } catch (Exception ex) {
