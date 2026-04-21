@@ -2615,9 +2615,13 @@ export default class Fec_CaseBussiness extends LightningElement {
               msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
             }
           }
-          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-            this._revertFecUpdateAddressAfterProcessFailure();
-          }
+          if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+            this._handleAddressUpdateFail();
+          } else {
+            this.processActionMsg = msgError;
+            if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+              this._revertFecUpdateAddressAfterProcessFailure();
+            }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
               this.publishPinReissueResult("ERROR",msgError);
