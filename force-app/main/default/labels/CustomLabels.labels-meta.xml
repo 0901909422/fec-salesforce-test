@@ -4219,7 +4219,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
-        <value>Other Card</value>
+        <value>Other Cards</value>
     </labels>
     <labels>
         <fullName>FEC_Outcome_Code_Label</fullName>
@@ -13537,5 +13537,110 @@
         <protected>false</protected>
         <shortDescription>No permission toast message</shortDescription>
         <value>Bạn không có quyền thực hiện thao tác này.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_File_Too_Large_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - File too large toast title</shortDescription>
+        <value>File too large</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_File_Too_Large_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - File too large toast message</shortDescription>
+        <value>exceeds the 25 MB limit.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Image_Too_Large_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Image too large toast title</shortDescription>
+        <value>Image too large</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Image_Too_Large_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Image too large toast message</shortDescription>
+        <value>Please use an image smaller than 3MB or use Web Image URL instead.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Subject_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Subject required error</shortDescription>
+        <value>Subject is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Body_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Body required error</shortDescription>
+        <value>Email body is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_We_Hit_A_Snag</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - We hit a snag toast title</shortDescription>
+        <value>We hit a snag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Invalid_Format_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Invalid format toast title</shortDescription>
+        <value>Invalid format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Send success toast title</shortDescription>
+        <value>Thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Success_Sent_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Send success toast message</shortDescription>
+        <value>Email was sent.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_Support_Queue_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS Support queue name for Manual Assignment check</shortDescription>
+        <value>DQ - CS Support</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup title</shortDescription>
+        <value>Discard Draft?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup message</shortDescription>
+        <value>Recipients, subject, body text, and attachments are removed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Discard</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard button label</shortDescription>
+        <value>Discard</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Cancel button label (English, not translated)</shortDescription>
+        <value>Cancel</value>
     </labels>
 </CustomLabels>

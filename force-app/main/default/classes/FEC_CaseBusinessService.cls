@@ -24,6 +24,7 @@ public without sharing class FEC_CaseBusinessService {
   public static final String BLOCK_CARD = 'Block Card';
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
+  public static final String REPLACE_CARD = 'Replace Card';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -69,7 +70,8 @@ public without sharing class FEC_CaseBusinessService {
     OC_001,
     BLOCK_CARD,
     UNBLOCK_CARD,
-    PIN_REISSUE
+    PIN_REISSUE,
+    REPLACE_CARD
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -93,7 +95,8 @@ public without sharing class FEC_CaseBusinessService {
     OC_001 => Method.OC_001,
     BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
-    PIN_REISSUE => Method.PIN_REISSUE
+    PIN_REISSUE => Method.PIN_REISSUE,
+    REPLACE_CARD => Method.REPLACE_CARD
   };
 
   @AuraEnabled
@@ -710,6 +713,7 @@ public without sharing class FEC_CaseBusinessService {
           'FEC_Action_Button__r.Name, ' +
           'FEC_Action_Button__r.FEC_Type__c, ' +
           'FEC_Action_Button__r.FEC_Code__c, ' +
+          'FEC_Custom_Action_Button_Label__c, ' +
           'FEC_Field_Type__c ' +
           'FROM FEC_Stage_Screen__c ' +
           'WHERE FEC_Action_Button__c != NULL AND FEC_Active__c = TRUE AND FEC_Action_Button__r.FEC_Type__c IN :validButtonTypelst ' +
@@ -732,7 +736,9 @@ public without sharing class FEC_CaseBusinessService {
           Action act = new Action(
             item.FEC_Action_Button__c,
             item.FEC_Action_Button__r.FEC_Code__c,
-            item.FEC_Action_Button__r.Name
+            String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+              ? item.FEC_Custom_Action_Button_Label__c
+              : item.FEC_Action_Button__r.Name
           );
           if (item.FEC_Field_Type__c == 'All') {
             result.routingActionlst.add(
@@ -1181,6 +1187,7 @@ public without sharing class FEC_CaseBusinessService {
       String oldOwnerName;
       String stageName;
       Id oldOwnerId;
+      Id currentStageId;
       String finalStatusBeforeSubmit = null;
       
       if (params != null) {
@@ -1190,6 +1197,7 @@ public without sharing class FEC_CaseBusinessService {
             Id,
             OwnerId,
             Owner.Name,
+            FEC_Current_Case_Stage__c,
             FEC_Stage_Name__c,
             FEC_Final_Status__c,
             FEC_Customer_Type__c,
@@ -1203,8 +1211,11 @@ public without sharing class FEC_CaseBusinessService {
         oldOwnerId = c.OwnerId;
         oldOwnerName = resolveRoutingHistoryOwnerLabel(c.OwnerId, c.Owner?.Name);
         stageName = c.FEC_Stage_Name__c;
+        currentStageId = c.FEC_Current_Case_Stage__c;
         finalStatusBeforeSubmit = c.FEC_Final_Status__c;
       }
+
+      String blockCode = (String)params.get('blockCode');
 
       switch on selectedMethod {
         when ROUTE_TO {
@@ -1226,37 +1237,37 @@ public without sharing class FEC_CaseBusinessService {
         when RECALL {
           markCaseSubmittedAndClearDrafts(caseId);
           recall(caseId);
-          createRoutingActionHis('Recall', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Recall', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when CANCEL {
           markCaseSubmittedAndClearDrafts(caseId);
           cancel(caseId);
-          createRoutingActionHis('Cancel', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Cancel', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when REOPEN {
           markCaseSubmittedAndClearDrafts(caseId);
           reopen(caseId);
-          createRoutingActionHis('Reopen', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Reopen', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when ESCALATE {
           markCaseSubmittedAndClearDrafts(caseId);
           escalate(caseId);
-          createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Escalate', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when REJECT {
           markCaseSubmittedAndClearDrafts(caseId);
           reject(caseId);
-          createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Reject', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when RESOLVE {
           markCaseSubmittedAndClearDrafts(caseId);
           resolve(caseId);
-          createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Resolve', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when TRANSFER {
@@ -1264,14 +1275,14 @@ public without sharing class FEC_CaseBusinessService {
           String userOrQueueId = (String) params.get('userOrQueueId');
           // Đổi owner trước (transfer đã registerSkip), rồi ghi history — tránh 2 bản; Updated = owner sau transfer
           transfer(caseId, userOrQueueId);
-          createRoutingActionHis('Transfer', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Transfer', '', oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when UPDATEACTION {
           String decision = (String) params.get('decision');
           updateCaseTeamAndOwner(caseId, decision);
           markCaseSubmittedAndClearDrafts(caseId);
-          createRoutingActionHis('Update', decision, oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit);
+          createRoutingActionHis('Update', decision, oldOwnerName, oldOwnerId, caseId, stageName, finalStatusBeforeSubmit, currentStageId);
           return null;
         }
         when PHONE_UPDATE {
@@ -1303,13 +1314,16 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when BLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', BLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', blockCode, BLOCK_CARD);
         }
         when UNBLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', UNBLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', blockCode, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
+        }
+        when REPLACE_CARD {
+          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, '', '', null);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -1457,6 +1471,11 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
+      String customActionButtonLabel = getCustomActionButtonLabel(
+        updatedCase.FEC_Current_Case_Stage__c,
+        ROUTE_TO,
+        actionId
+      );
 
       if (
         String.isBlank(updatedCase.FEC_Actual_Nature_of_Case__c) &&
@@ -1513,6 +1532,7 @@ public without sharing class FEC_CaseBusinessService {
           ? String.valueOf(queueId)
           : null,
         FEC_Stage_Name__c = selectedChange.FEC_Previous_Stage__r?.FEC_Code__c,
+        FEC_Custom_Action_Button_Label__c = customActionButtonLabel,
         FEC_User__c = emailLocalPart(userlst.get(0).Email),
         FEC_User_Role__c = userlst.get(0).UserRole?.Name,
         FEC_Current_Status__c = finalStatusBeforeSubmit
@@ -1585,7 +1605,8 @@ public without sharing class FEC_CaseBusinessService {
     Id originalOwnerId,
     String caseId,
     String stageName,
-    String finalStatusBeforeSubmit
+    String finalStatusBeforeSubmit,
+    Id currentStageId
   ) {
     Long corrId = DateTime.now().getTime();
     System.debug(
@@ -1625,6 +1646,11 @@ public without sharing class FEC_CaseBusinessService {
           ? String.valueOf(c.OwnerId)
           : null,
         FEC_Stage_Name__c = stageName,
+        FEC_Custom_Action_Button_Label__c = getCustomActionButtonLabel(
+          currentStageId,
+          routingAction,
+          null
+        ),
         FEC_User__c = emailLocalPart(usr.Email),
         FEC_User_Role__c = usr.UserRole?.Name,
         FEC_Current_Status__c = finalStatusBeforeSubmit,
@@ -2119,6 +2145,11 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Routing_Action_History__c history = historylst.get(0);
 
         if (ROUTE_TO.equals(history.FEC_Routing_Action__c)) {
+          String customActionButtonLabel = getCustomActionButtonLabel(
+            updatedCase.FEC_Current_Case_Stage__c,
+            REVERT,
+            null
+          );
           if (
             history.FEC_Previous_Stage__r?.FEC_Default_Stage__c &&
             FRONT_LINE.equals(
@@ -2186,6 +2217,7 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Updated_User_Queue_ID__c = queueId,
             FEC_Stage_Name__c = updatedCase.FEC_Current_Case_Stage__r
               ?.FEC_Code__c,
+            FEC_Custom_Action_Button_Label__c = customActionButtonLabel,
             FEC_User__c = emailLocalPart(userlst.get(0).Email),
             FEC_User_Role__c = userlst.get(0).UserRole?.Name,
             FEC_Current_Status__c = finalStatusBeforeSubmit
@@ -2210,6 +2242,52 @@ public without sharing class FEC_CaseBusinessService {
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
+  }
+  
+  //linhdev: getCustomActionButtonLabel - lấy custom label theo previous stage + action code để lưu vào Routing Action History
+  private static String getCustomActionButtonLabel(
+    Id currentStageId,
+    String actionCode,
+    String actionButtonId
+  ) {
+    if (currentStageId == null) {
+      return null;
+    }
+    List<FEC_Stage_Screen__c> stageScreenlst;
+    if (String.isNotBlank(actionButtonId)) {
+      stageScreenlst = [
+        SELECT
+          FEC_Custom_Action_Button_Label__c,
+          FEC_Action_Button__r.Name
+        FROM FEC_Stage_Screen__c
+        WHERE
+          FEC_Case_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :actionButtonId
+        LIMIT 1
+      ];
+    } else if (String.isNotBlank(actionCode)) {
+      stageScreenlst = [
+        SELECT
+          FEC_Custom_Action_Button_Label__c,
+          FEC_Action_Button__r.Name
+        FROM FEC_Stage_Screen__c
+        WHERE
+          FEC_Case_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__r.FEC_Code__c = :actionCode
+        LIMIT 1
+      ];
+    } else {
+      return null;
+    }
+    if (stageScreenlst.isEmpty()) {
+      return null;
+    }
+    FEC_Stage_Screen__c selectedStageScreen = stageScreenlst.get(0);
+    return String.isNotBlank(selectedStageScreen.FEC_Custom_Action_Button_Label__c)
+      ? selectedStageScreen.FEC_Custom_Action_Button_Label__c
+      : selectedStageScreen.FEC_Action_Button__r.Name;
   }
 
   private static FEC_Actual_Nature_of_Case__c cloneActualNatureOfCase(
