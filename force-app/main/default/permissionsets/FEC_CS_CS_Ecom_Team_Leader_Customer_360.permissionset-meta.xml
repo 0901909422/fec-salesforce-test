@@ -2345,21 +2345,6 @@
         <field>FEC_Ward__c.FEC_Name_VN__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Additional_Info__c.FEC_Test_Field_01__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Additional_Info__c.FEC_Test_Field_02__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Additional_Info__c.FEC_Test_Field_03__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Ecom Team Leader - Customer 360</label>
     <license>Salesforce</license>

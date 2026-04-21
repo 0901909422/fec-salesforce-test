@@ -2096,6 +2096,21 @@
         <field>FEC_Additional_Info__c.FEC_Payment_Method__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Test_Field_01__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Test_Field_02__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Test_Field_03__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Card Operations User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
