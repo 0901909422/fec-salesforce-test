@@ -51,13 +51,17 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
                 for(Id reId : new Map<Id, sObject>(scope).keySet()) {
                     recordIDs.add(String.valueOf(reId));
                 }
-                log.FEC_Request_String__c = JSON.serialize(recordIDs);   
-                log = FEC_CustomSyncCallout.sendRequest(cus,log,scope);  
-                if (log.FEC_Is_Success__c ?? false) { 
-                    countSuccess++;
-                } else{ 
-                    countFail++;
-                } 
+                log.Records__c = JSON.serialize(recordIDs);   
+                List<FEC_API_Log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,scope);  
+                for (FEC_API_Log__c rLog : resultLogs) {
+                    if (rLog.FEC_Is_Success__c ?? false) { 
+                        countSuccess++;
+                    } else { 
+                        countFail++;
+                    }
+                    logs.add(rLog);
+                }
+                return;
             }
         }Catch(Exception e){ 
             log.FEC_Error_Message__c = 'Exception FEC_BatchCustomSync: Line ' + e.getLineNumber() + ' - '+e.getMessage();
@@ -84,7 +88,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
 
         String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                            ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
-                           ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName';  
+                           ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ';  
         return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c + wherePart;
     }
 
@@ -92,7 +96,10 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(mappingJson);
         Set<String> fields = new Set<String>();
         for (String key : mapping.keySet()) {
-            fields.add((String) mapping.get(key));
+            Object val = mapping.get(key);
+            if (val instanceof String) {
+                fields.add((String) val);
+            }
         }
         return String.join(new List<String>(fields), ', ');
     }

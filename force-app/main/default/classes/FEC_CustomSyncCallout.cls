@@ -9,7 +9,8 @@ History
 ------------------------------------------------------------*/
 public with sharing class FEC_CustomSyncCallout { 
     
-    public static FEC_API_Log__c sendRequest(CustomSync__c cus, FEC_API_Log__c log, List<SObject> scope) {
+    public static List<FEC_API_Log__c> sendRequest(CustomSync__c cus, FEC_API_Log__c log, List<SObject> scope) {
+        List<FEC_API_Log__c> resultLogs = new List<FEC_API_Log__c>();
         try {   
             CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix'); 
@@ -30,9 +31,82 @@ public with sharing class FEC_CustomSyncCallout {
             Http http = new Http(); 
             HttpResponse response = http.send(req); 
             
+            log.FEC_Request_String__c = jsonBody.length() > 131072 ? jsonBody.substring(0, 131072) : jsonBody;
             log.FEC_Status_Code__c = String.valueOf(response.getStatusCode());
-            log.FEC_Response_String__c = response.getBody();
-            log.FEC_Is_Success__c =  (response.getStatusCode() == 200);
+            String resBody = response.getBody();
+            String truncatedRes = resBody != null && resBody.length() > 131072 ? resBody.substring(0, 131072) : resBody;
+            log.FEC_Response_String__c = truncatedRes;
+            log.FEC_Is_Success__c = (response.getStatusCode() == 200);
+
+            // Parse response to split success/failed records
+            if (response.getStatusCode() == 200 && String.isNotBlank(resBody)) {
+                Map<String, Object> resMap = (Map<String, Object>) JSON.deserializeUntyped(resBody);
+                Map<String, Object> data = (Map<String, Object>) resMap.get('data');
+                if (data != null) {
+                    Integer totalFailed = data.get('totalFailed') != null ? Integer.valueOf(String.valueOf(data.get('totalFailed'))) : 0;
+                    
+                    if (totalFailed > 0) {
+                        // Build map: FEC_ID_Search__c -> SFID
+                        Map<String, String> extIdToSfId = new Map<String, String>();
+                        for (SObject record : scope) {
+                            String extId = (String) record.get('FEC_ID_Search__c');
+                            if (extId != null) {
+                                extIdToSfId.put(extId, String.valueOf(record.get('Id')));
+                            }
+                        }
+
+                        // Failed record IDs
+                        List<Object> failedRecords = (List<Object>) data.get('failedRecords');
+                        Set<String> failedExtIds = new Set<String>();
+                        if (failedRecords != null) {
+                            for (Object fr : failedRecords) {
+                                Map<String, Object> frMap = (Map<String, Object>) fr;
+                                String recordId = (String) frMap.get('recordId');
+                                if (recordId != null) failedExtIds.add(recordId);
+                            }
+                        }
+
+                        // Success record IDs
+                        List<Object> successRecords = (List<Object>) data.get('successRecords');
+                        List<String> successSfIds = new List<String>();
+                        if (successRecords != null) {
+                            for (Object sr : successRecords) {
+                                String extId = (String) sr;
+                                if (extIdToSfId.containsKey(extId)) {
+                                    successSfIds.add(extIdToSfId.get(extId));
+                                }
+                            }
+                        }
+
+                        List<String> failedSfIds = new List<String>();
+                        for (String extId : failedExtIds) {
+                            if (extIdToSfId.containsKey(extId)) {
+                                failedSfIds.add(extIdToSfId.get(extId));
+                            }
+                        }
+
+                        // Log 1: Success records
+                        log.Records__c = JSON.serialize(successSfIds);
+                        log.FEC_Is_Success__c = true;
+                        resultLogs.add(log);
+
+                        // Log 2: Failed records
+                        FEC_API_Log__c failLog = new FEC_API_Log__c();
+                        failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
+                        failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
+                        failLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
+                        failLog.FEC_Method__c = log.FEC_Method__c;
+                        failLog.FEC_Request_String__c = log.FEC_Request_String__c;
+                        failLog.FEC_Response_String__c = truncatedRes;
+                        failLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
+                        failLog.Records__c = JSON.serialize(failedSfIds);
+                        failLog.FEC_Is_Success__c = false;
+                        resultLogs.add(failLog);
+
+                        return resultLogs;
+                    }
+                }
+            }
 
         } catch (Exception e) {   
             log.FEC_Status_Code__c = '500'; 
@@ -40,25 +114,68 @@ public with sharing class FEC_CustomSyncCallout {
             log.FEC_Error_Message__c = errorMsg.length() > 255 ? errorMsg.substring(0, 255) : errorMsg;
             System.debug(errorMsg);
         }
-        return log;
+        resultLogs.add(log);
+        return resultLogs;
     } 
     private static String toJson(CustomSync__c cus, List<SObject> scope) {
         Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cus.RequestBodyMapping__c);
+        Map<String, Object> dataTypeMap = String.isNotBlank(cus.MappingDataType__c)
+            ? (Map<String, Object>) JSON.deserializeUntyped(cus.MappingDataType__c)
+            : new Map<String, Object>();
         List<Map<String, Object>> mappedRecords = new List<Map<String, Object>>();
 
         for (SObject record : scope) {
             Map<String, Object> row = new Map<String, Object>();
             for (String jsonKey : mapping.keySet()) {
-                String sfField = (String) mapping.get(jsonKey);
-                row.put(jsonKey, getFieldValue(record, sfField));
+                Object mappingVal = mapping.get(jsonKey);
+                Object rawValue;
+                if (mappingVal == null) {
+                    rawValue = null;
+                } else if (mappingVal instanceof String) {
+                    rawValue = getFieldValue(record, (String) mappingVal);
+                } else {
+                    // Integer, Boolean, Decimal, etc. — dùng trực tiếp
+                    rawValue = mappingVal;
+                }
+                String targetType = dataTypeMap.containsKey(jsonKey) 
+                    ? ((String) dataTypeMap.get(jsonKey)).toUpperCase() 
+                    : null;
+                // Nếu mappingVal không phải String (hardcode value) thì không cần cast
+                if (mappingVal instanceof String) {
+                    row.put(jsonKey, castValue(rawValue, targetType));
+                } else {
+                    row.put(jsonKey, rawValue);
+                }
             }
             mappedRecords.add(row);
         }
 
         Map<String, Object> finalWrapper = new Map<String, Object>();
         finalWrapper.put('tableName', cus.TableName__c);
+        finalWrapper.put('pkColumn', String.isNotBlank(cus.PkColumn__c) ? cus.PkColumn__c : '');
         finalWrapper.put('records', mappedRecords);
         return JSON.serialize(finalWrapper);
+    }
+
+    private static Object castValue(Object rawValue, String targetType) {
+        if (rawValue == null || String.isBlank(targetType)) {
+            return rawValue;
+        }
+        try {
+            if (targetType == 'NUMBER') {
+                if (rawValue instanceof Decimal) return rawValue;
+                return Decimal.valueOf(String.valueOf(rawValue));
+            } else if (targetType.startsWith('TIMESTAMP')) {
+                if (rawValue instanceof Datetime) return ((Datetime) rawValue).formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+                if (rawValue instanceof Date) return Datetime.newInstance((Date) rawValue, Time.newInstance(0,0,0,0)).formatGmt('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
+                return String.valueOf(rawValue);
+            } else {
+                // VARCHAR2 and other string types
+                return String.valueOf(rawValue);
+            }
+        } catch (Exception e) {
+            return String.valueOf(rawValue);
+        }
     }
 
     private static Object getFieldValue(SObject record, String fieldPath) {

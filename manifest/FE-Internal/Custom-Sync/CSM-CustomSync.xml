@@ -17,9 +17,13 @@
         <members>CustomSync__c.WhatSync__c</members>
         <members>CustomSync__c.TargetObject__c</members> 
         <members>CustomSync__c.RequestBodyMapping__c</members>
+        <members>CustomSync__c.TableName__c</members>
+        <members>CustomSync__c.MappingDataType__c</members>
+        <members>CustomSync__c.PkColumn__c</members>
 
         <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
-        <members>FEC_API_Log__c.FEC_Custom_Sync__c</members> 
+        <members>FEC_API_Log__c.FEC_Custom_Sync__c</members>
+        <members>FEC_API_Log__c.Records__c</members> 
 
         <members>CustomSyncSetting__c.Endpoint__c</members> 
         <members>CustomSyncSetting__c.ApiKey__c</members>
@@ -36,6 +40,10 @@
         <name>CustomTab</name>
     </types>
     <types>
+        <members>CustomSync__c-Sync Bix Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
         <members>Custom_Sync_Record_Page</members>
         <name>FlexiPage</name>
     </types> 
@@ -49,10 +57,6 @@
         <members>FEC_CustomSyncAllInOneTest</members>  
         <name>ApexClass</name>
     </types>
-    
-    <types>
-        <members>FEC_Common_System_Setting</members>
-        <name>PermissionSet</name>
-    </types>
+     
     <version>65.0</version>
 </Package>
