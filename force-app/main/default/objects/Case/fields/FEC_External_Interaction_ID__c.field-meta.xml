@@ -5,7 +5,7 @@
     <description>Mã tương tác từ các hệ thống tích hợp</description>
     <externalId>true</externalId>
     <label>External Interaction ID</label>
-    <length>20</length>
+    <length>255</length>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
