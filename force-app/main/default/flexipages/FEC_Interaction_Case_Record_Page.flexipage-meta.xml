@@ -273,12 +273,6 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_InsuranceInfo</componentName>
-                <identifier>c_fec_InsuranceInfo</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
                 <componentName>fec_MainInfoAccount</componentName>
                 <identifier>c_fec_MainInfoAccount</identifier>
             </componentInstance>
@@ -685,42 +679,38 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>previewSampleData</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_allocationHistory</componentName>
-                <identifier>c_fec_allocationHistory</identifier>
+                <componentName>fec_MainInfoLoanAccount</componentName>
+                <identifier>c_fec_MainInfoLoanAccount</identifier>
             </componentInstance>
         </itemInstances>
+        <name>Facet-e86cc39b-6a73-4de9-a6fb-e0f029a270c2</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>previewSampleData</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_communicationHistory</componentName>
-                <identifier>c_fec_communicationHistory</identifier>
+                <componentName>fec_SecondaryInfoLoanAccount</componentName>
+                <identifier>c_fec_SecondaryInfoLoanAccount</identifier>
             </componentInstance>
         </itemInstances>
+        <name>Facet-5d3e4157-62b3-4f96-8c44-ccdc7842e467</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>previewSampleData</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_CollectionInteractions</componentName>
-                <identifier>c_fec_CollectionInteractions</identifier>
+                <componentName>fec_Termination</componentName>
+                <identifier>c_fec_Termination</identifier>
             </componentInstance>
         </itemInstances>
+        <name>Facet-a1c9cf75-8e21-4bcb-868b-2cd549a2346e</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>previewSampleData</name>
-                    <value>false</value>
-                </componentInstanceProperties>
-                <componentName>fec_NFU</componentName>
-                <identifier>c_fec_NFU</identifier>
+                <componentName>fec_RepaymentSchedulePaymentHistory</componentName>
+                <identifier>c_fec_RepaymentSchedulePaymentHistory</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-4029d6b1-0ccd-459c-a277-50b63fca40ae</name>
