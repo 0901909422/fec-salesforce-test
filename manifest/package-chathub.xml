@@ -43,6 +43,7 @@
         <members>Facebook_CDN_atl3_3</members>
         <members>Facebook_CDN_sin2_1</members>
         <members>Facebook_CDN</members>
+        <members>S3_FPT</members>
         <name>RemoteSiteSetting</name>
     </types>
 
