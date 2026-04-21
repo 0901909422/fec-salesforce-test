@@ -1302,6 +1302,8 @@
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
 		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1668,6 +1670,7 @@
     </types>
 	<types>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
