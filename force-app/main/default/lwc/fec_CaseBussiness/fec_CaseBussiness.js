@@ -2610,7 +2610,6 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
 
         } else {
-          this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
           // PhuongNT add set msg error for call api
@@ -2625,12 +2624,17 @@ export default class Fec_CaseBussiness extends LightningElement {
               msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
             }
           }
-          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-            this._revertFecUpdateAddressAfterProcessFailure();
+          if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+            this._handleAddressUpdateFail();
+          } else {
+            this.processActionMsg = msgError;
+            if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+              this._revertFecUpdateAddressAfterProcessFailure();
+            }
           }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
-              this.publishPinReissueResult("ERROR",msgError);
+            this.publishPinReissueResult("ERROR", msgError);
           }
         }
 
@@ -2650,9 +2654,13 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
-        this.processActionMsg = msgError;
-        if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-          this._revertFecUpdateAddressAfterProcessFailure();
+        if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+          this._handleAddressUpdateFail();
+        } else {
+          this.processActionMsg = msgError;
+          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+            this._revertFecUpdateAddressAfterProcessFailure();
+          }
         }
       })
       .finally(() => {
@@ -2660,10 +2668,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
   }
 
+  _handleAddressUpdateFail() {
+    this.addressUpdateFailCount++;
+    if (this.addressUpdateFailCount >= 3) {
+      this.business.processActionlst = (this.business.processActionlst || []).filter(
+        (p) => p.value !== ACTION_ADDRESS_UPDATE
+      );
+      this.business = { ...this.business };
+      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL;
+      this._revertFecUpdateAddressAfterProcessFailure();
+    } else {
+      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR;
+    }
+  }
+
   _getFecUpdateAddressCmp() {
-    const host = this.template.querySelector(
-      '[data-fec-lwc="fec_UpdateAddress"]',
-    );
+    const host = this._findFecUpdateAddressHostEl();
     if (!host) {
       return null;
     }
