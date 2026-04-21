@@ -3085,4 +3085,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
+  // PhuongNT add handle get field value
+  handleGetFieldValue() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+              this.newBlockCode = field.value;
+            }
+          });
+        });
+      });
+    });
+  }
+
+
 }
