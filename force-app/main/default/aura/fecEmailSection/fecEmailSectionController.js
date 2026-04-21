@@ -353,10 +353,62 @@
     },
 
     discardEmail: function(component, event, helper) {
-        // Chỉ xóa nội dung text trong editor, không đóng compose
-        component.set('v.body', '');
-        if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
-        component.set('v.errorMsg', '');
+        // tungnm37 sửa: hiện popup xác nhận qua JS (append to body để tránh stacking context của Aura)
+        var existing = document.getElementById('fec-discard-popup');
+        if (existing) return;
+        var lblTitle = component.get('v.lblDiscardTitle') || 'Discard Draft?';
+        var lblMsg = component.get('v.lblDiscardMsg') || 'Recipients, subject, body text, and attachments are removed.';
+        var lblDiscard = component.get('v.lblDiscardBtn') || 'Discard';
+        var lblCancel = component.get('v.lblCancelBtn') || 'Cancel';
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-discard-popup';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.5);z-index:99999;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:32px 28px 24px;width:420px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:100000;text-align:center;';
+        modal.innerHTML = '<div id="fec-discard-close" style="position:absolute;top:14px;right:18px;font-size:20px;cursor:pointer;color:#706e6b;line-height:1;">&#x2715;</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#16325c;margin-bottom:12px;">' + lblTitle + '</div>'
+            + '<div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5;">' + lblMsg + '</div>'
+            + '<div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e5e5e5;padding-top:16px;">'
+            + '<button id="fec-discard-cancel" style="padding:7px 18px;border:1px solid #c8c8c8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#333;">' + lblCancel + '</button>'
+            + '<button id="fec-discard-confirm" style="padding:7px 18px;border:none;border-radius:20px;background:#0070d2;color:#fff;cursor:pointer;font-size:13px;">' + lblDiscard + '</button>'
+            + '</div>';
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+
+        function closePopup() {
+            var o = document.getElementById('fec-discard-popup');
+            var m = document.getElementById('fec-discard-modal-box');
+            if (o && o.parentNode) o.parentNode.removeChild(o);
+            if (m && m.parentNode) m.parentNode.removeChild(m);
+            // remove modal by finding it
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        }
+        modal.id = 'fec-discard-modal-box';
+
+        overlay.addEventListener('click', closePopup);
+        document.getElementById('fec-discard-close').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-cancel').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-confirm').addEventListener('click', $A.getCallback(function() {
+            closePopup();
+            component.set('v.body', '');
+            component.set('v.rawBody', '');
+            component.set('v.subject', '');
+            component.set('v.ccEmail', '');
+            component.set('v.toTags', []);
+            component.set('v.toInput', '');
+            component.set('v.attachments', []);
+            component.set('v.replyTemplate', '');
+            component.set('v.errorMsg', '');
+            if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+        }));
+    },
+
+    confirmDiscard: function(component, event, helper) {},
+    cancelDiscard: function(component, event, helper) {
+        component.set('v.showDiscardConfirm', false);
     },
 
     sendEmail: function(component, event, helper) {
