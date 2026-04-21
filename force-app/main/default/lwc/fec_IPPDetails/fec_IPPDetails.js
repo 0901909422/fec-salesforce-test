@@ -23,9 +23,6 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         totalIPPCurrentBalanceLabel: FEC_Total_IPP_Current_Balance_Label
     };
 
-    /** Khi gọi thành công nhưng không có bản ghi IPP */
-    noDataLabel = 'No data';
-    
     // Message Context for LMS
     @wire(MessageContext)
     messageContext;
@@ -124,27 +121,9 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         return !this.hasError && this.ippData && this.ippData.length > 0;
     }
 
-    // Chỉ hiển thị "Tải dữ liệu không thành công" khi đã load xong (không còn loading) VÀ lỗi VÀ không có dữ liệu
-    // (tránh flash lỗi lúc mới load vì ban đầu hasError=true, isLoading=false)
+    /** Lỗi chỉ hiển thị trên tiêu đề section; body dùng bảng (RelatedListPaging) với "No data" khi không có dòng. */
     get showErrorInHeader() {
         return !this.isLoading && this.hasError && (!this.ippData || this.ippData.length === 0);
-    }
-
-    // Hiển thị khối lỗi (no-data error) chỉ khi đã load xong VÀ lỗi VÀ không có dữ liệu
-    get showErrorDiv() {
-        return !this.isLoading && this.hasError && (!this.ippData || this.ippData.length === 0);
-    }
-
-    get showTable() {
-        return Array.isArray(this.ippData) && this.ippData.length > 0;
-    }
-
-    get showIPPNoData() {
-        return (
-            !this.isLoading &&
-            !this.hasError &&
-            (!this.ippData || this.ippData.length === 0)
-        );
     }
 
     // Handle accordion toggle - IPP Details
