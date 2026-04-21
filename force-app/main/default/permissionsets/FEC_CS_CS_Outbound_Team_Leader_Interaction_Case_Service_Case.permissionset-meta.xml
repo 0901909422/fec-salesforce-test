@@ -1892,6 +1892,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Custom_Action_Button_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Sensitive_Data__c.FEC_Case_ID__c</field>
         <readable>true</readable>
@@ -2109,6 +2114,11 @@
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Outbound Team Leader - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>

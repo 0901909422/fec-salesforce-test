@@ -818,6 +818,8 @@
 		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Custom_Action_Button_Label__c</members>
+		<members>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
