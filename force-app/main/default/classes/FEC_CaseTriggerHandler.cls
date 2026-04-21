@@ -508,9 +508,22 @@ public without sharing class FEC_CaseTriggerHandler {
                 if (relatedEmail != null) {
                     c.FEC_Send_To__c = relatedEmail.ToAddress;
                 }
+            } else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                // Ép cứng địa chỉ cho FE Credit
+                c.FEC_Send_To__c = FEC_ConstantCommon.EMAIL_READONLY_FROM_FECREDIT;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                casesForRouting.add(c);
             } else {
-                // Ép cứng địa chỉ Routing bằng giá trị lấy từ Custom Setting (sendToValue)
-                c.FEC_Send_To__c = sendToValue;
+                // Với Ubank: Tuyệt đối chỉ lấy từ Custom Setting
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK) {
+                    c.FEC_Send_To__c = sendToValue;
+                } 
+                // Các trường hợp khác: Lấy ToAddress thực tế của mail làm fallback
+                else if (relatedEmail != null) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                }
+
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);

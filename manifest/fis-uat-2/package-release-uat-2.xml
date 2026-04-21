@@ -742,10 +742,10 @@
 		<members>Create_Case</members>
 		<name>CustomTab</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
         <members>Channel</members>
         <name>GlobalValueSet</name>
@@ -1301,6 +1301,9 @@
 		<members>FEC_Log__c</members>
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
+		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1388,6 +1391,11 @@
 		<members>FEC_SendNotificationEmailsQueueable</members>
 		<members>FEC_CardReplacementAddressController</members>
 		<members>FEC_EmeaAccountInqService</members>
+		<members>FEC_SyncCaseStatusBatch</members>
+		<members>FEC_SyncCaseStatusScheduler</members>
+		<members>FEC_CardInfoController</members>
+		<members>FEC_GetCardSecInfo</members>
+		<members>FEC_IPPController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1594,6 +1602,22 @@
         <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
 		<members>FEC_MSG_IncorrectPayment_Date_Not_After_Today</members>
         <members>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</members>
+        <members>FEC_Email_Error_File_Too_Large_Title</members>
+        <members>FEC_Email_Error_File_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Image_Too_Large_Title</members>
+        <members>FEC_Email_Error_Image_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Subject_Required</members>
+        <members>FEC_Email_Error_Body_Required</members>
+        <members>FEC_Email_Error_We_Hit_A_Snag</members>
+        <members>FEC_Email_Error_Invalid_Format_Title</members>
+        <members>FEC_Email_Success_Title</members>
+        <members>FEC_Email_Success_Sent_Msg</members>
+        <members>FEC_CS_Support_Queue_Name</members>
+        <members>FEC_Other_Card_Label</members>
+		<members>FEC_Email_Discard_Title</members>
+        <members>FEC_Email_Discard_Msg</members>
+        <members>FEC_Email_Btn_Discard</members>
+        <members>FEC_Email_Btn_Cancel</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1623,6 +1647,8 @@
 		<members>fec_Modal</members>
 		<members>fec_CardReplacementAddress</members>
 		<members>fec_MultiPicklistInput</members>
+		<members>fec_CardInfo</members>
+		<members>fec_IPPDetails</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1644,6 +1670,7 @@
     </types>
 	<types>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
