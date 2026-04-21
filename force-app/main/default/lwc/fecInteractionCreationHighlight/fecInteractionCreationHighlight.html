@@ -80,7 +80,9 @@
                 <button class="slds-button slds-button_neutral" onclick={handleExecute}>{labels.execute}</button>
               </template>
               <template if:true={isHandling}>
-                <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                <template if:true={isNotRelevantDepts}>
+                  <button class="slds-button slds-button_neutral" onclick={handleCreateCase}>{labels.createCase}</button>
+                </template>
               </template>
 
             </div>
