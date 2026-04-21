@@ -13611,4 +13611,34 @@
         <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
         <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
     </labels>
+
+    <labels>
+        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No response from server</shortDescription>
+        <value>No response from server</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unexpected_SOAP_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected SOAP response</shortDescription>
+        <value>Unexpected SOAP response</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unknown Sys.Code</shortDescription>
+        <value>Unknown Sys.Code</value>
+    </labels>
 </CustomLabels>
