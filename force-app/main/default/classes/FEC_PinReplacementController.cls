@@ -7,7 +7,9 @@ public with sharing class FEC_PinReplacementController {
                 SELECT Id,
                     FEC_National_ID_Passport_ID__c,
                     FEC_Case_Phone_Number__c,
-                    FEC_Process_Action_Count__c
+                    FEC_Process_Action_Count__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :recordId
             ];

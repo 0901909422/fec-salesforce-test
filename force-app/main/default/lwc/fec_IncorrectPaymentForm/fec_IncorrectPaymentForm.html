@@ -2,29 +2,16 @@
   <lightning-layout multiple-rows>
     <template if:true={configLoaded}>
       <lightning-layout-item size="6" padding="around-small">
-        <lightning-input
-          lwc:if={isIncorrectContractManualInput}
-          data-id="incorrect-contract-manual-input"
-          type="text"
-          label={customLabel.incorrectContractNumber}
-          value={incorrectContract}
-          disabled={isReadOnly}
-          onchange={handleIncorrectContractManualInput}
-          onblur={handleIncorrectContractManualBlur}
-        >
-        </lightning-input>
         <c-fec_-combo-box
-          lwc:else
           data-id="incorrect-contract"
           label={customLabel.incorrectContractNumber}
           placeholder={customLabel.selectContractPlaceholder}
           value={incorrectContract}
           option={formattedIncorrectContractOption}
           disabled={isReadOnly}
-          enable-search-change
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
-          onsearchchange={handleIncorrectContractSearchChange}
+          onblurcommit={handleIncorrectContractBlurCommit}
         ></c-fec_-combo-box>
         <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
           {customLabel.incorrectContractHint}
@@ -85,12 +72,12 @@
       <template if:true={showManualBill}>
         <lightning-layout-item size="6" padding="around-small">
           <lightning-input
-            data-id="manual-bill-date"
             type="date"
             date-style="short"
             placeholder={customLabel.datePlaceholder}
-            label={manualBillDateLabel}
+            label={customLabel.billDate}
             value={manualBillDate}
+            max={maxManualBillDate}
             disabled={isReadOnly}
             onchange={handleManualBillDateChange}
           >
@@ -101,7 +88,7 @@
             data-id="manual-bill-amount"
             name="manualBillAmount"
             type="number"
-            label={manualBillAmountLabel}
+            label={customLabel.billAmount}
             value={manualBillAmount}
             disabled={isReadOnly}
             onchange={handleManualBillAmountChange}
@@ -165,31 +152,17 @@
                 class="receipt-row slds-grid_vertical-align-end"
               >
                 <lightning-layout-item size="6" padding="around-small">
-                  <lightning-input
-                    lwc:if={row.isCorrectContractManualInput}
-                    data-id="correct-contract-manual"
-                    data-id-value={row.id}
-                    type="text"
-                    label={row.correctContractLabel}
-                    value={row.correctContract}
-                    disabled={isReadOnly}
-                    required
-                    onchange={handleAdjustmentCorrectContractManualInput}
-                  >
-                  </lightning-input>
                   <c-fec_-combo-box
-                    lwc:else
                     data-id-value={row.id}
                     label={row.correctContractLabel}
                     placeholder={customLabel.selectContractPlaceholder}
                     value={row.correctContract}
-                    option={row.correctContractOptionsJson}
+                    option={formattedCorrectContractOption}
                     disabled={isReadOnly}
                     required
-                    enable-search-change
-                    onchange={handleAdjustmentCorrectContractComboChange}
-                    onsearchchange={handleAdjustmentCorrectContractSearchChange}
                     onremove={handleAdjustmentCorrectContractRemove}
+                    onchange={handleAdjustmentCorrectContractChange}
+                    onblurcommit={handleAdjustmentCorrectContractBlurCommit}
                   ></c-fec_-combo-box>
                 </lightning-layout-item>
                 <lightning-layout-item size="4" padding="around-small">
