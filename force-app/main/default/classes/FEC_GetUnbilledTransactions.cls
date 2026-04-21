@@ -24,12 +24,14 @@ public with sharing class FEC_GetUnbilledTransactions {
         try {
  
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+            
+            // ================= CONFIG =================
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
 
             // =====================================================
             // ENV OVERRIDE 
             // =====================================================
-            FEC_API_Setting__c systemConfig = FEC_API_Setting__c.getOrgDefaults();
-
             String accountNumberParam;
 
             if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
@@ -49,9 +51,6 @@ public with sharing class FEC_GetUnbilledTransactions {
                 accountNumberParam
                 );
             
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
- 
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
