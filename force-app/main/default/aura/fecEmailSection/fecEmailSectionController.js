@@ -64,8 +64,22 @@
             // Ghép header + body + footer
             var fullBody = (header ? header : '') + body + (footer ? footer : '');
             component.set('v.body', fullBody);
+            component.set('v.rawBody', fullBody); // tungnm37: lưu raw HTML để gửi email
             if (window._fecQuill) {
-                window._fecQuill.root.innerHTML = helper.cleanBody(fullBody);
+                var _q = window._fecQuill;
+                var _body = helper.cleanBody(fullBody);
+                window.setTimeout(function() {
+                    if (_q.scroll && _q.scroll.observer) {
+                        _q.scroll.observer.disconnect();
+                    }
+                    _q.root.innerHTML = _body;
+                    _q.root.classList.remove('ql-blank');
+                    window.setTimeout(function() {
+                        if (_q.scroll && _q.scroll.observer) {
+                            _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                        }
+                    }, 100);
+                }, 50);
             }
             // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
@@ -382,6 +396,11 @@
         }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
+        // If v.body has table HTML but quill stripped it, use rawBody or v.body directly
+        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
+        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
+            body = storedBody;
+        }
         if (!subject) {
             component.set('v.errorMsg', 'Subject is required.');
             try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:'We hit a snag',message:'Review the errors on this page. Subject is required.',type:'error',duration:4000});ts.fire();} } catch(e){}

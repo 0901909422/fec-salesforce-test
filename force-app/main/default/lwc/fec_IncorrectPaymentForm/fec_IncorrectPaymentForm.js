@@ -39,6 +39,7 @@ import FEC_LBL_Adjusted_Amount from '@salesforce/label/c.FEC_LBL_Adjusted_Amount
 import FEC_LBL_Remove_Row from '@salesforce/label/c.FEC_LBL_Remove_Row';
 import FEC_LBL_Add_Item from '@salesforce/label/c.FEC_LBL_Add_Item';
 import FEC_MSG_Adjusted_Amount_Must_Equal_Payment from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Payment';
+import FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount from '@salesforce/label/c.FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount';
 import FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row from '@salesforce/label/c.FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row';
 import FEC_MSG_IncorrectPayment_Date_Not_After_Today from '@salesforce/label/c.FEC_MSG_IncorrectPayment_Date_Not_After_Today';
 import FEC_LBL_Payment_Method_Bank_Transfer from '@salesforce/label/c.FEC_LBL_Payment_Method_Bank_Transfer';
@@ -95,11 +96,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     @track configLoaded = false;
     @track paymentHistoryTableKey = 0;
     @track incorrectContractOptionlst = [];
+    @track incorrectContractOptionLoadFailed = false;
     @track correctContractOptionlst = [];
     @track paymentMethodOptionlst = [];
     _lastLoadedContract = STR_EMPTY;
     _pendingSelectedPaymentId = null;
     _incorrectContractHistoryLoadTimer;
+    _paymentHistoryLoadFailed = false;
 
     customLabel = {
         loading: Loading,
@@ -118,6 +121,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         removeRow: FEC_LBL_Remove_Row,
         addItem: FEC_LBL_Add_Item,
         adjustedAmountMustEqualPayment: FEC_MSG_Adjusted_Amount_Must_Equal_Payment,
+        adjustedAmountMustEqualExcessAmount: FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount,
         datePlaceholder: CONST.DATE_PLACEHOLDER
     };
 
@@ -194,6 +198,10 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         return this.isTh2 ? this.customLabel.excessAmount : this.customLabel.adjustedAmount;
     }
 
+    get adjustedAmountNoticeMessage() {
+        return this.isTh2 ? this.customLabel.adjustedAmountMustEqualExcessAmount : this.customLabel.adjustedAmountMustEqualPayment;
+    }
+
     get displayExcessAmount() {
         if (this.excessAmount == null) return STR_EMPTY;
         return this.formatAmount(this.excessAmount);
@@ -237,6 +245,9 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get isIncorrectContractManualInput() {
+        if (this.incorrectContractOptionLoadFailed) {
+            return true;
+        }
         const v = this.incorrectContract != null ? String(this.incorrectContract).trim() : STR_EMPTY;
         if (!v) {
             return false;
@@ -385,9 +396,11 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 const incorrectContractPromise = getIncorrectContractOptions({ caseId: this.recordId })
                     .then((contractOpts) => {
                         this.incorrectContractOptionlst = contractOpts || [];
+                        this.incorrectContractOptionLoadFailed = false;
                     })
                     .catch(() => {
                         this.incorrectContractOptionlst = [];
+                        this.incorrectContractOptionLoadFailed = true;
                     });
                 const correctContractPromise = getCorrectContractOptions()
                     .then((pickOpts) => {
@@ -419,6 +432,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 this.configLoaded = true;
                 this.subCode = STR_EMPTY;
                 this.incorrectContractOptionlst = [];
+                this.incorrectContractOptionLoadFailed = true;
                 this.correctContractOptionlst = [];
                 this.paymentMethodOptionlst = [];
             });
@@ -490,6 +504,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         this.incorrectContract = v != null ? String(v) : STR_EMPTY;
         const contract = (this.incorrectContract || STR_EMPTY).trim();
         if (!contract) {
+            this._paymentHistoryLoadFailed = false;
             this._clearIncorrectContractHistoryLoadTimer();
             this.paymentHistory = [];
             this.paymentHistoryTableKey += 1;
@@ -515,6 +530,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     handleRemoveIncorrectContract() {
         this._clearIncorrectContractHistoryLoadTimer();
+        this._paymentHistoryLoadFailed = false;
         const element = this.template.querySelector(
             'c-fec_-combo-box[data-id="incorrect-contract"]'
         );
@@ -531,6 +547,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
 
     handleChangeIncorrectContract(e) {
         this._clearIncorrectContractHistoryLoadTimer();
+        this._paymentHistoryLoadFailed = false;
         this.incorrectContract = e.detail.value || STR_EMPTY;
         const contract = (this.incorrectContract || STR_EMPTY).trim();
         if (!contract) {
@@ -548,10 +565,12 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     loadPaymentHistory() {
         const contract = (this.incorrectContract || STR_EMPTY).trim();
         if (!contract) {
+            this._paymentHistoryLoadFailed = false;
             this.paymentHistory = [];
             this.paymentHistoryTableKey += 1;
             return Promise.resolve();
         }
+        this._paymentHistoryLoadFailed = false;
         this.paymentHistoryLoading = true;
         this.selectedPaymentId = null;
         this.selectedRowIds = [];
@@ -573,11 +592,13 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 }
                 this.paymentHistoryTableKey += 1;
                 this.paymentHistoryLoading = false;
+                this._paymentHistoryLoadFailed = false;
             })
             .catch((err) => {
                 this.paymentHistory = [];
                 this.paymentHistoryTableKey += 1;
                 this.paymentHistoryLoading = false;
+                this._paymentHistoryLoadFailed = true;
                 this.dispatchEvent(new ShowToastEvent({
                     title: FEC_Toast_Error,
                     message: err.body?.message || err.message || FEC_MSG_Error_API_Label,
@@ -985,17 +1006,18 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
         }
 
         if (this.showManualBill) {
+            const skipManualBillValidation = this._paymentHistoryLoadFailed && !!(this.incorrectContract && String(this.incorrectContract).trim());
             const billAmtSel = 'lightning-input[data-id="manual-bill-amount"]';
             const dateSel = 'lightning-input[data-id="manual-bill-date"]';
-            if (this.isTh1 || this.isTh2) {
+            if (!skipManualBillValidation && (this.isTh1 || this.isTh2)) {
                 this._syncTh1ManualBillDateFieldValidity();
                 const dateOk = this.validateFields([dateSel]);
                 if (!dateOk) {
                     return false;
                 }
             }
-            const billAmtOk = this.validateFields([billAmtSel]);
-            const billAmtMissing = this.manualBillAmount == null;
+            const billAmtOk = skipManualBillValidation ? true : this.validateFields([billAmtSel]);
+            const billAmtMissing = skipManualBillValidation ? false : this.manualBillAmount == null;
             if (!billAmtOk || billAmtMissing) {
                 const billAmtEl = this.template.querySelector(billAmtSel);
                 if (billAmtEl && billAmtEl.reportValidity) {
@@ -1059,6 +1081,9 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
             billAmount = this.selectedPayment.paymentAmount ?? null;
         } else {
             billAmount = this.manualBillAmount ?? null;
+        }
+        if (this._paymentHistoryLoadFailed && !this.selectedPayment && (billAmount == null || billAmount === 0)) {
+            return { skipApex: false, valid, billDate, billAmount };
         }
 
         const billFieldsRendered = this.showManualBill || this.selectedPaymentId;

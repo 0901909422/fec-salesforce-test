@@ -126,7 +126,21 @@
         });
         var body = bodyHtml || component.get('v.body') || '';
         if (body) {
-            quill.root.innerHTML = self.cleanBody(body);
+            var cleanedBody = self.cleanBody(body);
+            // Disconnect Quill's MutationObserver to prevent table stripping
+            window.setTimeout(function() {
+                if (quill.scroll && quill.scroll.observer) {
+                    quill.scroll.observer.disconnect();
+                }
+                quill.root.innerHTML = cleanedBody;
+                quill.root.classList.remove('ql-blank');
+                // Reconnect after DOM is stable
+                window.setTimeout(function() {
+                    if (quill.scroll && quill.scroll.observer) {
+                        quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                    }
+                }, 100);
+            }, 50);
         }
         // Set default font Times New Roman
         quill.root.style.fontFamily = '"Times New Roman",serif';
@@ -181,7 +195,6 @@
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
             + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
-                + btn('table','',ic.table,'Insert Table')
                 + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
@@ -921,7 +934,7 @@
         if (!body) return;
         var updated = this.replaceDanhXung(body, title);
         component.set('v.body', updated);
-        if (window._fecQuill) window._fecQuill.root.innerHTML = this.cleanBody(updated);
+        if (window._fecQuill) window._fecQuill.clipboard.dangerouslyPasteHTML(this.cleanBody(updated));
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
@@ -1027,7 +1040,7 @@
                         var h12=h%12||12, minStr=min<10?'0'+min:min;
                         ds = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' at '+h12+':'+minStr+' '+ampm;
                     }
-                    var rb=(m.TextBody||m.HtmlBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+                    var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
                     return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,bodyHtml:m.HtmlBody||'',messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
