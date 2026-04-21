@@ -1,3 +1,16 @@
+
+/****************************************************************************************
+ * File Name    : FEC_CheckEligibleCallout.Apex
+ * Author       : LongNH76
+ * Date         : 2026-04-21
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-04-21     LongNH76             Create
+ 
+****************************************************************************************/
 public without sharing class FEC_CheckEligibleCallout {
 
     public static final String API_CONFIG_NAME = 'FEC_CheckEligible';
@@ -95,6 +108,13 @@ public without sharing class FEC_CheckEligibleCallout {
         CheckEligibleResponse response = new CheckEligibleResponse();
         
         try {
+            // 0. Validate Input
+            ValidationResult vr = validateRequest(idCardNumber);
+            if (!vr.isValid) {
+                response.errorMessage = vr.errorMessage;
+                return response;
+            }
+
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
@@ -176,12 +196,12 @@ public without sharing class FEC_CheckEligibleCallout {
      */
     public static ValidationResult validateRequest(String idCardNumber) {
         if (String.isBlank(idCardNumber)) {
-            return new ValidationResult(false, 'ID Card Number is required.');
+            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ID Card Number'}));
         }
         
         // Example regex validation for National ID (matching project constants if available)
-        if (!Pattern.matches('^(\\d{9}|\\d{12})$', idCardNumber)) {
-             return new ValidationResult(false, 'Invalid ID Card Number format.');
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
+             return new ValidationResult(false, String.format(System.Label.FEC_MSG_Invalid, new List<String>{'ID Card Number'}));
         }
 
         return new ValidationResult(true, null);

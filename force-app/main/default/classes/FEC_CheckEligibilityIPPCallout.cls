@@ -1,12 +1,12 @@
 /****************************************************************************************
 * File Name    : FEC_CheckEligibilityIPPCallout
-* Author       : Antigravity
-* Date         : 2026-04-14
+* Author       : Longnh76
+* Date         : 2026-04-21
 * Description  : Implementation of Check Eligibility SOAP API (CMS_IPP_BlockWS)
 * ===============================================================
 * Ver      Date           Author              Modification
 * ===============================================================
-* 1.0      2026-04-14     Antigravity         Create
+* 1.0      2026-04-21     Longnh76         Create
 ****************************************************************************************/
 
 public with sharing class FEC_CheckEligibilityIPPCallout {
@@ -98,7 +98,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
             } else {
                 result.success = false;
                 result.httpStatus = (res != null) ? res.getStatusCode() : 0;
-                result.errorMessage = (res != null) ? res.getBody() : 'No response from server';
+                result.errorMessage = (res != null) ? res.getBody() : System.Label.FEC_MSG_No_Response;
             }
 
         } catch (Exception e) {

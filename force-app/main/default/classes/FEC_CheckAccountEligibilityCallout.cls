@@ -1,11 +1,13 @@
 /****************************************************************************************
 * File Name    : FEC_CheckAccountEligibilityCallout
+ * Author       : LongNH76
+ * Date         : 2026-04-21
 * Description  : SOAP CheckAccountEligibility (CMS_RewardDebitWS) — Top-up / E-voucher eligibility.
 *                Gateway pattern: FEC_API_Setting__c.FEC_Endpoint__c + FEC_API_Config__mdt path.
 * ===============================================================
 * Ver      Date           Author              Modification
 * ===============================================================
-* 1.0      2026-04-15     Cursor              Create
+* 1.0      2026-04-21     LongNH76              Create
 ****************************************************************************************/
 public with sharing class FEC_CheckAccountEligibilityCallout {
 // CMDT phải khớp file FEC_API_Config.FEC_CMS_RewardDebitWS — path /esb/cms/CMS_RewardDebitWS (không dùng FEC_Get_Reward_Eligibility / CMS_RewardWS)
@@ -103,7 +105,7 @@ public with sharing class FEC_CheckAccountEligibilityCallout {
             } else {
                 result.success = false;
                 result.httpStatus = (res != null) ? res.getStatusCode() : 0;
-                result.errorMessage = (res != null) ? res.getBody() : 'No response from server';
+                result.errorMessage = (res != null) ? res.getBody() : System.Label.FEC_MSG_No_Response;
             }
         } catch (Exception e) {
             result.success = false;
@@ -162,7 +164,7 @@ public with sharing class FEC_CheckAccountEligibilityCallout {
                 if (fault != null) {
                     result.errorMessage = FEC_CommonUltils.getXmlValue(fault, 'faultstring');
                 } else {
-                    result.errorMessage = 'Unexpected SOAP response (no CheckAccountEligibilityResponse)';
+                    result.errorMessage = System.Label.FEC_MSG_Unexpected_SOAP_Response + ' (no CheckAccountEligibilityResponse)';
                 }
                 return result;
             }
