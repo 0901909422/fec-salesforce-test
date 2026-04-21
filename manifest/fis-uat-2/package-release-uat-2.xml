@@ -1611,6 +1611,10 @@
         <members>FEC_Email_Success_Sent_Msg</members>
         <members>FEC_CS_Support_Queue_Name</members>
         <members>FEC_Other_Card_Label</members>
+		<members>FEC_Email_Discard_Title</members>
+        <members>FEC_Email_Discard_Msg</members>
+        <members>FEC_Email_Btn_Discard</members>
+        <members>FEC_Email_Btn_Cancel</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
