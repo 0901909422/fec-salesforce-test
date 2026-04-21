@@ -664,6 +664,39 @@ export default class Fec_CaseBussiness extends LightningElement {
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
   }
+  
+  //linhdev: logic cho phép xử lý action có label hoặc value dựa vào field FEC_Custom_Action_Button_Label__c
+  _resolveRoutingMethodByAction(action) {
+    const customActionLabel = action?.label?.trim();
+    let resolvedMethod;
+    if (
+      [
+        ACTION_ROUTE_TO,
+        ACTION_REVERT,
+        ACTION_TRANSFER,
+        ACTION_UPDATE,
+        ACTION_ESCALATE,
+        ACTION_REJECT,
+        ACTION_RESOLVE,
+        ACTION_CANCEL,
+      ].includes(customActionLabel)
+    ) {
+      resolvedMethod = customActionLabel;
+    } else {
+      resolvedMethod = action?.value;
+    }
+    console.log(
+      "FEC_DEBUG _resolveRoutingMethodByAction",
+      JSON.stringify({
+        actionId: action?.id,
+        actionValue: action?.value,
+        actionLabel: action?.label,
+        customActionLabel,
+        resolvedMethod,
+      }),
+    );
+    return resolvedMethod;
+  }
 
   get showRevert() {
     return ACTION_REVERT === this.actionValue;

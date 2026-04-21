@@ -2176,6 +2176,16 @@
         <field>FEC_Additional_Info__c.FEC_Test_Field_03__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Custom_Action_Button_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Operations Manager - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
