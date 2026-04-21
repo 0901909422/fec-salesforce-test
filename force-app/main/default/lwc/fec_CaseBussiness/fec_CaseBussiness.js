@@ -93,8 +93,6 @@ const ACTION_TRANSFER = "Transfer";
 const ACTION_UPDATE = "Update";
 const ACTION_ESCALATE = "Escalate";
 const ACTION_CANCEL = "Cancel";
-const ACTION_RECALL = "Recall";
-const ACTION_REOPEN = "Reopen";
 
 const OUTBOUND_CAMPAIGN = 'Outbound Campaign';
 
@@ -676,9 +674,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         ACTION_ESCALATE,
         ACTION_REJECT,
         ACTION_RESOLVE,
-        ACTION_RECALL,
         ACTION_CANCEL,
-        ACTION_REOPEN,
       ].includes(customActionLabel)
     ) {
       resolvedMethod = customActionLabel;
