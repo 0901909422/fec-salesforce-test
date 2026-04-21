@@ -126,7 +126,23 @@
         });
         var body = bodyHtml || component.get('v.body') || '';
         if (body) {
-            quill.root.innerHTML = self.cleanBody(body);
+            var cleanedBody = self.cleanBody(body);
+            // Disconnect Quill's MutationObserver to prevent table stripping
+            window.setTimeout(function() {
+                if (quill.scroll && quill.scroll.observer) {
+                    quill.scroll.observer.disconnect();
+                }
+                quill.root.innerHTML = cleanedBody;
+                quill.root.classList.remove('ql-blank');
+                // tungnm37 thêm: đảm bảo td/th từ template có contenteditable để xóa được nội dung
+                self._makeTableCellsEditable(quill.root);
+                // Reconnect after DOM is stable
+                window.setTimeout(function() {
+                    if (quill.scroll && quill.scroll.observer) {
+                        quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                    }
+                }, 100);
+            }, 50);
         }
         // Set default font Times New Roman
         quill.root.style.fontFamily = '"Times New Roman",serif';
@@ -136,6 +152,9 @@
         var tbMod = quill.getModule('toolbar');
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
+        // tungnm37 thêm: lắng nghe event thêm ảnh vào attachments list
+        // Không thêm vào attachments list — ảnh chỉ hiển thị inline trong editor
+        // (blob URL sẽ bị strip khi gửi, không gửi kèm attachment)
     },
 
 
@@ -181,7 +200,6 @@
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
             + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
-                + btn('table','',ic.table,'Insert Table')
                 + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
@@ -423,7 +441,7 @@
                     imgDD.style.left = rr.left + 'px';
                     imgDD.style.top = (rr.bottom + 2) + 'px';
                     function closeImgDD() { var d=document.getElementById('fec-img-dd'); if(d&&d.parentNode) d.parentNode.removeChild(d); }
-                    // Browse or Upload → file picker → base64
+                    // Browse or Upload → file picker → base64 nếu ≤3MB, Object URL nếu lớn hơn
                     document.getElementById('fec-img-browse').addEventListener('mousedown', function(ev2) {
                         ev2.preventDefault(); closeImgDD();
                         var fi = document.createElement('input');
@@ -433,10 +451,23 @@
                         fi.addEventListener('change', function() {
                             var f = fi.files[0];
                             if (!f) { document.body.removeChild(fi); return; }
+                            var MAX_IMG = 3 * 1024 * 1024; // 3MB
+                            if (f.size > MAX_IMG) {
+                                // tungnm37 sửa: ảnh quá lớn → báo lỗi, không insert
+                                try {
+                                    var toastBig = $A.get('e.force:showToast');
+                                    // tungnm37 sửa: dùng custom labels
+                                    if (toastBig) { toastBig.setParams({ title: component.get('v.lblImgTooLargeTitle'), message: component.get('v.lblImgTooLargeMsg'), type: 'error', duration: 6000 }); toastBig.fire(); }
+                                } catch(ex) {}
+                                document.body.removeChild(fi);
+                                return;
+                            }
+                            // ≤3MB → dùng base64 để lưu được vào EmailMessage
                             var rd = new FileReader();
                             rd.onload = function(ev3) {
                                 var sel = quill.getSelection(true);
-                                quill.insertEmbed(sel.index, 'image', ev3.target.result);
+                                var idx = sel ? sel.index : quill.getLength();
+                                quill.insertEmbed(idx, 'image', ev3.target.result);
                                 document.body.removeChild(fi);
                             };
                             rd.readAsDataURL(f);
@@ -476,7 +507,11 @@
                     setTimeout(function() {
                         document.addEventListener('mousedown', function onOut(ev2) {
                             var d = document.getElementById('fec-img-dd');
-                            if (d && !d.contains(ev2.target)) { closeImgDD(); document.removeEventListener('mousedown', onOut); }
+                            // tungnm37 sửa: không đóng nếu click vào chính button ảnh (tránh toggle conflict)
+                            if (d && !d.contains(ev2.target) && !imgBtn.contains(ev2.target)) {
+                                closeImgDD();
+                                document.removeEventListener('mousedown', onOut);
+                            }
                         });
                     }, 50);
                 }
@@ -601,11 +636,16 @@
             }
 
             if (inTable) {
-                // Trong table: stop Quill intercept tất cả key trừ Backspace/Delete (để native xử lý)
-                if (e.keyCode !== 8 && e.keyCode !== 46) {
-                    e.stopImmediatePropagation();
+                // tungnm37 sửa: stop Quill intercept TẤT CẢ key trong table, để native browser xử lý
+                e.stopImmediatePropagation();
+                // Backspace/Delete: dùng execCommand để xóa nội dung trong td
+                if (e.keyCode === 8) {
+                    e.preventDefault();
+                    document.execCommand('delete', false, null);
+                } else if (e.keyCode === 46) {
+                    e.preventDefault();
+                    document.execCommand('forwardDelete', false, null);
                 }
-                // Backspace/Delete trong table → native browser xử lý bình thường
                 return;
             }
 
@@ -905,6 +945,19 @@
         return result.split('\x00T\x00').join(title);
     },
 
+    // tungnm37 thêm: đảm bảo tất cả td/th trong editor có contenteditable để xóa/sửa được
+    _makeTableCellsEditable: function(rootEl) {
+        if (!rootEl) return;
+        var cells = rootEl.querySelectorAll('td, th');
+        for (var i = 0; i < cells.length; i++) {
+            cells[i].setAttribute('contenteditable', 'true');
+            // Nếu cell rỗng hoặc chỉ có &nbsp;, đặt nội dung là khoảng trắng để cursor vào được
+            if (!cells[i].textContent.trim() || cells[i].innerHTML === '&nbsp;') {
+                cells[i].innerHTML = '\u00a0';
+            }
+        }
+    },
+
     cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
@@ -921,7 +974,7 @@
         if (!body) return;
         var updated = this.replaceDanhXung(body, title);
         component.set('v.body', updated);
-        if (window._fecQuill) window._fecQuill.root.innerHTML = this.cleanBody(updated);
+        if (window._fecQuill) window._fecQuill.clipboard.dangerouslyPasteHTML(this.cleanBody(updated));
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
@@ -983,7 +1036,8 @@
                 try {
                     var toast = $A.get('e.force:showToast');
                     if (toast) {
-                        toast.setParams({ title: 'Thành công', message: 'Email was sent.', type: 'success', duration: 4000 });
+                        // tungnm37 sửa: dùng custom labels
+                        toast.setParams({ title: component.get('v.lblSuccessTitle'), message: component.get('v.lblSuccessSentMsg'), type: 'success', duration: 4000 });
                         toast.fire();
                     }
                 } catch(te) { console.log('toast error', te); }
@@ -998,11 +1052,11 @@
                 }
                 console.error('sendEmail error state=' + state + ' msg=' + msg, errors);
                 component.set('v.errorMsg', msg);
-                // Toast error
+                // Toast error - tungnm37 sửa: dùng custom label
                 try {
                     var toastErr = $A.get('e.force:showToast');
                     if (toastErr) {
-                        toastErr.setParams({ title: 'Lỗi gửi email', message: msg, type: 'error', duration: 8000 });
+                        toastErr.setParams({ title: component.get('v.lblWeHitASnag') || 'Lỗi gửi email', message: msg, type: 'error', duration: 8000 });
                         toastErr.fire();
                     }
                 } catch(te2) { console.log('toast error2', te2); }
@@ -1027,7 +1081,7 @@
                         var h12=h%12||12, minStr=min<10?'0'+min:min;
                         ds = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' at '+h12+':'+minStr+' '+ampm;
                     }
-                    var rb=(m.TextBody||m.HtmlBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+                    var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
                     return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,bodyHtml:m.HtmlBody||'',messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};

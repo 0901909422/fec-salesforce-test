@@ -76,7 +76,6 @@ import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC
 import FEC_Add_Item_Label from "@salesforce/label/c.FEC_Add_Item_Label";
 import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Remark_Label";
 import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
-
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -197,6 +196,8 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
+
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -405,7 +406,7 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-        typeof o.fecMasterDataSettingIsEdit === "boolean"
+      typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
   };
@@ -2308,14 +2309,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       return false;
     }
 
-    if (hasAddressUpdate) {
-      const res = await cmp.commitPendingAddressUpdatesForProcessAction();
-      if (!res?.success) {
-        this.showToast(FEC_Error_Title, res?.errorMessage || FEC_Error_Title, "error");
-        return false;
-      }
-      this._refreshFecUpdateAddressAfterProcessSuccess();
-    }
+    // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
+    // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
@@ -2414,20 +2409,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (method === ACTION_ADDRESS_UPDATE) {
       let processObj = this.business.processActionlst?.find(p => p.value === ACTION_ADDRESS_UPDATE);
       if (processObj && processObj.disabled) {
-        return; // Prevent further action if already disabled
-      }
-      this.addressUpdateClickCount++;
-      if (this.addressUpdateClickCount >= 3) {
-        this.business.processActionlst = this.business.processActionlst.map(
-          (process) => {
-            if (process.value === ACTION_ADDRESS_UPDATE) {
-              return { ...process, disabled: true };
-            }
-            return process;
-          }
-        );
-        // Force LWC reactivity to re-render the button as disabled
-        this.business = { ...this.business };
+        return;
       }
     }
 
@@ -2619,7 +2601,6 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
 
         } else {
-          this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
           // PhuongNT add set msg error for call api
@@ -2659,9 +2640,13 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.isProcessActionFailed = true;
         this.isProcessActionSuccessed = false;
-        this.processActionMsg = msgError;
-        if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
-          this._revertFecUpdateAddressAfterProcessFailure();
+        if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+          this._handleAddressUpdateFail();
+        } else {
+          this.processActionMsg = msgError;
+          if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
+            this._revertFecUpdateAddressAfterProcessFailure();
+          }
         }
       })
       .finally(() => {
@@ -2669,10 +2654,22 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
   }
 
+  _handleAddressUpdateFail() {
+    this.addressUpdateFailCount++;
+    if (this.addressUpdateFailCount >= 3) {
+      this.business.processActionlst = (this.business.processActionlst || []).filter(
+        (p) => p.value !== ACTION_ADDRESS_UPDATE
+      );
+      this.business = { ...this.business };
+      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL;
+      this._revertFecUpdateAddressAfterProcessFailure();
+    } else {
+      this.processActionMsg = FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR;
+    }
+  }
+
   _getFecUpdateAddressCmp() {
-    const host = this.template.querySelector(
-      '[data-fec-lwc="fec_UpdateAddress"]',
-    );
+    const host = this._findFecUpdateAddressHostEl();
     if (!host) {
       return null;
     }
@@ -3146,5 +3143,44 @@ export default class Fec_CaseBussiness extends LightningElement {
     } catch(error) {
       console.error('Error updating record: ', error);
     }
+=======
+>>>>>>> force-app/main/default/lwc/fec_CaseBussiness/fec_CaseBussiness.js
   }
+
+  // PhuongNT add handle save data for fields readonly were changed data by another field
+  async handleSaveFieldReadOnly() {
+    let mapRecord = new Map();
+    const els = this.template.querySelectorAll('[data-id="field-read-only"]');
+    els?.forEach(el => {
+      const isUpdateReadOnly = el.dataset.isUpdateReadOnly;
+      if (!isUpdateReadOnly) return; // ingnore
+
+      const fieldName = el.dataset.field;
+      const recordId = el.dataset.recordId;
+      const value = el.dataset.value;
+      
+      if (mapRecord.has(recordId)) {
+          mapRecord.get(recordId)[fieldName] = value;
+      } else {
+        let fields = {
+          'Id': recordId,
+          [fieldName]: value
+        };
+        mapRecord.set(recordId, fields);
+      }
+    });
+    if (mapRecord.size === 0) return;
+    try {
+      const updatePromises = Array.from(mapRecord.values()).map(fields => {
+        const recordInput = { fields };
+        console.log('>>>>recordInput: ', JSON.stringify(recordInput));
+        return updateRecord(recordInput);
+      });
+      await Promise.all(updatePromises);
+      console.log('Record updated successfully!');
+    } catch(error) {
+      console.error('Error updating record: ', error);
+    }
+  }
+
 }

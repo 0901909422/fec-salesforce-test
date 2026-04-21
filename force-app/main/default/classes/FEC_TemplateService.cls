@@ -38,7 +38,7 @@ public with sharing class FEC_TemplateService {
      * @param oldBody       Previous body value (null for insert) – used for content history
      * @return Id of the saved record
      */
-    public static Id saveTemplate(FEC_Template__c tmpl, String oldBody) {
+    public static Id saveTemplate(FEC_Template__c tmpl, String oldBody, List<Id> deletedAttachmentIds) {
         // CRUD check
         if (tmpl.Id == null) {
             if (!Schema.sObjectType.FEC_Template__c.isCreateable()) {
@@ -54,6 +54,10 @@ public with sharing class FEC_TemplateService {
         String newBody = tmpl.FEC_Body__c;
 
         upsert tmpl;
+
+        if (deletedAttachmentIds != null && !deletedAttachmentIds.isEmpty()) {
+            delete [SELECT Id FROM ContentDocument WHERE Id IN :deletedAttachmentIds];
+        }
 
         // Track body change → FEC_Content_History_Tracking__c
         // Skip when oldBody is null (initial save / draft→real conversion)

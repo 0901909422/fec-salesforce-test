@@ -114,7 +114,7 @@ public without sharing class FEC_CustomEmailService {
     public static List<EmailMessage> getEmailMessages(String caseId) {
         return [
             SELECT Id, FromName, FromAddress, ToAddress, CcAddress,
-                   Subject, TextBody, MessageDate, Incoming
+                   Subject, TextBody, HtmlBody, MessageDate, Incoming
             FROM EmailMessage
             WHERE ParentId = :caseId
             ORDER BY MessageDate DESC

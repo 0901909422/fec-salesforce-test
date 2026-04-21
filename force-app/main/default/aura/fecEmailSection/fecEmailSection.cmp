@@ -8,6 +8,7 @@
     <aura:attribute name="ccEmail" type="String" default="" />
     <aura:attribute name="subject" type="String" default="" />
     <aura:attribute name="body" type="String" default="" />
+    <aura:attribute name="rawBody" type="String" default="" />
     <aura:attribute name="errorMsg" type="String" default="" />
     <aura:attribute name="isSending" type="Boolean" default="false" />
     <aura:attribute name="titleReply" type="String" default="Anh/ Chi" />
@@ -49,6 +50,18 @@
     <aura:attribute name="lblNone" type="String" default="{!$Label.c.FEC_Email_Option_None}" />
     <aura:attribute name="lblWriteEmail" type="String" default="{!$Label.c.FEC_Email_Placeholder_Write}" />
     <aura:attribute name="lblCompose" type="String" default="{!$Label.c.FEC_Email_Btn_Compose}" />
+    <!-- tungnm37 thêm: labels cho toast/error messages -->
+    <aura:attribute name="lblFileTooLargeTitle" type="String" default="{!$Label.c.FEC_Email_Error_File_Too_Large_Title}" />
+    <aura:attribute name="lblFileTooLargeMsg" type="String" default="{!$Label.c.FEC_Email_Error_File_Too_Large_Msg}" />
+    <aura:attribute name="lblImgTooLargeTitle" type="String" default="{!$Label.c.FEC_Email_Error_Image_Too_Large_Title}" />
+    <aura:attribute name="lblImgTooLargeMsg" type="String" default="{!$Label.c.FEC_Email_Error_Image_Too_Large_Msg}" />
+    <aura:attribute name="lblSubjectRequired" type="String" default="{!$Label.c.FEC_Email_Error_Subject_Required}" />
+    <aura:attribute name="lblBodyRequired" type="String" default="{!$Label.c.FEC_Email_Error_Body_Required}" />
+    <aura:attribute name="lblWeHitASnag" type="String" default="{!$Label.c.FEC_Email_Error_We_Hit_A_Snag}" />
+    <aura:attribute name="lblInvalidFormatTitle" type="String" default="{!$Label.c.FEC_Email_Error_Invalid_Format_Title}" />
+    <aura:attribute name="lblSuccessTitle" type="String" default="{!$Label.c.FEC_Email_Success_Title}" />
+    <aura:attribute name="lblSuccessSentMsg" type="String" default="{!$Label.c.FEC_Email_Success_Sent_Msg}" />
+    <aura:attribute name="lblToRequired" type="String" default="{!$Label.c.FEC_Email_Error_To_Required}" />
 
     <!-- Load viewMode từ Case record -->
     <force:recordData aura:id="caseData"
@@ -153,7 +166,10 @@
                                 <div class="attach-pill">
                                     <span class="attach-pill-icon"><lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" /></span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
+                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
+                                    <aura:if isTrue="{!not(att._fromTemplate)}">
+                                        <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
+                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -254,7 +270,10 @@
                                         <lightning:icon iconName="doctype:attachment" size="xx-small" class="fec-icon" />
                                     </span>
                                     <span class="attach-pill-name">{!att.name}</span>
-                                    <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
+                                    <!-- tungnm37 sửa: chỉ hiện X với file user upload, không hiện với template attachment -->
+                                    <aura:if isTrue="{!not(att._fromTemplate)}">
+                                        <span class="attach-pill-remove" data-idx="{!idx}" onclick="{!c.removeAttachment}">&#x2715;</span>
+                                    </aura:if>
                                 </div>
                             </aura:iteration>
                         </div>
@@ -411,7 +430,16 @@
                                         </div>
                                     </span>
                                 </div>
-                                <div class="feed-body-full">{!email.bodyFull}</div>
+                                <div class="feed-body-full">
+                                    <aura:if isTrue="{!not(empty(email.bodyHtml))}">
+                                        <lightning:formattedRichText value="{!email.bodyHtml}" />
+                                        <aura:set attribute="else">
+                                            {!email.bodyFull}
+                                        </aura:set>
+                                    </aura:if>
+                                </div>
+                                <!-- tungnm37 sửa: chỉ hiện Reply/Reply All/Forward ở màn Handling, không hiện ở Review -->
+                                <aura:if isTrue="{!v.isHandling}">
                                 <div class="feed-actions">
                                     <div class="compose-footer-reply">
                                         <button class="foot-reply-btn" data-id="{!email.Id}" data-from="{!email.fromAddress}" data-to="{!email.toAddress}" data-subject="{!email.subject}" onclick="{!c.handleReply}" title="Reply">
@@ -428,6 +456,7 @@
                                         </button>
                                     </div>
                                 </div>
+                                </aura:if>
                             </aura:if>
                         </div>
                     </div>

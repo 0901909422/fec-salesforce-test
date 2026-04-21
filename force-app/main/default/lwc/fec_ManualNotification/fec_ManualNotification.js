@@ -2,12 +2,13 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
 import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
+import CASE_NOTIFICATION from '@salesforce/messageChannel/FEC_Case_Notification__c';
 import getCase from '@salesforce/apex/FEC_CaseEditNOCController.getCase';
 import { VIEW_MODE_HANDLING } from 'c/fec_CommonConst';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import getAvailableNotifications from '@salesforce/apex/FEC_Notification.getAvailableNotifications';
-import sendManualEmail from '@salesforce/apex/FEC_Notification.sendManualEmail';
+import sendManualNotification from '@salesforce/apex/FEC_Notification.sendManualNotification';
 import previewTemplate from '@salesforce/apex/FEC_Notification.previewTemplate';
 import labelSendManualNotification from '@salesforce/label/c.FEC_Send_Manual_Notification';
 import LBL_SFT_Notification_Type from '@salesforce/label/c.LBL_SFT_Notification_Type';
@@ -30,7 +31,9 @@ import {
     PATTERN_EMAIL_FEC_STRICT,
     MSG_INVALID_EMAIL_FORMAT,
     ERROR_MODAL_TITLE,
-    MSG_ENTER_EMAIL_CORRECTLY
+    MSG_ENTER_EMAIL_CORRECTLY,
+    NOTIFICATION_CHANNEL_SF_APP,
+    FEC_SENT_SUCCESS
 } from 'c/fec_CommonConst';
 
 
@@ -68,7 +71,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     messageContext;
     
     subscriptionMode = null;
-    subscriptionNOC = null;
+    //subscriptionNOC = null;
+    subscriptionCaseNotif = null;
     
     @track modeEditCase = false;
     @track isSubmited = true;
@@ -78,15 +82,16 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
     @track categoryId = null;
     @track subCategoryId = null;
     @track subCodeId = null;
+    @track stageId = null;
     @track isDropdownOpen = false;
     @track isSearching = false;
     @track userSearchResults = [];
     @track searchTerm = '';
     searchTimeout;
 
-    // Getter kiểm tra Internal User
-    get isInternalUser() {
-        return this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER;
+    // Getter kiểm tra Select Email Mode
+    get isSelectEmailMode() {
+        return this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP;
     }
 
     // Getter kiểm tra kết quả rỗng
@@ -119,8 +124,13 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         unsubscribe(this.subscriptionMode);
         this.subscriptionMode = null;
 
-        unsubscribe(this.subscriptionNOC);
-        this.subscriptionNOC = null;
+        // unsubscribe(this.subscriptionNOC);
+        // this.subscriptionNOC = null;
+
+        if (this.subscriptionCaseNotif) {
+            unsubscribe(this.subscriptionCaseNotif);
+            this.subscriptionCaseNotif = null;
+        }
     }
 
     subscribeToMessageChannel() {
@@ -131,10 +141,17 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             { scope: APPLICATION_SCOPE }
         );
 
-        this.subscriptionNOC = subscribe(
+        // this.subscriptionNOC = subscribe(
+        //     this.messageContext,
+        //     CASE_NOC,
+        //     (message) => this.handleNOCMessage(message),
+        //     { scope: APPLICATION_SCOPE }
+        // );
+
+        this.subscriptionCaseNotif = subscribe(
             this.messageContext,
-            CASE_NOC,
-            (message) => this.handleNOCMessage(message),
+            CASE_NOTIFICATION,
+            (message) => this.handleCaseNotifMessage(message),
             { scope: APPLICATION_SCOPE }
         );
     }
@@ -144,12 +161,14 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
         this.modeEditCase = message.isModeEdit === true;
     }
 
-    handleNOCMessage(message) {
+
+    handleCaseNotifMessage(message) {
         if (!message) return;
         this.productTypeId = message?.productTypeId;
         this.categoryId = message?.categoryId;
         this.subCategoryId = message?.subCategoryId;
         this.subCodeId = message?.subCodeId;
+        this.stageId = message?.stageId;
         this.fetchNotifications();
     }
 
@@ -161,7 +180,8 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
                 productTypeId: this.productTypeId, 
                 categoryId: this.categoryId, 
                 subCategoryId: this.subCategoryId, 
-                subCodeId: this.subCodeId 
+                subCodeId: this.subCodeId,
+                stageId: this.stageId
             });
             console.log('--- [fetchNotifications] data: ' + JSON.stringify(data));
             this.rawNotifications = data;
@@ -206,7 +226,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             this.selectedTargetGroup = selectedItem.targetGroup;
             this.targetEmail = selectedItem.targetEmail;
             // Xóa email và reset trạng thái combobox nếu là Internal User
-            if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER) {
+            if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) {
                 this.targetEmail = '';
                 this.searchTerm = '';
                 this.isDropdownOpen = false;
@@ -256,7 +276,7 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     // --- NEW: Open Modal Logic ---
     async handleEmailInputKeyup(event) {
-        if (this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER && event.keyCode === 13) {
+        if ((this.selectedTargetGroup === TARGET_GROUP_INTERNAL_USER || this.selectedChannel === NOTIFICATION_CHANNEL_SF_APP) && event.keyCode === 13) {
             // Open the LWC Modal and wait for the user to close it
             const result = await fec_UserSearchModal.open({
                 size: 'large',
@@ -371,31 +391,31 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
             return;
         }
 
-        sendManualEmail({
+            sendManualNotification({
             caseId: this.recordId,
             templateId: this.selectedTemplateId,
             toEmail: this.targetEmail,
             fecNotificationConfigId: this.selectedNotificationId
         })
-            .then(() => {
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
-                        message: this.label.FEC_Email_Sent_Success,
-                        variant: 'success',
-                    })
-                );
-                // Reset states
-                this.selectedNotificationId = null; 
-                this.selectedTemplateId = null;
-                this.selectedChannel = '';
-                this.selectedTargetGroup = '';
-                this.targetEmail = '';
-                this.searchTerm = '';
-                this.isDropdownOpen = false;
-            })
-            .catch(error => {
-                this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
-            });
+                .then(() => {
+                    this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: this.label.FEC_MSG_IPP_AddIpp_Default_Success,
+                            message: FEC_SENT_SUCCESS,
+                            variant: 'success',
+                        })
+                    );
+                    // Reset states
+                    this.selectedNotificationId = null; 
+                    this.selectedTemplateId = null;
+                    this.selectedChannel = '';
+                    this.selectedTargetGroup = '';
+                    this.targetEmail = '';
+                    this.searchTerm = '';
+                    this.isDropdownOpen = false;
+                })
+                .catch(error => {
+                    this.error =  this.label.FEC_Email_Send_Error + ': ' + (error.body ? error.body.message : JSON.stringify(error));
+                });
     }
 }
