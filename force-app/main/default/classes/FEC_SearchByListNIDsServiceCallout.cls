@@ -75,7 +75,7 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
         Map<String, Object> bodyMap = new  Map<String, Object>();
         
         bodyMap.put('sys', new Map<String, Object> {
-            'dateTime' => FEC_CommonUltils.buildDatetimeForAPI(),
+            'dateTime' => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_SSSSSS_XXX),
             'transID' => transactionId,
             'requestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
         });
