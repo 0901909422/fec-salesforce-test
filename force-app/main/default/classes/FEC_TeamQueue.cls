@@ -36,7 +36,7 @@ public with sharing class FEC_TeamQueue {
 
         @AuraEnabled public Id teamQueueRecordId;      // FEC_Team_Queue__c.Id
         @AuraEnabled public Id teamId;
-        @AuraEnabled public String queueLabelStatus;    // FEC_Team_Queue__c.FEC_Queue_Label_Status__c
+        @AuraEnabled public String queueLabelStatus;    // FEC_Team_Queue__c.FEC_Team__c
     }
     /*------------------------------------------------------------
     Author:        Ha Linh
@@ -94,7 +94,7 @@ public with sharing class FEC_TeamQueue {
             List<FEC_Team_Queue__c> teamQueues = [
                 SELECT Id, FEC_Queue_Name__c
                 FROM FEC_Team_Queue__c
-                WHERE Team__r.Id = :teamID
+                WHERE FEC_Select_Team__r.Id = :teamID
                 ORDER BY FEC_Queue_Name__c
             ];
 
@@ -173,9 +173,9 @@ public with sharing class FEC_TeamQueue {
         try {
             // Create a new FEC_Team_Queue__c record
             FEC_Team_Queue__c newTeamQueue = new FEC_Team_Queue__c(
-                Team__c = teamID,  // This maps to the Name field on the custom object
+                FEC_Select_Team__c = teamID,  // This maps to the Name field on the custom object
                 FEC_Queue_Name__c = queueName,  // This maps to the custom field
-                FEC_Queue_Label_Status__c = labelStatus  // This maps to the custom field for label status
+                FEC_Team__c = labelStatus  // This maps to the custom field for label status
             );
             insert newTeamQueue;
             DepartmentAdmin.insertCustomLog(teamID, CLASS_NAME, 'saveNewQueue', 'Add New Queue For Team', '', queueName);
@@ -289,7 +289,7 @@ public with sharing class FEC_TeamQueue {
 
         // Resolve FEC_Team_Queue__c mapping
         FEC_Team_Queue__c teamQueue = [
-                SELECT Id, Team__c, FEC_Queue_Label_Status__c
+                SELECT Id, FEC_Select_Team__c, FEC_Team__c
                 FROM FEC_Team_Queue__c
                 WHERE Id = :teamQueueRecordId
                 LIMIT 1
@@ -297,8 +297,8 @@ public with sharing class FEC_TeamQueue {
 
         if (teamQueue != null) {
             dto.teamQueueRecordId = teamQueue.Id;
-            dto.teamId = teamQueue.Team__c;
-            dto.queueLabelStatus = teamQueue.FEC_Queue_Label_Status__c;
+            dto.teamId = teamQueue.FEC_Select_Team__c;
+            dto.queueLabelStatus = teamQueue.FEC_Team__c;
         }
         return dto;
     }
@@ -308,8 +308,8 @@ public with sharing class FEC_TeamQueue {
     Description:   Update queue label (Group.Name) and Team mapping (FEC_Team_Queue__c.Team__c)
     @param queueId Group (Queue) Id to update label
     @param newQueueLabel New label for queue (Group.Name)
-    @param teamQueueRecordId Id of FEC_Team_Queue__c to update Team__ct
-    @param newTeamId New Team__c Id to map the queue to
+    @param teamQueueRecordId Id of FEC_Team_Queue__c to update FEC_Select_Team__c
+    @param newTeamId New FEC_Select_Team__c Id to map the queue to
     @return Boolean success
     Test Class:    
     History
@@ -333,12 +333,12 @@ public with sharing class FEC_TeamQueue {
         FEC_Team_Queue__c tqUpdate = new FEC_Team_Queue__c(Id = teamQueueRecordId);
         Boolean isTqNeeded = false;
         if (newTeamId != null) {
-            tqUpdate.Team__c = newTeamId;
+            tqUpdate.FEC_Select_Team__c = newTeamId;
             messageEdit = messageEdit + ' update team to: ' + newTeamId;
             isTqNeeded = true;
         }
         if (!String.isBlank(newLabelStatus)) {
-            tqUpdate.FEC_Queue_Label_Status__c = newLabelStatus;
+            tqUpdate.FEC_Team__c = newLabelStatus;
             messageEdit = messageEdit + ' update label status to: ' + newLabelStatus;
             isTqNeeded = true;
         }

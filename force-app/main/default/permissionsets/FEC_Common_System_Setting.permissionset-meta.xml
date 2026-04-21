@@ -828,4 +828,9 @@
         <field>FEC_Team__c.FEC_Team_Label__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team_Queue__c.FEC_Select_Team__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>

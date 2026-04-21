@@ -2,13 +2,6 @@
     <div class="slds-card container">
         <div class="slds-card__header slds-grid slds-p-around_small">
             <header class="slds-media slds-media_center slds-has-flexi-truncate">
-                <div class="slds-media__figure">
-                    <span class="slds-icon_container slds-icon-standard-queue" title="Queues">
-                        <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                            <use xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#queue"></use>
-                        </svg>
-                    </span>
-                </div>
                 <div class="slds-media__body">
                     <h2 class="slds-card__header-title">
                         <span>{customLabels.CS_OrgChart_Text_header}</span>
@@ -146,11 +139,12 @@
                             <div class="slds-form-element__control">
                                 <lightning-input 
                                     type="text" 
+                                    class="validate-input"
                                     label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}
-                                    variant="label-hidden"
                                     value={editQueueLabel} 
                                     onchange={handleEditQueueLabelChange} 
-                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}>
+                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Label}
+                                    required>
                                 </lightning-input>
                             </div>
                         </div>
@@ -158,11 +152,12 @@
                             <div class="slds-form-element__control">
                                 <lightning-input 
                                     type="text" 
+                                    class="validate-input"
                                     label={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}
-                                    variant="label-hidden"
                                     value={editQueueLabelStatus} 
                                     onchange={handleEditQueueLabelStatusChange} 
-                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}>
+                                    placeholder={customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}
+                                    required>
                                 </lightning-input>
                             </div>
                         </div>

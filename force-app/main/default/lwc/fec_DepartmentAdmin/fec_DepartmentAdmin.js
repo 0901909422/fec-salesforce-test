@@ -128,28 +128,49 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     handleEditQueueLabelStatusChange(event) {
         this.editQueueLabelStatus = event.target.value;
     }
+    validateInputFields() {
+        const allValid = [
+            ...this.template.querySelectorAll('.validate-input'),
+        ].reduce((validSoFar, inputCmp) => {
+            inputCmp.reportValidity();
+            return validSoFar && inputCmp.checkValidity();
+        }, true);
+        return allValid;
+    }
 
     async handleSaveEditQueue() {
         if (!this.selectedQueueId || !this.editTeamQueueRecordId) return;
         this.editErrorMessage = '';
         this.isSavingEditQueue = true;
         try {
+            const allValid = this.validateInputFields();
+            if (!allValid) {
+                return;
+            }
+            const teamChanged = this.curentTeamId !== this.editTeamId;
+            const labelChanged = this.selectedQueueName !== this.editQueueLabel;
+            const labelStatusChanged = this.selectedQueueLabelStatus !== this.editQueueLabelStatus;
+            if (!teamChanged && !labelChanged && !labelStatusChanged) {
+                this.dispatchEvent(new ShowToastEvent({ 
+                    title: this.customLabels.CS_OrgChart_Text_Save_Waning_Title, 
+                    message: this.customLabels.CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected, 
+                    variant: 'warning', 
+                    mode: 'dismissible' 
+                }));
+                return;
+            }
             // Show confirmation dialog
             const confirmed = confirm(this.customLabels.CS_OrgChart_Text_EditQueueModal_Confirm_Save);
             if (confirmed) {
-                const teamChanged = this.curentTeamId !== this.editTeamId;
-                const labelChanged = this.selectedQueueName !== this.editQueueLabel;
-                const labelStatusChanged = this.selectedQueueLabelStatus !== this.editQueueLabelStatus;
                 const queueEdit = {
                     queueId: this.selectedQueueId,
                     newQueueLabel: null,
-                    teamQueueRecordId: null,
+                    teamQueueRecordId: this.editTeamQueueRecordId,
                     newTeamId: null,
                     newLabelStatus: null
                 };
                 if (teamChanged) {
                     queueEdit.newTeamId = this.editTeamId;
-                    queueEdit.teamQueueRecordId = this.editTeamQueueRecordId;
                 }
                 if (labelChanged) {
                     queueEdit.newQueueLabel = this.editQueueLabel;
@@ -172,7 +193,6 @@ export default class Fec_DepartmentAdmin extends LightningElement {
                 // send event to child history log
                 this.refreshHistoryChild();
             }
-            
         } catch (err) {
             const message = err && err.body && err.body.message ? err.body.message : (err.message ? err.message : 'Failed to save queue');
             this.editErrorMessage = message;

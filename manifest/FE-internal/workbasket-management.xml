@@ -117,6 +117,9 @@
         <members>CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err</members>
         <members>CS_OrgChart_Text_AddTeamModal_Input_Label_Placeholder</members>
         <members>CS_OrgChart_Text_AddTeamModal_Input_Name_Placeholder</members>
+        <members>CS_OrgChart_Text_EditQueueModal_Input_Queue_Status</members>
+        <members>CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder</members>
+        <members>CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -138,7 +141,7 @@
         <members>CustomLog__c.TargetObjectId__c</members>
         <members>FEC_Team__c.FEC_Team_Label__c</members>
         <members>FEC_Team__c.FEC_Team_Description__c</members>
-        <members>FEC_Team_Queue__c.Team__c</members>
+        <members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
         <name>CustomField</name>
     </types>
     <types>

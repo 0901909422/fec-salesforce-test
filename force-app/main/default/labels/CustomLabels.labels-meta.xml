@@ -13240,6 +13240,34 @@
         <value>Enter team API name</value>
     </labels>
     <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Input_Queue_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team For Status</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_QueueLabelStatus_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team phục vụ hiển thị tại trạng thái của Case (vd: Pending-CSIB01)</shortDescription>
+        <value>Team phục vụ hiển thị tại trạng thái của Case</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No changes detected to save</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Save_Waning_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>warning</value>
+    </labels>
+    <labels>
         <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
         <categories>Label</categories>
         <language>en_US</language>

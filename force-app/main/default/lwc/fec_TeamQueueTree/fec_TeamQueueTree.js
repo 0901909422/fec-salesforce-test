@@ -211,6 +211,15 @@ export default class fec_TeamQueueTree extends LightningElement {
     handleQueueLabelStatusChange(event) {
         this.queueLabelStatus = event.target.value;
     }
+    validateInputFields() {
+        const allValid = [
+            ...this.template.querySelectorAll('.validate-input'),
+        ].reduce((validSoFar, inputCmp) => {
+            inputCmp.reportValidity();
+            return validSoFar && inputCmp.checkValidity();
+        }, true);
+        return allValid;
+    }
 
     // Validate queue name format using regex
     validateQueueNameFormat(queueName) {
@@ -254,6 +263,11 @@ export default class fec_TeamQueueTree extends LightningElement {
     async saveNewTeam() {
         this.teamErrorMessage = '';
         this.isLoadingTeam = true;
+        const allValid = this.validateInputFields();
+        if (!allValid) {
+            this.isLoadingTeam = false;
+            return;
+        }
         try {
             // Basic client-side validations
             if (!this.teamLabel || this.teamLabel.trim().length === 0) {
@@ -317,6 +331,11 @@ export default class fec_TeamQueueTree extends LightningElement {
         // Reset any previous errors
         this.errorMessage = '';
         this.isLoading = true;
+        const allValid = this.validateInputFields();
+        if (!allValid) {
+            this.isLoading = false;
+            return;
+        }
 
         try {
             // Validate queue name format first

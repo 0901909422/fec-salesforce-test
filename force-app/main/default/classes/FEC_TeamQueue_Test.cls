@@ -57,7 +57,7 @@ public class FEC_TeamQueue_Test {
     static void testCreateTeamQueueRecord() {
         FEC_Team__c team = createSampleTeam();
         Test.startTest();
-        Boolean result = FEC_TeamQueue.createTeamQueueRecord(team.Id, 'TestQueueDevName');
+        Boolean result = FEC_TeamQueue.createTeamQueueRecord(team.Id, 'TestQueueDevName', 'Test Label Status');
         System.assertEquals(true, result, 'Team Queue record should be created successfully');
         Test.stopTest();
     }
@@ -67,7 +67,7 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         // Tạo record FEC_Team_Queue__c giả lập
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'TestQueueDevName'
         );
         insert tq;
@@ -88,7 +88,7 @@ public class FEC_TeamQueue_Test {
         
         // Tạo mapping record FEC_Team_Queue__c
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
+            FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'EditQueueDevName'
         );
         insert tq;
@@ -110,8 +110,9 @@ public class FEC_TeamQueue_Test {
         // Then create team and mapping record
         FEC_Team__c team = createSampleTeam();
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
-            Team__c = team.Id,
-            FEC_Queue_Name__c = 'EditQueueDevName'
+            FEC_Select_Team__c = team.Id,
+            FEC_Queue_Name__c = 'EditQueueDevName',
+            FEC_Team__c = 'Original Label Status'
         );
         insert tq;
 
@@ -120,14 +121,15 @@ public class FEC_TeamQueue_Test {
         System.assertNotEquals(null, tq.Id, 'Team-Queue mapping Id must not be null');
 
         Test.startTest();
-        Boolean updateResult = FEC_TeamQueue.updateQueueEdit(queueId, 'UpdatedLabel', tq.Id, team.Id);
+        Boolean updateResult = FEC_TeamQueue.updateQueueEdit(queueId, 'UpdatedLabel', tq.Id, team.Id, 'Updated Label Status');
         System.assertEquals(true, updateResult, 'Update should succeed');
         // Verify that Group name was updated
         Group updated = [SELECT Id, Name FROM Group WHERE Id = :queueId LIMIT 1];
         System.assertEquals('UpdatedLabel', updated.Name, 'Group name should be updated');
         // Verify that mapping was updated to point to the same team (no change expected)
-        FEC_Team_Queue__c updatedTq = [SELECT Id, Team__c FROM FEC_Team_Queue__c WHERE Id = :tq.Id LIMIT 1];
-        System.assertEquals(team.Id, updatedTq.Team__c, 'Team mapping should match the provided team Id');
+        FEC_Team_Queue__c updatedTq = [SELECT Id, FEC_Select_Team__c, FEC_Team__c FROM FEC_Team_Queue__c WHERE Id = :tq.Id LIMIT 1];
+        System.assertEquals(team.Id, updatedTq.FEC_Select_Team__c, 'Team mapping should match the provided team Id');
+        System.assertEquals('Updated Label Status', updatedTq.FEC_Team__c, 'Label status should be updated');
         Test.stopTest();
     }
 }
