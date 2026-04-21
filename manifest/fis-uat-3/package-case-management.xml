@@ -23,6 +23,7 @@
 	<types>
         <members>fecInteractionChatConversations</members>
         <members>fecInteractionChatInfo</members>
+		<members>fec_CaseBussiness</members>
 		<members>fec_CommonConst</members>
 		<members>fec_FastCashCaseForm</members>
 		<name>LightningComponentBundle</name>
