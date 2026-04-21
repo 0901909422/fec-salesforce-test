@@ -887,10 +887,10 @@
         <members>FEC_Clear_Session__c</members>
         <name>CustomTab</name>
     </types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
 		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
