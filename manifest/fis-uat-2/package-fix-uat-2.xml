@@ -458,6 +458,7 @@
         <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
         <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
         <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
