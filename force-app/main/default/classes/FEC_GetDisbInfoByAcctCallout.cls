@@ -198,7 +198,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         String requestorId
     ) {
         String endpoint = resolveDisbInfoEndpoint();
-        
+
         Map<String, String> httpHeaders = new Map<String, String>{
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
