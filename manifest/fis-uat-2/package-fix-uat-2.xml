@@ -111,6 +111,9 @@
 		<members>FEC_EmeaAccountInqService</members>
 		<members>FEC_SyncCaseStatusBatch</members>
 		<members>FEC_SyncCaseStatusScheduler</members>
+		<members>FEC_CardInfoController</members>
+		<members>FEC_GetCardSecInfo</members>
+		<members>FEC_IPPController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -186,6 +189,8 @@
 		<members>fec_Modal</members>
 		<members>fec_CardReplacementAddress</members>
 		<members>fecInteractionCreationHighlight</members>
+		<members>fec_CardInfo</members>
+		<members>fec_IPPDetails</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -472,6 +477,7 @@
         <members>FEC_Email_Success_Title</members>
         <members>FEC_Email_Success_Sent_Msg</members>
         <members>FEC_CS_Support_Queue_Name</members>
+        <members>FEC_Other_Card_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
