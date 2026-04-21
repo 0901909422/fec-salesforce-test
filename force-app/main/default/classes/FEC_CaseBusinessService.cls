@@ -1215,6 +1215,8 @@ public without sharing class FEC_CaseBusinessService {
         finalStatusBeforeSubmit = c.FEC_Final_Status__c;
       }
 
+      String blockCode = (String)params.get('blockCode');
+
       switch on selectedMethod {
         when ROUTE_TO {
           String queueId = (String) params.get('queueId');
@@ -1312,10 +1314,10 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when BLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', BLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', blockCode, BLOCK_CARD);
         }
         when UNBLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', UNBLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', blockCode, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);

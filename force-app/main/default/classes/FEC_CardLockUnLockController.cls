@@ -1,6 +1,6 @@
 public with sharing class FEC_CardLockUnLockController {
 
-    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String method) {
+    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String method) {
         UpdateResult result = new UpdateResult();
         try {
             Case objCasse = [
@@ -35,7 +35,7 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
-                objCasse.FEC_New_Block_Code__c,
+                blockCode,
                 funcCode,
                 cardNumber,
                 objCasse.FEC_Account_Number__c
