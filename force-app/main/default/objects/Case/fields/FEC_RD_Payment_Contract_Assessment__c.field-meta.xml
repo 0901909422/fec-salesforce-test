@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_RD_Payment_Contract_Assessment__c</fullName>
+    <description>Đánh giá của RD PM cho yêu cầu đóng HĐ</description>
+    <label>RD Payment Contract Assessment</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Hợp đồng không thể đóng</fullName>
+                <default>false</default>
+                <label>Hợp đồng không thể đóng</label>
+            </value>
+            <value>
+                <fullName>Hợp đồng có thể đóng với tờ trình</fullName>
+                <default>false</default>
+                <label>Hợp đồng có thể đóng với tờ trình</label>
+            </value>
+            <value>
+                <fullName>Hợp đồng có thể đóng không cần tờ trình</fullName>
+                <default>false</default>
+                <label>Hợp đồng có thể đóng không cần tờ trình</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
