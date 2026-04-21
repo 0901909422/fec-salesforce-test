@@ -465,7 +465,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     get showRecipientSection() {
-        return this.deliveryAddressSelected === true || this.deliveryOfficeSelected === true;
+        return this.deliveryAddressSelected === true;
     }
 
     get showAddressSection() {
