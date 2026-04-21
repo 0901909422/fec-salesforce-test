@@ -1488,12 +1488,6 @@
                 <identifier>c_fec_CaseEditNOC</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_Chathub</componentName>
-                <identifier>c_fec_Chathub</identifier>
-            </componentInstance>
-        </itemInstances>
         <name>sidebar</name>
         <type>Region</type>
     </flexiPageRegions>
