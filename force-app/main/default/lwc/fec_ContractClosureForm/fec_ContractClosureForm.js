@@ -464,12 +464,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
         return this.deliveryEmailSelected === true;
     }
 
+    get showRecipientSection() {
+        return this.deliveryAddressSelected === true || this.deliveryOfficeSelected === true;
+    }
+
     get showAddressSection() {
-        return (
-            this.deliveryAddressSelected === true ||
-            (this.deliveryEmailSelected === true &&
-                this.deliveryOfficeSelected === true)
-        );
+        return this.deliveryAddressSelected === true;
     }
 
     get hasDemographicEmail() {
@@ -667,7 +667,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     assertRecipientNameInputValid() {
-        if (!this.showAddressSection) {
+        if (!this.showRecipientSection) {
             return true;
         }
         const inp = this.template.querySelector('lightning-input[data-fec-field="recipientName"]');
@@ -682,7 +682,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     assertRecipientPhoneInputValid() {
-        if (!this.showAddressSection) {
+        if (!this.showRecipientSection) {
             return true;
         }
         const inp = this.applyRecipientPhoneCustomValidity();
