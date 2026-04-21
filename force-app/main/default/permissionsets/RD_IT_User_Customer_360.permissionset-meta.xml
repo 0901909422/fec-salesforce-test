@@ -537,6 +537,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Contact_List__c.FEC_Temporary_Email__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Country__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
