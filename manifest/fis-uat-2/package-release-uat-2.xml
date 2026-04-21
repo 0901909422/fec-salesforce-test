@@ -1388,6 +1388,8 @@
 		<members>FEC_SendNotificationEmailsQueueable</members>
 		<members>FEC_CardReplacementAddressController</members>
 		<members>FEC_EmeaAccountInqService</members>
+		<members>FEC_SyncCaseStatusBatch</members>
+		<members>FEC_SyncCaseStatusScheduler</members>
         <name>ApexClass</name>
     </types>
 	<types>
