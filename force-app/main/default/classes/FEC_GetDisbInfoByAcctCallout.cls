@@ -149,13 +149,14 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     public static String buildRequestPayload(
         String transId,
         String dateTimeHeader,
+        String requestorId,
         String accountNumber,
         Integer ageOfRecords
     ) {
         Map<String, Object> headerMap = new Map<String, Object>{
             'TransID' => transId,
             'DateTime' => dateTimeHeader,
-            'RequestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            'RequestorID' => requestorId,
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
         Map<String, Object> bodyMap;
@@ -252,6 +253,22 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     }
 
     public static GetDisbInfoByAcctExecutionResult getDisbInfoByAcctExecutionResult(String accountNumber, Integer ageOfRecords) {
+        return getDisbInfoByAcctExecutionResult(
+            accountNumber,
+            ageOfRecords,
+            String.valueOf(UUID.randomUUID()),
+            Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+        );
+    }
+
+    public static GetDisbInfoByAcctExecutionResult getDisbInfoByAcctExecutionResult(
+        String accountNumber,
+        Integer ageOfRecords,
+        String transId,
+        String dateTimeHeader,
+        String requestorId
+    ) {
         GetDisbInfoByAcctExecutionResult result = new GetDisbInfoByAcctExecutionResult();
         result.endpoint = resolveDisbInfoEndpoint();
         ValidationResult reqVal = validateRequest(accountNumber);
@@ -266,12 +283,10 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             stashDisbApiLog(result);
             return result;
         }
-        String transactionId = String.valueOf(UUID.randomUUID());
-        String dateTimeValue = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX);
         ValidationResult headerVal = validateRequestHeaders(
-            transactionId,
-            dateTimeValue,
-            FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+            transId,
+            dateTimeHeader,
+            requestorId
         );
         if (!headerVal.isValid) {
             HttpResponse synHdr = new HttpResponse();
@@ -284,16 +299,16 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             stashDisbApiLog(result);
             return result;
         }
-        String payload = buildRequestPayload(transactionId, dateTimeValue, accountNumber, ageOfRecords);
+        String payload = buildRequestPayload(transId, dateTimeHeader, requestorId, accountNumber, ageOfRecords);
         result.requestPayload = payload;
         HttpResponse resp;
         String callExMsg = null;
         try {
             resp = sendRequest(
                 payload,
-                transactionId,
-                dateTimeValue,
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+                transId,
+                dateTimeHeader,
+                requestorId
             );
         } catch (Exception e) {
             callExMsg = e.getMessage();

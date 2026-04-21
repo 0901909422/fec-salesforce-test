@@ -64,8 +64,24 @@
             // Ghép header + body + footer
             var fullBody = (header ? header : '') + body + (footer ? footer : '');
             component.set('v.body', fullBody);
+            component.set('v.rawBody', fullBody); // tungnm37: lưu raw HTML để gửi email
             if (window._fecQuill) {
-                window._fecQuill.root.innerHTML = helper.cleanBody(fullBody);
+                var _q = window._fecQuill;
+                var _body = helper.cleanBody(fullBody);
+                window.setTimeout(function() {
+                    if (_q.scroll && _q.scroll.observer) {
+                        _q.scroll.observer.disconnect();
+                    }
+                    _q.root.innerHTML = _body;
+                    _q.root.classList.remove('ql-blank');
+                    // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
+                    helper._makeTableCellsEditable(_q.root);
+                    window.setTimeout(function() {
+                        if (_q.scroll && _q.scroll.observer) {
+                            _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                        }
+                    }, 100);
+                }, 50);
             }
             // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
@@ -276,24 +292,29 @@
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
         if (!files || files.length === 0) return;
-        var MAX_SIZE = 25 * 1024 * 1024; // 25MB
+        // tungnm37 sửa: lưu ref trước khi Aura re-render
+        var inputTarget = event.target;
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
         var existing = component.get('v.attachments') || [];
         var newList = existing.slice();
-        var hasError = false;
         for (var i = 0; i < files.length; i++) {
-            if (files[i].size > MAX_SIZE) {
-                hasError = true;
+            var f = files[i];
+            var isImage = f.type && f.type.indexOf('image/') === 0;
+            // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
+            if (!isImage && f.size > MAX_SIZE) {
                 try {
                     var t = $A.get('e.force:showToast');
-                    if (t) { t.setParams({ title: 'File too large', message: files[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 }); t.fire(); }
+                    if (t) { t.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: f.name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 }); t.fire(); }
                 } catch(e) {}
             } else {
-                newList.push({ name: files[i].name, size: files[i].size, file: files[i] });
+                newList.push({ name: f.name, size: f.size, file: f });
             }
         }
         component.set('v.attachments', newList);
-        // Reset input so same file can be re-selected
-        event.target.value = '';
+        // tungnm37 sửa: reset sau setTimeout để lần 2 vẫn trigger onchange
+        window.setTimeout(function() {
+            try { if (inputTarget) inputTarget.value = ''; } catch(ex) {}
+        }, 0);
     },
 
     removeAttachment: function(component, event, helper) {
@@ -332,23 +353,79 @@
     },
 
     discardEmail: function(component, event, helper) {
-        // Chỉ xóa nội dung text trong editor, không đóng compose
-        component.set('v.body', '');
-        if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
-        component.set('v.errorMsg', '');
+        // tungnm37 sửa: hiện popup xác nhận qua JS (append to body để tránh stacking context của Aura)
+        var existing = document.getElementById('fec-discard-popup');
+        if (existing) return;
+        var lblTitle = component.get('v.lblDiscardTitle') || 'Discard Draft?';
+        var lblMsg = component.get('v.lblDiscardMsg') || 'Recipients, subject, body text, and attachments are removed.';
+        var lblDiscard = component.get('v.lblDiscardBtn') || 'Discard';
+        var lblCancel = component.get('v.lblCancelBtn') || 'Cancel';
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-discard-popup';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.5);z-index:99999;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:32px 28px 24px;width:420px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:100000;text-align:center;';
+        modal.innerHTML = '<div id="fec-discard-close" style="position:absolute;top:14px;right:18px;font-size:20px;cursor:pointer;color:#706e6b;line-height:1;">&#x2715;</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#16325c;margin-bottom:12px;">' + lblTitle + '</div>'
+            + '<div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5;">' + lblMsg + '</div>'
+            + '<div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e5e5e5;padding-top:16px;">'
+            + '<button id="fec-discard-cancel" style="padding:7px 18px;border:1px solid #c8c8c8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#333;">' + lblCancel + '</button>'
+            + '<button id="fec-discard-confirm" style="padding:7px 18px;border:none;border-radius:20px;background:#0070d2;color:#fff;cursor:pointer;font-size:13px;">' + lblDiscard + '</button>'
+            + '</div>';
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+
+        function closePopup() {
+            var o = document.getElementById('fec-discard-popup');
+            var m = document.getElementById('fec-discard-modal-box');
+            if (o && o.parentNode) o.parentNode.removeChild(o);
+            if (m && m.parentNode) m.parentNode.removeChild(m);
+            // remove modal by finding it
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        }
+        modal.id = 'fec-discard-modal-box';
+
+        overlay.addEventListener('click', closePopup);
+        document.getElementById('fec-discard-close').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-cancel').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-confirm').addEventListener('click', $A.getCallback(function() {
+            closePopup();
+            component.set('v.body', '');
+            component.set('v.rawBody', '');
+            component.set('v.subject', '');
+            component.set('v.ccEmail', '');
+            component.set('v.toTags', []);
+            component.set('v.toInput', '');
+            component.set('v.attachments', []);
+            component.set('v.replyTemplate', '');
+            component.set('v.errorMsg', '');
+            if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+        }));
+    },
+
+    confirmDiscard: function(component, event, helper) {},
+    cancelDiscard: function(component, event, helper) {
+        component.set('v.showDiscardConfirm', false);
     },
 
     sendEmail: function(component, event, helper) {
         // Service Case: dùng serviceCaseToEmail; Interaction: dùng toEmail/toTags
         var isServiceCase = component.get('v.isServiceCase');
+        // tungnm37 sửa: dùng custom labels thay hardcode
+        var lblSnag = component.get('v.lblWeHitASnag');
+        var lblToReq = component.get('v.lblToRequired') || 'To email is required.';
+        var lblInvalidFmt = component.get('v.lblInvalidFormatTitle');
         var finalToEmail;
         if (isServiceCase) {
             finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
             if (!finalToEmail) {
-                component.set('v.serviceCaseToError', 'To email is required.');
+                component.set('v.serviceCaseToError', lblToReq);
                 try {
                     var t1 = $A.get('e.force:showToast');
-                    if (t1) { t1.setParams({ title: 'We hit a snag', message: 'Review the errors on this page. To email is required.', type: 'error', duration: 4000 }); t1.fire(); }
+                    if (t1) { t1.setParams({ title: lblSnag, message: 'Review the errors on this page. ' + lblToReq, type: 'error', duration: 4000 }); t1.fire(); }
                 } catch(e) {}
                 return;
             }
@@ -363,7 +440,7 @@
                 component.set('v.serviceCaseToError', '"' + invalidEmail + '" is not a valid To email address.');
                 try {
                     var t2 = $A.get('e.force:showToast');
-                    if (t2) { t2.setParams({ title: 'Invalid format', message: '"' + invalidEmail + '" is not a valid To email address.', type: 'error', duration: 4000 }); t2.fire(); }
+                    if (t2) { t2.setParams({ title: lblInvalidFmt, message: '"' + invalidEmail + '" is not a valid To email address.', type: 'error', duration: 4000 }); t2.fire(); }
                 } catch(e) {}
                 return;
             }
@@ -372,19 +449,25 @@
             var tags = component.get('v.toTags');
             finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
             if (!finalToEmail) {
-                component.set('v.errorMsg', 'To email is required.');
+                component.set('v.errorMsg', lblToReq);
                 try {
                     var t3 = $A.get('e.force:showToast');
-                    if (t3) { t3.setParams({ title: 'We hit a snag', message: 'Review the errors on this page. To email is required.', type: 'error', duration: 4000 }); t3.fire(); }
+                    if (t3) { t3.setParams({ title: lblSnag, message: 'Review the errors on this page. ' + lblToReq, type: 'error', duration: 4000 }); t3.fire(); }
                 } catch(e) {}
                 return;
             }
         }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
+        // If v.body has table HTML but quill stripped it, use rawBody or v.body directly
+        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
+        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
+            body = storedBody;
+        }
+        var lblSubjReq = component.get('v.lblSubjectRequired');
         if (!subject) {
-            component.set('v.errorMsg', 'Subject is required.');
-            try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:'We hit a snag',message:'Review the errors on this page. Subject is required.',type:'error',duration:4000});ts.fire();} } catch(e){}
+            component.set('v.errorMsg', lblSubjReq);
+            try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:lblSnag,message:'Review the errors on this page. '+lblSubjReq,type:'error',duration:4000});ts.fire();} } catch(e){}
             return;
         }
         // Validate CC format
@@ -399,18 +482,25 @@
             }
             if (invalidCC) {
                 component.set('v.errorMsg', '"' + invalidCC + '" is not a valid CC email address.');
-                try { var tcc=$A.get('e.force:showToast'); if(tcc){tcc.setParams({title:'Invalid format',message:'"' + invalidCC + '" is not a valid CC email address.',type:'error',duration:4000});tcc.fire();} } catch(e){}
+                try { var tcc=$A.get('e.force:showToast'); if(tcc){tcc.setParams({title:lblInvalidFmt,message:'"' + invalidCC + '" is not a valid CC email address.',type:'error',duration:4000});tcc.fire();} } catch(e){}
                 return;
             }
         }
         var bodyText = window._fecQuill ? window._fecQuill.getText().trim() : (body || '').replace(/<[^>]+>/g,'').trim();
         if (!bodyText && window._fecQuill) {
+            // tungnm37 sửa: check cả img (ảnh insert) không chỉ table
             var hasTable = window._fecQuill.root.querySelector('table') !== null;
-            if (hasTable) bodyText = 'table';
+            var hasImg = window._fecQuill.root.querySelector('img') !== null;
+            if (hasTable || hasImg) bodyText = 'content';
         }
+        // tungnm37 sửa: nếu body HTML có img tag thì cũng coi là có nội dung
+        if (!bodyText && body && body.indexOf('<img') !== -1) {
+            bodyText = 'content';
+        }
+        var lblBodyReq = component.get('v.lblBodyRequired');
         if (!bodyText) {
-            component.set('v.errorMsg', 'Email body is required.');
-            try { var tb=$A.get('e.force:showToast'); if(tb){tb.setParams({title:'We hit a snag',message:'Review the errors on this page. Email body is required.',type:'error',duration:4000});tb.fire();} } catch(e){}
+            component.set('v.errorMsg', lblBodyReq);
+            try { var tb=$A.get('e.force:showToast'); if(tb){tb.setParams({title:lblSnag,message:'Review the errors on this page. '+lblBodyReq,type:'error',duration:4000});tb.fire();} } catch(e){}
             return;
         }
         // Normalize: đổi ". " thành "," rồi split, trim trailing dots
@@ -431,19 +521,25 @@
         }
         var converted = [];
         var pending = 0;
-        var MAX_SIZE = 25 * 1024 * 1024; // 25MB
-        // Separate template attachments (already base64) from user-uploaded files
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
+        // tungnm37 sửa: ảnh insert vào body (_isInlineImg) không gửi kèm attachment
+        // chỉ strip blob URL khỏi body. File đính kèm thường mới convert base64.
         var templateAtts = [];
         var fileAtts = [];
         for (var i = 0; i < attachments.length; i++) {
             if (attachments[i]._fromTemplate) {
                 templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
+            } else if (attachments[i]._isInlineImg) {
+                // Ảnh insert vào body — không gửi kèm, đã strip blob URL khỏi bodyToSend
             } else {
-                if (attachments[i].size > MAX_SIZE) {
+                // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
+                var attFile = attachments[i].file;
+                var isImg = attFile && attFile.type && attFile.type.indexOf('image/') === 0;
+                if (!isImg && attachments[i].size > MAX_SIZE) {
                     component.set('v.isSending', false);
                     var toastSize = $A.get('e.force:showToast');
                     if (toastSize) {
-                        toastSize.setParams({ title: 'File too large', message: attachments[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 });
+                        toastSize.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: attachments[i].name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 });
                         toastSize.fire();
                     }
                     return;

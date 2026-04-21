@@ -27,7 +27,7 @@
                 </template>
                 
                 <template if:false={isCardDeliveryLoading}>
-                    <template if:true={hasCardDeliveryData}>
+                    <template if:false={hasCardDeliveryError}>
                         <div class="card-info-table-wrapper">
                             <c-fec_-related-list-paging
                                 columns={cardDeliveryColumns}
@@ -38,11 +38,6 @@
                                 hide-row-number={hideCardDeliveryRowNumber}
                                 hide-updated-time={hideCardDeliveryRowNumber}>
                             </c-fec_-related-list-paging>
-                        </div>
-                    </template>
-                    <template if:true={showCardDeliveryNoData}>
-                        <div class="slds-text-align_center slds-p-around_large card-info-empty">
-                            <p>{noDataLabel}</p>
                         </div>
                     </template>
                 </template>
@@ -76,7 +71,7 @@
                 </template>
                 
                 <template if:false={isOtherCardLoading}>
-                    <template if:true={hasOtherCardData}>
+                    <template if:false={hasOtherCardError}>
                         <div class="card-info-table-wrapper">
                             <c-fec_-related-list-paging
                                 columns={otherCardColumns}
@@ -86,11 +81,6 @@
                                 default-sort-direction="desc"
                                 hide-updated-time={hideCardDeliveryRowNumber}>
                             </c-fec_-related-list-paging>
-                        </div>
-                    </template>
-                    <template if:true={showOtherCardNoData}>
-                        <div class="slds-text-align_center slds-p-around_large card-info-empty">
-                            <p>{noDataLabel}</p>
                         </div>
                     </template>
                 </template>

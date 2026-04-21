@@ -123,6 +123,7 @@ export default class Fec_ComboBox extends LightningElement {
   handleSearchInput(e) {
     const inputValue = e?.detail?.value !== undefined ? e.detail.value : e.target.value;
     this.searchKey = inputValue?.toLowerCase()?.trim();
+    this.dispatchSearchChange(inputValue);
   }
 
   dispatchSearchChange(inputValue) {
