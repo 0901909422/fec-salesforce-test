@@ -3,8 +3,6 @@ import Toast from "lightning/toast";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
-// import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
-import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions"; // tungnm37 thêm: import getTeamQueueOptions cho Manual Assignment
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
@@ -196,6 +194,8 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
+
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -403,7 +403,7 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-        typeof o.fecMasterDataSettingIsEdit === "boolean"
+      typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
   };
@@ -657,15 +657,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track actionValue;
 
-  // Manual Route to
-  @track showManualForm = false;
-  @track manualRouteItems = [];
-  @track manualTeamValue = '';
-  @track manualQueueValue = '';
-  @track manualRemarkValue = '';
-  @track _allQueues = [];
-  _manualItemCounter = 0;
-
   isModalOpen = false;
   header;
   content;
@@ -676,92 +667,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
-  }
-
-  // tungnm37 thêm: showManualAddItem - chỉ hiện ở Stage 2 (Case đã Submit VÀ Queue tiếp theo là DQ - CS Support)
-  get showManualAddItem() {
-    return (
-      this.showRouteTo &&
-      this.business?.isSubmited === true &&
-      this.business?.nextQueue?.label === 'DQ - CS Support'
-    );
-  }
-
-  get hasManualRouteItems() {
-    return this.manualRouteItems.length > 0;
-  }
-
-  get manualTeamOptions() {
-    const teams = [...new Set(this._allQueues.map(q => q.teamName).filter(Boolean))];
-    return teams.map(t => ({ label: t, value: t }));
-  }
-
-  get manualQueueOptions() {
-    if (!this.manualTeamValue) return [];
-    return this._allQueues
-      .filter(q => q.teamName === this.manualTeamValue)
-      .map(q => ({ label: q.queueName, value: q.queueName }));
-  }
-
-  handleToggleManualForm() {
-    this.showManualForm = !this.showManualForm;
-    if (this.showManualForm && this._allQueues.length === 0) {
-      this._loadQueues();
-    }
-  }
-
-  async _loadQueues() {
-    try {
-      const data = await getTeamQueueOptions();
-      // data: [{teamName, queueName}]
-      this._allQueues = data || [];
-    } catch (e) {
-      console.error('_loadQueues error', e);
-    }
-  }
-
-  handleManualTeamChange(e) {
-    this.manualTeamValue = e.detail.value;
-    this.manualQueueValue = '';
-  }
-
-  handleManualQueueChange(e) {
-    this.manualQueueValue = e.detail.value;
-  }
-
-  handleManualRemarkChange(e) {
-    this.manualRemarkValue = e.detail.value;
-  }
-
-  handleManualConfirm() {
-    if (!this.manualTeamValue || !this.manualQueueValue || !this.manualRemarkValue) {
-      Toast.show({ label: this.customLabel.assignmentRemarkLabel, message: '', variant: 'error' }, this);
-      return;
-    }
-    const queueOption = this.manualQueueOptions.find(o => o.value === this.manualQueueValue);
-    this.manualRouteItems = [
-      ...this.manualRouteItems,
-      {
-        id: ++this._manualItemCounter,
-        teamLabel: this.manualTeamValue,
-        queueName: this.manualQueueValue,
-        queueLabel: this.manualQueueValue,
-        remark: this.manualRemarkValue
-      }
-    ];
-    this.manualTeamValue = '';
-    this.manualQueueValue = '';
-    this.manualRemarkValue = '';
-    this.showManualForm = false;
-  }
-
-  handleRemoveManualItem(e) {
-    const id = parseInt(e.currentTarget.dataset.id, 10);
-    this.manualRouteItems = this.manualRouteItems.filter(item => item.id !== id);
-  }
-
-  @api getManualRouteItems() {
-    return this.manualRouteItems;
   }
 
   get showRevert() {
@@ -1162,7 +1067,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.isPhone =
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER;
+                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
+                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1341,6 +1247,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       FIELD_UPDATED_INFO_PHONE_NUMBER,
       FIELD_REGISTERED_PHONE_NUMBER,
       FIELD_CASE_PHONE_NUMBER,
+      FIELD_RECIPIENT_PHONE_NUMBER,
     ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
@@ -1477,7 +1384,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER
+      fieldName === FIELD_CASE_PHONE_NUMBER ||
+      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1552,7 +1460,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER) &&
+        fieldName === FIELD_CASE_PHONE_NUMBER ||
+        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
@@ -2196,28 +2105,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
-   * Đẩy file từ các slot `fec_FileUploadCard` lên Case (ContentVersion) khi Save & Close / Submit.
-   */
-  _uploadFecFileUploadCardsIfApplicable() {
-    const wrappers = this.template.querySelectorAll(
-      '[data-fec-lwc="fec_FileUploadCard"]',
-    );
-    if (!wrappers || !wrappers.length) {
-      return Promise.resolve();
-    }
-    const promises = [];
-    wrappers.forEach((wrap) => {
-      const el =
-        wrap.querySelector("c-fec_-file-upload-card") ||
-        wrap.querySelector("c-fec-file-upload-card");
-      if (el && typeof el.flushUploadsToCase === "function") {
-        promises.push(Promise.resolve(el.flushUploadsToCase()));
-      }
-    });
-    return promises.length ? Promise.all(promises) : Promise.resolve();
-  }
-
-  /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
@@ -2308,6 +2195,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
       this._refreshFecUpdateAddressAfterProcessSuccess();
     }
+
+    // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
+    // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -2405,20 +2295,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (method === ACTION_ADDRESS_UPDATE) {
       let processObj = this.business.processActionlst?.find(p => p.value === ACTION_ADDRESS_UPDATE);
       if (processObj && processObj.disabled) {
-        return; // Prevent further action if already disabled
-      }
-      this.addressUpdateClickCount++;
-      if (this.addressUpdateClickCount >= 3) {
-        this.business.processActionlst = this.business.processActionlst.map(
-          (process) => {
-            if (process.value === ACTION_ADDRESS_UPDATE) {
-              return { ...process, disabled: true };
-            }
-            return process;
-          }
-        );
-        // Force LWC reactivity to re-render the button as disabled
-        this.business = { ...this.business };
+        return;
       }
     }
 
@@ -2634,7 +2511,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           }
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
-            this.publishPinReissueResult("ERROR", msgError);
+              this.publishPinReissueResult("ERROR",msgError);
           }
         }
 
@@ -2973,6 +2850,28 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * Đẩy file từ các slot `fec_FileUploadCard` (chế độ local) lên Case khi Save & Close / Submit — nếu LWC expose flush.
+   */
+  _uploadFecFileUploadCardsIfApplicable() {
+    const wrappers = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_FileUploadCard"]',
+    );
+    if (!wrappers || !wrappers.length) {
+      return Promise.resolve();
+    }
+    const promises = [];
+    wrappers.forEach((wrap) => {
+      const el =
+        wrap.querySelector("c-fec_-file-upload-card") ||
+        wrap.querySelector("c-fec-file-upload-card");
+      if (el && typeof el.flushUploadsToCase === "function") {
+        promises.push(Promise.resolve(el.flushUploadsToCase()));
+      }
+    });
+    return promises.length ? Promise.all(promises) : Promise.resolve();
+  }
+
+  /**
    * Tìm mọi instance fec_FileUploadCard (tag có thể là c-fec_-file-upload-card hoặc c-fec-file-upload-card tùy runtime).
    */
   _queryFecFileUploadCardElements() {
@@ -3157,4 +3056,5 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error('Error updating record: ', error);
     }
   }
+
 }
