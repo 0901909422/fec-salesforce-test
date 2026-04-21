@@ -559,7 +559,7 @@ public without sharing class FEC_ContractClosureController {
                 }
             }
         }
-        if (hasAddr || (hasEmail && hasOffice)) {
+        if (hasAddr || hasOffice) {
             String rn = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
             String rp = p.recipientPhone != null ? FEC_CommonUltils.normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
             if (forComplete && String.isBlank(rn)) {
@@ -571,7 +571,7 @@ public without sharing class FEC_ContractClosureController {
             if (String.isNotBlank(rp) && !FEC_CommonUltils.isPhone(rp)) {
                 r.addFail(MSG_NOTI_16);
             }
-            if (forComplete || requireDelivery) {
+            if (hasAddr && (forComplete || requireDelivery)) {
                 Boolean hasRow = String.isNotBlank(p.selectedAddressId);
                 Boolean hasTempLine = String.isNotBlank(
                     p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : FEC_ConstantCommon.STR_EMPTY
