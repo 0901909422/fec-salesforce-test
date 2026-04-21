@@ -11,88 +11,173 @@
         </span>
         <span class="fec-card__title">{titleLabel}</span>
       </div>
-      <button
-        type="button"
-        class="fec-pill-btn"
-        aria-label="Add files"
-        onclick={handleAddFilesClick}
-        disabled={disabled}
-      >
-        Add Files
-      </button>
+      <template if:true={hasRecordId}>
+        <div class="fec-add-files-wrap" title="Add files to this Case">
+          <span class="fec-add-files-pill" aria-hidden="true">Add Files</span>
+          <div class="fec-add-files-hitbox">
+            <template lwc:if={multiple}>
+              <lightning-file-upload
+                label="Add Files"
+                title="Attach files to this Case"
+                name={uploadName}
+                record-id={recordId}
+                multiple
+                accept={inputAccept}
+                disabled={uploadDisabled}
+                onuploadfinished={handleUploadFinished}
+                onuploaderror={handleUploadError}
+              ></lightning-file-upload>
+            </template>
+            <template lwc:else>
+              <lightning-file-upload
+                label="Add Files"
+                title="Attach files to this Case"
+                name={uploadName}
+                record-id={recordId}
+                accept={inputAccept}
+                disabled={uploadDisabled}
+                onuploadfinished={handleUploadFinished}
+                onuploaderror={handleUploadError}
+              ></lightning-file-upload>
+            </template>
+          </div>
+        </div>
+      </template>
+      <template if:false={hasRecordId}>
+        <button
+          type="button"
+          class="fec-pill-btn"
+          aria-label="Add files"
+          onclick={handleAddFilesClick}
+          disabled={disabled}
+        >
+          Add Files
+        </button>
+      </template>
     </div>
 
-    <template lwc:if={multiple}>
-      <input
-        type="file"
-        class="fec-file-input"
-        data-id="file-input"
-        aria-label="Choose files to upload"
-        accept={inputAccept}
-        multiple
-        onchange={handleInputChange}
-        disabled={disabled}
-      />
-    </template>
-    <template lwc:else>
-      <input
-        type="file"
-        class="fec-file-input"
-        data-id="file-input"
-        aria-label="Choose file to upload"
-        accept={inputAccept}
-        onchange={handleInputChange}
-        disabled={disabled}
-      />
-    </template>
-
-    <div
-      class={dropZoneClass}
-      ondragenter={handleDragEnter}
-      ondragleave={handleDragLeave}
-      ondragover={handleDragOver}
-      ondrop={handleDrop}
-    >
-      <button
-        type="button"
-        class="fec-pill-btn fec-pill-btn_primary"
-        aria-label="Upload files"
-        onclick={handleUploadClick}
-        disabled={disabled}
-      >
-        <lightning-icon
-          class="fec-upload-icon"
-          icon-name="utility:upload"
-          size="x-small"
-          alternative-text="Upload"
-        ></lightning-icon>
-        <span>Upload Files</span>
-      </button>
-      <p class="fec-drop-hint">Or drop files</p>
-    </div>
-
-    <template lwc:if={fileCount}>
-      <ul class="fec-file-list">
-        <template for:each={fileRows} for:item="row">
-          <li key={row.id} class="fec-file-list__item">
-            <span class="fec-file-list__name" title={row.file.name}>{row.file.name}</span>
-            <button
-              type="button"
-              class="fec-file-list__remove"
-              data-index={row.index}
-              onclick={handleRemoveFile}
-              disabled={disabled}
-              title="Remove"
-            >
-              <lightning-icon
-                icon-name="utility:close"
-                size="xx-small"
-                alternative-text="Remove"
-              ></lightning-icon>
-            </button>
-          </li>
+    <!-- Gắn Case: related-list style + list từ server -->
+    <template if:true={hasRecordId}>
+      <div class="fec-related-body">
+        <template if:true={isLoadingServerFiles}>
+          <div class="fec-file-list-spinner">
+            <lightning-spinner
+              size="small"
+              alternative-text="Loading files"
+            ></lightning-spinner>
+          </div>
         </template>
-      </ul>
+        <template if:false={isLoadingServerFiles}>
+          <template if:true={hasServerFiles}>
+            <ul class="fec-related-rows">
+              <template for:each={serverFileRows} for:item="row">
+                <li key={row.id} class="fec-related-row">
+                  <div class="fec-file-thumb" aria-hidden="true">
+                    <span class="fec-file-thumb__ext">{row.extBadge}</span>
+                  </div>
+                  <div class="fec-related-row__main">
+                    <button
+                      type="button"
+                      class="fec-related-row__link"
+                      data-docid={row.contentDocumentId}
+                      onclick={handleOpenServerFile}
+                    >
+                      {row.linkLabel}
+                    </button>
+                    <span class="fec-related-row__meta">{row.metaLine}</span>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </template>
+        </template>
+      </div>
+      <div class="fec-related-footer">
+        <button
+          type="button"
+          class="fec-view-all"
+          aria-label="View all files linked to this Case"
+          onclick={handleViewAllFiles}
+        >
+          View All
+        </button>
+      </div>
+    </template>
+
+    <!-- Không có recordId: chọn file cục bộ (legacy) -->
+    <template if:false={hasRecordId}>
+      <template lwc:if={multiple}>
+        <input
+          type="file"
+          class="fec-file-input"
+          data-id="file-input"
+          aria-label="Choose files to upload"
+          accept={inputAccept}
+          multiple
+          onchange={handleInputChange}
+          disabled={disabled}
+        />
+      </template>
+      <template lwc:else>
+        <input
+          type="file"
+          class="fec-file-input"
+          data-id="file-input"
+          aria-label="Choose file to upload"
+          accept={inputAccept}
+          onchange={handleInputChange}
+          disabled={disabled}
+        />
+      </template>
+
+      <div
+        class={dropZoneClass}
+        ondragenter={handleDragEnter}
+        ondragleave={handleDragLeave}
+        ondragover={handleDragOver}
+        ondrop={handleDrop}
+      >
+        <button
+          type="button"
+          class="fec-pill-btn fec-pill-btn_primary"
+          aria-label="Upload files"
+          onclick={handleUploadClick}
+          disabled={disabled}
+        >
+          <lightning-icon
+            class="fec-upload-icon"
+            icon-name="utility:upload"
+            size="x-small"
+            alternative-text="Upload"
+          ></lightning-icon>
+          <span>Upload Files</span>
+        </button>
+        <p class="fec-drop-hint">Or drop files</p>
+      </div>
+
+      <template lwc:if={fileCount}>
+        <ul class="fec-file-list">
+          <template for:each={fileRows} for:item="row">
+            <li key={row.id} class="fec-file-list__item">
+              <span class="fec-file-list__name" title={row.file.name}>{row.file.name}</span>
+              <button
+                type="button"
+                class="fec-file-list__remove"
+                data-index={row.index}
+                onclick={handleRemoveFile}
+                disabled={disabled}
+                title="Remove"
+              >
+                <lightning-icon
+                  icon-name="utility:close"
+                  size="xx-small"
+                  alternative-text="Remove"
+                ></lightning-icon>
+              </button>
+            </li>
+          </template>
+        </ul>
+      </template>
     </template>
   </div>
 </template>

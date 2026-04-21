@@ -157,7 +157,14 @@
                                 content={field.helpText}
                               ></lightning-helptext>
                             </p>
-                            <p class="value">
+                            <p class="value"
+                              data-id="field-read-only"
+                              data-record-id={obj.id}
+                              data-obj-name={obj.name}
+                              data-field={field.apiName}
+                              data-value={field.value}
+                              data-is-update-read-only={field.isUpdateReadOnly}
+                            >
                               {field.readonlyDisplayValue}
                               <lightning-icon
                                 if:true={field.masked}
@@ -276,6 +283,83 @@
             <p class="label">{customLabel.queueLabel}</p>
             <p class="value">{business.nextQueue.label}</p>
           </div>
+        </div>
+
+        <!-- tungnm37 thêm: Manual Assignment UI - chỉ hiện khi Queue = DQ - CS Support -->
+        <div if:true={showManualAddItem} class="slds-col slds-size_1-of-1 slds-p-around--x-small">
+          <lightning-button
+            label={customLabel.addItemLabel}
+            onclick={handleToggleManualForm}
+          ></lightning-button>
+
+          <div if:true={showManualForm} class="slds-box slds-m-top--small slds-p-around--small">
+            <div class="slds-grid slds-wrap slds-gutters_small">
+              <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                  label={customLabel.teamLabel}
+                  value={manualTeamValue}
+                  options={manualTeamOptions}
+                  onchange={handleManualTeamChange}
+                  required
+                ></lightning-combobox>
+              </div>
+              <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                  label={customLabel.queueLabel}
+                  value={manualQueueValue}
+                  options={manualQueueOptions}
+                  onchange={handleManualQueueChange}
+                  required
+                ></lightning-combobox>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-m-top--small">
+                <lightning-textarea
+                  label={customLabel.assignmentRemarkLabel}
+                  value={manualRemarkValue}
+                  onchange={handleManualRemarkChange}
+                  required
+                ></lightning-textarea>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-m-top--small slds-text-align_right">
+                <lightning-button
+                  variant="brand"
+                  label={customLabel.confirmLabel}
+                  onclick={handleManualConfirm}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List of added items -->
+          <template if:true={hasManualRouteItems}>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top--small">
+              <thead>
+                <tr class="slds-line-height_reset">
+                  <th scope="col"><div class="slds-truncate">{customLabel.teamLabel}</div></th>
+                  <th scope="col"><div class="slds-truncate">{customLabel.queueLabel}</div></th>
+                  <th scope="col"><div class="slds-truncate">{customLabel.assignmentRemarkLabel}</div></th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={manualRouteItems} for:item="item">
+                  <tr key={item.id}>
+                    <td>{item.teamLabel}</td>
+                    <td>{item.queueLabel}</td>
+                    <td>{item.remark}</td>
+                    <td>
+                      <lightning-button-icon
+                        icon-name="utility:close"
+                        variant="bare"
+                        data-id={item.id}
+                        onclick={handleRemoveManualItem}
+                      ></lightning-button-icon>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </template>
         </div>
 
         <div

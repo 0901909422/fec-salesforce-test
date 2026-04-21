@@ -3,6 +3,8 @@ import Toast from "lightning/toast";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
+// import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
+import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions"; // tungnm37 thêm: import getTeamQueueOptions cho Manual Assignment
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
@@ -26,7 +28,8 @@ import {
   validateUpdatedInfoNationalID,
   checkNoUpdateInSubmit,
   findPicklistOptionByRaw,
-  isOnlyNumber
+  isOnlyNumber,
+  formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
@@ -38,7 +41,10 @@ import FEC_ACTION_PHONE_UPDATE_HEADER from "@salesforce/label/c.FEC_ACTION_PHONE
 import FEC_MSG_ACTION_PHONE_UPDATE from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE";
 import FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS";
 import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PHONE_UPDATE_ERROR";
+import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
+import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_MSG_Param_Must_Number from "@salesforce/label/c.FEC_MSG_Param_Must_Number";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
 import FEC_Team_Label from "@salesforce/label/c.FEC_Team_Label";
@@ -51,22 +57,31 @@ import FEC_Block_Card_Header from '@salesforce/label/c.FEC_Block_Card_Header';
 import FEC_Block_Card_Confirmation_Msg from '@salesforce/label/c.FEC_Block_Card_Confirmation_Msg';
 import FEC_Block_Card_Success from '@salesforce/label/c.FEC_Block_Card_Success';
 import FEC_Block_Card_Failed_Max from '@salesforce/label/c.FEC_Block_Card_Failed_Max';
+import FEC_Block_Card_Failed from '@salesforce/label/c.FEC_Block_Card_Failed';
 import FEC_ACTION_UNBLOCK_CARD_HEADER from "@salesforce/label/c.FEC_ACTION_UNBLOCK_CARD_HEADER";
 import FEC_MSG_ACTION_UNBLOCK_CARD from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD";
 import FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS";
 import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR";
+import FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY";
 import FEC_ACTION_PIN_REISSUE_HEADER from "@salesforce/label/c.FEC_ACTION_PIN_REISSUE_HEADER";
 import FEC_MSG_ACTION_PIN_REISSUE from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE";
 import FEC_MSG_ACTION_PIN_REISSUE_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_SUCCESS";
 import FEC_MSG_ACTION_PIN_REISSUE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR";
+import FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY";
 import FEC_ACTION_CARD_REPLACEMENT_HEADER from "@salesforce/label/c.FEC_ACTION_CARD_REPLACEMENT_HEADER";
 import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
+import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
+import FEC_Add_Item_Label from "@salesforce/label/c.FEC_Add_Item_Label";
+import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Remark_Label";
+import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
+import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
@@ -183,6 +198,7 @@ const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
 
 const TYPE_QUALIFIED = "Qualified";
+const TYPE_QUALIFIED_VN = "Hợp lệ";
 const TYPE_UNQUALIFIED = "Unqualified";
 const TYPE_AGREE = "Agree";
 const TYPE_DISAGREE = "Disagree";
@@ -249,6 +265,12 @@ const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
+
+const FIELD_READ_ONLY_UPDATE = [
+  FIELD_NEW_BLOCK_CODE,
+  FIELD_NEW_BLOCK_CODE_CARD_REPLACE,
+  FIELD_CARD_REPLACEMENT_FEE,
+];
 
 /**
  * Registry of dynamically loadable components.
@@ -398,6 +420,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   set isEdit(value) {
     const prev = this._isEdit;
     this._isEdit = value === true || value === "true";
+    console.log(`[DEBUG][fec_CaseBussiness] set isEdit — rawValue=${JSON.stringify(value)} (type=${typeof value}), _isEdit=${this._isEdit}, prev=${prev}, businessReady=${!!this.business?.sectionlst}`);
     if (prev !== this._isEdit && this.business?.sectionlst) {
       this._applyEditModeToBusiness();
     }
@@ -414,6 +437,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   routingAccordionSectionKey = "routing-action";
 
   @track addressUpdateClickCount = 0;
+  @track addressUpdateFailCount = 0;
 
   _ippClosureHasEligibleRows = false;
 
@@ -435,7 +459,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
-
+  
   @wire(MessageContext)
   messageContext;
 
@@ -633,6 +657,15 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   @track actionValue;
 
+  // Manual Route to
+  @track showManualForm = false;
+  @track manualRouteItems = [];
+  @track manualTeamValue = '';
+  @track manualQueueValue = '';
+  @track manualRemarkValue = '';
+  @track _allQueues = [];
+  _manualItemCounter = 0;
+
   isModalOpen = false;
   header;
   content;
@@ -643,6 +676,92 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
+  }
+
+  // tungnm37 thêm: showManualAddItem - chỉ hiện ở Stage 2 (Case đã Submit VÀ Queue tiếp theo là DQ - CS Support)
+  get showManualAddItem() {
+    return (
+      this.showRouteTo &&
+      this.business?.isSubmited === true &&
+      this.business?.nextQueue?.label === 'DQ - CS Support'
+    );
+  }
+
+  get hasManualRouteItems() {
+    return this.manualRouteItems.length > 0;
+  }
+
+  get manualTeamOptions() {
+    const teams = [...new Set(this._allQueues.map(q => q.teamName).filter(Boolean))];
+    return teams.map(t => ({ label: t, value: t }));
+  }
+
+  get manualQueueOptions() {
+    if (!this.manualTeamValue) return [];
+    return this._allQueues
+      .filter(q => q.teamName === this.manualTeamValue)
+      .map(q => ({ label: q.queueName, value: q.queueName }));
+  }
+
+  handleToggleManualForm() {
+    this.showManualForm = !this.showManualForm;
+    if (this.showManualForm && this._allQueues.length === 0) {
+      this._loadQueues();
+    }
+  }
+
+  async _loadQueues() {
+    try {
+      const data = await getTeamQueueOptions();
+      // data: [{teamName, queueName}]
+      this._allQueues = data || [];
+    } catch (e) {
+      console.error('_loadQueues error', e);
+    }
+  }
+
+  handleManualTeamChange(e) {
+    this.manualTeamValue = e.detail.value;
+    this.manualQueueValue = '';
+  }
+
+  handleManualQueueChange(e) {
+    this.manualQueueValue = e.detail.value;
+  }
+
+  handleManualRemarkChange(e) {
+    this.manualRemarkValue = e.detail.value;
+  }
+
+  handleManualConfirm() {
+    if (!this.manualTeamValue || !this.manualQueueValue || !this.manualRemarkValue) {
+      Toast.show({ label: this.customLabel.assignmentRemarkLabel, message: '', variant: 'error' }, this);
+      return;
+    }
+    const queueOption = this.manualQueueOptions.find(o => o.value === this.manualQueueValue);
+    this.manualRouteItems = [
+      ...this.manualRouteItems,
+      {
+        id: ++this._manualItemCounter,
+        teamLabel: this.manualTeamValue,
+        queueName: this.manualQueueValue,
+        queueLabel: this.manualQueueValue,
+        remark: this.manualRemarkValue
+      }
+    ];
+    this.manualTeamValue = '';
+    this.manualQueueValue = '';
+    this.manualRemarkValue = '';
+    this.showManualForm = false;
+  }
+
+  handleRemoveManualItem(e) {
+    const id = parseInt(e.currentTarget.dataset.id, 10);
+    this.manualRouteItems = this.manualRouteItems.filter(item => item.id !== id);
+  }
+
+  @api getManualRouteItems() {
+    return this.manualRouteItems;
   }
 
   get showRevert() {
@@ -679,7 +798,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     decisionLabel: FEC_Decision_Label,
     chooseDecisionLabel: FEC_Choose_Decision_Label,
     subDecisionLabel: FEC_Sub_Decision_Label,
-    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label
+    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
+    addItemLabel: FEC_Add_Item_Label,
+    assignmentRemarkLabel: FEC_Assignment_Remark_Label,
+    confirmLabel: FEC_Confirm_Label
   }
 
   @api getNatureOfCaseId() {
@@ -1010,13 +1132,14 @@ export default class Fec_CaseBussiness extends LightningElement {
                   assignmentType = field.value;
                 }
 
-                if (!field.readonly) {
+                // PhuongNT cmt, still process for field read only
+                // if (!field.readonly) {
                   if (
                     currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
                     currentField === CASE_CS_D2C_RISK_LEVEL
                   ) {
                     field.isHidden =
-                      !assignmentType || assignmentType === TYPE_QUALIFIED;
+                      !assignmentType || assignmentType === TYPE_QUALIFIED || assignmentType === TYPE_QUALIFIED_VN;
                   } else if (
                     currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
                   ) {
@@ -1025,7 +1148,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                   } else {
                     field.isHidden = false;
                   }
-                }
+                // }
 
                 if (!this.isEdit) {
                   field.readonly = true;
@@ -1098,6 +1221,12 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 field.editWrapperClass =
                   "edit slds-p-around--x-small";
+
+                // PhuongNT add handle set display value for field "Card Replacement Fee"
+                if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+                  field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
+                  field.readonlyDisplayValue = field.displayValue;
+                }
               });
             });
           });
@@ -1140,8 +1269,17 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
         }
-        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+        // PhuongNT add handle set update field read only
+        this.handleSetUpdateFieldReadOnly();
 
+        console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
+        publish(this.messageContext, CASE_NOTIFICATION, {
+            productTypeId: productTypeId,
+            categoryId: categoryId,
+            subCategoryId: subCategoryId,
+            subCodeId: subCodeId,
+            stageId: res.stage
+        });
       })
       .catch((err) => {
         console.error(
@@ -1170,7 +1308,8 @@ export default class Fec_CaseBussiness extends LightningElement {
             ...field,
             isHidden: isInternal
               ? field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
-              : false,
+              // : false,
+              : field.isHidden, // PhuongNT modified
           })) || [],
         })) || [],
       })) || [],
@@ -1211,6 +1350,27 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     const fieldName = e.target.fieldName || e.target.dataset?.field;
     if (!fieldName) return;
+
+    // const objNameFromEl = e.target.dataset?.objName;
+    // if (objNameFromEl === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER) {
+    //   if (e.ctrlKey || e.metaKey) return;
+    //   const key = e.key;
+    //   const isDigit = key.length === 1 && /^\d$/.test(key);
+    //   const isControl =
+    //     key === "Backspace" ||
+    //     key === "Delete" ||
+    //     key === "Tab" ||
+    //     key === "Enter" ||
+    //     key === "Escape" ||
+    //     key === "ArrowLeft" ||
+    //     key === "ArrowRight" ||
+    //     key === "ArrowUp" ||
+    //     key === "ArrowDown" ||
+    //     key === "Home" ||
+    //     key === "End";
+    //   if (!isDigit && !isControl) e.preventDefault();
+    //   return;
+    // }
 
     if (e.ctrlKey || e.metaKey) return;
 
@@ -1697,6 +1857,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       isAllValid = false;
     }
 
+    const contractClosureEl = this._getContractClosureFormEl();
+    if (
+      contractClosureEl &&
+      typeof contractClosureEl.validateForSubmit === "function"
+    ) {
+      if (!contractClosureEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -1745,6 +1915,38 @@ export default class Fec_CaseBussiness extends LightningElement {
       return host;
     }
     return null;
+  }
+
+  _getContractClosureFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_ContractClosureForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveToCase === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
+  _saveContractClosureDraftIfApplicable() {
+    const el = this._getContractClosureFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve({ valid: true, messages: [] });
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _saveContractClosureIfApplicable() {
+    const el = this._getContractClosureFormEl();
+    if (!el || typeof el.saveToCase !== "function") {
+      return Promise.resolve({ valid: true, messages: [] });
+    }
+    return el.saveToCase();
   }
 
   _saveIncorrectPaymentAdjustmentsIfApplicable() {
@@ -1994,6 +2196,28 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * Đẩy file từ các slot `fec_FileUploadCard` lên Case (ContentVersion) khi Save & Close / Submit.
+   */
+  _uploadFecFileUploadCardsIfApplicable() {
+    const wrappers = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_FileUploadCard"]',
+    );
+    if (!wrappers || !wrappers.length) {
+      return Promise.resolve();
+    }
+    const promises = [];
+    wrappers.forEach((wrap) => {
+      const el =
+        wrap.querySelector("c-fec_-file-upload-card") ||
+        wrap.querySelector("c-fec-file-upload-card");
+      if (el && typeof el.flushUploadsToCase === "function") {
+        promises.push(Promise.resolve(el.flushUploadsToCase()));
+      }
+    });
+    return promises.length ? Promise.all(promises) : Promise.resolve();
+  }
+
+  /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
@@ -2018,9 +2242,20 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveCardClosureRefundDraftIfApplicable(),
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
-      ]);
+      ])
+        .then(() => this._saveContractClosureDraftIfApplicable())
+        .then((closureRes) => {
+          if (closureRes && closureRes.valid === false) {
+            return Promise.reject(new Error("FEC_CONTRACT_CLOSURE_SAVE_FAILED"));
+          }
+        });
+
     if (total === 0) {
-      return afterForms();
+      return this._uploadFecFileUploadCardsIfApplicable()
+        .then(() => afterForms())
+        .then(() => {
+          this.handleSaveFieldReadOnly();
+        });
     }
 
     return new Promise((resolve, reject) => {
@@ -2033,7 +2268,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    }).then(() => afterForms());
+    })
+      .then(() => this._uploadFecFileUploadCardsIfApplicable())
+      .then(() => {
+        afterForms();
+        // PhuongNT add handle save data for fields readonly were changed data by another field
+        this.handleSaveFieldReadOnly();
+      });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -2069,6 +2310,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
     await this._submitFormsPromise();
+    await this._uploadFecFileUploadCardsIfApplicable();
+
+    // PhuongNT add handle save data for fields readonly were changed data by another field
+    this.handleSaveFieldReadOnly();
+    
     await Promise.all([
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),
@@ -2077,6 +2323,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
     ]);
+    const closureSaveRes = await this._saveContractClosureIfApplicable();
+    if (closureSaveRes && closureSaveRes.valid === false) {
+      return false;
+    }
     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
@@ -2332,6 +2582,9 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.processActionMsg = msgSuccess;
           this.isProcessActionSuccessed = true;
           this.isProcessActionFailed = false;
+          if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
+            this.addressUpdateFailCount = 0;
+          }
           this.actionValue = ACTION_RESOLVE;
 
           let routeToEle = this.template.querySelector(
@@ -2349,7 +2602,10 @@ export default class Fec_CaseBussiness extends LightningElement {
               this.publishPinReissueResult("SUCCESS");
           }
 
-          if (msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS) {
+          if (
+            this.processActionMethod === ACTION_ADDRESS_UPDATE ||
+            msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS
+          ) {
             this._refreshFecUpdateAddressAfterProcessSuccess();
           }
 
@@ -2357,6 +2613,18 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.processActionMsg = msgError;
           this.isProcessActionSuccessed = false;
           this.isProcessActionFailed = true;
+          // PhuongNT add set msg error for call api
+          if (this.isProcessActionValid) {
+            if (this.processActionMethod == ACTION_BLOCK_CARD) {
+              msgError = FEC_Block_Card_Failed;
+            } else if (this.processActionMethod == ACTION_UNBLOCK_CARD) {
+              msgError = FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              msgError = FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY;
+            } else if (this.processActionMethod == ACTION_REPLACE_CARD) {
+              msgError = FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY;
+            }
+          }
           if (msgError === FEC_MSG_ACTION_PHONE_UPDATE_ERROR) {
             this._revertFecUpdateAddressAfterProcessFailure();
           }
@@ -2402,6 +2670,33 @@ export default class Fec_CaseBussiness extends LightningElement {
     return (
       host.querySelector("c-fec_-update-address") || host.firstElementChild
     );
+  }
+
+  /** Master data có thể lưu `fec_UpdateAddress`, `c/fec_UpdateAddress` hoặc tên namespaced — tránh bỏ lỡ commit khi Submit. */
+  _findFecUpdateAddressHostEl() {
+    const exact = this.template.querySelector(
+      '[data-fec-lwc="fec_UpdateAddress"]',
+    );
+    if (exact) {
+      return exact;
+    }
+    const all = this.template.querySelectorAll("[data-fec-lwc]");
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i];
+      const raw = (el.getAttribute("data-fec-lwc") || "").trim();
+      if (!raw) {
+        continue;
+      }
+      const tail = raw
+        .replace(/^c\//i, "")
+        .split("/")
+        .pop();
+      const base = tail.includes("__") ? tail.split("__").pop() : tail;
+      if (base === "fec_UpdateAddress") {
+        return el;
+      }
+    }
+    return null;
   }
 
   /** Đồng bộ lại địa chỉ + mailing sau khi Process Action cập nhật thông tin KH thành công. */
@@ -2604,7 +2899,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             const layoutNum = Number(meta.fieldLayout);
             const layout =
               Number.isFinite(layoutNum) &&
-                SLDS_MEDIUM_SIZE_OF_12[layoutNum]
+              SLDS_MEDIUM_SIZE_OF_12[layoutNum]
                 ? layoutNum
                 : 12;
             const lwcColClassName =
@@ -2613,6 +2908,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
+            console.log(`[DEBUG][fec_CaseBussiness] _resolveComponentlst — component="${name}", _isEdit=${this._isEdit}, fecMasterDataSettingIsEdit=${fecMasterDataSettingIsEdit}, finalIsEdit=${this._isEdit && fecMasterDataSettingIsEdit}`);
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
@@ -2652,7 +2948,46 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
       this._updateDynCmpIsEditFlags();
       this._rebuildAllSectionSortedRows();
+      this._scheduleRefreshFileUploadCards();
     });
+  }
+
+  /**
+   * Tìm mọi instance fec_FileUploadCard (tag có thể là c-fec_-file-upload-card hoặc c-fec-file-upload-card tùy runtime).
+   */
+  _queryFecFileUploadCardElements() {
+    const selector = "c-fec_-file-upload-card, c-fec-file-upload-card";
+    const seen = new Set();
+    const out = [];
+    const push = (el) => {
+      if (el && !seen.has(el)) {
+        seen.add(el);
+        out.push(el);
+      }
+    };
+    this.template.querySelectorAll('[data-fec-lwc="fec_FileUploadCard"]').forEach((wrap) => {
+      wrap.querySelectorAll(selector).forEach(push);
+    });
+    this.template.querySelectorAll(selector).forEach(push);
+    return out;
+  }
+
+  /** Sau khi dynamic LWC (lwc:is) mount — reload danh sách file trên fec_FileUploadCard. */
+  _scheduleRefreshFileUploadCards() {
+    const run = () => {
+      this._queryFecFileUploadCardElements().forEach((el) => {
+        if (typeof el.refreshFilesFromServer === "function") {
+          el.refreshFilesFromServer();
+        }
+      });
+    };
+    setTimeout(run, 0);
+    setTimeout(run, 400);
+  }
+
+  @api
+  refreshFileUploadCards() {
+    this._scheduleRefreshFileUploadCards();
   }
 
   applyDraft() {
@@ -2699,7 +3034,17 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
-    return this.isEdit && this.business?.hasRoutingAction;
+   return this.isEdit && this.business?.hasRoutingAction;
+  }
+  // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
+  async publishPinReissueResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
   }
 
   // PhuongNT add get current card status for Card Block/Unblock
@@ -2740,14 +3085,56 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.log(error);
     });
   }
-  // Thangtv updated the logic to send a message to the NOC component to prevent users from changing the NOC value.
-  async publishPinReissueResult(status, message = "") {
-    const payload = {
-      status, // "SUCCESS" | "ERROR"
-      caseId: this.recordId,
-      message,
-    };
+  
+  // PhuongNT add handle set update field read only
+  handleSetUpdateFieldReadOnly() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.editable) return; // ignore editable
+            if (FIELD_READ_ONLY_UPDATE.includes(field.apiName)) {
+              field.isUpdateReadOnly = true;
+            }
+          });
+        });
+      });
+    });
+  }
 
-    publish(this.messageContext, PIN_REISSUE_MESSAGE_CHANNEL, payload);
+  // PhuongNT add handle save data for fields readonly were changed data by another field
+  async handleSaveFieldReadOnly() {
+    let mapRecord = new Map();
+    const els = this.template.querySelectorAll('[data-id="field-read-only"]');
+    els?.forEach(el => {
+      const isUpdateReadOnly = el.dataset.isUpdateReadOnly;
+      if (!isUpdateReadOnly) return; // ingnore
+
+      const fieldName = el.dataset.field;
+      const recordId = el.dataset.recordId;
+      const value = el.dataset.value;
+      
+      if (mapRecord.has(recordId)) {
+          mapRecord.get(recordId)[fieldName] = value;
+      } else {
+        let fields = {
+          'Id': recordId,
+          [fieldName]: value
+        };
+        mapRecord.set(recordId, fields);
+      }
+    });
+    if (mapRecord.size === 0) return;
+    try {
+      const updatePromises = Array.from(mapRecord.values()).map(fields => {
+        const recordInput = { fields };
+        console.log('>>>>recordInput: ', JSON.stringify(recordInput));
+        return updateRecord(recordInput);
+      });
+      await Promise.all(updatePromises);
+      console.log('Record updated successfully!');
+    } catch(error) {
+      console.error('Error updating record: ', error);
+    }
   }
 }
