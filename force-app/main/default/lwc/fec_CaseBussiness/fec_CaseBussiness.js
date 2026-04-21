@@ -675,7 +675,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         ACTION_REJECT,
         ACTION_RESOLVE,
         ACTION_CANCEL,
-        ACTION_REOPEN,
       ].includes(customActionLabel)
     ) {
       resolvedMethod = customActionLabel;
