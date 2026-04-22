@@ -56,10 +56,7 @@
                 </template>
                 
                 <template if:false={isLoading}>
-                    <template if:true={showErrorDiv}>
-                        <div class="no-data error">{ERROR_MESSAGE}</div>
-                    </template>
-                    <template if:true={showTable}>
+                    <template if:false={hasError}>
                         <div class="ipp-details-table-wrapper">
                             <c-fec_-related-list-paging
                                 columns={columns}
@@ -71,11 +68,6 @@
                                 default-sort-direction={defaultSortDirection}
                                 onrowselect={handleRowSelect}>
                             </c-fec_-related-list-paging>
-                        </div>
-                    </template>
-                    <template if:true={showIPPNoData}>
-                        <div class="slds-text-align_center slds-p-around_large ipp-details-empty">
-                            <p>{noDataLabel}</p>
                         </div>
                     </template>
                 </template>
