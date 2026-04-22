@@ -9,6 +9,13 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { publish, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
+import FEC_Btn_Apply from '@salesforce/label/c.FEC_Btn_Apply';
+import FEC_CollectionDateFilter_HintText from '@salesforce/label/c.FEC_CollectionDateFilter_HintText';
+import FEC_CollectionDateFilter_FromDate from '@salesforce/label/c.FEC_CollectionDateFilter_FromDate';
+import FEC_CollectionDateFilter_ToDate from '@salesforce/label/c.FEC_CollectionDateFilter_ToDate';
+import FEC_CollectionDateFilter_ErrorMissingDate from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorMissingDate';
+import FEC_CollectionDateFilter_ErrorFromGtTo from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorFromGtTo';
+import FEC_CollectionDateFilter_ErrorExceedRange from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorExceedRange';
 
 const MAX_RANGE_DAYS = 90;
 
@@ -21,6 +28,13 @@ export default class Fec_CollectionDateFilter extends LightningElement {
     @track fromDate = '';
     @track toDate = '';
     @track errorMessage = '';
+
+    label = {
+        apply: FEC_Btn_Apply,
+        hintText: FEC_CollectionDateFilter_HintText,
+        fromDate: FEC_CollectionDateFilter_FromDate,
+        toDate: FEC_CollectionDateFilter_ToDate
+    };
 
     connectedCallback() {
         // Default: From = 90 ngày trước, To = hôm nay
@@ -49,7 +63,7 @@ export default class Fec_CollectionDateFilter extends LightningElement {
         this.errorMessage = '';
 
         if (!this.fromDate || !this.toDate) {
-            this.errorMessage = 'Vui lòng chọn đầy đủ From Date và To Date.';
+            this.errorMessage = FEC_CollectionDateFilter_ErrorMissingDate;
             return;
         }
 
@@ -57,14 +71,14 @@ export default class Fec_CollectionDateFilter extends LightningElement {
         const to = new Date(this.toDate);
 
         if (from > to) {
-            this.errorMessage = 'From Date không được lớn hơn To Date.';
+            this.errorMessage = FEC_CollectionDateFilter_ErrorFromGtTo;
             return;
         }
 
         const diffDays = Math.round((to - from) / (1000 * 60 * 60 * 24));
         const maxDays = this.maxRangeDays || MAX_RANGE_DAYS;
         if (diffDays > maxDays) {
-            this.errorMessage = `Khoảng thời gian không được vượt quá ${maxDays} ngày.`;
+            this.errorMessage = FEC_CollectionDateFilter_ErrorExceedRange.replace('{0}', maxDays);
             return;
         }
 

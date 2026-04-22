@@ -1,11 +1,11 @@
 public with sharing class FEC_FetchCollectionDataServiceCallout {
   
     public class CollectionDataResponse {
-        @AuraEnabled public Boolean Success;
+        @AuraEnabled public String Success;
         @AuraEnabled public List<AllocationHistory> AllocationHistory;
         @AuraEnabled public List<CommunicationHistory> CommunicationHistory;
         @AuraEnabled public List<InteractionHistory> CollectionInteractions;
-        @AuraEnabled public NFUDetailsList NFU;
+        @AuraEnabled public List<NFUItem> NFUDetailsList;
     }
 
    public class AllocationHistory {
@@ -50,21 +50,12 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
         @AuraEnabled public String OtherNotes;
     }
 
-    public class NFUDetailsList {
+    public class NFUItem {
         @AuraEnabled public String NFUStatus;
         @AuraEnabled public String NFUStartDate;
         @AuraEnabled public String NFUExpiryDate;
         @AuraEnabled public String NFUCode;
         @AuraEnabled public String NFUReason;
-        //{"NFUDetailsList":
-        // [{
-        //     "ContractNumber":"20161129-0006618",
-        //     "NFUReason":"",
-        //     "NFUCode":"",
-        //     "NFUStatus":"Y",
-        //     "NFUStartDate":"20260310T103856.862 GMT",
-        //     "NFUExpiryDate":"22991227"
-        // }],"Success":"true"}
     }
 
     //=============== MAIN CALL METHOD ===============//
@@ -102,38 +93,31 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
                     + '&EndDate=' + endDate
                     + '&RecordType=' + recordType;
         Map<String, String> headers = new Map<String, String>{
-            'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            // 'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
         };
 
-        Map<String, Object> bodyMap = new Map<String, Object>();
-        bodyMap.put('ContractNumber', contractNumber);
-        bodyMap.put('RecordType', recordType);
-        bodyMap.put('StartDate', String.isNotBlank(startDate) ? startDate : '20251212');
-        bodyMap.put('EndDate', String.isNotBlank(endDate) ? endDate : '99991212');
-
-        String requestBody = JSON.serialize(bodyMap);
-
         System.debug('===== API REQUEST =====');
         System.debug('ENDPOINT: ' + endpoint);
-        System.debug('METHOD: POST');
+        System.debug('METHOD: GET');
         System.debug('HEADERS: ' + JSON.serialize(headers));
-        System.debug('BODY: ' + requestBody);
 
         try {
-            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_POST, headers, requestBody);
+            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, headers, null);
 
             if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
+                System.debug('response: ' + resp.getBody());
                 return (CollectionDataResponse) JSON.deserialize(resp.getBody(), CollectionDataResponse.class);
             } else {
                 System.debug('response: ' + resp);
                 CollectionDataResponse err = new CollectionDataResponse();
-                err.Success = false;
+                err.Success = 'false';
                 return err;
             }
         } catch (Exception ex) {
+            System.debug('Exception: ' + ex);
             CollectionDataResponse err = new CollectionDataResponse();
-            err.Success = false;
+            err.Success = 'false';
             return err;
         }
     }

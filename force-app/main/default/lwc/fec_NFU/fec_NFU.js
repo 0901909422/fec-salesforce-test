@@ -118,10 +118,10 @@ export default class Fec_NFU extends LightningElement {
                     recordType: this._recordTypeName
                 });
 
-            if (!response || response.Success === false || response.NFU == null) {
+            if (!response || response.Success === false || !response.NFUDetailsList || response.NFUDetailsList.length === 0) {
                 this.nfuData = null;
             } else {
-                this.nfuData = response.NFU;
+                this.nfuData = response.NFUDetailsList[0];
             }
         } catch (e) {
             this.nfuData = null;

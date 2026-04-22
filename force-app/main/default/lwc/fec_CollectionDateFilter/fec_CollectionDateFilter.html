@@ -1,34 +1,32 @@
 <template>
     <div class="date-filter-container">
         <!-- Hint text -->
-        <p class="hint-text">Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</p>
+        <p class="hint-text">{label.hintText}</p>
 
         <!-- Date inputs + Apply button -->
         <div class="filter-row">
             <div class="date-field">
-                <label class="date-label">From Date</label>
-                <lightning-input
-                    type="date"
+                <label class="date-label">{label.fromDate}</label>
+                <c-fec_-date-picker
+                    label={label.fromDate}
                     value={fromDate}
-                    variant="label-hidden"
-                    onchange={handleFromDateChange}
-                ></lightning-input>
+                    ondatechange={handleFromDateChange}
+                ></c-fec_-date-picker>
             </div>
 
             <div class="date-field">
-                <label class="date-label">To Date</label>
-                <lightning-input
-                    type="date"
+                <label class="date-label">{label.toDate}</label>
+                <c-fec_-date-picker
+                    label={label.toDate}
                     value={toDate}
-                    variant="label-hidden"
-                    onchange={handleToDateChange}
-                ></lightning-input>
+                    ondatechange={handleToDateChange}
+                ></c-fec_-date-picker>
             </div>
 
             <div class="apply-btn">
                 <lightning-button
                     variant="brand"
-                    label="Apply"
+                    label={label.apply}
                     onclick={handleApply}
                 ></lightning-button>
             </div>
