@@ -145,6 +145,9 @@ const FIELD_ORIGINAL_INFO_PLACE_OF_ISSUE =
 const FIELD_UPDATED_INFO_PLACE_OF_ISSUE = "FEC_Updated_Info_Place_of_Issue__c";
 const FIELD_NEW_ISSUE_DATE = "FEC_New_Issue_Date__c";
 const FIELD_OLD_ISSUE_DATE = "FEC_Old_Issue_Date__c";
+const FIELD_DUE_DATE = "FEC_Due_Date__c";
+const FIELD_TRANSACTION_DATE = "FEC_Transaction_Date__c";
+const FIELD_STATEMENT_DATE = "FEC_Statement_Date__c";
 const FIELD_NEW_CITIZEN_ID_NUMBER = "FEC_New_Citizen_ID_Number__c";
 const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
 const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
@@ -168,6 +171,9 @@ const DATE_FIELDS = new Set([
   FIELD_OLD_ISSUE_DATE,
   FIELD_CORRECT_DATE_OF_BIRTH,
   FIELD_INCORRECT_DATE_OF_BIRTH,
+  FIELD_DUE_DATE,
+  FIELD_TRANSACTION_DATE,
+  FIELD_STATEMENT_DATE,
 ]);
 const CASE_UPDATED_INFO_GENDER = "Case.FEC_Updated_Info_Gender__c";
 const CASE_UPDATED_INFO_NATIONAL_ID = "Case.FEC_Updated_Info_National_ID__c";
