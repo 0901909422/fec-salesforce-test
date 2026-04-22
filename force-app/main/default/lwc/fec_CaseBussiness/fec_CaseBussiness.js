@@ -8,6 +8,7 @@ import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
+import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
 import checkProcessAction from "@salesforce/apex/FEC_CardReplacementAddressController.checkProcessAction";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -447,6 +448,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   userGroup;
   newBlockCode;
+  currentBlockCode;
+  currentCardStatus;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -1159,6 +1162,10 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
                   field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
                   field.readonlyDisplayValue = field.displayValue;
+                }
+                // PhuongNT add set newBlockCode
+                else if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+                  this.newBlockCode = field.value;
                 }
               });
             });
@@ -2925,13 +2932,15 @@ export default class Fec_CaseBussiness extends LightningElement {
   async handleGetCardStatus() {
     const result = await getCardStatus({ recordId: this.recordId });
     console.log('>>>>>handleGetCardStatus: ' + JSON.stringify(result));
+    this.currentBlockCode = result?.currentBlockCode;
+    this.currentCardStatus = result?.currentCardStatus;
     this.business.sectionlst.forEach(section => {
       section.subSectionlst.forEach(sub => {
         sub.objlst.forEach(obj => {
           obj.fieldlst.forEach(field => {
             if (field.editable) return; // ignore editable
             if (field.apiName === FIELD_CURRENT_CARD_STATUS) {
-              field.value = result?.currentCardStatus;
+              field.value = this.currentCardStatus;
               field.displayValue = field.value;
               field.readonlyDisplayValue = field.value;
             }
@@ -2953,6 +2962,30 @@ export default class Fec_CaseBussiness extends LightningElement {
       } else {
         this.isProcessActionInfo = true;
         this.processActionMsg = result.strMsg;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+
+  // PhuongNT add check process action Card Block
+  handleCheckProcessActionCardBlock() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.processActionMsg = '';
+    checkProcessActionCardBlock({
+      currentBlockCode: this.currentBlockCode,
+      newBlockCode: this.newBlockCode,
+    })
+    .then((result) => {
+      this.processActionMsg = result.strMsg;
+      if (result.isShowAction) {
+        this.showProcessAction = true;
+      } else if (result.isCancel) {
+        this.isProcessActionFailed = true;
+      } else {
+        this.isProcessActionInfo = true;
       }
     })
     .catch((error) => {
