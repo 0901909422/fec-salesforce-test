@@ -13275,6 +13275,13 @@
         <value>100</value>
     </labels>
     <labels>
+        <fullName>CS_OrgChart_Text_RemoveUser_MainQueue_Warning</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>This is the current main queue. Please select a different queue as the main queue before removing this user.</value>
+    </labels>
+    <labels>
         <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
         <categories>Label</categories>
         <language>en_US</language>

@@ -3,6 +3,7 @@ import getQueueMembers from '@salesforce/apex/DepartmentAdmin.getQueueMembers';
 import searchActiveUsers from '@salesforce/apex/DepartmentAdmin.searchActiveUsers';
 import addUsersToQueue from '@salesforce/apex/DepartmentAdmin.addUsersToQueue';
 import removeUserFromQueue from '@salesforce/apex/DepartmentAdmin.removeUserFromQueue';
+import isMainQueueOfUser from '@salesforce/apex/DepartmentAdmin.isMainQueueOfUser';
 import getQueueValidBaseNameOrId from '@salesforce/apex/DepartmentAdmin.getQueueValidBaseNameOrId';
 import getListTeam from '@salesforce/apex/FEC_TeamQueue.getListTeam';
 import getQueueEditInfo from '@salesforce/apex/FEC_TeamQueue.getQueueEditInfo';
@@ -48,6 +49,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     // Selection and pagination
     selectedQueueId;
     selectedQueueName;
+    selectedQueueDevName;
     selectedQueueLabelStatus;
     pageSize = parseInt(this.customLabels.CS_OrgChart_Table_UserTable_Page_Size) || 100; // Number of users to load per page
     lastUserId = null; // For keyset pagination
@@ -225,6 +227,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             this.editTeamQueueRecordId = teamQueueRecordID;
             if (queueInfo && queueInfo.name) {
                 this.selectedQueueName = queueInfo.name;
+                this.selectedQueueDevName = queueInfo.devname;
             } else {
                 this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
             }
@@ -401,7 +404,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.selectedUsersToAdd = event.detail.selectedRows;
     }
 
-    handleRowAction(event) {
+    async handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
         if (actionName === 'viewUserDetail') {
@@ -419,7 +422,19 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (row && row.id && this.selectedQueueId) {
                 const userName = row.name || row.fullName || 'User';
                 const queueName = this.selectedQueueName || 'Queue';
-                
+                this.selectedQueueDevName = this.selectedQueueDevName || '';
+                const isMainQueue = await isMainQueueOfUser({ 
+                    userId: row.id, 
+                    developerName: this.selectedQueueDevName 
+                });
+                if (isMainQueue) {
+                    this.dispatchEvent(new ShowToastEvent({ 
+                        title: this.customLabels.CS_OrgChart_Text_Save_Waning_Title, 
+                        message: this.customLabels.CS_OrgChart_Text_RemoveUser_MainQueue_Warning, 
+                        variant: 'warning'
+                    }));
+                    return;
+                }
                 // Show confirmation dialog
                 let messConfirmLabel = this.customLabels.CS_OrgChart_Text_RemoveUser_Message_Confirm;
                 let messConfirm = messConfirmLabel.replace("{userName}", userName).replace("{queueName}", queueName);

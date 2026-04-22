@@ -56,7 +56,8 @@ public with sharing class FEC_TeamQueue {
             // Query to get teams and their queue counts
             List<FEC_Team__c> listTeamNames = [
                 SELECT Id, Name, FEC_Team_Label__c 
-                FROM FEC_Team__c
+                FROM FEC_Team__c 
+                WHERE FEC_Team_Active__c = true
                 ORDER BY Name
             ];
             
@@ -353,5 +354,22 @@ public with sharing class FEC_TeamQueue {
             DepartmentAdmin.insertCustomLog(queueId, CLASS_NAME, 'updateQueueEdit', 'Update Queue', '', messageEdit);
         }
         return true;
+    }
+
+    @AuraEnabled
+    public static Boolean isTeamActiveForQueue(String developerName) {
+
+        // Load the FEC_Team_Queue__c record
+        List<FEC_Team_Queue__c> teamQueue = [
+            SELECT Id, FEC_Select_Team__r.FEC_Team_Active__c
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Queue_Name__c = :developerName
+            LIMIT 1
+        ];
+
+        if (teamQueue == null) {
+            return false;
+        }
+        return teamQueue[0].FEC_Select_Team__r.FEC_Team_Active__c;
     }
 }

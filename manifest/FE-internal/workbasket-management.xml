@@ -122,6 +122,7 @@
         <members>CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected</members>
         <members>CS_OrgChart_Text_Save_Waning_Title</members>
         <members>CS_OrgChart_Table_UserTable_Page_Size</members>
+        <members>CS_OrgChart_Text_RemoveUser_MainQueue_Warning</members>
         <name>CustomLabel</name>
     </types>
     <types>
@@ -143,6 +144,7 @@
         <members>CustomLog__c.TargetObjectId__c</members>
         <members>FEC_Team__c.FEC_Team_Label__c</members>
         <members>FEC_Team__c.FEC_Team_Description__c</members>
+        <members>FEC_Team__c.FEC_Team_Active__c</members>
         <members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
         <name>CustomField</name>
     </types>
