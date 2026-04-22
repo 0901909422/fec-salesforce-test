@@ -50,7 +50,12 @@
     <aura:attribute name="lblNone" type="String" default="{!$Label.c.FEC_Email_Option_None}" />
     <aura:attribute name="lblWriteEmail" type="String" default="{!$Label.c.FEC_Email_Placeholder_Write}" />
     <aura:attribute name="lblCompose" type="String" default="{!$Label.c.FEC_Email_Btn_Compose}" />
-    <!-- tungnm37 thêm: labels cho toast/error messages -->
+    <!-- tungnm37 thêm: labels cho Discard popup -->
+    <aura:attribute name="showDiscardConfirm" type="Boolean" default="false" />
+    <aura:attribute name="lblDiscardTitle" type="String" default="{!$Label.c.FEC_Email_Discard_Title}" />
+    <aura:attribute name="lblDiscardMsg" type="String" default="{!$Label.c.FEC_Email_Discard_Msg}" />
+    <aura:attribute name="lblDiscardBtn" type="String" default="{!$Label.c.FEC_Email_Btn_Discard}" />
+    <aura:attribute name="lblCancelBtn" type="String" default="{!$Label.c.FEC_Email_Btn_Cancel}" />
     <aura:attribute name="lblFileTooLargeTitle" type="String" default="{!$Label.c.FEC_Email_Error_File_Too_Large_Title}" />
     <aura:attribute name="lblFileTooLargeMsg" type="String" default="{!$Label.c.FEC_Email_Error_File_Too_Large_Msg}" />
     <aura:attribute name="lblImgTooLargeTitle" type="String" default="{!$Label.c.FEC_Email_Error_Image_Too_Large_Title}" />
@@ -470,5 +475,19 @@
     </lightning:accordion>
     </div>
     </div>
+
+    <!-- tungnm37 thêm: Discard confirmation popup -->
+    <aura:if isTrue="{!v.showDiscardConfirm}">
+        <div class="fec-discard-overlay" onclick="{!c.cancelDiscard}"></div>
+        <div class="fec-discard-modal" onclick="{!c.stopPropagation}">
+            <div class="fec-discard-close" onclick="{!c.cancelDiscard}">&#x2715;</div>
+            <div class="fec-discard-title">{!v.lblDiscardTitle}</div>
+            <div class="fec-discard-msg">{!v.lblDiscardMsg}</div>
+            <div class="fec-discard-footer">
+                <lightning:button label="{!v.lblCancelBtn}" onclick="{!c.cancelDiscard}" />
+                <lightning:button variant="brand" label="{!v.lblDiscardBtn}" onclick="{!c.confirmDiscard}" class="slds-m-left_x-small" />
+            </div>
+        </div>
+    </aura:if>
 
 </aura:component>
