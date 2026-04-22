@@ -114,6 +114,11 @@
 		<members>FEC_CardInfoController</members>
 		<members>FEC_GetCardSecInfo</members>
 		<members>FEC_IPPController</members>
+		<members>FEC_CaseLinkedFilesController</members>
+		<members>FEC_ContentDocumentLinkService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -191,6 +196,7 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
+		<members>fec_FileUploadCard</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

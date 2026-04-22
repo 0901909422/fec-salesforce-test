@@ -2,8 +2,9 @@ public with sharing class FEC_CardLockUnLockController {
 
     public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String method) {
         UpdateResult result = new UpdateResult();
+        Case objCasse;
         try {
-            Case objCasse = [
+            objCasse = [
                 SELECT Id,
                     FEC_Account_Number__c,
                     FEC_New_Block_Code__c,
@@ -19,6 +20,10 @@ public with sharing class FEC_CardLockUnLockController {
             String transId = FEC_CommonUltils.generateTransactionId();
             String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID;
             // Function indicator: "B" for block, "U" for unblock.
+            String blockCodeParam = blockCode;
+            if (funcCode == 'U') {
+                blockCodeParam = objCasse.FEC_New_Block_Code__c;
+            }
 
             // FEC_CardLockUnLockCallout.ValidationResult validateResult = FEC_CardLockUnLockCallout.validateRequest(
             //     transId,
@@ -35,7 +40,7 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
-                blockCode,
+                blockCodeParam,
                 funcCode,
                 cardNumber,
                 objCasse.FEC_Account_Number__c
@@ -56,17 +61,19 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
             result.actionCount = objCasse.FEC_Process_Action_Count__c;
-            FEC_CommonUltils.createProcessActionHistory(
-                method,
-                objCasse,
-                result.success
-            );
         } catch (Exception ex) {
+            result.success = false;
             FEC_CommonUltils.logException(
                 'FEC_CardLockUnLockController', 
                 'lockUnblockCard', 
                 ex.getMessage(),
                 ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
             );
         }
         return result;
