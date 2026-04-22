@@ -954,7 +954,7 @@
 		<name>LightningMessageChannel</name>
 	</types>
 	<types>
-    	<members>Case-en_US</members>
+    	<members>Case-vi</members>
 		<name>CustomObjectTranslation</name>
 	</types>
     <version>65.0</version>
