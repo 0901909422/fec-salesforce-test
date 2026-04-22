@@ -1,4 +1,4 @@
-public with sharing class FEC_CardClosureRefundController {
+public without sharing class FEC_CardClosureRefundController {
 
     private static final String BLOCK_CODE_CARD = 'C';
     private static final String FUNC_BLOCK = 'B';
@@ -326,8 +326,8 @@ public with sharing class FEC_CardClosureRefundController {
 
             dto.transId = transId;
             dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
-            dto.code = response != null && response.Sys2 != null ? response.Sys2.Code : null;
-            dto.description = response != null && response.Sys2 != null ? response.Sys2.Description : null;
+            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
+            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
 
             if (dto.success && funcCode == FUNC_BLOCK) {

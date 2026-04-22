@@ -157,7 +157,14 @@
                                 content={field.helpText}
                               ></lightning-helptext>
                             </p>
-                            <p class="value">
+                            <p class="value"
+                              data-id="field-read-only"
+                              data-record-id={obj.id}
+                              data-obj-name={obj.name}
+                              data-field={field.apiName}
+                              data-value={field.value}
+                              data-is-update-read-only={field.isUpdateReadOnly}
+                            >
                               {field.readonlyDisplayValue}
                               <lightning-icon
                                 if:true={field.masked}
@@ -208,6 +215,7 @@
                 onclick={handleProcessAction}
                 class="slds-m-right_x-small"
                 data-id={process.value}
+                disabled={process.disabled}
               ></lightning-button>
             </template>
           </div>
@@ -224,6 +232,13 @@
           <div
             if:true={isProcessActionSuccessed}
             class="process-action-result process-action-result--success"
+          >
+            <p>{processActionMsg}</p>
+          </div>
+
+          <div
+            if:true={isProcessActionInfo}
+            class="process-action-result process-action-result--info"
           >
             <p>{processActionMsg}</p>
           </div>

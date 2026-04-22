@@ -1,0 +1,118 @@
+.selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.selected .slds-badge {
+  cursor: default;
+  padding: 2px 4px;
+}
+
+.badge__close {
+  margin-left: 6px;
+  cursor: pointer;
+}
+
+.required {
+  color: red;
+}
+
+.badge__value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.has-error .slds-input_faux,
+.has-error .slds-combobox__input {
+  border: 1px solid #ea001e;
+  box-shadow: #ea001e 0 0 0 1px inset;
+}
+
+.has-error .slds-input_faux.slds-has-focus {
+  box-shadow: 0 0 0 2px #0b5cab;
+}
+
+.slds-dropdown {
+  top: 35px;
+  --lwc-spacingXSmall: 0.25rem;
+  --lwc-spacingSmall: 0.25rem;
+}
+
+.slds-dropdown .slds-listbox_vertical {
+  gap: 0;
+}
+
+.slds-dropdown .slds-listbox__item {
+  margin: 0;
+  padding: 0;
+}
+
+.slds-dropdown .slds-listbox__option_plain {
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0.75rem;
+  padding-right: 0.5rem;
+  line-height: 1.25;
+}
+
+.slds-dropdown .slds-listbox_vertical .slds-media {
+  align-items: center;
+  padding: 0;
+}
+
+.slds-dropdown .slds-listbox_vertical .slds-media_small {
+  min-height: 0;
+}
+
+.slds-dropdown .slds-listbox_vertical .slds-media__figure {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.slds-dropdown .slds-listbox_vertical .slds-media__body {
+  line-height: 1.125;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.slds-dropdown .slds-checkbox__label {
+  margin-left: 0.75rem;
+}
+
+.slds-badge + .slds-badge {
+  margin-left: unset;
+}
+
+.slds-form-element {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  row-gap: 0.75rem;
+  align-items: start;
+}
+
+.slds-form-element__label {
+  position: static;
+  max-width: none;
+  margin: 0;
+  padding-top: 0;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.slds-form-element__control {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.error-msg {
+  grid-column: 1;
+  grid-row: 3;
+  color: var(--lwc-colorTextError, #ea001e);
+}

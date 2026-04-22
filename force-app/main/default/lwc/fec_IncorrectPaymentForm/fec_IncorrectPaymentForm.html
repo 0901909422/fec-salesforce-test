@@ -11,6 +11,7 @@
           disabled={isReadOnly}
           onremove={handleRemoveIncorrectContract}
           onchange={handleChangeIncorrectContract}
+          onblurcommit={handleIncorrectContractBlurCommit}
         ></c-fec_-combo-box>
         <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
           {customLabel.incorrectContractHint}
@@ -76,6 +77,7 @@
             placeholder={customLabel.datePlaceholder}
             label={customLabel.billDate}
             value={manualBillDate}
+            max={maxManualBillDate}
             disabled={isReadOnly}
             onchange={handleManualBillDateChange}
           >
@@ -83,6 +85,7 @@
         </lightning-layout-item>
         <lightning-layout-item size="6" padding="around-small">
           <lightning-input
+            data-id="manual-bill-amount"
             name="manualBillAmount"
             type="number"
             label={customLabel.billAmount}
@@ -149,17 +152,18 @@
                 class="receipt-row slds-grid_vertical-align-end"
               >
                 <lightning-layout-item size="6" padding="around-small">
-                  <lightning-combobox
+                  <c-fec_-combo-box
                     data-id-value={row.id}
                     label={row.correctContractLabel}
-                    value={row.correctContract}
-                    options={correctContractOptions}
-                    disabled={isReadOnly}
-                    onchange={handleAdjustmentCorrectContractChange}
                     placeholder={customLabel.selectContractPlaceholder}
+                    value={row.correctContract}
+                    option={formattedCorrectContractOption}
+                    disabled={isReadOnly}
                     required
-                  >
-                  </lightning-combobox>
+                    onremove={handleAdjustmentCorrectContractRemove}
+                    onchange={handleAdjustmentCorrectContractChange}
+                    onblurcommit={handleAdjustmentCorrectContractBlurCommit}
+                  ></c-fec_-combo-box>
                 </lightning-layout-item>
                 <lightning-layout-item size="4" padding="around-small">
                   <lightning-input
@@ -209,8 +213,8 @@
         </template>
       </lightning-layout-item>
       <lightning-layout-item size="12" padding="around-small">
-        <p class="slds-text-body_small slds-text-color_error">
-          {customLabel.adjustedAmountMustEqualPayment}
+        <p class="slds-text-body_small fec-ipp-noti-05">
+          {adjustedAmountNoticeMessage}
         </p>
       </lightning-layout-item>
     </template>

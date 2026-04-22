@@ -301,7 +301,11 @@ public with sharing class FEC_UpdateCustomerContact {
 
     Case selectedCase = caselst.get(0);
     CustomerContactRequest req = new CustomerContactRequest();
-    req.CIFNumber = selectedCase.FEC_Account_or_Contract__r?.FEC_CIF_Number__c;
+    if (selectedCase.FEC_Account_or_Contract__r != null) {
+      req.CIFNumber = selectedCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c;
+    } else {
+      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Customer History'}));
+    }
 
     if (PHONE_UPDATE.equals(method)) {
       req.ContactString = selectedCase.FEC_Updated_Info_Phone_Number__c;
@@ -330,11 +334,10 @@ public with sharing class FEC_UpdateCustomerContact {
     if (result.success) {
       selectedCase.FEC_Process_Action_Count__c = -1;
     } else {
-      Decimal failedCount = selectedCase.FEC_Process_Action_Count__c;
-      if (failedCount == null || failedCount < 0) {
-        failedCount = 0;
+      if (selectedCase.FEC_Process_Action_Count__c == null) {
+        selectedCase.FEC_Process_Action_Count__c = 0;
       }
-      selectedCase.FEC_Process_Action_Count__c = Math.min(3, failedCount + 1);
+      selectedCase.FEC_Process_Action_Count__c += 1;
     }
 
     update selectedCase;

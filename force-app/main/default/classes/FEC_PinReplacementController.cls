@@ -2,12 +2,15 @@ public with sharing class FEC_PinReplacementController {
     
     public static UpdateResult pinReplacement(String recordId, String method) {
         UpdateResult result = new UpdateResult();
+        Case objCasse;
         try {
-            Case objCasse = [
+            objCasse = [
                 SELECT Id,
                     FEC_National_ID_Passport_ID__c,
                     FEC_Case_Phone_Number__c,
-                    FEC_Process_Action_Count__c
+                    FEC_Process_Action_Count__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -33,17 +36,19 @@ public with sharing class FEC_PinReplacementController {
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
             result.actionCount = objCasse.FEC_Process_Action_Count__c;
-            FEC_CommonUltils.createProcessActionHistory(
-                method,
-                objCasse,
-                result.success
-            );
         } catch (Exception ex) {
+            result.success = false;
             FEC_CommonUltils.logException(
                 'FEC_PinReplacementController', 
                 'pinReplacement', 
                 ex.getMessage(),
                 ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
             );
         }
         return result;
