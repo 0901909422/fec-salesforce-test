@@ -1,19 +1,17 @@
-
 /****************************************************************************************
- * File Name    : FEC_CheckEligibleCallout.Apex
- * Author       : LongNH76
- * Date         : 2026-04-21
- * Description  : Call data object Case
- * Modification Log
- * ===============================================================
- * Ver      Date           Author              Modification
- * ===============================================================
-   1.0      2026-04-21     LongNH76             Create
+* File Name    : FEC_CheckEligibleCallout
+* Author       : LongNH76
+* Date         : 2026-03-23
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
+   1.0      2026-03-23     LongNH76             Create
  
 ****************************************************************************************/
+
 public without sharing class FEC_CheckEligibleCallout {
 
-    public static final String API_CONFIG_NAME = 'FEC_CheckEligible';
     private static ResponseLog responseLog;
 
     // ============================================================
@@ -24,15 +22,9 @@ public without sharing class FEC_CheckEligibleCallout {
      * Following the pattern: { headers: {}, parameters: [...], body: {} }
      */
     public class CheckEligibleRequest {
-        public Map<String, String> headers;
-        public List<String> parameters;
+        public Map<String,String> parameters;
+        public Map<String, Object> headers;
         public Map<String, Object> body;
-
-        public CheckEligibleRequest() {
-            this.headers = new Map<String, String>();
-            this.parameters = new List<String>();
-            this.body = new Map<String, Object>();
-        }
     }
 
     // ============================================================
@@ -43,7 +35,7 @@ public without sharing class FEC_CheckEligibleCallout {
      */
     public class CheckEligibleResponse {
         @AuraEnabled public String pxObjClass;
-        @AuraEnabled public String Status; // "true" = Eligible
+        @AuraEnabled public String Status; 
         @AuraEnabled public EligibleData Data;
         
         @AuraEnabled public String errorCode;
@@ -54,7 +46,7 @@ public without sharing class FEC_CheckEligibleCallout {
      * Detailed eligibility data returned by the API.
      */
     public class EligibleData {
-        @AuraEnabled public String BIRTHDAY;          // YYYY-MM-DD
+        @AuraEnabled public String BIRTHDAY;      
         @AuraEnabled public String GENDER;
         @AuraEnabled public String ID_CARD_NUMBER;
         @AuraEnabled public String LEAD_NEXTVALID;
@@ -104,52 +96,61 @@ public without sharing class FEC_CheckEligibleCallout {
      * @param idCardNumber The customer's ID card number (mandatory).
      * @return CheckEligibleResponse containing the result of the callout.
      */
-    public static CheckEligibleResponse checkEligibility(String idCardNumber) {
+    public static CheckEligibleResponse checkEligibility(String idCardNumber, String phoneNumber) {
         CheckEligibleResponse response = new CheckEligibleResponse();
         
         try {
-            // 0. Validate Input
-            ValidationResult vr = validateRequest(idCardNumber);
-            if (!vr.isValid) {
-                response.errorMessage = vr.errorMessage;
-                return response;
-            }
+            validateRequest(idCardNumber);
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_CheckEligible');
 
             // 1. Prepare Request Wrapper
             CheckEligibleRequest reqWrapper = new CheckEligibleRequest();
 
-            // Add ID_CARD_NUMBER as the first parameter per the example structure
-            reqWrapper.parameters.add(idCardNumber);
-            // Empty second parameter as per the "Reserved / optional" requirement
-            reqWrapper.parameters.add('');
+            reqWrapper.headers = new Map<String, Object>{
+                'TransID'     => FEC_CommonUltils.generateTransactionUUID(),
+                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            };
 
-            // Set standard headers (also embedded in JSON body via serialize)
-            reqWrapper.headers.put('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
-            reqWrapper.headers.put('TransID', generateTransactionId());
-            // API Gateway (apigw): consumer_name — giá trị trên Custom Metadata FEC_CheckEligible.FEC_Consumer_Name__c (dùng get() để deploy class trước field vẫn compile)
-            if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Consumer_Name__c)) {
-                reqWrapper.headers.put('consumer_name', apiConfig.FEC_Consumer_Name__c.trim());
-            }
+            reqWrapper.parameters = new Map<String, String>{
+                'ID_CARD_NUMBER'    => idCardNumber,
+                'PHONE_NUMBER'      => phoneNumber
+            };
 
+            reqWrapper.body = new Map<String, Object>();
             String requestBodyJson = JSON.serialize(reqWrapper);
 
-            // 2. Resolve Endpoint
-            String endpoint = (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            if (apiConfig != null) {
+                String consumerName = (String) apiConfig.get('FEC_Consumer_Name__c');
+                if (String.isNotBlank(consumerName)) {
+                    reqWrapper.headers.put('consumer_name', consumerName.trim());
+                }
+            }
+
+            String endpoint = apiSetting?.FEC_Call_Mock__c
+            ? FEC_MockupEndpoint.FEC_GET_CARD_TXN_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            
+            endpoint += '?ID_CARD_NUMBER=' + EncodingUtil.urlEncode(idCardNumber,'UTF-8')
+            + '&PHONE_NUMBER=' + EncodingUtil.urlEncode(phoneNumber,'UTF-8');
+
+            Map<String,String> headers = new Map<String,String>{
+                'TransID'     => FEC_CommonUltils.generateTransactionUUID(),
+                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            };
 
             // 3. Execute Callout (GET + JSON body theo pattern hiện tại)
             HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_GET,
-                reqWrapper.headers,
-                requestBodyJson
+                headers,
+                null
             );
 
             // 4. Log the Interaction
             responseLog = new ResponseLog(
-                API_CONFIG_NAME,
+                'FEC_CheckEligible',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_GET,
                 requestBodyJson,
@@ -191,22 +192,17 @@ public without sharing class FEC_CheckEligibleCallout {
     /**
      * Validates input parameters before making the callout.
      */
-    public static ValidationResult validateRequest(String idCardNumber) {
-        if (String.isBlank(idCardNumber)) {
-            return new ValidationResult(false, String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'ID Card Number'}));
-        }
-        
-        // Example regex validation for National ID (matching project constants if available)
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
-             return new ValidationResult(false, String.format(System.Label.FEC_MSG_Invalid, new List<String>{'ID Card Number'}));
-        }
+    private static void validateRequest(String idCardNumber) {
 
-        return new ValidationResult(true, null);
+        if (String.isNotBlank(idCardNumber) &&
+            !Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
+            throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CardNumber'}));
+        }
     }
 
-    /**
-     * Persists the API log to the database.
-     */
+    // /**
+    //  * Persists the API log to the database.
+    //  */
     public static void logApiResponse() {
         if (responseLog != null) {
             FEC_CommonUltils.logApi(
@@ -218,12 +214,5 @@ public without sharing class FEC_CheckEligibleCallout {
                 responseLog.errorMessage
             );
         }
-    }
-
-    /**
-     * Generates a unique transaction identifier.
-     */
-    private static String generateTransactionId() {
-        return 'SF-' + Datetime.now().getTime() + '-' + Crypto.getRandomInteger();
     }
 }
