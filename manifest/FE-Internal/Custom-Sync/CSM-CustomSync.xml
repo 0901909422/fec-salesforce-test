@@ -55,12 +55,13 @@
         <members>FEC_BatchReCallCustomSync</members>
         <members>FEC_QueueReportCustomSyncBix</members> 
         <members>FEC_CustomSyncAllInOneTest</members>  
+        <members>FEC_CustomSyncValidator</members>
+        <members>FEC_CustomSyncValidatorTest</members>
         <name>ApexClass</name>
     </types>
-     
     <types>
-        <members>FEC_Common_System_Setting</members>
-        <name>PermissionSet</name>
-    </types>
+        <members>CustomSyncTrigger</members>
+        <name>ApexTrigger</name>
+    </types> 
     <version>65.0</version>
 </Package>
