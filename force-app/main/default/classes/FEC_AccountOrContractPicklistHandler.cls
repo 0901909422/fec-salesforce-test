@@ -19,7 +19,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                    FEC_Has_Account_or_Contract__c,
                    FEC_Phone_Number__c 
             FROM Case
-            WHERE Id = :caseId 
+            WHERE Id = :caseId
             LIMIT 1
         ];
             
@@ -56,7 +56,6 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 result.put('phone', interactionCase.FEC_Phone_Number__c);
                 
             }
-            
             
             return JSON.serialize(result);
             
@@ -211,7 +210,8 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 GetProductsListResponse item = new GetProductsListResponse();
                 
                 if (String.isNotBlank(p.accountNumber) &&
-                Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)) {
+                    (Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)
+                || p.accountNumber.contains('X'))) {
                     
                     item.accountContractNumber = p.accountNumber;
                     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;
@@ -451,29 +451,40 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
         }
     }
     
+    //Hieutt74 - Get account/contract number from first customer history record of interaction
+    //Updated by Hieutt74 - 2026-04-17 - Add product code check to ensure correct account/contract number is returned
     @AuraEnabled
     public static String getInteractionFirstCustomerHistoryAccountNumber(Id caseId){
         try {
-            FEC_Customer_History__c customerHistory = [
-            SELECT ID,  FEC_Account_Number__c, FEC_Contract_Number__c  , CreatedDate , FEC_Product_Code__c  
+            if (caseId == null) return null;
+            
+            List<FEC_Customer_History__c> histories = [
+            SELECT Id, FEC_Account_Number__c, FEC_Contract_Number__c, CreatedDate, FEC_Product_Code__c  
             FROM FEC_Customer_History__c 
-            WHERE FEC_Case__c  = :caseId ORDER BY CreatedDate ASC
+            WHERE FEC_Case__c = :caseId 
+            ORDER BY CreatedDate ASC
             LIMIT 1
-         ];
-            String accountContractNumber;
-            if (customerHistory.FEC_Product_Code__c.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_LOAN.toLowerCase() ||
-            customerHistory.FEC_Product_Code__c.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE.toLowerCase()) {
+        ];
+            
+            if (histories.isEmpty()) return null;
+            
+            FEC_Customer_History__c record = histories[0];
+            
+            String productCode = record.FEC_Product_Code__c;
+            if (String.isBlank(productCode)) return null;
+            
+            if (productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_LOAN) ||
+            productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE)) {
                 
-                accountContractNumber =
-                    customerHistory.FEC_Contract_Number__c;
+                return record.FEC_Contract_Number__c;
                 
-            } else if (customerHistory.FEC_Product_Code__c.toLowerCase() == FEC_ConstantCommon.PRODUCT_TYPE_CARD.toLowerCase() ) {
+            } else if (productCode.equalsIgnoreCase(FEC_ConstantCommon.PRODUCT_TYPE_CARD)) {
                 
-                accountContractNumber =
-                    customerHistory.FEC_Account_Number__c;
+                return record.FEC_Account_Number__c;
             }
             
-            return accountContractNumber;
+            return null;
+            
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
