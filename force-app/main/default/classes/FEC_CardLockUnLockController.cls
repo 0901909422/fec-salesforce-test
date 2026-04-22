@@ -20,10 +20,6 @@ public with sharing class FEC_CardLockUnLockController {
             String transId = FEC_CommonUltils.generateTransactionId();
             String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID;
             // Function indicator: "B" for block, "U" for unblock.
-            String blockCodeParam = blockCode;
-            if (funcCode == 'U') {
-                blockCodeParam = objCasse.FEC_New_Block_Code__c;
-            }
 
             // FEC_CardLockUnLockCallout.ValidationResult validateResult = FEC_CardLockUnLockCallout.validateRequest(
             //     transId,
@@ -40,7 +36,7 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
-                blockCodeParam,
+                blockCode,
                 funcCode,
                 cardNumber,
                 objCasse.FEC_Account_Number__c

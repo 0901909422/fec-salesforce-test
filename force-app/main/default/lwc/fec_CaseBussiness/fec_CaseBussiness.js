@@ -2451,7 +2451,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_UNBLOCK_CARD:
         params = {
           caseId: this.recordId,
-          blockCode: this.newBlockCode,
+          blockCode: this.currentBlockCode,
         };
         break;
 
