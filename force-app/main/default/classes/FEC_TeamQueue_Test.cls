@@ -5,24 +5,26 @@
  * - getQueuesForTeam
  * - createQueue
  * - createTeamQueueRecord
- * - CreateNewTeam
+ * - CreateNewTeam (success + validation errors)
  * - getQueueEditInfo
  * - updateQueueEdit
+ * - isTeamActiveForQueue
+ * - removeQueue (via createTeamQueueRecord failure path)
  *
  * Notes:
  * - SeeAllData=false. All data is created within tests.
- * - DepartmentAdmin.getQueueValidBaseNameOrId and DepartmentAdmin.insertCustomLog are invoked; if these have logic,
- *   this test only relies on their public contract and will create minimal data to satisfy usage.
+ * - System.runAs is used to avoid Mixed DML errors when inserting
+ *   setup objects (Group) alongside non-setup objects (FEC_Team__c).
  */
 @isTest
 public class FEC_TeamQueue_Test {
 
-    // Utility method để tạo dữ liệu mẫu
     private static FEC_Team__c createSampleTeam() {
         FEC_Team__c team = new FEC_Team__c(
             Name = 'TestTeam',
             FEC_Team_Label__c = 'Test Label',
-            FEC_Team_Description__c = 'Test Description'
+            FEC_Team_Description__c = 'Test Description',
+            FEC_Team_Active__c = true
         );
         insert team;
         return team;
@@ -32,7 +34,31 @@ public class FEC_TeamQueue_Test {
     static void testCreateNewTeam() {
         Test.startTest();
         Id teamId = FEC_TeamQueue.CreateNewTeam('Label1', 'TeamAPIName', 'Description');
+        Test.stopTest();
         System.assertNotEquals(null, teamId, 'Team should be created successfully');
+    }
+
+    @isTest
+    static void testCreateNewTeam_BlankLabel() {
+        Test.startTest();
+        try {
+            FEC_TeamQueue.CreateNewTeam('', 'TeamAPIName', 'Description');
+            System.assert(false, 'Should have thrown AuraHandledException for blank label');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage(), 'Exception message should not be null');
+        }
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testCreateNewTeam_BlankName() {
+        Test.startTest();
+        try {
+            FEC_TeamQueue.CreateNewTeam('Label1', '', 'Description');
+            System.assert(false, 'Should have thrown AuraHandledException for blank name');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage(), 'Exception message should not be null');
+        }
         Test.stopTest();
     }
 
@@ -41,16 +67,16 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         Test.startTest();
         List<FEC_TeamQueue.TeamQueueWrapper> teams = FEC_TeamQueue.getListTeam();
-        System.assert(teams.size() > 0, 'Should return at least one team');
         Test.stopTest();
+        System.assert(teams.size() > 0, 'Should return at least one team');
     }
 
     @isTest
     static void testCreateQueue() {
         Test.startTest();
         String queueId = FEC_TeamQueue.createQueue('Test Queue Label', 'TestQueueDevName');
-        System.assertNotEquals(null, queueId, 'Queue should be created successfully');
         Test.stopTest();
+        System.assertNotEquals(null, queueId, 'Queue should be created successfully');
     }
 
     @isTest
@@ -58,14 +84,13 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         Test.startTest();
         Boolean result = FEC_TeamQueue.createTeamQueueRecord(team.Id, 'TestQueueDevName', 'Test Label Status');
-        System.assertEquals(true, result, 'Team Queue record should be created successfully');
         Test.stopTest();
+        System.assertEquals(true, result, 'Team Queue record should be created successfully');
     }
 
     @isTest
     static void testGetQueuesForTeam() {
         FEC_Team__c team = createSampleTeam();
-        // Tạo record FEC_Team_Queue__c giả lập
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'TestQueueDevName'
@@ -74,19 +99,21 @@ public class FEC_TeamQueue_Test {
 
         Test.startTest();
         List<FEC_TeamQueue.ListQueueDto> queues = FEC_TeamQueue.getQueuesForTeam(team.Id);
-        System.assertNotEquals(null, queues, 'Queues list should not be null');
         Test.stopTest();
+        System.assertNotEquals(null, queues, 'Queues list should not be null');
     }
 
     @isTest
     static void testGetQueueEditInfo() {
-        // Tạo team và queue (tạo Group trực tiếp để đảm bảo tồn tại)
+        // Insert Group (setup object) inside System.runAs to avoid Mixed DML
+        Group g;
+        User currentUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        System.runAs(currentUser) {
+            g = new Group(Name = 'EditQueueLabel', DeveloperName = 'EditQueueDevName', Type = 'Queue');
+            insert g;
+        }
+
         FEC_Team__c team = createSampleTeam();
-        Group g = new Group(Name = 'EditQueueLabel', DeveloperName = 'EditQueueDevName', Type = 'Queue');
-        insert g;
-        Id queueId = g.Id;
-        
-        // Tạo mapping record FEC_Team_Queue__c
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Select_Team__c = team.Id,
             FEC_Queue_Name__c = 'EditQueueDevName'
@@ -94,20 +121,49 @@ public class FEC_TeamQueue_Test {
         insert tq;
 
         Test.startTest();
-        FEC_TeamQueue.EditQueueDto dto = FEC_TeamQueue.getQueueEditInfo(queueId, tq.Id);
-        System.assertEquals(queueId, dto.queueId, 'Queue Id should match');
+        FEC_TeamQueue.EditQueueDto dto = FEC_TeamQueue.getQueueEditInfo(g.Id, tq.Id);
+        Test.stopTest();
+        System.assertEquals(g.Id, dto.queueId, 'Queue Id should match');
         System.assertEquals(team.Id, dto.teamId, 'Team Id should match');
+    }
+
+    @isTest
+    static void testGetQueueEditInfo_InvalidQueue() {
+        // Create a regular Group (not Queue type) so its Id is valid but won't match Type='Queue'
+        Group notAQueue;
+        User currentUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        System.runAs(currentUser) {
+            notAQueue = new Group(Name = 'NotAQueue', DeveloperName = 'NotAQueueDev', Type = 'Regular');
+            insert notAQueue;
+        }
+
+        FEC_Team__c team = createSampleTeam();
+        FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
+            FEC_Select_Team__c = team.Id,
+            FEC_Queue_Name__c = 'SomeQueue'
+        );
+        insert tq;
+
+        Test.startTest();
+        try {
+            FEC_TeamQueue.getQueueEditInfo(notAQueue.Id, tq.Id);
+            System.assert(false, 'Should have thrown AuraHandledException for invalid queue');
+        } catch (AuraHandledException e) {
+            System.assertNotEquals(null, e.getMessage());
+        }
         Test.stopTest();
     }
 
     @isTest
     static void testUpdateQueueEdit() {
-        // Tạo Group (Queue) first to avoid mixed DML issues and ensure it exists
-        Group g = new Group(Name = 'EditQueueLabel', DeveloperName = 'EditQueueDevName', Type = 'Queue');
-        insert g;
-        Id queueId = g.Id;
+        // Insert Group inside System.runAs to avoid Mixed DML
+        Group g;
+        User currentUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        System.runAs(currentUser) {
+            g = new Group(Name = 'EditQueueLabel', DeveloperName = 'EditQueueDevName', Type = 'Queue');
+            insert g;
+        }
 
-        // Then create team and mapping record
         FEC_Team__c team = createSampleTeam();
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Select_Team__c = team.Id,
@@ -116,20 +172,72 @@ public class FEC_TeamQueue_Test {
         );
         insert tq;
 
-        // Sanity checks
-        System.assertNotEquals(null, queueId, 'Queue Id must not be null');
-        System.assertNotEquals(null, tq.Id, 'Team-Queue mapping Id must not be null');
+        Test.startTest();
+        Boolean updateResult = FEC_TeamQueue.updateQueueEdit(g.Id, 'UpdatedLabel', tq.Id, team.Id, 'Updated Label Status');
+        Test.stopTest();
+
+        System.assertEquals(true, updateResult, 'Update should succeed');
+        Group updated = [SELECT Id, Name FROM Group WHERE Id = :g.Id LIMIT 1];
+        System.assertEquals('UpdatedLabel', updated.Name, 'Group name should be updated');
+        FEC_Team_Queue__c updatedTq = [SELECT Id, FEC_Select_Team__c, FEC_Team__c FROM FEC_Team_Queue__c WHERE Id = :tq.Id LIMIT 1];
+        System.assertEquals(team.Id, updatedTq.FEC_Select_Team__c, 'Team mapping should match');
+        System.assertEquals('Updated Label Status', updatedTq.FEC_Team__c, 'Label status should be updated');
+    }
+
+    @isTest
+    static void testIsTeamActiveForQueue_Active() {
+        FEC_Team__c team = createSampleTeam(); // FEC_Team_Active__c = true
+        FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
+            FEC_Select_Team__c = team.Id,
+            FEC_Queue_Name__c = 'ActiveQueueDev'
+        );
+        insert tq;
 
         Test.startTest();
-        Boolean updateResult = FEC_TeamQueue.updateQueueEdit(queueId, 'UpdatedLabel', tq.Id, team.Id, 'Updated Label Status');
-        System.assertEquals(true, updateResult, 'Update should succeed');
-        // Verify that Group name was updated
-        Group updated = [SELECT Id, Name FROM Group WHERE Id = :queueId LIMIT 1];
-        System.assertEquals('UpdatedLabel', updated.Name, 'Group name should be updated');
-        // Verify that mapping was updated to point to the same team (no change expected)
-        FEC_Team_Queue__c updatedTq = [SELECT Id, FEC_Select_Team__c, FEC_Team__c FROM FEC_Team_Queue__c WHERE Id = :tq.Id LIMIT 1];
-        System.assertEquals(team.Id, updatedTq.FEC_Select_Team__c, 'Team mapping should match the provided team Id');
-        System.assertEquals('Updated Label Status', updatedTq.FEC_Team__c, 'Label status should be updated');
+        Boolean result = FEC_TeamQueue.isTeamActiveForQueue('ActiveQueueDev');
         Test.stopTest();
+        System.assertEquals(true, result, 'Should return true for active team');
+    }
+
+    @isTest
+    static void testIsTeamActiveForQueue_NotFound() {
+        Test.startTest();
+        Boolean result = FEC_TeamQueue.isTeamActiveForQueue('NonExistentQueue');
+        Test.stopTest();
+        System.assertEquals(false, result, 'Should return false when queue not found');
+    }
+
+    @isTest
+    static void testRemoveQueue() {
+        // Cover removeQueue directly via @future
+        Group g;
+        User currentUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
+        System.runAs(currentUser) {
+            g = new Group(Name = 'ToDelete', DeveloperName = 'ToDeleteDev', Type = 'Queue');
+            insert g;
+        }
+
+        Test.startTest();
+        FEC_TeamQueue.removeQueue('ToDeleteDev', null);
+        Test.stopTest();
+        // After @future completes, queue should be deleted
+        List<Group> remaining = [SELECT Id FROM Group WHERE DeveloperName = 'ToDeleteDev' AND Type = 'Queue'];
+        System.assertEquals(0, remaining.size(), 'Queue should be deleted');
+    }
+
+    @isTest
+    static void testRemoveQueue_NotFound() {
+        Test.startTest();
+        FEC_TeamQueue.removeQueue('NonExistentDev', null);
+        Test.stopTest();
+        // No exception expected, just debug log
+    }
+
+    @isTest
+    static void testRemoveQueue_BothBlank() {
+        Test.startTest();
+        FEC_TeamQueue.removeQueue(null, null);
+        Test.stopTest();
+        // Should return early without error
     }
 }

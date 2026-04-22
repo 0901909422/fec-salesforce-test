@@ -367,7 +367,7 @@ public with sharing class FEC_TeamQueue {
             LIMIT 1
         ];
 
-        if (teamQueue == null) {
+        if (teamQueue == null || teamQueue.isEmpty()) {
             return false;
         }
         return teamQueue[0].FEC_Select_Team__r.FEC_Team_Active__c;
