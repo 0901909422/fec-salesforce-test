@@ -867,6 +867,12 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_CollectionDateFilter</componentName>
+                <identifier>c_fec_CollectionDateFilter</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>previewSampleData</name>
                     <value>false</value>
