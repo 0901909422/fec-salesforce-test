@@ -114,6 +114,11 @@
 		<members>FEC_CardInfoController</members>
 		<members>FEC_GetCardSecInfo</members>
 		<members>FEC_IPPController</members>
+		<members>FEC_CaseLinkedFilesController</members>
+		<members>FEC_ContentDocumentLinkService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -191,6 +196,7 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
+		<members>fec_FileUploadCard</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -483,6 +489,8 @@
         <members>FEC_Email_Discard_Msg</members>
         <members>FEC_Email_Btn_Discard</members>
         <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -951,5 +959,6 @@
 		<members>FEC_Case_Notification</members>
 		<name>LightningMessageChannel</name>
 	</types>
+	
     <version>65.0</version>
 </Package>

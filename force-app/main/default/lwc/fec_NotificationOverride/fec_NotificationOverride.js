@@ -220,7 +220,10 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
     switch (source) {
       // Use related Object API Names from lookup components
       case CHANNEL_FIELD.fieldApiName:
-        this.selectedChannelId = joined || null;
+        const channelNames = (event.detail || [])
+          .map((e) => (e?.title != null ? String(e.title).trim() : ''))
+          .filter(Boolean);
+        this.selectedChannelId = channelNames.length ? channelNames.join(',') : null;
         break;
       case 'Group': // <--- ADD THIS CASE
         this.selectedAssignedToQueueId = joined || null;
@@ -434,6 +437,8 @@ export default class Fec_Notification extends NavigationMixin(LightningElement) 
                 this.initialChannel = response.channels.map(ch => ({
                     id: ch.Id, title: ch.Name, subtitle: 'FEC_Channel__c'
                 }));
+                // Ensures saving existing records overrides old IDs with Names
+                this.selectedChannelId = response.channels.map(ch => ch.Name).join(',');
             }
 
             // Multi-select FEC_Case_Status__c: Apex trả Id + Name để lookup loại trừ đúng; fallback split Name nếu không có pill
