@@ -178,8 +178,18 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentInstanceProperties>
+                    <name>recordId</name>
+                </componentInstanceProperties>
                 <componentName>fecInteractionChatInfo</componentName>
                 <identifier>c_fecInteractionChatInfo</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -847,16 +857,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-4029d6b1-0ccd-459c-a277-50b63fca40ae</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Repayment Schedule &amp; Payment History</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab25</identifier>
+                <componentName>fec_SensitiveDataTable</componentName>
+                <identifier>c_fec_SensitiveDataTable</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-c2792dca-a561-477a-801c-cb47564b39bb</name>
@@ -866,12 +868,18 @@
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-adff6adf-8ad8-4efa-a7f2-4d1f0ef87d3f</value>
+                    <name>previewSampleData</name>
+                    <value>false</value>
                 </componentInstanceProperties>
+                <componentName>fec_allocationHistory</componentName>
+                <identifier>c_fec_allocationHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
-                    <name>title</name>
-                    <value>MRC</value>
+                    <name>previewSampleData</name>
+                    <value>false</value>
                 </componentInstanceProperties>
                 <componentName>fec_communicationHistory</componentName>
                 <identifier>c_fec_communicationHistory</identifier>
@@ -937,7 +945,7 @@
                 <identifier>flexipage_tabset6</identifier>
             </componentInstance>
         </itemInstances>
-        <name>Facet-56d90d7e-6960-4734-99f9-f6066b18ba70</name>
+        <name>Facet-8e053f58-5e65-4077-81b5-7fa1420d4b81</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -945,9 +953,16 @@
             <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
                 <identifier>c_fecInteractionChatConversations2</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
-        <name>Facet-rrxgsr9ruhg</name>
+        <name>Facet-i9z6432zuwn</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1130,33 +1145,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab27</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
-                        <operator>NE</operator>
-                        <rightValue>Non-existing</rightValue>
-                    </criteria>
-                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-rrxgsr9ruhg</value>
+                    <value>Facet-i9z6432zuwn</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Conversations</value>
+                    <value>Conversions</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab32</identifier>
+                <identifier>flexipage_tab30</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
@@ -1232,6 +1234,13 @@
             <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
                 <identifier>c_fecInteractionChatConversations</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
