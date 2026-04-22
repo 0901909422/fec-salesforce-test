@@ -71,11 +71,16 @@ import FEC_MSG_ACTION_CARD_REPLACEMENT from "@salesforce/label/c.FEC_MSG_ACTION_
 import FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR";
 import FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY from "@salesforce/label/c.FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY";
+import FEC_Add_Item_Label from "@salesforce/label/c.FEC_Add_Item_Label";
+import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Remark_Label";
+import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+// [NOC-HANDLING-STAGE-UPDATE]: Import subscribe/unsubscribe để lắng nghe CASE_NOC channel
+import { subscribe, unsubscribe, APPLICATION_SCOPE } from "lightning/messageService";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -291,7 +296,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
-  fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm')
+  fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
+  fec_FileUploadCard: () => import('c/fec_FileUploadCard')
 };
 
 /**
@@ -664,6 +670,41 @@ export default class Fec_CaseBussiness extends LightningElement {
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
   }
+  
+  //linhdev: logic cho phép xử lý action có label hoặc value dựa vào field FEC_Custom_Action_Button_Label__c
+  _resolveRoutingMethodByAction(action) {
+    const customActionLabel = action?.label?.trim();
+    let resolvedMethod;
+    if (
+      [
+        ACTION_ROUTE_TO,
+        ACTION_REVERT,
+        ACTION_TRANSFER,
+        ACTION_UPDATE,
+        ACTION_ESCALATE,
+        ACTION_REJECT,
+        ACTION_RESOLVE,
+        ACTION_RECALL,
+        ACTION_CANCEL,
+        ACTION_REOPEN,
+      ].includes(customActionLabel)
+    ) {
+      resolvedMethod = customActionLabel;
+    } else {
+      resolvedMethod = action?.value;
+    }
+    console.log(
+      "FEC_DEBUG _resolveRoutingMethodByAction",
+      JSON.stringify({
+        actionId: action?.id,
+        actionValue: action?.value,
+        actionLabel: action?.label,
+        customActionLabel,
+        resolvedMethod,
+      }),
+    );
+    return resolvedMethod;
+  }
 
   get showRevert() {
     return ACTION_REVERT === this.actionValue;
@@ -699,7 +740,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     decisionLabel: FEC_Decision_Label,
     chooseDecisionLabel: FEC_Choose_Decision_Label,
     subDecisionLabel: FEC_Sub_Decision_Label,
-    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label
+    chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
+    addItemLabel: FEC_Add_Item_Label,
+    assignmentRemarkLabel: FEC_Assignment_Remark_Label,
+    confirmLabel: FEC_Confirm_Label
   }
 
   @api getNatureOfCaseId() {
@@ -865,6 +909,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       "fecippclosureselection",
       this._boundHandleIppClosureSelection,
     );
+    // [NOC-HANDLING-STAGE-UPDATE]: Subscribe CASE_NOC channel để nhận NOC update từ fec_CaseEditNOC
+    // Phân biệt 2 loại message: có 'accountType' (existing) vs có 'subCodeId' (NOC update mới)
+    this._subscriptionCaseNOC = subscribe(
+      this.messageContext,
+      CASE_NOC,
+      (message) => this._handleCaseNOCMessage(message),
+      { scope: APPLICATION_SCOPE }
+    );
     this.getData();
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
@@ -885,6 +937,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._boundHandleIppClosureSelection,
       );
     }
+    // [NOC-HANDLING-STAGE-UPDATE]: Unsubscribe CASE_NOC khi component bị destroy
+    if (this._subscriptionCaseNOC) {
+      unsubscribe(this._subscriptionCaseNOC);
+      this._subscriptionCaseNOC = null;
+    }
     localStorage.removeItem(this.draftKey);
   }
 
@@ -892,6 +949,103 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (raw == null || raw === STR_EMPTY) return STR_EMPTY;
     return maskValue(String(raw).replace(/\D/g, STR_EMPTY), false);
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // [NOC-HANDLING-STAGE-UPDATE]:
+  // Xử lý NOC update từ fec_CaseEditNOC (Handling Stage)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Handler cho CASE_NOC channel.
+   * Phân biệt 2 loại message:
+   *   - Có 'accountType' → existing behavior (không thay đổi)
+   *   - Có 'subCodeId'   → NOC update từ Updated Information section → reload business
+   */
+  _handleCaseNOCMessage(message) {
+    if (!message) return;
+
+    if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
+      // Existing behavior: account type change — không xử lý ở đây
+      // (fec_CaseEditNOC đã tự xử lý)
+      return;
+    }
+
+    if (message.subCodeId) {
+      // NOC update từ Updated Information section
+      this._handleNOCUpdate(message);
+    }
+  }
+
+  /**
+   * Xử lý NOC update — snapshot property fields, reload business, merge lại.
+   */
+  _handleNOCUpdate(message) {
+    // Snapshot property fields TRƯỚC khi reload để giữ lại giá trị đã nhập
+    const snapshot = this._snapshotPropertyFields();
+
+    this.getData(
+      message.productTypeId,
+      message.categoryId,
+      message.subCategoryId,
+      message.subCodeId,
+      message.natureOfCaseId
+    );
+
+    // getData là async (Promise-based), cần hook vào sau khi hoàn thành.
+    // Vì getData không return Promise, ta dùng một approach khác:
+    // Override businessLoaded watcher bằng cách lưu snapshot và merge trong _rebuildAllSectionSortedRows
+    // (được gọi cuối getData). Lưu snapshot vào instance để _mergePropertyFieldSnapshot có thể dùng.
+    this._pendingPropertySnapshot = snapshot;
+  }
+
+  /**
+   * Snapshot giá trị hiện tại của các Property Fields.
+   * Chỉ snapshot fields trong subsection có isProperty = true.
+   * Return map { apiName → value }.
+   */
+  _snapshotPropertyFields() {
+    const snapshot = {};
+    const sections = this.business?.sectionlst ?? [];
+    for (const section of sections) {
+      for (const sub of section.subSectionlst ?? []) {
+        // Chỉ snapshot subsection có isProperty = true (Property Info subsection)
+        if (!sub.isProperty) continue;
+        for (const obj of sub.objlst ?? []) {
+          for (const field of obj.fieldlst ?? []) {
+            if (field?.apiName) {
+              snapshot[field.apiName] = field.value ?? null;
+            }
+          }
+        }
+      }
+    }
+    return snapshot;
+  }
+
+  /**
+   * Merge snapshot vào business data sau khi reload.
+   * Field có apiName trong snapshot → giữ nguyên value đã nhập.
+   * Field không có trong snapshot → giữ nguyên value từ getData (trống).
+   */
+  _mergePropertyFieldSnapshot(snapshot) {
+    if (!snapshot || !this.business?.sectionlst) return;
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst?.forEach(sub => {
+        if (!sub.isProperty) return;
+        sub.objlst?.forEach(obj => {
+          obj.fieldlst?.forEach(field => {
+            if (field?.apiName && Object.prototype.hasOwnProperty.call(snapshot, field.apiName)) {
+              field.value = snapshot[field.apiName];
+              field.original = field.value;
+            }
+          });
+        });
+      });
+    });
+    this.business = { ...this.business };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   handleToggleMask(e) {
     let filter = {
@@ -1164,6 +1318,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyCsSupportAssessmentRoutingActionSync();
         // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
+
+        // [NOC-HANDLING-STAGE-UPDATE] Task 7.5: Sau khi getData hoàn thành, merge lại Property Fields
+        // nếu có snapshot đang chờ (từ _handleNOCUpdate)
+        if (this._pendingPropertySnapshot) {
+          this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
+          this._pendingPropertySnapshot = null;
+        }
         // PhuongNT add get current card status for Card Block/Unblock
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
@@ -2131,7 +2292,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
 
     if (total === 0) {
-      return afterForms();
+      return this._uploadFecFileUploadCardsIfApplicable()
+        .then(() => afterForms())
+        .then(() => {
+          this.handleSaveFieldReadOnly();
+        });
     }
 
     return new Promise((resolve, reject) => {
@@ -2144,11 +2309,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    }).then(() => {
-      afterForms();
-      // PhuongNT add handle save data for fields readonly were changed data by another field
-      this.handleSaveFieldReadOnly();
-    });
+    })
+      .then(() => this._uploadFecFileUploadCardsIfApplicable())
+      .then(() => {
+        afterForms();
+        // PhuongNT add handle save data for fields readonly were changed data by another field
+        this.handleSaveFieldReadOnly();
+      });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -2174,10 +2341,20 @@ export default class Fec_CaseBussiness extends LightningElement {
       return false;
     }
 
+    if (hasAddressUpdate) {
+      const res = await cmp.commitPendingAddressUpdatesForProcessAction();
+      if (!res?.success) {
+        this.showToast(FEC_Error_Title, res?.errorMessage || FEC_Error_Title, "error");
+        return false;
+      }
+      this._refreshFecUpdateAddressAfterProcessSuccess();
+    }
+
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
+    await this._uploadFecFileUploadCardsIfApplicable();
 
     // PhuongNT add handle save data for fields readonly were changed data by another field
     this.handleSaveFieldReadOnly();
@@ -2194,14 +2371,17 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
     }
-    if (routeToEle) {
+     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
+      let selectedAction;
       this.business.routingActionlst?.forEach((item) => {
         if (item.value == method) {
           actionId = item.id;
+          selectedAction = item;
         }
       });
+      method = this._resolveRoutingMethodByAction(selectedAction);
       let params = { method };
       switch (method) {
         case ACTION_ROUTE_TO:
@@ -2822,7 +3002,68 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
       this._updateDynCmpIsEditFlags();
       this._rebuildAllSectionSortedRows();
+      this._scheduleRefreshFileUploadCards();
     });
+  }
+
+  /**
+   * Đẩy file từ các slot `fec_FileUploadCard` (chế độ local) lên Case khi Save & Close / Submit — nếu LWC expose flush.
+   */
+  _uploadFecFileUploadCardsIfApplicable() {
+    const wrappers = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_FileUploadCard"]',
+    );
+    if (!wrappers || !wrappers.length) {
+      return Promise.resolve();
+    }
+    const promises = [];
+    wrappers.forEach((wrap) => {
+      const el =
+        wrap.querySelector("c-fec_-file-upload-card") ||
+        wrap.querySelector("c-fec-file-upload-card");
+      if (el && typeof el.flushUploadsToCase === "function") {
+        promises.push(Promise.resolve(el.flushUploadsToCase()));
+      }
+    });
+    return promises.length ? Promise.all(promises) : Promise.resolve();
+  }
+
+  /**
+   * Tìm mọi instance fec_FileUploadCard (tag có thể là c-fec_-file-upload-card hoặc c-fec-file-upload-card tùy runtime).
+   */
+  _queryFecFileUploadCardElements() {
+    const selector = "c-fec_-file-upload-card, c-fec-file-upload-card";
+    const seen = new Set();
+    const out = [];
+    const push = (el) => {
+      if (el && !seen.has(el)) {
+        seen.add(el);
+        out.push(el);
+      }
+    };
+    this.template.querySelectorAll('[data-fec-lwc="fec_FileUploadCard"]').forEach((wrap) => {
+      wrap.querySelectorAll(selector).forEach(push);
+    });
+    this.template.querySelectorAll(selector).forEach(push);
+    return out;
+  }
+
+  /** Sau khi dynamic LWC (lwc:is) mount — reload danh sách file trên fec_FileUploadCard. */
+  _scheduleRefreshFileUploadCards() {
+    const run = () => {
+      this._queryFecFileUploadCardElements().forEach((el) => {
+        if (typeof el.refreshFilesFromServer === "function") {
+          el.refreshFilesFromServer();
+        }
+      });
+    };
+    setTimeout(run, 0);
+    setTimeout(run, 400);
+  }
+
+  @api
+  refreshFileUploadCards() {
+    this._scheduleRefreshFileUploadCards();
   }
 
   applyDraft() {

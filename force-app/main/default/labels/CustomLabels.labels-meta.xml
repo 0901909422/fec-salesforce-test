@@ -11584,14 +11584,6 @@
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
-        <categories>Incorrect Payment LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</shortDescription>
-        <value>Tổng số tiền điều chỉnh phải bằng số tiền dư</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11606,14 +11598,6 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</shortDescription>
         <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_IncorrectPayment_Date_Not_After_Today</fullName>
-        <categories>Incorrect Payment LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_IncorrectPayment_Date_Not_After_Today</shortDescription>
-        <value>Date cannot be later than the current date.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
@@ -13010,14 +12994,6 @@
         <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_ContractClosure_Address_Row_Empty</fullName>
-        <categories>Contract Closure LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Contract closure — đã chọn dòng địa chỉ nhưng cột địa chỉ trống</shortDescription>
-        <value>Dòng địa chỉ đã chọn chưa có nội dung. Vui lòng chọn địa chỉ khác hoặc nhập địa chỉ tạm thời.</value>
-    </labels>
-    <labels>
         <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
@@ -13386,14 +13362,6 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
-        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
-        <categories>Case Business LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</shortDescription>
-        <value>Mở khoá thẻ thất bại. Vui lòng thử lại.</value>
-    </labels>
-    <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13424,14 +13392,6 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</fullName>
-        <categories>Case Business LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</shortDescription>
-        <value>Thay thế mã PIN thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Data_Application_History</fullName>
@@ -13492,14 +13452,6 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
         <value>Thay thế thẻ thất bại.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</fullName>
-        <categories>Case Business LWC</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</shortDescription>
-        <value>Thay thế thẻ thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
@@ -13602,93 +13554,6 @@
         <protected>false</protected>
         <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
         <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Title</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket modal title</shortDescription>
-        <value>New Relevant Ticket</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Section_Information</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket section header</shortDescription>
-        <value>Relevant Ticket Information</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Field_Interaction</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket interaction field label</shortDescription>
-        <value>Interaction</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket search placeholder</shortDescription>
-        <value>Search by Case Number or ID...</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_No_Results</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket no results message</shortDescription>
-        <value>No results found.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Select_Required</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket select required error</shortDescription>
-        <value>Please select an Interaction.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Case_Not_Found</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket case not found error</shortDescription>
-        <value>Could not determine the current Case. Please try again.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Save_Error</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket save error</shortDescription>
-        <value>An error occurred while saving. Please try again.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_RelevantTicket_Save_Success</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Relevant Ticket save success</shortDescription>
-        <value>Relevant Ticket was created successfully.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Chat_Conversations_Label</fullName>
-        <categories>FEC_ChatHub</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Chat - Conversations section label</shortDescription>
-        <value>Conversations</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Chat_History_Label</fullName>
-        <categories>FEC_ChatHub</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Chat - Chat History field label</shortDescription>
-        <value>Chat History</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Chat_Save_Failed</fullName>
-        <categories>FEC_ChatHub</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Chat - Save failed error message</shortDescription>
-        <value>Save failed. Please try again.</value>
     </labels>
 <labels>
         <fullName>FEC_Account_Contract_Number</fullName>
