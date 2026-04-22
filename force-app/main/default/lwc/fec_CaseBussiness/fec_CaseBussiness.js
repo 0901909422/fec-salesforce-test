@@ -192,7 +192,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-
 const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 
 const TYPE_QUALIFIED = "Qualified";
@@ -292,7 +291,9 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
-  fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm')
+  fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
+  // DungLT — đăng ký LWC upload file động (master data)
+  fec_FileUploadCard: () => import('c/fec_FileUploadCard')
 };
 
 /**
@@ -2145,6 +2146,28 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
+   * DungLT — Đẩy file từ các slot `fec_FileUploadCard` lên Case (ContentVersion) khi Save & Close / Submit.
+   */
+  _uploadFecFileUploadCardsIfApplicable() {
+    const wrappers = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_FileUploadCard"]',
+    );
+    if (!wrappers || !wrappers.length) {
+      return Promise.resolve();
+    }
+    const promises = [];
+    wrappers.forEach((wrap) => {
+      const el =
+        wrap.querySelector("c-fec_-file-upload-card") ||
+        wrap.querySelector("c-fec-file-upload-card");
+      if (el && typeof el.flushUploadsToCase === "function") {
+        promises.push(Promise.resolve(el.flushUploadsToCase()));
+      }
+    });
+    return promises.length ? Promise.all(promises) : Promise.resolve();
+  }
+
+  /**
    * Chỉ lưu dữ liệu form (Nature of Case, Account Info, Case Info, Process Action, Routing Action)
    * mà KHÔNG gọi run() - không chuyển sang Stage tiếp theo.
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
@@ -2178,7 +2201,12 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
 
     if (total === 0) {
-      return afterForms();
+      // DungLT — flush upload file trước khi lưu form
+      return this._uploadFecFileUploadCardsIfApplicable()
+        .then(() => afterForms())
+        .then(() => {
+          this.handleSaveFieldReadOnly();
+        });
     }
 
     return new Promise((resolve, reject) => {
@@ -2191,11 +2219,14 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
       });
-    }).then(() => {
-      afterForms();
-      // PhuongNT add handle save data for fields readonly were changed data by another field
-      this.handleSaveFieldReadOnly();
-    });
+    })
+      // DungLT — flush upload file sau khi submit record forms
+      .then(() => this._uploadFecFileUploadCardsIfApplicable())
+      .then(() => {
+        afterForms();
+        // PhuongNT add handle save data for fields readonly were changed data by another field
+        this.handleSaveFieldReadOnly();
+      });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -2225,6 +2256,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
     await this._submitFormsPromise();
+    // DungLT — flush upload file trước các bước lưu khác khi Submit
+    await this._uploadFecFileUploadCardsIfApplicable();
 
     // PhuongNT add handle save data for fields readonly were changed data by another field
     this.handleSaveFieldReadOnly();
@@ -2874,7 +2907,47 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
       this._updateDynCmpIsEditFlags();
       this._rebuildAllSectionSortedRows();
+      this._scheduleRefreshFileUploadCards();
     });
+  }
+
+  /**
+   * Tìm mọi instance fec_FileUploadCard (tag có thể là c-fec_-file-upload-card hoặc c-fec-file-upload-card tùy runtime).
+   */
+  _queryFecFileUploadCardElements() {
+    const selector = "c-fec_-file-upload-card, c-fec-file-upload-card";
+    const seen = new Set();
+    const out = [];
+    const push = (el) => {
+      if (el && !seen.has(el)) {
+        seen.add(el);
+        out.push(el);
+      }
+    };
+    this.template.querySelectorAll('[data-fec-lwc="fec_FileUploadCard"]').forEach((wrap) => {
+      wrap.querySelectorAll(selector).forEach(push);
+    });
+    this.template.querySelectorAll(selector).forEach(push);
+    return out;
+  }
+
+  /** DungLT — Sau khi dynamic LWC (lwc:is) mount — reload danh sách file trên fec_FileUploadCard. */
+  _scheduleRefreshFileUploadCards() {
+    const run = () => {
+      this._queryFecFileUploadCardElements().forEach((el) => {
+        if (typeof el.refreshFilesFromServer === "function") {
+          el.refreshFilesFromServer();
+        }
+      });
+    };
+    setTimeout(run, 0);
+    setTimeout(run, 400);
+  }
+
+  /** DungLT — gọi từ parent (vd. Case Detail) sau submit để refresh danh sách file. */
+  @api
+  refreshFileUploadCards() {
+    this._scheduleRefreshFileUploadCards();
   }
 
   applyDraft() {
