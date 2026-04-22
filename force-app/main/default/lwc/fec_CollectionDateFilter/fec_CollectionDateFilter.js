@@ -1,54 +1,29 @@
 /**
  * fec_CollectionDateFilter
  *
- * Component date filter dùng chung cho các LWC collection data.
- * Hiển thị From Date / To Date + nút Apply.
- * Khi Apply, fire event 'datefilterchange' lên parent với:
- *   { detail: { startDate: 'YYYYMMDD', endDate: 'YYYYMMDD' } }
- *
- * @api defaultFromDate - Giá trị mặc định cho From Date (YYYY-MM-DD, optional)
- * @api defaultToDate   - Giá trị mặc định cho To Date (YYYY-MM-DD, optional)
- * @api maxRangeDays    - Số ngày tối đa cho phép (mặc định 90)
+ * Component date filter đứng độc lập trên Lightning Page.
+ * Khi user bấm Apply, publish lên FEC_Collection_Date_Filter message channel.
+ * Các LWC collection data (fec_allocationHistory, fec_CollectionInteractions,
+ * fec_communicationHistory, fec_NFU) subscribe và tự gọi lại API.
  */
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { publish, MessageContext } from 'lightning/messageService';
+import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 
 const MAX_RANGE_DAYS = 90;
 
 export default class Fec_CollectionDateFilter extends LightningElement {
     @api maxRangeDays = MAX_RANGE_DAYS;
 
+    @wire(MessageContext)
+    messageContext;
+
     @track fromDate = '';
     @track toDate = '';
     @track errorMessage = '';
 
-    // Nhận default values từ parent
-    @api
-    get defaultFromDate() {
-        return this._defaultFromDate;
-    }
-    set defaultFromDate(val) {
-        this._defaultFromDate = val;
-        if (val && !this.fromDate) {
-            this.fromDate = val;
-        }
-    }
-
-    @api
-    get defaultToDate() {
-        return this._defaultToDate;
-    }
-    set defaultToDate(val) {
-        this._defaultToDate = val;
-        if (val && !this.toDate) {
-            this.toDate = val;
-        }
-    }
-
-    _defaultFromDate = '';
-    _defaultToDate = '';
-
     connectedCallback() {
-        // Set default: From = 90 ngày trước, To = hôm nay
+        // Default: From = 90 ngày trước, To = hôm nay
         if (!this.fromDate) {
             const today = new Date();
             const from = new Date(today);
@@ -93,15 +68,11 @@ export default class Fec_CollectionDateFilter extends LightningElement {
             return;
         }
 
-        // Convert sang YYYYMMDD để truyền vào API
-        const startDate = this._toApiDateStr(from);
-        const endDate = this._toApiDateStr(to);
-
-        this.dispatchEvent(
-            new CustomEvent('datefilterchange', {
-                detail: { startDate, endDate }
-            })
-        );
+        // Publish lên message channel — tất cả LWC subscriber sẽ nhận và reload
+        publish(this.messageContext, COLLECTION_DATE_FILTER, {
+            startDate: this._toApiDateStr(from),
+            endDate: this._toApiDateStr(to)
+        });
     }
 
     /** YYYY-MM-DD cho lightning-input[type=date] */

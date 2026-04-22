@@ -1,10 +1,13 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
+import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_NFUStatus from '@salesforce/label/c.FEC_NFUStatus';
 import FEC_NFUStartDate from '@salesforce/label/c.FEC_NFUStartDate';
@@ -38,6 +41,13 @@ export default class Fec_NFU extends LightningElement {
     @track nfuData;
     @track isLoading = true;
 
+    _startDate = null;
+    _endDate = null;
+    _subscription = null;
+
+    @wire(MessageContext)
+    messageContext;
+
     sectionTitleText = SECTION_LABEL;
     labelMsgApiError = FEC_MSG_Error_API_Label;
 
@@ -45,7 +55,23 @@ export default class Fec_NFU extends LightningElement {
         if (this.previewSampleData) {
             this.nfuData = { ...PREVIEW_NFU };
             this.isLoading = false;
+            return;
         }
+        this._subscription = subscribe(
+            this.messageContext,
+            COLLECTION_DATE_FILTER,
+            (msg) => {
+                this._startDate = msg.startDate;
+                this._endDate = msg.endDate;
+                this.loadNfu();
+            },
+            { scope: APPLICATION_SCOPE }
+        );
+    }
+
+    disconnectedCallback() {
+        unsubscribe(this._subscription);
+        this._subscription = null;
     }
 
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
@@ -80,10 +106,17 @@ export default class Fec_NFU extends LightningElement {
                 return;
             }
 
-            const response = await fetchCollectionData({
-                contractNumber: this._contractNumber,
-                recordType: this._recordTypeName
-            });
+            const response = this._startDate && this._endDate
+                ? await fetchCollectionDataWithDates({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName,
+                    startDate: this._startDate,
+                    endDate: this._endDate
+                })
+                : await fetchCollectionData({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName
+                });
 
             if (!response || response.Success === false || response.NFU == null) {
                 this.nfuData = null;

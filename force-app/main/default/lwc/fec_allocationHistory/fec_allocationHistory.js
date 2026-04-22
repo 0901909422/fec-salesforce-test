@@ -1,5 +1,7 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
@@ -58,9 +60,12 @@ export default class Fec_allocationHistory extends LightningElement {
     @track allocationHistories;
     @track isLoading = true;
 
-    // startDate/endDate dùng cho API — mặc định null (dùng fetchCollectionData cũ)
     _startDate = null;
     _endDate = null;
+    _subscription = null;
+
+    @wire(MessageContext)
+    messageContext;
 
     sectionTitleText = SECTION_LABEL;
     labelMsgApiError = FEC_MSG_Error_API_Label;
@@ -81,7 +86,23 @@ export default class Fec_allocationHistory extends LightningElement {
         if (this.previewSampleData) {
             this.allocationHistories = PREVIEW_ALLOCATION_HISTORY.map((r) => ({ ...r }));
             this.isLoading = false;
+            return;
         }
+        this._subscription = subscribe(
+            this.messageContext,
+            COLLECTION_DATE_FILTER,
+            (msg) => {
+                this._startDate = msg.startDate;
+                this._endDate = msg.endDate;
+                this.loadAllocationHistory();
+            },
+            { scope: APPLICATION_SCOPE }
+        );
+    }
+
+    disconnectedCallback() {
+        unsubscribe(this._subscription);
+        this._subscription = null;
     }
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_FIELDS })
@@ -140,13 +161,6 @@ export default class Fec_allocationHistory extends LightningElement {
         } finally {
             this.isLoading = false;
         }
-    }
-
-    // Handler nhận event từ fec_CollectionDateFilter khi user bấm Apply
-    handleDateFilterChange(e) {
-        this._startDate = e.detail.startDate;
-        this._endDate = e.detail.endDate;
-        this.loadAllocationHistory();
     }
 
     get showErrorBanner() {

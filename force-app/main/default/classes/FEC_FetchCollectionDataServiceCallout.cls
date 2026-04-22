@@ -97,7 +97,10 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
 
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
-
+        endpoint += '?ContractNumber=' + contractNumber
+                    + '&StartDate=' + startDate
+                    + '&EndDate=' + endDate
+                    + '&RecordType=' + recordType;
         Map<String, String> headers = new Map<String, String>{
             'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
