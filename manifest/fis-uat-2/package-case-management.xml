@@ -212,6 +212,7 @@
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CreateCaseInteractionController</members>
         <members>FEC_CardLockUnLockController</members>
+		<members>FEC_AssignmentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
