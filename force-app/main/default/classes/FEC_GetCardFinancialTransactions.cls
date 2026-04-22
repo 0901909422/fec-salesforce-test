@@ -63,18 +63,39 @@ public with sharing class FEC_GetCardFinancialTransactions {
         try {
  
             validateRequest(transID, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
+
+            // ================= CONFIG =================
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
+
+            // =====================================================
+            // ENV OVERRIDE 
+            // =====================================================
+            String accountNumberParam;
+            Date fromDateParam;
+            Date toDateParam;
+
+            if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+                && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+
+                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+                fromDateParam = apiConfig?.FEC_FromDate__c;
+                toDateParam =  apiConfig?.FEC_ToDate__c;
+
+            } else {
+                accountNumberParam = accountNumber;
+                fromDateParam = fromDate;
+                toDateParam = toDate;
+            }
             
             String soapBody = buildSoapBody(
                 transId,
                 requestorId,
                 dateTimeStr,
-                accountNumber,
-                fromDate,
-                toDate
+                accountNumberParam,
+                fromDateParam,
+                toDateParam
             );
-                
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Financial_Transaction');
  
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_CARD_FINANCIAL_TRANSACTION_ENDPOINT_MOCKUP
