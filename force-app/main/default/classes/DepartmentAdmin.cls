@@ -266,6 +266,18 @@ public with sharing class DepartmentAdmin {
             return false;
         }
     }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Check if the given queue is the main queue of the user by comparing with User.FEC_Main_Queue__c field
+    @param developerName The queue to check
+    @param userId The user ID to check
+    @return Boolean if the queue is the main queue of the user
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/04/22      Ha Linh          Init
+    ------------------------------------------------------------*/
     @AuraEnabled
     public static Boolean isMainQueueOfUser(Id userId, String developerName) {
         try {
