@@ -53,23 +53,7 @@ const isPaymentHistoryMeaningfulRow = (row) => {
     );
 };
 
-import { toSortDateStr } from 'c/fec_CommonUtils';
-
-/** Currency(18,0): phân cách hàng nghìn, không thập phân. VD: 8,200,000 */
-const formatCurrency0 = (value) => {
-    if (value == null || value === '' || value === '-') return '-';
-    const num = Number(value);
-    if (Number.isNaN(num)) return '-';
-    return Math.round(num).toLocaleString('en-US');
-};
-
-/** Currency(16,2): phân cách hàng nghìn, 2 thập phân. VD: 5,526,000.00 */
-const formatCurrency2 = (value) => {
-    if (value == null || value === '' || value === '-') return '-';
-    const num = Number(value);
-    if (Number.isNaN(num)) return '-';
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
 
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
