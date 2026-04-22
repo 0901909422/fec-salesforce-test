@@ -2524,15 +2524,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (this.processActionMethod === ACTION_ADDRESS_UPDATE) {
             this.addressUpdateFailCount = 0;
           }
-          this.actionValue = ACTION_RESOLVE;
-
-          let routeToEle = this.template.querySelector(
-            'lightning-select[data-id="routing-action"]',
-          );
-
-          if (routeToEle) {
-            routeToEle.value = ACTION_RESOLVE;
-          }
+          this._setActionValueByCode(ACTION_RESOLVE);
           // thangtv update logic for Jira KH-931
           this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
 
@@ -2985,8 +2977,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
 
     // If current selected value was removed, reset to Resolve
-    if (actionsToRemove.includes(this.actionValue)) {
-      this.actionValue = ACTION_RESOLVE;
+    if (actionsToRemove.includes(this._getCurrentActionCode())) {
+      this._setActionValueByCode(ACTION_RESOLVE);
     }
 
     // this._syncHasRoutingAction(); // PhuongNT cmt, method not exist
@@ -3138,6 +3130,40 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
       });
     });
+  }
+
+  // Linhdev add handle find routing action by value or code (FEC_Custom_Action_Button_Label__c or FEC_Action_Button__r.FEC_Code__c)
+  _findRoutingActionByValueOrCode(valueOrCode) {
+    if (!valueOrCode || !this.business?.routingActionlst?.length) {
+      return null;
+    }
+    return (
+      this.business.routingActionlst.find(
+        (a) => a.value === valueOrCode || a.code === valueOrCode,
+      ) || null
+    );
+  }
+
+  _getRoutingActionValueByCode(code) {
+    return this._findRoutingActionByValueOrCode(code)?.value;
+  }
+
+  _getCurrentActionCode() {
+    return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
+  }
+
+  _setActionValueByCode(code) {
+    const optionValue = this._getRoutingActionValueByCode(code);
+    if (!optionValue) {
+      return;
+    }
+    this.actionValue = optionValue;
+    const routeToEle = this.template.querySelector(
+      'lightning-select[data-id="routing-action"]',
+    );
+    if (routeToEle) {
+      routeToEle.value = optionValue;
+    }
   }
 
 }
