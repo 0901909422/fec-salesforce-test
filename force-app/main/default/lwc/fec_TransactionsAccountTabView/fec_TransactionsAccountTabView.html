@@ -1,0 +1,28 @@
+<template>
+    <!-- LOADING -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+
+    <!-- CONTENT -->
+    <template if:true={transaction}>
+        <template if:true={sections}>
+            <c-fec_-common-detail-view
+                title={customLabel.transactionLabel}
+                sub-title={transaction.transactionCode}
+                icon-name="standard:orders"
+                sections={sections}
+                columns="4">
+            </c-fec_-common-detail-view>
+        </template>
+    </template>
+
+    <!-- EMPTY STATE -->
+    <template if:false={transaction}>
+        <template if:false={isLoading}>
+            <div class="slds-text-color_weak slds-p-around_medium">
+                {customLabel.msgNoTransactionSelected}
+            </div>
+        </template>
+    </template>
+</template>

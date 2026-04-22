@@ -1,0 +1,250 @@
+<template>
+    <template if:true={isDisplay}>
+        <div class="slds-card slds-p-around_medium">
+            <lightning-accordion class="customer-search" allow-multiple-sections-open
+                active-section-name={activeSections}>
+                <lightning-accordion-section name="searchCriteria" label={tabLabel}>
+                    <template if:false={isAccountContractSearch}>
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input type="text" data-id="nationalId" label="National ID" value={nationalId} onchange={handleInputChange} disabled={isDisabledNationalId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input type="tel" data-id="phoneNumber" label="Phone Number" value={phoneNumber} onchange={handleInputChange} disabled={isDisabledPhoneNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="applicationId" label="Application ID" value={applicationId} onchange={handleInputChange} disabled={isDisabledApplicationId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="contractNumber" label="Contract Number" value={contractNumber} onchange={handleInputChange} disabled={isDisabledContractNumber}></lightning-input>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="accountNumber" label="Account Number" value={accountNumber} onchange={handleInputChange} disabled={isDisabledAccountNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input type="email" data-id="emailAddress" label="Email Address" value={emailAddress} onchange={handleInputChange} disabled={isDisabledEmailAddress}></lightning-input>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </template>
+
+                    <template if:true={isAccountContractSearch}>
+                        <lightning-layout class="responsive-layout" multiple-rows pull-to-boundary="small">
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input type="text" data-id="nationalId" label="National ID" value={nationalId} onchange={handleInputChange} disabled={isDisabledNationalId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="applicationId" label="Application ID" value={applicationId} onchange={handleInputChange} disabled={isDisabledApplicationId}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="contractNumber" label="Contract Number" value={contractNumber} onchange={handleInputChange} disabled={isDisabledContractNumber}></lightning-input>
+                            </lightning-layout-item>
+                            <lightning-layout-item class="field-item" padding="around-small" size="3" small-device-size="6" medium-device-size="4" large-device-size="3">
+                                <lightning-input data-id="accountNumber" label="Account Number" value={accountNumber} onchange={handleInputChange} disabled={isDisabledAccountNumber}></lightning-input>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </template>
+
+                    <div class="slds-p-top_medium slds-align_absolute-center slds-grid slds-gutters_x-small">
+                        <lightning-button variant="neutral" label="Clear" onclick={handleClear}></lightning-button>
+                        <lightning-button class="slds-m-left_x-small" variant="brand" label="Search" onclick={handleSearch} disabled={isDisabledSearch}></lightning-button>
+                        <template if:true={isSkip}>
+                            <lightning-button class="slds-m-left_x-small" variant="brand" label="Skip" onclick={handleSkip}></lightning-button>
+                        </template>
+                    </div>
+                </lightning-accordion-section>
+
+                <lightning-accordion-section class="search-result" name="results" label="Search Result">
+                    <template if:true={isNoCustomerFound}>
+                        <div class="slds-p-vertical_medium">
+                            <template if:true={isAccountContractSearch}>
+                                <div class="slds-text-align_center slds-text-body_regular slds-m-bottom_medium">
+                                    <span class="no-result-text">
+                                        <span class="no-result-icon">&#x2297;</span>
+                                        Không tìm thấy kết quả
+                                    </span>
+                                </div>
+                            </template>
+                            <template if:false={isAccountContractSearch}>
+                                <div class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
+                                    Không tìm thấy khách hàng
+                                </div>
+                            </template>
+                            <template if:true={isDisplayCreateCase}>
+                                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required onchange={handleCustNameChange}></lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-input label={FEC_National_ID_Passport_ID_Label} placeholder={nationalId_PassPortId_PlaceHolder} value={nationalIdForCreate} data-id="national-id" onchange={handleNationalIdChange}></lightning-input>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-grid_align-center">
+                                    <lightning-button label="Create Case" variant="brand" onclick={handleNewCase} disabled={isNewCaseDisabled}></lightning-button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template if:false={isNoCustomerFound}>
+                        <lightning-tabset class="slds-m-top_large" active-tab-value={activeTabValue} onactive={handleTabChange}>
+                            <lightning-tab label="Card" value="Card">
+                                <c-masked-toggle-datatable key-field="id" data={cardData} columns={cardColumns}
+                                    hide-checkbox-column onrowaction={handleRowAction} onshowhistory={handleDblClick}>
+                                </c-masked-toggle-datatable>
+                                <template for:each={cardDataWithHistory} for:item="row">
+                                    <template if:true={isAccountContractSearch}>
+                                        <template if:true={row._historyState}>
+                                            <template if:true={row._historyState.expanded}>
+                                                <div key={row.AccountNumber} class="fec-history-wrap">
+                                                    <div class="fec-history-label">Application History: {row.AccountNumber}</div>
+                                                    <template if:true={row._historyState.loading}>
+                                                        <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                                                    </template>
+                                                    <template if:false={row._historyState.loading}>
+                                                        <table class="fec-history-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>User</th>
+                                                                    <th>Activity</th>
+                                                                    <th>Status</th>
+                                                                    <th>Edit Date</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <template for:each={row._historyState.rows} for:item="h">
+                                                                    <tr key={h.editDate}>
+                                                                        <td>{h.user}</td>
+                                                                        <td>{h.activity}</td>
+                                                                        <td>{h.status}</td>
+                                                                        <td>{h.editDate}</td>
+                                                                    </tr>
+                                                                </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </template>
+                                    </template>
+                                </template>
+                            </lightning-tab>
+                            <lightning-tab label="Loan" value="Loan">
+                                <div>
+                                    <h3 class="slds-text-heading_small slds-m-bottom_x-small">Normal Contracts</h3>
+                                    <c-masked-toggle-datatable key-field="id" data={loanContractData}
+                                        columns={loanContractColumns} hide-checkbox-column
+                                        onrowaction={handleRowAction} onshowhistory={handleDblClick}>
+                                    </c-masked-toggle-datatable>
+                                    <template for:each={loanContractDataWithHistory} for:item="row">
+                                        <template if:true={isAccountContractSearch}>
+                                            <template if:true={row._historyState}>
+                                                <template if:true={row._historyState.expanded}>
+                                                    <div key={row.ContractNumber} class="fec-history-wrap">
+                                                        <div class="fec-history-label">Application History: {row.ContractNumber}</div>
+                                                        <template if:true={row._historyState.loading}>
+                                                            <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                                                        </template>
+                                                        <template if:false={row._historyState.loading}>
+                                                            <table class="fec-history-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>User</th>
+                                                                        <th>Activity</th>
+                                                                        <th>Status</th>
+                                                                        <th>Edit Date</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <template for:each={row._historyState.rows} for:item="h">
+                                                                        <tr key={h.editDate}>
+                                                                            <td>{h.user}</td>
+                                                                            <td>{h.activity}</td>
+                                                                            <td>{h.status}</td>
+                                                                            <td>{h.editDate}</td>
+                                                                        </tr>
+                                                                    </template>
+                                                                </tbody>
+                                                            </table>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </template>
+                                    </template>
+                                </div>
+                                <template if:false={isAccountContractSearch}>
+                                    <div class="slds-m-top_medium">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_x-small">B2 Contracts</h3>
+                                        <c-masked-toggle-datatable key-field="id" data={loanB2Data} columns={loanB2Columns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
+                                    </div>
+                                    <div class="slds-m-top_medium">
+                                        <h3 class="slds-text-heading_small slds-m-bottom_x-small">Cash24 Contracts</h3>
+                                        <c-masked-toggle-datatable key-field="id" data={loanCash24Data} columns={loanCash24Columns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
+                                    </div>
+                                </template>
+                            </lightning-tab>
+                            <template if:false={isAccountContractSearch}>
+                                <lightning-tab label="Insurance" value="Insurance">
+                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
+                                </lightning-tab>
+                            </template>
+                        </lightning-tabset>
+                    </template>
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </div>
+    </template>
+    <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
+
+    <!-- Application History Modal -->
+    <template if:true={showHistoryModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseHistoryModal}>
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="Close"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title">Application History: {historyModalKey}</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template if:true={historyModalLoading}>
+                        <lightning-spinner size="small" alternative-text="Loading"></lightning-spinner>
+                    </template>
+                    <template if:false={historyModalLoading}>
+                        <table class="fec-history-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Activity</th>
+                                    <th>Status</th>
+                                    <th>Edit Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={historyModalRows} for:item="h">
+                                    <tr key={h.editDate}>
+                                        <td>{h.user}</td>
+                                        <td>{h.activity}</td>
+                                        <td>{h.status}</td>
+                                        <td>{h.editDate}</td>
+                                    </tr>
+                                </template>
+                                <template if:false={historyModalRows.length}>
+                                    <tr>
+                                        <td colspan="4" class="slds-text-align_center">No history found</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" onclick={handleCloseHistoryModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

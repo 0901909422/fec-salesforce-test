@@ -1,0 +1,222 @@
+<template>
+  <lightning-layout multiple-rows>
+    <template if:true={configLoaded}>
+      <lightning-layout-item size="6" padding="around-small">
+        <c-fec_-combo-box
+          data-id="incorrect-contract"
+          label={customLabel.incorrectContractNumber}
+          placeholder={customLabel.selectContractPlaceholder}
+          value={incorrectContract}
+          option={formattedIncorrectContractOption}
+          disabled={isReadOnly}
+          onremove={handleRemoveIncorrectContract}
+          onchange={handleChangeIncorrectContract}
+          onblurcommit={handleIncorrectContractBlurCommit}
+        ></c-fec_-combo-box>
+        <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+          {customLabel.incorrectContractHint}
+        </p>
+      </lightning-layout-item>
+      <lightning-layout-item size="6" padding="around-small">
+        <lightning-combobox
+          name="paymentMethod"
+          label={customLabel.paymentMethod}
+          value={paymentMethod}
+          placeholder={customLabel.selectPaymentMethodPlaceholder}
+          options={paymentMethodOptions}
+          onchange={handlePaymentMethodChange}
+          disabled={isReadOnly}
+          required
+        >
+        </lightning-combobox>
+      </lightning-layout-item>
+
+      <template if:true={paymentHistoryLoading}>
+        <lightning-layout-item size="12" padding="around-small">
+          <lightning-spinner
+            alternative-text={customLabel.loading}
+            size="small"
+          >
+          </lightning-spinner>
+        </lightning-layout-item>
+      </template>
+
+      <template if:false={paymentHistoryLoading}>
+        <template if:true={hasPaymentHistory}>
+          <lightning-layout-item size="12" padding="around-small">
+            <template for:each={datatableKeyItems} for:item="keyItem">
+              <lightning-datatable
+                key={keyItem.id}
+                key-field="id"
+                data={paymentHistory}
+                columns={paymentHistoryColumns}
+                max-row-selection={datatableMaxRowSelection}
+                selected-rows={selectedRowIds}
+                onrowselection={handlePaymentRowSelect}
+              >
+              </lightning-datatable>
+            </template>
+          </lightning-layout-item>
+        </template>
+        <template if:false={hasPaymentHistory}>
+          <template if:true={incorrectContractTrimmed}>
+            <lightning-layout-item size="12" padding="around-small">
+              <p class="slds-text-color_weak">
+                {customLabel.noPaymentHistoryFound}
+              </p>
+            </lightning-layout-item>
+          </template>
+        </template>
+      </template>
+
+      <template if:true={showManualBill}>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            type="date"
+            date-style="short"
+            placeholder={customLabel.datePlaceholder}
+            label={customLabel.billDate}
+            value={manualBillDate}
+            max={maxManualBillDate}
+            disabled={isReadOnly}
+            onchange={handleManualBillDateChange}
+          >
+          </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            data-id="manual-bill-amount"
+            name="manualBillAmount"
+            type="number"
+            label={customLabel.billAmount}
+            value={manualBillAmount}
+            disabled={isReadOnly}
+            onchange={handleManualBillAmountChange}
+            formatter="decimal"
+            required
+          >
+          </lightning-input>
+        </lightning-layout-item>
+      </template>
+
+      <template if:true={showSelectedBillReadOnly}>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            label={customLabel.billDate}
+            value={displayBillDate}
+            disabled
+          >
+          </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            type="text"
+            label={customLabel.billAmount}
+            value={displayBillAmount}
+            disabled
+          >
+          </lightning-input>
+        </lightning-layout-item>
+      </template>
+
+      <template if:true={showTh2Row1}>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            label={customLabel.paymentDate}
+            value={displayPaymentDate}
+            disabled
+            required
+          >
+          </lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input
+            type="text"
+            label={customLabel.excessAmount}
+            value={displayExcessAmount}
+            disabled
+            required
+          >
+          </lightning-input>
+        </lightning-layout-item>
+      </template>
+
+      <template if:true={adjustmentRows.length}>
+        <lightning-layout-item size="12" padding="around-small">
+          <div class="receipt-box">
+            <template for:each={adjustmentRows} for:item="row">
+              <lightning-layout
+                key={row.id}
+                multiple-rows
+                vertical-align="end"
+                class="receipt-row slds-grid_vertical-align-end"
+              >
+                <lightning-layout-item size="6" padding="around-small">
+                  <c-fec_-combo-box
+                    data-id-value={row.id}
+                    label={row.correctContractLabel}
+                    placeholder={customLabel.selectContractPlaceholder}
+                    value={row.correctContract}
+                    option={formattedCorrectContractOption}
+                    disabled={isReadOnly}
+                    required
+                    onremove={handleAdjustmentCorrectContractRemove}
+                    onchange={handleAdjustmentCorrectContractChange}
+                    onblurcommit={handleAdjustmentCorrectContractBlurCommit}
+                  ></c-fec_-combo-box>
+                </lightning-layout-item>
+                <lightning-layout-item size="4" padding="around-small">
+                  <lightning-input
+                    data-id-value={row.id}
+                    type="number"
+                    label={row.adjustedAmountLabel}
+                    value={row.adjustedAmount}
+                    disabled={isReadOnly}
+                    onchange={handleAdjustmentAmountChange}
+                    formatter="decimal"
+                    required
+                  >
+                  </lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item
+                  size="2"
+                  padding="around-small"
+                  class="btn-delete"
+                >
+                  <template if:false={isReadOnly}>
+                    <lightning-button-icon
+                      icon-name="utility:delete"
+                      variant="border"
+                      alternative-text={customLabel.removeRow}
+                      aria-label={customLabel.removeRow}
+                      title={customLabel.removeRow}
+                      data-id={row.id}
+                      onclick={handleRemoveAdjustment}
+                    >
+                    </lightning-button-icon>
+                  </template>
+                </lightning-layout-item>
+              </lightning-layout>
+            </template>
+          </div>
+        </lightning-layout-item>
+      </template>
+      <lightning-layout-item size="12" padding="around-small">
+        <template if:false={isReadOnly}>
+          <lightning-button
+            label={customLabel.addItem}
+            icon-name="utility:add"
+            variant="neutral"
+            onclick={handleAddAdjustment}
+          >
+          </lightning-button>
+        </template>
+      </lightning-layout-item>
+      <lightning-layout-item size="12" padding="around-small">
+        <p class="slds-text-body_small fec-ipp-noti-05">
+          {adjustedAmountNoticeMessage}
+        </p>
+      </lightning-layout-item>
+    </template>
+  </lightning-layout>
+</template>

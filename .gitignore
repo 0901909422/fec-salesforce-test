@@ -24,9 +24,6 @@ yarn-error.log*
 # Dependency directories
 node_modules/
 
-# ApexPMD cache
-.pmdCache
-
 # Eslint cache
 .eslintcache
 
@@ -46,9 +43,20 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+.prettierrc
+jest.config.js
+package.json
+.husky/pre-commit
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+force-app/main/default/aura/.eslintrc.json
+force-app/main/default/lwc/.eslintrc.json
+scripts/apex/hello.apex
+scripts/soql/account.soql
+README.md
 
-.knowns/
-.kiro/
-.husky/
-.vscode/
-.config/
+# Ignore MainPrompt.prompt.md
+.github/prompts/MainPrompt.prompt.md
+# ApexPMD cache
+.pmdCache
