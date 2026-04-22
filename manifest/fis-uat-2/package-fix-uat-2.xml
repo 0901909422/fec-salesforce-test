@@ -118,6 +118,7 @@
 		<members>FEC_ContentDocumentLinkService</members>
 		<members>FEC_ContentDocumentLinkTriggerHandler</members>
 		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
     <types>
