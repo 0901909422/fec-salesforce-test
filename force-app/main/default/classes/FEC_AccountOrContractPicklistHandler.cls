@@ -19,7 +19,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                    FEC_Has_Account_or_Contract__c,
                    FEC_Phone_Number__c 
             FROM Case
-            WHERE Id = :caseId
+            WHERE Id = :caseId 
             LIMIT 1
         ];
             
@@ -56,6 +56,7 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 result.put('phone', interactionCase.FEC_Phone_Number__c);
                 
             }
+            
             
             return JSON.serialize(result);
             
