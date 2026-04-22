@@ -91,8 +91,25 @@ public without sharing class FEC_Notification {
 
             // 2. Fetch Channel names for the Multi-Select Channel lookup
             if (String.isNotBlank(noti.FEC_Channel__c)) {
-                List<String> channelIds = noti.FEC_Channel__c.split(',');
-                result.put('channels', [SELECT Id, Name FROM FEC_Channel__c WHERE Id IN :channelIds]);
+                List<String> tokens = noti.FEC_Channel__c.split(',');
+                List<String> ids = new List<String>();
+                List<String> names = new List<String>();
+                for (String t : tokens) {
+                    t = t.trim();
+                    if (String.isNotBlank(t)) {
+                        if (t.length() == 15 || t.length() == 18) {
+                            // Check if it's alphanumeric id format
+                            if (t.isAlphanumeric()) {
+                                ids.add(t);
+                            } else {
+                                names.add(t);
+                            }
+                        } else {
+                            names.add(t);
+                        }
+                    }
+                }
+                result.put('channels', [SELECT Id, Name FROM FEC_Channel__c WHERE Id IN :ids OR Name IN :names]);
             }
 
             // 2. Fetch the Group (Queue) Name to display in the UI Pill
