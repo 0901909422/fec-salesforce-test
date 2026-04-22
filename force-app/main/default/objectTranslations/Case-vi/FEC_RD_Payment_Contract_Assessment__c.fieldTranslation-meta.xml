@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- RD Payment Contract Assessment --></label>
+    <name>FEC_RD_Payment_Contract_Assessment__c</name>
+    <picklistValues>
+        <masterLabel>Hợp đồng có thể đóng không cần tờ trình</masterLabel>
+        <translation><!-- Hợp đồng có thể đóng không cần tờ trình --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Hợp đồng có thể đóng với tờ trình</masterLabel>
+        <translation><!-- Hợp đồng có thể đóng với tờ trình --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Hợp đồng không thể đóng</masterLabel>
+        <translation><!-- Hợp đồng không thể đóng --></translation>
+    </picklistValues>
+</CustomFieldTranslation>
