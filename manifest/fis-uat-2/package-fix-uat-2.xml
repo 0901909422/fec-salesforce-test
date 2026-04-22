@@ -953,5 +953,9 @@
 		<members>FEC_Case_Notification</members>
 		<name>LightningMessageChannel</name>
 	</types>
+	<types>
+    	<members>Case-en_US</members>
+		<name>CustomObjectTranslation</name>
+	</types>
     <version>65.0</version>
 </Package>
