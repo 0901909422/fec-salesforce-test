@@ -6,6 +6,7 @@ import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
+import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Agent_ID from '@salesforce/label/c.FEC_Agent_ID';
 import FEC_Agent_Name from '@salesforce/label/c.FEC_Agent_Name';
@@ -56,6 +57,10 @@ export default class Fec_allocationHistory extends LightningElement {
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track allocationHistories;
     @track isLoading = true;
+
+    // startDate/endDate dùng cho API — mặc định null (dùng fetchCollectionData cũ)
+    _startDate = null;
+    _endDate = null;
 
     sectionTitleText = SECTION_LABEL;
     labelMsgApiError = FEC_MSG_Error_API_Label;
@@ -111,10 +116,18 @@ export default class Fec_allocationHistory extends LightningElement {
                 return;
             }
 
-            const response = await fetchCollectionData({
-                contractNumber: this._contractNumber,
-                recordType: this._recordTypeName
-            });
+            // Nếu có date filter thì dùng fetchCollectionDataWithDates, ngược lại dùng method cũ
+            const response = this._startDate && this._endDate
+                ? await fetchCollectionDataWithDates({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName,
+                    startDate: this._startDate,
+                    endDate: this._endDate
+                })
+                : await fetchCollectionData({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName
+                });
 
             if (!response || response.Success === false) {
                 this.allocationHistories = null;
@@ -127,6 +140,13 @@ export default class Fec_allocationHistory extends LightningElement {
         } finally {
             this.isLoading = false;
         }
+    }
+
+    // Handler nhận event từ fec_CollectionDateFilter khi user bấm Apply
+    handleDateFilterChange(e) {
+        this._startDate = e.detail.startDate;
+        this._endDate = e.detail.endDate;
+        this.loadAllocationHistory();
     }
 
     get showErrorBanner() {

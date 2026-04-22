@@ -46,6 +46,10 @@
                             </h3>
                         </div>
                         <div class="slds-accordion__content">
+                            <!-- Date filter: Apply sẽ gọi lại API với startDate/endDate mới -->
+                            <c-fec_-collection-date-filter
+                                ondatefilterchange={handleDateFilterChange}
+                            ></c-fec_-collection-date-filter>
                             <c-fec_-related-list-paging
                                 records={recordsForTable}
                                 columns={columns}

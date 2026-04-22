@@ -1,0 +1,42 @@
+<template>
+    <div class="date-filter-container">
+        <!-- Hint text -->
+        <p class="hint-text">Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</p>
+
+        <!-- Date inputs + Apply button -->
+        <div class="filter-row">
+            <div class="date-field">
+                <label class="date-label">From Date</label>
+                <lightning-input
+                    type="date"
+                    value={fromDate}
+                    variant="label-hidden"
+                    onchange={handleFromDateChange}
+                ></lightning-input>
+            </div>
+
+            <div class="date-field">
+                <label class="date-label">To Date</label>
+                <lightning-input
+                    type="date"
+                    value={toDate}
+                    variant="label-hidden"
+                    onchange={handleToDateChange}
+                ></lightning-input>
+            </div>
+
+            <div class="apply-btn">
+                <lightning-button
+                    variant="brand"
+                    label="Apply"
+                    onclick={handleApply}
+                ></lightning-button>
+            </div>
+        </div>
+
+        <!-- Validation error -->
+        <template lwc:if={errorMessage}>
+            <p class="error-text">{errorMessage}</p>
+        </template>
+    </div>
+</template>
