@@ -1,0 +1,299 @@
+.fec-card {
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem 1rem;
+  font-family: "Salesforce Sans", Arial, sans-serif;
+}
+
+.fec-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.fec-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fec-card__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #706e6b;
+  color: #ffffff;
+}
+
+.fec-card__title-icon lightning-icon {
+  --sds-c-icon-color-foreground-default: #ffffff;
+}
+
+.fec-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #032d60;
+}
+
+.fec-file-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.fec-pill-btn {
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.fec-pill-btn:hover:not(:disabled) {
+  border-color: #0176d3;
+  background: #f3f9ff;
+}
+
+.fec-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fec-pill-btn_primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fec-upload-icon {
+  --sds-c-icon-color-foreground-default: #0176d3;
+}
+
+.fec-drop-zone {
+  min-height: 7.5rem;
+  border: 1px dashed #c9c9c9;
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.fec-drop-zone_active {
+  background: #f3f9ff;
+  border-color: #0176d3;
+}
+
+.fec-drop-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #706e6b;
+}
+
+.fec-file-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border-top: 1px solid #f3f2f2;
+  padding-top: 0.5rem;
+}
+
+.fec-file-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid #f3f2f2;
+}
+
+.fec-file-list__item:last-child {
+  border-bottom: none;
+}
+
+.fec-file-list__name {
+  color: #3e3e3c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fec-file-list__remove {
+  border: none;
+  background: transparent;
+  padding: 0.15rem;
+  cursor: pointer;
+  border-radius: 0.15rem;
+  color: #706e6b;
+}
+
+.fec-file-list__remove:hover:not(:disabled) {
+  background: #f3f2f2;
+  color: #032d60;
+}
+
+.fec-file-list__remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fec-file-list-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+/* Header: pill + invisible lightning-file-upload overlay (related list look) */
+.fec-add-files-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.75rem;
+  min-height: 2rem;
+}
+
+.fec-add-files-pill {
+  pointer-events: none;
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #0176d3;
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 999px;
+}
+
+.fec-add-files-hitbox {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fec-add-files-hitbox lightning-file-upload {
+  min-width: 100%;
+  transform: scale(1.15);
+  transform-origin: center;
+}
+
+/* Related list body / rows */
+.fec-related-body {
+  min-height: 0;
+}
+
+.fec-related-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fec-related-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #f3f2f2;
+}
+
+.fec-related-row:last-child {
+  border-bottom: none;
+}
+
+.fec-file-thumb {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.75rem;
+  border-radius: 0.2rem;
+  background: #2e844a;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding-bottom: 0.2rem;
+}
+
+.fec-file-thumb__ext {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.fec-related-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fec-related-row__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fec-related-row__link:hover {
+  text-decoration: underline;
+}
+
+.fec-related-row__meta {
+  font-size: 0.75rem;
+  color: #706e6b;
+}
+
+.fec-related-footer {
+  border-top: 1px solid #f3f2f2;
+  padding: 0.5rem 0 0;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.fec-view-all {
+  border: none;
+  background: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+}
+
+.fec-view-all:hover {
+  text-decoration: underline;
+}

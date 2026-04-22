@@ -1,12 +1,12 @@
 /**
- * Callout: Disb_Status_Inquiry / GetDisbInfoByAcct (JSON envelope: headers, parameters, body).
+ * Callout: Disb_Status_Inquiry / GetDisbInfoByAcct (flat JSON body; TransID/DateTime/RequestorID on HTTP headers).
  * Maps response Applications[].Application to FEC_Pending_Disbursement__c fields at integration layer.
  */
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
 
-    private static ResponseLog responseLog;
+    private static List<ResponseLog> responseLogs = new List<ResponseLog>();
 
     public class ResponseLog {
         public String apiName;
@@ -27,18 +27,23 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     }
 
     private static void stashDisbApiLog(GetDisbInfoByAcctExecutionResult result) {
-        responseLog = new ResponseLog(
-            'FEC_GetDisbInfoByAcctCallout',
-            result.endpoint,
-            FEC_ConstantCommon.API_METHOD_POST,
-            result.requestPayload,
-            result.httpResponse,
-            result.logErrorMessage
+        responseLogs.add(
+            new ResponseLog(
+                'FEC_GetDisbInfoByAcctCallout',
+                result.endpoint,
+                FEC_ConstantCommon.API_METHOD_POST,
+                result.requestPayload,
+                result.httpResponse,
+                result.logErrorMessage
+            )
         );
     }
 
     public static void logApiResponse() {
-        if (responseLog != null) {
+        if (responseLogs == null || responseLogs.isEmpty()) {
+            return;
+        }
+        for (ResponseLog responseLog : responseLogs) {
             FEC_CommonUltils.logApi(
                 responseLog.apiName,
                 responseLog.endpoint,
@@ -48,6 +53,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 responseLog.errorMessage
             );
         }
+        responseLogs.clear();
     }
 
     //=============== RESPONSE ===============//
@@ -153,12 +159,6 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         String accountNumber,
         Integer ageOfRecords
     ) {
-        Map<String, Object> headerMap = new Map<String, Object>{
-            'TransID' => transId,
-            'DateTime' => dateTimeHeader,
-            'RequestorID' => requestorId,
-            'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
-        };
         Map<String, Object> bodyMap;
         if (ageOfRecords != null) {
             bodyMap = new Map<String, Object>{
@@ -170,12 +170,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
                 'AccountNumber' => accountNumber
             };
         }
-        Map<String, Object> root = new Map<String, Object>{
-            'headers' => headerMap,
-            'parameters' => new List<Object>(),
-            'body' => bodyMap
-        };
-        return JSON.serialize(root);
+        return JSON.serialize(bodyMap);
     }
 
     private static String resolveDisbInfoEndpoint() {
@@ -231,6 +226,8 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         }
         try {
             String normalized = responseBody.replace('"DateTime":', '"DateTime_x":');
+            normalized = normalized.replace('"Sys":', '"Sys2":');
+            normalized = normalized.replace('"Code":', '"Code2":');
             response = (GetDisbInfoByAcctResponse) JSON.deserialize(
                 normalized,
                 FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctResponse.class
