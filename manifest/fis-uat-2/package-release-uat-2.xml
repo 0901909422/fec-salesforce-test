@@ -742,10 +742,10 @@
 		<members>Create_Case</members>
 		<name>CustomTab</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
         <members>Channel</members>
         <name>GlobalValueSet</name>
@@ -1302,6 +1302,8 @@
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
 		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1616,6 +1618,8 @@
         <members>FEC_Email_Discard_Msg</members>
         <members>FEC_Email_Btn_Discard</members>
         <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1668,6 +1672,7 @@
     </types>
 	<types>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
     <types>

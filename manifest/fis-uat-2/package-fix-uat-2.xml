@@ -215,6 +215,7 @@
 		<members>FEC_Notification__c-Notifications Layout</members>
 		<members>ServiceResourceSkill-Service Resource Skill Layout</members>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
 	<types>
@@ -482,6 +483,8 @@
         <members>FEC_Email_Discard_Msg</members>
         <members>FEC_Email_Btn_Discard</members>
         <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -689,6 +692,8 @@
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
 		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -750,6 +755,9 @@
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<members>FEC_Additional_Info__c.FEC_IPP_Plan__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_01__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_02__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_03__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
 		<members>Case.FEC_Current_Card_Status__c</members>
 		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
@@ -802,6 +810,13 @@
 		<members>Case.FEC_Updated_Info_Permanent_Address__c</members>
 		<members>Case.FEC_Updated_Info_Office_Address__c</members>
 		<members>Case.FEC_Updated_Info_Current_Address__c</members>
+		<members>Case.FEC_CS_Customer_Care_Assessment_Type__c</members>
+		<members>Case.FEC_Confirm_CS_CC_Assessment__c</members>
+		<members>Case.FEC_Confirm_RD_CO_Assessment__c</members>
+		<members>Case.FEC_Confirm_RD_PM_Assessment__c</members>
+		<members>Case.FEC_RD_Card_Ops_Assessment_Type__c</members>
+		<members>Case.FEC_RD_Payment_Assessment_Type__c</members>
+		<members>Case.FEC_RD_Payment_Contract_Assessment__c</members>
 		<members>Case.FEC_Input_Correct_Contract_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
 		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
@@ -846,6 +861,9 @@
 		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
+		<members>FEC_Contact_List__c.FEC_Temporary_Email__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Custom_Action_Button_Label__c</members>
+		<members>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -876,10 +894,10 @@
         <members>FEC_Clear_Session__c</members>
         <name>CustomTab</name>
     </types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
 		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>

@@ -8,6 +8,7 @@ import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
+import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
 import checkProcessAction from "@salesforce/apex/FEC_CardReplacementAddressController.checkProcessAction";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
 import USER_ID from "@salesforce/user/Id";
@@ -446,6 +447,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track subDecisionOptions = [];
 
   userGroup;
+  newBlockCode;
+  currentBlockCode;
+  currentCardStatus;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -663,6 +667,39 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   get showRouteTo() {
     return ACTION_ROUTE_TO === this.actionValue;
+  }
+  
+  //linhdev: logic cho phép xử lý action có label hoặc value dựa vào field FEC_Custom_Action_Button_Label__c
+  _resolveRoutingMethodByAction(action) {
+    const customActionLabel = action?.label?.trim();
+    let resolvedMethod;
+    if (
+      [
+        ACTION_ROUTE_TO,
+        ACTION_REVERT,
+        ACTION_TRANSFER,
+        ACTION_UPDATE,
+        ACTION_ESCALATE,
+        ACTION_REJECT,
+        ACTION_RESOLVE,
+        ACTION_CANCEL,
+      ].includes(customActionLabel)
+    ) {
+      resolvedMethod = customActionLabel;
+    } else {
+      resolvedMethod = action?.value;
+    }
+    console.log(
+      "FEC_DEBUG _resolveRoutingMethodByAction",
+      JSON.stringify({
+        actionId: action?.id,
+        actionValue: action?.value,
+        actionLabel: action?.label,
+        customActionLabel,
+        resolvedMethod,
+      }),
+    );
+    return resolvedMethod;
   }
 
   get showRevert() {
@@ -1126,6 +1163,10 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
                   field.readonlyDisplayValue = field.displayValue;
                 }
+                // PhuongNT add set newBlockCode
+                else if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+                  this.newBlockCode = field.value;
+                }
               });
             });
           });
@@ -1138,6 +1179,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         // PhuongNT add show button process action with process Card Replacement
         if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
           this.handleCheckProcessAction();
+        }
+        // PhuongNT add check process action Card Block
+        if (this.business?.code === PROCESS_BLOCK_CARD) {
+          this.handleCheckProcessActionCardBlock();
         }
 
         const actions = this.business.routingActionlst || [];
@@ -1648,6 +1693,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.value = MAP_NEW_BLOCK_CODE[value];
                 field.displayValue = field.value;
                 field.readonlyDisplayValue = field.value;
+                this.newBlockCode = field.value;
+                this.handleCheckProcessActionCardBlock();
               }
             });
           });
@@ -2278,6 +2325,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.processActionMethod = method;
 
+    // PhuongNT add handle get field value
+    this.handleGetFieldValue();
+
     let header;
     let content;
     if (method == ACTION_BLOCK_CARD) {
@@ -2361,12 +2411,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_BLOCK_CARD:
         params = {
           caseId: this.recordId,
+          blockCode: this.newBlockCode,
         };
         break;
 
       case ACTION_UNBLOCK_CARD:
         params = {
           caseId: this.recordId,
+          blockCode: this.newBlockCode,
         };
         break;
 
@@ -2886,13 +2938,15 @@ export default class Fec_CaseBussiness extends LightningElement {
   async handleGetCardStatus() {
     const result = await getCardStatus({ recordId: this.recordId });
     console.log('>>>>>handleGetCardStatus: ' + JSON.stringify(result));
+    this.currentBlockCode = result?.currentBlockCode;
+    this.currentCardStatus = result?.currentCardStatus;
     this.business.sectionlst.forEach(section => {
       section.subSectionlst.forEach(sub => {
         sub.objlst.forEach(obj => {
           obj.fieldlst.forEach(field => {
             if (field.editable) return; // ignore editable
             if (field.apiName === FIELD_CURRENT_CARD_STATUS) {
-              field.value = result?.currentCardStatus;
+              field.value = this.currentCardStatus;
               field.displayValue = field.value;
               field.readonlyDisplayValue = field.value;
             }
@@ -2914,6 +2968,31 @@ export default class Fec_CaseBussiness extends LightningElement {
       } else {
         this.isProcessActionInfo = true;
         this.processActionMsg = result.strMsg;
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+  }
+
+  // PhuongNT add check process action Card Block
+  handleCheckProcessActionCardBlock() {
+    this.showProcessAction = false;
+    this.isProcessActionInfo = false;
+    this.isProcessActionFailed = false;
+    this.processActionMsg = '';
+    checkProcessActionCardBlock({
+      currentBlockCode: this.currentBlockCode,
+      newBlockCode: this.newBlockCode,
+    })
+    .then((result) => {
+      this.processActionMsg = result.strMsg;
+      if (result.isShowAction) {
+        this.showProcessAction = true;
+      } else if (result.isCancel) {
+        this.isProcessActionFailed = true;
+      } else {
+        this.isProcessActionInfo = true;
       }
     })
     .catch((error) => {
@@ -2971,6 +3050,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     } catch(error) {
       console.error('Error updating record: ', error);
     }
+  }
+
+  // PhuongNT add handle get field value
+  handleGetFieldValue() {
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst.forEach(sub => {
+        sub.objlst.forEach(obj => {
+          obj.fieldlst.forEach(field => {
+            if (field.apiName === FIELD_NEW_BLOCK_CODE) {
+              this.newBlockCode = field.value;
+            }
+          });
+        });
+      });
+    });
   }
 
 }

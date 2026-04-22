@@ -12716,4 +12716,20 @@
         <shortDescription>Email - Cancel button label (English, not translated)</shortDescription>
         <value>Cancel</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_BLOCK_CS_D2C</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_BLOCK_CS_D2C</shortDescription>
+        <value>Vui lòng tạo yêu cầu mở khóa thẻ để chuyển CS D2C xử lý.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_BLOCK_CANCEL</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
+        <value>Không thể thực hiện khoá thẻ.</value>
+    </labels>
 </CustomLabels>

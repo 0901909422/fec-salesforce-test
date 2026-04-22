@@ -181,9 +181,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     private static String resolveDisbInfoEndpoint() {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-        return apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_DISB_INFO_BY_ACCT_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        return apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
     }
 
     private static GetDisbInfoByAcctResponse disbErrorResponse(String errorCode, String errorMessage) {
@@ -203,7 +201,6 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
 
         Map<String, String> httpHeaders = new Map<String, String>{
             'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
-            'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             'TransID' => transId,
             'DateTime' => dateTimeHeader,
             'RequestorID' => requestorId
