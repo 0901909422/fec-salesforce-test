@@ -60,8 +60,9 @@ public with sharing class FEC_CardReplacementAddressController {
 
     public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
         UpdateResult result = new UpdateResult();
+        Case objCasse;
         try {
-            Case objCasse = [
+            objCasse = [
                 SELECT Id,
                     FEC_National_ID_Passport_ID__c,
                     FEC_Case_Phone_Number__c,
@@ -99,17 +100,19 @@ public with sharing class FEC_CardReplacementAddressController {
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
             result.actionCount = objCasse.FEC_Process_Action_Count__c;
-            FEC_CommonUltils.createProcessActionHistory(
-                method,
-                objCasse,
-                result.success
-            );
         } catch (Exception ex) {
+            result.success = false;
             FEC_CommonUltils.logException(
                 'FEC_CardReplacementAddressController', 
                 'cardReplacement', 
                 ex.getMessage(),
                 ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
             );
         }
         return result;
