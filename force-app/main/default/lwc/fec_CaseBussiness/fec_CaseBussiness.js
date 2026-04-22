@@ -667,29 +667,12 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   get showRouteTo() {
-    return ACTION_ROUTE_TO === this.actionValue;
+    return ACTION_ROUTE_TO === this._getCurrentActionCode();
   }
-  
-  //linhdev: logic cho phép xử lý action có label hoặc value dựa vào field FEC_Custom_Action_Button_Label__c
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
-    let resolvedMethod;
-    if (
-      [
-        ACTION_ROUTE_TO,
-        ACTION_REVERT,
-        ACTION_TRANSFER,
-        ACTION_UPDATE,
-        ACTION_ESCALATE,
-        ACTION_REJECT,
-        ACTION_RESOLVE,
-        ACTION_CANCEL,
-      ].includes(customActionLabel)
-    ) {
-      resolvedMethod = customActionLabel;
-    } else {
-      resolvedMethod = action?.value;
-    }
+    const actionValue = action?.value;
+    const resolvedMethod = action?.code || actionValue;
     console.log(
       "FEC_DEBUG _resolveRoutingMethodByAction",
       JSON.stringify({
@@ -704,15 +687,15 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   get showRevert() {
-    return ACTION_REVERT === this.actionValue;
+    return ACTION_REVERT === this._getCurrentActionCode();
   }
 
   get showTransfer() {
-    return ACTION_TRANSFER === this.actionValue;
+    return ACTION_TRANSFER === this._getCurrentActionCode();
   }
 
   get showUpdate() {
-    return ACTION_UPDATE === this.actionValue;
+    return ACTION_UPDATE === this._getCurrentActionCode();
   }
 
   processActionMethod;
@@ -1004,15 +987,13 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
-        const hasDraftInOptions =
-          draftCode &&
-          this.business.routingActionlst?.some((a) => a.value === draftCode);
-        this.actionValue = hasDraftInOptions
-          ? draftCode
+        const selectedDraftAction = this._findRoutingActionByValueOrCode(draftCode);
+        this.actionValue = selectedDraftAction
+          ? selectedDraftAction.value
           : this.business.routingActionlst[0]?.value;
 
         if (OUTBOUND_CAMPAIGN == this.business.code) {
-          this.actionValue = ACTION_RESOLVE;
+          this._setActionValueByCode(ACTION_RESOLVE);
         }
 
         if (!this.business.nextQueue) {
@@ -1033,7 +1014,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               });
             });
 
-            this.actionValue = ACTION_REJECT;
+            this._setActionValueByCode(ACTION_REJECT);
           }
           section.id = crypto.randomUUID();
 
@@ -1662,23 +1643,19 @@ export default class Fec_CaseBussiness extends LightningElement {
 
       if (routeToEle) {
         if (toRouteTo === true) {
-          routeToEle.value = ACTION_ROUTE_TO;
-          this.actionValue = ACTION_ROUTE_TO;
+          this._setActionValueByCode(ACTION_ROUTE_TO);
         }
 
         if (toRevert === true) {
-          routeToEle.value = ACTION_REVERT;
-          this.actionValue = ACTION_REVERT;
+          this._setActionValueByCode(ACTION_REVERT);
         }
 
         if (toResolve === true) {
-          routeToEle.value = ACTION_RESOLVE;
-          this.actionValue = ACTION_RESOLVE;
+          this._setActionValueByCode(ACTION_RESOLVE);
         }
 
         if (toReject === true) {
-          routeToEle.value = ACTION_REJECT;
-          this.actionValue = ACTION_REJECT;
+          this._setActionValueByCode(ACTION_REJECT);
         }
       }
     }
@@ -2067,18 +2044,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (d.noEligibleForClosure) {
       Promise.resolve().then(() => {
         const hasReject = this.business.routingActionlst?.some(
-          (a) => a.value === ACTION_REJECT,
+          (a) => (a.code || a.value) === ACTION_REJECT,
         );
         if (!hasReject) {
           return;
         }
-        this.actionValue = ACTION_REJECT;
-        const routeToEle = this.template.querySelector(
-          'lightning-select[data-id="routing-action"]',
-        );
-        if (routeToEle) {
-          routeToEle.value = ACTION_REJECT;
-        }
+        this._setActionValueByCode(ACTION_REJECT);
       });
       return;
     }
@@ -2114,19 +2085,12 @@ export default class Fec_CaseBussiness extends LightningElement {
       return;
     }
     const hasRouteTo = this.business.routingActionlst?.some(
-      (a) => a.value === ACTION_ROUTE_TO,
+      (a) => (a.code || a.value) === ACTION_ROUTE_TO,
     );
     if (!hasRouteTo) {
       return;
     }
-    const routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
-    if (!routeToEle) {
-      return;
-    }
-    routeToEle.value = ACTION_ROUTE_TO;
-    this.actionValue = ACTION_ROUTE_TO;
+    this._setActionValueByCode(ACTION_ROUTE_TO);
   }
 
   _validateIPPClosureForSubmit() {
@@ -2274,14 +2238,17 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
     }
-    if (routeToEle) {
+     if (routeToEle) {
       let method = routeToEle.value;
       let actionId;
+      let selectedAction;
       this.business.routingActionlst?.forEach((item) => {
         if (item.value == method) {
           actionId = item.id;
+          selectedAction = item;
         }
       });
+      method = this._resolveRoutingMethodByAction(selectedAction);
       let params = { method };
       switch (method) {
         case ACTION_ROUTE_TO:
@@ -2296,7 +2263,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           };
           break;
         case ACTION_REVERT:
-          params = { ...params, params: { caseId: this.recordId } };
+          params = { ...params, params: { caseId: this.recordId, actionId: actionId } };
           break;
         case ACTION_TRANSFER:
           params = {
@@ -2973,7 +2940,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (!this.business?.routingActionlst) return;
 
     this.business.routingActionlst = this.business.routingActionlst.filter(
-      (a) => !actionsToRemove.includes(a.value)
+      (a) => !actionsToRemove.includes(a.code || a.value)
     );
 
     // If current selected value was removed, reset to Resolve
