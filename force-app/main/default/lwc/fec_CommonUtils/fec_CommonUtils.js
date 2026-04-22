@@ -827,6 +827,12 @@ const todayIso = () => {
   return y + '-' + m + '-' + d;
 };
 
+const formatCurrencyIncludeTax = (value, text) => {
+  let val = formatNumber(value);
+  if (!val || val == '0') return '';
+  return val + ' ' + text;
+}
+
 export {
   formatDate,
   formatDateTime,
@@ -861,5 +867,6 @@ export {
   formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
-  toUpperNoVietnameseAccent
+  toUpperNoVietnameseAccent,
+  formatCurrencyIncludeTax,
 };

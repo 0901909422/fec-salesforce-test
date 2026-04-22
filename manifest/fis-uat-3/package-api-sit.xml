@@ -14,6 +14,7 @@
 		<members>FEC_CheckEligibleCallout</members>
 		<members>FEC_CheckAccountEligibilityCallout</members>
 		<members>FEC_CheckEligibilityIPPCallout</members>
+		<members>FEC_Chathub</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -41,6 +42,7 @@
 		<members>FEC_Page_Size_Deals</members>
 		<members>FEC_Page_Number_Deals</members>
 		<members>FEC_Error_Callout_Insurance</members>
+		<members>FEC_CustomerInfo_Null_Or_ChatSession_Null</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>

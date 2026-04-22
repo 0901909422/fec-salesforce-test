@@ -5,6 +5,8 @@ public without sharing class FEC_ContractClosureController {
     public static final String MSG_NOTI_03 = System.Label.FEC_Interaction_Email_Invalid_Msg;
     public static final String MSG_NOTI_16 = System.Label.FEC_MSG_ContractClosure_Phone_Invalid;
     public static final String MSG_ADDRESS_REQUIRED = System.Label.FEC_MSG_ContractClosure_Address_Required;
+    public static final String MSG_TEMP_EMAIL_REQUIRED = System.Label.FEC_Complete_This_Field;
+    public static final String MSG_ADDRESS_ROW_EMPTY = System.Label.FEC_MSG_ContractClosure_Address_Row_Empty;
 
     private static final String OBJ_CASE = 'Case';
     private static final String OBJ_ADDRESS = 'FEC_Address_Info__c';
@@ -537,11 +539,11 @@ public without sharing class FEC_ContractClosureController {
             if (hasTemp && !EMAIL_PAT.matcher(tempMail).matches()) {
                 r.addFail(MSG_NOTI_03);
             }
-            if (forComplete) {
+            if (forComplete || requireDelivery) {
                 Boolean hasDemo = String.isNotBlank(init.demographicEmail);
                 if (!hasDemo) {
-                    if (!hasTemp || !EMAIL_PAT.matcher(tempMail).matches()) {
-                        r.addFail(MSG_NOTI_02);
+                    if (!hasTemp) {
+                        r.addFail(MSG_TEMP_EMAIL_REQUIRED);
                     }
                 } else {
                     if (
@@ -550,7 +552,7 @@ public without sharing class FEC_ContractClosureController {
                     ) {
                         r.addFail(MSG_NOTI_02);
                     } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY && !hasTemp) {
-                        r.addFail(MSG_NOTI_02);
+                        r.addFail(MSG_TEMP_EMAIL_REQUIRED);
                     } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 && hasTemp) {
                         r.addFail(MSG_NOTI_02);
                     }
@@ -569,13 +571,29 @@ public without sharing class FEC_ContractClosureController {
             if (String.isNotBlank(rp) && !FEC_CommonUltils.isPhone(rp)) {
                 r.addFail(MSG_NOTI_16);
             }
-            if (forComplete) {
+            if (forComplete || requireDelivery) {
                 Boolean hasRow = String.isNotBlank(p.selectedAddressId);
                 Boolean hasTempLine = String.isNotBlank(
                     p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : FEC_ConstantCommon.STR_EMPTY
                 );
                 if (!hasRow && !hasTempLine) {
                     r.addFail(MSG_ADDRESS_REQUIRED);
+                }
+                if (hasRow) {
+                    Boolean rowLineOk = false;
+                    if (init.addresses != null) {
+                        for (AddressRowDTO row : init.addresses) {
+                            if (row != null && row.id == p.selectedAddressId) {
+                                rowLineOk = String.isNotBlank(
+                                    row.address != null ? row.address.trim() : FEC_ConstantCommon.STR_EMPTY
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    if (!rowLineOk) {
+                        r.addFail(MSG_ADDRESS_ROW_EMPTY);
+                    }
                 }
             }
         }
