@@ -14000,4 +14000,76 @@
         <shortDescription>Promised Repayment Amount</shortDescription>
         <value>Promised Repayment Amount</value>
     </labels>
+    <labels>
+        <fullName>FEC_Chat_Customer_Username_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username label</shortDescription>
+        <value>Customer Username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Interaction Phone label</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_KYC_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - KYC Status label</shortDescription>
+        <value>KYC Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone invalid format error</shortDescription>
+        <value>Invalid phone format (10 digits starting with &quot;0&quot; or 11 digits starting with &quot;84&quot;).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone placeholder</shortDescription>
+        <value>Enter phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone required error</shortDescription>
+        <value>Phone is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username placeholder</shortDescription>
+        <value>Enter customer username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Username required error</shortDescription>
+        <value>Customer Username is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Eligible</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Not_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Not_Eligible</shortDescription>
+        <value>Not eligible</value>
+    </labels>
 </CustomLabels>
