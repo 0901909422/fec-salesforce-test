@@ -344,6 +344,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
 
+      if (
+        caseBusinessEle &&
+        typeof caseBusinessEle.refreshFileUploadCards === "function"
+      ) {
+        caseBusinessEle.refreshFileUploadCards();
+      }
+
       // Chuyển sang Case Review (chế độ xem), không đóng tab
       setTimeout(() => {
         this.modeEditCase = false;
