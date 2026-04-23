@@ -929,7 +929,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
         try {
             const rows = await searchAdministrativeUnits({
                 objectApiName: 'FEC_Province__c',
-                searchKey: STR_EMPTY
+                searchKey: STR_EMPTY,
+                provinceId: null
             });
             const mapped = (rows || []).map((r) => ({
                 label: r.label,
@@ -952,8 +953,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     async loadWardOptions() {
         try {
             const rows = await searchAdministrativeUnits({
-                objectApiName: 'FEC_Ward__c',
-                searchKey: STR_EMPTY
+                objectApiName: 'FEC_District__c',
+                searchKey: STR_EMPTY,
+                provinceId: this.modalProvinceId || null
             });
             const mapped = (rows || []).map((r) => ({
                 label: r.label,
@@ -977,6 +979,10 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.modalProvinceId = event.detail.value;
         const opt = this.provinceOptions.find((o) => o.value === this.modalProvinceId);
         this.modalProvinceLabel = opt ? opt.label : STR_EMPTY;
+        this.modalWardId = STR_EMPTY;
+        this.modalWardLabel = STR_EMPTY;
+        this.wardOptions = [];
+        this.loadWardOptions();
     }
 
     handleModalWardPick(event) {

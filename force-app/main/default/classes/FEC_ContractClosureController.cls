@@ -31,7 +31,10 @@ public without sharing class FEC_ContractClosureController {
         'FEC_Cash24_Contract_Text__c'
     };
 
-    private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_Ward__c', 'FEC_Province__c' };
+    private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_District__c', 'FEC_Province__c' };
+    private static final String COUNTRY_CODE_VN = '2';
+    private static Id countryIdVnCache;
+    private static String caseSelectedAddressFieldApiCache;
 
     private static final Pattern EMAIL_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_EMAIL);
 
@@ -278,7 +281,7 @@ public without sharing class FEC_ContractClosureController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<PicklistEntryDTO> searchAdministrativeUnits(String objectApiName, String searchKey) {
+    public static List<PicklistEntryDTO> searchAdministrativeUnits(String objectApiName, String searchKey, Id provinceId) {
         List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
         if (String.isBlank(objectApiName) || !ADMIN_UNIT_OBJECTS.contains(objectApiName)) {
             return opts;
@@ -287,13 +290,64 @@ public without sharing class FEC_ContractClosureController {
         if (!gd.containsKey(objectApiName) || !gd.get(objectApiName).getDescribe().isAccessible()) {
             return opts;
         }
-        String term = '%' + (searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey) + '%';
-        String q =
-            'SELECT Id, Name FROM ' +
-            objectApiName +
-            ' WHERE Name LIKE :term ORDER BY Name LIMIT 200';
-        for (SObject row : Database.query(q)) {
-            opts.add(new PicklistEntryDTO((String) row.get('Name'), (String) row.get('Id')));
+        String term = searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey.trim();
+        String likeTerm = '%' + term + '%';
+        Boolean hasSearchTerm = String.isNotBlank(term);
+        Id countryId = resolveCountryIdByCode(COUNTRY_CODE_VN);
+        if (countryId == null) {
+            return opts;
+        }
+        if (objectApiName == 'FEC_Province__c') {
+            if (hasSearchTerm) {
+                for (FEC_Province__c row : [
+                    SELECT Id, FEC_Name_VN__c
+                    FROM FEC_Province__c
+                    WHERE FEC_Country__c = :countryId
+                    AND FEC_Name_VN__c != null
+                    AND FEC_Name_VN__c LIKE :likeTerm
+                    ORDER BY FEC_Name_VN__c
+                ]) {
+                    opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+                }
+            } else {
+                for (FEC_Province__c row : [
+                    SELECT Id, FEC_Name_VN__c
+                    FROM FEC_Province__c
+                    WHERE FEC_Country__c = :countryId
+                    AND FEC_Name_VN__c != null
+                    ORDER BY FEC_Name_VN__c
+                ]) {
+                    opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+                }
+            }
+            return opts;
+        }
+        if (provinceId == null) {
+            return opts;
+        }
+        if (hasSearchTerm) {
+            for (FEC_District__c row : [
+                SELECT Id, FEC_Name_VN__c
+                FROM FEC_District__c
+                WHERE FEC_Province__c = :provinceId
+                AND FEC_Country__c = :countryId
+                AND FEC_Name_VN__c != null
+                AND FEC_Name_VN__c LIKE :likeTerm
+                ORDER BY FEC_Name_VN__c
+            ]) {
+                opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+            }
+        } else {
+            for (FEC_District__c row : [
+                SELECT Id, FEC_Name_VN__c
+                FROM FEC_District__c
+                WHERE FEC_Province__c = :provinceId
+                AND FEC_Country__c = :countryId
+                AND FEC_Name_VN__c != null
+                ORDER BY FEC_Name_VN__c
+            ]) {
+                opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+            }
         }
         return opts;
     }
@@ -320,7 +374,7 @@ public without sharing class FEC_ContractClosureController {
         Id histId = resolveCustomerHistoryId(caseId);
         String line = buildTemporaryAddressLine(t);
         if (String.isNotBlank(p.tempAddressRecordId)) {
-            return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, histId, line, t);
+            return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, caseId, histId, line, t);
         }
         if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
             throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
@@ -328,6 +382,8 @@ public without sharing class FEC_ContractClosureController {
         SObject addr = Schema.getGlobalDescribe().get(OBJ_ADDRESS).newSObject(null);
         addr.put('FEC_Customer_History__c', histId);
         putIfCreateable(addr, 'Name', 'Temporary-' + String.valueOf(Crypto.getRandomInteger()));
+        putIfCreateable(addr, 'FEC_Case__c', caseId);
+        putIfCreateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, true);
         SObjectAccessDecision dec = Security.stripInaccessible(
             AccessType.CREATABLE,
@@ -383,7 +439,7 @@ public without sharing class FEC_ContractClosureController {
         );
     }
 
-    private static Id updateExistingTemporaryAddress(Id rowId, Id histId, String line, TempAddressPartsDTO t) {
+    private static Id updateExistingTemporaryAddress(Id rowId, Id caseId, Id histId, String line, TempAddressPartsDTO t) {
         if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
             throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
         }
@@ -397,6 +453,8 @@ public without sharing class FEC_ContractClosureController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
         }
         SObject addr = row;
+        putIfUpdateable(addr, 'FEC_Case__c', caseId);
+        putIfUpdateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, false);
         SObjectAccessDecision dec = Security.stripInaccessible(
             AccessType.UPDATABLE,
@@ -435,9 +493,9 @@ public without sharing class FEC_ContractClosureController {
         if (String.isNotBlank(t.wardRecordId)) {
             try {
                 if (forInsert) {
-                    putIfCreateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
+                    putIfCreateable(addr, 'FEC_District__c', (Id) t.wardRecordId);
                 } else {
-                    putIfUpdateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
+                    putIfUpdateable(addr, 'FEC_District__c', (Id) t.wardRecordId);
                 }
             } catch (Exception ignore) {
             }
@@ -445,8 +503,10 @@ public without sharing class FEC_ContractClosureController {
         if (String.isNotBlank(t.provinceRecordId)) {
             try {
                 if (forInsert) {
+                    putIfCreateable(addr, 'FEC_Province_City__c', (Id) t.provinceRecordId);
                     putIfCreateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
                 } else {
+                    putIfUpdateable(addr, 'FEC_Province_City__c', (Id) t.provinceRecordId);
                     putIfUpdateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
                 }
             } catch (Exception ignore) {
@@ -559,7 +619,7 @@ public without sharing class FEC_ContractClosureController {
                 }
             }
         }
-        if (hasAddr || hasOffice) {
+        if (hasAddr) {
             String rn = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
             String rp = p.recipientPhone != null ? FEC_CommonUltils.normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
             if (forComplete && String.isBlank(rn)) {
@@ -571,7 +631,7 @@ public without sharing class FEC_ContractClosureController {
             if (String.isNotBlank(rp) && !FEC_CommonUltils.isPhone(rp)) {
                 r.addFail(MSG_NOTI_16);
             }
-            if (hasAddr && (forComplete || requireDelivery)) {
+            if (forComplete || requireDelivery) {
                 Boolean hasRow = String.isNotBlank(p.selectedAddressId);
                 Boolean hasTempLine = String.isNotBlank(
                     p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : FEC_ConstantCommon.STR_EMPTY
@@ -620,8 +680,104 @@ public without sharing class FEC_ContractClosureController {
         if (fRp != null && fRp.getDescribe().isUpdateable()) {
             c.put(FLD_RECIPIENT_PHONE, FEC_CommonUltils.normalizePhone(p.recipientPhone));
         }
+        if (String.isNotBlank(p.selectedAddressId)) {
+            putCaseSelectedAddress(c, p.selectedAddressId);
+        }
         putCaseCash24OnRecord(c, p.cash24ContractText);
         return c;
+    }
+
+    private static void putCaseSelectedAddress(SObject caseRec, String selectedAddressId) {
+        String selectedAddressApi = resolveCaseSelectedAddressFieldApi();
+        if (String.isBlank(selectedAddressApi)) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        Schema.SObjectField sf = fm.get(flc(selectedAddressApi));
+        if (sf == null) {
+            return;
+        }
+        Schema.DisplayType t = sf.getDescribe().getType();
+        if (t == DisplayType.REFERENCE) {
+            caseRec.put(selectedAddressApi, (Id) selectedAddressId);
+            return;
+        }
+        caseRec.put(selectedAddressApi, selectedAddressId);
+    }
+
+    private static Id resolveCountryIdByCode(String countryCode) {
+        if (countryCode == COUNTRY_CODE_VN && countryIdVnCache != null) {
+            return countryIdVnCache;
+        }
+        if (String.isBlank(countryCode)) {
+            return null;
+        }
+        if (!Schema.sObjectType.FEC_Country__c.isAccessible()) {
+            return null;
+        }
+        List<FEC_Country__c> rows = [
+            SELECT Id, FEC_Code__c
+            FROM FEC_Country__c
+            WHERE FEC_Code__c = :countryCode
+            LIMIT 1
+        ];
+        if (!rows.isEmpty()) {
+            if (countryCode == COUNTRY_CODE_VN) {
+                countryIdVnCache = rows[0].Id;
+            }
+            return rows[0].Id;
+        }
+        return null;
+    }
+
+    private static String resolveCaseSelectedAddressFieldApi() {
+        if (String.isNotBlank(caseSelectedAddressFieldApiCache)) {
+            return caseSelectedAddressFieldApiCache;
+        }
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        String fallbackApi;
+        for (String api : new List<String>{ 'FEC_Selected_Address__c', 'FEC_Selected_Address_Info__c', 'FEC_Selected_Address_Id__c' }) {
+            Schema.SObjectField fieldRef = fm.get(flc(api));
+            if (fieldRef != null && fieldRef.getDescribe().isUpdateable()) {
+                caseSelectedAddressFieldApiCache = fieldRef.getDescribe().getName();
+                return caseSelectedAddressFieldApiCache;
+            }
+        }
+        for (String apiLower : fm.keySet()) {
+            Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
+            if (!d.isUpdateable()) {
+                continue;
+            }
+            Boolean isAddressInfoRef = false;
+            if (d.getType() == DisplayType.REFERENCE) {
+                for (Schema.SObjectType refType : d.getReferenceTo()) {
+                    if (refType.getDescribe().getName() == 'FEC_Address_Info__c') {
+                        isAddressInfoRef = true;
+                        break;
+                    }
+                }
+            }
+            String nameLower = d.getName().toLowerCase();
+            String labelLower = d.getLabel().toLowerCase();
+            Boolean isSelectedAddressName =
+                (nameLower.contains('selected') && nameLower.contains('address')) ||
+                (labelLower.contains('selected') && labelLower.contains('address'));
+            if (!isAddressInfoRef && !isSelectedAddressName) {
+                continue;
+            }
+            if (fallbackApi == null) {
+                fallbackApi = d.getName();
+            }
+            if (
+                (nameLower.contains('selected') && nameLower.contains('address')) ||
+                (labelLower.contains('selected') && labelLower.contains('address'))
+            ) {
+                caseSelectedAddressFieldApiCache = d.getName();
+                return caseSelectedAddressFieldApiCache;
+            }
+        }
+        caseSelectedAddressFieldApiCache = fallbackApi;
+        return caseSelectedAddressFieldApiCache;
     }
 
     private static void putCaseCash24OnRecord(SObject caseRec, String raw) {
