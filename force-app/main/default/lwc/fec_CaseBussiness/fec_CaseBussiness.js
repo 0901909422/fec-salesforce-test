@@ -77,6 +77,7 @@ import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -268,6 +269,7 @@ const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
+const FIELD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
 
 const FIELD_READ_ONLY_UPDATE = [
   FIELD_NEW_BLOCK_CODE,
@@ -457,6 +459,8 @@ export default class Fec_CaseBussiness extends LightningElement {
   newBlockCode;
   currentBlockCode;
   currentCardStatus;
+  cardReplacementReason;
+  isHiddenLwc = false;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -1057,6 +1061,10 @@ export default class Fec_CaseBussiness extends LightningElement {
                 ) {
                   assignmentType = field.value;
                 }
+                if (field.apiName === FIELD_CARD_REPLACEMENT_REASON) {
+                  this.cardReplacementReason = field.value;
+                  this.isHiddenLwc = !field.value;
+                }
 
                 // PhuongNT cmt, still process for field read only
                 // if (!field.readonly) {
@@ -1153,10 +1161,20 @@ export default class Fec_CaseBussiness extends LightningElement {
                 if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
                   field.displayValue = formatCurrencyIncludeTax(field.value, 'VND (include 10% VAT)');
                   field.readonlyDisplayValue = field.displayValue;
+                  // PhuongNT add set hidden field
+                  field.isHidden = !this.cardReplacementReason;
                 }
                 // PhuongNT add set newBlockCode
                 else if (field.apiName === FIELD_NEW_BLOCK_CODE) {
                   this.newBlockCode = field.value;
+                }
+                // PhuongNT add set hidden field
+                else if (field.apiName === FIELD_NEW_BLOCK_CODE_CARD_REPLACE) {
+                  field.isHidden = !this.cardReplacementReason;
+                } else if (field.apiName === FIELD_RECIPIENT_NAME) {
+                  field.isHidden = !this.cardReplacementReason;
+                } else if (field.apiName === FIELD_RECIPIENT_PHONE_NUMBER) {
+                  field.isHidden = !this.cardReplacementReason;
                 }
               });
             });
@@ -1170,10 +1188,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         // PhuongNT add show button process action with process Card Replacement
         if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
           this.handleCheckProcessAction();
-        }
-        // PhuongNT add check process action Card Block
-        if (this.business?.code === PROCESS_BLOCK_CARD) {
-          this.handleCheckProcessActionCardBlock();
         }
 
         const actions = this.business.routingActionlst || [];
@@ -1610,7 +1624,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           toRevert = TYPE_UNQUALIFIED == value;
           // PhuongNT add for Unblock Card
           if (this.business?.code === PROCESS_UNBLOCK_CARD) {
-            this.showProcessAction = TYPE_QUALIFIED == value;
+            this.showProcessAction = TYPE_QUALIFIED == value || TYPE_QUALIFIED_VN == value;
           }
 
           break;
@@ -1690,19 +1704,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
     // card replacement
     else if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
+      this.isHiddenLwc = !value;
       this.business.sectionlst.forEach(section => {
         section.subSectionlst.forEach(sub => {
           sub.objlst.forEach(obj => {
             obj.fieldlst.forEach(field => {
-              if (field.editable) return; // ignore editable
+              // PhuongNT cmt, still process hidden with editable
+              // if (field.editable) return; // ignore editable
               if (field.apiName === FIELD_NEW_BLOCK_CODE_CARD_REPLACE) {
                 field.value = MAP_NEW_BLOCK_CODE_CARD_REPLACE[value];
                 field.displayValue = field.value;
                 field.readonlyDisplayValue = field.value;
+                field.isHidden = !value;
               } else if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
                 field.value = MAP_CARD_REPLACEMENT_FEE_VALUE[value];
                 field.displayValue = MAP_CARD_REPLACEMENT_FEE_DISPLAY[value];
                 field.readonlyDisplayValue = field.displayValue;
+                field.isHidden = !value;
+              } else if (field.apiName === FIELD_RECIPIENT_NAME) {
+                field.isHidden = !value;
+              } else if (field.apiName === FIELD_RECIPIENT_PHONE_NUMBER) {
+                field.isHidden = !value;
               }
             });
           });
@@ -2509,6 +2531,14 @@ export default class Fec_CaseBussiness extends LightningElement {
               this.publishPinReissueResult("SUCCESS");
           }
 
+          // PhuongNT send message call api to NOC component
+          if (this.processActionMethod == ACTION_BLOCK_CARD 
+            || this.processActionMethod == ACTION_UNBLOCK_CARD
+            || this.processActionMethod == ACTION_REPLACE_CARD
+          ) {
+            this.publishProcessActionResult("SUCCESS");
+          }
+
           if (
             this.processActionMethod === ACTION_ADDRESS_UPDATE ||
             msgSuccess === FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS
@@ -2995,6 +3025,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
       });
     });
+    // PhuongNT add check process action Card Block
+    if (this.business?.code === PROCESS_BLOCK_CARD) {
+      this.handleCheckProcessActionCardBlock();
+    }
   }
 
   // PhuongNT add check process action Card Replacement
@@ -3018,6 +3052,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // PhuongNT add check process action Card Block
   handleCheckProcessActionCardBlock() {
+    if (this.currentCardStatus == 'Not Blocked' || !this.currentBlockCode || !this.newBlockCode) {
+      return;
+    }
     this.showProcessAction = false;
     this.isProcessActionInfo = false;
     this.isProcessActionFailed = false;
@@ -3108,6 +3145,17 @@ export default class Fec_CaseBussiness extends LightningElement {
     });
   }
 
+  // PhuongNT send a message to the NOC component to prevent users from changing the NOC value.
+  async publishProcessActionResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PROCESS_ACTION_MESSAGE_CHANNEL, payload);
+  }
+  
   // Linhdev add handle find routing action by value or code (FEC_Custom_Action_Button_Label__c or FEC_Action_Button__r.FEC_Code__c)
   _findRoutingActionByValueOrCode(valueOrCode) {
     if (!valueOrCode || !this.business?.routingActionlst?.length) {

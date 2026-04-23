@@ -13,6 +13,8 @@ import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
 //Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+// PhuongNT disable NOC after process action call api success
+import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
 // import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
 // import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
 // import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
@@ -245,6 +247,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.subscriptionPinReissue = subscribe(
       this.messageContext,
       PIN_REISSUE_MESSAGE_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
+    );
+    // PhuongNT disable NOC after process action call api success
+    this.subscriptionPinReissue = subscribe(
+      this.messageContext,
+      PROCESS_ACTION_MESSAGE_CHANNEL,
       (message) => this.handleMessageResetPin(message),
       { scope: APPLICATION_SCOPE },
     );
