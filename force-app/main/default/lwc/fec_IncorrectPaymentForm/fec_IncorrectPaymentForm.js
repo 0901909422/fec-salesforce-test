@@ -184,7 +184,15 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
     }
 
     get adjustmentAmountFieldLabel() {
-        return this.isTh2 ? this.customLabel.excessAmount : this.customLabel.adjustedAmount;
+        return this.customLabel.adjustedAmount;
+    }
+
+    get manualBillDateFieldLabel() {
+        return this.isTh2 ? this.customLabel.paymentDate : this.customLabel.billDate;
+    }
+
+    get manualBillAmountFieldLabel() {
+        return this.isTh2 ? this.customLabel.excessAmount : this.customLabel.billAmount;
     }
 
     get adjustedAmountNoticeMessage() {
@@ -835,7 +843,7 @@ export default class Fec_IncorrectPaymentForm extends LightningElement {
                 }
                 this.dispatchEvent(new ShowToastEvent({
                     title: FEC_Toast_Validation_Title,
-                    message: FEC_LBL_Bill_Amount + ': ' + FEC_Complete_This_Field,
+                    message: this.manualBillAmountFieldLabel + ': ' + FEC_Complete_This_Field,
                     variant: CONST.VARIANT_WARNING
                 }));
                 return false;
