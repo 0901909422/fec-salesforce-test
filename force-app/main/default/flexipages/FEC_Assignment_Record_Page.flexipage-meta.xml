@@ -120,7 +120,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListApiName</name>
-                    <value>Routing_Action_History__r</value>
+                    <value>Routing_Action_Histories__r</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>relatedListDisplayType</name>
@@ -173,12 +173,6 @@
                 </componentInstanceProperties>
                 <componentName>lst:dynamicRelatedList</componentName>
                 <identifier>lst_dynamicRelatedList</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_AssignmentRemarkHistoryTable</componentName>
-                <identifier>c_fec_AssignmentRemarkHistoryTable</identifier>
             </componentInstance>
         </itemInstances>
         <mode>Replace</mode>
