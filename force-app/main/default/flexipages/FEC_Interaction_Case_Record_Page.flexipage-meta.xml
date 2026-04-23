@@ -950,6 +950,18 @@
                 <identifier>flexipage_tabset6</identifier>
             </componentInstance>
         </itemInstances>
+        <name>Facet-56d90d7e-6960-4734-99f9-f6066b18ba70</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <name>Facet-a9b3182d-454e-420a-b5bf-15b7522e9754</name>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionChatConversations</componentName>
+                <identifier>c_fecInteractionChatConversations2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-rrxgsr9ruhg</name>
         <name>Facet-8e053f58-5e65-4077-81b5-7fa1420d4b81</name>
         <type>Facet</type>
     </flexiPageRegions>
