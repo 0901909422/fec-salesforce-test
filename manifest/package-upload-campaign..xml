@@ -4,6 +4,7 @@
         <members>fecUploadCampaignData</members>
         <members>fecUploadCampaignModal</members>
         <members>fecCampaignSetting</members>
+        <members>fecPushRecordsModal</members>
         <members>fecUtils</members>
         <name>LightningComponentBundle</name>
     </types>
@@ -23,6 +24,9 @@
         <members>FEC_CampaignApiResponse</members>
         <members>FEC_CampaignBatchLogger</members>
         <members>FEC_CampaignValidator</members>
+        <!-- New push batch classes -->
+        <members>FEC_PushExistingRecordsBatch</members>
+        <members>FEC_PushCallbackRecordsBatch</members>
         <!-- Test classes -->
         <members>FEC_CampaignBatchServiceTest</members>
         <members>FEC_CampaignApiCallerTest</members>

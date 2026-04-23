@@ -34,6 +34,9 @@ public with sharing class FEC_DataCampaign {
     @AuraEnabled public String createBy;
     @AuraEnabled public String updateBy;
 
+    @AuraEnabled public Boolean isExistingRecords = false;
+    @AuraEnabled public Boolean isCallback = false;
+
     public FEC_DataCampaign() {}
 
     /**
@@ -76,6 +79,8 @@ public with sharing class FEC_DataCampaign {
         m.recordLifetime = record.FEC_RecordLifetime__c;
         m.currentCallAttempt = record.FEC_CurrentCallAttempt__c;
         m.recordCurrentLifetime = record.FEC_RecordCurrentLifetime__c;
+        m.isExistingRecords = false;
+        m.isCallback = false;
         return m;
     }
 }

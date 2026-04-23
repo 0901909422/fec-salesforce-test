@@ -120,6 +120,12 @@
                 onclose={closeModal}
                 onsave={handleUploadFile}>
             </c-fec-upload-campaign-modal>
+
+            <c-fec-push-records-modal
+                if:true={blnIsPushModalOpen}
+                onclose={closePushModal}
+                oncomplete={handlePushComplete}>
+            </c-fec-push-records-modal>
         </div>
     </div>
 </template>

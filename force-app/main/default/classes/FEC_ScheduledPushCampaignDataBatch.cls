@@ -39,6 +39,7 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
     }
 
     public void execute(Database.BatchableContext BC, List<FEC_DataCampaign__c> scope) {
+        System.debug('>>> [ScheduledPushCampaign] execute() — scope size: ' + scope.size());
         try {
             List<FEC_DataCampaign> models = new List<FEC_DataCampaign>();
             for (FEC_DataCampaign__c rec : scope) {
@@ -48,6 +49,7 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
             List<List<FEC_DataCampaign>> chunks = FEC_CampaignBatchService.chunkBySize(
                 models, FEC_Constants.CAMPAIGN_MAX_JSON_SIZE
             );
+            System.debug('>>> [ScheduledPushCampaign] chunks count: ' + chunks.size() + ' | total models: ' + models.size());
 
             for (List<FEC_DataCampaign> chunk : chunks) {
                 sendChunk(chunk);
@@ -58,6 +60,7 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
         } catch (Exception ex) {
             this.errorCount += scope.size();
             this.errorDetails += ex.getMessage() + '\n';
+            System.debug('>>> [ScheduledPushCampaign] ERROR: ' + ex.getMessage() + ' | StackTrace: ' + ex.getStackTraceString());
             FEC_CampaignBatchLogger.logException(
                 this.batchLogId, 'FEC_ScheduledPushCampaignDataBatch', ex, scope.size()
             );
@@ -78,13 +81,18 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
 
     private void sendChunk(List<FEC_DataCampaign> chunk) {
         String payload = JSON.serialize(chunk);
+        System.debug('>>> [ScheduledPushCampaign] sendChunk — records: ' + chunk.size() + ' | payload size: ' + payload.length() + ' bytes');
+        System.debug('>>> [ScheduledPushCampaign] payload: ' + payload.abbreviate(5000));
         HttpResponse response = FEC_CampaignApiCaller.sendCampaignData(payload);
-        if (response != null && response.getStatusCode() != FEC_Constants.HTTP_STATUS_OK
-            && response.getStatusCode() != FEC_Constants.HTTP_STATUS_CREATED) {
+        Integer statusCode = response != null ? response.getStatusCode() : null;
+        System.debug('>>> [ScheduledPushCampaign] response status: ' + statusCode);
+        if (response != null && statusCode != FEC_Constants.HTTP_STATUS_OK
+            && statusCode != FEC_Constants.HTTP_STATUS_CREATED) {
+            System.debug('>>> [ScheduledPushCampaign] callout error — status: ' + statusCode + ' | body: ' + response.getBody().abbreviate(2000));
             this.errorCount++;
             FEC_CampaignBatchLogger.logCalloutError(
                 this.batchLogId, 'FEC_ScheduledPushCampaignDataBatch',
-                response.getStatusCode(), response.getBody(), chunk.size()
+                statusCode, response.getBody(), chunk.size()
             );
         }
     }

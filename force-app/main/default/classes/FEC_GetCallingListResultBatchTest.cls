@@ -59,10 +59,7 @@ private class FEC_GetCallingListResultBatchTest {
     static void testInterfaceDeclaration() {
         FEC_GetCallingListResultBatch batch = new FEC_GetCallingListResultBatch();
 
-        Assert.isTrue(batch instanceof Database.Batchable<sObject>,
-            'Batch should implement Database.Batchable<sObject>');
-        Assert.isTrue(batch instanceof Database.Stateful,
-            'Batch should implement Database.Stateful');
+        // Batchable and Stateful are compile-time guaranteed — only check AllowsCallouts
         Assert.isFalse(batch instanceof Database.AllowsCallouts,
             'Batch should NOT implement Database.AllowsCallouts (Req 1.1, 1.2)');
     }

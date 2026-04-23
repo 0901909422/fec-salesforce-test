@@ -194,6 +194,36 @@ public with sharing class FEC_CampaignController {
         return jobId;
     }
 
+    @AuraEnabled
+    public static String pushExistingRecords(Id mappingId) {
+        if (mappingId == null) {
+            throw new AuraHandledException(System.Label.FEC_Please_Select_A_Campaign_Message);
+        }
+        FEC_CS_Campaign__c mappingRecord = new FEC_CS_Campaign__c(
+            Id = mappingId,
+            FEC_PushInstant__c = true
+        );
+        update mappingRecord;
+        FEC_PushExistingRecordsBatch batch = new FEC_PushExistingRecordsBatch(mappingId);
+        Id jobId = Database.executeBatch(batch, 2000);
+        return jobId;
+    }
+
+    @AuraEnabled
+    public static String pushCallbackRecords(Id mappingId) {
+        if (mappingId == null) {
+            throw new AuraHandledException(System.Label.FEC_Please_Select_A_Campaign_Message);
+        }
+        FEC_CS_Campaign__c mappingRecord = new FEC_CS_Campaign__c(
+            Id = mappingId,
+            FEC_PushInstant__c = true
+        );
+        update mappingRecord;
+        FEC_PushCallbackRecordsBatch batch = new FEC_PushCallbackRecordsBatch(mappingId);
+        Id jobId = Database.executeBatch(batch, 2000);
+        return jobId;
+    }
+
     // ─── Private Helpers ───────────────────────────────────────────
 
     private static String generateKey(Map<String, Object> row) {

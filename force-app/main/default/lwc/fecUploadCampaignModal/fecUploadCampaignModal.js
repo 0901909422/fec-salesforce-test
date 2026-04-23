@@ -67,7 +67,7 @@ export default class FecUploadCampaignModal extends LightningElement {
 
         // Auto column width based on header text length
         worksheet['!cols'] = CAMPAIGN_EXCEL_HEADERS.map(header => ({
-            wch: header.length + 4
+            wch: Math.max(header.length + 6, 18)
         }));
 
         // Style definitions
@@ -93,13 +93,9 @@ export default class FecUploadCampaignModal extends LightningElement {
         };
 
         // Merge header cells across 3 rows (row 0-2) for each column
-        worksheet['!merges'] = [];
+        // Single-row header with increased height — no merge to avoid impacting validation rules
+        worksheet['!rows'] = [{ hpt: 40 }];
         for (let col = 0; col < CAMPAIGN_EXCEL_HEADERS.length; col++) {
-            worksheet['!merges'].push({
-                s: { r: 0, c: col },
-                e: { r: 2, c: col }
-            });
-            // Style the header cell (row 0)
             const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
             if (worksheet[cellRef]) {
                 worksheet[cellRef].s = headerStyle;
@@ -107,15 +103,10 @@ export default class FecUploadCampaignModal extends LightningElement {
                     worksheet[cellRef].z = '@';
                 }
             }
-            // Style merged rows 1-2 with same header style
-            for (let row = 1; row <= 2; row++) {
-                const mergedRef = XLSX.utils.encode_cell({ r: row, c: col });
-                worksheet[mergedRef] = { v: '', t: 's', s: headerStyle };
-            }
         }
 
-        // Add borders for 40 empty data rows below header (starting from row 3)
-        for (let row = 3; row <= 42; row++) {
+        // Add borders for 40 empty data rows below header (starting from row 1)
+        for (let row = 1; row <= 40; row++) {
             for (let col = 0; col < CAMPAIGN_EXCEL_HEADERS.length; col++) {
                 const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
                 worksheet[cellRef] = { v: '', t: 's', s: emptyCellStyle };
@@ -125,8 +116,8 @@ export default class FecUploadCampaignModal extends LightningElement {
             }
         }
 
-        // Set range to include header (3 rows) + 40 empty rows
-        worksheet['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 42, c: CAMPAIGN_EXCEL_HEADERS.length - 1 } });
+        // Set range to include header (1 row) + 40 empty rows
+        worksheet['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 40, c: CAMPAIGN_EXCEL_HEADERS.length - 1 } });
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
@@ -186,14 +177,19 @@ export default class FecUploadCampaignModal extends LightningElement {
 
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+            // Filter out empty rows (rows with no meaningful values, only borders)
+            const filteredData = jsonData.filter(row => {
+                return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== '');
+            });
+
             // Empty data guard
-            if (jsonData.length === 0) {
+            if (filteredData.length === 0) {
                 this.showToast(FAIL_TITLE, lblEmptyFile, 'error');
                 this.isLoading = false;
                 return;
             }
 
-            this.sendDataToApex(jsonData);
+            this.sendDataToApex(filteredData);
         };
         reader.onerror = (error) => {
             this.isLoading = false;

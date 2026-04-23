@@ -8,6 +8,8 @@ import FEC_SHEETJS_STYLE from '@salesforce/resourceUrl/FEC_SheetJSStyle';
 import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
 import getInProgressSummary from '@salesforce/apex/FEC_CampaignController.getInProgressSummary';
 import pushRecords from '@salesforce/apex/FEC_CampaignController.pushRecords';
+import pushExistingRecords from '@salesforce/apex/FEC_CampaignController.pushExistingRecords';
+import pushCallbackRecords from '@salesforce/apex/FEC_CampaignController.pushCallbackRecords';
 import saveConfigurationDetails from '@salesforce/apex/FEC_CampaignController.saveConfigurationDetails';
 import unableToLoadRecordsMsg from '@salesforce/label/c.FEC_Unable_To_Load_Records_Message';
 import savedDataMsg from '@salesforce/label/c.FEC_Saved_Data';
@@ -56,6 +58,7 @@ export default class FecUploadCampaignData extends LightningElement {
     @track recordLifetime = null;
     @track isSaving = false;
     @track blnIsModalOpen = false;
+    @track blnIsPushModalOpen = false;
     @track inProgressCount = 0;
     @track inProgressData = [];
     @track mappingOptions = [];
@@ -178,10 +181,10 @@ export default class FecUploadCampaignData extends LightningElement {
 
             const XLSX = window.XLSX;
             const headers = CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
-            const HEADER_ROWS = 3;
+            const HEADER_ROWS = 1;
 
-            // Build data: row 0 = header, row 1-2 = empty (merged), row 3+ = data
-            const ws_data = [headers, [], []];
+            // Build data: row 0 = header, row 1+ = data
+            const ws_data = [headers];
 
             this.inProgressData.forEach(item => {
                 ws_data.push([
@@ -211,7 +214,7 @@ export default class FecUploadCampaignData extends LightningElement {
 
             // Auto column width
             worksheet['!cols'] = headers.map(header => ({
-                wch: header.length + 4
+                wch: Math.max(header.length + 6, 18)
             }));
 
             // Style definitions
@@ -236,23 +239,15 @@ export default class FecUploadCampaignData extends LightningElement {
                 }
             };
 
-            // Merge header cells across 3 rows for each column
-            worksheet['!merges'] = [];
+            // Single-row header with increased height — no merge to avoid impacting validation rules
+            worksheet['!rows'] = [{ hpt: 40 }];
             for (let col = 0; col < headers.length; col++) {
-                worksheet['!merges'].push({
-                    s: { r: 0, c: col },
-                    e: { r: 2, c: col }
-                });
                 const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
                 if (worksheet[cellRef]) {
                     worksheet[cellRef].s = headerStyle;
                     if (CAMPAIGN_STRING_COLUMNS.includes(col)) {
                         worksheet[cellRef].z = '@';
                     }
-                }
-                for (let row = 1; row <= 2; row++) {
-                    const mergedRef = XLSX.utils.encode_cell({ r: row, c: col });
-                    worksheet[mergedRef] = { v: '', t: 's', s: headerStyle };
                 }
             }
 
@@ -345,11 +340,26 @@ export default class FecUploadCampaignData extends LightningElement {
             this.showToast(FAIL_TITLE, selectACampaignMsg, 'error');
             return;
         }
-    
+        this.blnIsPushModalOpen = true;
+    }
+
+    closePushModal() {
+        this.blnIsPushModalOpen = false;
+    }
+
+    async handlePushComplete(event) {
+        this.blnIsPushModalOpen = false;
+        const recordType = event.detail.recordType;
+
         this.isLoading = true;
         try {
-            await pushRecords({ mappingId: this.selectedMappingId });
-            
+            if (recordType === 'fresh') {
+                await pushRecords({ mappingId: this.selectedMappingId });
+            } else if (recordType === 'existing') {
+                await pushExistingRecords({ mappingId: this.selectedMappingId });
+            } else if (recordType === 'callback') {
+                await pushCallbackRecords({ mappingId: this.selectedMappingId });
+            }
             this.showToast(SUCCESS_TITLE, notifyPushStartedMsg, 'success');
             await this.refreshInProgressDetails();
         } catch (error) {

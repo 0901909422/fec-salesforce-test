@@ -123,4 +123,65 @@ public with sharing class FEC_CampaignBatchService {
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
             'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null)';
     }
+
+    /**
+     * Builds the SOQL query for existing records push batch (FEC_PushExistingRecordsBatch).
+     * Selects all DTO-mapping fields from buildInstantPushQuery() plus FEC_InsertionDate__c
+     * and FEC_IsWithinLifetime__c.
+     * Filters: created before today, not resolved, not pending-callback, within lifetime,
+     * no callback requested, PushInstant enabled, InsertionDate null or before today.
+     * @return Complete SOQL query string for existing records push
+     */
+    public static String buildExistingRecordsPushQuery() {
+        return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
+            'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
+            'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
+            'FEC_DateTime1__c, FEC_DateTime2__c, FEC_DateTime3__c, ' +
+            'FEC_RecordId__c, FEC_RecordStatus__c, FEC_RecordLifetime__c, FEC_RecordCurrentLifetime__c, ' +
+            'FEC_MaxCallAttempt__c, FEC_CurrentCallAttempt__c, FEC_CampaignCallingList__c, FEC_SystemName__c, ' +
+            'CreatedDate, LastModifiedDate, CreatedBy.Name, LastModifiedBy.Name, ' +
+            'FEC_CS_Campaign__r.FEC_Campaign__r.FEC_CampaignId__c, ' +
+            'FEC_CS_Campaign__r.FEC_PushInstant__c, ' +
+            'FEC_InsertionDate__c, FEC_IsWithinLifetime__c ' +
+            'FROM FEC_DataCampaign__c ' +
+            'WHERE CreatedDate < :dtStart ' +
+            'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
+            'AND FEC_RecordStatus__c != \'Pending-callback\' ' +
+            'AND FEC_IsWithinLifetime__c = true ' +
+            'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null) ' +
+            'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
+            'AND (FEC_InsertionDate__c = null OR FEC_InsertionDate__c < :dtStart)';
+    }
+
+    /**
+     * Builds the SOQL query for callback records push batch (FEC_PushCallbackRecordsBatch).
+     * Selects all DTO-mapping fields from buildInstantPushQuery() plus FEC_InsertionDate__c,
+     * FEC_CallbackRequested__c, FEC_RecordCurrentLifetime__c, and FEC_RecordLifetime__c.
+     * Implements Pega filter (F2 OR F3) AND F4 AND F1 AND F6:
+     * InsertionDate today, (status not Resolved-Completed/Cancelled OR CallbackRequested = true),
+     * RecordCurrentLifetime <= RecordLifetime, PushInstant = true.
+     * @return Complete SOQL query string for callback records push
+     */
+    public static String buildCallbackRecordsPushQuery() {
+        return 'SELECT Id, FEC_AppId__c, FEC_AccountOrContractNumber__c, FEC_ProductLine__c, ' +
+            'FEC_Number1__c, FEC_Number2__c, FEC_Number3__c, FEC_Number4__c, FEC_Number5__c, ' +
+            'FEC_String1__c, FEC_String2__c, FEC_String3__c, FEC_String4__c, FEC_String5__c, ' +
+            'FEC_DateTime1__c, FEC_DateTime2__c, FEC_DateTime3__c, ' +
+            'FEC_RecordId__c, FEC_RecordStatus__c, FEC_RecordLifetime__c, FEC_RecordCurrentLifetime__c, ' +
+            'FEC_MaxCallAttempt__c, FEC_CurrentCallAttempt__c, FEC_CampaignCallingList__c, FEC_SystemName__c, ' +
+            'CreatedDate, LastModifiedDate, CreatedBy.Name, LastModifiedBy.Name, ' +
+            'FEC_CS_Campaign__r.FEC_Campaign__r.FEC_CampaignId__c, ' +
+            'FEC_CS_Campaign__r.FEC_PushInstant__c, ' +
+            'FEC_InsertionDate__c, FEC_CallbackRequested__c, ' +
+            'FEC_RecordCurrentLifetime__c, FEC_RecordLifetime__c ' +
+            'FROM FEC_DataCampaign__c ' +
+            'WHERE FEC_InsertionDate__c >= :dtStart AND FEC_InsertionDate__c <= :dtEnd ' +
+            'AND (' +
+                '(FEC_RecordStatus__c != \'Resolved-Completed\' ' +
+                'AND FEC_RecordStatus__c != \'Resolved-Cancelled\') ' +
+                'OR FEC_CallbackRequested__c = \'true\'' +
+            ') ' +
+            'AND FEC_RecordCurrentLifetime__c <= FEC_RecordLifetime__c ' +
+            'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true';
+    }
 }

@@ -12833,4 +12833,46 @@
         <shortDescription>Record Lifetime</shortDescription>
         <value>Record Lifetime</value>
     </labels>
+    <labels>
+        <fullName>FEC_Lbl_Push_Records_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Push Records Modal Title</shortDescription>
+        <value>Push Records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Type_Of_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type of Record Label</shortDescription>
+        <value>Type of Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Existing_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Existing Records Option</shortDescription>
+        <value>Existing records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Fresh_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fresh Records Option</shortDescription>
+        <value>Fresh records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Callback_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Call Back Records Option</shortDescription>
+        <value>Call back records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Complete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete Button</shortDescription>
+        <value>Complete</value>
+    </labels>
 </CustomLabels>

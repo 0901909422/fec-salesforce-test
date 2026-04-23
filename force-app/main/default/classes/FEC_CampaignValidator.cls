@@ -66,8 +66,7 @@ public with sharing class FEC_CampaignValidator {
 
         validateCampaignId(row, expectedCampaignCode, rowIndex, result);
         validateProductLine(row, rowIndex, result);
-        validateAppId(row, rowIndex, result);
-        validateAccountNumber(row, rowIndex, result);
+        validateAppIdOrAccountNumber(row, rowIndex, result);
         validateNumberFields(row, rowIndex, result);
 
         result.isValid = result.errors.isEmpty();
@@ -145,35 +144,25 @@ public with sharing class FEC_CampaignValidator {
         }
     }
 
-    private static void validateAppId(
+    private static void validateAppIdOrAccountNumber(
         Map<String, Object> row, Integer rowIndex, ValidationResult result
     ) {
         String appId = FEC_Util.toString(row.get('App ID'));
-        if (String.isBlank(appId)) {
+        String accNum = FEC_Util.toString(row.get('Account or Contract number'));
+
+        if (String.isBlank(appId) && String.isBlank(accNum)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'App ID\' - must not be blank'
+                'Row ' + (rowIndex + 1) + ': At least one of \'App ID\' or \'Account or Contract number\' must not be blank'
             );
             return;
         }
-        if (appId.length() > FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH) {
+        if (String.isNotBlank(appId) && appId.length() > FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH) {
             result.errors.add(
                 'Row ' + (rowIndex + 1) + ': Field \'App ID\' - '
                 + 'exceeds max length of ' + FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH + ' characters'
             );
         }
-    }
-
-    private static void validateAccountNumber(
-        Map<String, Object> row, Integer rowIndex, ValidationResult result
-    ) {
-        String accNum = FEC_Util.toString(row.get('Account or Contract number'));
-        if (String.isBlank(accNum)) {
-            result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'Account or Contract number\' - must not be blank'
-            );
-            return;
-        }
-        if (accNum.length() > FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH) {
+        if (String.isNotBlank(accNum) && accNum.length() > FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH) {
             result.errors.add(
                 'Row ' + (rowIndex + 1) + ': Field \'Account or Contract number\' - '
                 + 'exceeds max length of ' + FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH + ' characters'
