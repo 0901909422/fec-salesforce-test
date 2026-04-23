@@ -11,6 +11,10 @@
         <value xsi:type="xsd:string">/esb/cif/CIF_CardInfo</value>
     </values>
     <values>
+        <field>FEC_FromDate_Hard_Code__c</field>
+        <value xsi:type="xsd:date">2020-05-26</value>
+    </values>
+    <values>
         <field>FEC_Last_4_Digit_Hard_Code__c</field>
         <value xsi:nil="true"/>
     </values>
@@ -25,5 +29,9 @@
     <values>
         <field>FEC_SOAP_Action__c</field>
         <value xsi:type="xsd:string">http://fecredit.com.vn/CIF_CardInfo/GetCardFinancialTransactions</value>
+    </values>
+    <values>
+        <field>FEC_ToDate_Hard_Code__c</field>
+        <value xsi:type="xsd:date">2025-05-26</value>
     </values>
 </CustomMetadata>
