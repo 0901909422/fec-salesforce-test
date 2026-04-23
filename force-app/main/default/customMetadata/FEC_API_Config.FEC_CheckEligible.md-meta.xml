@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <label>CMS IPP Block WS</label>
+    <label>Check Eligible REST (National ID)</label>
     <protected>false</protected>
     <values>
         <field>FEC_Account_Number_Hard_Code__c</field>
@@ -8,7 +8,7 @@
     </values>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">/esb/cms/CMS_IPP_BlockWS</value>
+        <value xsi:type="xsd:string">/esb/cms/cust-eligible-rest</value>
     </values>
     <values>
         <field>FEC_FromDate_Hard_Code__c</field>

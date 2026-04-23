@@ -11,6 +11,9 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_GetDeals</members>
 		<members>FEC_GetDNBCalloutService</members>
+		<members>FEC_CheckEligibleCallout</members>
+		<members>FEC_CheckAccountEligibilityCallout</members>
+		<members>FEC_CheckEligibilityIPPCallout</members>
 		<members>FEC_Chathub</members>
 		<name>Apexclass</name>
 	</types>
@@ -20,6 +23,7 @@
 		<members>FEC_API_Config.FEC_Fetch_Collection_Data</members>
 		<members>FEC_API_Config.FEC_GetDeals</members>
 		<members>FEC_API_Config.FEC_Get_DNB</members>
+		<members>FEC_API_Config.FEC_CheckEligible</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
