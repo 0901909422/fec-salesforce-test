@@ -38,18 +38,20 @@ public without sharing class FEC_AssignmentController {
     }
 
     // =========================================================
-    // CASE FLOW (Route to)
+    // CASE FLOW
     // =========================================================
     private static void handleCaseRouting(List<FEC_Routing_Action_History__c> histories) {
 
         if (histories.isEmpty()) return;
 
         Map<Id, Case> caseMap = new Map<Id, Case>(
-            [SELECT Id, FEC_Team__c FROM Case WHERE Id IN :getCaseIds(histories)]
+            [SELECT Id, FEC_Team__c, FEC_Assignment_Count__c
+             FROM Case WHERE Id IN :getCaseIds(histories)]
         );
 
         Map<Id, FEC_Assignment__c> assignmentMap = new Map<Id, FEC_Assignment__c>(
-            [SELECT Id, FEC_Team__c FROM FEC_Assignment__c WHERE Id IN :getAssignmentIds(histories)]
+            [SELECT Id, FEC_Team__c FROM FEC_Assignment__c
+             WHERE Id IN :getAssignmentIds(histories)]
         );
 
         for (FEC_Routing_Action_History__c h : histories) {
@@ -63,12 +65,17 @@ public without sharing class FEC_AssignmentController {
 
             String team = getTeamFromOwner(h.FEC_Updated_User_Queue_ID__c);
 
+            if (c.FEC_Assignment_Count__c == 1) {
+                c.FEC_Team__c = null;
+            }
+
             addTeam(c, team);
-            addTeamToAssignment(a, team);
+
+            a.FEC_Team__c = team;
         }
 
-        update caseMap.values();
-        update assignmentMap.values();
+        if (!caseMap.isEmpty()) update caseMap.values();
+        if (!assignmentMap.isEmpty()) update assignmentMap.values();
     }
 
     // =========================================================
@@ -92,8 +99,8 @@ public without sharing class FEC_AssignmentController {
 
         Map<Id, List<FEC_Assignment__c>> caseAssignments = getAllAssignments(caseMap.keySet());
 
-        Map<Id, Case> caseUpdateMap = new Map<Id, Case>();
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
+        Map<Id, Case> caseUpdateMap = new Map<Id, Case>();
         List<FEC_Routing_Action_History__c> historiesToInsert = new List<FEC_Routing_Action_History__c>();
 
         for (FEC_Routing_Action_History__c h : histories) {
@@ -109,25 +116,31 @@ public without sharing class FEC_AssignmentController {
             String action = h.FEC_Routing_Action__c;
 
             // ===== ROUTE / TRANSFER / ESCALATE =====
-            if (action == FEC_ConstantCommon.CASE_ROUTING_ACTION || action == FEC_ConstantCommon.CASE_TRANSFER_ACTION || action == FEC_ConstantCommon.CASE_ESCALATE_ACTION) {
+            if (action == FEC_ConstantCommon.CASE_ROUTING_ACTION
+                || action == FEC_ConstantCommon.CASE_TRANSFER_ACTION
+                || action == FEC_ConstantCommon.CASE_ESCALATE_ACTION) {
 
                 String targetTeam = getTeamFromOwner(h.FEC_Updated_User_Queue_ID__c);
 
                 removeTeam(c, currentTeam);
                 addTeam(c, targetTeam);
 
-                assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = targetTeam));
+                assignmentsToUpdate.add(new FEC_Assignment__c(
+                    Id = current.Id,
+                    FEC_Team__c = targetTeam
+                ));
             }
 
             // ===== REVERT =====
             else if (action == FEC_ConstantCommon.CASE_REVERT_ACTION) {
 
-                String targetTeam = FEC_ConstantCommon.CASE_REVERTING_CREATOR;
-
                 removeTeam(c, currentTeam);
-                addTeam(c, targetTeam);
+                addTeam(c, FEC_ConstantCommon.CASE_REVERTING_CREATOR);
 
-                assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = targetTeam));
+                assignmentsToUpdate.add(new FEC_Assignment__c(
+                    Id = current.Id,
+                    FEC_Team__c = FEC_ConstantCommon.CASE_REVERTING_CREATOR
+                ));
             }
 
             // ===== UPDATE =====
@@ -140,7 +153,10 @@ public without sharing class FEC_AssignmentController {
                     removeTeam(c, currentTeam);
                     addTeam(c, targetTeam);
 
-                    assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = targetTeam));
+                    assignmentsToUpdate.add(new FEC_Assignment__c(
+                        Id = current.Id,
+                        FEC_Team__c = targetTeam
+                    ));
                 }
 
                 else {
@@ -150,10 +166,13 @@ public without sharing class FEC_AssignmentController {
                         c.FEC_Team__c = null;
                         c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER;
 
-                        assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = null));
+                        assignmentsToUpdate.add(new FEC_Assignment__c(
+                            Id = current.Id,
+                            FEC_Team__c = null
+                        ));
 
                         historiesToInsert.add(new FEC_Routing_Action_History__c(
-                            FEC_Routing_Action__c = FEC_ConstantCommon.CASE_STATUS_RESOLVED,
+                            FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
                             FEC_Routing_Action_Type__c = 'Case',
                             FEC_Case__c = c.Id
                         ));
@@ -163,20 +182,27 @@ public without sharing class FEC_AssignmentController {
                         removeTeam(c, currentTeam);
                         addTeam(c, FEC_ConstantCommon.TEAM_VALUE);
 
-                        assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = FEC_ConstantCommon.TEAM_VALUE));
+                        assignmentsToUpdate.add(new FEC_Assignment__c(
+                            Id = current.Id,
+                            FEC_Team__c = FEC_ConstantCommon.TEAM_VALUE
+                        ));
                     }
                 }
             }
 
             // ===== REJECT / RESOLVE =====
-            else if (action == FEC_ConstantCommon.CASE_REJECT_ACTION || action == FEC_ConstantCommon.CASE_RESOLVE_ACTION) {
+            else if (action == FEC_ConstantCommon.CASE_REJECT_ACTION
+                  || action == FEC_ConstantCommon.CASE_RESOLVE_ACTION) {
 
                 if (activeCount == 0) {
 
                     c.FEC_Team__c = null;
                     c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
 
-                    assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = null));
+                    assignmentsToUpdate.add(new FEC_Assignment__c(
+                        Id = current.Id,
+                        FEC_Team__c = null
+                    ));
 
                     historiesToInsert.add(new FEC_Routing_Action_History__c(
                         FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
@@ -188,7 +214,10 @@ public without sharing class FEC_AssignmentController {
 
                     removeTeam(c, currentTeam);
 
-                    assignmentsToUpdate.add(new FEC_Assignment__c(Id = current.Id, FEC_Team__c = null));
+                    assignmentsToUpdate.add(new FEC_Assignment__c(
+                        Id = current.Id,
+                        FEC_Team__c = null
+                    ));
                 }
             }
 
@@ -250,7 +279,8 @@ public without sharing class FEC_AssignmentController {
         if (listA == null) return 0;
 
         for (FEC_Assignment__c a : listA) {
-            if (a.Id != currentId && a.FEC_Assignment_Status__c != FEC_ConstantCommon.STATUS_COMPLETED) {
+            if (a.Id != currentId &&
+                a.FEC_Assignment_Status__c != FEC_ConstantCommon.STATUS_COMPLETED) {
                 count++;
             }
         }
@@ -261,34 +291,44 @@ public without sharing class FEC_AssignmentController {
         if (String.isBlank(ownerIdStr)) return null;
 
         Id ownerId = Id.valueOf(ownerIdStr);
+        Map<Id, String> teamMap =
+            FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(new Set<Id>{ownerId});
 
-        Map<Id, String> teamMap = FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(new Set<Id>{ownerId});
         return teamMap.get(ownerId);
     }
 
+    // ===== REMOVE TEAM =====
     private static void removeTeam(Case c, String team) {
         if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return;
 
         Set<String> setTeam = new Set<String>(c.FEC_Team__c.split('_'));
-        setTeam.remove(team);
 
-        c.FEC_Team__c = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
+        if (setTeam.contains(team)) {
+            setTeam.remove(team);
+        }
+
+        c.FEC_Team__c = setTeam.isEmpty()
+            ? null
+            : String.join(new List<String>(setTeam), '_');
     }
 
+    // ===== ADD TEAM =====
     private static void addTeam(Case c, String team) {
         if (String.isBlank(team)) return;
 
         Set<String> setTeam = new Set<String>();
+
         if (String.isNotBlank(c.FEC_Team__c)) {
             setTeam.addAll(c.FEC_Team__c.split('_'));
         }
 
-        setTeam.add(team);
-        c.FEC_Team__c = String.join(new List<String>(setTeam), '_');
-    }
+        if (!setTeam.contains(team)) {
+            setTeam.add(team);
+        }
 
-    private static void addTeamToAssignment(FEC_Assignment__c a, String team) {
-        a.FEC_Team__c = team;
+        c.FEC_Team__c = setTeam.isEmpty()
+            ? null
+            : String.join(new List<String>(setTeam), '_');
     }
 
     private static String mapDecisionToTeam(String decision) {
