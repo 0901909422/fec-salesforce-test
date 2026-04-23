@@ -175,8 +175,6 @@ export default class FecCustomerUpsertModal extends LightningElement {
             this.currentSelectedFile = event.target.files[0];
             this.fileName = this.currentSelectedFile.name;
             this.isUploadDisabled = false;
-            // Auto-upload khi chọn file
-            this.handleUpload();
         }
     }
 

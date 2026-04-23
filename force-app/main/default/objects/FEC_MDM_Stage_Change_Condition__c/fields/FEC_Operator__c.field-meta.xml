@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Operator__c</fullName>
-    <description>Comparison operator used to evaluate the condition (e.g. =, !=, >, >=, &lt;, &lt;=, IN, NOT IN, CONTAINS, STARTS WITH, ENDS WITH).</description>
-    <externalId>false</externalId>
+    <description>Comparison operator used to evaluate the condition (e.g. =, !=, &gt;, &gt;=, &lt;, &lt;=, IN, NOT IN, CONTAINS, STARTS WITH, ENDS WITH).</description>
     <label>Operator</label>
     <required>true</required>
     <trackHistory>true</trackHistory>

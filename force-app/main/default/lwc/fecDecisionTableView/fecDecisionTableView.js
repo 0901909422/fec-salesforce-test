@@ -7,8 +7,9 @@ import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
 
-import getBusinessProcessTree from '@salesforce/apex/FEC_DecisionTableController.getBusinessProcessTree';
+import getBusinessProcessTree from '@salesforce/apex/FEC_BusinessProcessService.getBusinessProcessTree';
 import getDynamicDecisionTable from '@salesforce/apex/FEC_DecisionTableController.getDynamicDecisionTable';
+import getDynamicDecisionTableFresh from '@salesforce/apex/FEC_DecisionTableController.getDynamicDecisionTableFresh';
 import saveDynamicRule from '@salesforce/apex/FEC_DecisionTableController.saveDynamicRule';
 import deleteDynamicRule from '@salesforce/apex/FEC_DecisionTableController.deleteDynamicRule';
 import addDynamicColumn from '@salesforce/apex/FEC_DecisionTableController.addDynamicColumn';
@@ -74,6 +75,37 @@ export default class FecDecisionTableView extends LightningElement {
 
     _wiredDynamicTable;
     _currentBPId = null;
+    _refreshCounter = 0;
+
+    /**
+     * Force full reload Decision Table — imperative call bypasses wire cache
+     */
+    refreshTable() {
+        if (!this._currentBPId) return;
+        this.isLoading = true;
+        getDynamicDecisionTableFresh({ businessProcessId: this._currentBPId })
+            .then(data => {
+                if (data) {
+                    const clonedConditionCols = (data.conditionCols || []).map(c => ({ ...c, cssClass: 'conditions-cell' }));
+                    const clonedActionCols = (data.actionCols || []).map(c => ({ ...c, cssClass: 'action-cell' }));
+                    const clonedRows = (data.rows || []).map(r => ({ ...r, cssClass: 'decision-row' }));
+                    this.dynamicData = {
+                        tableId: data.tableId,
+                        conditionCols: clonedConditionCols,
+                        actionCols: clonedActionCols,
+                        rows: clonedRows
+                    };
+                    this.originalRows = [...clonedRows];
+                    this.error = null;
+                }
+            })
+            .catch(err => {
+                this.error = err?.body?.message || err?.message || 'Error refreshing table';
+            })
+            .finally(() => {
+                this.isLoading = false;
+            });
+    }
 
     showLog(methodName, message) {
         console.log(`[${methodName}] ${message}`);
@@ -306,11 +338,12 @@ export default class FecDecisionTableView extends LightningElement {
         const selectedField = this.rawMdmFields.find(f => f.value === this.newMdmFieldId);
 
         if (selectedField) {
-            // Tự động điền Tên Cột bằng Label của Field
-            this.newColName = selectedField.label;
-            // Tự động map Loại Dữ Liệu
+            // Strip API name nếu label có format "Label (API_Name__c)"
+            let label = selectedField.label || '';
+            label = label.replace(/\s*\(.*?\)\s*$/, '').trim();
+            this.newColName = label;
             let mappedType = selectedField.dataType || 'Text';
-            if (mappedType === 'Picklist') mappedType = 'Text'; // Quy picklist về Text để dùng chung Input
+            if (mappedType === 'Picklist') mappedType = 'Text';
             this.newColDataType = mappedType;
         }
     }
@@ -322,7 +355,15 @@ export default class FecDecisionTableView extends LightningElement {
 
     submitAddColumn() {
         if (!this.newMdmFieldId) {
-            this.showToast('Lỗi', 'Vui lòng chọn một Trường dữ liệu (Field) từ danh sách', 'error');
+            this.showToast('Error', 'Please select a Field from the list', 'error');
+            return;
+        }
+
+        // Validate duplicate: check if field already exists as a column
+        const existingCols = [...(this.dynamicData.conditionCols || []), ...(this.dynamicData.actionCols || [])];
+        const isDuplicate = existingCols.some(c => c.label === this.newColName);
+        if (isDuplicate) {
+            this.showToast('Error', `Column "${this.newColName}" already exists. Please select a different field.`, 'error');
             return;
         }
 
@@ -334,14 +375,16 @@ export default class FecDecisionTableView extends LightningElement {
             colName: this.newColName,
             colType: this.newColType,
             dataType: this.newColDataType,
-            mdmFieldId: this.newMdmFieldId // Truyền ID này xuống Apex
+            mdmFieldId: this.newMdmFieldId
         }).then(() => {
-            this.showToast('Thành công', 'Đã thêm cột mới', 'success');
+            this.showToast('Success', 'Column added successfully', 'success');
             this.closeAddColModal();
             this.selectedColId = null;
-            return refreshApex(this._wiredDynamicTable);
+            this.selectedColType = null;
+            this.selectedRowId = null;
+            this.refreshTable();
         }).catch(err => {
-            this.showToast('Lỗi', err.body?.message || err.message, 'error');
+            this.showToast('Error', err.body?.message || err.message, 'error');
         }).finally(() => {
             this.isLoading = false;
         });
@@ -354,11 +397,11 @@ export default class FecDecisionTableView extends LightningElement {
         this.isLoading = true;
         deleteDynamicColumn({ colId: this.selectedColId })
             .then(() => {
-                this.showToast('Thành công', 'Đã xóa cột', 'success');
+                this.showToast('Success', 'Column deleted successfully', 'success');
                 this.selectedColId = null;
-                return refreshApex(this._wiredDynamicTable);
+                this.refreshTable(); return;
             }).catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message, 'error');
+                this.showToast('Error', err.body?.message || err.message, 'error');
             }).finally(() => {
                 this.isLoading = false;
             });
@@ -371,18 +414,19 @@ export default class FecDecisionTableView extends LightningElement {
     handleAddRowBelow() { this.callAddRowAPI('below'); }
 
     callAddRowAPI(position) {
-        // Cho phép thêm dòng kể cả khi không click chọn dòng nào
         this.isLoading = true;
         addDynamicRow({
             tableId: this.dynamicData.tableId,
-            targetRowId: this.selectedRowId, // Có thể null
+            targetRowId: this.selectedRowId,
             position: position || 'below'
         }).then(() => {
-            this.showToast('Thành công', 'Đã thêm dòng mới', 'success');
-            this.selectedRowId = null; // Clear selection
-            return refreshApex(this._wiredDynamicTable);
+            this.showToast('Success', 'Row added successfully', 'success');
+            this.selectedRowId = null;
+            this.selectedColId = null;
+            this.selectedColType = null;
+            this.refreshTable(); return;
         }).catch(err => {
-            this.showToast('Lỗi', err.body?.message || err.message, 'error');
+            this.showToast('Error', err.body?.message || err.message, 'error');
         }).finally(() => {
             this.isLoading = false;
         });
@@ -395,11 +439,11 @@ export default class FecDecisionTableView extends LightningElement {
         this.isLoading = true;
         deleteDynamicRule({ rowId: this.selectedRowId })
             .then(() => {
-                this.showToast('Thành công', 'Đã xóa dòng', 'success');
+                this.showToast('Success', 'Row deleted successfully', 'success');
                 this.selectedRowId = null;
-                return refreshApex(this._wiredDynamicTable);
+                this.refreshTable(); return;
             }).catch(err => {
-                this.showToast('Lỗi', err.body?.message || err.message, 'error');
+                this.showToast('Error', err.body?.message || err.message, 'error');
             }).finally(() => {
                 this.isLoading = false;
             });
@@ -459,12 +503,12 @@ export default class FecDecisionTableView extends LightningElement {
             cellDataMap: cellDataMap
         })
             .then(() => {
-                this.showToast('Thành công', 'Lưu Rule thành công!', 'success');
+                this.showToast('Success', 'Rule saved successfully', 'success');
                 this.handleCloseModal();
-                refreshApex(this._wiredDynamicTable);
+                this.refreshTable();
             })
             .catch(error => {
-                this.showToast('Lỗi', error.body ? error.body.message : error.message, 'error');
+                this.showToast('Error', error.body ? error.body.message : error.message, 'error');
             })
             .finally(() => {
                 this.isLoading = false;
@@ -478,11 +522,11 @@ export default class FecDecisionTableView extends LightningElement {
 
         deleteDynamicRule({ rowId: rowId })
             .then(() => {
-                this.showToast('Thành công', 'Đã xóa Rule', 'success');
-                refreshApex(this._wiredDynamicTable);
+                this.showToast('Success', 'Rule deleted successfully', 'success');
+                this.refreshTable();
             })
             .catch(error => {
-                this.showToast('Lỗi', error.body ? error.body.message : error.message, 'error');
+                this.showToast('Error', error.body ? error.body.message : error.message, 'error');
             })
             .finally(() => {
                 this.isLoading = false;
@@ -500,11 +544,13 @@ export default class FecDecisionTableView extends LightningElement {
     wiredMdmFields({ error, data }) {
         if (data) {
             this.rawMdmFields = data;
-            this.mdmFieldOptions = data.map(f => ({ label: f.label, value: f.value }));
+            this.mdmFieldOptions = data.map(f => ({
+                label: (f.label || '').replace(/\s*\(.*?\)\s*$/, '').trim(),
+                value: f.value
+            }));
         } else if (error) {
             this.mdmFieldOptions = [];
             this.rawMdmFields = [];
-            console.error('Lỗi tải danh sách MDM Fields:', error);
         }
     }
 }

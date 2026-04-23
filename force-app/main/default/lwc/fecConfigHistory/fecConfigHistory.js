@@ -33,21 +33,45 @@ export default class FecConfigHistory extends LightningElement {
             this.isLoading = false; // Tắt loading khi có data
             this.showLog('wiredHistory', 'RETURN: Success with ' + data.length + ' records');
         } else if (error) {
-            this.error = error.body.message;
+            this.error = error.body?.message || error.message;
             this.lstHistory = undefined;
             this.isLoading = false; // Tắt loading khi có lỗi
             this.showLog('wiredHistory', 'ERROR: ' + JSON.stringify(error));
         }
     }
 
-    // Expose hàm này ra ngoài cho Parent LWC gọi
+    /**
+     * Expose hàm này ra ngoài cho Parent LWC gọi.
+     * Thử refreshApex trước, nếu data không thay đổi thì retry sau 1s
+     * để đợi Salesforce History Tracking kịp commit async.
+     */
     @api
     refreshData() {
         this.showLog('refreshData', 'START');
-        // Đảm bảo không bị lỗi nếu context chưa sẵn sàng
         if (this.wiredHistoryResult) {
-            this.isLoading = true; // Bật loading lại mỗi khi refresh
-            return refreshApex(this.wiredHistoryResult);
+            this.isLoading = true;
+            const previousCount = this.lstHistory ? this.lstHistory.length : 0;
+
+            return refreshApex(this.wiredHistoryResult)
+                .then(() => {
+                    const currentCount = this.lstHistory ? this.lstHistory.length : 0;
+                    // Nếu data không thay đổi, retry sau 1s (History tracking có thể chưa commit)
+                    if (currentCount === previousCount) {
+                        this.showLog('refreshData', 'Data unchanged, retrying in 1s...');
+                        // eslint-disable-next-line @lwc/lwc/no-async-operation
+                        return new Promise((resolve) => {
+                            setTimeout(() => {
+                                refreshApex(this.wiredHistoryResult)
+                                    .then(resolve)
+                                    .catch(resolve);
+                            }, 1000);
+                        });
+                    }
+                    return Promise.resolve();
+                })
+                .catch((err) => {
+                    this.showLog('refreshData', 'ERROR: ' + JSON.stringify(err));
+                });
         }
         return Promise.resolve();
     }
