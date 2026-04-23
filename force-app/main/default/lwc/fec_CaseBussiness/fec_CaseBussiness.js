@@ -1181,10 +1181,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
           this.handleCheckProcessAction();
         }
-        // PhuongNT add check process action Card Block
-        if (this.business?.code === PROCESS_BLOCK_CARD) {
-          this.handleCheckProcessActionCardBlock();
-        }
 
         const actions = this.business.routingActionlst || [];
         const foundActions = [];
@@ -2451,7 +2447,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_UNBLOCK_CARD:
         params = {
           caseId: this.recordId,
-          blockCode: this.newBlockCode,
+          blockCode: this.currentBlockCode,
         };
         break;
 
@@ -3027,6 +3023,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         });
       });
     });
+    // PhuongNT add check process action Card Block
+    if (this.business?.code === PROCESS_BLOCK_CARD) {
+      this.handleCheckProcessActionCardBlock();
+    }
   }
 
   // PhuongNT add check process action Card Replacement
@@ -3050,6 +3050,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // PhuongNT add check process action Card Block
   handleCheckProcessActionCardBlock() {
+    if (this.currentCardStatus == 'Not Blocked' || !this.currentBlockCode || !this.newBlockCode) {
+      return;
+    }
     this.showProcessAction = false;
     this.isProcessActionInfo = false;
     this.isProcessActionFailed = false;
