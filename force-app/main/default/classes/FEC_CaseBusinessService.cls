@@ -735,10 +735,13 @@ public without sharing class FEC_CaseBusinessService {
           }
           Action act = new Action(
             item.FEC_Action_Button__c,
-            item.FEC_Action_Button__r.FEC_Code__c,
             String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
               ? item.FEC_Custom_Action_Button_Label__c
-              : item.FEC_Action_Button__r.Name
+              : item.FEC_Action_Button__r.FEC_Code__c,
+            String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+              ? item.FEC_Custom_Action_Button_Label__c
+              : item.FEC_Action_Button__r.Name,
+            item.FEC_Action_Button__r.FEC_Code__c
           );
           if (item.FEC_Field_Type__c == 'All') {
             result.routingActionlst.add(
@@ -3096,6 +3099,9 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String label;
 
+    @AuraEnabled
+    public String code;
+
     public Action() {
     }
 
@@ -3103,12 +3109,21 @@ public without sharing class FEC_CaseBusinessService {
     public Action(String value, String label) {
       this.value = value;
       this.label = label;
+      this.code = value;
     }
 
     public Action(String id, String value, String label) {
       this.id = id;
       this.value = value;
       this.label = label;
+      this.code = value;
+    }
+
+    public Action(String id, String value, String label, String code) {
+      this.id = id;
+      this.value = value;
+      this.label = label;
+      this.code = code;
     }
   }
 

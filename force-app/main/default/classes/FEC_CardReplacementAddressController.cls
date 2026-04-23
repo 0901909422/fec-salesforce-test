@@ -6,7 +6,7 @@ public with sharing class FEC_CardReplacementAddressController {
             return [
                 SELECT Id,
                     FEC_Address_Type__c,
-                    FEC_Address__c,
+                    FEC_Full_Address__c,
                     FEC_Mailing_Address__c
                 FROM FEC_Address_Info__c
                 WHERE FEC_Customer_History__c = :objCase.FEC_Account_or_Contract__c
@@ -14,6 +14,18 @@ public with sharing class FEC_CardReplacementAddressController {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    @AuraEnabled
+    public static String getProvinceId(String provinceCode) {
+        List<FEC_Province__c> provinces = [SELECT Id FROM FEC_Province__c WHERE FEC_Code__c = :provinceCode LIMIT 1];
+        return !provinces.isEmpty() ? provinces.get(0).Id : '';
+    }
+
+    @AuraEnabled
+    public static String getWardId(String wardCode) {
+        List<FEC_Ward__c> wards = [SELECT Id FROM FEC_Ward__c WHERE FEC_Code__c = :wardCode LIMIT 1];
+        return !wards.isEmpty() ? wards.get(0).Id : '';
     }
 
     @AuraEnabled

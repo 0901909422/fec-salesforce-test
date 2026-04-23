@@ -2,11 +2,10 @@ import { LightningElement, api, track } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getLinkedFilesForCase from "@salesforce/apex/FEC_CaseLinkedFilesController.getLinkedFilesForCase";
-import {
-  formatBytes,
-  formatShortDate,
-  extensionBadge
-} from "c/fec_CommonUtils";
+import { mapLinkedFileToTableRow } from "c/fec_CommonUtils";
+
+/** Số file tối đa hiển thị trên card; View All mở modal đủ bản ghi + bảng. */
+const PREVIEW_FILE_LIMIT = 5;
 
 export default class Fec_FileUploadCard extends NavigationMixin(
   LightningElement
@@ -35,6 +34,8 @@ export default class Fec_FileUploadCard extends NavigationMixin(
 
   @track serverFiles = [];
   @track isLoadingServerFiles = false;
+  /** Xem toàn bộ file trong modal — không phụ thuộc layout related list LEX (tránh lỗi Console/review). */
+  @track showAllFilesModal = false;
 
   files = [];
   isDragOver = false;
@@ -63,7 +64,11 @@ export default class Fec_FileUploadCard extends NavigationMixin(
   }
 
   get titleLabel() {
-    return `Files (${this.fileCount})`;
+    const n = this.fileCount;
+    if (this.hasRecordId && n > PREVIEW_FILE_LIMIT) {
+      return `Files (${n}+)`;
+    }
+    return `Files (${n})`;
   }
 
   get fileRows() {
@@ -78,19 +83,19 @@ export default class Fec_FileUploadCard extends NavigationMixin(
     return (this.serverFiles || []).length > 0;
   }
 
-  get serverFileRows() {
-    return (this.serverFiles || []).map((row) => {
-      const ext = row.fileExtension || "";
-      const title = row.title || row.contentDocumentId;
-      return {
-        id: row.linkId,
-        /** Link label like standard Files list (title without forcing .ext). */
-        linkLabel: title,
-        metaLine: `${formatShortDate(row.linkedCreatedDate)} • ${formatBytes(row.contentSize)}${ext ? ` • ${ext}` : ""}`,
-        contentDocumentId: row.contentDocumentId,
-        extBadge: extensionBadge(ext)
-      };
-    });
+  /** Trên card: tối đa 5 dòng, cùng layout bảng LEX (Title / Owner / Last Modified / Size). */
+  get previewTableRows() {
+    return (this.serverFiles || [])
+      .slice(0, PREVIEW_FILE_LIMIT)
+      .map((r) => mapLinkedFileToTableRow(r))
+      .filter(Boolean);
+  }
+
+  /** Modal View All: đủ bản ghi. */
+  get modalTableRows() {
+    return (this.serverFiles || [])
+      .map((r) => mapLinkedFileToTableRow(r))
+      .filter(Boolean);
   }
 
   get inputAccept() {
@@ -113,9 +118,7 @@ export default class Fec_FileUploadCard extends NavigationMixin(
   connectedCallback() {
     document.addEventListener("visibilitychange", this._visibilityHandler);
     window.addEventListener("focus", this._windowFocusHandler);
-    if (this._recordId) {
-      this.refreshFilesFromServer();
-    }
+    // recordId setter đã gọi refresh khi có giá trị — không gọi lại ở đây (tránh load đôi + nhấp spinner).
   }
 
   disconnectedCallback() {
@@ -153,7 +156,7 @@ export default class Fec_FileUploadCard extends NavigationMixin(
         return;
       }
       this._lastFocusDrivenRefreshAt = now;
-      this.refreshFilesFromServer();
+      this.refreshFilesFromServer({ suppressSpinner: true });
     }, 450);
   }
 
@@ -164,7 +167,7 @@ export default class Fec_FileUploadCard extends NavigationMixin(
     this._clearRefreshDebounce();
     this._refreshDebounceId = window.setTimeout(() => {
       this._refreshDebounceId = null;
-      this.refreshFilesFromServer();
+      this.refreshFilesFromServer({ suppressSpinner: true });
     }, 400);
   }
 
@@ -203,7 +206,7 @@ export default class Fec_FileUploadCard extends NavigationMixin(
         this._stopExternalEditorPolling();
         return;
       }
-      this.refreshFilesFromServer().then(() => {
+      this.refreshFilesFromServer({ suppressSpinner: true }).then(() => {
         if (!this._externalEditorPollId) {
           return;
         }
@@ -222,14 +225,20 @@ export default class Fec_FileUploadCard extends NavigationMixin(
     runTick();
   }
 
-  /** Gọi từ fec_CaseBussiness sau getData / submit để list file khớp server. */
+  /**
+   * Gọi từ fec_CaseBussiness sau getData / submit để list file khớp server.
+   * @param {{ suppressSpinner?: boolean }} [opts] — `suppressSpinner: true` khi poll/focus/visibility để tránh nhấp toàn card.
+   */
   @api
-  refreshFilesFromServer() {
+  refreshFilesFromServer(opts) {
     if (!this._recordId) {
       this.serverFiles = [];
       return Promise.resolve();
     }
-    this.isLoadingServerFiles = true;
+    const suppressSpinner = opts && opts.suppressSpinner === true;
+    if (!suppressSpinner) {
+      this.isLoadingServerFiles = true;
+    }
     return getLinkedFilesForCase({ caseId: this._recordId })
       .then((rows) => {
         this.serverFiles = Array.isArray(rows) ? rows : [];
@@ -247,12 +256,14 @@ export default class Fec_FileUploadCard extends NavigationMixin(
         this.serverFiles = [];
       })
       .finally(() => {
-        this.isLoadingServerFiles = false;
+        if (!suppressSpinner) {
+          this.isLoadingServerFiles = false;
+        }
       });
   }
 
   handleUploadFinished() {
-    this.refreshFilesFromServer().then(() => {
+    this.refreshFilesFromServer({ suppressSpinner: true }).then(() => {
       this.dispatchEvent(
         new CustomEvent("filesrefreshed", {
           bubbles: true,
@@ -276,8 +287,7 @@ export default class Fec_FileUploadCard extends NavigationMixin(
     );
   }
 
-  handleOpenServerFile(event) {
-    const docId = event.currentTarget?.dataset?.docid;
+  _openServerFileById(docId) {
     if (!docId) {
       return;
     }
@@ -294,20 +304,37 @@ export default class Fec_FileUploadCard extends NavigationMixin(
     this._startExternalEditorPolling();
   }
 
+  handleOpenServerFile(event) {
+    const docId = event.currentTarget?.dataset?.docid;
+    this._openServerFileById(docId);
+  }
+
+  handleModalFileMenuSelect(event) {
+    if (event.detail.value !== "open") {
+      return;
+    }
+    const docId = event.currentTarget?.dataset?.docid;
+    this._openServerFileById(docId);
+  }
+
   handleViewAllFiles() {
     if (!this._recordId) {
       return;
     }
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordRelationshipPage",
-      attributes: {
-        recordId: this._recordId,
-        objectApiName: "Case",
-        relationshipApiName: "ContentDocumentLinks",
-        actionName: "view"
-      }
-    });
-    this._startExternalEditorPolling();
+    this.showAllFilesModal = true;
+    this.refreshFilesFromServer({ suppressSpinner: true });
+  }
+
+  closeAllFilesModal() {
+    this.showAllFilesModal = false;
+  }
+
+  handleAllFilesOverlayClick() {
+    this.closeAllFilesModal();
+  }
+
+  handleAllFilesPanelClick(event) {
+    event.stopPropagation();
   }
 
   /* --- Local-only mode (no Case Id): giữ hành vi cũ --- */
