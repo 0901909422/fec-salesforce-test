@@ -4,6 +4,7 @@
         <div slot="actions">
             <lightning-button label={label.addNew} variant="success" class="slds-m-left_x-small" onclick={handleAddNew}></lightning-button>
             <lightning-button label={label.reload} variant="success" class="slds-m-left_x-small" onclick={handleReload}></lightning-button>
+            <lightning-button label={label.processNow} variant="brand" class="slds-m-left_x-small" onclick={handleProcessNow}></lightning-button>
         </div>
 
         <div class="slds-p-around_medium">
@@ -19,6 +20,7 @@
                         hide-checkbox-column="true"
                         table-data={uploadedData}
                         columns={columnsPending}
+                        page-size="10"
                         onrowaction={handleUploadedRowAction}>
                     </c-fec-custom-datatable>
                 </template>
@@ -37,6 +39,7 @@
                         hide-checkbox-column="true"
                         table-data={processedData}
                         columns={columnsProcessed}
+                        page-size="10"
                         onrowaction={handleProcessedRowAction}>
                     </c-fec-custom-datatable>
                 </template>

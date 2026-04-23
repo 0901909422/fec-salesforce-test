@@ -20,11 +20,7 @@ public with sharing class FEC_CustomerAdditionalHistoryHandler {
             history.FEC_StartDate__c = config.FEC_StartDate__c;
             history.FEC_EndDate__c = config.FEC_EndDate__c;
 
-            if (isUpdate && config.FEC_Status__c == 'Uploaded') {
-                history.FEC_Status__c = 'Reuploaded';
-            } else {
-                history.FEC_Status__c = config.FEC_Status__c;
-            }
+            history.FEC_Status__c = config.FEC_Status__c;
 
             historyRecords.add(history);
         }

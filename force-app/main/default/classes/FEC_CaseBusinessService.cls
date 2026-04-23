@@ -735,10 +735,13 @@ public without sharing class FEC_CaseBusinessService {
           }
           Action act = new Action(
             item.FEC_Action_Button__c,
-            item.FEC_Action_Button__r.FEC_Code__c,
             String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
               ? item.FEC_Custom_Action_Button_Label__c
-              : item.FEC_Action_Button__r.Name
+              : item.FEC_Action_Button__r.FEC_Code__c,
+            String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+              ? item.FEC_Custom_Action_Button_Label__c
+              : item.FEC_Action_Button__r.Name,
+            item.FEC_Action_Button__r.FEC_Code__c
           );
           if (item.FEC_Field_Type__c == 'All') {
             result.routingActionlst.add(
@@ -1215,6 +1218,8 @@ public without sharing class FEC_CaseBusinessService {
         finalStatusBeforeSubmit = c.FEC_Final_Status__c;
       }
 
+      String blockCode = (String)params.get('blockCode');
+
       switch on selectedMethod {
         when ROUTE_TO {
           String queueId = (String) params.get('queueId');
@@ -1312,10 +1317,10 @@ public without sharing class FEC_CaseBusinessService {
           System.debug(OC_001);
         }
         when BLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', BLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'B', blockCode, BLOCK_CARD);
         }
         when UNBLOCK_CARD {
-          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', UNBLOCK_CARD);
+          return FEC_CardLockUnLockController.lockUnblockCard(caseId, 'U', blockCode, UNBLOCK_CARD);
         }
         when PIN_REISSUE {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
@@ -3094,6 +3099,9 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String label;
 
+    @AuraEnabled
+    public String code;
+
     public Action() {
     }
 
@@ -3101,12 +3109,21 @@ public without sharing class FEC_CaseBusinessService {
     public Action(String value, String label) {
       this.value = value;
       this.label = label;
+      this.code = value;
     }
 
     public Action(String id, String value, String label) {
       this.id = id;
       this.value = value;
       this.label = label;
+      this.code = value;
+    }
+
+    public Action(String id, String value, String label, String code) {
+      this.id = id;
+      this.value = value;
+      this.label = label;
+      this.code = code;
     }
   }
 

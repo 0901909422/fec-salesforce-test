@@ -25,17 +25,32 @@ public with sharing class FEC_GetUnbilledTransactions {
  
             validateRequest(transID, requestorId, dateTimeStr, accountNumber);
             
+            // ================= CONFIG =================
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
+
+            // =====================================================
+            // ENV OVERRIDE 
+            // =====================================================
+            String accountNumberParam;
+
+            if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+                && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+
+                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+
+            } else {
+                accountNumberParam = accountNumber;
+            }
+            
             // ================= SOAP REQUEST BODY =================
             String soapBody = buildSoapBody(
                 transId, 
                 requestorId, 
                 dateTimeStr, 
-                accountNumber
+                accountNumberParam
                 );
             
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Unbilled_Transaction');
- 
             String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);

@@ -114,6 +114,11 @@
 		<members>FEC_CardInfoController</members>
 		<members>FEC_GetCardSecInfo</members>
 		<members>FEC_IPPController</members>
+		<members>FEC_CaseLinkedFilesController</members>
+		<members>FEC_ContentDocumentLinkService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -191,6 +196,7 @@
 		<members>fecInteractionCreationHighlight</members>
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
+		<members>fec_FileUploadCard</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -215,6 +221,7 @@
 		<members>FEC_Notification__c-Notifications Layout</members>
 		<members>ServiceResourceSkill-Service Resource Skill Layout</members>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
 	<types>
@@ -482,6 +489,8 @@
         <members>FEC_Email_Discard_Msg</members>
         <members>FEC_Email_Btn_Discard</members>
         <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -689,6 +698,8 @@
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
 		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -878,11 +889,13 @@
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
 		<members>ServiceResourceSkill-en_US</members>
 		<members>FEC_Additional_Info__c-en_US</members>
+		<members>Case-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
@@ -943,9 +956,9 @@
 
 	<types>
 		<members>FEC_PinReset</members>
-		<members>FEC_Case_Notification</members>
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
+		<members>FEC_ProcessAction</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>

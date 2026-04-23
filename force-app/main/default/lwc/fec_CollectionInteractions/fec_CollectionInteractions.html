@@ -1,0 +1,63 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <template if:true={isLoading}>
+            <div class="ci-spinner">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Cùng khung slds-accordion cho lỗi và có dữ liệu — tránh lệch so với lightning-accordion -->
+            <template if:true={showErrorBanner}>
+                <div class="slds-accordion">
+                    <section class="slds-accordion__section slds-is-open">
+                        <div class="slds-accordion__summary">
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name="utility:chevrondown"
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>
+                                        {sectionTitleText}&nbsp;-&nbsp;
+                                        <span class="ci-sync-fail">{labelMsgApiError}</span>
+                                    </span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content slds-hide"></div>
+                    </section>
+                </div>
+            </template>
+
+            <template if:true={showDataSection}>
+                <div class="slds-accordion">
+                    <section class="slds-accordion__section slds-is-open">
+                        <div class="slds-accordion__summary">
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name="utility:chevrondown"
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>{sectionTitleText}</span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content">
+                            <c-fec_-related-list-paging
+                                records={recordsForTable}
+                                columns={columns}
+                                default-sorted-by="InteractedDate"
+                                default-sort-direction="desc"
+                                sorted-by-description={sortedByDescription}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </section>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>
