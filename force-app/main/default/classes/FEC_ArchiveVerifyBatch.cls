@@ -25,18 +25,21 @@ public class FEC_ArchiveVerifyBatch
     private Integer totalError   = 0;
 
     public static final Integer DEFAULT_BATCH_SIZE = 100;
-
-    private static final String QUERY =
-        'SELECT Id, CaseNumber, FEC_ID_Search__c ' +
-        'FROM Case ' +
-        'WHERE FEC_Archive_Status__c = \'Processing\' ' +   
-        'AND (FEC_Attachment_Status__c = \'Completed\' OR FEC_Attachment_Status__c = NULL) ' +
-        'AND Status = \'Closed\' AND ClosedDate <= LAST_N_DAYS:30 ' +
-        'ORDER BY FEC_Archive_Sent_At__c ASC';
+    private static final Integer CLOSED_DAYS_THRESHOLD = 90;
 
     public Database.QueryLocator start(Database.BatchableContext bc) {
-        System.debug('[FEC_ArchiveVerifyBatch] start() jobId=' + bc.getJobId());
-        return Database.getQueryLocator(QUERY);
+        Datetime threshold = System.now().addDays(-CLOSED_DAYS_THRESHOLD);
+        System.debug('[FEC_ArchiveVerifyBatch] start() jobId=' + bc.getJobId()
+            + ', threshold: ' + threshold);
+        return Database.getQueryLocator([
+            SELECT Id, CaseNumber, FEC_ID_Search__c
+            FROM Case
+            WHERE FEC_Archive_Status__c = 'Processing'
+            AND (FEC_Attachment_Status__c = 'Completed' OR FEC_Attachment_Status__c = NULL)
+            AND Status = 'Closed'
+            AND ClosedDate <= :threshold
+            ORDER BY FEC_Archive_Sent_At__c ASC
+        ]);
     }
 
     public void execute(Database.BatchableContext bc, List<SObject> scope) {
