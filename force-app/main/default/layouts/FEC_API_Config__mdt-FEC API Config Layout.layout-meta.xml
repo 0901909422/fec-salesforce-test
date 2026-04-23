@@ -38,6 +38,14 @@
                 <behavior>Edit</behavior>
                 <field>FEC_Mobile_Hard_Code__c</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>FEC_FromDate_Hard_Code__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>FEC_ToDate_Hard_Code__c</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
