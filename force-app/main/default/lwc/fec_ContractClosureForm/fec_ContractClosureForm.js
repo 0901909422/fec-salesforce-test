@@ -531,13 +531,38 @@ export default class Fec_ContractClosureForm extends LightningElement {
         }
         this.tempAddressRecordId = tempRow.id;
         this.temporaryAddressDisplay = tempRow.address || STR_EMPTY;
-        this.lastTempAddressParts = this.parseTemporaryAddressDisplay(tempRow.address);
+        this.lastTempAddressParts =
+            this.resolveTemporaryAddressPartsFromRow(tempRow) ||
+            this.parseTemporaryAddressDisplay(tempRow.address);
         this.disableAddTempAddress = true;
         if (this.pendingSelectTemporaryAddress === true || !this.selectedAddressRowId) {
             this.selectedAddressRowId = tempRow.id;
             this.addrRenderKey++;
         }
         this.pendingSelectTemporaryAddress = false;
+    }
+
+    resolveTemporaryAddressPartsFromRow(row) {
+        if (!row) {
+            return undefined;
+        }
+        const building = (row.building || STR_EMPTY).trim();
+        const streetNumber = (row.streetNumber || STR_EMPTY).trim();
+        const street = (row.street || STR_EMPTY).trim();
+        const wardLabel = (row.wardLabel || STR_EMPTY).trim();
+        const provinceLabel = (row.provinceLabel || STR_EMPTY).trim();
+        if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
+            return undefined;
+        }
+        return {
+            building: building,
+            streetNumber: streetNumber,
+            street: street,
+            wardRecordId: row.wardRecordId || wardLabel,
+            provinceRecordId: row.provinceRecordId || provinceLabel,
+            wardLabel: wardLabel,
+            provinceLabel: provinceLabel
+        };
     }
 
     parseTemporaryAddressDisplay(line) {

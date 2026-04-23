@@ -52,6 +52,13 @@ public without sharing class FEC_ContractClosureController {
         @AuraEnabled public String addressType;
         @AuraEnabled public String address;
         @AuraEnabled public String mailingAddressLabel;
+        @AuraEnabled public String building;
+        @AuraEnabled public String streetNumber;
+        @AuraEnabled public String street;
+        @AuraEnabled public String wardRecordId;
+        @AuraEnabled public String provinceRecordId;
+        @AuraEnabled public String wardLabel;
+        @AuraEnabled public String provinceLabel;
     }
 
     public class InitDataDTO {
@@ -173,7 +180,10 @@ public without sharing class FEC_ContractClosureController {
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
                 ) {
                     for (FEC_Address_Info__c a : [
-                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c
+                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c,
+                            FEC_Building__c, FEC_Number__c, FEC_Street__c,
+                            FEC_District__c, FEC_District__r.FEC_Name_VN__c, FEC_Ward_Text__c,
+                            FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c
                         FROM FEC_Address_Info__c
                         WHERE FEC_Customer_History__c = :histId
                         ORDER BY FEC_Address_Type__c
@@ -181,10 +191,32 @@ public without sharing class FEC_ContractClosureController {
                         AddressRowDTO row = new AddressRowDTO();
                         row.id = a.Id;
                         row.addressType = a.FEC_Address_Type__c;
-                        row.address = a.FEC_Full_Address__c;
+                        String wardLabel = String.isNotBlank(a.FEC_Ward_Text__c)
+                            ? a.FEC_Ward_Text__c
+                            : (a.FEC_District__r == null ? null : a.FEC_District__r.FEC_Name_VN__c);
+                        String provinceLabel = String.isNotBlank(a.FEC_Province_Text__c)
+                            ? a.FEC_Province_Text__c
+                            : (a.FEC_Province__r == null ? null : a.FEC_Province__r.FEC_Name_VN__c);
+                        String temporaryLine = buildAddressLineFromComponents(
+                            a.FEC_Building__c,
+                            a.FEC_Number__c,
+                            a.FEC_Street__c,
+                            wardLabel,
+                            provinceLabel
+                        );
+                        row.address = a.FEC_Address_Type__c == FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY
+                            ? (String.isNotBlank(temporaryLine) ? temporaryLine : a.FEC_Full_Address__c)
+                            : a.FEC_Full_Address__c;
                         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
                             ? FEC_ConstantCommon.STR_EMPTY
                             : String.valueOf(a.FEC_Mailing_Address__c);
+                        row.building = a.FEC_Building__c;
+                        row.streetNumber = a.FEC_Number__c;
+                        row.street = a.FEC_Street__c;
+                        row.wardRecordId = a.FEC_District__c == null ? null : String.valueOf(a.FEC_District__c);
+                        row.provinceRecordId = a.FEC_Province__c == null ? null : String.valueOf(a.FEC_Province__c);
+                        row.wardLabel = wardLabel;
+                        row.provinceLabel = provinceLabel;
                         out.addresses.add(row);
                     }
                 }
@@ -450,6 +482,34 @@ public without sharing class FEC_ContractClosureController {
         );
     }
 
+    private static String buildAddressLineFromComponents(
+        String building,
+        String streetNumber,
+        String street,
+        String wardLabel,
+        String provinceLabel
+    ) {
+        if (
+            String.isBlank(building) ||
+            String.isBlank(streetNumber) ||
+            String.isBlank(street) ||
+            String.isBlank(wardLabel) ||
+            String.isBlank(provinceLabel)
+        ) {
+            return null;
+        }
+        return String.join(
+            new List<String>{
+                building.trim(),
+                streetNumber.trim(),
+                street.trim(),
+                wardLabel.trim(),
+                provinceLabel.trim()
+            },
+            ', '
+        );
+    }
+
     private static Id updateExistingTemporaryAddress(Id rowId, Id caseId, Id histId, String line, TempAddressPartsDTO t) {
         if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
             throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
@@ -486,18 +546,16 @@ public without sharing class FEC_ContractClosureController {
         }
         if (forInsert) {
             putIfCreateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfCreateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfCreateable(addr, 'FEC_Number__c', t.streetNumber.trim());
             putIfCreateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfCreateable(addr, 'FEC_Temporary_Address__c', line);
+            putIfCreateable(addr, 'FEC_Full_Address__c', line);
             putIfCreateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfCreateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         } else {
             putIfUpdateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfUpdateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfUpdateable(addr, 'FEC_Number__c', t.streetNumber.trim());
             putIfUpdateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfUpdateable(addr, 'FEC_Temporary_Address__c', line);
+            putIfUpdateable(addr, 'FEC_Full_Address__c', line);
             putIfUpdateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfUpdateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         }
@@ -514,10 +572,8 @@ public without sharing class FEC_ContractClosureController {
         if (String.isNotBlank(t.provinceRecordId)) {
             try {
                 if (forInsert) {
-                    putIfCreateable(addr, 'FEC_Province_City__c', (Id) t.provinceRecordId);
                     putIfCreateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
                 } else {
-                    putIfUpdateable(addr, 'FEC_Province_City__c', (Id) t.provinceRecordId);
                     putIfUpdateable(addr, 'FEC_Province__c', (Id) t.provinceRecordId);
                 }
             } catch (Exception ignore) {
