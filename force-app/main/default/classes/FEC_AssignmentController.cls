@@ -30,10 +30,7 @@ public without sharing class FEC_AssignmentController {
             }
         }
 
-        // ===== HANDLE CASE FLOW =====
         handleCaseRouting(caseHistories);
-
-        // ===== HANDLE ASSIGNMENT FLOW =====
         handleAssignmentRouting(assignmentHistories);
     }
 
@@ -134,43 +131,65 @@ public without sharing class FEC_AssignmentController {
             // ===== REVERT =====
             else if (action == FEC_ConstantCommon.CASE_REVERT_ACTION) {
 
-                removeTeam(c, currentTeam);
-                addTeam(c, FEC_ConstantCommon.CASE_REVERTING_CREATOR);
+            String targetTeam = FEC_ConstantCommon.CASE_REVERTING_CREATOR;
 
-                assignmentsToUpdate.add(new FEC_Assignment__c(
-                    Id = current.Id,
-                    FEC_Team__c = FEC_ConstantCommon.CASE_REVERTING_CREATOR
-                ));
+            removeTeam(c, currentTeam);
+
+            if (!isTeamExist(c, targetTeam)) {
+                addTeam(c, targetTeam);
             }
+
+            assignmentsToUpdate.add(new FEC_Assignment__c(
+                Id = current.Id,
+                FEC_Team__c = targetTeam
+            ));
+        }
 
             // ===== UPDATE =====
             else if (action == FEC_ConstantCommon.CASE_UPDATE_VALUE && h.FEC_Decision__c != null) {
 
-                if (h.FEC_Decision__c != FEC_ConstantCommon.CASE_DECISION_VALUE) {
+                String decision = h.FEC_Decision__c;
 
-                    String targetTeam = mapDecisionToTeam(h.FEC_Decision__c);
+                // =========================
+                // TH1: KHÁC Cannot Contact Customer
+                // =========================
+                if (decision != FEC_ConstantCommon.CASE_DECISION_VALUE) {
 
+                    String targetTeam = mapDecisionToTeam(decision);
+
+                    // a. remove team hiện tại
                     removeTeam(c, currentTeam);
-                    addTeam(c, targetTeam);
 
+                    // b. update Assignment
                     assignmentsToUpdate.add(new FEC_Assignment__c(
                         Id = current.Id,
                         FEC_Team__c = targetTeam
                     ));
+
+                    // c. add vào Case nếu chưa tồn tại
+                    if (!isTeamExist(c, targetTeam)) {
+                        addTeam(c, targetTeam);
+                    }
                 }
 
+                // =========================
+                // TH2: Cannot Contact Customer
+                // =========================
                 else {
 
                     if (activeCount == 0) {
 
+                        // a. clear Case
                         c.FEC_Team__c = null;
                         c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER;
 
+                        // b. clear Assignment
                         assignmentsToUpdate.add(new FEC_Assignment__c(
                             Id = current.Id,
                             FEC_Team__c = null
                         ));
 
+                        // c. tạo history
                         historiesToInsert.add(new FEC_Routing_Action_History__c(
                             FEC_Routing_Action__c = FEC_ConstantCommon.CASE_RESOLVE_ACTION,
                             FEC_Routing_Action_Type__c = 'Case',
@@ -179,12 +198,20 @@ public without sharing class FEC_AssignmentController {
                     }
                     else {
 
-                        removeTeam(c, currentTeam);
-                        addTeam(c, FEC_ConstantCommon.TEAM_VALUE);
+                        String targetTeam = FEC_ConstantCommon.TEAM_VALUE;
 
+                        // a. remove team hiện tại
+                        removeTeam(c, currentTeam);
+
+                        // b. add nếu chưa có
+                        if (!isTeamExist(c, targetTeam)) {
+                            addTeam(c, targetTeam);
+                        }
+
+                        // c. update Assignment
                         assignmentsToUpdate.add(new FEC_Assignment__c(
                             Id = current.Id,
-                            FEC_Team__c = FEC_ConstantCommon.TEAM_VALUE
+                            FEC_Team__c = targetTeam
                         ));
                     }
                 }
@@ -331,7 +358,36 @@ public without sharing class FEC_AssignmentController {
             : String.join(new List<String>(setTeam), '_');
     }
 
+    private static Boolean isTeamExist(Case c, String team) {
+        if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return false;
+
+        Set<String> setTeam = new Set<String>(c.FEC_Team__c.split('_'));
+        return setTeam.contains(team);
+    }
+
     private static String mapDecisionToTeam(String decision) {
-        return decision;
+
+        Map<String, String> mapDecision = new Map<String, String>{
+            'Pending CS' => 'CSInternal',
+            'Pending Customer' => 'Customer',
+            'Pending Card Ops' => 'CardOpsOutOfSystem',
+            'Pending Collections' => 'CollectionsOutOfSystem',
+            'Pending Contract Processing' => 'CPOutOfSystem',
+            'Pending Credit Assessment' => 'CAOutOfSystem',
+            'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+            'Pending Telesales' => 'TelesalesOutOfSystem',
+            'Pending IT' => 'ITOutOfSystem',
+            'Pending Payment' => 'PaymentOutOfSystem',
+            'Pending Product' => 'PBDOutOfSystem',
+            'Pending RCP&A' => 'RCPAOutOfSystem',
+            'Pending Security' => 'SecurityOutOfSystem',
+            'Pending Vendor' => 'VendorOutOfSystem',
+            'Out Of Process' => 'OutOfProcess',
+            'CIC Related' => 'CICRelated',
+            'Document Preparation' => 'DocumentPreparation',
+            'Task Under Review' => 'TaskUnderReview'
+        };
+
+        return mapDecision.get(decision);
     }
 }
