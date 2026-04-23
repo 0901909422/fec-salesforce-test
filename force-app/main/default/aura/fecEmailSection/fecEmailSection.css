@@ -802,3 +802,57 @@
     white-space: normal !important;
     vertical-align: top;
 }
+
+/* tungnm37 thêm: Discard confirmation popup */
+.THIS .fec-discard-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,.5);
+    z-index: 9999;
+}
+.THIS .fec-discard-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 28px 24px;
+    width: 420px;
+    max-width: 92vw;
+    box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    z-index: 10000;
+    text-align: center;
+}
+.THIS .fec-discard-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #706e6b;
+    line-height: 1;
+}
+.THIS .fec-discard-close:hover { color: #333; }
+.THIS .fec-discard-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #16325c;
+    margin-bottom: 12px;
+}
+.THIS .fec-discard-msg {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+.THIS .fec-discard-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid #e5e5e5;
+    padding-top: 16px;
+}
