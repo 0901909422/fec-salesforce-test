@@ -197,6 +197,119 @@ public with sharing class FEC_UpdateCustomerAddress {
     return updateCustomerAddress(info);
   }
 
+  public static UpdateResult updateValue(
+    String caseId,
+    Map<String, String> params,
+    String method
+  ) {
+    if (String.isBlank(caseId)) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
+      );
+    }
+    List<Case> caselst = [
+      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name,
+             FEC_Updated_Info_Permanent_Address__c,
+             FEC_Updated_Info_Office_Address__c,
+             FEC_Updated_Info_Current_Address__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty()) {
+      throw new FEC_APIServiceException(
+        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case Id' })
+      );
+    }
+
+    Case selectedCase = caselst[0];
+    Map<String, String> pendingFieldBySfType = new Map<String, String>{
+      'Permanent Address' => selectedCase.FEC_Updated_Info_Permanent_Address__c,
+      'Office Address'    => selectedCase.FEC_Updated_Info_Office_Address__c,
+      'Current Address'   => selectedCase.FEC_Updated_Info_Current_Address__c
+    };
+
+    UpdateResult result;
+    for (String sfType : new List<String>{ 'Permanent Address', 'Office Address', 'Current Address' }) {
+      String pendingJson = pendingFieldBySfType.get(sfType);
+      if (String.isBlank(pendingJson)) {
+        continue;
+      }
+      try {
+        Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
+        result = updateCustomerAddressParams(
+          caseId,
+          sfType,
+          (String) data.get('cifNumber'),
+          (String) data.get('addressId'),
+          (String) data.get('addressType'),
+          (String) data.get('number_x'),
+          (String) data.get('building'),
+          (String) data.get('street'),
+          (String) data.get('ward'),
+          (String) data.get('city'),
+          (String) data.get('propertyStatus'),
+          (String) data.get('years'),
+          (String) data.get('months'),
+          (String) data.get('isMailingAddress'),
+          (String) data.get('isPrimary'),
+          (String) data.get('receiveStatement'),
+          (String) data.get('cardDelivery')
+        );
+      } finally {
+        logApiResponse();
+      }
+      if (result == null || result.success != true) {
+        break;
+      }
+    }
+
+    if (result != null && result.success == true) {
+      selectedCase.FEC_Process_Action_Count__c = -1;
+
+      // Sync FEC_Mailing_Address__c trong FEC_Address_Info__c dựa trên isMailingAddress trong pending JSON
+      // vì API GetAddressesList không trả cờ mailing, nên phải sync trước khi xóa pending fields
+      String selectedMailingSfType = null;
+      for (String sfType : pendingFieldBySfType.keySet()) {
+        String pendingJson = pendingFieldBySfType.get(sfType);
+        if (String.isBlank(pendingJson)) continue;
+        try {
+          Map<String, Object> d = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
+          if ('Y'.equals((String) d.get('isMailingAddress'))) {
+            selectedMailingSfType = sfType;
+            break;
+          }
+        } catch (Exception ex) {
+          System.debug('### syncMailing parse error: ' + ex.getMessage());
+        }
+      }
+      FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);
+
+      selectedCase.FEC_Updated_Info_Permanent_Address__c = null;
+      selectedCase.FEC_Updated_Info_Office_Address__c    = null;
+      selectedCase.FEC_Updated_Info_Current_Address__c   = null;
+    } else {
+      if (selectedCase.FEC_Process_Action_Count__c == null) {
+        selectedCase.FEC_Process_Action_Count__c = 0;
+      }
+      selectedCase.FEC_Process_Action_Count__c += 1;
+    }
+    FEC_CaseTriggerHandler.isExecuting = true;
+    update selectedCase;
+    if (result == null) {
+      result = new UpdateResult();
+      result.success = false;
+      result.errorMessage = System.Label.FEC_MSG_Response_Null;
+    }
+    result.actionCount = selectedCase.FEC_Process_Action_Count__c;
+    FEC_CommonUltils.createProcessActionHistory(
+      String.isNotBlank(method) ? method : API_NAME,
+      selectedCase,
+      result.success == true
+    );
+    return result;
+  }
+
   public static UpdateResult parseResponse(String xml, Integer httpStatus) {
     UpdateResult result = new UpdateResult();
     result.httpStatus = httpStatus;

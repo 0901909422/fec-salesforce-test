@@ -48,19 +48,18 @@
         <members>FEC_API_Config.FEC_Transfer_Call</members>
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
+		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
 		<members>FEC_Application_History__c</members>
 		<members>FEC_Asset__c</members>
-		<members>FEC_MRC__c</members>
 		<members>FEC_Hold_Case_Config__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
 		<members>FEC_Application_History__c</members>
 		<members>FEC_Asset__c</members>
-		<members>FEC_MRC__c</members>
 		<name>CustomTab</name>
 	</types>
     <types>
@@ -688,7 +687,7 @@
 		<members>fec_InteractionSLA</members>
 		<members>fec_CardClosureRefundForm</members>
 		<members>fec_InteractionCreateCase</members>
-		<members>fec_CardBlock</members>
+		<!--<members>fec_CardBlock</members>-->
 		<members>fecInteractionEmailInfoUbank</members>
 		<members>fec_IPPConversionRetailForm</members>
 		<members>fec_IncorrectPaymentForm</members>
@@ -727,6 +726,7 @@
         <members>FEC_IncorrectPaymentController</members>
         <members>FEC_RemovePhoneController</members>
         <members>FEC_ContractClosureController</members>
+		<members>FEC_MCMSCARDTOCARDINQEMEA</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -742,10 +742,10 @@
 		<members>Create_Case</members>
 		<name>CustomTab</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
         <members>Channel</members>
         <name>GlobalValueSet</name>
@@ -1299,6 +1299,11 @@
 		<members>FEC_Additional_Info__c</members>
 		<members>FEC_System_Config__c</members>
 		<members>FEC_Log__c</members>
+		<members>FEC_Customer_History__c</members>
+		<members>FEC_Outbound_Email_Config__c</members>
+		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -1320,6 +1325,7 @@
         <members>FEC_Address_Info__c.FEC_Province__c</members>
         <members>FEC_Address_Info__c.FEC_Country__c</members>
 		<members>FEC_Address_Info__c.FEC_Mailing_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Address_Type__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
@@ -1332,6 +1338,25 @@
 		<members>Case.FEC_New_Block_Code_Card_Replace__c</members>
 		<members>Case.FEC_Recipient_Name__c</members>
 		<members>Case.FEC_Recipient_Phone_Number__c</members>
+		<members>Case.FEC_Refund_Amount__c</members>
+		<members>Case.FEC_Refund_Request_Draft__c</members>
+		<members>Case.FEC_Show_Unfollow__c</members>
+		<members>Case.FEC_Updated_Info_Permanent_Address__c</members>
+		<members>Case.FEC_Updated_Info_Office_Address__c</members>
+		<members>Case.FEC_Updated_Info_Current_Address__c</members>
+		<members>Case.FEC_Input_Correct_Contract_Number__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification_Channel__c</members>
+		<members>FEC_Notification_History__c.FEC_Target_Group__c</members>
+		<members>FEC_Notification_History__c.FEC_User__c</members>
+		<members>FEC_Notification_History__c.FEC_User_Role__c</members>
+		<members>FEC_Notification_History__c.FEC_Stage_Name__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Notification__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Status__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_Type__c</members>
+		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
+		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
+		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1362,6 +1387,20 @@
 		<members>FEC_MarkNFU</members>
 		<members>FEC_GetProductListCallout</members>
 		<members>FEC_PinReplacementController</members>
+		<members>FEC_NotificationHistoryService</members>
+		<members>FEC_SendNotificationEmailsQueueable</members>
+		<members>FEC_CardReplacementAddressController</members>
+		<members>FEC_EmeaAccountInqService</members>
+		<members>FEC_SyncCaseStatusBatch</members>
+		<members>FEC_SyncCaseStatusScheduler</members>
+		<members>FEC_CardInfoController</members>
+		<members>FEC_GetCardSecInfo</members>
+		<members>FEC_IPPController</members>
+		<members>FEC_CaseLinkedFilesController</members>
+		<members>FEC_ContentDocumentLinkService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1549,6 +1588,43 @@
 		<members>FEC_MSG_ACTION_PIN_REISSUE</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</members>
 		<members>FEC_MSG_ACTION_PIN_REISSUE_ERROR</members>
+		<members>FEC_No_Data_Application_History</members>
+		<members>FEC_RESET_PIN_SUCCESS</members>
+        <members>FEC_RESET_PIN_ERROR</members>
+        <members>FEC_RESET_PIN_FAILED</members>
+		<members>FEC_ACTION_CARD_REPLACEMENT_HEADER</members>
+		<members>FEC_MSG_ACTION_CARD_REPLACEMENT</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
+        <members>FEC_No_Permission_Msg</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
+        <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
+		<members>FEC_MSG_IncorrectPayment_Date_Not_After_Today</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</members>
+        <members>FEC_Email_Error_File_Too_Large_Title</members>
+        <members>FEC_Email_Error_File_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Image_Too_Large_Title</members>
+        <members>FEC_Email_Error_Image_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Subject_Required</members>
+        <members>FEC_Email_Error_Body_Required</members>
+        <members>FEC_Email_Error_We_Hit_A_Snag</members>
+        <members>FEC_Email_Error_Invalid_Format_Title</members>
+        <members>FEC_Email_Success_Title</members>
+        <members>FEC_Email_Success_Sent_Msg</members>
+        <members>FEC_CS_Support_Queue_Name</members>
+        <members>FEC_Other_Card_Label</members>
+		<members>FEC_Email_Discard_Title</members>
+        <members>FEC_Email_Discard_Msg</members>
+        <members>FEC_Email_Btn_Discard</members>
+        <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1575,6 +1651,12 @@
 		<members>fec_InteractionCaseModeStore</members>
 		<members>fec_InteractionHighlightMain</members>
 		<members>maskedToggleCell</members>
+		<members>fec_Modal</members>
+		<members>fec_CardReplacementAddress</members>
+		<members>fec_MultiPicklistInput</members>
+		<members>fec_CardInfo</members>
+		<members>fec_IPPDetails</members>
+		<members>fec_FileUploadCard</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1596,6 +1678,7 @@
     </types>
 	<types>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
@@ -1633,6 +1716,64 @@
 		<members>en_US</members>
 		<name>Translations</name>
 	</types>
-
+	<types>
+        <members>FEC_RD_Card_Operations_User_Customer_360</members>
+        <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Card_Operations_User_Master_Data_Management</members>
+        <members>FEC_RD_Card_Operations_User_User_Management</members>
+        <members>FEC_RD_Collections_User_Customer_360</members>
+        <members>FEC_RD_Collections_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Collections_User_Master_Data_Management</members>
+        <members>FEC_RD_Collections_User_User_Management</members>
+        <members>FEC_RD_Contract_Processing_User_Customer_360</members>
+        <members>FEC_RD_Contract_Processing_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Contract_Processing_User_Master_Data_Management</members>
+        <members>FEC_RD_Contract_Processing_User_User_Management</members>
+		<members>FEC_RD_Credit_Assessment_User_Customer_360</members>
+        <members>FEC_RD_Credit_Assessment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Credit_Assessment_User_Master_Data_Management</members>
+        <members>FEC_RD_Credit_Assessment_User_User_Management</members>
+        <members>FEC_RD_Direct_Sales_User_Customer_360</members>
+        <members>FEC_RD_Direct_Sales_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Direct_Sales_User_Master_Data_Management</members>
+        <members>FEC_RD_Direct_Sales_User_User_Management</members>
+        <members>FEC_RD_Internal_Audit_User_Customer_360</members>
+        <members>FEC_RD_Internal_Audit_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Internal_Audit_User_Master_Data_Management</members>
+        <members>FEC_RD_Internal_Audit_User_User_Management</members>
+        <members>FEC_RD_Payment_User_Customer_360</members>
+        <members>FEC_RD_Payment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Payment_User_Master_Data_Management</members>
+        <members>FEC_RD_Payment_User_User_Management</members>
+        <members>FEC_RD_Telesales_User_1_Customer_360</members>
+        <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
+        <members>FEC_RD_Telesales_User_1_User_Management</members>
+        <members>FEC_RD_Telesales_User_2_Customer_360</members>
+        <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
+        <members>FEC_RD_Telesales_User_2_User_Management</members>
+		<name>PermissionSet</name>
+	</types>
+	<types>
+		<members>FEC_PSG_RD_Card_Operations_User</members>
+		<members>FEC_PSG_RD_Collections_User</members>
+		<members>FEC_PSG_RD_Contract_Processing_User</members>
+		<members>FEC_PSG_RD_Credit_Assessment_User</members>
+		<members>FEC_PSG_RD_Direct_Sales_PSG_User</members>
+		<members>FEC_PSG_RD_Internal_Audit_User</members>
+		<members>FEC_PSG_RD_Payment_User</members>
+		<members>FEC_PSG_RD_Telesales_User_1</members>
+		<members>FEC_PSG_RD_Telesales_User_2</members>
+		<name>PermissionSetGroup</name>
+	</types>
+	<types>
+		<members>FEC_PinReset</members>
+		<members>FEC_PinReissue</members>
+		<members>FEC_Case_Notification</members>
+		<members>FEC_ProcessAction</members>
+		<name>LightningMessageChannel</name>
+	</types>
+	
     <version>65.0</version>
 </Package>

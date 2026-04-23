@@ -55,7 +55,7 @@ private class FEC_TemplateService_Test {
         );
 
         Test.startTest();
-        Id savedId = FEC_TemplateService.saveTemplate(newTmpl, null);
+        Id savedId = FEC_TemplateService.saveTemplate(newTmpl, null, null);
         Test.stopTest();
 
         Assert.isNotNull(savedId, 'Should return saved record Id');
@@ -70,7 +70,7 @@ private class FEC_TemplateService_Test {
         tmpl.FEC_Body__c = '<p>Dear {{{Contact.FirstName}}}, updated body with {{{Organization.Name}}}</p>';
 
         Test.startTest();
-        FEC_TemplateService.saveTemplate(tmpl, oldBody);
+        FEC_TemplateService.saveTemplate(tmpl, oldBody, null);
         Test.stopTest();
 
         // Verify content-history was created
@@ -94,7 +94,7 @@ private class FEC_TemplateService_Test {
         tmpl.FEC_Subject_Line__c = 'Updated Subject Only';
 
         Test.startTest();
-        FEC_TemplateService.saveTemplate(tmpl, oldBody);
+        FEC_TemplateService.saveTemplate(tmpl, oldBody, null);
         Test.stopTest();
 
         // No content history should be created when body didn't change
@@ -254,7 +254,7 @@ private class FEC_TemplateService_Test {
 
         Test.startTest();
         // Pass null oldBody to simulate new template (skip content history)
-        Id savedId = FEC_TemplateService.saveTemplate(tmpl, null);
+        Id savedId = FEC_TemplateService.saveTemplate(tmpl, null, null);
         Test.stopTest();
 
         Assert.areEqual(draftId, savedId, 'Should reuse the draft Id');

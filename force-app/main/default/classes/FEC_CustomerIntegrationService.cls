@@ -19,15 +19,6 @@ public with sharing class FEC_CustomerIntegrationService {
         @AuraEnabled public Date dateOfBirth;
         @AuraEnabled public String primaryPhone;
         @AuraEnabled public String emailAddress;
-        @AuraEnabled public Boolean isZaloFollower;
-        @AuraEnabled public Boolean hasWebsiteAccount;
-        @AuraEnabled public Boolean hasMobileAppAccount;
-
-        public ResultDTO() {
-            isZaloFollower = false;
-            hasWebsiteAccount = false;
-            hasMobileAppAccount = false;
-        }
     }
 
     public static ResultDTO syncCustomer(
@@ -78,47 +69,7 @@ public with sharing class FEC_CustomerIntegrationService {
             System.debug('### BASIC ERROR: ' + e.getMessage());
         }
 
-        try {
-            FEC_GetDocumentsList.ResponseWrapper docRes =
-                FEC_GetDocumentsList.callGetDocumentsList(requestId, requestor, timestamp, cifNumber);
-
-            if (docRes != null && docRes.Documents != null && !docRes.Documents.isEmpty()) {
-                hist.FEC_National_ID_Passport_ID__c = docRes.Documents[0].DocumentID;
-                hist.FEC_Date_of_Issue__c           = docRes.Documents[0].IssueDate;
-                hist.FEC_Place_of_Issue__c          = docRes.Documents[0].IssuePlace;
-
-                result.nationalId = docRes.Documents[0].DocumentID;
-            }
-        } catch (Exception e) {
-            System.debug('### DOCUMENT ERROR: ' + e.getMessage());
-        }
-
-        try {
-            FEC_GetDigitalAccountStatus.ResponseWrapper digitalRes =
-                FEC_GetDigitalAccountStatus.callGetDigitalAccountStatus(requestId, requestor, timestamp, phone, cifNumber);
-
-            if (digitalRes != null && digitalRes.DigitalAccounts != null) {
-                for (FEC_GetDigitalAccountStatus.DigitalAccountInfo da : digitalRes.DigitalAccounts) {
-                    if (da == null) continue;
-
-                    if (da.Type == FEC_ConstantCommon.CHANNEL_ZALO) {
-                        hist.FEC_Zalo_Follower__c = normalize(da.Status);
-                        result.isZaloFollower = hist.FEC_Zalo_Follower__c == 'Yes';
-                    }
-                    if (da.Type == FEC_ConstantCommon.CHANNEL_WEBSITE) {
-                        hist.FEC_Website_Account__c = normalize(da.Status);
-                        result.hasWebsiteAccount = hist.FEC_Website_Account__c == 'Yes';
-                    }
-                    if (da.Type == FEC_ConstantCommon.CHANNEL_FE_MOBILE_APP) {
-                        hist.FEC_Mobile_App_Account__c = normalize(da.Status);
-                        result.hasMobileAppAccount = hist.FEC_Mobile_App_Account__c == 'Yes';
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.debug('### DIGITAL ERROR: ' + e.getMessage());
-        }
-
+        // 2. PRIMARY PHONE
         try {
             if (String.isNotBlank(accountNumber)) {
                 hist.FEC_Primary_Phone__c = getPrimaryPhone(accountNumber);
