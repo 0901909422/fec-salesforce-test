@@ -108,25 +108,27 @@ public without sharing class FEC_CheckEligibleCallout {
             // 1. Prepare Request Wrapper
             CheckEligibleRequest reqWrapper = new CheckEligibleRequest();
 
-            reqWrapper.headers = new Map<String, Object>{
-                'TransID'     => FEC_CommonUltils.generateTransactionUUID(),
-                'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
-            };
+            // TEST: tạm tắt parameters/headers trong JSON log — bật lại sau khi thử API xong.
+            // reqWrapper.headers = new Map<String, Object>{
+            //     'TransID'     => FEC_CommonUltils.generateTransactionUUID(),
+            //     'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
+            // };
 
-            reqWrapper.parameters = new Map<String, String>{
-                'ID_CARD_NUMBER'    => idCardNumber,
-                'PHONE_NUMBER'      => phoneNumber
-            };
+            // reqWrapper.parameters = new Map<String, String>{
+            //     'ID_CARD_NUMBER'    => idCardNumber,
+            //     'PHONE_NUMBER'      => phoneNumber
+            // };
 
             reqWrapper.body = new Map<String, Object>();
             String requestBodyJson = JSON.serialize(reqWrapper);
 
-            if (apiConfig != null) {
-                String consumerName = (String) apiConfig.get('FEC_Consumer_Name__c');
-                if (String.isNotBlank(consumerName)) {
-                    reqWrapper.headers.put('consumer_name', consumerName.trim());
-                }
-            }
+            // TEST: tạm tắt consumer_name từ CMDT (không ghi vào reqWrapper.headers).
+            // if (apiConfig != null) {
+            //     String consumerName = apiConfig.FEC_Consumer_Name__c;
+            //     if (String.isNotBlank(consumerName)) {
+            //         reqWrapper.headers.put('consumer_name', consumerName.trim());
+            //     }
+            // }
 
             String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.FEC_GET_CARD_TXN_ENDPOINT_MOCKUP
