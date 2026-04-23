@@ -15,6 +15,12 @@ public with sharing class FEC_CaseLinkedFilesController {
     public Long contentSize { get; set; }
     @AuraEnabled
     public Datetime linkedCreatedDate { get; set; }
+    /** ContentDocument.Owner (User / Group name). */
+    @AuraEnabled
+    public String ownerName { get; set; }
+    /** ContentDocument.LastModifiedDate — cột Last Modified trên UI. */
+    @AuraEnabled
+    public Datetime lastModifiedDate { get; set; }
   }
 
   /**
@@ -32,6 +38,8 @@ public with sharing class FEC_CaseLinkedFilesController {
         ContentDocumentId,
         ContentDocument.Title,
         ContentDocument.FileExtension,
+        ContentDocument.LastModifiedDate,
+        ContentDocument.Owner.Name,
         ContentDocument.LatestPublishedVersion.ContentSize,
         ContentDocument.LatestPublishedVersion.CreatedDate,
         SystemModstamp
@@ -44,6 +52,10 @@ public with sharing class FEC_CaseLinkedFilesController {
       row.contentDocumentId = cdl.ContentDocumentId;
       row.title = cdl.ContentDocument != null ? cdl.ContentDocument.Title : null;
       row.fileExtension = cdl.ContentDocument != null ? cdl.ContentDocument.FileExtension : null;
+      if (cdl.ContentDocument != null) {
+        row.ownerName = cdl.ContentDocument.Owner != null ? cdl.ContentDocument.Owner.Name : null;
+        row.lastModifiedDate = cdl.ContentDocument.LastModifiedDate;
+      }
       if (cdl.ContentDocument != null && cdl.ContentDocument.LatestPublishedVersion != null) {
         ContentVersion lv = cdl.ContentDocument.LatestPublishedVersion;
         row.contentSize = lv.ContentSize != null ? lv.ContentSize : 0L;
