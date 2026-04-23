@@ -693,7 +693,10 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   get showRevert() {
-    return ACTION_REVERT === this._getCurrentActionCode();
+    if (ACTION_REVERT !== this.actionValue) return false;
+    // Nếu action Revert được đặt custom label "Route to" thì showRouteTo đã xử lý — không hiện section Revert
+    const action = this._findRoutingActionByValueOrCode(this.actionValue);
+    return action == null || action.label?.trim() !== ACTION_ROUTE_TO;
   }
 
   get showTransfer() {
