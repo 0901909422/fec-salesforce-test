@@ -182,7 +182,7 @@ public without sharing class FEC_ContractClosureController {
                     for (FEC_Address_Info__c a : [
                         SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c,
                             FEC_Building__c, FEC_Number__c, FEC_Street__c,
-                            FEC_District__c, FEC_District__r.FEC_Name_VN__c, FEC_Ward_Text__c,
+                            FEC_Ward__c, FEC_Ward__r.FEC_Name_VN__c, FEC_Ward_Text__c,
                             FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c
                         FROM FEC_Address_Info__c
                         WHERE FEC_Customer_History__c = :histId
@@ -193,7 +193,7 @@ public without sharing class FEC_ContractClosureController {
                         row.addressType = a.FEC_Address_Type__c;
                         String wardLabel = String.isNotBlank(a.FEC_Ward_Text__c)
                             ? a.FEC_Ward_Text__c
-                            : (a.FEC_District__r == null ? null : a.FEC_District__r.FEC_Name_VN__c);
+                            : (a.FEC_Ward__r == null ? null : a.FEC_Ward__r.FEC_Name_VN__c);
                         String provinceLabel = String.isNotBlank(a.FEC_Province_Text__c)
                             ? a.FEC_Province_Text__c
                             : (a.FEC_Province__r == null ? null : a.FEC_Province__r.FEC_Name_VN__c);
@@ -204,7 +204,7 @@ public without sharing class FEC_ContractClosureController {
                         row.building = a.FEC_Building__c;
                         row.streetNumber = a.FEC_Number__c;
                         row.street = a.FEC_Street__c;
-                        row.wardRecordId = a.FEC_District__c == null ? null : String.valueOf(a.FEC_District__c);
+                        row.wardRecordId = a.FEC_Ward__c == null ? null : String.valueOf(a.FEC_Ward__c);
                         row.provinceRecordId = a.FEC_Province__c == null ? null : String.valueOf(a.FEC_Province__c);
                         row.wardLabel = wardLabel;
                         row.provinceLabel = provinceLabel;
@@ -520,15 +520,10 @@ public without sharing class FEC_ContractClosureController {
             putIfUpdateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfUpdateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         }
-        if (String.isNotBlank(t.wardRecordId)) {
-            try {
-                if (forInsert) {
-                    putIfCreateable(addr, 'FEC_District__c', (Id) t.wardRecordId);
-                } else {
-                    putIfUpdateable(addr, 'FEC_District__c', (Id) t.wardRecordId);
-                }
-            } catch (Exception ignore) {
-            }
+        if (forInsert) {
+            putIfCreateable(addr, 'FEC_District__c', null);
+        } else {
+            putIfUpdateable(addr, 'FEC_District__c', null);
         }
         if (String.isNotBlank(t.provinceRecordId)) {
             try {
