@@ -1191,8 +1191,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           });
         });
 
-        // PhuongNT add show button process action with process Block Card and PIN Reissue
-        if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_PIN_REISSUE) {
+        // PhuongNT add show button process action with process PIN Reissue
+        if (this.business?.code === PROCESS_PIN_REISSUE) {
           this.showProcessAction = true;
         }
         // PhuongNT add show button process action with process Card Replacement
@@ -1699,6 +1699,13 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // card block
     if (fieldName === FIELD_CARD_BLOCK_REASON) {
+      this.isProcessActionInfo = false;
+      this.isProcessActionFailed = false;
+      this.processActionMsg = '';
+      if (!value) {
+        this.showProcessAction = false;
+      }
+
       this.business.sectionlst.forEach(section => {
         section.subSectionlst.forEach(sub => {
           sub.objlst.forEach(obj => {
@@ -1709,12 +1716,12 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.displayValue = field.value;
                 field.readonlyDisplayValue = field.value;
                 this.newBlockCode = field.value;
-                this.handleCheckProcessActionCardBlock();
               }
             });
           });
         });
       });
+      this.handleCheckProcessActionCardBlock();
     }
     // card replacement
     else if (fieldName === FIELD_CARD_REPLACEMENT_REASON) {
@@ -3084,7 +3091,11 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // PhuongNT add check process action Card Block
   handleCheckProcessActionCardBlock() {
-    if (this.currentCardStatus == 'Not Blocked' || !this.currentBlockCode || !this.newBlockCode) {
+    if (this.currentCardStatus == 'Not Blocked' && this.newBlockCode) {
+      this.showProcessAction = true;
+      return;
+    }
+    if (!this.currentBlockCode || !this.newBlockCode) {
       return;
     }
     this.showProcessAction = false;
