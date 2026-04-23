@@ -94,7 +94,7 @@
                 <componentName>fec_InteractionInfoF2F_Letter</componentName>
                 <identifier>c_fec_InteractionInfoF2F_Letter</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND (2 OR 3 OR 4 OR 5) AND 6</booleanFilter>
+                    <booleanFilter>1 AND (2 OR 3 OR 4 OR (5 AND 7)) AND 6</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Is_In_Create_new_mode__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -124,6 +124,11 @@
                         <leftValue>{!Record.FEC_Is_MyCaseAPI_Interaction__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>false</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_Subchannel__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Internal Email</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
