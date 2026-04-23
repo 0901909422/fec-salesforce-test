@@ -110,7 +110,7 @@ public class FEC_FraudCaseMockData {
         caseInfo.accountOwner = '4354545959';
         caseInfo.caseGoal = '1 month 9 days from now';
         caseInfo.lastUpdateDate = 'Jan 6, 2026';
-        caseInfo.caseChannel = 'FIMA';
+        caseInfo.caseChannel = FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE;
         caseInfo.lastUpdateBy = 'Nguyen Tan Hoai';
         caseInfo.createdBy = 'hoai.nguyen.14.test@fecredit.com.vn';
         caseInfo.createdDate = '10/07/2024';

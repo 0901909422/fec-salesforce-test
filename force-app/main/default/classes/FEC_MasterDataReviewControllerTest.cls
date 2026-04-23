@@ -43,7 +43,9 @@ private class FEC_MasterDataReviewControllerTest {
         insert addField;
 
         // 4. Tạo Setting Live (Bản cũ - Non MDM Object)
+        // FEC_Code__c = 'EXT_SYNC' để match với MDM record bên dưới → verify updateList
         FEC_Master_Data_Setting__c live = new FEC_Master_Data_Setting__c(
+            FEC_Code__c = 'EXT_SYNC',
             FEC_Channel__c = 'Web',
             FEC_Field_Mandatory__c = false
         );
@@ -94,7 +96,6 @@ private class FEC_MasterDataReviewControllerTest {
                                         FROM FEC_MDM_Nature_Of_Case__c LIMIT 1];
 
         Test.startTest();
-        // Thực thi logic so sánh dữ liệu
         FEC_MasterDataReviewController.ComparisonResult result = FEC_MasterDataReviewController.getComparisonData(
             noc.FEC_Product_Type__c, 
             noc.FEC_Business_Process__c, 
@@ -104,9 +105,42 @@ private class FEC_MasterDataReviewControllerTest {
         );
         Test.stopTest();
 
-        // Kiểm tra phân loại danh sách so sánh
-        Assert.isFalse(result.newList.isEmpty(), 'newList không được rỗng');
-        Assert.isFalse(result.updateList.isEmpty(), 'updateList không được rỗng');
+        // EXT_NEW không có Live record tương ứng → newList
+        Assert.isFalse(result.newList.isEmpty(), 'newList không được rỗng — EXT_NEW phải là record mới');
+        Assert.areEqual(1, result.newList.size(), 'Chỉ có 1 record mới (EXT_NEW)');
+        Assert.areEqual('EXT_NEW', result.newList[0].externalId, 'Record mới phải có code EXT_NEW');
+        Assert.isTrue(result.newList[0].isNew, 'Record EXT_NEW phải được đánh dấu isNew');
+
+        // EXT_SYNC có Live record (Web) nhưng MDM đổi sang App → updateList
+        Assert.isFalse(result.updateList.isEmpty(), 'updateList không được rỗng — EXT_SYNC phải có thay đổi');
+        Assert.areEqual(1, result.updateList.size(), 'Chỉ có 1 record cập nhật (EXT_SYNC)');
+        Assert.areEqual('EXT_SYNC', result.updateList[0].externalId, 'Record cập nhật phải có code EXT_SYNC');
+        Assert.isTrue(result.updateList[0].hasChanged, 'Record EXT_SYNC phải được đánh dấu hasChanged');
+        // Verify diff: Channel changed from Web → App
         Assert.areEqual('App', result.updateList[0].diffs[0].newVal, 'Giá trị channel mới phải là App');
+        Assert.areEqual('Web', result.updateList[0].diffs[0].oldVal, 'Giá trị channel cũ phải là Web');
+
+        // syncedList phải rỗng vì không có record nào giống nhau hoàn toàn
+        Assert.isTrue(result.syncedList.isEmpty(), 'syncedList phải rỗng');
+    }
+
+    @isTest
+    static void testComparisonDataNoMatch() {
+        // Test với IDs không tồn tại → trả về ComparisonResult rỗng
+        FEC_MDM_Product_Type__c prod = [SELECT Id FROM FEC_MDM_Product_Type__c LIMIT 1];
+        FEC_MDM_Business_Process__c biz = [SELECT Id FROM FEC_MDM_Business_Process__c LIMIT 1];
+        FEC_MDM_Category__c cat = [SELECT Id FROM FEC_MDM_Category__c LIMIT 1];
+        FEC_MDM_Sub_Category__c subCat = [SELECT Id FROM FEC_MDM_Sub_Category__c LIMIT 1];
+
+        Test.startTest();
+        // Dùng subCodeId không khớp → không tìm thấy NOC
+        FEC_MasterDataReviewController.ComparisonResult result = FEC_MasterDataReviewController.getComparisonData(
+            prod.Id, biz.Id, cat.Id, subCat.Id, null
+        );
+        Test.stopTest();
+
+        Assert.isTrue(result.newList.isEmpty(), 'newList phải rỗng khi không có NOC match');
+        Assert.isTrue(result.updateList.isEmpty(), 'updateList phải rỗng khi không có NOC match');
+        Assert.isTrue(result.syncedList.isEmpty(), 'syncedList phải rỗng khi không có NOC match');
     }
 }
