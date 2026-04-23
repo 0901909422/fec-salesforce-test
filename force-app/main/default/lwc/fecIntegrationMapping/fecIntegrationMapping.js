@@ -78,6 +78,7 @@ export default class FraudIntegrationMapping extends LightningElement {
     @api screenCaseId;
     
     get notLoading() { return !this.loading; }
+    get hasSubCodeOptions() { return this.subCodeOptions && this.subCodeOptions.length > 0; }
     labels = {
         Integration_Mapping_Title,
         Loading,
@@ -269,7 +270,8 @@ export default class FraudIntegrationMapping extends LightningElement {
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
-            channelCode: this.channel
+            channelCode: this.channel,
+            userTypeId: this.userType
         })
             .then(r => {
                 //console.log('[SUCCESS] Additional Properties:', r);
@@ -285,7 +287,8 @@ export default class FraudIntegrationMapping extends LightningElement {
                     csmPropertyId: found.csmPropertyId,
                     csmPropertyType: found.csmPropertyType,
                     csmProperty: found.csmProperty? `${found.csmProperty}`: null,
-                    autoMapping: found.autoMapping
+                    autoMapping: found.autoMapping,
+                    autoMappingPropertySource: found.autoMappingPropertySource || r.autoMappingPropertySource
                 };
                 });
             })
@@ -583,7 +586,8 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCategory: this.subCategory,
             subCode: this.subCode,
             channelCode: this.channel,
-            serviceType: this.serviceType
+            serviceType: this.serviceType,
+            userTypeId: this.userType
 
         })
             .then(r => {
@@ -606,13 +610,15 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCategory: this.subCategory,
             subCode: this.subCode
         });
+        console.log('userTypeId: ', this.userType);
 
         loadAdditionalProperties({
             category: this.category,
             subCategory: this.subCategory,
             subCode: this.subCode,
             channelCode: this.channel,
-            serviceType: this.serviceType
+            serviceType: this.serviceType,
+            userTypeId: this.userType
 
         })
             .then(r => {
@@ -710,19 +716,6 @@ export default class FraudIntegrationMapping extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
-    }
-    
-    handleAutoMappingChange(event) {
-        const rowId = event.target.dataset.id;    
-        //checkbox value comes from event.target.checked
-        const checked = event.target.checked;    
-        console.log('[AUTO MAPPING CHANGE]', { rowId, checked });
-    
-        this.rows = this.rows.map(r =>
-            r.id === rowId
-                ? { ...r, autoMapping: checked }
-                : r
-        );
     }
     
 
@@ -843,7 +836,7 @@ export default class FraudIntegrationMapping extends LightningElement {
         console.log("BEGIN validateBeforeSave");
         if (!this.userType || !this.channel || !this.productLine ||
             !this.serviceType || !this.category ||
-            !this.subCategory) {            
+            !this.subCategory || (this.hasSubCodeOptions && !this.subCode)) {            
             this.showToast(
                 this.labels.validationError,
                 this.labels.headerRequired,

@@ -1,0 +1,119 @@
+<template>
+    <!-- Empty state: no item selected or Product Type level -->
+    <template if:true={showEmptyState}>
+        <div class="slds-p-around_medium slds-align_absolute-center">
+            <div class="slds-illustration slds-illustration_small">
+                <p class="slds-text-color_weak slds-text-body_regular">
+                    Select a Business Process node (or below) to view stage configurations.
+                </p>
+            </div>
+        </div>
+    </template>
+
+    <!-- Stage tabs: shown for BP-level nodes and below -->
+    <template if:false={showEmptyState}>
+        <div class="slds-is-relative">
+            <lightning-spinner if:true={isLoadingStages} variant="brand" size="medium"
+                alternative-text="Loading stages"></lightning-spinner>
+
+            <template if:false={hasStages}>
+                <div class="slds-p-around_medium">
+                    <p class="slds-text-color_weak">No stages found for this Business Process.</p>
+                </div>
+            </template>
+
+            <template if:true={hasStages}>
+                <lightning-tabset variant="scoped">
+                    <template for:each={stages} for:item="stage">
+                        <lightning-tab key={stage.value}
+                            label={stage.label}
+                            value={stage.value}
+                            onactive={handleStageActive}>
+
+                            <!-- Sub-tabs within each stage -->
+                            <lightning-tabset variant="default">
+                                <!-- Sub-tab 1: Property Configuration -->
+                                <lightning-tab label={labelTabPropertyConfig}
+                                    icon-name="standard:settings">
+                                    <div class="slds-is-relative slds-p-around_small">
+                                        <lightning-spinner if:true={isLoadingProperty}
+                                            variant="brand" size="small"
+                                            alternative-text="Loading properties">
+                                        </lightning-spinner>
+
+                                        <template if:true={hasPropertyData}>
+                                            <lightning-datatable
+                                                key-field="Id"
+                                                data={propertyData}
+                                                columns={propertyColumns}
+                                                hide-checkbox-column
+                                                show-row-number-column>
+                                            </lightning-datatable>
+                                        </template>
+                                        <template if:false={hasPropertyData}>
+                                            <template if:false={isLoadingProperty}>
+                                                <c-fec-no-record-display></c-fec-no-record-display>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </lightning-tab>
+
+                                <!-- Sub-tab 2: Fraud Integration Mapping -->
+                                <lightning-tab label={labelTabFraudIntegration}
+                                    icon-name="standard:hierarchy">
+                                    <div class="slds-is-relative slds-p-around_small">
+                                        <lightning-spinner if:true={isLoadingFraud}
+                                            variant="brand" size="small"
+                                            alternative-text="Loading fraud mapping">
+                                        </lightning-spinner>
+
+                                        <template if:true={hasFraudData}>
+                                            <lightning-datatable
+                                                key-field="Id"
+                                                data={fraudData}
+                                                columns={fraudColumns}
+                                                hide-checkbox-column
+                                                show-row-number-column>
+                                            </lightning-datatable>
+                                        </template>
+                                        <template if:false={hasFraudData}>
+                                            <template if:false={isLoadingFraud}>
+                                                <c-fec-no-record-display></c-fec-no-record-display>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </lightning-tab>
+
+                                <!-- Sub-tab 3: Decision Table Stage -->
+                                <lightning-tab label={labelTabDecisionTable}
+                                    icon-name="utility:flow">
+                                    <div class="slds-is-relative slds-p-around_small">
+                                        <lightning-spinner if:true={isLoadingDecisionTable}
+                                            variant="brand" size="small"
+                                            alternative-text="Loading decision table">
+                                        </lightning-spinner>
+
+                                        <template if:true={hasDecisionTableData}>
+                                            <lightning-datatable
+                                                key-field="id"
+                                                data={decisionTableData}
+                                                columns={decisionTableColumns}
+                                                hide-checkbox-column
+                                                show-row-number-column>
+                                            </lightning-datatable>
+                                        </template>
+                                        <template if:false={hasDecisionTableData}>
+                                            <template if:false={isLoadingDecisionTable}>
+                                                <c-fec-no-record-display></c-fec-no-record-display>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </lightning-tab>
+                            </lightning-tabset>
+                        </lightning-tab>
+                    </template>
+                </lightning-tabset>
+            </template>
+        </div>
+    </template>
+</template>

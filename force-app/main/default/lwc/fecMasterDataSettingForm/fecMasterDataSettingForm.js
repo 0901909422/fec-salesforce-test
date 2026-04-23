@@ -1,17 +1,23 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
 import saveMasterDataSetting from '@salesforce/apex/FEC_MasterDataSettingController.saveMasterDataSetting';
 import getAdditionalFieldOptions from '@salesforce/apex/FEC_MasterDataSettingController.getAdditionalFieldOptions';
+import checkParentDuplicateProperty from '@salesforce/apex/FEC_MasterDataSettingController.checkParentDuplicateProperty';
 
 import getChannels from '@salesforce/apex/FEC_MasterDataSettingController.getChannels';
 import getUserRoles from '@salesforce/apex/FEC_MasterDataSettingController.getUserRoles';
+
+import MDM_MASTER_DATA_SETTING_OBJECT from '@salesforce/schema/FEC_MDM_Master_Data_Setting__c';
+import MASKING_TYPE_FIELD from '@salesforce/schema/FEC_MDM_Master_Data_Setting__c.FEC_Masking_Type__c';
+import EDITABLE_USER_GROUP_FIELD from '@salesforce/schema/FEC_MDM_Master_Data_Setting__c.FEC_Editable_User_Group__c';
 
 import LABEL_BUTTON_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
 import LABEL_BUTTON_SAVE from '@salesforce/label/c.FEC_Button_Save';
 import LABEL_LABEL_CHANNEL_MULTISELECT from '@salesforce/label/c.FEC_Label_Channel_Multiselect';
 import LABEL_LABEL_APPLICABLE_ROLES from '@salesforce/label/c.FEC_Label_Applicable_Roles';
 
-import { FIELD_FIELD_ORDER_DISPLAY, OBJECT_MDM_MASTER_DATA_SETTING, FIELD_ADDITIONAL_FIELD, FIELD_FIELD_STATUS, FIELD_FIELD_READONLY, FIELD_FIELD_MANDATORY, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_NATURE_OF_CASE, FIELD_STAGE_NAME, DATA_NAME_CHANNELS, DATA_NAME_ROLES, FIELD_SECTION } from 'c/fecConstants';
+import { FIELD_FIELD_ORDER_DISPLAY, OBJECT_MDM_MASTER_DATA_SETTING, FIELD_ADDITIONAL_FIELD, FIELD_FIELD_STATUS, FIELD_FIELD_READONLY, FIELD_FIELD_MANDATORY, FIELD_CHANNEL, FIELD_APPLICABLE_ROLE, FIELD_NATURE_OF_CASE, FIELD_STAGE_NAME, DATA_NAME_CHANNELS, DATA_NAME_ROLES, FIELD_SECTION, FIELD_FIELD_OBJECT_NAME, FIELD_FIELD_API_NAME, FIELD_FIELD_LABEL_NAME, FIELD_ID, FIELD_FIELD_MASKING, FIELD_MASKING_TYPE, FIELD_FIELD_REVERTED, FIELD_SUB_SECTION, FIELD_SUB_SECTION_FIELD_LAYOUT, FIELD_SUB_SECTION_LAYOUT, FIELD_SUB_SECTION_ORDER, FIELD_EDITABLE_USER_GROUP, DATA_NAME_EDITABLE_USER_GROUPS, FIELD_FIELD_EDITABLE, FIELD_EDITABLE_ROLE, DEFAULT_CHANNEL_INTEGRATION_CODE } from 'c/fecConstants';
 import { showLog } from 'c/fecMDMUtils';
 
 const FIELDS = [
@@ -33,18 +39,35 @@ export default class FecMasterDataSettingForm extends LightningElement {
     @api nextOrder;
     @api isIntegrationMode = false;
 
-    @track selectedChannels = [];
+    selectedChannel = '';
     @track selectedRoles = [];
+    @track selectedEditableUserGroups = [];
     @track channelOptions = [];
     @track roleOptions = [];
     @track additionalFieldOptions = [];
+    @track maskingTypeOptions = [];
+    propertyInfoMap = new Map(); // Map<Id, {name, fieldApiName}> for auto-fill
+    @track editableUserGroupOptions = [];
     @track displayOrder;
     @track formData = {
         additionalField: '',
         section: '',
         fieldStatus: true,
         fieldReadOnly: false,
-        fieldMandatory: false
+        fieldMandatory: false,
+        fieldObjectName: '',
+        fieldApiName: '',
+        fieldLabelName: '',
+        fieldMasking: false,
+        maskingType: '',
+        fieldReverted: false,
+        subSection: '',
+        subSectionFieldLayout: 3,
+        subSectionLayout: 12,
+        subSectionOrder: null,
+        editableUserGroup: '',
+        fieldEditable: false,
+        editableRole: ''
     };
 
     // expose labels and field names
@@ -62,6 +85,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     labelApplicableRoles = LABEL_LABEL_APPLICABLE_ROLES;
     dataNameChannels = DATA_NAME_CHANNELS;
     dataNameRoles = DATA_NAME_ROLES;
+    dataNameEditableUserGroups = DATA_NAME_EDITABLE_USER_GROUPS;
 
     get isEditMode() {
         return !!this.recordId;
@@ -69,6 +93,25 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
     get isCreateMode() {
         return !this.recordId;
+    }
+
+    /**
+     * @description Check if field info is auto-filled from Property.
+     * When true, Object Name, API Name, and Label fields should be read-only.
+     */
+    get isAutoFilled() {
+        if (!this.formData.additionalField) return false;
+        const info = this.propertyInfoMap.get(this.formData.additionalField);
+        return info && info.fieldApiName ? true : false;
+    }
+
+    @api
+    submitForm() {
+        if (this.isEditMode) {
+            this.handleSubmitEdit();
+        } else {
+            this.handleCreateSubmit();
+        }
     }
 
     connectedCallback() {
@@ -79,8 +122,8 @@ export default class FecMasterDataSettingForm extends LightningElement {
             // Integration Mode: Set FIMA defaults
             if (this.isIntegrationMode) {
                 this.displayOrder = 1;
-                this.selectedChannels = ['FIMA'];
-                this.formData.additionalField = 'FIMA';
+                this.selectedChannel = DEFAULT_CHANNEL_INTEGRATION_CODE;
+                this.formData.additionalField = DEFAULT_CHANNEL_INTEGRATION_CODE;
                 showLog('[connectedCallback] Integration Mode activated - Set FIMA defaults');
             }
         } else if (this.recordData && Object.keys(this.recordData).length > 0) {
@@ -95,7 +138,6 @@ export default class FecMasterDataSettingForm extends LightningElement {
     populateFormFromRecordData(data) {
         showLog('[populateFormFromRecordData] START with data:', data);
         try {
-            const channelsStr = data.FEC_Channel__c || '';
             const rolesStr = data.FEC_Applicable_Role__c || '';
             const section = data.FEC_Section__c || '';
             const order = data.FEC_Field_Order_Display__c || 0;
@@ -104,15 +146,44 @@ export default class FecMasterDataSettingForm extends LightningElement {
             const mandatory = data.FEC_Field_Mandatory__c || false;
             const additionalField = data.FEC_Additional_Field__c || '';
 
-            this.selectedChannels = channelsStr ? channelsStr.split(',').map(item => item.trim()) : [];
+            const fieldObjectName = data.FEC_Field_Object_Name__c || '';
+            const fieldApiName = data.FEC_Field_API_Name__c || '';
+            const fieldLabelName = data.FEC_Field_Label_Name__c || '';
+
+            const fieldMasking = data.FEC_Field_Masking__c || false;
+            const maskingType = data.FEC_Masking_Type__c || '';
+            const fieldReverted = data.FEC_Field_Reverted__c || false;
+            const subSection = data.FEC_Sub_Section__c || '';
+            const subSectionFieldLayout = data.FEC_Sub_Section_Field_Layout__c || null;
+            const subSectionLayout = data.FEC_Sub_Section_Layout__c || null;
+            const subSectionOrder = data.FEC_Sub_Section_Order__c || null;
+            const editableUserGroupStr = data.FEC_Editable_User_Group__c || '';
+            const fieldEditable = data.FEC_Field_Editable__c || false;
+            const editableRole = data.FEC_Editable_Role__c || '';
+
+            this.selectedChannel = data.FEC_MDM_Channel__c || (data.FEC_MDM_Channel__r ? data.FEC_MDM_Channel__r.Id : '') || '';
             this.selectedRoles = rolesStr ? rolesStr.split(',').map(item => item.trim()) : [];
+            this.selectedEditableUserGroups = editableUserGroupStr ? editableUserGroupStr.split(';').map(item => item.trim()) : [];
             this.displayOrder = order;
             this.formData = {
                 additionalField: additionalField,
                 section: section,
                 fieldStatus: status,
                 fieldReadOnly: readOnly,
-                fieldMandatory: mandatory
+                fieldMandatory: mandatory,
+                fieldObjectName,
+                fieldApiName,
+                fieldLabelName,
+                fieldMasking,
+                maskingType,
+                fieldReverted,
+                subSection,
+                subSectionFieldLayout,
+                subSectionLayout,
+                subSectionOrder,
+                editableUserGroup: editableUserGroupStr,
+                fieldEditable,
+                editableRole
             };
             showLog('[populateFormFromRecordData] Form populated successfully');
         } catch (error) {
@@ -133,18 +204,72 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
     @wire(getAdditionalFieldOptions)
     wiredAdditionalFields({ data }) {
-        if (data) this.additionalFieldOptions = data;
+        if (data) {
+            this.additionalFieldOptions = data;
+            // Build propertyInfoMap for auto-fill (Phase 3)
+            this.propertyInfoMap = new Map();
+            data.forEach(opt => {
+                this.propertyInfoMap.set(opt.value, {
+                    name: opt.label,
+                    fieldApiName: opt.fieldApiName || ''
+                });
+            });
+        }
+    }
+
+    @wire(getObjectInfo, { objectApiName: MDM_MASTER_DATA_SETTING_OBJECT })
+    mdmObjectInfo;
+
+    @wire(getPicklistValues, { recordTypeId: '$mdmObjectInfo.data.defaultRecordTypeId', fieldApiName: MASKING_TYPE_FIELD })
+    wiredMaskingTypeValues({ data }) {
+        if (data) {
+            this.maskingTypeOptions = data.values.map(item => ({
+                label: item.label,
+                value: item.value
+            }));
+        }
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$mdmObjectInfo.data.defaultRecordTypeId', fieldApiName: EDITABLE_USER_GROUP_FIELD })
+    wiredEditableUserGroupValues({ data }) {
+        if (data) {
+            this.editableUserGroupOptions = data.values.map(item => ({
+                label: item.label,
+                value: item.value
+            }));
+        }
     }
 
     // Handle input change for create mode
     handleInputChange(event) {
         const fieldName = event.target.dataset.fieldName;
-        const value = event.detail?.value || event.target.value;
+        // Use nullish coalescing to properly handle falsy values like 0 and ""
+        const value = event.detail?.value ?? event.target.value;
 
         showLog('[handleInputChange] Field:', fieldName, 'Value:', value);
 
         if (fieldName === 'FEC_Additional_Field__c') {
             this.formData = { ...this.formData, additionalField: value };
+            // Auto-fill from Property info (Phase 3)
+            const info = this.propertyInfoMap.get(value);
+            if (info && info.fieldApiName) {
+                this.formData = {
+                    ...this.formData,
+                    additionalField: value,
+                    fieldObjectName: 'FEC_Additional_Info__c',
+                    fieldApiName: info.fieldApiName,
+                    fieldLabelName: info.name
+                };
+            } else {
+                // Always set Object Name when a Property is selected
+                this.formData = {
+                    ...this.formData,
+                    additionalField: value,
+                    fieldObjectName: value ? 'FEC_Additional_Info__c' : '',
+                    fieldApiName: value ? this.formData.fieldApiName : '',
+                    fieldLabelName: value ? this.formData.fieldLabelName : ''
+                };
+            }
         } else if (fieldName === 'FEC_Section__c') {
             this.formData = { ...this.formData, section: value };
         } else if (fieldName === 'FEC_Field_Order_Display__c') {
@@ -155,9 +280,37 @@ export default class FecMasterDataSettingForm extends LightningElement {
             this.formData = { ...this.formData, fieldReadOnly: event.detail.checked };
         } else if (fieldName === 'FEC_Field_Mandatory__c') {
             this.formData = { ...this.formData, fieldMandatory: event.detail.checked };
+        } else if (fieldName === 'FEC_Field_Object_Name__c') {
+            this.formData = { ...this.formData, fieldObjectName: value };
+        } else if (fieldName === 'FEC_Field_API_Name__c') {
+            this.formData = { ...this.formData, fieldApiName: value };
+        } else if (fieldName === 'FEC_Field_Label_Name__c') {
+            this.formData = { ...this.formData, fieldLabelName: value };
+        } else if (fieldName === 'FEC_Field_Masking__c') {
+            this.formData = { ...this.formData, fieldMasking: event.detail.checked };
+        } else if (fieldName === 'FEC_Masking_Type__c') {
+            this.formData = { ...this.formData, maskingType: value };
+        } else if (fieldName === 'FEC_Field_Reverted__c') {
+            this.formData = { ...this.formData, fieldReverted: event.detail.checked };
+        } else if (fieldName === 'FEC_Sub_Section__c') {
+            this.formData = { ...this.formData, subSection: value };
+        } else if (fieldName === 'FEC_Sub_Section_Field_Layout__c') {
+            this.formData = { ...this.formData, subSectionFieldLayout: value };
+        } else if (fieldName === 'FEC_Sub_Section_Layout__c') {
+            this.formData = { ...this.formData, subSectionLayout: value };
+        } else if (fieldName === 'FEC_Sub_Section_Order__c') {
+            this.formData = { ...this.formData, subSectionOrder: value };
+        } else if (fieldName === 'FEC_Field_Editable__c') {
+            this.formData = { ...this.formData, fieldEditable: event.detail.checked };
+        } else if (fieldName === 'FEC_Editable_Role__c') {
+            this.formData = { ...this.formData, editableRole: value };
         }
 
         showLog('[handleInputChange] Updated formData:', this.formData);
+    }
+
+    handleChannelChange(event) {
+        this.selectedChannel = event.detail.value;
     }
 
     handleSelectCustom(event) {
@@ -167,11 +320,11 @@ export default class FecMasterDataSettingForm extends LightningElement {
         // Prevent adding empty values
         if (!value) return;
 
-        if (field === DATA_NAME_CHANNELS && !this.selectedChannels.includes(value)) {
-            this.selectedChannels = [...this.selectedChannels, value];
-            this.clearCombobox(event.target);
-        } else if (field === DATA_NAME_ROLES && !this.selectedRoles.includes(value)) {
+        if (field === DATA_NAME_ROLES && !this.selectedRoles.includes(value)) {
             this.selectedRoles = [...this.selectedRoles, value];
+            this.clearCombobox(event.target);
+        } else if (field === DATA_NAME_EDITABLE_USER_GROUPS && !this.selectedEditableUserGroups.includes(value)) {
+            this.selectedEditableUserGroups = [...this.selectedEditableUserGroups, value];
             this.clearCombobox(event.target);
         }
     }
@@ -184,19 +337,19 @@ export default class FecMasterDataSettingForm extends LightningElement {
     handleRemoveCustom(event) {
         const field = event.target.dataset.name;
         const value = event.target.name;
-        if (field === DATA_NAME_CHANNELS) {
-            this.selectedChannels = this.selectedChannels.filter(v => v !== value);
-        } else if (field === DATA_NAME_ROLES) {
+        if (field === DATA_NAME_ROLES) {
             this.selectedRoles = this.selectedRoles.filter(v => v !== value);
+        } else if (field === DATA_NAME_EDITABLE_USER_GROUPS) {
+            this.selectedEditableUserGroups = this.selectedEditableUserGroups.filter(v => v !== value);
         }
     }
 
     handleSubmit(event) {
         event.preventDefault();
 
-        // Validate multi-select fields - Set title to empty string
-        if (this.selectedChannels.length === 0) {
-            this.showToast('', 'Please select at least one Channel', 'error');
+        // Validate single-select channel
+        if (!this.selectedChannel) {
+            this.showToast('', 'Please select a Channel', 'error');
             return;
         }
 
@@ -207,7 +360,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
         try {
             const fields = event.detail.fields || {};
-            fields[FIELD_CHANNEL] = this.selectedChannels.join(', ');
+            fields['FEC_MDM_Channel__c'] = this.selectedChannel || null;
             fields[FIELD_APPLICABLE_ROLE] = this.selectedRoles.join(', ');
             fields[FIELD_NATURE_OF_CASE] = this.natureOfCaseId;
             fields[FIELD_STAGE_NAME] = this.stageId;
@@ -220,7 +373,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     }
 
     handleCreateSubmit() {
-        showLog('[handleSuccess] START - refreshing data');
+        showLog('[handleCreateSubmit] START');
 
         // Validation - Trimming whitespace and making sure content exists
         const trimmedSection = this.formData.section ? this.formData.section.trim() : '';
@@ -236,8 +389,8 @@ export default class FecMasterDataSettingForm extends LightningElement {
             return;
         }
 
-        if (this.selectedChannels.length === 0) {
-            this.showToast('', 'Please select at least one Channel', 'error');
+        if (!this.selectedChannel) {
+            this.showToast('', 'Please select a Channel', 'error');
             return;
         }
         if (this.selectedRoles.length === 0) {
@@ -245,19 +398,64 @@ export default class FecMasterDataSettingForm extends LightningElement {
             return;
         }
 
+        // Check parent node duplicate trước khi save
+        checkParentDuplicateProperty({
+            nocId: this.natureOfCaseId,
+            stageId: this.stageId,
+            additionalFieldId: this.formData.additionalField,
+            channelId: this.selectedChannel,
+            applicableRole: this.selectedRoles.join(', ')
+        })
+            .then(parentNodeName => {
+                if (parentNodeName) {
+                    this.showToast(
+                        'Warning',
+                        `This property already exists at parent node "${parentNodeName}" with the same Channel. Cannot add duplicate.`,
+                        'warning'
+                    );
+                    return;
+                }
+                // Không trùng → tiến hành save
+                this._doCreateSave(trimmedSection);
+            })
+            .catch(error => {
+                console.error('Error checking parent duplicate:', error);
+                // Nếu check lỗi, vẫn cho save (không block user)
+                this._doCreateSave(trimmedSection);
+            });
+    }
+
+    /**
+     * Thực hiện save sau khi đã pass duplicate check
+     * @param {String} trimmedSection
+     */
+    _doCreateSave(trimmedSection) {
         try {
             const mappingReq = {
                 [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,
                 // Ensure we don't save whitespace-only strings
                 [FIELD_SECTION]: trimmedSection || null,
-                [FIELD_CHANNEL]: this.selectedChannels.join(', '),
+                ['FEC_MDM_Channel__c']: this.selectedChannel || null,
                 [FIELD_APPLICABLE_ROLE]: this.selectedRoles.join(', '),
                 [FIELD_FIELD_ORDER_DISPLAY]: this.displayOrder || 0,
                 [FIELD_FIELD_STATUS]: this.formData.fieldStatus,
                 [FIELD_FIELD_READONLY]: this.formData.fieldReadOnly,
                 [FIELD_FIELD_MANDATORY]: this.formData.fieldMandatory,
                 [FIELD_NATURE_OF_CASE]: this.natureOfCaseId,
-                [FIELD_STAGE_NAME]: this.stageId
+                [FIELD_STAGE_NAME]: this.stageId,
+                [FIELD_FIELD_OBJECT_NAME]: this.formData.fieldObjectName || null,
+                [FIELD_FIELD_API_NAME]: this.formData.fieldApiName || null,
+                [FIELD_FIELD_LABEL_NAME]: this.formData.fieldLabelName || null,
+                [FIELD_FIELD_MASKING]: this.formData.fieldMasking,
+                [FIELD_MASKING_TYPE]: this.formData.maskingType || null,
+                [FIELD_FIELD_REVERTED]: this.formData.fieldReverted,
+                [FIELD_SUB_SECTION]: this.formData.subSection || null,
+                [FIELD_SUB_SECTION_FIELD_LAYOUT]: this.formData.subSectionFieldLayout || null,
+                [FIELD_SUB_SECTION_LAYOUT]: this.formData.subSectionLayout || null,
+                [FIELD_SUB_SECTION_ORDER]: this.formData.subSectionOrder || null,
+                [FIELD_EDITABLE_USER_GROUP]: this.selectedEditableUserGroups.join(';') || null,
+                [FIELD_FIELD_EDITABLE]: this.formData.fieldEditable,
+                [FIELD_EDITABLE_ROLE]: this.formData.editableRole || null
             };
 
             saveMasterDataSetting({ mappingReq })
@@ -304,7 +502,7 @@ export default class FecMasterDataSettingForm extends LightningElement {
     handleSubmitEdit() {
         showLog('[handleSubmitEdit] START - Saving edit with all fields editable');
         showLog('[handleSubmitEdit] Current formData:', this.formData);
-        showLog('[handleSubmitEdit] Selected Channels:', this.selectedChannels);
+        showLog('[handleSubmitEdit] Selected Channel:', this.selectedChannel);
         showLog('[handleSubmitEdit] Selected Roles:', this.selectedRoles);
         showLog('[handleSubmitEdit] Display Order:', this.displayOrder);
 
@@ -315,8 +513,8 @@ export default class FecMasterDataSettingForm extends LightningElement {
             this.showToast('', 'Please select Additional Field', 'error');
             return;
         }
-        if (this.selectedChannels.length === 0) {
-            this.showToast('', 'Please select at least one Channel', 'error');
+        if (!this.selectedChannel) {
+            this.showToast('', 'Please select a Channel', 'error');
             return;
         }
         if (this.selectedRoles.length === 0) {
@@ -326,18 +524,31 @@ export default class FecMasterDataSettingForm extends LightningElement {
 
         try {
             const mappingReq = {
-                Id: this.recordId,
-                FEC_Additional_Field__c: this.formData.additionalField,
+                [FIELD_ID]: this.recordId,
+                [FIELD_ADDITIONAL_FIELD]: this.formData.additionalField,
                 // Ensure we don't save whitespace-only strings
-                FEC_Section__c: trimmedSection || null,
-                FEC_Channel__c: this.selectedChannels.join(', '),
-                FEC_Applicable_Role__c: this.selectedRoles.join(', '),
-                FEC_Field_Order_Display__c: this.displayOrder || 0,
-                FEC_Field_Status__c: this.formData.fieldStatus,
-                FEC_Field_ReadOnly__c: this.formData.fieldReadOnly,
-                FEC_Field_Mandatory__c: this.formData.fieldMandatory,
-                FEC_Nature_Of_Case__c: this.natureOfCaseId,
-                FEC_Stage_Name__c: this.stageId
+                [FIELD_SECTION]: trimmedSection || null,
+                ['FEC_MDM_Channel__c']: this.selectedChannel || null,
+                [FIELD_APPLICABLE_ROLE]: this.selectedRoles.join(', '),
+                [FIELD_FIELD_ORDER_DISPLAY]: this.displayOrder || 0,
+                [FIELD_FIELD_STATUS]: this.formData.fieldStatus,
+                [FIELD_FIELD_READONLY]: this.formData.fieldReadOnly,
+                [FIELD_FIELD_MANDATORY]: this.formData.fieldMandatory,
+                [FIELD_NATURE_OF_CASE]: this.natureOfCaseId,
+                [FIELD_STAGE_NAME]: this.stageId,
+                [FIELD_FIELD_OBJECT_NAME]: this.formData.fieldObjectName || null,
+                [FIELD_FIELD_API_NAME]: this.formData.fieldApiName || null,
+                [FIELD_FIELD_LABEL_NAME]: this.formData.fieldLabelName || null,
+                [FIELD_FIELD_MASKING]: this.formData.fieldMasking,
+                [FIELD_MASKING_TYPE]: this.formData.maskingType || null,
+                [FIELD_FIELD_REVERTED]: this.formData.fieldReverted,
+                [FIELD_SUB_SECTION]: this.formData.subSection || null,
+                [FIELD_SUB_SECTION_FIELD_LAYOUT]: this.formData.subSectionFieldLayout || null,
+                [FIELD_SUB_SECTION_LAYOUT]: this.formData.subSectionLayout || null,
+                [FIELD_SUB_SECTION_ORDER]: this.formData.subSectionOrder || null,
+                [FIELD_EDITABLE_USER_GROUP]: this.selectedEditableUserGroups.join(';') || null,
+                [FIELD_FIELD_EDITABLE]: this.formData.fieldEditable,
+                [FIELD_EDITABLE_ROLE]: this.formData.editableRole || null
             };
 
             showLog('[handleSubmitEdit] Mapping Request:', mappingReq);

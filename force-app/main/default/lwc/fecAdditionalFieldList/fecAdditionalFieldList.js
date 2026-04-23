@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, wire } from 'lwc';
 import getAdditionalFields from '@salesforce/apex/FEC_AdditionalFieldController.getAdditionalFields';
 import deleteAdditionalField from '@salesforce/apex/FEC_AdditionalFieldController.deleteRecord'; 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -29,11 +29,16 @@ import LABEL_CONFIRM_DELETE_MSG from '@salesforce/label/c.FEC_Confirm_Delete_Mes
 import LABEL_BUTTON_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
 import LABEL_BUTTON_DELETE from '@salesforce/label/c.FEC_Button_Delete';
 import LABEL_BUTTON_CLOSE from '@salesforce/label/c.FEC_Button_Close';
+import LABEL_MANAGE_MAPPING from '@salesforce/label/c.FEC_Manage_Mapping';
+import LABEL_SEARCH_PLACEHOLDER from '@salesforce/label/c.FEC_Search_Placeholder';
+import LABEL_WARNING_DELETE_NEW_ONLY from '@salesforce/label/c.FEC_Warning_Delete_New_Only';
+import LABEL_ERROR_DELETE_FAILED from '@salesforce/label/c.FEC_Error_Delete_Failed';
 
 const ACTIONS = [
     { label: LABEL_EDIT, name: 'edit' },
     { label: LABEL_DELETE, name: 'delete' },
-    { label: LABEL_MANAGE_LIST_VALUES, name: 'manage_list_values' }
+    { label: LABEL_MANAGE_LIST_VALUES, name: 'manage_list_values' },
+    { label: LABEL_MANAGE_MAPPING, name: 'manage_mapping' }
 ];
 const COLUMNS = [
     { label: LABEL_UNIQUE_ID, fieldName: FIELD_FEC_UNIQUE_ID, type: 'text', sortable: true },
@@ -48,29 +53,40 @@ const COLUMNS = [
 
 export default class FecAdditionalFieldList extends LightningElement {
 
-    @track fieldList;
-    @track error;
-    @track columns = COLUMNS;
-    @track isLoading = false;
-    @track isModalOpen = false;
-    @track actionClick = false;
-    @track modalTitle = "";
-    @track recordIdForEdit; 
-    @track isEditModalOpen = false; 
-    @track showDeleteConfirm = false; 
-    @track recordIdToDelete = null; 
-    @track isListValueModalOpen = false; 
-    @track selectedFieldRecord = {};    
+    fieldList;
+    error;
+    columns = COLUMNS;
+    isLoading = false;
+    isModalOpen = false;
+    actionClick = false;
+    modalTitle = "";
+    recordIdForEdit; 
+    isEditModalOpen = false; 
+    showDeleteConfirm = false; 
+    recordIdToDelete = null; 
+    isListValueModalOpen = false; 
+    selectedFieldRecord = {};
+    isMappingModalOpen = false;
+    mappingRecordId = null;
+    mappingModalTitle = '';
     wiredFieldsResult;
 
     sortedBy;
     sortDirection = 'asc';
+    searchTerm = '';
+    allFieldList;;
+    pageSize = 15;
+    currentPage = 1;
+    totalRecords = 0;
+    totalPages = 1;
+
+    labelSearchPlaceholder = LABEL_SEARCH_PLACEHOLDER;
 
     // ==========================================================
     // KHỐI CODE BỔ SUNG CHỈ DÀNH CHO HISTORY (GIAO DIỆN)
     // ==========================================================
-    @track isHistoryVisible = false;
-    @track historyRecordId = ''; 
+    isHistoryVisible = false;
+    historyRecordId = ''; 
 
     get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
     get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
@@ -79,12 +95,19 @@ export default class FecAdditionalFieldList extends LightningElement {
 
     handleToggleHistory() {
         this.isHistoryVisible = !this.isHistoryVisible;
+        if (this.isHistoryVisible && this._pendingHistoryRefresh) {
+            this._pendingHistoryRefresh = false;
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(() => { this.refreshHistoryPanel(); }, 200);
+        }
     }
 
     refreshHistoryPanel() {
         const historyComp = this.template.querySelector('[data-id="historyComponent"]');
         if (historyComp) {
             historyComp.refreshData();
+        } else {
+            this._pendingHistoryRefresh = true;
         }
     }
     // ==========================================================
@@ -102,15 +125,66 @@ export default class FecAdditionalFieldList extends LightningElement {
         this.wiredFieldsResult = result;
         this.isLoading = true;
         if (result.data) {
-            this.fieldList = result.data;
+            this.allFieldList = result.data;
+            this.applySearch();
             this.error = undefined;
         } else if (result.error) {
             this.error = result.error;
+            this.allFieldList = undefined;
             this.fieldList = undefined;
             this.showToast(LABEL_ERROR_TITLE, LABEL_ERROR_RETRIEVE + ': ' + (result.error.body?.message || result.error.message), 'error');
         }
         this.isLoading = false;
     }
+
+    handleSearch(event) {
+        this.searchTerm = event.target.value;
+        this.applySearch();
+    }
+
+    applySearch() {
+        if (!this.allFieldList) {
+            this.fieldList = undefined;
+            return;
+        }
+        let filtered;
+        if (!this.searchTerm || this.searchTerm.trim() === '') {
+            filtered = [...this.allFieldList];
+        } else {
+            const key = this.searchTerm.toLowerCase().trim();
+            filtered = this.allFieldList.filter(f => {
+                const uid = (f[FIELD_FEC_UNIQUE_ID] || '').toLowerCase();
+                const name = (f[FIELD_NAME] || '').toLowerCase();
+                return uid.includes(key) || name.includes(key);
+            });
+        }
+        this.fieldList = filtered;
+        this.totalRecords = filtered.length;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize) || 1;
+        this.currentPage = 1;
+    }
+
+    get paginatedFieldList() {
+        if (!this.fieldList) return [];
+        const start = (this.currentPage - 1) * this.pageSize;
+        return this.fieldList.slice(start, start + this.pageSize);
+    }
+
+    handlePreviousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+        }
+    }
+
+    handleNextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+        }
+    }
+
+    get isFirstPage() { return this.currentPage <= 1; }
+    get isLastPage() { return this.currentPage >= this.totalPages; }
+    get paginationInfo() { return `${this.currentPage} / ${this.totalPages} (${this.totalRecords} records)`; }
 
     async deleteRecord(recordId) {
         this.isLoading = true;
@@ -120,12 +194,10 @@ export default class FecAdditionalFieldList extends LightningElement {
             if (this.wiredFieldsResult) {
                 await refreshApex(this.wiredFieldsResult);
             }
-            // Gọi refresh lịch sử nếu đang mở
-            if (this.isHistoryVisible) {
-                this.refreshHistoryPanel();
-            }
+            // Gọi refresh lịch sử
+            this.refreshHistoryPanel();
         } catch (error) {
-            this.showToast(LABEL_ERROR_TITLE, error?.body?.message || error?.message || 'Failed to delete record.', 'error');
+            this.showToast(LABEL_ERROR_TITLE, error?.body?.message || error?.message || LABEL_ERROR_DELETE_FAILED, 'error');
         } finally {
             this.isLoading = false;
         }
@@ -144,7 +216,7 @@ export default class FecAdditionalFieldList extends LightningElement {
             case 'delete':
                 // KIỂM TRA ĐIỀU KIỆN XÓA TẠI ĐÂY
                 if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
-                    this.showToast(LABEL_WARNING_TITLE, 'Chỉ được phép xóa bản ghi có Process Status là "New".', 'warning');
+                    this.showToast(LABEL_WARNING_TITLE, LABEL_WARNING_DELETE_NEW_ONLY, 'warning');
                     return; // Dừng lại, không mở xác nhận xóa
                 }
                 this.recordIdToDelete = row.Id;
@@ -152,7 +224,10 @@ export default class FecAdditionalFieldList extends LightningElement {
                 break;
             case 'manage_list_values':
                 this.handleManageListValues(row);
-                break; 
+                break;
+            case 'manage_mapping':
+                this.handleManageMapping(row);
+                break;
             default:
         }
     }
@@ -165,6 +240,17 @@ export default class FecAdditionalFieldList extends LightningElement {
         } else {
             this.showToast(LABEL_WARNING_TITLE, LABEL_WARNING_TYPE_NOT_LIST.replace('{0}', record.Name), 'warning');
         }
+    }
+
+    handleManageMapping(record) {
+        this.mappingRecordId = record.FEC_Unique_ID__c;
+        this.mappingModalTitle = LABEL_MANAGE_MAPPING + ': ' + record.Name;
+        this.isMappingModalOpen = true;
+    }
+
+    closeMappingModal() {
+        this.isMappingModalOpen = false;
+        this.mappingRecordId = null;
     }
 
     closeListValueModal() {
@@ -211,16 +297,17 @@ export default class FecAdditionalFieldList extends LightningElement {
         this.recordIdForEdit = null;
     }
 
-    handleSuccess() {
+    async handleSuccess() {
         this.closeModal();
         this.showToast(LABEL_SUCCESS_TITLE, LABEL_SAVE_SUCCESS_MSG, 'success');
         if (this.wiredFieldsResult) {
-            refreshApex(this.wiredFieldsResult);
+            await refreshApex(this.wiredFieldsResult);
         }
-        // Gọi refresh lịch sử nếu đang mở
-        if (this.isHistoryVisible) {
+        // Gọi refresh lịch sử — delay để History Tracking kịp commit
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
             this.refreshHistoryPanel();
-        }
+        }, 500);
     }
 
     handleSort(event) {
@@ -230,7 +317,7 @@ export default class FecAdditionalFieldList extends LightningElement {
     }
 
     sortData(fieldName, direction) {
-        let parseData = JSON.parse(JSON.stringify(this.fieldList));
+        let parseData = [...this.fieldList];
         let isReverse = direction === 'asc' ? 1 : -1;
         parseData.sort((x, y) => {
             x = (x[fieldName] === undefined || x[fieldName] === null) ? '' : x[fieldName];
@@ -238,6 +325,7 @@ export default class FecAdditionalFieldList extends LightningElement {
             return isReverse * ((x > y) - (y > x));
         });
         this.fieldList = parseData;
+        this.currentPage = 1;
     }
 
     showToast(title, message, variant) {
