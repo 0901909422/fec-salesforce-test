@@ -14044,4 +14044,227 @@
         <shortDescription>Unknown Sys.Code</shortDescription>
         <value>Unknown Sys.Code</value>
     </labels>
+    <labels>
+        <fullName>FEC_Chat_Customer_Username_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username label</shortDescription>
+        <value>Customer Username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Interaction Phone label</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_KYC_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - KYC Status label</shortDescription>
+        <value>KYC Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone invalid format error</shortDescription>
+        <value>Invalid phone format (10 digits starting with &quot;0&quot; or 11 digits starting with &quot;84&quot;).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone placeholder</shortDescription>
+        <value>Enter phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone required error</shortDescription>
+        <value>Phone is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username placeholder</shortDescription>
+        <value>Enter customer username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Username required error</shortDescription>
+        <value>Customer Username is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Eligible</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Not_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Not_Eligible</shortDescription>
+        <value>Not eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_External_Interaction_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - External Interaction ID label</shortDescription>
+        <value>External Interaction ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_No</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_No</shortDescription>
+        <value>Không</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Max_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Max_Amount</shortDescription>
+        <value>Max Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Requested_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Requested_Amount</shortDescription>
+        <value>Requested Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Loading</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Modal_Body</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Modal_Body</shortDescription>
+        <value>Bạn sắp thực hiện đăng ký Fast Cash. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_10</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_10</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_12</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_12</shortDescription>
+        <value>Số tiền đăng ký ít nhất là 2,000,000 VND và không vượt quá số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_15</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_15</shortDescription>
+        <value>Không đủ điều kiện đăng ký Fast Cash.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Block_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Block_Amount</shortDescription>
+        <value>Block Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_Yes</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_Yes</shortDescription>
+        <value>Có</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Code</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Code</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_01</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_01</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_02</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_02</shortDescription>
+        <value>Số tiền đăng ký phải từ 2,000,000 VND đến số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_08</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_08</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_09</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_09</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Description</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Description</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Processing</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Processing</shortDescription>
+        <value>Processing</value>
+    </labels>
 </CustomLabels>

@@ -95,6 +95,15 @@
 		<members>FEC_POS</members>
 		<members>FEC_Phone_Number</members>
 		<members>FEC_Promised_Repayment_Amount</members>
+		<members>FEC_Chat_Customer_Username_Label</members>
+		<members>FEC_Chat_Interaction_Phone_Label</members>
+		<members>FEC_Chat_KYC_Status_Label</members>
+		<members>FEC_Chat_Phone_Invalid</members>
+		<members>FEC_Chat_Phone_Placeholder</members>
+		<members>FEC_Chat_Phone_Required</members>
+		<members>FEC_Chat_Username_Placeholder</members>
+		<members>FEC_Chat_Username_Required</members>
+		<members>FEC_Chat_External_Interaction_ID_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
