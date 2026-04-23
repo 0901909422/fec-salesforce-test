@@ -79,8 +79,8 @@ public with sharing class FEC_GetCardFinancialTransactions {
                 && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
 
                 accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
-                fromDateParam = apiConfig?.FEC_FromDate__c;
-                toDateParam =  apiConfig?.FEC_ToDate__c;
+                fromDateParam = Date.newInstance(2020, 5, 26);
+                toDateParam =  Date.newInstance(2025, 5, 26); 
 
             } else {
                 accountNumberParam = accountNumber;
