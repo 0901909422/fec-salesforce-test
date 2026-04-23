@@ -889,6 +889,7 @@
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
