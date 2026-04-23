@@ -827,7 +827,7 @@ const todayIso = () => {
   return y + '-' + m + '-' + d;
 };
 
-/** Human-readable file size (B … GB). */
+/** Human-readable file size (B … GB). Dùng bởi fec_FileUploadCard và LWC khác. */
 const formatBytes = (bytes) => {
   const n = Number(bytes);
   if (!n || n <= 0) {
@@ -839,7 +839,7 @@ const formatBytes = (bytes) => {
   return `${(n / k ** i).toFixed(i > 0 ? 1 : 0)} ${sizes[i]}`;
 };
 
-/** Short locale date for file lists (e.g. "18 Apr 2026"). */
+/** Ngày ngắn theo locale (vd. "18 Apr 2026") — list file. */
 const formatShortDate = (dt) => {
   if (!dt) {
     return "";
@@ -856,13 +856,59 @@ const formatShortDate = (dt) => {
   }
 };
 
-/** Badge text from file extension (max 4 chars, upper). */
+/** Nhãn phần mở rộng file (tối đa 4 ký tự, in hoa). */
 const extensionBadge = (ext) => {
   const e = (ext || "").toLowerCase().replace(/^\./, "");
   if (!e) {
     return "FILE";
   }
   return e.length <= 4 ? e.toUpperCase() : e.slice(0, 4).toUpperCase();
+};
+
+/**
+ * `lightning-icon` icon-name theo phần mở rộng (ContentDocument.FileExtension / tên file).
+ * Dùng cho bảng file / related list.
+ */
+const doctypeIconFromExtension = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  const map = {
+    pdf: "doctype:pdf",
+    xlsx: "doctype:excel",
+    xls: "doctype:excel",
+    csv: "doctype:csv",
+    doc: "doctype:word",
+    docx: "doctype:word",
+    ppt: "doctype:ppt",
+    pptx: "doctype:ppt",
+    txt: "doctype:txt",
+    xml: "doctype:xml",
+    png: "doctype:image",
+    jpg: "doctype:image",
+    jpeg: "doctype:image",
+    gif: "doctype:image",
+    zip: "doctype:zip"
+  };
+  return map[e] || "doctype:attachment";
+};
+
+/**
+ * Map 1 object cùng shape `FEC_CaseLinkedFilesController.CaseLinkedFileRow` → row UI bảng (Title / Owner / …).
+ */
+const mapLinkedFileToTableRow = (row) => {
+  if (!row) {
+    return null;
+  }
+  const ext = row.fileExtension || "";
+  const title = row.title || row.contentDocumentId;
+  return {
+    id: row.linkId,
+    linkLabel: title,
+    contentDocumentId: row.contentDocumentId,
+    ownerLabel: row.ownerName || "—",
+    lastModifiedLabel: formatDateTimeVNShort(row.lastModifiedDate) || "—",
+    sizeLabel: formatBytes(row.contentSize),
+    iconName: doctypeIconFromExtension(ext)
+  };
 };
 
 const formatCurrencyIncludeTax = (value, text) => {
@@ -909,5 +955,7 @@ export {
   formatCurrencyIncludeTax,
   formatBytes,
   formatShortDate,
-  extensionBadge
+  extensionBadge,
+  doctypeIconFromExtension,
+  mapLinkedFileToTableRow
 };
