@@ -13659,4 +13659,91 @@
         <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Page_Number_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Number Deals</shortDescription>
+        <value>pageNumber is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Size_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Size Deals</shortDescription>
+        <value>pageSize is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contract_Number_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Contract_Number_Is_Null</shortDescription>
+        <value>Contract Number is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Account_Number_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Account_Number_Null</shortDescription>
+        <value>Account is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Amount_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Amount_Null</shortDescription>
+        <value>Amount is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CRM_ID_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CRM_ID_Null</shortDescription>
+        <value>CRM ID is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_DisbChannel_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_DisbChannel_Null</shortDescription>
+        <value>DisbChannel is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NationalIDs_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_NationalIDs_Null</shortDescription>
+        <value>National IDs are null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Tenure_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Tenure_Null</shortDescription>
+        <value>Tenure is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Record_Type_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Record_Type_Is_Null</shortDescription>
+        <value>Record Type is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Callout_Insurance</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
+        <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+    </labels>
 </CustomLabels>
