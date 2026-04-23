@@ -75,7 +75,7 @@
             type="date"
             date-style="short"
             placeholder={customLabel.datePlaceholder}
-            label={customLabel.billDate}
+            label={manualBillDateFieldLabel}
             value={manualBillDate}
             max={maxManualBillDate}
             disabled={isReadOnly}
@@ -88,7 +88,7 @@
             data-id="manual-bill-amount"
             name="manualBillAmount"
             type="number"
-            label={customLabel.billAmount}
+            label={manualBillAmountFieldLabel}
             value={manualBillAmount}
             disabled={isReadOnly}
             onchange={handleManualBillAmountChange}
