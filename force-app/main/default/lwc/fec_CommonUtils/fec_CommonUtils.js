@@ -827,6 +827,44 @@ const todayIso = () => {
   return y + '-' + m + '-' + d;
 };
 
+/** Human-readable file size (B … GB). */
+const formatBytes = (bytes) => {
+  const n = Number(bytes);
+  if (!n || n <= 0) {
+    return "0 B";
+  }
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(n) / Math.log(k));
+  return `${(n / k ** i).toFixed(i > 0 ? 1 : 0)} ${sizes[i]}`;
+};
+
+/** Short locale date for file lists (e.g. "18 Apr 2026"). */
+const formatShortDate = (dt) => {
+  if (!dt) {
+    return "";
+  }
+  try {
+    const d = new Date(dt);
+    return d.toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  } catch (e) {
+    return "";
+  }
+};
+
+/** Badge text from file extension (max 4 chars, upper). */
+const extensionBadge = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  if (!e) {
+    return "FILE";
+  }
+  return e.length <= 4 ? e.toUpperCase() : e.slice(0, 4).toUpperCase();
+};
+
 const formatCurrencyIncludeTax = (value, text) => {
   let val = formatNumber(value);
   if (!val || val == '0') return '';
@@ -869,4 +907,7 @@ export {
   todayIso,
   toUpperNoVietnameseAccent,
   formatCurrencyIncludeTax,
+  formatBytes,
+  formatShortDate,
+  extensionBadge
 };

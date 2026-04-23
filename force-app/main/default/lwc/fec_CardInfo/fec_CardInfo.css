@@ -16,7 +16,7 @@
 /* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
 .error-text {
     color: #c23934 !important;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 /* Đường ngăn cách cột - truyền biến CSS cho bảng Card Delivery và Other Cards */
