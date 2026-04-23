@@ -54,14 +54,32 @@
 }
 
 /* Tree item positioning và styling */
+:host {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+li[role="treeitem"] {
+    padding: 0;
+    margin: 0;
+    line-height: 1.2;
+}
+
+ul[role="group"] {
+    padding: 0;
+    margin: 0;
+}
+
 .slds-tree__item {
     position: relative;
+    padding: 2px 0;
 }
 
 .slds-tree__item > div {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: 2px 8px;
     position: relative;
 }
 

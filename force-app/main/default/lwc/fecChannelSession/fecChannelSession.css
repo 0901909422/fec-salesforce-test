@@ -62,8 +62,8 @@
     border: 1px solid #d8dde6;
     border-radius: 4px;
     background-color: white;
-    overflow: hidden !important;
-    max-width: 100%; /* Không được to hơn container cha */
+    overflow: visible;
+    max-width: 100%;
     box-sizing: border-box;
 }
 

@@ -5,6 +5,7 @@
     <externalId>false</externalId>
     <label>Priority</label>
     <precision>5</precision>
+    <required>false</required>
     <scale>0</scale>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

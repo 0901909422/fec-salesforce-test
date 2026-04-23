@@ -70,13 +70,16 @@
                     onchange={handleSubCategory}>
                 </lightning-combobox>
 
-                <lightning-combobox
-                    label={labels.Int_Sub_Code}
-                    class="slds-col slds-size_1-of-4"
-                    options={subCodeOptions}
-                    value={subCode}
-                    onchange={handleSubCode}>
-                </lightning-combobox>
+                <template if:true={hasSubCodeOptions}>
+                    <lightning-combobox
+                        label={labels.Int_Sub_Code}
+                        required
+                        class="slds-col slds-size_1-of-4"
+                        options={subCodeOptions}
+                        value={subCode}
+                        onchange={handleSubCode}>
+                    </lightning-combobox>
+                </template>
 
             </div>
         </div>
@@ -149,13 +152,7 @@
                             <td>{r.csmPropertyType}</td>
 
                             <td class="slds-text-align_center">
-                                <lightning-input
-                                type="checkbox"
-                                checked={r.autoMapping}
-                                data-id={r.id}
-                                onchange={handleAutoMappingChange}>
-                            </lightning-input>
-
+                                {r.autoMappingPropertySource}
                             </td>
 
                             <td class="slds-text-align_center">

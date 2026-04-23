@@ -5,8 +5,8 @@
     <label>Process Change Status</label>
     <length>80</length>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
-    <trackHistory>true</trackHistory>
 </CustomField>
