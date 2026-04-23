@@ -3,7 +3,7 @@
     <fullName>FEC_Code__c</fullName>
     <caseSensitive>false</caseSensitive>
     <externalId>true</externalId>
-    <label>FEC Code </label>
+    <label>FEC Code</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>true</trackHistory>

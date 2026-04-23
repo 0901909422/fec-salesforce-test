@@ -3,7 +3,6 @@
     <fullName>FEC_Field_Editable__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Tùy chọn trường có thể chỉnh sửa trên màn hình Case</description>
-    <externalId>false</externalId>
     <label>Field Editable</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

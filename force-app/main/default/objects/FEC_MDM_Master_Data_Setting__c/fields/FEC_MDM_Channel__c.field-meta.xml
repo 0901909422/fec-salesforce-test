@@ -3,7 +3,6 @@
     <fullName>FEC_MDM_Channel__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin kênh được khai thác dữ liệu</description>
-    <externalId>false</externalId>
     <label>Channel</label>
     <referenceTo>FEC_MDM_Channel__c</referenceTo>
     <relationshipName>Master_Data_Setting</relationshipName>

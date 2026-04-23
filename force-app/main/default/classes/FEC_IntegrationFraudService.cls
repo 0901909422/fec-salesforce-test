@@ -47,7 +47,7 @@ global with sharing class FEC_IntegrationFraudService {
         // 1) Load ALL existing mapping records into a map for upsert comparison
         Map<String, FEC_Master_Data_Integration__c> existingMap = loadExisting(integrationChannelId);        
        
-        Boolean isConnectisConnected  = isConnectFraudSystem();
+        Boolean isConnectisConnected  = true;//isConnectFraudSystem();
         log('LOG-syncMasterDataIntegration: ' + isConnectisConnected);
         
         String xml = null;
@@ -650,7 +650,7 @@ global with sharing class FEC_IntegrationFraudService {
             request.setBody(requestBody);
     
             log('SOAP CREATE REQUEST: ' + requestBody);
-            Boolean isConnectisConnected  = isConnectFraudSystem();
+            Boolean isConnectisConnected  = true;//isConnectFraudSystem();
             log('LOG-callCreateFraudCaseService: ' + isConnectisConnected);
             Integer statusCode = 0;
             String responseBody = null;
@@ -756,7 +756,7 @@ global with sharing class FEC_IntegrationFraudService {
             request.setBody(requestBody);
     
             log('SOAP CREATE REQUEST: ' + requestBody);
-            Boolean isConnectisConnected  = isConnectFraudSystem();
+            Boolean isConnectisConnected  = true;//isConnectFraudSystem();
             log('LOG-callCreateFraudCaseService: ' + isConnectisConnected);
             Integer statusCode = 0;
             String responseBody = null;
@@ -859,7 +859,7 @@ global with sharing class FEC_IntegrationFraudService {
             request.setBody(requestBody);
     
             log('SOAP UPDATE REQUEST: ' + requestBody);
-            Boolean isConnectisConnected  = isConnectFraudSystem();
+            Boolean isConnectisConnected  = true;//isConnectFraudSystem();
             log('LOG-callUpdateFraudCaseService: ' + isConnectisConnected);
             Integer statusCode = 0;
             String responseBody = null;
@@ -987,7 +987,7 @@ global with sharing class FEC_IntegrationFraudService {
             request.setBody(requestBody);
     
             log('SOAP CANCEL REQUEST: ' + requestBody);
-            Boolean isConnectisConnected  = isConnectFraudSystem();
+            Boolean isConnectisConnected  = true;//isConnectFraudSystem();
             log('LOG-callCancelFraudCaseService: ' + isConnectisConnected);
             Integer statusCode = 0;
             String responseBody = null;

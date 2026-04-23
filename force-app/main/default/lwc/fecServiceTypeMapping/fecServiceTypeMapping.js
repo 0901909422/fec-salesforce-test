@@ -2,6 +2,7 @@ import { LightningElement, wire, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getServiceTypeTree from '@salesforce/apex/FEC_FecServiceTypeMappingController.getServiceTypeTree';
 import savePropertyMapping from '@salesforce/apex/FEC_FecServiceTypeMappingController.savePropertyMapping';
+import savePropertyMappings from '@salesforce/apex/FEC_FecServiceTypeMappingController.savePropertyMappings';
 import { showLog } from 'c/fecMDMUtils';
 import LABEL_TOAST_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_Success_Title';
 import LABEL_TOAST_SAVE_SUCCESS_MESSAGE from '@salesforce/label/c.FEC_Toast_Save_Success_Message';
@@ -18,7 +19,8 @@ import LABEL_MESSAGE_SELECT_PROPERTY from '@salesforce/label/c.FEC_Message_Selec
 
 export default class FecServiceTypeMapping extends LightningElement {
     @track treeItems = [];
-    @track selectedProperty = null;
+    @track selectedFields = [];
+    @track selectedBpName = '';
     allPropertiesFlat = [];
 
     labelSave = LABEL_BUTTON_SAVE;
@@ -42,50 +44,101 @@ export default class FecServiceTypeMapping extends LightningElement {
 
     handleSelect(event) {
         const id = event.detail.name;
-        const found = this.allPropertiesFlat.find(p => p.name === id);
-        if (found) {
-            this.selectedProperty = { ...found };
+        // Check if selected node is a BP (has items in treeItems)
+        const bpNode = this.treeItems.find(bp => bp.name === id);
+        if (bpNode) {
+            // Selected a BP node → get all child fields
+            this.selectedBpName = bpNode.label;
+            this.selectedFields = (bpNode.items || []).map(field => ({
+                ...field,
+                fieldLabel: field.fieldLabel || field.label,
+                fieldApiName: field.fieldApiName,
+                originalRef: field.propertyRef
+            }));
+        } else {
+            // Selected a field node → find parent BP, then get all fields of that BP
+            const parentBp = this.treeItems.find(bp =>
+                (bp.items || []).some(item => item.name === id)
+            );
+            if (parentBp) {
+                this.selectedBpName = parentBp.label;
+                this.selectedFields = (parentBp.items || []).map(field => ({
+                    ...field,
+                    fieldLabel: field.fieldLabel || field.label,
+                    fieldApiName: field.fieldApiName,
+                    originalRef: field.propertyRef
+                }));
+            }
         }
     }
 
-    handleInputChange(event) {
-        this.selectedProperty.propertyRef = event.target.value;
+    handleFieldInputChange(event) {
+        const fieldName = event.target.dataset.id;
+        this.selectedFields = this.selectedFields.map(field => {
+            if (field.name === fieldName) {
+                return { ...field, propertyRef: event.target.value };
+            }
+            return field;
+        });
     }
 
     @track isSaving = false; // Thêm biến này
 
     // Getter để kiểm tra khi nào nút Save nên bị khóa
     get isSaveDisabled() {
-        return !this.selectedProperty || this.isSaving;
+        return this.selectedFields.length === 0 || this.isSaving;
+    }
+
+    get hasSelectedFields() {
+        return this.selectedFields.length > 0;
     }
 
     async handleSave() {
-        if (!this.selectedProperty || this.isSaving) return;
+        if (this.selectedFields.length === 0 || this.isSaving) return;
+
+        // Collect only changed fields
+        const changedFields = this.selectedFields.filter(
+            field => field.propertyRef !== field.originalRef
+        );
+
+        if (changedFields.length === 0) {
+            this.showToast(LABEL_TOAST_SAVE_SUCCESS_TITLE, LABEL_TOAST_SAVE_SUCCESS_MESSAGE, VARIANT_SUCCESS);
+            return;
+        }
 
         this.isSaving = true;
         try {
-            // 1. Lưu vào Database (Apex)
-            await savePropertyMapping({
-                settingId: this.selectedProperty.name,
-                newRef: this.selectedProperty.propertyRef
+            // 1. Build bulk save payload
+            const mappings = changedFields.map(field => ({
+                settingId: field.name,
+                newRef: field.propertyRef
+            }));
+
+            // 2. Bulk save via Apex
+            await savePropertyMappings({ mappingsJson: JSON.stringify(mappings) });
+
+            // 3. Update local allPropertiesFlat array
+            const changedMap = {};
+            changedFields.forEach(field => {
+                changedMap[field.name] = field.propertyRef;
             });
 
-            // 2. Cập nhật mảng local bằng cách tạo bản sao mới (Tránh lỗi Proxy)
-            const targetId = this.selectedProperty.name;
-            const newRefValue = this.selectedProperty.propertyRef;
-
-            // Tạo mảng mới hoàn toàn dựa trên mảng cũ
             this.allPropertiesFlat = this.allPropertiesFlat.map(item => {
-                if (item.name === targetId) {
-                    // Trả về một object mới đã được cập nhật
-                    return { ...item, propertyRef: newRefValue };
+                if (changedMap[item.name] !== undefined) {
+                    return { ...item, propertyRef: changedMap[item.name] };
                 }
                 return item;
             });
 
+            // 4. Update originalRef in selectedFields to reflect saved state
+            this.selectedFields = this.selectedFields.map(field => ({
+                ...field,
+                originalRef: field.propertyRef
+            }));
+
             showLog('Updated allPropertiesFlat:', this.allPropertiesFlat);
 
-            // 3. Thông báo thành công
+            // 5. Thông báo thành công
             this.showToast(LABEL_TOAST_SAVE_SUCCESS_TITLE, LABEL_TOAST_SAVE_SUCCESS_MESSAGE, VARIANT_SUCCESS);
 
         } catch (error) {

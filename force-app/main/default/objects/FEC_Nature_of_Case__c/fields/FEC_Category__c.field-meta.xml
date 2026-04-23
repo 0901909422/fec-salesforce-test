@@ -3,7 +3,6 @@
     <fullName>FEC_Category__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục</description>
-    <externalId>false</externalId>
     <label>Category</label>
     <lookupFilter>
         <active>true</active>
