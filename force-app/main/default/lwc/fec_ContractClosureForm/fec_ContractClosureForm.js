@@ -298,6 +298,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.deliveryOptions = data.deliveryOptions || [];
             this.savedDeliveryOption = data.savedDeliveryOption || STR_EMPTY;
             this.addresses = data.addresses || [];
+            const serverSelectedAddressId = data.savedSelectedAddressId || STR_EMPTY;
+            if (serverSelectedAddressId) {
+                this.selectedAddressRowId = serverSelectedAddressId;
+                this.addrRenderKey++;
+            }
             this.resolveDeliveryMeta();
             this.applySavedDelivery();
             const serverRecipientName =
@@ -526,13 +531,38 @@ export default class Fec_ContractClosureForm extends LightningElement {
         }
         this.tempAddressRecordId = tempRow.id;
         this.temporaryAddressDisplay = tempRow.address || STR_EMPTY;
-        this.lastTempAddressParts = this.parseTemporaryAddressDisplay(tempRow.address);
+        this.lastTempAddressParts =
+            this.resolveTemporaryAddressPartsFromRow(tempRow) ||
+            this.parseTemporaryAddressDisplay(tempRow.address);
         this.disableAddTempAddress = true;
         if (this.pendingSelectTemporaryAddress === true || !this.selectedAddressRowId) {
             this.selectedAddressRowId = tempRow.id;
             this.addrRenderKey++;
         }
         this.pendingSelectTemporaryAddress = false;
+    }
+
+    resolveTemporaryAddressPartsFromRow(row) {
+        if (!row) {
+            return undefined;
+        }
+        const building = (row.building || STR_EMPTY).trim();
+        const streetNumber = (row.streetNumber || STR_EMPTY).trim();
+        const street = (row.street || STR_EMPTY).trim();
+        const wardLabel = (row.wardLabel || STR_EMPTY).trim();
+        const provinceLabel = (row.provinceLabel || STR_EMPTY).trim();
+        if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
+            return undefined;
+        }
+        return {
+            building: building,
+            streetNumber: streetNumber,
+            street: street,
+            wardRecordId: row.wardRecordId || wardLabel,
+            provinceRecordId: row.provinceRecordId || provinceLabel,
+            wardLabel: wardLabel,
+            provinceLabel: provinceLabel
+        };
     }
 
     parseTemporaryAddressDisplay(line) {
@@ -551,7 +581,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
         const streetNumber = chunks[1] || STR_EMPTY;
         const provinceLabel = chunks[chunks.length - 1] || STR_EMPTY;
         const wardLabel = chunks[chunks.length - 2] || STR_EMPTY;
-        const street = chunks.slice(2, chunks.length - 2).join(', ');
+        const streetChunks = chunks.slice(2, chunks.length - 2);
+        if (
+            streetChunks.length > 0 &&
+            wardLabel &&
+            ((streetChunks[streetChunks.length - 1] || STR_EMPTY).trim().toLowerCase() === wardLabel.toLowerCase())
+        ) {
+            streetChunks.pop();
+        }
+        const street = streetChunks.join(', ');
         if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
             return undefined;
         }
@@ -929,7 +967,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
         try {
             const rows = await searchAdministrativeUnits({
                 objectApiName: 'FEC_Province__c',
-                searchKey: STR_EMPTY
+                searchKey: STR_EMPTY,
+                provinceId: null
             });
             const mapped = (rows || []).map((r) => ({
                 label: r.label,
@@ -952,8 +991,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
     async loadWardOptions() {
         try {
             const rows = await searchAdministrativeUnits({
-                objectApiName: 'FEC_Ward__c',
-                searchKey: STR_EMPTY
+                objectApiName: 'FEC_District__c',
+                searchKey: STR_EMPTY,
+                provinceId: this.modalProvinceId || null
             });
             const mapped = (rows || []).map((r) => ({
                 label: r.label,
@@ -977,6 +1017,10 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.modalProvinceId = event.detail.value;
         const opt = this.provinceOptions.find((o) => o.value === this.modalProvinceId);
         this.modalProvinceLabel = opt ? opt.label : STR_EMPTY;
+        this.modalWardId = STR_EMPTY;
+        this.modalWardLabel = STR_EMPTY;
+        this.wardOptions = [];
+        this.loadWardOptions();
     }
 
     handleModalWardPick(event) {

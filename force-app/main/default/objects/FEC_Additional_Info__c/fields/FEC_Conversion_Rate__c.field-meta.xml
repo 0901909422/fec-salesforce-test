@@ -3,10 +3,28 @@
     <fullName>FEC_Conversion_Rate__c</fullName>
     <description>Lãi xuất chuyển đổi</description>
     <label>Conversion Rate</label>
-    <precision>18</precision>
     <required>false</required>
-    <scale>2</scale>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Percent</type>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>0.00%</fullName>
+                <default>false</default>
+                <label>0.00%</label>
+            </value>
+            <value>
+                <fullName>12.00%</fullName>
+                <default>false</default>
+                <label>12.00%</label>
+            </value>
+            <value>
+                <fullName>28.00%</fullName>
+                <default>false</default>
+                <label>28.00%</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
 </CustomField>
