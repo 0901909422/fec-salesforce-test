@@ -137,7 +137,8 @@ public with sharing class FEC_CardLockUnLockController {
             List<FEC_Block_Code_Matrix__c> blockCodeMatrixs = [
                 SELECT Id, FEC_Action__c
                 FROM FEC_Block_Code_Matrix__c
-                WHERE FEC_Current_Block_Code__c = :currentBlockCode
+                WHERE (FEC_Current_Block_Code__c = :currentBlockCode
+                        OR FEC_Current_Block_Code__c = 'OTHER')
                     AND FEC_New_Block_Code__c = :newBlockCode
                 LIMIT 1
             ];
