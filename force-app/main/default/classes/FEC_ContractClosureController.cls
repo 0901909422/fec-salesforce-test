@@ -67,6 +67,7 @@ public without sharing class FEC_ContractClosureController {
         @AuraEnabled public String savedDeliveryOption;
         @AuraEnabled public String savedRecipientName;
         @AuraEnabled public String savedRecipientPhone;
+        @AuraEnabled public String savedSelectedAddressId;
         @AuraEnabled public String savedTemporaryEmail;
         @AuraEnabled public Id additionalInfoId;
         @AuraEnabled public String savedVerifyInformation;
@@ -205,6 +206,16 @@ public without sharing class FEC_ContractClosureController {
             }
             if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
                 out.savedRecipientPhone = (String) c.get(FLD_RECIPIENT_PHONE);
+            }
+            String selectedAddressApi = resolveCaseSelectedAddressFieldApi();
+            if (String.isNotBlank(selectedAddressApi) && caseFields.containsKey(flc(selectedAddressApi))) {
+                List<SObject> selectedRows = Database.query(
+                    'SELECT ' + selectedAddressApi + ' FROM Case WHERE Id = :caseId LIMIT 1'
+                );
+                if (!selectedRows.isEmpty()) {
+                    Object selectedAddressVal = selectedRows[0].get(selectedAddressApi);
+                    out.savedSelectedAddressId = selectedAddressVal == null ? null : String.valueOf(selectedAddressVal);
+                }
             }
             out.savedTemporaryEmail = loadTemporaryEmailFromContactList(c);
             out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);

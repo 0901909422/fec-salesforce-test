@@ -298,6 +298,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
             this.deliveryOptions = data.deliveryOptions || [];
             this.savedDeliveryOption = data.savedDeliveryOption || STR_EMPTY;
             this.addresses = data.addresses || [];
+            const serverSelectedAddressId = data.savedSelectedAddressId || STR_EMPTY;
+            if (serverSelectedAddressId) {
+                this.selectedAddressRowId = serverSelectedAddressId;
+                this.addrRenderKey++;
+            }
             this.resolveDeliveryMeta();
             this.applySavedDelivery();
             const serverRecipientName =
