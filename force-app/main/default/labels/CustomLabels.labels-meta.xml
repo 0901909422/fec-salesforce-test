@@ -2989,6 +2989,22 @@
         <value>Customer information update failed. Please try again</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</shortDescription>
+        <value>Cập nhật thông tin khách hàng thất bại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -4203,7 +4219,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
-        <value>Other Card</value>
+        <value>Other Cards</value>
     </labels>
     <labels>
         <fullName>FEC_Outcome_Code_Label</fullName>
@@ -11568,6 +11584,14 @@
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</shortDescription>
+        <value>Tổng số tiền điều chỉnh phải bằng số tiền dư</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11582,6 +11606,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_IncorrectPayment_No_Valid_Adjustment_Row</shortDescription>
         <value>No valid adjustment row with both Correct Contract and Adjusted Amount.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IncorrectPayment_Date_Not_After_Today</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IncorrectPayment_Date_Not_After_Today</shortDescription>
+        <value>Date cannot be later than the current date.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IncorrectPayment_Case_Not_Found</fullName>
@@ -12978,6 +13010,14 @@
         <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ContractClosure_Address_Row_Empty</fullName>
+        <categories>Contract Closure LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contract closure — đã chọn dòng địa chỉ nhưng cột địa chỉ trống</shortDescription>
+        <value>Dòng địa chỉ đã chọn chưa có nội dung. Vui lòng chọn địa chỉ khác hoặc nhập địa chỉ tạm thời.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
@@ -13346,6 +13386,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</shortDescription>
+        <value>Mở khoá thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13376,6 +13424,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
         <value>Thay thế mã PIN thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</shortDescription>
+        <value>Thay thế mã PIN thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Data_Application_History</fullName>
@@ -13438,6 +13494,14 @@
         <value>Thay thế thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</shortDescription>
+        <value>Thay thế thẻ thất bại. Vui lòng thử lại.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13459,5 +13523,126 @@
         <protected>false</protected>
         <shortDescription>No permission toast message</shortDescription>
         <value>Bạn không có quyền thực hiện thao tác này.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_File_Too_Large_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - File too large toast title</shortDescription>
+        <value>File too large</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_File_Too_Large_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - File too large toast message</shortDescription>
+        <value>exceeds the 25 MB limit.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Image_Too_Large_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Image too large toast title</shortDescription>
+        <value>Image too large</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Image_Too_Large_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Image too large toast message</shortDescription>
+        <value>Please use an image smaller than 3MB or use Web Image URL instead.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Subject_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Subject required error</shortDescription>
+        <value>Subject is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Body_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Body required error</shortDescription>
+        <value>Email body is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_We_Hit_A_Snag</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - We hit a snag toast title</shortDescription>
+        <value>We hit a snag</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Error_Invalid_Format_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Invalid format toast title</shortDescription>
+        <value>Invalid format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Send success toast title</shortDescription>
+        <value>Thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Success_Sent_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Send success toast message</shortDescription>
+        <value>Email was sent.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CS_Support_Queue_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS Support queue name for Manual Assignment check</shortDescription>
+        <value>DQ - CS Support</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup title</shortDescription>
+        <value>Discard Draft?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Discard_Msg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard draft popup message</shortDescription>
+        <value>Recipients, subject, body text, and attachments are removed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Discard</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Discard button label</shortDescription>
+        <value>Discard</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Email_Btn_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email - Cancel button label (English, not translated)</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_BLOCK_CS_D2C</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_BLOCK_CS_D2C</shortDescription>
+        <value>Vui lòng tạo yêu cầu mở khóa thẻ để chuyển CS D2C xử lý.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_BLOCK_CANCEL</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
+        <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
 </CustomLabels>

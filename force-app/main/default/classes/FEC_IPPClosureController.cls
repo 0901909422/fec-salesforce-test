@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : FEC_IPPClosureController.cls
- * Description  : Controller for IPP Closure. Eligible IPPs for selection exclude Pending- cases on other records; if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
+ * Description  : Controller for IPP Closure. Eligible IPPs exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
  ****************************************************************************************/
 
 public without sharing class FEC_IPPClosureController {
@@ -26,7 +26,7 @@ public without sharing class FEC_IPPClosureController {
     }
 
     /**
-     * Get IPPs for closure: same Customer History as Case. If Case.FEC_IPP_To_Close__c is set, returns only that IPP. Otherwise returns IPPs with Current Balance != 0 and != null, excluding IPPs referenced by another Case (Id != this Case) with Status starting with Pending-.
+     * Get IPPs for closure: same Customer History as Case. If Case.FEC_IPP_To_Close__c is set, returns only that IPP. Otherwise returns IPPs with Current Balance != 0 and != null, excluding rows linked to another Case via FEC_IPP_Closure_Case__c, and excluding IPPs already chosen on another Case (FEC_IPP_To_Close__c, Id != this Case).
      */
     @AuraEnabled(cacheable=false)
     public static IPPClosureResultDTO getEligibleIPPsForClosure(Id caseId) {
@@ -64,6 +64,7 @@ public without sharing class FEC_IPPClosureController {
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
                   AND FEC_Customer_History__c = :customerHistoryId
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                 LIMIT 1
             ];
         } else {
@@ -76,6 +77,7 @@ public without sharing class FEC_IPPClosureController {
                 WHERE FEC_Customer_History__c = :customerHistoryId
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
         }
@@ -89,11 +91,11 @@ public without sharing class FEC_IPPClosureController {
             for (FEC_IPP__c r : accessibleIpps) {
                 ippIdSet.add(r.Id);
             }
-            Set<Id> blockedByPending = getIppIdsBlockedByOtherPendingCases(caseId, ippIdSet);
-            if (!blockedByPending.isEmpty()) {
+            Set<Id> blockedByOtherCase = getIppIdsReferencedByOtherCases(caseId, ippIdSet);
+            if (!blockedByOtherCase.isEmpty()) {
                 List<FEC_IPP__c> filtered = new List<FEC_IPP__c>();
                 for (FEC_IPP__c r : accessibleIpps) {
-                    if (!blockedByPending.contains(r.Id)) {
+                    if (!blockedByOtherCase.contains(r.Id)) {
                         filtered.add(r);
                     }
                 }
@@ -120,7 +122,7 @@ public without sharing class FEC_IPPClosureController {
     }
 
     /**
-     * Save selected IPP to Case (FEC_IPP_To_Close__c). Call when user completes Case with a selected IPP.
+     * Save selected IPP to Case (FEC_IPP_To_Close__c) and set FEC_IPP_Closure_Case__c on the IPP row. Call when user completes Case with a selected IPP.
      */
     @AuraEnabled
     public static Boolean saveSelectedIPPToCase(Id caseId, Id ippId) {
@@ -130,7 +132,10 @@ public without sharing class FEC_IPPClosureController {
         if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.Case.isUpdateable()) {
             return false;
         }
-        if (!Schema.sObjectType.FEC_IPP__c.isAccessible()) {
+        if (!Schema.sObjectType.FEC_IPP__c.isAccessible() || !Schema.sObjectType.FEC_IPP__c.isUpdateable()) {
+            return false;
+        }
+        if (!Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isAccessible() || !Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isUpdateable()) {
             return false;
         }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
@@ -138,7 +143,7 @@ public without sharing class FEC_IPPClosureController {
             return false;
         }
         List<FEC_IPP__c> ippRows = [
-            SELECT Id, FEC_Customer_History__c, FEC_IPP_Current_Balance__c
+            SELECT Id, FEC_Customer_History__c, FEC_IPP_Current_Balance__c, FEC_IPP_Closure_Case__c
             FROM FEC_IPP__c
             WHERE Id = :ippId
             LIMIT 1
@@ -155,9 +160,12 @@ public without sharing class FEC_IPPClosureController {
         if (ippRec.FEC_Customer_History__c != customerHistoryId) {
             return false;
         }
+        if (ippRec.FEC_IPP_Closure_Case__c != null && ippRec.FEC_IPP_Closure_Case__c != caseId) {
+            return false;
+        }
         Set<Id> checkBlocked = new Set<Id>();
         checkBlocked.add(ippId);
-        if (!getIppIdsBlockedByOtherPendingCases(caseId, checkBlocked).isEmpty()) {
+        if (!getIppIdsReferencedByOtherCases(caseId, checkBlocked).isEmpty()) {
             return false;
         }
         if (ippRec.FEC_IPP_Current_Balance__c == null || ippRec.FEC_IPP_Current_Balance__c == 0) {
@@ -168,8 +176,15 @@ public without sharing class FEC_IPPClosureController {
             return false;
         }
         Case c = cases[0];
+        List<FEC_IPP__c> ippToUpdate = new List<FEC_IPP__c>();
+        Id previousIppId = c.FEC_IPP_To_Close__c;
+        if (previousIppId != null && previousIppId != ippId) {
+            ippToUpdate.add(new FEC_IPP__c(Id = previousIppId, FEC_IPP_Closure_Case__c = null));
+        }
+        ippToUpdate.add(new FEC_IPP__c(Id = ippId, FEC_IPP_Closure_Case__c = caseId));
         c.FEC_IPP_To_Close__c = ippId;
         try {
+            update ippToUpdate;
             update c;
             return true;
         } catch (Exception e) {
@@ -207,7 +222,7 @@ public without sharing class FEC_IPPClosureController {
         return null;
     }
 
-    private static Set<Id> getIppIdsBlockedByOtherPendingCases(Id currentCaseId, Set<Id> ippIds) {
+    private static Set<Id> getIppIdsReferencedByOtherCases(Id currentCaseId, Set<Id> ippIds) {
         Set<Id> blocked = new Set<Id>();
         if (currentCaseId == null || ippIds == null || ippIds.isEmpty()) {
             return blocked;
@@ -220,7 +235,6 @@ public without sharing class FEC_IPPClosureController {
             FROM Case
             WHERE FEC_IPP_To_Close__c IN :ippIds
               AND Id != :currentCaseId
-              AND Status LIKE 'Pending-%'
         ]) {
             if (c.FEC_IPP_To_Close__c != null) {
                 blocked.add(c.FEC_IPP_To_Close__c);

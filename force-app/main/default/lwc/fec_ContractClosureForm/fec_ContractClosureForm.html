@@ -1,7 +1,9 @@
 <template>
   <div class="fec-closure-form">
     <template if:true={loading}>
-      <lightning-spinner alternative-text={customLabel.loadingAlt}></lightning-spinner>
+      <lightning-spinner
+        alternative-text={customLabel.loadingAlt}
+      ></lightning-spinner>
     </template>
     <template if:false={loading}>
       <template if:true={loadError}>
@@ -17,9 +19,9 @@
                 placeholder={customLabel.placeholderDelivery}
                 options={deliveryPicklistOptions}
                 value={selectedDeliveryValues}
-                required
+                required={closureFieldRequired}
+                read-only={closureFieldsReadonly}
                 is-search
-                is-all
                 onchange={handlePicklistChange}
               ></c-fec_-multi-picklist-input>
             </div>
@@ -36,7 +38,9 @@
             </lightning-layout-item>
             <lightning-layout-item size="12" padding="around-small">
               <div class="fec-email-box">
-                <p class="slds-text-title slds-m-bottom_x-small">{customLabel.emailLabel}</p>
+                <p class="slds-text-title slds-m-bottom_x-small">
+                  {customLabel.emailLabel}
+                </p>
                 <template if:true={hasEmailRadioOptions}>
                   <lightning-radio-group
                     name="fecClosureEmailPick"
@@ -45,6 +49,7 @@
                     value={emailRadioValue}
                     type="radio"
                     variant="label-hidden"
+                    disabled={closureFieldsReadonly}
                     onchange={handleEmailRadioChange}
                   ></lightning-radio-group>
                 </template>
@@ -62,9 +67,14 @@
                   >
                     <lightning-layout-item size="6" padding="around-small">
                       <lightning-input
+                        data-fec-field="temporaryEmail"
                         type="email"
                         label={customLabel.newTempEmail}
                         value={temporaryEmail}
+                        readonly={closureFieldsReadonly}
+                        required={temporaryEmailRequired}
+                        message-when-value-missing={validationLabels.completeThisField}
+                        oninput={handleTempEmailChange}
                         onchange={handleTempEmailChange}
                       ></lightning-input>
                     </lightning-layout-item>
@@ -78,6 +88,7 @@
                         variant="border"
                         alternative-text={customLabel.altRemove}
                         title={customLabel.altRemove}
+                        disabled={closureFieldsReadonly}
                         onclick={handleRemoveTempEmail}
                       ></lightning-button-icon>
                     </lightning-layout-item>
@@ -87,13 +98,15 @@
             </lightning-layout-item>
           </template>
 
-          <template if:true={showAddressSection}>
+          <template if:true={showRecipientSection}>
             <lightning-layout-item size="6" padding="around-small">
               <lightning-input
+                data-fec-field="recipientName"
                 type="text"
                 label={customLabel.recipientName}
                 value={recipientName}
-                required
+                required={closureFieldRequired}
+                readonly={closureFieldsReadonly}
                 onchange={handleRecipientNameChange}
               ></lightning-input>
             </lightning-layout-item>
@@ -103,11 +116,14 @@
                 type="tel"
                 label={customLabel.recipientPhone}
                 value={recipientPhone}
-                required
+                required={closureFieldRequired}
+                readonly={closureFieldsReadonly}
                 onchange={handleRecipientPhoneChange}
                 onblur={handleRecipientPhoneBlur}
               ></lightning-input>
             </lightning-layout-item>
+          </template>
+          <template if:true={showAddressSection}>
             <lightning-layout-item size="12" padding="around-small">
               <div class="fec-table-wrap">
                 <p
@@ -121,7 +137,9 @@
                   <thead>
                     <tr class="slds-line-height_reset">
                       <th class="fec-col-select" scope="col">
-                        <span class="slds-assistive-text">{selectionAssistiveText}</span>
+                        <span class="slds-assistive-text"
+                          >{selectionAssistiveText}</span
+                        >
                       </th>
                       <th
                         class="fec-sortable-th"
@@ -152,6 +170,7 @@
                             class="slds-m-right_xx-small"
                             data-row-id={row.id}
                             checked={row.selected}
+                            disabled={closureFieldsReadonly}
                             onchange={handlePickAddr}
                           />
                         </td>
@@ -189,12 +208,14 @@
                     <lightning-button-icon
                       icon-name="utility:edit"
                       alternative-text={customLabel.altEdit}
+                      disabled={closureFieldsReadonly}
                       onclick={handleEditTempAddress}
                       class="slds-m-right_xx-small"
                     ></lightning-button-icon>
                     <lightning-button-icon
                       icon-name="utility:delete"
                       alternative-text={customLabel.altRemove}
+                      disabled={closureFieldsReadonly}
                       onclick={handleRemoveTempAddress}
                     ></lightning-button-icon>
                   </div>

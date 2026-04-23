@@ -42,13 +42,7 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
   @wire(IsConsoleNavigation) isConsoleNavigation;
   @wire(getCurrentUserProfileName)
   wiredProfile({ data }) {
-    if (data) {
-      this._userProfile = data;
-      if (data === PROFILE_RELEVANT_DEPTS) {
-        this.isShowModal = false;
-        this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
-      }
-    }
+    if (data) this._userProfile = data;
   }
 
   currentTabId;
@@ -70,9 +64,28 @@ export default class Fec_CreateCaseInListView extends NavigationMixin(
     try {
       const { tabId } = await getFocusedTabInfo();
       this.currentTabId = tabId;
-    } catch (e) {
-      console.warn("Cannot get current tab", e);
-    }
+    } catch (e) {}
+    // Check profile on every mount (wire is cached, connectedCallback always runs)
+    try {
+      const profile = await getCurrentUserProfileName();
+      this._userProfile = profile;
+      if (profile === PROFILE_RELEVANT_DEPTS) {
+        this.isShowModal = false;
+        this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+        // Get current tab BEFORE navigating
+        let tabToClose = this.currentTabId;
+        if (!tabToClose) {
+          try { const { tabId } = await getFocusedTabInfo(); tabToClose = tabId; } catch(e) {}
+        }
+        this[NavigationMixin.Navigate]({
+          type: 'standard__objectPage',
+          attributes: { objectApiName: 'Case', actionName: 'list' }
+        });
+        setTimeout(async () => {
+          try { if (tabToClose) await closeTab(tabToClose); } catch(e) {}
+        }, 3000);
+      }
+    } catch(e) {}
   }
 
   async handleCloseTab() {

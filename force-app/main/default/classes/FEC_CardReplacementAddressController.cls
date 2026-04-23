@@ -58,10 +58,77 @@ public with sharing class FEC_CardReplacementAddressController {
         }
     }
 
+    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
+        UpdateResult result = new UpdateResult();
+        Case objCasse;
+        try {
+            objCasse = [
+                SELECT Id,
+                    FEC_National_ID_Passport_ID__c,
+                    FEC_Case_Phone_Number__c,
+                    FEC_Process_Action_Count__c,
+                    FEC_Current_Case_Stage__c,
+                    FEC_Current_Case_Stage__r.Name,
+                    FEC_Account_Number__c
+                FROM Case
+                WHERE Id = :recordId
+            ];
+            String transactionId = FEC_CommonUltils.generateTransactionUUID();
+            String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+            String replacementFeeFlag = replacementFee != null ? '1' : '0';
+            FEC_ReplacementCardCallout.ReplaceCardResponse response = FEC_ReplacementCardCallout.callReplaceCard(
+                transactionId,
+                requestorId,
+                cardBlockCode,
+                last4CardNumber,
+                replacementFeeFlag,
+                objCasse.FEC_Account_Number__c
+            );
+            FEC_ReplacementCardCallout.logApiResponse();
+            
+            if (FEC_ReplacementCardCallout.isSuccess(response)) {
+                result.success = true;
+                objCasse.FEC_Process_Action_Count__c = -1;
+            } else {
+                result.success = false;
+                if (objCasse.FEC_Process_Action_Count__c == null) {
+                    objCasse.FEC_Process_Action_Count__c = 0;
+                }
+                objCasse.FEC_Process_Action_Count__c += 1;
+            }
+
+            FEC_CaseTriggerHandler.isExecuting = true;
+            update objCasse;
+            result.actionCount = objCasse.FEC_Process_Action_Count__c;
+        } catch (Exception ex) {
+            result.success = false;
+            FEC_CommonUltils.logException(
+                'FEC_CardReplacementAddressController', 
+                'cardReplacement', 
+                ex.getMessage(),
+                ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
+            );
+        }
+        return result;
+    }
+
     public class ReplaceCardResult {
         @AuraEnabled
         public Boolean isShowAction { get; set; }
         @AuraEnabled
         public String strMsg { get; set; }
+    }
+
+    public class UpdateResult {
+        @AuraEnabled
+        public Boolean success { get; set; }
+        @AuraEnabled
+        public Decimal actionCount { get; set; }
     }
 }

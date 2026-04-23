@@ -122,13 +122,10 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
 
   async initData() {
     try {
-      console.log("Test");
-      console.log(this.recordId);
       this.interactionId = await getInteractionIdFromCustomerCase({
         caseId: this.recordId,
       });
 
-      // 1. lấy customer type
       this.interactionCustomerType = await getInteractionCustomerType({
         caseId: this.interactionId,
       });
@@ -140,7 +137,8 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
       console.log("interactionId:", this.interactionId);
       console.log("interactionCustomerType:", this.interactionCustomerType);
       console.log("customerHistoryId:", this.customerHistoryId);
-      // 2. load account data
+
+      await this.getInteractionFirstCustomerHistoryAccountNumber();
       await this.loadAccountData();
     } catch (e) {
       console.error("initData error:", e);
@@ -153,47 +151,55 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
     this.isLoading = true;
 
     try {
-      // const result = await getAccountNumberCustomerCase({
-      //   caseId: this.recordId,
-      //   customerHistoryId: this.customerHistoryId,
-      // });
-
-      const result = await getInteractionAccountNumber({
-        caseId: this.interactionId,
+      const caseRes = await getAccountNumberCustomerCase({
+        caseId: this.recordId,
+        customerHistoryId: this.customerHistoryId,
       });
 
-      const parsed = result ? JSON.parse(result) : {};
+      const parsed = caseRes ? JSON.parse(caseRes) : {};
 
-      console.log("DATA final customer case:", JSON.stringify(parsed));
+      console.log("DATA final customer case:", parsed);
 
-      // ❗ nếu chưa có data → retry
-      if (!parsed.accountNumber && retry < 3) {
-        console.warn(`Retry lần ${retry + 1}`);
+      // Retry nếu chưa có accountNumber
+      if (!parsed?.accountNumber) {
+        if (retry < 3) {
+          console.warn(`Retry lần ${retry + 1}`);
 
-        setTimeout(() => {
-          this.isLoading = false; // unlock
-          this.loadAccountData(retry + 1);
-        }, 300);
+          setTimeout(() => {
+            this.isLoading = false;
+            this.loadAccountData(retry + 1);
+          }, 300);
 
-        return;
+          return;
+        }
       }
-
-      // ✅ data OK → set state
-      this.selectedValue = parsed.accountNumber || "";
-      this.cifNumber = parsed.cifNumber;
-      this.hasAccountOrContact = parsed.hasContractAccount;
-      this.phone = parsed.phone || "";
-      await this.getInteractionFirstCustomerHistoryAccountNumber();
-      if (this.isNonExistingCustomer) {
-        this.initAccountDataNonExisting();
-      } else {
-        await this.getProductsList();
-      }
+      // Set base state
+      this.selectedValue = parsed?.accountNumber || "";
+      this.cifNumber = parsed?.cifNumber || "";
+      this.hasAccountOrContact = parsed?.hasContractAccount || false;
+      this.phone = parsed?.phone || "";
+      // Load data list
+      await this.loadProductData();
     } catch (error) {
       console.error("loadAccountData error:", error);
     } finally {
       this.isLoading = false;
     }
+  }
+
+  async loadProductData() {
+    if (this.isNonExistingCustomer) {
+      this.initAccountDataNonExisting();
+      return;
+    }
+
+    if (!this.cifNumber) {
+      console.warn("Missing CIF → skip getProductsList");
+      this.data = [];
+      return;
+    }
+
+    await this.getProductsList();
   }
 
   async getInteractionFirstCustomerHistoryAccountNumber() {
@@ -326,7 +332,7 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
         console.log(
           "Creating history with:",
           JSON.stringify({
-            caseId: this.recordId,
+            caseId: this.interactionId,
             selectedAccountContractNumber: this.selectedValue,
             selectedType: selectedRow.product,
             cifNumber: this.cifNumber,
@@ -334,7 +340,7 @@ export default class AccountOrContractPicklistCustomerCase extends LightningElem
           }),
         );
         await createHistory({
-          caseId: this.recordId,
+          caseId: this.interactionId,
           selectedAccountContractNumber: this.selectedValue,
           selectedType: selectedRow.product,
           cifNumber: this.cifNumber,

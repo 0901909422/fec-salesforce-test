@@ -464,18 +464,11 @@ public with sharing class FEC_ConstantCommon {
     };
     
     public static final String CASE_ALL_REQUEST = 'All';
-
-    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
-    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
-    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
-    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
     public static final String CASE_ALL_CUSTOMER = 'All';
-    
-    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
-    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
-    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
-    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
 
+    //----------HARD CODE VALUE FOR CALL API (Non-production)----------
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    
     /** Profile names */
     public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
 
@@ -500,4 +493,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
 
+    public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
+    public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
+    public static final String P_TAG_REGEX = '(?i)</p>';
+    public static final String HTML_TAG_REGEX = '<[^>]+>';
+    public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
+    public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
 }

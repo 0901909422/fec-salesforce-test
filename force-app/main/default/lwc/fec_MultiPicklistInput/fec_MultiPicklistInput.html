@@ -9,7 +9,7 @@
         <div class="slds-combobox_container">
           <div
             class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click"
-            tabindex="0"
+            tabindex={comboboxTabIndex}
             onblur={handleBlur}
             onfocus={handleFocus}
           >
@@ -29,6 +29,8 @@
                 if:true={isSearch}
                 class="slds-input slds-combobox__input"
                 placeholder={placeholder}
+                disabled={readOnly}
+                readonly={readOnly}
                 onfocus={handleFocus}
                 onblur={handleBlur}
                 onkeyup={handleChange}
@@ -63,6 +65,7 @@
                           type="checkbox"
                           id={selectAllCheckboxId}
                           checked={isSelectAll}
+                          disabled={readOnly}
                           onchange={handleSelectAllChange}
                         />
                         <label class="slds-checkbox__label" for={selectAllCheckboxId}>
@@ -95,6 +98,7 @@
                             id={item.checkboxId}
                             data-id={item.id}
                             checked={item.isSelected}
+                            disabled={readOnly}
                             onchange={handleChooseOptionChange}
                           />
                           <label class="slds-checkbox__label" for={item.checkboxId}>
@@ -117,7 +121,7 @@
             <template for:each={selectedlst} for:item="item">
               <span class="slds-badge" key={item.id}>
                 <span class="badge__value">{item.label}</span>
-                <span class="badge__close">
+                <span class="badge__close" if:false={readOnly}>
                   <lightning-icon
                     data-id={item.id}
                     icon-name="utility:close"

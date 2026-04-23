@@ -31,6 +31,7 @@ public without sharing class FEC_IncorrectPaymentController {
         @AuraEnabled public String billDate;
         @AuraEnabled public Decimal billAmount;
         @AuraEnabled public String correctContractNumber;
+        @AuraEnabled public String inputCorrectContractNumber;
         @AuraEnabled public Decimal adjustedAmount;
         @AuraEnabled public List<AdjustmentDTO> adjustmentRows;
     }
@@ -87,12 +88,13 @@ public without sharing class FEC_IncorrectPaymentController {
         dto.billDate = null;
         dto.billAmount = null;
         dto.correctContractNumber = FEC_ConstantCommon.STR_EMPTY;
+        dto.inputCorrectContractNumber = FEC_ConstantCommon.STR_EMPTY;
         dto.adjustedAmount = null;
         dto.adjustmentRows = null;
         if (caseId == null) return dto;
         List<Case> cases = [
             SELECT Id, FEC_SubCode__c, FEC_Incorrect_Contract_Number__c, FEC_Payment_Method__c,
-                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Adjusted_Amount__c,
+                FEC_Bill_Date__c, FEC_Bill_Amount__c, FEC_Correct_Contract_Number__c, FEC_Input_Correct_Contract_Number__c, FEC_Adjusted_Amount__c,
                 FEC_Incorrect_Payment_Adj_Rows__c
             FROM Case
             WHERE Id = :caseId
@@ -104,6 +106,7 @@ public without sharing class FEC_IncorrectPaymentController {
         dto.billDate = cases[0].FEC_Bill_Date__c != null ? String.valueOf(cases[0].FEC_Bill_Date__c) : null;
         dto.billAmount = cases[0].FEC_Bill_Amount__c;
         dto.correctContractNumber = cases[0].FEC_Correct_Contract_Number__c != null ? cases[0].FEC_Correct_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
+        dto.inputCorrectContractNumber = cases[0].FEC_Input_Correct_Contract_Number__c != null ? cases[0].FEC_Input_Correct_Contract_Number__c : FEC_ConstantCommon.STR_EMPTY;
         dto.adjustedAmount = cases[0].FEC_Adjusted_Amount__c;
         String adjRowsJson = cases[0].FEC_Incorrect_Payment_Adj_Rows__c;
         if (String.isNotBlank(adjRowsJson)) {
@@ -146,10 +149,9 @@ public without sharing class FEC_IncorrectPaymentController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+    public static List<FEC_CommonUltils.PicklistOption> getCorrectContractOptions() {
         List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
         
-        // Get picklist values from field metadata
         Schema.DescribeFieldResult fieldResult = Case.FEC_Correct_Contract_Number__c.getDescribe();
         List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
         
@@ -159,30 +161,35 @@ public without sharing class FEC_IncorrectPaymentController {
             }
         }
         
-        // Also add contract numbers from Case if available
-        if (caseId != null && Schema.sObjectType.Case.isAccessible()) {
-            List<Case> cases = [
-                SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
-                    FEC_Account_or_Contract__r.FEC_Contract_Number__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
-            
-            if (!cases.isEmpty()) {
-                Case c = cases[0];
-                Set<String> existingValues = new Set<String>();
-                for (FEC_CommonUltils.PicklistOption opt : result) {
-                    existingValues.add(opt.value);
-                }
-                
-                // Add contract numbers from Case if not already in picklist
-                addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
-                addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
-                if (c.FEC_Account_or_Contract__r != null) {
-                    addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
-                }
-            }
+        return result;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_CommonUltils.PicklistOption> getIncorrectContractOptions(Id caseId) {
+        List<FEC_CommonUltils.PicklistOption> result = new List<FEC_CommonUltils.PicklistOption>();
+        
+        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+            return result;
+        }
+        List<Case> cases = [
+            SELECT FEC_Contract_Number__c, FEC_Incorrect_Contract_Number__c,
+                FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
+        if (cases.isEmpty()) {
+            return result;
+        }
+        
+        Case c = cases[0];
+        Set<String> existingValues = new Set<String>();
+        
+        addContractIfNotExists(result, existingValues, c.FEC_Contract_Number__c);
+        addContractIfNotExists(result, existingValues, c.FEC_Incorrect_Contract_Number__c);
+        if (c.FEC_Account_or_Contract__r != null) {
+            addContractIfNotExists(result, existingValues, c.FEC_Account_or_Contract__r.FEC_Contract_Number__c);
         }
         
         return result;
@@ -198,6 +205,32 @@ public without sharing class FEC_IncorrectPaymentController {
         }
         existingValues.add(trimmed);
         opts.add(new FEC_CommonUltils.PicklistOption(trimmed, trimmed, null));
+    }
+
+    private static Boolean isActivePicklistValue(Schema.SObjectField fieldToken, String val) {
+        if (String.isBlank(val)) {
+            return false;
+        }
+        Schema.DescribeFieldResult dfr = fieldToken.getDescribe();
+        if (dfr.getType() != Schema.DisplayType.PICKLIST) {
+            return false;
+        }
+        for (Schema.PicklistEntry pe : dfr.getPicklistValues()) {
+            if (pe != null && pe.isActive() && val.equals(pe.getValue())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void applyCorrectContractInputAndPicklist(Case c, String correctContract) {
+        String trimmed = String.isNotBlank(correctContract) ? correctContract.trim() : null;
+        c.FEC_Input_Correct_Contract_Number__c = trimmed;
+        if (trimmed != null && isActivePicklistValue(Case.FEC_Correct_Contract_Number__c, trimmed)) {
+            c.FEC_Correct_Contract_Number__c = trimmed;
+        } else {
+            c.FEC_Correct_Contract_Number__c = null;
+        }
     }
 
     @AuraEnabled
@@ -270,7 +303,7 @@ public without sharing class FEC_IncorrectPaymentController {
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = paymentMethod != null ? paymentMethod.trim() : null;
-        c.FEC_Correct_Contract_Number__c = String.isNotBlank(first.correctContract) ? first.correctContract.trim() : null;
+        applyCorrectContractInputAndPicklist(c, first.correctContract);
         c.FEC_Adjusted_Amount__c = first.adjustedAmount != null ? first.adjustedAmount : null;
         c.FEC_Incorrect_Payment_Adj_Rows__c = JSON.serialize(validAdjs);
         try {
@@ -314,7 +347,7 @@ public without sharing class FEC_IncorrectPaymentController {
         c.FEC_Bill_Amount__c = billAmount != null ? billAmount : null;
         c.FEC_Incorrect_Contract_Number__c = String.isNotBlank(incorrectContract) ? incorrectContract.trim() : null;
         c.FEC_Payment_Method__c = String.isNotBlank(paymentMethod) ? paymentMethod.trim() : null;
-        c.FEC_Correct_Contract_Number__c = String.isNotBlank(correctContract) ? correctContract.trim() : null;
+        applyCorrectContractInputAndPicklist(c, correctContract);
         c.FEC_Adjusted_Amount__c = adjustedAmount != null ? adjustedAmount : null;
 
         try {

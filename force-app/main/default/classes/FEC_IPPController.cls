@@ -489,10 +489,27 @@ public with sharing class FEC_IPPController {
         if (cases.isEmpty()) {
             return null;
         }
-        Case c = cases[0];
-        return (c.FEC_Account_or_Contract__c != null && c.FEC_Account_or_Contract__r != null && String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c))
-            ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c
-            : null;
+        return getAccountNumberFromCaseRecord(cases[0]);
+    }
+
+    /** Giống FEC_CardInfoController: __r → SOQL History → Case.FEC_Account_Number__c */
+    private static String getAccountNumberFromCaseRecord(Case c) {
+        if (c.FEC_Account_or_Contract__r != null
+            && String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c)) {
+            return c.FEC_Account_or_Contract__r.FEC_Account_Number__c;
+        }
+        if (c.FEC_Account_or_Contract__c != null) {
+            List<FEC_Customer_History__c> rows = [
+                SELECT FEC_Account_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            if (!rows.isEmpty() && String.isNotBlank(rows[0].FEC_Account_Number__c)) {
+                return rows[0].FEC_Account_Number__c;
+            }
+        }
+        return c.FEC_Account_Number__c;
     }
 
 
