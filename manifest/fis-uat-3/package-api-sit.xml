@@ -14,7 +14,9 @@
 		<members>FEC_CheckEligibleCallout</members>
 		<members>FEC_CheckAccountEligibilityCallout</members>
 		<members>FEC_CheckEligibilityIPPCallout</members>
+		<members>FEC_GetSMSInfoFromITTelcoCallout</members>
 		<members>FEC_Chathub</members>
+		<members>FEC_MockupEndpoint</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -24,6 +26,8 @@
 		<members>FEC_API_Config.FEC_GetDeals</members>
 		<members>FEC_API_Config.FEC_Get_DNB</members>
 		<members>FEC_API_Config.FEC_CheckEligible</members>
+		<members>FEC_API_Config.FEC_CMS_RewardDebitWS</members>
+		<members>FEC_API_Config.FEC_GetSMSInfoFromITTelco</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
