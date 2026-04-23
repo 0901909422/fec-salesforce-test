@@ -18,10 +18,14 @@ import FEC_LBL_ContractClosure_Street_Number from '@salesforce/label/c.FEC_LBL_C
 import getProvinceOptionsForAddress from '@salesforce/apex/FEC_MainInfoController.getProvinceOptionsForAddress';
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_MainInfoController.getWardOptionsForProvinceCode';
 import getAddressInfos from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfos';
+import getProvinceId from '@salesforce/apex/FEC_CardReplacementAddressController.getProvinceId';
+import getWardId from '@salesforce/apex/FEC_CardReplacementAddressController.getWardId';
 
 export default class Fec_CardReplacementAddress extends LightningElement {
     @api recordId;
     @track addressInfos = [];
+    @api isEdit;
+    @api isHiddenLwc;
 
     isModalOpen = false;
     provinceOptions = [];
@@ -56,7 +60,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
 
     columns = [
         { label: this.customLabel.addressType, fieldName: 'FEC_Address_Type__c' },
-        { label: 'Address', fieldName: 'FEC_Address__c' },
+        { label: 'Address', fieldName: 'FEC_Full_Address__c' },
         { label: 'Mailing Address', fieldName: 'FEC_Mailing_Address__c' },
     ];
 
@@ -65,6 +69,10 @@ export default class Fec_CardReplacementAddress extends LightningElement {
 
     get customerHistoryId() {
         return getFieldValue(this.objCase.data, ACCOUNT_OR_CONTRACT_FIELD);
+    }
+
+    get isDisable() {
+        return !this.isEdit || this.isDisableBtnAddTempAddress;
     }
 
     connectedCallback() {
@@ -120,6 +128,11 @@ export default class Fec_CardReplacementAddress extends LightningElement {
 
     handleAddTempAddress() {
         this.isModalOpen = true;
+        this.building = '';
+        this.numberValue = '';
+        this.street = '';
+        this.mailingWard = '';
+        this.mailingCity = '';
     }
 
     handleCloseModal() {
@@ -156,11 +169,18 @@ export default class Fec_CardReplacementAddress extends LightningElement {
         const ward = this.wardOptions.find(w => w.value === this.mailingWard)?.label;
         const province = this.provinceOptions.find(p => p.value === this.mailingCity)?.label;
         const address = this.building + ', ' + this.numberValue + ' ' + this.street + ', ' + ward + ', ' + province;
+        const provinceId = await getProvinceId({ provinceCode : this.mailingCity});
+        const wardId = await getWardId({ wardCode : this.mailingWard});
         const fields = {
             'FEC_Customer_History__c': this.customerHistoryId,
             'FEC_Address_Type__c': this.addressType,
             'FEC_Address__c': address,
             'FEC_Mailing_Address__c': true,
+            'FEC_Province__c': provinceId,
+            'FEC_Ward__c': wardId,
+            'FEC_Building__c': this.building,
+            'FEC_Number__c': this.numberValue,
+            'FEC_Street__c': this.street,
         };
         try {
             if (this.newAddressInfoId) {

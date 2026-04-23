@@ -954,9 +954,9 @@
 
 	<types>
 		<members>FEC_PinReset</members>
-		<members>FEC_Case_Notification</members>
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
+		<members>FEC_ProcessAction</members>
 		<name>LightningMessageChannel</name>
 	</types>
 	
