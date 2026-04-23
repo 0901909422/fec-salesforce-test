@@ -13,19 +13,19 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Hợp đồng không thể đóng</fullName>
+                <fullName>Contract can be closed without statement</fullName>
                 <default>false</default>
-                <label>Hợp đồng không thể đóng</label>
+                <label>Contract can be closed without statement</label>
             </value>
             <value>
-                <fullName>Hợp đồng có thể đóng với tờ trình</fullName>
+                <fullName>Contract can be closed with statement</fullName>
                 <default>false</default>
-                <label>Hợp đồng có thể đóng với tờ trình</label>
+                <label>Contract can be closed with statement</label>
             </value>
             <value>
-                <fullName>Hợp đồng có thể đóng không cần tờ trình</fullName>
+                <fullName>Cannot close contract</fullName>
                 <default>false</default>
-                <label>Hợp đồng có thể đóng không cần tờ trình</label>
+                <label>Cannot close contract</label>
             </value>
         </valueSetDefinition>
     </valueSet>
