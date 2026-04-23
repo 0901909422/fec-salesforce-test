@@ -7,15 +7,11 @@
         <value xsi:nil="true"/>
     </values>
     <values>
-        <field>FEC_Consumer_Name__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/cust-eligible-rest</value>
     </values>
     <values>
-        <field>FEC_FromDate__c</field>
+        <field>FEC_FromDate_Hard_Code__c</field>
         <value xsi:nil="true"/>
     </values>
     <values>
@@ -35,7 +31,7 @@
         <value xsi:nil="true"/>
     </values>
     <values>
-        <field>FEC_ToDate__c</field>
+        <field>FEC_ToDate_Hard_Code__c</field>
         <value xsi:nil="true"/>
     </values>
 </CustomMetadata>
