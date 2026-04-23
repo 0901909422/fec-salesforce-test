@@ -581,7 +581,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
         const streetNumber = chunks[1] || STR_EMPTY;
         const provinceLabel = chunks[chunks.length - 1] || STR_EMPTY;
         const wardLabel = chunks[chunks.length - 2] || STR_EMPTY;
-        const street = chunks.slice(2, chunks.length - 2).join(', ');
+        const streetChunks = chunks.slice(2, chunks.length - 2);
+        if (
+            streetChunks.length > 0 &&
+            wardLabel &&
+            ((streetChunks[streetChunks.length - 1] || STR_EMPTY).trim().toLowerCase() === wardLabel.toLowerCase())
+        ) {
+            streetChunks.pop();
+        }
+        const street = streetChunks.join(', ');
         if (!building || !streetNumber || !street || !wardLabel || !provinceLabel) {
             return undefined;
         }
