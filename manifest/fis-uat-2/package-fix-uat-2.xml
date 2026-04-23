@@ -894,6 +894,7 @@
     <types>
 		<members>ServiceResourceSkill-en_US</members>
 		<members>FEC_Additional_Info__c-en_US</members>
+		<members>Case-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
@@ -958,10 +959,6 @@
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
 		<name>LightningMessageChannel</name>
-	</types>
-	<types>
-    	<members>Case-en_US</members>
-		<name>CustomObjectTranslation</name>
 	</types>
     <version>65.0</version>
 </Package>
