@@ -1,0 +1,157 @@
+import { LightningElement, api, wire, track } from 'lwc';
+import { getRecord } from 'lightning/uiRecordApi';
+import { STR_EMPTY } from 'c/fec_CommonConst';
+
+import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
+import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
+
+import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
+import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Interacted_Agent_ID from '@salesforce/label/c.FEC_Interacted_Agent_ID';
+import FEC_Interacted_Date from '@salesforce/label/c.FEC_Interacted_Date';
+import FEC_Interacted_Code from '@salesforce/label/c.FEC_Interacted_Code';
+import FEC_Interacted_Phone from '@salesforce/label/c.FEC_Interacted_Phone';
+import FEC_Promised_Repayment_Amount from '@salesforce/label/c.FEC_Promised_Repayment_Amount';
+import FEC_Next_Interaction_Date from '@salesforce/label/c.FEC_Next_Interaction_Date';
+import FEC_Contacted_Person from '@salesforce/label/c.FEC_Contacted_Person';
+import FEC_Due_Reason from '@salesforce/label/c.FEC_Due_Reason';
+import FEC_Note from '@salesforce/label/c.FEC_Note';
+
+const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
+
+const SECTION_LABEL = 'Collection Interactions';
+
+/** Mẫu để test UI (bật Preview trên App Builder) */
+const PREVIEW_INTERACTIONS = [
+    {
+        InteractedAgentsID: 'preview@preview.com',
+        InteractedDate: '24/10/2023 10:00:00',
+        InteractedCode: 'NAB',
+        PhoneNumber: '09061234567',
+        PromisedRepaymentAmount: '19,300,000',
+        NextInteractionDate: '10/24/2023',
+        ContactedPerson: 'CLIENT',
+        DueReason: 'N/A',
+        OtherNotes: 'KH không bắt máy'
+    }
+];
+
+export default class Fec_CollectionInteractions extends LightningElement {
+    @api recordId;
+
+    /** Bật trên App Builder: bỏ qua API, hiển thị bảng với dữ liệu mẫu (chỉ để test FE). */
+    @api previewSampleData = false;
+
+    _contractNumber;
+    _recordTypeName;
+
+    /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
+    @track interactions;
+    @track isLoading = true;
+
+    sectionTitleText = SECTION_LABEL;
+    labelMsgApiError = FEC_MSG_Error_API_Label;
+    sortedByDescription = FEC_Interacted_Date;
+
+    columns = [
+        { label: FEC_Interacted_Agent_ID, fieldName: 'InteractedAgentsID', headerClass: 'header-left' },
+        { label: FEC_Interacted_Date, fieldName: 'InteractedDate', headerClass: 'header-center' },
+        { label: FEC_Interacted_Code, fieldName: 'InteractedCode', headerClass: 'header-center' },
+        {
+            label: FEC_Interacted_Phone,
+            fieldName: 'PhoneNumber',
+            type: 'eye',
+            cellAlign: 'center',
+            headerClass: 'header-center'
+        },
+        { label: FEC_Promised_Repayment_Amount, fieldName: 'PromisedRepaymentAmount', headerClass: 'header-right', cellAlign: 'right' },
+        { label: FEC_Next_Interaction_Date, fieldName: 'NextInteractionDate', headerClass: 'header-center' },
+        { label: FEC_Contacted_Person, fieldName: 'ContactedPerson', headerClass: 'header-center' },
+        { label: FEC_Due_Reason, fieldName: 'DueReason', headerClass: 'header-left' },
+        { label: FEC_Note, fieldName: 'OtherNotes', headerClass: 'header-left' }
+    ];
+
+    connectedCallback() {
+        if (this.previewSampleData) {
+            this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
+            this.isLoading = false;
+        }
+    }
+
+    @wire(getRecord, { recordId: '$recordId', fields: CASE_FIELDS })
+    wiredCase({ data, error }) {
+        if (this.previewSampleData) {
+            this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
+            this.isLoading = false;
+            return;
+        }
+        if (data) {
+            this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
+            this._recordTypeName = data.fields.RecordType?.displayValue;
+            this.loadInteractions();
+        } else if (error) {
+            this.interactions = null;
+            this.isLoading = false;
+        }
+    }
+
+    async loadInteractions() {
+        if (this.previewSampleData) {
+            this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
+            this.isLoading = false;
+            return;
+        }
+
+        this.isLoading = true;
+
+        try {
+            if (!this._contractNumber || !this._recordTypeName) {
+                this.interactions = null;
+                return;
+            }
+
+            const response = await fetchCollectionData({
+                contractNumber: this._contractNumber,
+                recordType: this._recordTypeName
+            });
+
+            if (!response || response.Success === false) {
+                this.interactions = null;
+            } else {
+                const list = response.CollectionInteractions;
+                this.interactions = Array.isArray(list) ? list : null;
+            }
+        } catch (e) {
+            this.interactions = null;
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    get showErrorBanner() {
+        return !this.isLoading && this.interactions === null;
+    }
+
+    get showDataSection() {
+        return !this.isLoading && Array.isArray(this.interactions);
+    }
+
+    /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
+    get recordsForTable() {
+        if (!Array.isArray(this.interactions)) {
+            return [];
+        }
+        return this.interactions.map((row, idx) => ({
+            Id: `ci-${idx}`,
+            InteractedAgentsID: row?.InteractedAgentsID ?? STR_EMPTY,
+            InteractedDate: row?.InteractedDate ?? STR_EMPTY,
+            InteractedCode: row?.InteractedCode ?? STR_EMPTY,
+            PhoneNumber: row?.PhoneNumber ?? STR_EMPTY,
+            PromisedRepaymentAmount: row?.PromisedRepaymentAmount ?? STR_EMPTY,
+            NextInteractionDate: row?.NextInteractionDate ?? STR_EMPTY,
+            ContactedPerson: row?.ContactedPerson ?? STR_EMPTY,
+            DueReason: row?.DueReason ?? STR_EMPTY,
+            OtherNotes: row?.OtherNotes ?? STR_EMPTY
+        }));
+    }
+}
