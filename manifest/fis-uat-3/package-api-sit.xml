@@ -47,6 +47,9 @@
 		<members>FEC_Page_Number_Deals</members>
 		<members>FEC_Error_Callout_Insurance</members>
 		<members>FEC_CustomerInfo_Null_Or_ChatSession_Null</members>
+		<members>FEC_MSG_No_Response</members>
+		<members>FEC_MSG_Unexpected_SOAP_Response</members>
+		<members>FEC_MSG_Unknown_Sys_Code</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>

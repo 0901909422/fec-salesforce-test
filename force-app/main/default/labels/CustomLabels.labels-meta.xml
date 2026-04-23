@@ -13746,15 +13746,6 @@
         <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
         <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
     </labels>
-
-    <labels>
-        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
-        <categories>Label</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
-        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
-    </labels>
     <labels>
         <fullName>FEC_MSG_No_Response</fullName>
         <language>en_US</language>
