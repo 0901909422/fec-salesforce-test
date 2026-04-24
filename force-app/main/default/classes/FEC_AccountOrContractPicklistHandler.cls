@@ -210,7 +210,8 @@ public without sharing class FEC_AccountOrContractPicklistHandler {
                 GetProductsListResponse item = new GetProductsListResponse();
                 
                 if (String.isNotBlank(p.accountNumber) &&
-                Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)) {
+                    (Pattern.matches(FEC_ConstantCommon.PATTERN_CARD, p.accountNumber)
+                || p.accountNumber.contains('X'))) {
                     
                     item.accountContractNumber = p.accountNumber;
                     item.productType = FEC_ConstantCommon.PRODUCT_TYPE_CARD;

@@ -501,6 +501,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Contact_List__c.FEC_Temporary_Email__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Country__c.FEC_Code__c</field>
         <readable>true</readable>
@@ -2578,6 +2583,11 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Chat_History__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <tabSettings>
         <tab>FEC_Application_History__c</tab>
         <visibility>Visible</visibility>

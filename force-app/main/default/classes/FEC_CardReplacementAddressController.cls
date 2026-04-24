@@ -6,7 +6,7 @@ public with sharing class FEC_CardReplacementAddressController {
             return [
                 SELECT Id,
                     FEC_Address_Type__c,
-                    FEC_Address__c,
+                    FEC_Full_Address__c,
                     FEC_Mailing_Address__c
                 FROM FEC_Address_Info__c
                 WHERE FEC_Customer_History__c = :objCase.FEC_Account_or_Contract__c
@@ -14,6 +14,18 @@ public with sharing class FEC_CardReplacementAddressController {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    @AuraEnabled
+    public static String getProvinceId(String provinceCode) {
+        List<FEC_Province__c> provinces = [SELECT Id FROM FEC_Province__c WHERE FEC_Code__c = :provinceCode LIMIT 1];
+        return !provinces.isEmpty() ? provinces.get(0).Id : '';
+    }
+
+    @AuraEnabled
+    public static String getWardId(String wardCode) {
+        List<FEC_Ward__c> wards = [SELECT Id FROM FEC_Ward__c WHERE FEC_Code__c = :wardCode LIMIT 1];
+        return !wards.isEmpty() ? wards.get(0).Id : '';
     }
 
     @AuraEnabled
@@ -60,8 +72,9 @@ public with sharing class FEC_CardReplacementAddressController {
 
     public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
         UpdateResult result = new UpdateResult();
+        Case objCasse;
         try {
-            Case objCasse = [
+            objCasse = [
                 SELECT Id,
                     FEC_National_ID_Passport_ID__c,
                     FEC_Case_Phone_Number__c,
@@ -99,17 +112,19 @@ public with sharing class FEC_CardReplacementAddressController {
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
             result.actionCount = objCasse.FEC_Process_Action_Count__c;
-            FEC_CommonUltils.createProcessActionHistory(
-                method,
-                objCasse,
-                result.success
-            );
         } catch (Exception ex) {
+            result.success = false;
             FEC_CommonUltils.logException(
                 'FEC_CardReplacementAddressController', 
                 'cardReplacement', 
                 ex.getMessage(),
                 ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
             );
         }
         return result;

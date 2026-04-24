@@ -1,9 +1,10 @@
 public with sharing class FEC_CardLockUnLockController {
 
-    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String method) {
+    public static UpdateResult lockUnblockCard(String recordId, String funcCode, String blockCode, String method) {
         UpdateResult result = new UpdateResult();
+        Case objCasse;
         try {
-            Case objCasse = [
+            objCasse = [
                 SELECT Id,
                     FEC_Account_Number__c,
                     FEC_New_Block_Code__c,
@@ -35,7 +36,7 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
-                objCasse.FEC_New_Block_Code__c,
+                blockCode,
                 funcCode,
                 cardNumber,
                 objCasse.FEC_Account_Number__c
@@ -56,17 +57,19 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CaseTriggerHandler.isExecuting = true;
             update objCasse;
             result.actionCount = objCasse.FEC_Process_Action_Count__c;
-            FEC_CommonUltils.createProcessActionHistory(
-                method,
-                objCasse,
-                result.success
-            );
         } catch (Exception ex) {
+            result.success = false;
             FEC_CommonUltils.logException(
                 'FEC_CardLockUnLockController', 
                 'lockUnblockCard', 
                 ex.getMessage(),
                 ex.getStackTraceString()
+            );
+        } finally {
+            FEC_CommonUltils.createProcessActionHistory(
+                method,
+                objCasse,
+                result.success
             );
         }
         return result;
@@ -107,6 +110,7 @@ public with sharing class FEC_CardLockUnLockController {
                 for (FEC_MCMSCARDTOCARDINQEMEA.OutputData outputData : res?.VMXMsgOut?.OUTPUT_AREA?.OUTPUT_DATA) {
                     if (String.isNotBlank(outputData.BLK_CD)) {
                         result.isSuccess = true;
+                        result.currentBlockCode = outputData.BLK_CD;
                         result.currentCardStatus = 'Blocked';
                     }
                 }
@@ -125,6 +129,39 @@ public with sharing class FEC_CardLockUnLockController {
         return result;
     }
 
+
+    @AuraEnabled
+    public static LockCardResult checkProcessActionCardBlock(String currentBlockCode, String newBlockCode) {
+        try {
+            LockCardResult result = new LockCardResult();
+            List<FEC_Block_Code_Matrix__c> blockCodeMatrixs = [
+                SELECT Id, FEC_Action__c
+                FROM FEC_Block_Code_Matrix__c
+                WHERE (FEC_Current_Block_Code__c = :currentBlockCode
+                        OR FEC_Current_Block_Code__c = 'OTHER')
+                    AND FEC_New_Block_Code__c = :newBlockCode
+                LIMIT 1
+            ];
+            if (!blockCodeMatrixs.isEmpty()) {
+                FEC_Block_Code_Matrix__c blockCodeMatrix = blockCodeMatrixs.get(0);
+                if (blockCodeMatrix.FEC_Action__c?.toLowerCase() == 'cs thực hiện') {
+                    result.isShowAction = true;
+                } else if (blockCodeMatrix.FEC_Action__c?.toLowerCase() == 'd2c thực hiện') {
+                    result.isShowAction = false;
+                    result.isCancel = false;
+                    result.strMsg = System.Label.FEC_MSG_CARD_BLOCK_CS_D2C;
+                } else if (blockCodeMatrix.FEC_Action__c?.toLowerCase() == 'không thực hiện') {
+                    result.isShowAction = false;
+                    result.isCancel = true;
+                    result.strMsg = System.Label.FEC_MSG_CARD_BLOCK_CANCEL;
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
     public class UpdateResult {
         @AuraEnabled
         public Boolean success { get; set; }
@@ -137,5 +174,17 @@ public with sharing class FEC_CardLockUnLockController {
         public Boolean isSuccess { get; set; }
         @AuraEnabled
         public String currentCardStatus { get; set; }
+        @AuraEnabled
+        public String currentBlockCode { get; set; }
     }
+
+    public class LockCardResult {
+        @AuraEnabled
+        public Boolean isShowAction { get; set; }
+        @AuraEnabled
+        public Boolean isCancel { get; set; }
+        @AuraEnabled
+        public String strMsg { get; set; }
+    }
+
 }
