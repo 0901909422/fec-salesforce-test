@@ -1527,12 +1527,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Assignment__c.Assignment_Routing_Action__c</field>
+        <field>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Assignment__c.FEC_Assignment_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
