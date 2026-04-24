@@ -13660,6 +13660,14 @@
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
         <fullName>FEC_Page_Number_Deals</fullName>
         <categories>Label</categories>
         <language>en_US</language>
