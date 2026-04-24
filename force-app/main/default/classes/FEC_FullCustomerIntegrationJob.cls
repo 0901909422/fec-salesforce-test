@@ -39,7 +39,8 @@ implements Queueable, Database.AllowsCallouts {
                    FEC_Customer_Name__c,
                    FEC_Date_of_Birth__c,
                    FEC_Gender__c,
-                   FEC_National_ID_Passport_ID__c
+                   FEC_National_ID_Passport_ID__c,
+                   FEC_Plastic_ID__c
             FROM FEC_Customer_History__c
             WHERE Id = :historyId
             LIMIT 1
@@ -54,6 +55,7 @@ implements Queueable, Database.AllowsCallouts {
         hist.FEC_Date_of_Birth__c         = result.dateOfBirth;
         hist.FEC_Primary_Phone__c         = result.primaryPhone;
         hist.FEC_Email__c                 = result.emailAddress;
+        hist.FEC_Plastic_ID__c            = result.plasticID;
         update hist;
 
         // 15/04/2026 PhuongNT add
