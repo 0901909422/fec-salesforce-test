@@ -3235,4 +3235,19 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.isProcessActionFailed = false;
     this.isProcessActionInfo = false;
   }
+  // PhuongNT add get card replacement address selected
+  @api handleValidateAddressSelected() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_CardReplacementAddress"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (host && typeof host.getAddressSelectedId === "function") {
+      const addressInfoId = host.getAddressSelectedId();
+      return addressInfoId;
+    }
+  }
+  // PhuongNT add return current process action
+  @api handleGetCurrentProcessAction() {
+    return this.business?.code;
+  }
 }

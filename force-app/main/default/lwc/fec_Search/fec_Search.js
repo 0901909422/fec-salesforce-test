@@ -1447,6 +1447,7 @@ hasAnySearchCriteria(params) {
           cifNumber: cifNumber,
           phone: row?.Phone,
           customerName: customerName,
+          applicationId: row?.ApplicationID,
           isListView: isListView,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
           buyerNID: row?.BuyerNID || '', // Only for Insurance
