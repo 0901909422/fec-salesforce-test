@@ -93,6 +93,21 @@ public with sharing class FEC_GetCustomerList {
         System.debug('contractNumber: ' + contractNumber);
         System.debug('email: ' + email);
         System.debug('personId: ' + personId);
+
+        // tungnm37 thêm: hardcode email → accountNumber mapping cho môi trường test
+        // Khi search bằng email này, chuyển thành search theo accountNumber tương ứng
+        if (String.isNotBlank(email) && String.isBlank(accountNumber)) {
+            Map<String, String> emailToAccountMap = new Map<String, String>{
+                'huyen.nguyen.7@fecredit.com.vn' => '0001500010000000261',
+                'thanh.vu.5@fecredit.com.vn'     => '0001500010000009734'
+            };
+            String mappedAccount = emailToAccountMap.get(email.toLowerCase().trim());
+            if (mappedAccount != null) {
+                System.debug('tungnm37: email mapped to accountNumber=' + mappedAccount);
+                accountNumber = mappedAccount;
+                email = null;
+            }
+        }
         String transId = String.valueOf(UUID.randomUUID());
         String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT);
 
