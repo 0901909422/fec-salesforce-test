@@ -1,7 +1,7 @@
 /**
  * LWC C360 — tab Additional Data: đọc FEC_CustomerAdditionalInfo__c (chỉ field trên object)
  * đã lọc theo Case; config FEC_CustomerAdditionalInfoConfig__c truy vấn riêng theo FEC_Config__c.
- * Khớp KeyIdentifier + KeyIDValue với Case; chỉ bản ghi chi tiết isActive, config isActive,
+ * Khớp KeyIdentifier + KeyIDValue với FEC_Account_or_Contract__r; chỉ bản ghi chi tiết isActive, config isActive,
  * trong khoảng StartDate–EndDate của config.
  */
 public with sharing class FEC_CustomerAdditionalDataController {
@@ -105,9 +105,14 @@ public with sharing class FEC_CustomerAdditionalDataController {
 
     private static Case queryCase(Id caseId) {
         List<Case> cases = [
-            SELECT FEC_CIF_Number__c, FEC_Search_National_ID__c, FEC_National_ID_Passport_ID__c,
-                   FEC_Search_Phone_Number__c, FEC_Application_ID__c, FEC_Account_Number__c,
-                   FEC_Contract_Number__c, FEC_Customer_Username__c
+            SELECT FEC_Account_or_Contract__c,
+                   FEC_Account_or_Contract__r.FEC_CIF_Number__c,
+                   FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+                   FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+                   FEC_Account_or_Contract__r.FEC_PID_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Application_ID__c,
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_User_ID__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -117,15 +122,18 @@ public with sharing class FEC_CustomerAdditionalDataController {
 
     private static Map<String, Set<String>> buildKeyValueMap(Case c) {
         Map<String, Set<String>> m = new Map<String, Set<String>>();
-        putKeyValue(m, KEY_CIF, c.FEC_CIF_Number__c);
-        putKeyValue(m, KEY_ID_CARD, c.FEC_Search_National_ID__c);
-        putKeyValue(m, KEY_ID_CARD, c.FEC_National_ID_Passport_ID__c);
-        putKeyValue(m, KEY_PHONE, c.FEC_Search_Phone_Number__c);
-        putKeyValue(m, KEY_PID, c.FEC_National_ID_Passport_ID__c);
-        putKeyValue(m, KEY_APPLICATION_ID, c.FEC_Application_ID__c);
-        putKeyValue(m, KEY_ACCOUNT_NO, c.FEC_Account_Number__c);
-        putKeyValue(m, KEY_CONTRACT_NO, c.FEC_Contract_Number__c);
-        putKeyValue(m, KEY_USER_ID, c.FEC_Customer_Username__c);
+        if (c.FEC_Account_or_Contract__c == null || c.FEC_Account_or_Contract__r == null) {
+            return m;
+        }
+        FEC_Customer_History__c ac = c.FEC_Account_or_Contract__r;
+        putKeyValue(m, KEY_CIF, ac.FEC_CIF_Number__c);
+        putKeyValue(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c);
+        putKeyValue(m, KEY_PHONE, ac.FEC_Primary_Phone__c);
+        putKeyValue(m, KEY_PID, ac.FEC_PID_Number__c);
+        putKeyValue(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c);
+        putKeyValue(m, KEY_ACCOUNT_NO, ac.FEC_Account_Number__c);
+        putKeyValue(m, KEY_CONTRACT_NO, ac.FEC_Account_Number__c);
+        putKeyValue(m, KEY_USER_ID, ac.FEC_User_ID__c);
         return m;
     }
 

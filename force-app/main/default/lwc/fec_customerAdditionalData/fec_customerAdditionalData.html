@@ -23,10 +23,12 @@
                             large-device-size="4"
                         >
                             <div class="slds-text-title_bold">{r.fieldLabel}</div>
-                            <div class="slds-text-body_regular slds-text-color_weak slds-m-top_xx-small">{r.fieldValue}</div>
-                            <template if:true={r.showFile}>
-                                <div class="slds-text-body_small slds-m-top_xx-small slds-text-color_weak">{r.sourceFileName}</div>
-                            </template>
+                            <div class="fec-addl-body">
+                                <div class="slds-text-body_regular slds-text-color_weak slds-m-top_xx-small">{r.fieldValue}</div>
+                                <template if:true={r.showFile}>
+                                    <div class="slds-text-body_small slds-m-top_xx-small slds-text-color_weak">{r.sourceFileName}</div>
+                                </template>
+                            </div>
                         </lightning-layout-item>
                     </template>
                 </lightning-layout>
