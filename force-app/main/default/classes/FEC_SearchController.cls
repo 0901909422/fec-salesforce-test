@@ -34,7 +34,7 @@ public with sharing class FEC_SearchController {
 
     @AuraEnabled
     public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
-                String customerName, Boolean isListView, String policyNumber, String buyerNID ) {
+                String customerName, String applicationId, Boolean isListView, String policyNumber, String buyerNID ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -113,6 +113,8 @@ public with sharing class FEC_SearchController {
             System.debug('>>>>FEC_Contract_Number__c: ' + policyNumber);
             
         }
+        // Toan gán trường FEC_Application_ID__c cho history
+        rec.FEC_Application_ID__c = applicationId;
         rec.Name = value;
         rec.FEC_CIF_Number__c = cifNumber;
         rec.FEC_Work_Phone__c = phone;
@@ -359,13 +361,21 @@ public with sharing class FEC_SearchController {
                     FEC_Gender__c,
                     FEC_Date_of_Birth__c,
                     FEC_Primary_Phone__c,
-                    FEC_Email__c
+                    FEC_Email__c,
+                    FEC_Plastic_ID__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :historyId
                 LIMIT 1
             ];
 
-          Boolean isReady = hist != null && hist.Id != null;
+          Boolean isReady = 
+                    String.isNotBlank(hist.FEC_Customer_Name__c)
+                    || String.isNotBlank(hist.FEC_Primary_Phone__c)
+                    || hist.FEC_Date_of_Birth__c != null
+                    || String.isNotBlank(hist.FEC_Gender__c)
+                    || hist.FEC_National_ID_Passport_ID__c != null
+                    || String.isNotBlank(hist.FEC_Email__c)
+                    || String.isNotBlank(hist.FEC_Plastic_ID__c);
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,
@@ -373,7 +383,8 @@ public with sharing class FEC_SearchController {
                 'gender'       => hist.FEC_Gender__c,
                 'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
                 'primaryPhone' => hist.FEC_Primary_Phone__c,
-                'email'        => hist.FEC_Email__c
+                'email'        => hist.FEC_Email__c,
+                'plasticID'    => hist.FEC_Plastic_ID__c
             };
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());

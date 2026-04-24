@@ -8,13 +8,15 @@
         active-section-name="addressList"
       >
         <lightning-accordion-section name="addressList" label="Address List">
-          <div class="slds-p-top_x-small">
+          <div class="slds-p-top_x-small" lwc:if={addressInfos}>
             <lightning-datatable
-              key-field="id"
+              key-field="Id"
               data={addressInfos}
               columns={columns}
               max-row-selection="1"
-              hide-checkbox-column={isDisable}
+              disabled-rows={disabledRows}
+              selected-rows={selectedRows}
+              onrowselection={handleRowSelect}
             >
             </lightning-datatable>
           </div>
