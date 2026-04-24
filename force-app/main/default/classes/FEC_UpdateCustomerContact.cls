@@ -1,6 +1,8 @@
 public with sharing class FEC_UpdateCustomerContact {
   public static final String PHONE_UPDATE = 'Phone Update';
   public static final String EMAIL_UPDATE = 'Email Update';
+  public static final String API_NAME = 'FEC_UpdateCustomerContact';
+  public static FEC_ResponseLog responseLog;
 
   public class CustomerContactRequest {
     public String CIFNumber;
@@ -197,8 +199,23 @@ public with sharing class FEC_UpdateCustomerContact {
     String transId = generateTransId();
     String timestamp = formatTimestamp();
     String envelope = buildEnvelope(req, transId, timestamp);
+    String endpoint = '';
+    String method = FEC_ConstantCommon.API_METHOD_POST;
     try {
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Contact');
+      endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
       HttpResponse res = sendRequest(envelope);
+      responseLog = new FEC_ResponseLog(
+        API_NAME,
+        endpoint,
+        method,
+        envelope,
+        res,
+        null
+      );
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
       finalResult = parseResponse(body, status);
@@ -209,10 +226,36 @@ public with sharing class FEC_UpdateCustomerContact {
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
     } catch (Exception ex) {
+      if (responseLog != null) {
+        responseLog.errorMessage = ex.getMessage();
+      } else {
+        responseLog = new FEC_ResponseLog(
+          API_NAME,
+          endpoint,
+          method,
+          envelope,
+          null,
+          ex.getMessage()
+        );
+      }
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
     }
     return finalResult;
+  }
+
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      responseLog = null;
+    }
   }
 
   private static void validate(
@@ -329,7 +372,12 @@ public with sharing class FEC_UpdateCustomerContact {
       );
     }
 
-    UpdateContactResult result = updateCustomerContact(req);
+    UpdateContactResult result;
+    try {
+      result = updateCustomerContact(req);
+    } finally {
+      logApiResponse();
+    }
 
     if (result.success) {
       selectedCase.FEC_Process_Action_Count__c = -1;
