@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Selected_Address__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Sau khi user lựa chọn bản ghi trong bảng Select address và submit, hệ thống sẽ cập nhật dữ liệu vào field FEC_Selected_Address trên Case</description>
+    <label>Selected Address</label>
+    <referenceTo>FEC_Address_Info__c</referenceTo>
+    <relationshipLabel>Cases</relationshipLabel>
+    <relationshipName>Cases</relationshipName>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

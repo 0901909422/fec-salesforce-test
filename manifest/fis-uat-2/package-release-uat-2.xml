@@ -1360,6 +1360,8 @@
 		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
 		<members>Case.FEC_Is_Test_API__c</members>
+		<members>Case.FEC_Selected_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Case__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
