@@ -3,39 +3,11 @@
     <label>Fetch Collection Data</label>
     <protected>false</protected>
     <values>
-        <field>FEC_Account_Number_Hard_Code__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
-        <field>FEC_Consumer_Name__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/pegacoll/prweb/PRRestService/CollectionHistory/v1/FetchCollectionData</value>
     </values>
     <values>
-        <field>FEC_FromDate__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
-        <field>FEC_Last_4_Digit_Hard_Code__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
-        <field>FEC_Mobile_Hard_Code__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
-        <field>FEC_National_Id_Hard_Code__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_SOAP_Action__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
-        <field>FEC_ToDate__c</field>
         <value xsi:nil="true"/>
     </values>
 </CustomMetadata>
