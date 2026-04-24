@@ -6,6 +6,9 @@
 		<members>FEC_FastCashCaseController</members>
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CaseRemarkController</members>
+		<members>FEC_RelevantTicketController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -13,10 +16,38 @@
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Remark__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
+		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
+		<members>FEC_Assignment__c.FEC_Team__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Case__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Remark_Type__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Relevant_Ticket_ID__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Role_Relevant__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Active__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Channel__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Customer_Type__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Team__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
+		<members>FEC_Assignment__c.All</members>
+		<members>FEC_Routing_Assignment__c.All</members>
+		<name>ListView</name>
+	</types>
+	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_Routing_Assignment__c</members>
+		<members>FEC_Relevant_Ticket__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -41,6 +72,8 @@
 		<members>fec_communicationHistory</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_RoutingAssignment</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
