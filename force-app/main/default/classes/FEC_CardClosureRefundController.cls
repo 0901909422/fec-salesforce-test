@@ -246,7 +246,8 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Account_Number__c,
                 FEC_Account_or_Contract__c,
                 FEC_SubCode__r.FEC_Code__c,
-                FEC_Card_Block_Service_Attempts__c
+                FEC_Card_Block_Service_Attempts__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -320,7 +321,8 @@ public without sharing class FEC_CardClosureRefundController {
                 BLOCK_CODE_CARD,
                 funcCode,
                 last4Digit,
-                accountNumber
+                accountNumber,
+                c.FEC_Is_Test_API__c
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 

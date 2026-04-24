@@ -76,7 +76,8 @@ public without sharing class FEC_CardLockUnLockCallout {
         String blockCode,
         String funcCode,
         String last4Digit,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ){
         LockUnlockResponse response = new LockUnlockResponse();
         try{
@@ -96,13 +97,18 @@ public without sharing class FEC_CardLockUnLockCallout {
 
             String last4DigitParam = '';
             String accountNumberParam = '';
-            if (String.isNotBlank(apiSetting?.FEC_Enviroment__c) && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
-                last4DigitParam = apiConfig?.FEC_Last_4_Digit_Hard_Code__c;
-                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
-            }else{
+            
+            Boolean useRealData = isTestAPI ||
+                apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+            
+            if (useRealData) {
                 last4DigitParam = last4Digit;
                 accountNumberParam = accountNumber;
+            } else {
+                last4DigitParam = apiConfig?.FEC_Last_4_Digit_Hard_Code__c;
+                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
             }
+            
 
             request.body = new Map<String, String>{
                 'BlockCode' => blockCode,
