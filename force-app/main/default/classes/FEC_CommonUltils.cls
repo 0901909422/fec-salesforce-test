@@ -1335,4 +1335,25 @@ public with sharing class FEC_CommonUltils {
       return null;
     }
   }
+
+  public static final Map<String, String> DECISION_TEAM_MAP = new Map<String, String>{
+      'Pending CS' => 'CSInternal',
+      'Pending Customer' => 'Customer',
+      'Pending Card Ops' => 'CardOpsOutOfSystem',
+      'Pending Collections' => 'CollectionsOutOfSystem',
+      'Pending Contract Processing' => 'CPOutOfSystem',
+      'Pending Credit Assessment' => 'CAOutOfSystem',
+      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+      'Pending Telesales' => 'TelesalesOutOfSystem',
+      'Pending IT' => 'ITOutOfSystem',
+      'Pending Payment' => 'PaymentOutOfSystem',
+      'Pending Product' => 'PBDOutOfSystem',
+      'Pending RCP&A' => 'RCPAOutOfSystem',
+      'Pending Security' => 'SecurityOutOfSystem',
+      'Pending Vendor' => 'VendorOutOfSystem',
+      'Out Of Process' => 'OutOfProcess',
+      'CIC Related' => 'CICRelated',
+      'Document Preparation' => 'DocumentPreparation',
+      'Task Under Review' => 'TaskUnderReview'
+  };
 }

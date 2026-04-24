@@ -51,6 +51,8 @@ public without sharing class FEC_AssignmentController {
              WHERE Id IN :getAssignmentIds(histories)]
         );
 
+        Map<Id, String> teamMap = buildTeamMap(histories);
+
         for (FEC_Routing_Action_History__c h : histories) {
 
             if (h.FEC_Routing_Action__c != FEC_ConstantCommon.CASE_ROUTING_ACTION) continue;
@@ -60,7 +62,16 @@ public without sharing class FEC_AssignmentController {
 
             if (c == null || a == null) continue;
 
-            String team = getTeamFromOwner(h.FEC_Updated_User_Queue_ID__c);
+            String team = null;
+
+            if (String.isNotBlank(h.FEC_Updated_User_Queue_ID__c)) {
+                try {
+                    Id ownerId = Id.valueOf(h.FEC_Updated_User_Queue_ID__c);
+                    team = teamMap.get(ownerId);
+                } catch (Exception e) {
+                    team = null;
+                }
+            }
 
             if (c.FEC_Assignment_Count__c == 1) {
                 c.FEC_Team__c = null;
@@ -96,6 +107,8 @@ public without sharing class FEC_AssignmentController {
 
         Map<Id, List<FEC_Assignment__c>> caseAssignments = getAllAssignments(caseMap.keySet());
 
+        Map<Id, String> teamMap = buildTeamMap(histories);
+
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
         Map<Id, Case> caseUpdateMap = new Map<Id, Case>();
         List<FEC_Routing_Action_History__c> historiesToInsert = new List<FEC_Routing_Action_History__c>();
@@ -117,7 +130,16 @@ public without sharing class FEC_AssignmentController {
                 || action == FEC_ConstantCommon.CASE_TRANSFER_ACTION
                 || action == FEC_ConstantCommon.CASE_ESCALATE_ACTION) {
 
-                String targetTeam = getTeamFromOwner(h.FEC_Updated_User_Queue_ID__c);
+                String targetTeam = null;
+
+                 if (String.isNotBlank(h.FEC_Updated_User_Queue_ID__c)) {
+                    try {
+                        Id ownerId = Id.valueOf(h.FEC_Updated_User_Queue_ID__c);
+                        targetTeam = teamMap.get(ownerId);
+                    } catch (Exception e) {
+                        targetTeam = null;
+                    }
+                }
 
                 removeTeam(c, currentTeam);
                 addTeam(c, targetTeam);
@@ -314,16 +336,6 @@ public without sharing class FEC_AssignmentController {
         return count;
     }
 
-    private static String getTeamFromOwner(String ownerIdStr) {
-        if (String.isBlank(ownerIdStr)) return null;
-
-        Id ownerId = Id.valueOf(ownerIdStr);
-        Map<Id, String> teamMap =
-            FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(new Set<Id>{ownerId});
-
-        return teamMap.get(ownerId);
-    }
-
     // ===== REMOVE TEAM =====
     private static void removeTeam(Case c, String team) {
         if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return;
@@ -366,28 +378,27 @@ public without sharing class FEC_AssignmentController {
     }
 
     private static String mapDecisionToTeam(String decision) {
+        return FEC_CommonUltils.DECISION_TEAM_MAP.get(decision);
+    }
 
-        Map<String, String> mapDecision = new Map<String, String>{
-            'Pending CS' => 'CSInternal',
-            'Pending Customer' => 'Customer',
-            'Pending Card Ops' => 'CardOpsOutOfSystem',
-            'Pending Collections' => 'CollectionsOutOfSystem',
-            'Pending Contract Processing' => 'CPOutOfSystem',
-            'Pending Credit Assessment' => 'CAOutOfSystem',
-            'Pending Direct Sales' => 'DirectSalesOutOfSystem',
-            'Pending Telesales' => 'TelesalesOutOfSystem',
-            'Pending IT' => 'ITOutOfSystem',
-            'Pending Payment' => 'PaymentOutOfSystem',
-            'Pending Product' => 'PBDOutOfSystem',
-            'Pending RCP&A' => 'RCPAOutOfSystem',
-            'Pending Security' => 'SecurityOutOfSystem',
-            'Pending Vendor' => 'VendorOutOfSystem',
-            'Out Of Process' => 'OutOfProcess',
-            'CIC Related' => 'CICRelated',
-            'Document Preparation' => 'DocumentPreparation',
-            'Task Under Review' => 'TaskUnderReview'
-        };
+    private static Map<Id, String> buildTeamMap(List<FEC_Routing_Action_History__c> histories) {
 
-        return mapDecision.get(decision);
+        Set<Id> ownerIds = new Set<Id>();
+
+        for (FEC_Routing_Action_History__c h : histories) {
+            if (String.isNotBlank(h.FEC_Updated_User_Queue_ID__c)) {
+                try {
+                    ownerIds.add(Id.valueOf(h.FEC_Updated_User_Queue_ID__c));
+                } catch (Exception e) {
+                    System.debug(System.label.FEC_Invalid_OwnerId + h.FEC_Updated_User_Queue_ID__c);
+                }
+            }
+        }
+
+        if (ownerIds.isEmpty()) {
+            return new Map<Id, String>();
+        }
+
+        return FEC_RoutingActionHistoryTriggerHandler.getTeamsFromIds(ownerIds);
     }
 }

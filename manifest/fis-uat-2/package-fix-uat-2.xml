@@ -491,6 +491,7 @@
         <members>FEC_Email_Btn_Cancel</members>
         <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
+		<members>FEC_Invalid_OwnerId</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
