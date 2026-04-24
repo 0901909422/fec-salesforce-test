@@ -346,25 +346,6 @@ public with sharing class FEC_CaseEditNOCController {
     }
   }
 
-  // [NOC-HANDLING-STAGE-UPDATE] Task 1.1: Kiểm tra Case có Auto-Routing Assignment không
-  // Query FEC_Assignment__c với FEC_Case__c = caseId AND FEC_Assignment_Type__c = 'Routing'
-  // Nếu có ít nhất 1 record → return true → ẩn Updated Information section
-  @AuraEnabled
-  public static Boolean hasAutoRoutingAssignment(String caseId) {
-    try {
-      List<FEC_Assignment__c> assignments = [
-        SELECT Id
-        FROM FEC_Assignment__c
-        WHERE FEC_Case__c = :caseId
-          AND FEC_Assignment_Type__c = 'Routing'
-        LIMIT 1
-      ];
-      return !assignments.isEmpty();
-    } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
-    }
-  }
-
   @AuraEnabled
   public static List<FEC_CommonUltils.PicklistOption> getSubCodelst(
     String recordId,

@@ -3751,24 +3751,6 @@ public without sharing class FEC_CaseBusinessService {
   // }
 
   @AuraEnabled(cacheable=true)
-  public static List<Map<String, String>> getTeamQueueOptions() {
-    List<FEC_Team_Queue__c> records = [
-      SELECT FEC_Name__c, FEC_Queue_Name__c
-      FROM FEC_Team_Queue__c
-      ORDER BY FEC_Name__c, FEC_Queue_Name__c
-    ];
-    List<Map<String, String>> result = new List<Map<String, String>>();
-    for (FEC_Team_Queue__c r : records) {
-      Map<String, String> item = new Map<String, String>{
-        'teamName' => r.FEC_Name__c,
-        'queueName' => r.FEC_Queue_Name__c
-      };
-      result.add(item);
-    }
-    return result;
-  }
-
-  @AuraEnabled(cacheable=true)
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
