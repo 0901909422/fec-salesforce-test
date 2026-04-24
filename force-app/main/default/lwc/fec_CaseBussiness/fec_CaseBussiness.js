@@ -3228,5 +3228,11 @@ export default class Fec_CaseBussiness extends LightningElement {
       routeToEle.value = optionValue;
     }
   }
-
+  // PhuongNT add reset msg process action
+  @api resetMsgProcessAction() {
+    this.processActionMsg = '';
+    this.isProcessActionSuccessed = false;
+    this.isProcessActionFailed = false;
+    this.isProcessActionInfo = false;
+  }
 }
