@@ -120,6 +120,7 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_GetUnbilledTransactions</members>
 		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_BlockCodeRoutingService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -198,6 +199,7 @@
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
+		<members>fec_BlockCodeRouteToInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

@@ -125,7 +125,7 @@ public without sharing class FEC_CaseBusinessService {
       List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
 
       //  ===================================== GET CASE ===============================
-      List<Case> caselst = [
+            List<Case> caselst = [
         SELECT
           Id,
           FEC_Product_Type__c,
@@ -179,7 +179,11 @@ public without sharing class FEC_CaseBusinessService {
           FEC_National_ID_Passport_ID__c,
           FEC_Case_Phone_Number__c,
           FEC_Case_Email__c,
-          FEC_Account_or_Contract__r.FEC_Customer_Type__c
+          FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+          FEC_Interaction__c,
+          FEC_Category__r.Name,
+          FEC_SubCategory__r.Name,
+          FEC_SubCode__r.Name
         FROM Case
         WHERE Id = :caseId
       ];
@@ -798,6 +802,14 @@ public without sharing class FEC_CaseBusinessService {
           );
       }
 
+      FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+        selectedCase,
+        result,
+        categoryId,
+        subCategoryId,
+        subCodeId
+      );
+
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
         ? null
@@ -1384,7 +1396,13 @@ public without sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
-          FEC_Actual_Nature_of_Case__c, FEC_Team__c
+          FEC_Actual_Nature_of_Case__c,
+          FEC_Team__c,
+          FEC_Account_or_Contract__c,
+          FEC_Interaction__c,
+          FEC_Category__r.Name,
+          FEC_SubCategory__r.Name,
+          FEC_SubCode__r.Name
         FROM Case
         WHERE Id = :caseId
       ];
@@ -1502,6 +1520,11 @@ public without sharing class FEC_CaseBusinessService {
       queueId = applyFrontlineMainQueueIfUserOwner(queueId);
       //thangtv: fallback Queue->latest history updated user mapping
       queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+
+      queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+        updatedCase,
+        queueId
+      );
 
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
