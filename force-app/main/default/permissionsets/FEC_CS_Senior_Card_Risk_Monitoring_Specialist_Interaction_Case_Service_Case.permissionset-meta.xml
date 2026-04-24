@@ -542,7 +542,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case. FEC_Is_Test_API__c </field>
+        <field>Case.FEC_Is_Test_API__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
