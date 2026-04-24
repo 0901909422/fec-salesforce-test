@@ -70,7 +70,7 @@
 		<members>FEC_PinResetHandler</members>
 		<members>FEC_ClearSessionController</members>
         <members>FEC_SessionUtil</members>
-
+		<members>FEC_CaseTriggerHandler</members>
 		<members>FEC_RefundRequestController</members>
 		<members>FEC_GetMRCInfo</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
@@ -205,7 +205,7 @@
 		<members>FEC_Internal_Case_Record_Page</members>
 		<members>Service_Resource_Record_Page</members>
 		<members>Service_Resource_Skill_Record_Page</members>
-
+		<members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
 		<members>FEC_Notification_Record_Page_Manual</members>
 		<members>FEC_Customer_Case_Record_Page</members>
@@ -626,9 +626,9 @@
 		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
 		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
-
+		<members>RD_IT_User_Master_Data_Management</members>
 		<members>RD_IT_User_System_Management</members>
-
+        <members>FEC_Common_System_Setting</members>
 		<members>FEC_RD_Card_Operations_User_Customer_360</members>
         <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
         <members>FEC_RD_Card_Operations_User_Master_Data_Management</members>
