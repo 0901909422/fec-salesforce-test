@@ -1,0 +1,78 @@
+<template>
+    <div class="datepicker-wrapper" onkeydown={handleKeyDown}>
+        <!-- Input display -->
+        <div class="input-container">
+            <input
+                type="text"
+                class="date-input"
+                value={displayValue}
+                placeholder="dd/mm/yyyy"
+                readonly
+                onclick={toggleCalendar}
+                aria-label={label}
+                aria-haspopup="true"
+                aria-expanded={isOpen}
+            />
+            <span class="calendar-icon" onclick={toggleCalendar} aria-hidden="true">
+                <lightning-icon icon-name="utility:event" size="x-small"></lightning-icon>
+            </span>
+        </div>
+
+        <!-- Calendar popup -->
+        <template lwc:if={isOpen}>
+            <div class="calendar-popup" role="dialog" aria-modal="true" aria-label="Date picker">
+                <!-- Header: prev / month+year / next -->
+                <div class="cal-header">
+                    <button class="nav-btn" onclick={prevMonth} aria-label="Tháng trước">&#8249;</button>
+                    <span class="month-year-label" onclick={toggleYearMonthPicker} role="button" tabindex="0" aria-label="Chọn tháng năm">{monthYearLabel}</span>
+                    <button class="nav-btn" onclick={nextMonth} aria-label="Tháng sau">&#8250;</button>
+                </div>
+
+                <!-- Year/Month quick picker -->
+                <template lwc:if={showYearMonthPicker}>
+                    <div class="year-month-picker">
+                        <div class="year-row">
+                            <button class="nav-btn" onclick={prevYear} aria-label="Năm trước">&#8249;</button>
+                            <span class="year-label">{viewYear}</span>
+                            <button class="nav-btn" onclick={nextYear} aria-label="Năm sau">&#8250;</button>
+                        </div>
+                        <div class="month-grid">
+                            <template for:each={monthList} for:item="m">
+                                <button
+                                    key={m.index}
+                                    class={m.cls}
+                                    data-month={m.index}
+                                    onclick={selectMonth}
+                                    aria-label={m.name}
+                                >{m.name}</button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Day grid (shown when year/month picker is hidden) -->
+                <template lwc:if={showDayGrid}>
+                    <div class="cal-grid">
+                        <!-- Day-of-week headers -->
+                        <template for:each={dayHeaders} for:item="h">
+                            <div key={h} class="day-header">{h}</div>
+                        </template>
+                        <!-- Day cells -->
+                        <template for:each={calendarDays} for:item="day">
+                            <div
+                                key={day.key}
+                                class={day.cls}
+                                data-date={day.dateStr}
+                                onclick={selectDay}
+                                role="button"
+                                tabindex="0"
+                                aria-label={day.ariaLabel}
+                            >{day.label}</div>
+                        </template>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+    </div>
+</template>

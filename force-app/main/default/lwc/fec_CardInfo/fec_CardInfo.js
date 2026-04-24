@@ -17,10 +17,7 @@ export default class Fec_CardInfo extends LightningElement {
 
     cardDeliveryData = [];
     otherCardData = [];
-    
-    // Track if data has been loaded (to differentiate empty data vs no API call)
-    otherCardDataLoaded = false;
-    
+
     // Active accordion sections - mặc định mở cả 2
     activeSections = ['cardDelivery', 'otherCard'];
     
@@ -35,9 +32,6 @@ export default class Fec_CardInfo extends LightningElement {
     subscription = null;
     channelName = '/event/FEC_Card_Info_Refresh__e';
     
-    /** Empty state khi API OK nhưng không có dòng (Card Delivery / Other Card) */
-    noDataLabel = 'No data';
-
     customLabel = {
         cardDeliveryLabel: FEC_Card_Delivery_Label,
         otherCardLabel: FEC_Other_Card_Label
@@ -57,15 +51,12 @@ export default class Fec_CardInfo extends LightningElement {
         this.unsubscribeFromPlatformEvent();
     }
 
-    // Load data từ loadCardInfo() - method này tự động gọi API và load từ database
-    // Chỉ gọi API nếu chưa có dữ liệu trong database
     loadCardInfoData() {
         this.isCardDeliveryLoading = true;
         this.isOtherCardLoading = true;
         this.hasCardDeliveryError = false;
         this.hasOtherCardError = false;
-        
-        
+
         loadCardInfo({ caseId: this.recordId })
             .then(result => {
                 this.handleCardInfoResult(result);
@@ -81,12 +72,10 @@ export default class Fec_CardInfo extends LightningElement {
         this.isOtherCardLoading = true;
         this.hasCardDeliveryError = false;
         this.hasOtherCardError = false;
-        
-        // Clear cached data trước khi load lại
+
         this.cardDeliveryData = [];
         this.otherCardData = [];
-        
-        
+
         loadCardInfo({ caseId: this.recordId })
             .then(result => {
                 this.handleCardInfoResult(result);
@@ -156,10 +145,7 @@ export default class Fec_CardInfo extends LightningElement {
         } else {
             this.otherCardData = [];
         }
-        
-        // Mark that Other Card data has been loaded (even if empty)
-        this.otherCardDataLoaded = true;
-        
+
         this.hasCardDeliveryError = false;
         this.hasOtherCardError = false;
         this.cardDeliveryUpdatedTime = new Date();
@@ -174,7 +160,6 @@ export default class Fec_CardInfo extends LightningElement {
         this.hasOtherCardError = true;
         this.cardDeliveryData = [];
         this.otherCardData = [];
-        this.otherCardDataLoaded = false;
         this.isCardDeliveryLoading = false;
         this.isOtherCardLoading = false;
     }
@@ -272,31 +257,6 @@ export default class Fec_CardInfo extends LightningElement {
         return this.isOtherCardOpen 
             ? 'slds-accordion__content' 
             : 'slds-accordion__content slds-hide';
-    }
-
-    get hasCardDeliveryData() {
-        return Array.isArray(this.cardDeliveryData) && this.cardDeliveryData.length > 0;
-    }
-
-    /** API thành công, không lỗi, nhưng không có dòng dữ liệu — hiển thị empty state */
-    get showCardDeliveryNoData() {
-        return (
-            !this.isCardDeliveryLoading &&
-            !this.hasCardDeliveryError &&
-            !this.hasCardDeliveryData
-        );
-    }
-
-    get hasOtherCardData() {
-        return Array.isArray(this.otherCardData) && this.otherCardData.length > 0;
-    }
-
-    get showOtherCardNoData() {
-        return (
-            !this.isOtherCardLoading &&
-            !this.hasOtherCardError &&
-            !this.hasOtherCardData
-        );
     }
 
     // Hide row number for Card Delivery

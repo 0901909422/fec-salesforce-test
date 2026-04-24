@@ -3,8 +3,24 @@
     <label>Get Unbilled Transaction</label>
     <protected>false</protected>
     <values>
+        <field>FEC_Account_Number_Hard_Code__c</field>
+        <value xsi:type="xsd:string">0001500040000597830</value>
+    </values>
+    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/EStatementService</value>
+    </values>
+    <values>
+        <field>FEC_Last_4_Digit_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_Mobile_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_National_Id_Hard_Code__c</field>
+        <value xsi:nil="true"/>
     </values>
     <values>
         <field>FEC_SOAP_Action__c</field>

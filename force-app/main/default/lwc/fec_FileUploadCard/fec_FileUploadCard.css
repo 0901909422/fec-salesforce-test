@@ -1,0 +1,383 @@
+.fec-card {
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem 1rem;
+  font-family: "Salesforce Sans", Arial, sans-serif;
+}
+
+.fec-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.fec-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fec-card__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #706e6b;
+  color: #ffffff;
+}
+
+.fec-card__title-icon lightning-icon {
+  --sds-c-icon-color-foreground-default: #ffffff;
+}
+
+.fec-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #032d60;
+}
+
+.fec-file-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.fec-pill-btn {
+  appearance: none;
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.fec-pill-btn:hover:not(:disabled) {
+  border-color: #0176d3;
+  background: #f3f9ff;
+}
+
+.fec-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fec-pill-btn_primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fec-upload-icon {
+  --sds-c-icon-color-foreground-default: #0176d3;
+}
+
+.fec-drop-zone {
+  min-height: 7.5rem;
+  border: 1px dashed #c9c9c9;
+  border-radius: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.fec-drop-zone_active {
+  background: #f3f9ff;
+  border-color: #0176d3;
+}
+
+.fec-drop-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #706e6b;
+}
+
+.fec-file-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border-top: 1px solid #f3f2f2;
+  padding-top: 0.5rem;
+}
+
+.fec-file-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid #f3f2f2;
+}
+
+.fec-file-list__item:last-child {
+  border-bottom: none;
+}
+
+.fec-file-list__name {
+  color: #3e3e3c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fec-file-list__remove {
+  border: none;
+  background: transparent;
+  padding: 0.15rem;
+  cursor: pointer;
+  border-radius: 0.15rem;
+  color: #706e6b;
+}
+
+.fec-file-list__remove:hover:not(:disabled) {
+  background: #f3f2f2;
+  color: #032d60;
+}
+
+.fec-file-list__remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fec-file-list-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+/* Header: pill + invisible lightning-file-upload overlay (related list look) */
+.fec-add-files-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.75rem;
+  min-height: 2rem;
+  cursor: pointer;
+}
+
+.fec-add-files-pill {
+  pointer-events: none;
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #0176d3;
+  background: #ffffff;
+  border: 1px solid #dddbda;
+  border-radius: 999px;
+}
+
+.fec-add-files-hitbox {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fec-add-files-hitbox .fec-add-files-lfu {
+  position: relative;
+  z-index: 1;
+  min-width: 100%;
+  transform: scale(1.15);
+  transform-origin: center;
+}
+
+/* Related list body — bảng embed full ngang card */
+.fec-related-body {
+  min-height: 0;
+}
+
+.fec-files-embed {
+  margin: 0 -1rem;
+  border-top: 1px solid #dddbda;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.fec-files-embed .fec-files-table-scroll {
+  margin: 0;
+}
+
+.fec-related-footer {
+  border-top: none;
+  padding: 0.5rem 0 0;
+  margin-top: 0;
+  text-align: center;
+}
+
+.fec-view-all {
+  border: none;
+  background: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+}
+
+.fec-view-all:hover {
+  text-decoration: underline;
+}
+
+/* Modal "View all" — không dùng URL related list LEX (tránh lỗi layout). */
+.fec-all-files-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 7, 7, 0.45);
+  box-sizing: border-box;
+}
+
+.fec-all-files-dialog {
+  width: 100%;
+  max-width: 56rem;
+  max-height: min(85vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 0.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border: 1px solid #dddbda;
+  overflow: hidden;
+}
+
+.fec-all-files-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.fec-all-files-dialog__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #032d60;
+}
+
+.fec-all-files-dialog__body {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Bảng (card + modal) — header nền xám nhạt giống related list Files LEX */
+.fec-files-table-scroll {
+  margin: 0 -0.25rem;
+  overflow-x: auto;
+}
+
+.fec-files-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.fec-files-table__th {
+  text-align: left;
+  font-weight: 600;
+  color: #3e3e3c;
+  background: #f3f3f2;
+  border-bottom: 1px solid #dddbda;
+  padding: 0.5rem 0.65rem;
+  white-space: nowrap;
+}
+
+.fec-files-table__th_title {
+  min-width: 12rem;
+}
+
+.fec-files-table__th_size {
+  width: 5rem;
+}
+
+.fec-files-table__th_actions {
+  width: 3rem;
+  text-align: center;
+}
+
+.fec-files-table__td {
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0.5rem 0.65rem;
+  color: #181818;
+}
+
+.fec-files-table__td_muted {
+  color: #3e3e3c;
+}
+
+.fec-files-table__title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.fec-files-table__doctype {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.fec-files-table__title-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fec-files-table__title-link:hover {
+  text-decoration: underline;
+}
+
+.fec-files-table__owner {
+  color: #0176d3;
+  font-weight: 500;
+}
+
+.fec-files-table__td_actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fec-all-files-empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #706e6b;
+}
