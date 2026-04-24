@@ -1889,17 +1889,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Category_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Category_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Sub_Category_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Sub_Category_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
