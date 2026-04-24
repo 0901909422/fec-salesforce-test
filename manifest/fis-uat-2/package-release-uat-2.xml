@@ -50,6 +50,7 @@
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+		<members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -1358,6 +1359,7 @@
 		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
 		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
+		<members>Case.FEC_Is_Test_API__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1402,6 +1404,7 @@
 		<members>FEC_ContentDocumentLinkTriggerHandler</members>
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_GetUnbilledTransactions</members>
+		<members>FEC_GetCardFinancialTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
