@@ -29,14 +29,14 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-import {
-  ACTION_REOPEN,
+import { 
+  ACTION_REOPEN, 
   ACTION_RECALL,
-  // RECORD_TYPE_INTERNAL_CASE,
-  VIEW_MODE_HANDLING,
-  VIEW_MODE_REVIEW,
-  // STR_UNDEFINED,
-  INTERNAL_REQUEST,
+  // RECORD_TYPE_INTERNAL_CASE, 
+  VIEW_MODE_HANDLING, 
+  VIEW_MODE_REVIEW, 
+  // STR_UNDEFINED, 
+  INTERNAL_REQUEST, 
   INTERNAL_UBANK
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
@@ -53,7 +53,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _internalApplied = false;
 
   get isEdit() {
-
+    
     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
     return defaultEdit && !this.isSubmited;
   }
@@ -142,7 +142,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       viewMode: VIEW_MODE_REVIEW,
     });
     this.subscribeToMessageChannel();
-
+    
     getCase({ recordId: this.recordId })
       .then((res) => {
         this.productTypeSelectedId = res.FEC_Product_Type__c;
@@ -517,7 +517,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.productTypeSelectedId = internalOption.value;
           this.disableProdType = true;
           this._internalProductTypeId = internalOption.value;
-          this._internalApplied = false;
+          this._internalApplied = false; 
           this.getCategory();
           this.getSubCategory();
           this.getSubCode();
