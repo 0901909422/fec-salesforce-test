@@ -48,7 +48,7 @@ public with sharing class FEC_DataCampaign {
      */
     public static FEC_DataCampaign fromSObject(FEC_DataCampaign__c record) {
         if (record == null) {
-            throw new IllegalArgumentException('FEC_DataCampaign__c record cannot be null');
+            throw new IllegalArgumentException(System.Label.FEC_Campaign_Error_RecordNull);
         }
         FEC_DataCampaign m = new FEC_DataCampaign();
         m.campaignID = record.FEC_CS_Campaign__r?.FEC_Campaign__r?.FEC_CampaignId__c;

@@ -12875,4 +12875,84 @@
         <shortDescription>Complete Button</shortDescription>
         <value>Complete</value>
     </labels>
+    <labels>
+        <fullName>FEC_Campaign_Error_MaxJsonSize</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Error MaxJsonSize</shortDescription>
+        <value>maxJsonSize must be a positive integer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Error_RecordNull</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Error Record Null</shortDescription>
+        <value>FEC_DataCampaign__c record cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_RowNull</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Row Null</shortDescription>
+        <value>Row {0}: Row data is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_CampaignIdMismatch</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Campaign ID Mismatch</shortDescription>
+        <value>Row {0}: Field ''Campaign ID'' - value does not match expected campaign code ''{1}''</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_FieldBlank</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Field Blank</shortDescription>
+        <value>Row {0}: Field ''{1}'' - must not be blank</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_FieldExceedsMaxLength</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Field Exceeds Max Length</shortDescription>
+        <value>Row {0}: Field ''{1}'' - exceeds max length of {2} characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_ProductLineInvalid</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation ProductLine Invalid</shortDescription>
+        <value>Row {0}: Field ''ProductLine'' - value ''{1}'' is invalid, only ''Loan'' or ''Card'' accepted</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_AtLeastOneRequired</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation At Least One Required</shortDescription>
+        <value>Row {0}: At least one of ''App ID'' or ''Account or Contract number'' must not be blank</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_InvalidNumber</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Invalid Number</shortDescription>
+        <value>Row {0}: Field ''{1}'' - value ''{2}'' is not a valid number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_DuplicateKey</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Duplicate Key</shortDescription>
+        <value>Row {0}: Duplicate composite key ''{1}''</value>
+    </labels>
 </CustomLabels>

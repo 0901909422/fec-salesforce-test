@@ -12,16 +12,7 @@ public with sharing class FEC_CampaignApiCaller {
      * @return HttpResponse from the API, or null when running in test context
      */
     public static HttpResponse sendCampaignData(String jsonBody) {
-        if (Test.isRunningTest()) {
-            return null;
-        }
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(FEC_Constants.CAMPAIGN_API_ENDPOINT);
-        req.setMethod(FEC_Constants.HTTP_METHOD_POST);
-        req.setHeader('Content-Type', FEC_Constants.HTTP_CONTENT_TYPE_JSON);
-        req.setTimeout(120000);
-        req.setBody(jsonBody);
-        return new Http().send(req);
+        return doPost(FEC_Constants.CAMPAIGN_API_ENDPOINT, jsonBody);
     }
 
     /**
@@ -82,19 +73,21 @@ public with sharing class FEC_CampaignApiCaller {
 
     /**
      * Executes a POST request to the given endpoint with the given body.
+     * Delegates to FEC_CommonUltils.calloutApi() for centralized HTTP handling.
      * Returns null when running in test context.
      */
     private static HttpResponse doPost(String endpoint, String body) {
         if (Test.isRunningTest()) {
             return null;
         }
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(endpoint);
-        req.setMethod(FEC_Constants.HTTP_METHOD_POST);
-        req.setHeader('Content-Type', FEC_Constants.HTTP_CONTENT_TYPE_JSON);
-        req.setTimeout(120000);
-        req.setBody(body);
-        return new Http().send(req);
+        return FEC_CommonUltils.calloutApi(
+            endpoint,
+            FEC_Constants.HTTP_METHOD_POST,
+            FEC_Constants.HTTP_CONTENT_TYPE_JSON,
+            null,
+            null,
+            body
+        );
     }
 
     /**

@@ -33,7 +33,7 @@ public with sharing class FEC_CampaignBatchService {
             return chunks;
         }
         if (maxJsonSize == null || maxJsonSize <= 0) {
-            throw new IllegalArgumentException('maxJsonSize must be a positive integer');
+            throw new IllegalArgumentException(System.Label.FEC_Campaign_Error_MaxJsonSize);
         }
 
         List<FEC_DataCampaign> currentChunk = new List<FEC_DataCampaign>();

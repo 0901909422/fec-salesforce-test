@@ -14,6 +14,8 @@
         <members>FEC_PushCampaignDataBatch</members>
         <members>FEC_DataCampaign</members>
         <members>FEC_Constants</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_CommonUltils</members>
         <members>FEC_GetCallingListResultBatch</members>
         <members>FEC_CheckCampaignStatusBatch</members>
         <members>FEC_CampaignController</members>

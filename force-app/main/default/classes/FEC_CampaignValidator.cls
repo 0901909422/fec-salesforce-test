@@ -60,7 +60,7 @@ public with sharing class FEC_CampaignValidator {
         ValidationResult result = new ValidationResult(rowIndex);
         if (row == null) {
             result.isValid = false;
-            result.errors.add('Row ' + (rowIndex + 1) + ': Row data is null');
+            result.errors.add(String.format(System.Label.FEC_Campaign_Validation_RowNull, new List<String>{String.valueOf(rowIndex + 1)}));
             return result;
         }
 
@@ -98,7 +98,7 @@ public with sharing class FEC_CampaignValidator {
             List<Integer> rowNumbers = keyToRows.get(key);
             if (rowNumbers.size() > 1) {
                 String rowList = String.join(rowNumbers, ', ');
-                duplicateErrors.add('Row ' + rowList + ': Duplicate composite key \'' + key + '\'');
+                duplicateErrors.add(String.format(System.Label.FEC_Campaign_Validation_DuplicateKey, new List<String>{rowList, key}));
             }
         }
         return duplicateErrors;
@@ -113,8 +113,7 @@ public with sharing class FEC_CampaignValidator {
         String campaignId = FEC_Util.toString(row.get('Campaign ID'));
         if (campaignId == null || !campaignId.equals(expectedCode)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'Campaign ID\' - '
-                + 'value does not match expected campaign code \'' + expectedCode + '\''
+                String.format(System.Label.FEC_Campaign_Validation_CampaignIdMismatch, new List<String>{String.valueOf(rowIndex + 1), expectedCode})
             );
         }
     }
@@ -125,21 +124,19 @@ public with sharing class FEC_CampaignValidator {
         String productLine = FEC_Util.toString(row.get('ProductLine'));
         if (String.isBlank(productLine)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'ProductLine\' - must not be blank'
+                String.format(System.Label.FEC_Campaign_Validation_FieldBlank, new List<String>{String.valueOf(rowIndex + 1), 'ProductLine'})
             );
             return;
         }
         if (productLine.length() > FEC_Constants.CAMPAIGN_PRODUCT_LINE_MAX_LENGTH) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'ProductLine\' - '
-                + 'exceeds max length of ' + FEC_Constants.CAMPAIGN_PRODUCT_LINE_MAX_LENGTH + ' characters'
+                String.format(System.Label.FEC_Campaign_Validation_FieldExceedsMaxLength, new List<String>{String.valueOf(rowIndex + 1), 'ProductLine', String.valueOf(FEC_Constants.CAMPAIGN_PRODUCT_LINE_MAX_LENGTH)})
             );
         }
         if (!productLine.equalsIgnoreCase(FEC_Constants.CAMPAIGN_PRODUCT_LOAN)
             && !productLine.equalsIgnoreCase(FEC_Constants.CAMPAIGN_PRODUCT_CARD)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'ProductLine\' - '
-                + 'value \'' + productLine + '\' is invalid, only \'Loan\' or \'Card\' accepted'
+                String.format(System.Label.FEC_Campaign_Validation_ProductLineInvalid, new List<String>{String.valueOf(rowIndex + 1), productLine})
             );
         }
     }
@@ -152,20 +149,18 @@ public with sharing class FEC_CampaignValidator {
 
         if (String.isBlank(appId) && String.isBlank(accNum)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': At least one of \'App ID\' or \'Account or Contract number\' must not be blank'
+                String.format(System.Label.FEC_Campaign_Validation_AtLeastOneRequired, new List<String>{String.valueOf(rowIndex + 1)})
             );
             return;
         }
         if (String.isNotBlank(appId) && appId.length() > FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'App ID\' - '
-                + 'exceeds max length of ' + FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH + ' characters'
+                String.format(System.Label.FEC_Campaign_Validation_FieldExceedsMaxLength, new List<String>{String.valueOf(rowIndex + 1), 'App ID', String.valueOf(FEC_Constants.CAMPAIGN_APP_ID_MAX_LENGTH)})
             );
         }
         if (String.isNotBlank(accNum) && accNum.length() > FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'Account or Contract number\' - '
-                + 'exceeds max length of ' + FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH + ' characters'
+                String.format(System.Label.FEC_Campaign_Validation_FieldExceedsMaxLength, new List<String>{String.valueOf(rowIndex + 1), 'Account or Contract number', String.valueOf(FEC_Constants.CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH)})
             );
         }
     }
@@ -188,8 +183,7 @@ public with sharing class FEC_CampaignValidator {
         }
         if (!FEC_Util.checkIsNumber(val)) {
             result.errors.add(
-                'Row ' + (rowIndex + 1) + ': Field \'' + fieldName + '\' - '
-                + 'value \'' + String.valueOf(val) + '\' is not a valid number'
+                String.format(System.Label.FEC_Campaign_Validation_InvalidNumber, new List<String>{String.valueOf(rowIndex + 1), fieldName, String.valueOf(val)})
             );
         }
     }

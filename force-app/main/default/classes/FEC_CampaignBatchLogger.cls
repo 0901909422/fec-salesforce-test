@@ -79,7 +79,7 @@ public with sharing class FEC_CampaignBatchLogger {
             return;
         }
         try {
-            String errorEntry = Datetime.now().format('yyyy-MM-dd HH:mm:ss')
+            String errorEntry = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT_LOG)
                 + ' | ' + batchName
                 + ' | HTTP ' + statusCode
                 + ' | Records: ' + affectedRecords
@@ -107,7 +107,7 @@ public with sharing class FEC_CampaignBatchLogger {
             return;
         }
         try {
-            String errorEntry = Datetime.now().format('yyyy-MM-dd HH:mm:ss')
+            String errorEntry = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT_LOG)
                 + ' | ' + batchName
                 + ' | Exception: ' + ex.getMessage()
                 + ' | StackTrace: ' + ex.getStackTraceString()
