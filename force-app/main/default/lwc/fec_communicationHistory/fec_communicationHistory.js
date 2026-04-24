@@ -1,11 +1,14 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
+import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
 import FEC_Account_Contract_Number from '@salesforce/label/c.FEC_Account_Contract_Number';
 import FEC_Communication_Type from '@salesforce/label/c.FEC_Communication_Type';
@@ -54,6 +57,13 @@ export default class Fec_communicationHistory extends LightningElement {
     @track communicationHistories;
     @track isLoading = true;
 
+    _startDate = null;
+    _endDate = null;
+    _subscription = null;
+
+    @wire(MessageContext)
+    messageContext;
+
     sectionTitleText = SECTION_LABEL;
     labelMsgApiError = FEC_MSG_Error_API_Label;
     sortedByDescription = FEC_Communication_Date;
@@ -78,7 +88,23 @@ export default class Fec_communicationHistory extends LightningElement {
         if (this.previewSampleData) {
             this.communicationHistories = PREVIEW_COMMUNICATION_HISTORY.map((r) => ({ ...r }));
             this.isLoading = false;
+            return;
         }
+        this._subscription = subscribe(
+            this.messageContext,
+            COLLECTION_DATE_FILTER,
+            (msg) => {
+                this._startDate = msg.startDate;
+                this._endDate = msg.endDate;
+                this.loadCommunicationHistory();
+            },
+            { scope: APPLICATION_SCOPE }
+        );
+    }
+
+    disconnectedCallback() {
+        unsubscribe(this._subscription);
+        this._subscription = null;
     }
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_FIELDS })
@@ -113,10 +139,17 @@ export default class Fec_communicationHistory extends LightningElement {
                 return;
             }
 
-            const response = await fetchCollectionData({
-                contractNumber: this._contractNumber,
-                recordType: this._recordTypeName
-            });
+            const response = this._startDate && this._endDate
+                ? await fetchCollectionDataWithDates({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName,
+                    startDate: this._startDate,
+                    endDate: this._endDate
+                })
+                : await fetchCollectionData({
+                    contractNumber: this._contractNumber,
+                    recordType: this._recordTypeName
+                });
 
             if (!response || response.Success === false) {
                 this.communicationHistories = null;
