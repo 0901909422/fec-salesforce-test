@@ -44,10 +44,12 @@
         var recordId = component.get('v.recordId');
         if (!recordId) {
             var url = window.location.href;
+            console.log('[FEC_DEBUG] save url=' + url);
             var m = url.match(new RegExp('/r/Case/([a-zA-Z0-9]{15,18})/'));
             if (m) {
                 recordId = m[1];
             } else {
+                // tungnm37: thử parse inContextOfRef
                 var ref = url.match(new RegExp('inContextOfRef=([^&]+)'));
                 if (ref) {
                     try {
@@ -55,10 +57,28 @@
                         var b64 = dec.indexOf('.') !== -1 ? dec.substring(dec.indexOf('.') + 1) : dec;
                         while (b64.length % 4 !== 0) { b64 += '='; }
                         var obj = JSON.parse(atob(b64));
+                        console.log('[FEC_DEBUG] inContextOfRef parsed=' + JSON.stringify(obj));
                         recordId = (obj.attributes && obj.attributes.recordId)
                                 || (obj.state && obj.state.recordId)
                                 || obj.recordId;
-                    } catch(e) {}
+                    } catch(e) { console.log('[FEC_DEBUG] inContextOfRef parse error=' + e); }
+                }
+                // tungnm37: thử parse recordId trực tiếp từ URL params
+                if (!recordId) {
+                    var ridMatch = url.match(new RegExp('[?&]recordId=([a-zA-Z0-9]{15,18})'));
+                    if (ridMatch) recordId = ridMatch[1];
+                }
+                // tungnm37: thử parse từ navigationContext
+                if (!recordId) {
+                    try {
+                        var navCtx = url.match(new RegExp('navigationContext=([^&]+)'));
+                        if (navCtx) {
+                            var navDec = decodeURIComponent(navCtx[1]);
+                            var navObj = JSON.parse(navDec);
+                            console.log('[FEC_DEBUG] navigationContext=' + JSON.stringify(navObj));
+                            recordId = navObj.recordId || (navObj.attributes && navObj.attributes.recordId);
+                        }
+                    } catch(e2) {}
                 }
             }
             if (recordId) {
