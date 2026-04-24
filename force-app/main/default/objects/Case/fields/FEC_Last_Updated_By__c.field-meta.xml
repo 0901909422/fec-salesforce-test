@@ -6,15 +6,11 @@ Trường tạo mới để hiển thị trên Case details và interaction deta
     <externalId>false</externalId>
     <formula>IF(
     OR(
-        TRIM(LOWER( LastModifiedBy.LastName)) = &quot;platform integration user&quot;,
+        TRIM(LOWER(LastModifiedBy.LastName)) = &quot;platform integration user&quot;,
         TRIM(LOWER(LastModifiedBy.Alias)) = &quot;platint&quot;
     ),
     &quot;system&quot;,
-    IF(
-        RecordType.Name = &quot;Interaction&quot;,
-        LEFT(LastModifiedBy.Email,FIND(&quot;@&quot;,LastModifiedBy.Email)-1),
-        &quot;&quot;
-    )
+    LEFT(LastModifiedBy.Email, FIND(&quot;@&quot;, LastModifiedBy.Email) - 1)
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Last Updated By</label>
