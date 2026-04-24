@@ -21,6 +21,7 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
@@ -316,7 +317,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         addressInfoId = caseBusinessEle.handleValidateAddressSelected();
         if (!addressInfoId) {
           isAllValid = false;
-          this.errlst.push('Vui lòng chọn/ nhập địa chỉ phù hợp');
+          this.errlst.push(FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT);
         }
       }
     }
