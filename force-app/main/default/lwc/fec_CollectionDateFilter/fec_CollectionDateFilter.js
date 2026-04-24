@@ -8,7 +8,9 @@
  */
 import { LightningElement, api, track, wire } from 'lwc';
 import { publish, MessageContext } from 'lightning/messageService';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
+import { formatDate } from 'c/fec_CommonUtils';
 import FEC_Btn_Apply from '@salesforce/label/c.FEC_Btn_Apply';
 import FEC_CollectionDateFilter_HintText from '@salesforce/label/c.FEC_CollectionDateFilter_HintText';
 import FEC_CollectionDateFilter_FromDate from '@salesforce/label/c.FEC_CollectionDateFilter_FromDate';
@@ -64,6 +66,7 @@ export default class Fec_CollectionDateFilter extends LightningElement {
 
         if (!this.fromDate || !this.toDate) {
             this.errorMessage = FEC_CollectionDateFilter_ErrorMissingDate;
+            this.showErrorToast(FEC_CollectionDateFilter_ErrorMissingDate);
             return;
         }
 
@@ -72,13 +75,16 @@ export default class Fec_CollectionDateFilter extends LightningElement {
 
         if (from > to) {
             this.errorMessage = FEC_CollectionDateFilter_ErrorFromGtTo;
+            this.showErrorToast(FEC_CollectionDateFilter_ErrorFromGtTo);
             return;
         }
 
         const diffDays = Math.round((to - from) / (1000 * 60 * 60 * 24));
         const maxDays = this.maxRangeDays || MAX_RANGE_DAYS;
         if (diffDays > maxDays) {
-            this.errorMessage = FEC_CollectionDateFilter_ErrorExceedRange.replace('{0}', maxDays);
+            const errorMsg = FEC_CollectionDateFilter_ErrorExceedRange.replace('{0}', maxDays);
+            this.errorMessage = errorMsg;
+            this.showErrorToast(errorMsg);
             return;
         }
 
@@ -87,6 +93,32 @@ export default class Fec_CollectionDateFilter extends LightningElement {
             startDate: this._toApiDateStr(from),
             endDate: this._toApiDateStr(to)
         });
+
+        // Hiển thị toast notification thành công
+        this.showSuccessToast(from, to);
+    }
+
+    showSuccessToast(fromDate, toDate) {
+        const fromDateStr = formatDate(fromDate);
+        const toDateStr = formatDate(toDate);
+        
+        const evt = new ShowToastEvent({
+            title: 'Thành công',
+            message: `Đã áp dụng bộ lọc ngày từ ${fromDateStr} đến ${toDateStr}`,
+            variant: 'success',
+            mode: 'dismissable'
+        });
+        this.dispatchEvent(evt);
+    }
+
+    showErrorToast(message) {
+        const evt = new ShowToastEvent({
+            title: 'Lỗi',
+            message: message,
+            variant: 'error',
+            mode: 'dismissable'
+        });
+        this.dispatchEvent(evt);
     }
 
     /** YYYY-MM-DD cho lightning-input[type=date] */

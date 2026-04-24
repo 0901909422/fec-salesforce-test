@@ -14265,4 +14265,32 @@
         <shortDescription>FEC_CollectionDateFilter_ToDate</shortDescription>
         <value>To Date</value>
     </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Allocation_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Allocation History</shortDescription>
+        <value>Allocation</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Collection_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Collection Interaction</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Communication_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Communication History</shortDescription>
+        <value>Communication</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_NFU</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
+        <value>NFU</value>
+    </labels>
 </CustomLabels>
