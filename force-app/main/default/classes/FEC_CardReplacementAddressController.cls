@@ -10,22 +10,52 @@ public with sharing class FEC_CardReplacementAddressController {
                     FEC_Mailing_Address__c
                 FROM FEC_Address_Info__c
                 WHERE FEC_Customer_History__c = :objCase.FEC_Account_or_Contract__c
+                    AND FEC_Case__c = null
             ];
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
 
-    @AuraEnabled
-    public static String getProvinceId(String provinceCode) {
-        List<FEC_Province__c> provinces = [SELECT Id FROM FEC_Province__c WHERE FEC_Code__c = :provinceCode LIMIT 1];
-        return !provinces.isEmpty() ? provinces.get(0).Id : '';
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistOptionDTO> getProvinceOptionsForAddress() {
+        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
+        for (FEC_Province__c p : [
+            SELECT Id, Name, FEC_Name_VN__c
+            FROM FEC_Province__c
+            WHERE FEC_Country__r.FEC_Code__c = '2'
+            ORDER BY FEC_Name_VN__c NULLS LAST, Name
+        ]) {
+            PicklistOptionDTO o = new PicklistOptionDTO();
+            o.value = p.Id;
+            o.label = String.isNotBlank(p.FEC_Name_VN__c) ? p.FEC_Name_VN__c : p.Name;
+            opts.add(o);
+        }
+        return opts;
     }
 
-    @AuraEnabled
-    public static String getWardId(String wardCode) {
-        List<FEC_Ward__c> wards = [SELECT Id FROM FEC_Ward__c WHERE FEC_Code__c = :wardCode LIMIT 1];
-        return !wards.isEmpty() ? wards.get(0).Id : '';
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistOptionDTO> getWardOptionsForProvinceCode(String provinceId) {
+        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
+        for (FEC_District__c d : [
+            SELECT Id, Name, FEC_Name_VN__c
+            FROM FEC_District__c
+            WHERE FEC_Country__r.FEC_Code__c = '2'
+                AND FEC_Province__c = :provinceId
+            ORDER BY FEC_Name_VN__c NULLS LAST, Name
+        ]) {
+            PicklistOptionDTO o = new PicklistOptionDTO();
+            o.value = d.Id;
+            o.label = String.isNotBlank(d.FEC_Name_VN__c) ? d.FEC_Name_VN__c : d.Name;
+            opts.add(o);
+        }
+        return opts;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static String getCountryId() {
+        List<FEC_Country__c> countries = [SELECT Id FROM FEC_Country__c WHERE FEC_Code__c = '2' LIMIT 1];
+        return !countries.isEmpty() ? countries.get(0).Id : null;
     }
 
     @AuraEnabled
@@ -142,5 +172,10 @@ public with sharing class FEC_CardReplacementAddressController {
         public Boolean success { get; set; }
         @AuraEnabled
         public Decimal actionCount { get; set; }
+    }
+
+    public class PicklistOptionDTO {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
     }
 }
