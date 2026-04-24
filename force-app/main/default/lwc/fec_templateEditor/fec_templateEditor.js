@@ -14,7 +14,7 @@
  *               Apex-backed via FEC_TemplateController + FEC_FolderController.
  * @component    fec_templateEditor
  */
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 /* ── Apex ── */
@@ -25,6 +25,8 @@ import getAllLetterheads   from '@salesforce/apex/FEC_TemplateController.getAllL
 import getAllFolders       from '@salesforce/apex/FEC_FolderController.getAllFolders';
 import createDraftTemplate from '@salesforce/apex/FEC_TemplateController.createDraftTemplate';
 import deleteDraftTemplate from '@salesforce/apex/FEC_TemplateController.deleteDraftTemplate';
+// tungnm37 thêm: lấy mailbox options từ picklist metadata thay vì hardcode
+import getMailboxOptions  from '@salesforce/apex/FEC_TemplateController.getMailboxOptions';
 
 /* ── Custom Labels (i18n) ── */
 import FEC_New_Template               from '@salesforce/label/c.FEC_New_Template';
@@ -56,7 +58,6 @@ import bodyLabel                      from '@salesforce/label/c.FEC_Template_Bod
 import previewLabel                   from '@salesforce/label/c.FEC_Action_Preview';
 
 /* ── Constants & Utils ── */
-import { MAILBOX_OPTIONS } from 'c/fec_TemplateConstants';
 import { generateApiName, formatFileSize } from 'c/fec_TemplateUtils';
 
 export default class Fec_templateEditor extends LightningElement {
@@ -128,6 +129,14 @@ export default class Fec_templateEditor extends LightningElement {
 
     /* Letterhead options – placeholder for future EnhancedLetterhead query */
     @track _letterheadOptions = [];
+
+    // tungnm37 thêm: mailbox options từ picklist metadata
+    @track _mailboxOptions = [];
+    @wire(getMailboxOptions)
+    wiredMailboxOptions({ data, error }) {
+        if (data) this._mailboxOptions = data;
+        else if (error) console.error('[fec_templateEditor] getMailboxOptions error', error);
+    }
 
     /** Raw letterhead records keyed by Id for header/footer lookup */
     _letterheadMap = {};
@@ -274,7 +283,8 @@ export default class Fec_templateEditor extends LightningElement {
         ];
     }
 
-    get mailboxOptions() { return MAILBOX_OPTIONS; }
+    // tungnm37 sửa: lấy từ picklist metadata thay vì hardcode
+    get mailboxOptions() { return this._mailboxOptions; }
 
     /** Comma-separated display of selected mailboxes for the dual listbox */
     get selectedMailboxDisplay() {

@@ -60,6 +60,56 @@
                 <default>false</default>
                 <label>CS_QC_TEAM@fecredit.com.vn</label>
             </value>
+              <value>
+                <fullName>duongauto4045@gmail.com</fullName>
+                <default>false</default>
+                <label>duongauto4045@gmail.com</label>
+            </value>
+            <value>
+                <fullName>supportcsm_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>supportcsm_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>customercare_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>customercare_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>cs_d2c_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>cs_d2c_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>e_com_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>e_com_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>cs_om_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>cs_om_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>f2f_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>f2f_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>cs_qc_team_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>cs_qc_team_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>cssupport_uat@fecredit.com.vn</fullName>
+                <default>false</default>
+                <label>cssupport_uat@fecredit.com.vn</label>
+            </value>
+            <value>
+                <fullName>dichvukhachhang_uat@ubank.vn</fullName>
+                <default>false</default>
+                <label>dichvukhachhang_uat@ubank.vn</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
     <visibleLines>4</visibleLines>
