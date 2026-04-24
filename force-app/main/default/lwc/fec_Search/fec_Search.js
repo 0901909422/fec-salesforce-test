@@ -1395,6 +1395,7 @@ hasAnySearchCriteria(params) {
           cifNumber: cifNumber,
           phone: row?.Phone,
           customerName: row?.FullName,
+          applicationId: row?.ApplicationID,
           isListView: !this.recordId
         })
           .then(async (res) => {

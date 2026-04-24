@@ -11,7 +11,8 @@ public with sharing class FEC_CardLockUnLockController {
                     FEC_Account_or_Contract__r.FEC_Card_Number__c,
                     FEC_Process_Action_Count__c,
                     FEC_Current_Case_Stage__c,
-                    FEC_Current_Case_Stage__r.Name
+                    FEC_Current_Case_Stage__r.Name,
+                    FEC_Is_Test_API__c
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -39,7 +40,8 @@ public with sharing class FEC_CardLockUnLockController {
                 blockCode,
                 funcCode,
                 cardNumber,
-                objCasse.FEC_Account_Number__c
+                objCasse.FEC_Account_Number__c,
+                objCasse.FEC_Is_Test_API__c
             );
             // Log API response
             FEC_CardLockUnLockCallout.logApiResponse();
