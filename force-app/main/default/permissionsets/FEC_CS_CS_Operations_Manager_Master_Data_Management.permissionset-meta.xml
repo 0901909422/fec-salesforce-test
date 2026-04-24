@@ -967,11 +967,6 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Chat_History__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <tabSettings>
         <tab>FEC_Enhanced_Letterhead__c</tab>
         <visibility>Visible</visibility>

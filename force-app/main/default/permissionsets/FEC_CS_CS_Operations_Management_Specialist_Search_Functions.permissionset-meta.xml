@@ -224,11 +224,6 @@
         <recordType>Case.Search_Interaction</recordType>
         <visible>true</visible>
     </recordTypeVisibilities>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Chat_History__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <tabSettings>
         <tab>standard-Case</tab>
         <visibility>Visible</visibility>
