@@ -31,7 +31,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -200,6 +200,9 @@ const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
 const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
+const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
+const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
+const VALUE_COMPLAINT_SOURCE = ['High Risk', 'Urgent'];
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1247,24 +1250,44 @@ export default class Fec_CaseBussiness extends LightningElement {
     const accountValue = this._getCaseFieldValue(FIELD_ACCOUNT_CONTRACT_NUMBER_PL);
     const isInternal = accountValue?.trim() === INTERNAL_REQUEST;
 
+    let verifyInfoValue;
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst?.forEach(sub => {
+        sub.objlst?.forEach(obj => {
+          if (obj.name !== CASE_OBJECT_API_NAME) return;
+          obj.fieldlst?.forEach(field => {
+            if (field.apiName === FIELD_COMPLAIN_TYPE) {
+              verifyInfoValue = field.value;
+            }
+          });
+        });
+      });
+    });
+
     this.business.sectionlst = this.business.sectionlst.map(section => ({
       ...section,
       subSectionlst: section.subSectionlst?.map(sub => ({
         ...sub,
         objlst: sub.objlst?.map(obj => ({
           ...obj,
-          fieldlst: obj.fieldlst?.map(field => ({
-            ...field,
-            isHidden: isInternal
-              ? field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL
-              // : false,
-              : field.isHidden, // PhuongNT modified
-          })) || [],
+          fieldlst: obj.fieldlst?.map(field => {
+            let isHidden = field.isHidden;
+            if (isInternal) {
+              isHidden = field.apiName !== FIELD_ACCOUNT_CONTRACT_NUMBER_PL;
+            } else if (field.apiName === FIELD_COMPLAINT_SOURCE) {
+              isHidden = !VALUE_COMPLAINT_SOURCE.includes(verifyInfoValue);
+            }
+            return {
+              ...field,
+              isHidden
+            };
+          }) || [],
         })) || [],
       })) || [],
     }));
 
-    this.business = { ...this.business };
+     this.business = { ...this.business };
+     console.log("🚀 ~ Fec_CaseBussiness ~ _applyInternalFieldVisibility ~ this.business:", JSON.stringify(this.business))
   }
 
   /** Form Remove Phone: trong section Case Information, ngay dưới subsection Property Info (không tạo accordion riêng). */
@@ -1498,6 +1521,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         ? field.value
         : field.displayValue;
       this.business = { ...this.business };
+    }
+
+    if (fieldName === FIELD_COMPLAIN_TYPE) {
+      this._applyInternalFieldVisibility();
+      this._rebuildAllSectionSortedRows();
     }
 
     if (

@@ -12,7 +12,12 @@
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
 		<name>CustomField</name>
+	</types>
+	<types>
+		<members>FEC_Assignment__c</members>
+		<name>CustomObject</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
@@ -21,6 +26,7 @@
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
+		<members>FEC_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -33,8 +39,14 @@
 		<members>fec_NFU</members>
 		<members>fec_allocationHistory</members>
 		<members>fec_communicationHistory</members>
+		<members>fec_CollectionDateFilter</members>
+		<members>fec_DatePicker</members>
 		<name>LightningComponentBundle</name>
 	</types>
+	<types>
+        <members>FEC_Collection_Date_Filter</members>
+        <name>LightningMessageChannel</name>
+    </types>
 	<types>
         <members>FEC_RelevantTicket_Title</members>
         <members>FEC_RelevantTicket_Section_Information</members>

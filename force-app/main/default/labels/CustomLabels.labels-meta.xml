@@ -11583,7 +11583,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-    <labels>
+     <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -14266,5 +14266,47 @@
         <protected>false</protected>
         <shortDescription>FEC_LBL_Fast_Cash_Spinner_Processing</shortDescription>
         <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorExceedRange</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
+        <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorFromGtTo</shortDescription>
+        <value>From Date không được lớn hơn To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorMissingDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorMissingDate</shortDescription>
+        <value>Vui lòng chọn đầy đủ From Date và To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_FromDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_FromDate</shortDescription>
+        <value>From Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_HintText</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_HintText</shortDescription>
+        <value>Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ToDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ToDate</shortDescription>
+        <value>To Date</value>
     </labels>
 </CustomLabels>
