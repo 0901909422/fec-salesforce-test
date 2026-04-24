@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FE_Sub_Code_Relevant__c</fullName>
+    <fullName>FEC_Sub_Code_Relevant__c</fullName>
     <externalId>false</externalId>
     <formula>FEC_Related_To__r.FEC_SubCode__r.FEC_Name_VN__c</formula>
     <label>Sub Code</label>
