@@ -107,128 +107,127 @@
                 >
                 </lightning-record-picker> -->
 
-                <c-fec_-combo-box
-                  data-id="prod-type"
-                  label="Product Type"
-                  placehoder="Select Product Type"
-                  required
-                  value={productTypeSelectedId}
-                  option={formattedProductTypeOption}
-                  onremove={handleRemoveProdType}
-                  onchange={handleChangeProdType}
-                  disabled={disableProdType}
-                ></c-fec_-combo-box>
+              <c-fec_-combo-box
+                data-id="prod-type"
+                label="Product Type"
+                placehoder="Select Product Type"
+                required
+                value={productTypeSelectedId}
+                option={formattedProductTypeOption}
+                onremove={handleRemoveProdType}
+                onchange={handleChangeProdType}
+                disabled={disableProdType}
+              ></c-fec_-combo-box>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small" size="12">
+              <!-- <lightning-record-picker
+                label="Category"
+                data-name="category"
+                object-api-name="FEC_Category__c"
+                value={categorySelectedId}
+                filter={categoryFilter}
+                onchange={handleCategorySelect}
+                disabled={disableCategory}
+                required
+              >
+              </lightning-record-picker> -->
+
+              <c-fec_-combo-box
+                label="Category"
+                data-id="category"
+                placehoder="Select Category"
+                required
+                value={categorySelectedId}
+                option={formattedCategoryOption}
+                disabled={disableCategory}
+                onremove={handleRemoveCategory}
+                onchange={handleChangeCategory}
+              ></c-fec_-combo-box>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small" size="12">
+              <!-- <lightning-record-picker
+                label="Sub-Category"
+                data-name="subCategory"
+                object-api-name="FEC_Sub_Category__c"
+                value={subCategorySelectedId}
+                filter={subCategoryFilter}
+                onchange={handleSubCategorySelect}
+                disabled={disableSubCategory}
+                required
+              >
+              </lightning-record-picker> -->
+
+              <c-fec_-combo-box
+                data-id="sub-category"
+                label="Sub-Category"
+                placehoder="Select Sub-Category"
+                required
+                value={subCategorySelectedId}
+                option={formattedSubCategoryOption}
+                disabled={disableSubCategory}
+                onremove={handleRemoveSubCategory}
+                onchange={handleChangeSubCategory}
+              ></c-fec_-combo-box>
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small" size="12">
+              <!-- <lightning-record-picker
+                label="Sub-Code"
+                data-name="subCode"
+                object-api-name="FEC_Sub_Code__c"
+                value={subCodeSelectedId}
+                filter={subCodeFilter}
+                onchange={handleSubCodeSelect}
+                disabled={disableSubCode}
+                required
+              >
+              </lightning-record-picker> -->
+
+              <c-fec_-combo-box
+                data-id="sub-code"
+                label="Sub-Code"
+                placehoder="Select Sub-Code"
+                required
+                value={subCodeSelectedId}
+                option={formattedSubCodeOption}
+                disabled={disableSubCode}
+                onremove={handleRemoveSubCode}
+                onchange={handleChangeSubCode}
+              ></c-fec_-combo-box>
+            </lightning-layout-item>
+          </lightning-layout>
+        </template>
+        <template lwc:else>
+          <lightning-record-view-form
+            record-id={recordId}
+            object-api-name="Case"
+          >
+            <lightning-layout multiple-rows>
+              <lightning-layout-item padding="around-small" size="12">
+                <lightning-output-field
+                  field-name="FEC_Product_Type__c"
+                  class="slds-form-element_readonly"
+                ></lightning-output-field>
               </lightning-layout-item>
               <lightning-layout-item padding="around-small" size="12">
-                <!-- <lightning-record-picker
-                  label="Category"
-                  data-name="category"
-                  object-api-name="FEC_Category__c"
-                  value={categorySelectedId}
-                  filter={categoryFilter}
-                  onchange={handleCategorySelect}
-                  disabled={disableCategory}
-                  required
-                >
-                </lightning-record-picker> -->
-
-                <c-fec_-combo-box
-                  label="Category"
-                  data-id="category"
-                  placehoder="Select Category"
-                  required
-                  value={categorySelectedId}
-                  option={formattedCategoryOption}
-                  disabled={disableCategory}
-                  onremove={handleRemoveCategory}
-                  onchange={handleChangeCategory}
-                ></c-fec_-combo-box>
+                <lightning-output-field
+                  field-name="FEC_Category__c"
+                  class="slds-form-element_readonly"
+                ></lightning-output-field>
               </lightning-layout-item>
               <lightning-layout-item padding="around-small" size="12">
-                <!-- <lightning-record-picker
-                  label="Sub-Category"
-                  data-name="subCategory"
-                  object-api-name="FEC_Sub_Category__c"
-                  value={subCategorySelectedId}
-                  filter={subCategoryFilter}
-                  onchange={handleSubCategorySelect}
-                  disabled={disableSubCategory}
-                  required
-                >
-                </lightning-record-picker> -->
-
-                <c-fec_-combo-box
-                  data-id="sub-category"
-                  label="Sub-Category"
-                  placehoder="Select Sub-Category"
-                  required
-                  value={subCategorySelectedId}
-                  option={formattedSubCategoryOption}
-                  disabled={disableSubCategory}
-                  onremove={handleRemoveSubCategory}
-                  onchange={handleChangeSubCategory}
-                ></c-fec_-combo-box>
+                <lightning-output-field
+                  field-name="FEC_SubCategory__c"
+                  class="slds-form-element_readonly"
+                ></lightning-output-field>
               </lightning-layout-item>
               <lightning-layout-item padding="around-small" size="12">
-                <!-- <lightning-record-picker
-                  label="Sub-Code"
-                  data-name="subCode"
-                  object-api-name="FEC_Sub_Code__c"
-                  value={subCodeSelectedId}
-                  filter={subCodeFilter}
-                  onchange={handleSubCodeSelect}
-                  disabled={disableSubCode}
-                  required
-                >
-                </lightning-record-picker> -->
-
-                <c-fec_-combo-box
-                  data-id="sub-code"
-                  label="Sub-Code"
-                  placehoder="Select Sub-Code"
-                  required
-                  value={subCodeSelectedId}
-                  option={formattedSubCodeOption}
-                  disabled={disableSubCode}
-                  onremove={handleRemoveSubCode}
-                  onchange={handleChangeSubCode}
-                ></c-fec_-combo-box>
+                <lightning-output-field
+                  field-name="FEC_SubCode__c"
+                  class="slds-form-element_readonly"
+                ></lightning-output-field>
               </lightning-layout-item>
             </lightning-layout>
-          </template>
-          <template lwc:else>
-            <lightning-record-view-form
-              record-id={recordId}
-              object-api-name="Case"
-            >
-              <lightning-layout multiple-rows>
-                <lightning-layout-item padding="around-small" size="12">
-                  <lightning-output-field
-                    field-name="FEC_Product_Type__c"
-                    class="slds-form-element_readonly"
-                  ></lightning-output-field>
-                </lightning-layout-item>
-                <lightning-layout-item padding="around-small" size="12">
-                  <lightning-output-field
-                    field-name="FEC_Category__c"
-                    class="slds-form-element_readonly"
-                  ></lightning-output-field>
-                </lightning-layout-item>
-                <lightning-layout-item padding="around-small" size="12">
-                  <lightning-output-field
-                    field-name="FEC_SubCategory__c"
-                    class="slds-form-element_readonly"
-                  ></lightning-output-field>
-                </lightning-layout-item>
-                <lightning-layout-item padding="around-small" size="12">
-                  <lightning-output-field
-                    field-name="FEC_SubCode__c"
-                    class="slds-form-element_readonly"
-                  ></lightning-output-field>
-                </lightning-layout-item>
-              </lightning-layout>
-            </lightning-record-view-form>
-          </template>
+          </lightning-record-view-form>
         </template>
       </lightning-accordion-section>
     </lightning-accordion>

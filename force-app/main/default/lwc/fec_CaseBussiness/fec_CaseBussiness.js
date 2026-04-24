@@ -484,7 +484,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       console.error("Error fetching user group", error);
     }
   }
-
+  
   @wire(MessageContext)
   messageContext;
 
@@ -2492,7 +2492,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // PhuongNT add handle save data for fields readonly were changed data by another field
     this.handleSaveFieldReadOnly();
-
+    
     await Promise.all([
       this._saveIncorrectPaymentAdjustmentsIfApplicable(),
       this._saveIPPClosureIfApplicable(),

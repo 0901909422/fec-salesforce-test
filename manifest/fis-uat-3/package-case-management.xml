@@ -39,8 +39,14 @@
 		<members>fec_NFU</members>
 		<members>fec_allocationHistory</members>
 		<members>fec_communicationHistory</members>
+		<members>fec_CollectionDateFilter</members>
+		<members>fec_DatePicker</members>
 		<name>LightningComponentBundle</name>
 	</types>
+	<types>
+        <members>FEC_Collection_Date_Filter</members>
+        <name>LightningMessageChannel</name>
+    </types>
 	<types>
         <members>FEC_RelevantTicket_Title</members>
         <members>FEC_RelevantTicket_Section_Information</members>
