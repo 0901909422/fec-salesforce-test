@@ -2537,6 +2537,52 @@ public without sharing class FEC_CaseBusinessService {
       throw new CaseBusinessServiceException(e.getMessage());
     }
   }
+  
+  //linhdev: getCustomActionButtonLabel - lấy custom label theo previous stage + action code để lưu vào Routing Action History
+  private static String getCustomActionButtonLabel(
+    Id currentStageId,
+    String actionCode,
+    String actionButtonId
+  ) {
+    if (currentStageId == null) {
+      return null;
+    }
+    List<FEC_Stage_Screen__c> stageScreenlst;
+    if (String.isNotBlank(actionButtonId)) {
+      stageScreenlst = [
+        SELECT
+          FEC_Custom_Action_Button_Label__c,
+          FEC_Action_Button__r.Name
+        FROM FEC_Stage_Screen__c
+        WHERE
+          FEC_Case_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :actionButtonId
+        LIMIT 1
+      ];
+    } else if (String.isNotBlank(actionCode)) {
+      stageScreenlst = [
+        SELECT
+          FEC_Custom_Action_Button_Label__c,
+          FEC_Action_Button__r.Name
+        FROM FEC_Stage_Screen__c
+        WHERE
+          FEC_Case_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__r.FEC_Code__c = :actionCode
+        LIMIT 1
+      ];
+    } else {
+      return null;
+    }
+    if (stageScreenlst.isEmpty()) {
+      return null;
+    }
+    FEC_Stage_Screen__c selectedStageScreen = stageScreenlst.get(0);
+    return String.isNotBlank(selectedStageScreen.FEC_Custom_Action_Button_Label__c)
+      ? selectedStageScreen.FEC_Custom_Action_Button_Label__c
+      : selectedStageScreen.FEC_Action_Button__r.Name;
+  }
 
   //linhdev: getCustomActionButtonLabel - lấy custom label theo previous stage + action code để lưu vào Routing Action History
   private static String getCustomActionButtonLabel(
