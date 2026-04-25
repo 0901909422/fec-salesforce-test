@@ -6,6 +6,10 @@ import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTrans
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
+//PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
+import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory";
+//PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+import getPropertyFieldsFromFlowHistory from "@salesforce/apex/FEC_CaseEditNOCController.getPropertyFieldsFromFlowHistory";
 import logSensitiveAccess from "@salesforce/apex/FEC_InteractionHighlightController.logSensitiveAccess";
 import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCardStatus";
 import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
@@ -78,6 +82,8 @@ import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
 import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
+// [NOC-HANDLING-STAGE-UPDATE]: Import subscribe/unsubscribe để lắng nghe CASE_NOC channel
+import { subscribe, unsubscribe, APPLICATION_SCOPE } from "lightning/messageService";
 
 
 const ACTION_PHONE_UPDATE = "Phone Update";
@@ -906,6 +912,14 @@ export default class Fec_CaseBussiness extends LightningElement {
       "fecippclosureselection",
       this._boundHandleIppClosureSelection,
     );
+    // [NOC-HANDLING-STAGE-UPDATE]: Subscribe CASE_NOC channel để nhận NOC update từ fec_CaseEditNOC
+    // Phân biệt 2 loại message: có 'accountType' (existing) vs có 'subCodeId' (NOC update mới)
+    this._subscriptionCaseNOC = subscribe(
+      this.messageContext,
+      CASE_NOC,
+      (message) => this._handleCaseNOCMessage(message),
+      { scope: APPLICATION_SCOPE }
+    );
     this.getData();
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
@@ -926,6 +940,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._boundHandleIppClosureSelection,
       );
     }
+    // [NOC-HANDLING-STAGE-UPDATE]: Unsubscribe CASE_NOC khi component bị destroy
+    if (this._subscriptionCaseNOC) {
+      unsubscribe(this._subscriptionCaseNOC);
+      this._subscriptionCaseNOC = null;
+    }
     localStorage.removeItem(this.draftKey);
   }
 
@@ -933,6 +952,102 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (raw == null || raw === STR_EMPTY) return STR_EMPTY;
     return maskValue(String(raw).replace(/\D/g, STR_EMPTY), false);
   }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // [NOC-HANDLING-STAGE-UPDATE]:
+  // Xử lý NOC update từ fec_CaseEditNOC (Handling Stage)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Handler cho CASE_NOC channel.
+   * Phân biệt 2 loại message:
+   *   - Có 'accountType' → existing behavior (không thay đổi)
+   *   - Có 'subCodeId'   → NOC update từ Updated Information section → reload business
+   */
+  _handleCaseNOCMessage(message) {
+    if (!message) return;
+
+    if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
+      // Existing behavior: account type change — không xử lý ở đây
+      // (fec_CaseEditNOC đã tự xử lý)
+      return;
+    }
+
+    if (message.subCodeId) {
+      // NOC update từ Updated Information section
+      this._handleNOCUpdate(message);
+    }
+  }
+
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  _handleNOCUpdate(message) {
+    //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+    getPropertyFieldsFromFlowHistory({ caseId: this.recordId })
+      .then((fieldListJson) => {
+        // Parse JSON → map { apiName → value } để merge sau khi getData xong
+        let snapshot = {};
+        if (fieldListJson) {
+          try {
+            const fieldList = JSON.parse(fieldListJson);
+            if (Array.isArray(fieldList)) {
+              fieldList.forEach((item) => {
+                if (item?.apiName) {
+                  snapshot[item.apiName] = item.value ?? null;
+                }
+              });
+            }
+          } catch (e) {
+            console.error('[NOC-UPDATE] Parse fieldListJson error:', e);
+          }
+        }
+
+        // Lưu snapshot để _mergePropertyFieldSnapshot dùng sau khi getData hoàn thành
+        this._pendingPropertySnapshot = snapshot;
+
+        // Reload business với NOC mới
+        this.getData(
+          message.productTypeId,
+          message.categoryId,
+          message.subCategoryId,
+          message.subCodeId,
+          message.natureOfCaseId
+        );
+      })
+      .catch((err) => {
+        console.error('[NOC-UPDATE] getPropertyFieldsFromFlowHistory error:', err);
+        // Fallback: reload business mà không merge (không block flow)
+        this._pendingPropertySnapshot = null;
+        this.getData(
+          message.productTypeId,
+          message.categoryId,
+          message.subCategoryId,
+          message.subCodeId,
+          message.natureOfCaseId
+        );
+      });
+  }
+
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  // Merge field values từ FEC_Field_List__c JSON vào business data sau khi reload NOC mới.
+  // Field có apiName trùng → restore value; field không có → giữ nguyên trống từ getData.
+  _mergePropertyFieldSnapshot(snapshot) {
+    if (!snapshot || !this.business?.sectionlst) return;
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst?.forEach(sub => {
+        sub.objlst?.forEach(obj => {
+          obj.fieldlst?.forEach(field => {
+            if (field?.apiName && Object.prototype.hasOwnProperty.call(snapshot, field.apiName)) {
+              field.value = snapshot[field.apiName];
+              field.original = field.value;
+            }
+          });
+        });
+      });
+    });
+    this.business = { ...this.business };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   handleToggleMask(e) {
     let filter = {
@@ -1221,6 +1336,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyCsSupportAssessmentRoutingActionSync();
         // Resolve LWC name strings from componentlst into constructors for lwc:is
         this._resolveComponentlst();
+
+        //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+        // Sau khi getData hoàn thành, merge lại giá trị đã nhập từ FEC_Field_List__c vào NOC mới
+        if (this._pendingPropertySnapshot) {
+          this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
+          this._pendingPropertySnapshot = null;
+        }
         // PhuongNT add get current card status for Card Block/Unblock
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
@@ -2329,6 +2451,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               queueId: this.business.nextQueue?.value,
               natureOfCaseId: this.business.natureOfCase,
               actionId: actionId,
+              fieldListJson: this._collectFieldListJson()
             },
           };
           break;
@@ -2377,10 +2500,51 @@ export default class Fec_CaseBussiness extends LightningElement {
           caseId: this.recordId,
           natureOfCaseId: this.business.natureOfCase,
         });
-        await markCaseSubmittedWithoutRouting({ caseId: this.recordId });
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
+        await markCaseSubmittedWithoutRoutingWithHistory({
+          caseId: this.recordId,
+          natureOfCaseId: this.business.natureOfCase || null,
+          fieldListJson: this._collectFieldListJson()
+        });
+        }
       }
     }
     return true;
+  }
+
+  /**
+   * PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
+   * Collect tất cả field values từ business.sectionlst thành JSON string.
+   * Chỉ lấy field có value, bỏ qua field masked/hidden.
+   * Format: [{ apiName, label, value, objectName }]
+   */
+  _collectFieldListJson() {
+    try {
+      const fields = [];
+      const sections = this.business?.sectionlst ?? [];
+      for (const section of sections) {
+        for (const sub of section.subSectionlst ?? []) {
+          // Chỉ lấy các field thuộc sub-section có FEC_Sub_Section__c = "Property Info"
+          if (sub.name !== 'Property Info') continue;
+          for (const obj of sub.objlst ?? []) {
+            for (const field of obj.fieldlst ?? []) {
+              if (field.isHidden) continue;
+              const val = field.value;
+              if (val === null || val === undefined || val === '') continue;
+              fields.push({
+                apiName: field.apiName,
+                label: field.label,
+                value: String(val),
+                objectName: obj.name
+              });
+            }
+          }
+        }
+      }
+      return JSON.stringify(fields);
+    } catch (e) {
+      return '[]';
+    }
   }
 
   handleProcessAction(e) {
