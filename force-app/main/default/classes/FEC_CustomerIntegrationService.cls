@@ -19,6 +19,7 @@ public with sharing class FEC_CustomerIntegrationService {
         @AuraEnabled public Date dateOfBirth;
         @AuraEnabled public String primaryPhone;
         @AuraEnabled public String emailAddress;
+        @AuraEnabled public String plasticID;
     }
 
     public static ResultDTO syncCustomer(
@@ -77,6 +78,29 @@ public with sharing class FEC_CustomerIntegrationService {
             }
         } catch (Exception e) {
             System.debug('### PHONE ERROR: ' + e.getMessage());
+        }
+
+        // 3. plasticID
+
+        try {
+             FEC_GetCardBasicInfo.ResponseWrapper cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
+                FEC_CommonUltils.generateTransactionId(),
+                FEC_ConstantCommon.REQUESTOR_CRM,
+                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                accountNumber
+            );
+
+            if (cardRes != null 
+                && cardRes.CardBasicInfo != null 
+                && cardRes.CardBasicInfo.MainCard != null) {
+
+                result.plasticID = cardRes.CardBasicInfo.MainCard.PlasticIndicator;
+
+                hist.FEC_Plastic_ID__c = result.plasticID;
+            }
+
+        } catch (Exception e) {
+            System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());
         }
 
         return result;

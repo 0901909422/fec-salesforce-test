@@ -12589,4 +12589,12 @@
         <shortDescription>Warning: only New status records can be deleted</shortDescription>
         <value>Only records with Process Status &quot;New&quot; can be deleted.</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
 </CustomLabels>
