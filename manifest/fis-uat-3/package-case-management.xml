@@ -7,6 +7,7 @@
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
 		<members>FEC_CustomerAdditionalDataController</members>
+		<members>FEC_DNBHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -43,6 +44,10 @@
 		<members>fec_customerAdditionalData</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_DoNotBotherExistingCustomer</members>
+		<members>fec_DoNotBotherHandling</members>
+		<members>fec_DoNotBotherInformationView</members>
+		<members>fec_DoNotBotherNonExistingCustomer</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -124,6 +129,12 @@
 		<members>FEC_CollectionDateFilter_ErrorMissingDate</members>
 		<members>FEC_CollectionDateFilter_ErrorFromGtTo</members>
 		<members>FEC_CollectionDateFilter_ErrorExceedRange</members>
+		<members>FEC_DNB_Has_Data_Question</members>
+		<members>FEC_DNB_Modal_Message</members>
+		<members>FEC_DNB_Modal_Title</members>
+		<members>FEC_DNB_NID_Placeholder</members>
+		<members>FEC_DNB_No_Data_Question</members>
+		<members>FEC_DNB_Update_Button</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
