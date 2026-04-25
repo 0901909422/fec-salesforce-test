@@ -43,6 +43,7 @@
 		<members>fec_customerAdditionalData</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_DateFormatter</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -124,6 +125,11 @@
 		<members>FEC_CollectionDateFilter_ErrorMissingDate</members>
 		<members>FEC_CollectionDateFilter_ErrorFromGtTo</members>
 		<members>FEC_CollectionDateFilter_ErrorExceedRange</members>
+		<members>FEC_CollectionDateFilter_SuccessMsg</members>
+		<members>Fetch_Collection_Data_Record_Type_NFU</members>
+		<members>Fetch_Collection_Data_Record_Type_Communication_History</members>
+		<members>Fetch_Collection_Data_Record_Type_Collection_Interaction</members>
+		<members>Fetch_Collection_Data_Record_Type_Allocation_History</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

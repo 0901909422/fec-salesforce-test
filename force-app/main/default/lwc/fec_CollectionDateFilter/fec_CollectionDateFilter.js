@@ -8,7 +8,9 @@
  */
 import { LightningElement, api, track, wire } from 'lwc';
 import { publish, MessageContext } from 'lightning/messageService';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
+import { formatDate } from 'c/fec_CommonUtils';
 import FEC_Btn_Apply from '@salesforce/label/c.FEC_Btn_Apply';
 import FEC_CollectionDateFilter_HintText from '@salesforce/label/c.FEC_CollectionDateFilter_HintText';
 import FEC_CollectionDateFilter_FromDate from '@salesforce/label/c.FEC_CollectionDateFilter_FromDate';
@@ -16,6 +18,7 @@ import FEC_CollectionDateFilter_ToDate from '@salesforce/label/c.FEC_CollectionD
 import FEC_CollectionDateFilter_ErrorMissingDate from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorMissingDate';
 import FEC_CollectionDateFilter_ErrorFromGtTo from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorFromGtTo';
 import FEC_CollectionDateFilter_ErrorExceedRange from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorExceedRange';
+import FEC_CollectionDateFilter_SuccessMsg from '@salesforce/label/c.FEC_CollectionDateFilter_SuccessMsg';
 
 const MAX_RANGE_DAYS = 90;
 
@@ -64,6 +67,7 @@ export default class Fec_CollectionDateFilter extends LightningElement {
 
         if (!this.fromDate || !this.toDate) {
             this.errorMessage = FEC_CollectionDateFilter_ErrorMissingDate;
+            this.showErrorToast(FEC_CollectionDateFilter_ErrorMissingDate);
             return;
         }
 
@@ -72,13 +76,16 @@ export default class Fec_CollectionDateFilter extends LightningElement {
 
         if (from > to) {
             this.errorMessage = FEC_CollectionDateFilter_ErrorFromGtTo;
+            this.showErrorToast(FEC_CollectionDateFilter_ErrorFromGtTo);
             return;
         }
 
         const diffDays = Math.round((to - from) / (1000 * 60 * 60 * 24));
         const maxDays = this.maxRangeDays || MAX_RANGE_DAYS;
         if (diffDays > maxDays) {
-            this.errorMessage = FEC_CollectionDateFilter_ErrorExceedRange.replace('{0}', maxDays);
+            const errorMsg = FEC_CollectionDateFilter_ErrorExceedRange.replace('{0}', maxDays);
+            this.errorMessage = errorMsg;
+            this.showErrorToast(errorMsg);
             return;
         }
 
@@ -87,6 +94,26 @@ export default class Fec_CollectionDateFilter extends LightningElement {
             startDate: this._toApiDateStr(from),
             endDate: this._toApiDateStr(to)
         });
+
+        // Hiển thị toast notification thành công
+        this.showSuccessToast(from, to);
+    }
+
+    showSuccessToast(fromDate, toDate) {
+        const fromDateStr = formatDate(fromDate);
+        const toDateStr = formatDate(toDate);
+        const message = FEC_CollectionDateFilter_SuccessMsg
+            .replace('{0}', fromDateStr)
+            .replace('{1}', toDateStr);
+        this.showToast('Thành công', message, 'success');
+    }
+
+    showErrorToast(message) {
+        this.showToast('Lỗi', message, 'error');
+    }
+
+    showToast(title, message, variant = 'info') {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode: 'dismissable' }));
     }
 
     /** YYYY-MM-DD cho lightning-input[type=date] */
