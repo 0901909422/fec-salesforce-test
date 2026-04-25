@@ -67,15 +67,32 @@ public with sharing class FEC_CardReplacementAddressController {
             Case objCase = [
                 SELECT Id, 
                     FEC_Interaction__c,
-                    FEC_Account_or_Contract__r.FEC_Block_Code__c,
-                    FEC_Account_or_Contract__r.FEC_Block_Code_1__c
+                    FEC_Account_Number__c
                 FROM Case 
                 WHERE Id = :caseId
             ];
-            if ((String.isNotBlank(objCase.FEC_Account_or_Contract__r.FEC_Block_Code__c)
-                    && inValidBlockCode.contains(objCase.FEC_Account_or_Contract__r.FEC_Block_Code__c))
-                || (String.isNotBlank(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c)
-                    && inValidBlockCode1.contains(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c))) {
+            Boolean isSuccess = false;
+            String blockCode;
+            String blockCode1;
+            FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
+            blockCode = cardStatus?.currentBlockCode;
+
+            FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
+            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+            input.name       = UserInfo.getUserId();
+            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+            input.account    = objCase.FEC_Account_Number__c;
+            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+
+            FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+            blockCode1 = emeaRes?.blkCd1;
+
+            if (String.isNotBlank(blockCode) || String.isNotBlank(blockCode1)) {
+                isSuccess = true;
+            }
+
+            if (isSuccess && (inValidBlockCode.contains(blockCode) || inValidBlockCode1.contains(blockCode1))) {
                 result.isShowAction = false;
                 result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
@@ -100,7 +117,7 @@ public with sharing class FEC_CardReplacementAddressController {
         }
     }
 
-    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
+    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
         try {
@@ -117,7 +134,7 @@ public with sharing class FEC_CardReplacementAddressController {
             ];
             String transactionId = FEC_CommonUltils.generateTransactionUUID();
             String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-            String replacementFeeFlag = replacementFee != null ? '1' : '0';
+            String replacementFeeFlag = String.isNotBlank(replacementFee) ? '1' : '0';
             FEC_ReplacementCardCallout.ReplaceCardResponse response = FEC_ReplacementCardCallout.callReplaceCard(
                 transactionId,
                 requestorId,
