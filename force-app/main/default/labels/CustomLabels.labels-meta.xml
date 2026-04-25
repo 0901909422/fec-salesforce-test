@@ -14308,4 +14308,51 @@
         <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
         <value>NFU</value>
     </labels>
+    <labels>
+        <fullName>FEC_DNB_Has_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Has_Data_Question</shortDescription>
+        <value>Đã có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Message</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Message</shortDescription>
+        <value>Bạn sắp câp nhật thông tin khách hàng vào danh sách DNB. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Title</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Title</shortDescription>
+        <value>Do Not Bother</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_NID_Placeholder</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_NID_Placeholder</shortDescription>
+        <value>Enter 9 or 12 digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_No_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_No_Data_Question</shortDescription>
+        <value>Chưa có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Update_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Update_Button</shortDescription>
+        <value>Update to DNB</value>
+    </labels>
 </CustomLabels>
