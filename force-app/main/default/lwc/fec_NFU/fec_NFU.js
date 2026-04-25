@@ -42,6 +42,7 @@ export default class Fec_NFU extends LightningElement {
 
     @track nfuData;
     @track isLoading = true;
+    @track isExpanded = true;
 
     _startDate = null;
     _endDate = null;
@@ -175,5 +176,17 @@ export default class Fec_NFU extends LightningElement {
 
     buildField(key, label, value) {
         return { key, label, value };
+    }
+
+    handleToggle() {
+        this.isExpanded = !this.isExpanded;
+    }
+
+    get sectionClass() {
+        return `slds-accordion__section${this.isExpanded ? ' slds-is-open' : ''}`;
+    }
+
+    get iconName() {
+        return this.isExpanded ? 'utility:chevrondown' : 'utility:chevronright';
     }
 }
