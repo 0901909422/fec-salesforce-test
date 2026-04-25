@@ -1219,7 +1219,7 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       String blockCode = (String)params.get('blockCode');
-      String replacementFee = (String)params.get('cardReplacementFee');
+      String replacementFee = (String)params.get('replacementFee');
       String last4Digit = (String)params.get('last4Digit');
 
       switch on selectedMethod {
