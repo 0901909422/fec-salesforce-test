@@ -1,0 +1,60 @@
+<template>
+    <lightning-card icon-name="standard:folder">
+        <!-- Card Title -->
+        <div slot="title" class={titleClass} onclick={handleTitleClick} data-name="CardTitle" role="button" tabindex="0"
+            aria-label={ariaTreeLabel}>
+            {labelTreeTitle}
+        </div>
+        <!-- Search Input -->
+        <div class="slds-p-around_small">
+            <lightning-input name="fecSearchInput" type="search" placeholder={placeholderSearchTree}
+                onchange={handleFecSearch} aria-label={ariaTreeLabel}>
+            </lightning-input>
+        </div>
+        <!-- Row: Display Field + Status Filter -->
+        <div class="slds-p-around_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox name="displayField" label={labelShowField} value={selectedDisplayField}
+                    options={displayFieldOptions} onchange={handleDisplayFieldChange}
+                    aria-label="Chọn trường hiển thị cho node">
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                <lightning-combobox name="statusFilter" label="Status" value={selectedStatusFilter}
+                    options={statusOptions} onchange={handleStatusChange} aria-label="Lọc node theo trạng thái">
+                </lightning-combobox>
+            </div>
+        </div>
+        <!-- NO Add Node Button — read-only component -->
+        <div class="slds-p-around_medium">
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+            <!-- Tree Rendering -->
+            <template if:false={isLoading}>
+                <template if:true={treeItems}>
+                    <template lwc:if={treeKey}>
+                        <div class="slds-tree_container">
+                            <ul class="slds-tree" role="tree">
+                                <template for:each={treeItems} for:item="node">
+                                    <c-fec-nature-of-case-tree-item key={node.name} item={node} search-term={searchTerm}
+                                        selected-node-name={selectedNodeName} onnodeselect={handleNodeSelect}
+                                        onnodetoggle={handleNodeToggle}
+                                        display-field={selectedDisplayField}>
+                                    </c-fec-nature-of-case-tree-item>
+                                </template>
+                            </ul>
+                        </div>
+                    </template>
+                    <template if:true={isTreeEmpty}>
+                        <p>{messageNoItems}</p>
+                    </template>
+                </template>
+                <template if:false={treeItems}>
+                    <p>{messageLoading}</p>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

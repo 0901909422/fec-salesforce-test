@@ -3,7 +3,6 @@
     <fullName>FEC_Channel_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Trạng thái kênh</description>
-    <externalId>false</externalId>
     <label>Channel Status</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

@@ -1,0 +1,296 @@
+/* ── Filter Bar ─────────────────────────────────────────── */
+.filter-bar {
+    background: #f4f6f9;
+    border-bottom: 1px solid #d8dde6;
+}
+
+/* ── Summary Bar ───────────────────────────────────────── */
+.summary-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #d8dde6;
+    background: #fff;
+    padding: 0 1rem;
+}
+
+.summary-chip-new,
+.summary-chip-updated,
+.summary-chip-synced {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: border-color 0.15s;
+}
+
+.summary-chip-new {
+    color: #2e844a;
+    border-bottom: 3px solid #2e844a;
+}
+
+.summary-chip-updated {
+    color: #ba0517;
+    border-bottom: 3px solid #ba0517;
+}
+
+.summary-chip-synced {
+    color: #706e6b;
+    border-bottom: 3px solid #706e6b;
+}
+
+.summary-label {
+    margin-right: 0.375rem;
+}
+
+.summary-count {
+    background: #ecebea;
+    border-radius: 10px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+/* ── Section Block ─────────────────────────────────────── */
+.section-block {
+    margin-top: 1.25rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: #f4f6f9;
+    border: 1px solid #d8dde6;
+    border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.section-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #181818;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 0 0.375rem;
+}
+
+.badge-new { background: #2e844a; }
+.badge-updated { background: #ba0517; }
+.badge-synced { background: #706e6b; }
+
+/* ── Dual Column Header ────────────────────────────────── */
+.dual-header {
+    display: flex;
+    border: 1px solid #d8dde6;
+    border-top: none;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #444;
+}
+
+.dual-col-left,
+.dual-col-right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+}
+
+.dual-col-left {
+    background: #f8f8f8;
+    border-right: 2px solid #d8dde6;
+}
+
+.dual-col-right {
+    background: #f0f7ff;
+}
+
+/* ── Diff Card ─────────────────────────────────────────── */
+.diff-card {
+    border: 1px solid #d8dde6;
+    border-top: none;
+    transition: box-shadow 0.15s;
+}
+
+.diff-card:last-child {
+    border-radius: 0 0 0.25rem 0.25rem;
+}
+
+.diff-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Row Header */
+.row-header {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    background: #fff;
+    transition: background 0.1s;
+    user-select: none;
+}
+
+.row-header:hover {
+    background: #f4f6f9;
+}
+
+.row-header-new { border-left: 3px solid #2e844a; }
+.row-header-updated { border-left: 3px solid #ba0517; }
+.row-header-synced { border-left: 3px solid #d8dde6; }
+
+.toggle-icon { flex-shrink: 0; }
+
+.property-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #181818;
+}
+
+.external-id {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: #706e6b;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.diff-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #ba0517;
+    background: #fef1ee;
+    border: 1px solid #ea001e;
+    border-radius: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+}
+
+.status-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    padding: 0.1875rem 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.status-new {
+    background: #e6f7ec;
+    color: #2e844a;
+    border: 1px solid #2e844a;
+}
+
+.status-update {
+    background: #fef1ee;
+    color: #ba0517;
+    border: 1px solid #ba0517;
+}
+
+.status-synced {
+    background: #f3f3f3;
+    color: #706e6b;
+    border: 1px solid #c9c7c5;
+}
+
+/* ── Dual Body (Two-column diff) ──────────────────────── */
+.dual-body {
+    border-top: 1px solid #e5e5e5;
+}
+
+.diff-row-normal,
+.diff-row-changed {
+    display: flex;
+    border-bottom: 1px solid #ecebea;
+}
+
+.diff-row-normal:last-child,
+.diff-row-changed:last-child {
+    border-bottom: none;
+}
+
+.dual-row-live,
+.dual-row-mdm {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    min-height: 2rem;
+}
+
+.dual-row-live {
+    background: #fafaf9;
+    border-right: 2px solid #d8dde6;
+}
+
+.dual-row-mdm {
+    background: #f8fbff;
+}
+
+/* Changed row highlight */
+.diff-row-changed .dual-row-live {
+    background: #fff8f0;
+}
+
+.diff-row-changed .dual-row-mdm {
+    background: #fff3cd;
+}
+
+.field-label {
+    font-weight: 500;
+    color: #706e6b;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.field-value {
+    font-weight: 600;
+    color: #181818;
+    text-align: right;
+    word-break: break-word;
+}
+
+.diff-row-changed .dual-row-mdm .field-value {
+    color: #ba0517;
+}
+
+.arrow-icon {
+    --sds-c-icon-color-foreground-default: #0070d2;
+}
+
+/* ── Empty State ───────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: #706e6b;
+}
+
+.empty-icon {
+    --sds-c-icon-color-foreground-default: #d8dde6;
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    font-size: 0.9375rem;
+    color: #706e6b;
+}

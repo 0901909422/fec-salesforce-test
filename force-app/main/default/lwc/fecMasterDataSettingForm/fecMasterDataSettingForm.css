@@ -7,7 +7,23 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Ép spacing label-input sát nhau qua.button-wrapper {
+/* Sticky action buttons at top of form */
+.sticky-button-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 0.5rem 0.5rem 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Legacy button wrapper (kept for backward compat) */
+.button-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;

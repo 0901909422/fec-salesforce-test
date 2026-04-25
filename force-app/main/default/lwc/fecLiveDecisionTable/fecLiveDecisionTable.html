@@ -1,0 +1,92 @@
+<template>
+    <div class="slds-grid slds-gutters">
+        <!-- BP Selector -->
+        <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+            <lightning-combobox
+                label="Business Process"
+                value={selectedBPId}
+                options={bpOptions}
+                onchange={handleBPChange}
+                placeholder="-- Select Business Process --">
+            </lightning-combobox>
+        </div>
+    </div>
+
+    <div class="slds-is-relative" style="min-height: 200px;">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading decision table" size="medium"></lightning-spinner>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={hasDecisionData}>
+                <!-- Search filter -->
+                <div class="slds-m-bottom_small">
+                    <lightning-input
+                        type="search"
+                        label="Search"
+                        variant="label-hidden"
+                        placeholder="Search by cell value..."
+                        value={searchFilter}
+                        onchange={handleSearchChange}>
+                    </lightning-input>
+                </div>
+
+                <template if:true={hasNoSearchResults}>
+                    <p class="slds-text-color_weak slds-p-around_medium slds-text-align_center">
+                        No results found for "{searchFilter}".
+                    </p>
+                </template>
+
+                <template if:false={hasNoSearchResults}>
+                    <div class="table-scroll" style="overflow: auto; max-height: 600px;">
+                        <table class="slds-table slds-table_bordered slds-table_cell-buffer decision-table">
+                            <thead>
+                                <tr class="group-header-row">
+                                    <template if:true={conditionColSpan}>
+                                        <th colspan={conditionColSpan} class="group-header conditions-group">CONDITIONS</th>
+                                    </template>
+                                    <template if:true={actionColSpan}>
+                                        <th colspan={actionColSpan} class="group-header actions-group">ACTIONS</th>
+                                    </template>
+                                </tr>
+                                <tr class="col-header-row">
+                                    <template for:each={tableData.conditionCols} for:item="col">
+                                        <th key={col.id} class="conditions-cell">{col.label}</th>
+                                    </template>
+                                    <template for:each={tableData.actionCols} for:item="col">
+                                        <th key={col.id} class="action-cell">{col.label}</th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={displayRows} for:item="row">
+                                    <tr key={row.rowId} class="decision-row">
+                                        <template for:each={row.conditionCells} for:item="cell">
+                                            <td key={cell.colId} class="conditions-cell">{cell.value}</td>
+                                        </template>
+                                        <template for:each={row.actionCells} for:item="cell">
+                                            <td key={cell.colId} class="action-cell">{cell.value}</td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={hasDecisionData}>
+                <template if:true={selectedBPId}>
+                    <p class="slds-text-color_weak slds-p-around_medium slds-text-align_center">
+                        No decision table rules found for this Business Process.
+                    </p>
+                </template>
+                <template if:false={selectedBPId}>
+                    <p class="slds-text-color_weak slds-p-around_medium slds-text-align_center">
+                        Select a Business Process to view its Decision Table.
+                    </p>
+                </template>
+            </template>
+        </template>
+    </div>
+</template>

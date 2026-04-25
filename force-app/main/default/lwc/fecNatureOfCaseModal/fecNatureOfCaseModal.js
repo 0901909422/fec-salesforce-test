@@ -27,6 +27,7 @@ import LABEL_TOAST_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_S
 import LABEL_BUTTON_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
 import LABEL_BUTTON_SAVE from '@salesforce/label/c.FEC_Button_Save';
 import LABEL_UNKNOWN_ERROR from '@salesforce/label/c.FEC_Unknown_Error';
+import LABEL_ERROR_SPECIAL_CHARS_CODE from '@salesforce/label/c.FEC_Error_Special_Characters_ID';
 import { FIELD_CODE, FIELD_ALIAS, FIELD_NAME, FIELD_NAME_VN, FIELD_POS_ORDER, FIELD_STATUS, FIELD_CUSTOMER_TYPE, CUST_TYPE_ALL, CUST_TYPE_EXISTING, CUST_TYPE_NON_EXISTING, VARIANT_SUCCESS, VARIANT_ERROR, FIELD_PRODUCT_TYPE_NAME, FIELD_BUSINESS_PROCESS_NAME, FIELD_CATEGORY_NAME, FIELD_SUB_CATEGORY_NAME, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE } from 'c/fecConstants';
 
 /**
@@ -238,6 +239,18 @@ export default class FecNatureOfCaseModal extends LightningModal {
                 new ShowToastEvent({
                     title: LABEL_TOAST_VALIDATION_TITLE,
                     message: LABEL_TOAST_VALIDATION_MESSAGE,
+                    variant: VARIANT_ERROR
+                })
+            );
+            return;
+        }
+
+        // Validate Code: chỉ cho phép chữ, số, gạch ngang, gạch dưới
+        if (this.strCode && !/^[a-zA-Z0-9_-]+$/.test(this.strCode)) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: LABEL_TOAST_VALIDATION_TITLE,
+                    message: LABEL_ERROR_SPECIAL_CHARS_CODE,
                     variant: VARIANT_ERROR
                 })
             );

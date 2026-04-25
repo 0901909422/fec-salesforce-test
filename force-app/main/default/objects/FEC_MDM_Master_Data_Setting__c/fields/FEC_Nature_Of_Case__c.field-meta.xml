@@ -3,7 +3,6 @@
     <fullName>FEC_Nature_Of_Case__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Tên bộ Nature of Case</description>
-    <externalId>false</externalId>
     <label>Nature Of Case</label>
     <referenceTo>FEC_MDM_Nature_Of_Case__c</referenceTo>
     <relationshipLabel>Master MDM Data Setting</relationshipLabel>

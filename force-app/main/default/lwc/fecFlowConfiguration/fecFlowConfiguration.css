@@ -84,6 +84,71 @@
     box-shadow: 0 8px 18px rgba(245, 87, 108, 0.3);
 }
 
+/* Default Stage (green gradient) */
+.stage-box.stage-default {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    box-shadow: 0 3px 10px rgba(67, 233, 123, 0.2);
+}
+
+.stage-box.stage-default:hover {
+    box-shadow: 0 8px 16px rgba(67, 233, 123, 0.3);
+}
+
+.stage-box.stage-default.active {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 18px rgba(46, 204, 113, 0.4);
+}
+
+.stage-box.stage-default .stage-number {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stage-box.stage-default.active .stage-number {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+/* End Stage (dark red/crimson) */
+.stage-box.stage-end {
+    background: linear-gradient(135deg, #c0392b 0%, #96281b 100%);
+    box-shadow: 0 3px 10px rgba(192, 57, 43, 0.3);
+}
+
+.stage-box.stage-end:hover {
+    box-shadow: 0 8px 16px rgba(192, 57, 43, 0.4);
+}
+
+.stage-box.stage-end.active {
+    background: linear-gradient(135deg, #a93226 0%, #7b241c 100%);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 18px rgba(169, 50, 38, 0.5);
+}
+
+.stage-box.stage-end .stage-number {
+    background: linear-gradient(135deg, #c0392b 0%, #96281b 100%);
+}
+
+.stage-box.stage-end.active .stage-number {
+    background: linear-gradient(135deg, #a93226 0%, #7b241c 100%);
+}
+
+/* Stage Type Label (START/END) */
+.stage-type-label {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.stage-type-icon {
+    --slds-c-icon-color-foreground-default: white;
+}
+
 /* Stage Number Badge */
 .stage-number {
     position: absolute;
@@ -245,6 +310,10 @@
     --slds-c-icon-color-foreground-default: #0176d3;
 }
 
+.stage-hover-actions .action-button-screen {
+    --slds-c-icon-color-foreground-default: #0d9dda;
+}
+
 .stage-hover-actions .action-button-delete {
     --slds-c-icon-color-foreground-default: #dc2626;
 }
@@ -341,4 +410,39 @@
 
 .stage-box {
     animation: slideIn 0.3s ease-out;
+}
+
+
+/* Pos Order native input styling */
+.pos-order-wrapper {
+    margin-bottom: 0.25rem;
+}
+.pos-order-wrapper label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #444;
+    margin-bottom: 0.25rem;
+}
+.pos-order-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #c9c9c9;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+.pos-order-input:focus {
+    border-color: #0176d3;
+    box-shadow: 0 0 3px 0 #0176d3;
+    outline: none;
+}
+/* Hide number input spinners */
+.pos-order-input::-webkit-outer-spin-button,
+.pos-order-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.pos-order-input[type=number] {
+    -moz-appearance: textfield;
 }

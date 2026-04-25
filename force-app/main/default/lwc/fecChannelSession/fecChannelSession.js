@@ -10,10 +10,16 @@ import deleteChannel from '@salesforce/apex/FEC_ChannelController.deleteChannel'
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { showLog } from 'c/fecMDMUtils';
+import LABEL_ERROR_SPECIAL_CHARS_CHANNEL_ID from '@salesforce/label/c.FEC_Error_Special_Characters_Channel_ID';
+import LABEL_ERROR_REQUIRED_EMPTY from '@salesforce/label/c.FEC_Error_Required_Fields_Empty';
+import LABEL_COL_SELF_SERVICE from '@salesforce/label/c.FEC_Col_Self_Service_Flag';
+import LABEL_COL_PROCESS_STATUS from '@salesforce/label/c.FEC_Col_Process_Status';
+import LABEL_WARNING_DELETE_NEW_ONLY from '@salesforce/label/c.FEC_Warning_Delete_New_Only';
 import {
     FIELD_CHANNEL_ID,
     FIELD_CHANNEL_VN_NAME,
     FIELD_CHANNEL_STATUS,
+    FIELD_SELF_SERVICE_FLAG,
     FIELD_NAME,
     FIELD_PROCESS_CHANGE_STATUS,
     VARIANT_ERROR,
@@ -40,7 +46,8 @@ const COLUMNS = [
     { label: LABEL_COL_CHANNEL_ID, fieldName: FIELD_CHANNEL_ID, sortable: true },
     { label: LABEL_COL_CHANNEL_VN_NAME, fieldName: FIELD_CHANNEL_VN_NAME, sortable: true },
     { label: LABEL_COL_CHANNEL_STATUS, fieldName: FIELD_CHANNEL_STATUS, sortable: true },
-    { label: 'Process Status', fieldName: FIELD_PROCESS_CHANGE_STATUS, sortable: true },
+    { label: LABEL_COL_SELF_SERVICE, fieldName: FIELD_SELF_SERVICE_FLAG, type: 'boolean', sortable: true },
+    { label: LABEL_COL_PROCESS_STATUS, fieldName: FIELD_PROCESS_CHANGE_STATUS, sortable: true },
     {
         type: 'action',
         typeAttributes: {
@@ -56,11 +63,18 @@ const COLUMNS = [
 export default class FecChannelSession extends LightningElement {
     @track channels = [];
     @track filteredChannels = [];
+    @track allFilteredChannels = [];
+    totalRecords = 0;
+    totalPages = 1;
     @track selectedId = ''; // QUAN TRỌNG: Khởi tạo chuỗi rỗng để @wire không bị chặn vì undefined
     @track showForm = false;
     @track sortBy;
     @track sortDirection;
     @track searchTerm = '';
+
+    // Pagination
+    pageSize = 15;
+    currentPage = 1;
 
     // Add spinner property to manage loading state
     @track showSpinner = false;
@@ -84,7 +98,7 @@ export default class FecChannelSession extends LightningElement {
 
     // UX: Call to Action rõ ràng (Đổi chữ linh hoạt)
     get toggleHistoryLabel() {
-        return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử';
+        return this.isHistoryVisible ? 'Close History' : 'View History';
     }
 
     // Getter thay đổi variant nút bấm
@@ -106,6 +120,7 @@ export default class FecChannelSession extends LightningElement {
     fieldName = FIELD_NAME;
     fieldChannelVnName = FIELD_CHANNEL_VN_NAME;
     fieldChannelStatus = FIELD_CHANNEL_STATUS;
+    fieldSelfServiceFlag = FIELD_SELF_SERVICE_FLAG;
 
     get defaultChannelStatus() {
         // Return true for new records, undefined for existing records to allow form to load value
@@ -143,19 +158,47 @@ export default class FecChannelSession extends LightningElement {
     }
 
     applySearch() {
+        let result;
         if (!this.searchTerm || this.searchTerm.trim() === '') {
-            // No search term, display all channels
-            this.filteredChannels = [...this.channels];
+            result = [...this.channels];
         } else {
-            // Filter channels by Name or Channel ID (case-insensitive)
             const searchKey = this.searchTerm.toLowerCase().trim();
-            this.filteredChannels = this.channels.filter(channel => {
+            result = this.channels.filter(channel => {
                 const name = (channel[FIELD_NAME] || '').toLowerCase();
                 const channelId = (channel[FIELD_CHANNEL_ID] || '').toLowerCase();
                 return name.includes(searchKey) || channelId.includes(searchKey);
             });
         }
+        this.allFilteredChannels = result;
+        this.totalRecords = result.length;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize) || 1;
+        this.currentPage = 1;
+        this.updatePaginatedData();
     }
+
+    updatePaginatedData() {
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        this.filteredChannels = this.allFilteredChannels.slice(start, end);
+    }
+
+    handlePreviousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.updatePaginatedData();
+        }
+    }
+
+    handleNextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.updatePaginatedData();
+        }
+    }
+
+    get isFirstPage() { return this.currentPage <= 1; }
+    get isLastPage() { return this.currentPage >= this.totalPages; }
+    get paginationInfo() { return `${this.currentPage} / ${this.totalPages} (${this.totalRecords} records)`; }
 
     handleRowAction(event) {
         const actionName = event.detail.action.name;
@@ -169,8 +212,8 @@ export default class FecChannelSession extends LightningElement {
             if (row[FIELD_PROCESS_CHANGE_STATUS] !== 'New') {
                 showLog('handleRowAction', 'Delete blocked. Status is not New: ' + row[FIELD_PROCESS_CHANGE_STATUS]);
                 this.dispatchEvent(new ShowToastEvent({
-                    title: 'Cảnh báo',
-                    message: 'Chỉ được phép xóa bản ghi có Process Status là "New".',
+                    title: 'Warning',
+                    message: LABEL_WARNING_DELETE_NEW_ONLY,
                     variant: 'warning'
                 }));
                 return; // Dừng lại, không gọi hàm xóa
@@ -183,16 +226,24 @@ export default class FecChannelSession extends LightningElement {
     handleToggleHistory() {
         showLog('handleToggleHistory', 'START');
         this.isHistoryVisible = !this.isHistoryVisible;
+        // Nếu vừa mở history và có pending refresh, trigger refresh
+        if (this.isHistoryVisible && this._pendingHistoryRefresh) {
+            this._pendingHistoryRefresh = false;
+            // Đợi DOM render xong rồi refresh
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(() => { this.refreshHistoryPanel(); }, 200);
+        }
     }
 
     refreshHistoryPanel() {
         showLog('refreshHistoryPanel', 'START');
-        // Tìm component history thông qua data-id
         const historyComp = this.template.querySelector('[data-id="historyComponent"]');
         if (historyComp) {
-            // Gọi hàm được @api expose bên trong fecConfigHistory
             historyComp.refreshData();
             showLog('refreshHistoryPanel', 'Triggered refreshData on child component');
+        } else {
+            this._pendingHistoryRefresh = true;
+            showLog('refreshHistoryPanel', 'History not in DOM, marked pending');
         }
     }
 
@@ -225,12 +276,26 @@ export default class FecChannelSession extends LightningElement {
 
         if (!isValid) {
             this.dispatchEvent(new ShowToastEvent({
-                title: 'Lỗi',
-                message: 'Các trường bắt buộc không được để trống hoặc chỉ chứa khoảng trắng.',
+                title: 'Error',
+                message: LABEL_ERROR_REQUIRED_EMPTY,
                 variant: VARIANT_ERROR
             }));
             showLog('handleSubmit', 'RETURN: Validation Failed');
             return;
+        }
+
+        // Validate Channel ID: chỉ cho phép chữ, số, dấu gạch ngang, gạch dưới
+        if (!this.selectedId) {
+            const channelId = fields[this.fieldChannelId];
+            if (channelId && !/^[a-zA-Z0-9_-]+$/.test(channelId)) {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error',
+                    message: LABEL_ERROR_SPECIAL_CHARS_CHANNEL_ID,
+                    variant: VARIANT_ERROR
+                }));
+                this.showSpinner = false;
+                return;
+            }
         }
 
         // Nếu hợp lệ, bật spinner và submit thủ công
@@ -244,8 +309,8 @@ export default class FecChannelSession extends LightningElement {
 
         // 1. Hiển thị thông báo thành công
         this.dispatchEvent(new ShowToastEvent({
-            title: 'Thành công',
-            message: 'Bản ghi đã được lưu thành công.',
+            title: 'Success',
+            message: 'Record saved successfully.',
             variant: 'success',
         }));
 
@@ -262,12 +327,14 @@ export default class FecChannelSession extends LightningElement {
             this.selectedId = '';
             this.showForm = false;
             this.showSpinner = false;
-
-            // Refresh History Panel nếu nó đang mở
-            if (this.isHistoryVisible) {
-                this.refreshHistoryPanel();
-            }
         }, 100);
+
+        // 4. Refresh History panel ngay sau refreshApex — TRƯỚC khi reset selectedId
+        // Đợi thêm chút để server-side history tracking kịp ghi nhận
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => {
+            this.refreshHistoryPanel();
+        }, 500);
 
         showLog('handleSuccess', 'RETURN');
     }
@@ -299,8 +366,8 @@ export default class FecChannelSession extends LightningElement {
 
                 // 2. Thông báo và Refresh (Hai cái này chạy sau không ảnh hưởng đến UI chính)
                 this.dispatchEvent(new ShowToastEvent({
-                    title: 'Thành công',
-                    message: 'Đã xóa bản ghi.',
+                    title: 'Success',
+                    message: 'Record deleted successfully.',
                     variant: 'success'
                 }));
 
@@ -308,9 +375,7 @@ export default class FecChannelSession extends LightningElement {
                 await refreshApex(this.wiredResult);
 
                 // Refresh History Panel
-                if (this.isHistoryVisible) {
-                    this.refreshHistoryPanel();
-                }
+                this.refreshHistoryPanel();
             } catch (error) {
                 const msg = error?.body?.message || LABEL_TOAST_ERROR_GENERIC;
                 this.dispatchEvent(new ShowToastEvent({
@@ -365,7 +430,7 @@ export default class FecChannelSession extends LightningElement {
     }
 
     sortData(fieldName, direction) {
-        const parseData = JSON.parse(JSON.stringify(this.filteredChannels));
+        const parseData = [...this.allFilteredChannels];
         const keyValue = (a) => {
             return a[fieldName];
         };
@@ -375,6 +440,7 @@ export default class FecChannelSession extends LightningElement {
             y = keyValue(y) ? keyValue(y) : '';
             return isReverse * ((x > y) - (y > x));
         });
-        this.filteredChannels = parseData;
+        this.allFilteredChannels = parseData;
+        this.updatePaginatedData();
     }
 }

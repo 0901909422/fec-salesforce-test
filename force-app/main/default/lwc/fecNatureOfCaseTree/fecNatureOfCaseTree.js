@@ -252,6 +252,7 @@ export default class FecNatureOfCaseTree extends LightningElement {
 
         // Update state
         this.isTitleSelected = false;
+        this.selectedNodeName = selectedName;
         const parts = selectedName.split('_');
 
         if (parts.length > 1) {
