@@ -922,6 +922,16 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_customerAdditionalData</componentName>
+                <identifier>c_fec_customerAdditionalData</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -936,6 +946,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab28</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab29</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-6cfaf373-39cd-4b31-9241-7aec8e4a5c61</name>

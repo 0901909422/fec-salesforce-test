@@ -9,6 +9,7 @@
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_RelevantTicketController</members>
+		<members>FEC_CustomerAdditionalDataController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -70,6 +71,7 @@
 		<members>fec_NFU</members>
 		<members>fec_allocationHistory</members>
 		<members>fec_communicationHistory</members>
+		<members>fec_customerAdditionalData</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
 		<members>fec_CaseRemarks</members>
