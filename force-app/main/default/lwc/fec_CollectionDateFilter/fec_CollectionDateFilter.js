@@ -18,6 +18,7 @@ import FEC_CollectionDateFilter_ToDate from '@salesforce/label/c.FEC_CollectionD
 import FEC_CollectionDateFilter_ErrorMissingDate from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorMissingDate';
 import FEC_CollectionDateFilter_ErrorFromGtTo from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorFromGtTo';
 import FEC_CollectionDateFilter_ErrorExceedRange from '@salesforce/label/c.FEC_CollectionDateFilter_ErrorExceedRange';
+import FEC_CollectionDateFilter_SuccessMsg from '@salesforce/label/c.FEC_CollectionDateFilter_SuccessMsg';
 
 const MAX_RANGE_DAYS = 90;
 
@@ -101,10 +102,13 @@ export default class Fec_CollectionDateFilter extends LightningElement {
     showSuccessToast(fromDate, toDate) {
         const fromDateStr = formatDate(fromDate);
         const toDateStr = formatDate(toDate);
-        
+        const message = FEC_CollectionDateFilter_SuccessMsg
+            .replace('{0}', fromDateStr)
+            .replace('{1}', toDateStr);
+
         const evt = new ShowToastEvent({
             title: 'Thành công',
-            message: `Đã áp dụng bộ lọc ngày từ ${fromDateStr} đến ${toDateStr}`,
+            message,
             variant: 'success',
             mode: 'dismissable'
         });
