@@ -33,12 +33,14 @@
               name="radioGroup"
               label={customLabel.newTempAddress}
               options={newTempAddressOptions}
-              value={newAddressInfoId}
+              value={addressInfoValue}
               type="radio"
               disabled
             ></lightning-radio-group>
-            <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
-            <lightning-button-icon icon-name="utility:close" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
+            <template lwc:if={isEdit}>
+              <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
+              <lightning-button-icon icon-name="utility:close" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
+            </template>
           </div>
         </lightning-accordion-section>
       </lightning-accordion>
