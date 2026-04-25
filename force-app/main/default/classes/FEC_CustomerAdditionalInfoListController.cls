@@ -15,7 +15,12 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     ) {
         Savepoint sp = Database.setSavepoint();
         try {
-            objConfig.FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS; 
+            if (objConfig.Id == null) {
+                objConfig.FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS;
+            } else if (objConfig.FEC_Status__c == FEC_ConstantCommon.PROCESSED_STATUS 
+                       || objConfig.FEC_Status__c == FEC_ConstantCommon.FAILURE_STATUS) {
+                objConfig.FEC_Status__c = FEC_ConstantCommon.REUPLOADED_STATUS;
+            }
             upsert objConfig;
 
             if (lstFiles != null && !lstFiles.isEmpty()) {
@@ -51,6 +56,20 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     }
 
     /**
+     * Trigger batch processing immediately
+     * @return Success message from Custom Label
+     */
+    @AuraEnabled
+    public static String triggerBatchProcessing() {
+        try {
+            Database.executeBatch(new FEC_ProcessCustomerDataBatch());
+            return System.Label.FEC_Process_Now_Success;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    /**
      * Get list of uploaded configurations
      */
     @AuraEnabled(cacheable=true)
@@ -58,9 +77,9 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
         return [
             SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c, FEC_FieldName__c, 
                    FEC_StartDate__c, FEC_EndDate__c, FEC_Status__c, FEC_IsActive__c,
-                   CreatedDate, CreatedBy.Name
+                   CreatedDate, CreatedBy.Name, LastModifiedDate
             FROM FEC_CustomerAdditionalInfoConfig__c
-            WHERE FEC_Status__c = :FEC_ConstantCommon.UPLOADED_STATUS 
+            WHERE FEC_Status__c IN :FEC_ConstantCommon.PENDING_STATUSES 
             ORDER BY CreatedDate DESC
         ];
     }
@@ -69,7 +88,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     public static List<FEC_CustomerAdditionalInfoConfig__c> getExistingConfigs() {
         return [SELECT Id, FEC_KeyIdentifier__c, FEC_FieldID__c, FEC_FieldName__c, FEC_Status__c, FEC_IsActive__c, FEC_StartDate__c, FEC_EndDate__c 
                 FROM FEC_CustomerAdditionalInfoConfig__c 
-                WHERE FEC_Status__c = :FEC_ConstantCommon.PROCESSED_STATUS 
+                WHERE FEC_Status__c IN :FEC_ConstantCommon.PROCESSED_STATUSES 
                 ORDER BY CreatedDate DESC];
     }
 
@@ -79,7 +98,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
      * @return List<Map<String, Object>> Danh sách thông tin file
      * @created: 2026/01/02 trung.bui.4
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> getRelatedFiles(Id recordId) {
         List<Map<String, Object>> lstFiles = new List<Map<String, Object>>();
         
@@ -106,7 +125,7 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
     }
 
     /**
-     * Xóa bản ghi Config
+     * Soft delete Config — cập nhật trạng thái sang Cancelled thay vì xóa bản ghi
      * @param configId ID của bản ghi FEC_CustomerAdditionalInfoConfig__c cần xóa
      */
     @AuraEnabled
@@ -115,43 +134,25 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
         
         try {
             if (configId != null) {
-                List<ContentDocumentLink> fileLinks = [
-                    SELECT ContentDocumentId 
-                    FROM ContentDocumentLink 
-                    WHERE LinkedEntityId = :configId
+                FEC_CustomerAdditionalInfoConfig__c config = [
+                    SELECT Id, FEC_Status__c 
+                    FROM FEC_CustomerAdditionalInfoConfig__c 
+                    WHERE Id = :configId 
+                    LIMIT 1
                 ];
-                
-                if (!fileLinks.isEmpty()) {
-                    List<ContentDocument> docsToDelete = new List<ContentDocument>();
-                    for(ContentDocumentLink link : fileLinks) {
-                        docsToDelete.add(new ContentDocument(Id = link.ContentDocumentId));
-                    }
-                    delete docsToDelete; 
+
+                if (!FEC_ConstantCommon.DELETABLE_STATUSES.contains(config.FEC_Status__c)) {
+                    throw new AuraHandledException(System.Label.FEC_Error_Cannot_Delete_Status);
                 }
 
-                List<FEC_CustomerAdditionalInfo__c> relatedDetails = [
-                    SELECT Id 
-                    FROM FEC_CustomerAdditionalInfo__c 
-                    WHERE FEC_Config__c = :configId
-                ];
-                if (!relatedDetails.isEmpty()) {
-                    delete relatedDetails;
-                }
-
-                List<FEC_CustomerDataConfigHistory__c> relatedHistories = [
-                    SELECT Id 
-                    FROM FEC_CustomerDataConfigHistory__c 
-                    WHERE FEC_Customers_Data_Config__c = :configId
-                ];
-                if (!relatedHistories.isEmpty()) {
-                    delete relatedHistories;
-                }
-
-                delete new FEC_CustomerAdditionalInfoConfig__c(Id = configId);
+                config.FEC_Status__c = FEC_ConstantCommon.CANCELLED_STATUS;
+                update config;
             }
+        } catch (AuraHandledException e) {
+            throw e;
         } catch (Exception e) {
             Database.rollback(sp);
-            throw new AuraHandledException(System.Label.FEC_Error_Message_Deleting_Data + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -180,11 +181,12 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
 
     /**
      * Lấy lịch sử thay đổi của một Config cụ thể
+     * Sắp xếp theo CreatedDate DESC, nếu cùng thời gian thì theo status flow (Processed > Processing > Reuploaded > Uploaded)
      * @param configId ID của bản ghi Config
      */
     @AuraEnabled(cacheable=false)
     public static List<FEC_CustomerDataConfigHistory__c> getConfigHistory(Id configId) {
-        return [
+        List<FEC_CustomerDataConfigHistory__c> lstHistory = [
             SELECT Id, 
                    FEC_KeyIdentifier__c, 
                    FEC_FieldID__c, 
@@ -200,5 +202,41 @@ public with sharing class FEC_CustomerAdditionalInfoListController {
             WHERE FEC_Customers_Data_Config__c = :configId
             ORDER BY CreatedDate DESC
         ];
+
+        // Sort phụ theo status priority khi CreatedDate giống nhau
+        Map<String, Integer> mapStatusOrder = new Map<String, Integer>{
+            'Processed' => 0,
+            'Reprocess' => 1,
+            'Processing' => 2,
+            'Failure' => 3,
+            'Cancelled' => 4,
+            'Reuploaded' => 5,
+            'Uploaded' => 6
+        };
+
+        lstHistory.sort(new HistoryComparator(mapStatusOrder));
+        return lstHistory;
+    }
+
+    /**
+     * Comparator để sort history: CreatedDate DESC, rồi status priority ASC
+     */
+    private class HistoryComparator implements Comparator<FEC_CustomerDataConfigHistory__c> {
+        private Map<String, Integer> statusOrder;
+
+        public HistoryComparator(Map<String, Integer> statusOrder) {
+            this.statusOrder = statusOrder;
+        }
+
+        public Integer compare(FEC_CustomerDataConfigHistory__c a, FEC_CustomerDataConfigHistory__c b) {
+            // CreatedDate DESC
+            if (a.CreatedDate > b.CreatedDate) return -1;
+            if (a.CreatedDate < b.CreatedDate) return 1;
+
+            // Cùng CreatedDate → sort theo status priority (số nhỏ lên trước)
+            Integer orderA = statusOrder.containsKey(a.FEC_Status__c) ? statusOrder.get(a.FEC_Status__c) : 99;
+            Integer orderB = statusOrder.containsKey(b.FEC_Status__c) ? statusOrder.get(b.FEC_Status__c) : 99;
+            return orderA - orderB;
+        }
     }
 }

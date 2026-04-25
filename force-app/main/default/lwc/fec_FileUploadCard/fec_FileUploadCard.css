@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .fec-card__title-group {
@@ -168,6 +168,7 @@
   justify-content: center;
   min-width: 5.75rem;
   min-height: 2rem;
+  cursor: pointer;
 }
 
 .fec-add-files-pill {
@@ -191,96 +192,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
-.fec-add-files-hitbox lightning-file-upload {
+.fec-add-files-hitbox .fec-add-files-lfu {
+  position: relative;
+  z-index: 1;
   min-width: 100%;
   transform: scale(1.15);
   transform-origin: center;
 }
 
-/* Related list body / rows */
+/* Related list body — bảng embed full ngang card */
 .fec-related-body {
   min-height: 0;
 }
 
-.fec-related-rows {
-  list-style: none;
+.fec-files-embed {
+  margin: 0 -1rem;
+  border-top: 1px solid #dddbda;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.fec-files-embed .fec-files-table-scroll {
   margin: 0;
-  padding: 0;
-}
-
-.fec-related-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid #f3f2f2;
-}
-
-.fec-related-row:last-child {
-  border-bottom: none;
-}
-
-.fec-file-thumb {
-  flex: 0 0 auto;
-  width: 2.25rem;
-  height: 2.75rem;
-  border-radius: 0.2rem;
-  background: #2e844a;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  padding-bottom: 0.2rem;
-}
-
-.fec-file-thumb__ext {
-  font-size: 0.5625rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #ffffff;
-  text-align: center;
-  line-height: 1;
-  pointer-events: none;
-}
-
-.fec-related-row__main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.fec-related-row__link {
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #0176d3;
-  cursor: pointer;
-  text-align: left;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fec-related-row__link:hover {
-  text-decoration: underline;
-}
-
-.fec-related-row__meta {
-  font-size: 0.75rem;
-  color: #706e6b;
 }
 
 .fec-related-footer {
-  border-top: 1px solid #f3f2f2;
+  border-top: none;
   padding: 0.5rem 0 0;
-  margin-top: 0.25rem;
+  margin-top: 0;
   text-align: center;
 }
 
@@ -296,4 +237,147 @@
 
 .fec-view-all:hover {
   text-decoration: underline;
+}
+
+/* Modal "View all" — không dùng URL related list LEX (tránh lỗi layout). */
+.fec-all-files-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 7, 7, 0.45);
+  box-sizing: border-box;
+}
+
+.fec-all-files-dialog {
+  width: 100%;
+  max-width: 56rem;
+  max-height: min(85vh, 36rem);
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 0.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border: 1px solid #dddbda;
+  overflow: hidden;
+}
+
+.fec-all-files-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e5e5;
+  flex-shrink: 0;
+}
+
+.fec-all-files-dialog__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #032d60;
+}
+
+.fec-all-files-dialog__body {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Bảng (card + modal) — header nền xám nhạt giống related list Files LEX */
+.fec-files-table-scroll {
+  margin: 0 -0.25rem;
+  overflow-x: auto;
+}
+
+.fec-files-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.fec-files-table__th {
+  text-align: left;
+  font-weight: 600;
+  color: #3e3e3c;
+  background: #f3f3f2;
+  border-bottom: 1px solid #dddbda;
+  padding: 0.5rem 0.65rem;
+  white-space: nowrap;
+}
+
+.fec-files-table__th_title {
+  min-width: 12rem;
+}
+
+.fec-files-table__th_size {
+  width: 5rem;
+}
+
+.fec-files-table__th_actions {
+  width: 3rem;
+  text-align: center;
+}
+
+.fec-files-table__td {
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0.5rem 0.65rem;
+  color: #181818;
+}
+
+.fec-files-table__td_muted {
+  color: #3e3e3c;
+}
+
+.fec-files-table__title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.fec-files-table__doctype {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.fec-files-table__title-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: #0176d3;
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fec-files-table__title-link:hover {
+  text-decoration: underline;
+}
+
+.fec-files-table__owner {
+  color: #0176d3;
+  font-weight: 500;
+}
+
+.fec-files-table__td_actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fec-all-files-empty {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #706e6b;
 }

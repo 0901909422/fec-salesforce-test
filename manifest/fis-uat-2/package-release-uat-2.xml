@@ -49,6 +49,8 @@
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+		<members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
@@ -1357,6 +1359,9 @@
 		<members>FEC_Notification_History__c.FEC_Send_User__c</members>
 		<members>FEC_Notification_History__c.FEC_Date_Time__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
+		<members>Case.FEC_Is_Test_API__c</members>
+		<members>Case.FEC_Selected_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Case__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1401,6 +1406,7 @@
 		<members>FEC_ContentDocumentLinkTriggerHandler</members>
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_GetUnbilledTransactions</members>
+		<members>FEC_GetCardFinancialTransactions</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1625,6 +1631,7 @@
         <members>FEC_Email_Btn_Cancel</members>
         <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1771,7 +1778,12 @@
 		<members>FEC_PinReset</members>
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
+		<members>FEC_ProcessAction</members>
 		<name>LightningMessageChannel</name>
+	</types>
+	<types>
+		<members>Case-en_US</members>
+		<name>CustomObjectTranslation</name>
 	</types>
 	
     <version>65.0</version>

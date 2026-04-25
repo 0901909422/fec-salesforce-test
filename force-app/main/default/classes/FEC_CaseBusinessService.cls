@@ -735,10 +735,13 @@ public without sharing class FEC_CaseBusinessService {
           }
           Action act = new Action(
             item.FEC_Action_Button__c,
-            item.FEC_Action_Button__r.FEC_Code__c,
             String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
               ? item.FEC_Custom_Action_Button_Label__c
-              : item.FEC_Action_Button__r.Name
+              : item.FEC_Action_Button__r.FEC_Code__c,
+            String.isNotBlank(item.FEC_Custom_Action_Button_Label__c)
+              ? item.FEC_Custom_Action_Button_Label__c
+              : item.FEC_Action_Button__r.Name,
+            item.FEC_Action_Button__r.FEC_Code__c
           );
           if (item.FEC_Field_Type__c == 'All') {
             result.routingActionlst.add(
@@ -1216,6 +1219,8 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       String blockCode = (String)params.get('blockCode');
+      String replacementFee = (String)params.get('replacementFee');
+      String last4Digit = (String)params.get('last4Digit');
 
       switch on selectedMethod {
         when ROUTE_TO {
@@ -1323,7 +1328,7 @@ public without sharing class FEC_CaseBusinessService {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
         }
         when REPLACE_CARD {
-          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, '', '', null);
+          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, blockCode, last4Digit, replacementFee);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');
@@ -3096,6 +3101,9 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String label;
 
+    @AuraEnabled
+    public String code;
+
     public Action() {
     }
 
@@ -3103,12 +3111,21 @@ public without sharing class FEC_CaseBusinessService {
     public Action(String value, String label) {
       this.value = value;
       this.label = label;
+      this.code = value;
     }
 
     public Action(String id, String value, String label) {
       this.id = id;
       this.value = value;
       this.label = label;
+      this.code = value;
+    }
+
+    public Action(String id, String value, String label, String code) {
+      this.id = id;
+      this.value = value;
+      this.label = label;
+      this.code = code;
     }
   }
 

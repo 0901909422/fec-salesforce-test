@@ -10,7 +10,8 @@ public with sharing class FEC_PinReplacementController {
                     FEC_Case_Phone_Number__c,
                     FEC_Process_Action_Count__c,
                     FEC_Current_Case_Stage__c,
-                    FEC_Current_Case_Stage__r.Name
+                    FEC_Current_Case_Stage__r.Name,
+                    FEC_Is_Test_API__c 
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -18,7 +19,8 @@ public with sharing class FEC_PinReplacementController {
             FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(
                 objCasse.FEC_National_ID_Passport_ID__c,
                 transactionId,
-                objCasse.FEC_Case_Phone_Number__c
+                objCasse.FEC_Case_Phone_Number__c,
+                objCasse.FEC_Is_Test_API__c
             );
             FEC_PINReissueServiceCallout.logApiResponse();
             

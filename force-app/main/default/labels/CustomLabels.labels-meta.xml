@@ -256,7 +256,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Add New Button</shortDescription>
-        <value>Add New</value>
+        <value>New</value>
     </labels>
     <labels>
         <fullName>FEC_Btn_Apply</fullName>
@@ -319,7 +319,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Reload Button</shortDescription>
-        <value>Reload</value>
+        <value>Refresh</value>
     </labels>
     <labels>
         <fullName>FEC_Btn_Upload</fullName>
@@ -1922,6 +1922,87 @@
     </labels>
     <labels>
         <fullName>FEC_Interaction_Channel_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Channel</shortDescription>
+        <value>Interaction Channel</value>
+    </labels>
+    <!-- Apex Error Messages -->
+    <labels>
+        <fullName>FEC_Error_SessionID_Missing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SessionID is missing</shortDescription>
+        <value>SessionID is missing</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_ChatHistory_Blank</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat history data is blank</shortDescription>
+        <value>Chat history data is blank</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_ChatHistory_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat history list is empty</shortDescription>
+        <value>Chat history list is empty</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_SaveChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error saving chat history</shortDescription>
+        <value>Error saving chat history: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_InteractionDTO_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Case DTO is null</shortDescription>
+        <value>Interaction Case DTO is null. Please provide valid data.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_CreateInteractionCase</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error creating interaction case</shortDescription>
+        <value>Lỗi khi tạo Case tương tác: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_FileURL_Empty</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File URL is empty</shortDescription>
+        <value>File URL is empty</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_DownloadFile</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error downloading file</shortDescription>
+        <value>Error downloading file: HTTP </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <!-- LWC UI Labels -->
+    <labels>
+        <fullName>FEC_Label_InteractionInfo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interaction Info (C360)</shortDescription>
+        <value>Interaction Info (C360)</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_InteractionChannel</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Interaction Channel</shortDescription>
@@ -8184,6 +8265,103 @@
         <protected>false</protected>
         <shortDescription>FEC CREATE CS CASE SUCCESSFULLY MSG</shortDescription>
         <value>Case created successfully.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ExternalInteractionID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>External Interaction ID</shortDescription>
+        <value>External Interaction ID</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat History</shortDescription>
+        <value>Chat History</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NoChatHistory</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No chat history data</shortDescription>
+        <value>No chat history data is available.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_ChatHubDisabled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ChatHub disabled message</shortDescription>
+        <value>ChatHub is disabled or user access denied.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_CurrentStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current status label</shortDescription>
+        <value>Trạng thái hiện tại</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_WaitingForData</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Waiting for data message</shortDescription>
+        <value>Đang chờ dữ liệu từ hệ thống...</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_LoadAttachments</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Could not load attachments</shortDescription>
+        <value>Could not load attachments: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Warning_SelectAttachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select at least one attachment</shortDescription>
+        <value>Vui lòng chọn ít nhất một tệp đính kèm mới.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Success_AttachFiles</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Attach files success</shortDescription>
+        <value>Đã gắn tệp đính kèm thành công.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_AttachFiles</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error attaching files</shortDescription>
+        <value>Có lỗi xảy ra khi gắn tệp.</value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_System</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>System error prefix</shortDescription>
+        <value>Lỗi hệ thống: </value>
+        <categories>FEC_ChatHub</categories>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_FileNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>File not found</shortDescription>
+        <value>(File not found)</value>
+        <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
         <fullName>FEC_Case_Created_On_Label</fullName>
@@ -11405,7 +11583,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-    <labels>
+     <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11625,6 +11803,629 @@
         <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
     </labels>
     <labels>
+        <fullName>CS_OrgChart_Text_header</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Org Chart</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Manage Queues and Users in Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Users in Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Queue_Name_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Edit_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Edit queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Add_User_To_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add users to queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Requie_Select_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Select Queue to view list users</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_No_User</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>This queue hasn't any user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queues for</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_UserId</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>User Id</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add users to queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_Input</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Search user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter Username or Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_SearchUser_Result</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Result</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Checkbox_AddUserModal_SearchUser_SelectAll</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Checkbox</shortDescription>
+        <value>Select all</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_AddUserModal_SearchUser_AddIntoQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Add into Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Name_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Email_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_Role_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Role</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_table_AddUserModal_SuggestUser_ResultNotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Result not found</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Name_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Full Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Email_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_Queue_Unknow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Unknown Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserQueueDetailModal_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Can not show detail, the user invalid.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_RemoveUser_Message_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Do you want to remove {userName} from {queueName}?</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddUserModal_AddAction_Eror</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Can not add users into Queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Unknow_Eror</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_RemoveUser_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to remove user from queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Refresh_History_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to refresh child history log</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Label_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter queue label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Name_PlaceHolder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Enter queue name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name_Pattern</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>The unique name used by the API and managed packages. The name must begin with a letter and use only alphanumeric characters and underscores. The name cannot end with an underscore or have two consecutive underscores.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_Input_Name_Exp</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Exp: FEC_Bussiness_Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Cancel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Save</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_TeamQueue_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_HistoryLog_No_Result</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No history logs found.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_ModifiedOn_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Modified On</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_ModifiedBy_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Modified by</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_Action_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Action</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_OldValue_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>Old Value</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_HistoryLog_NewValue_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>New Value</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_HistoryLog_View</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>View Custom History</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_HistoryLog_Hide</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Hide Custom History</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_HistoryLog_Require_Select_Object</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please Select Team or Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Heading</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Edit Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Combobox_EditQueueModal_Team</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Combobox</shortDescription>
+        <value>Queue Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Combobox_EditQueueModal_Team_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Combobox</shortDescription>
+        <value>Select a team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to load queue info</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Confirm_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Do you want to save change for this Queue. If you change Queue Team, the page will be refresh to update Org Tree?</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Save_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue updated</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Save_Success_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_Save_Error_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_TeamQueue_Add_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Add New Team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Label</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Name_Pattern</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>The unique API name (alphanumeric and underscores, must start with a letter; no trailing underscore or double underscores).</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Input_Description_Placehoder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Describe this team</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team created successfully.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Label_Require_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Label is required.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Name_Require_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Team Name must start with a letter, contain only alphanumeric or underscore, cannot end with underscore or contain consecutive underscores.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_TeamQueue_Add_NewQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add New Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_Queues</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queues</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_QueueName</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Name</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Main Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_View_ListQueue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>View list queues of this user</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserTable_Remove_User_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Remove user from this queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_InvalidName_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please insert the valid Queue Name. Exp: FEC_Bussiness_Queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_InvalidName_Exist</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>A queue with this name already exists. Please choose a different name.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Add New Queue Successfully</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create team queue record, Please contact with your administrator to check Queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddQueueModal_AddQueue_Error_Catch</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create queue in Salesforce</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_Error_UserID_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>No user specified for queue lookup.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Main queue updated successfully.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update main queue.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Invalid_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Queue not found.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_AddTeamModal_Create_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to create team: </value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_Update_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update Queue Label:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_EditQueueModal_UpdateTeam_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to update Queue Team mapping:</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Btn_Modal_Close</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button</shortDescription>
+        <value>Close</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Select_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Please select a queue to set as main queue</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_User_NotFound</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Unable to update main queue: user not found</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Text_UserDetail_MainQueue_Init_Queue_Data_Err</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label</shortDescription>
+        <value>Failed to initialize queue data. Please try again.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_GetCSAttached_FileID_Invalid</fullName>
         <categories>API</categories>
         <language>en_US</language>
@@ -11647,6 +12448,27 @@
         <protected>false</protected>
         <shortDescription>Get CS Attached File not linked to Case</shortDescription>
         <value>File is not attached to this Case or FileID is invalid.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Duplicate_Key_In_File</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error duplicate key identifier values in uploaded file</shortDescription>
+        <value>File contains duplicate Key Identifier values: {0}. Each key must be unique.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Start_Date_Less_Than_Today</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Start date cannot be in the past</shortDescription>
+        <value>Start Date cannot be in the past. Please select today or a future date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Content_History_Tab</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>Content History tab label</shortDescription>
+        <value>Content History Tracking</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_CANCEL</fullName>
@@ -11759,13 +12581,6 @@
         <protected>false</protected>
         <shortDescription>FEC_RELATED_NOTES_UPDATED_MSG</shortDescription>
         <value>Note updated</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Content_History_Tab</fullName>
-        <language>vi</language>
-        <protected>false</protected>
-        <shortDescription>Content History tab label</shortDescription>
-        <value>Content History Tracking</value>
     </labels>
     <labels>
         <fullName>FEC_Template_History_Tab</fullName>
@@ -12224,6 +13039,104 @@
         <protected>false</protected>
         <shortDescription>FEC_Cannot_Delete_Enhanced_Letterhead</shortDescription>
         <value>This Enhanced Letterhead cannot be deleted because it contains active templates.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Uploaded</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Uploaded</shortDescription>
+        <value>Uploaded</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Reuploaded</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Reuploaded</shortDescription>
+        <value>Reuploaded</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Processing</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Processing</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Processed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Processed</shortDescription>
+        <value>Processed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Reprocess</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Reprocess</shortDescription>
+        <value>Reprocess</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Cancelled</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Cancelled</shortDescription>
+        <value>Cancelled</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Status_Failure</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Status_Failure</shortDescription>
+        <value>Failure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Cannot_Delete_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Cannot_Delete_Status</shortDescription>
+        <value>Cannot delete config in this status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Process_Now</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Process_Now</shortDescription>
+        <value>Process Now</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Process_Now_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Process_Now_Success</shortDescription>
+        <value>Batch processing has been triggered successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Updated_At</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Lbl_Updated_At</shortDescription>
+        <value>Updated At</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Page_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Lbl_Page_Info</shortDescription>
+        <value>Page {0}/{1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Previous</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Previous</shortDescription>
+        <value>Previous</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Next</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Btn_Next</shortDescription>
+        <value>Next</value>
     </labels>
     <labels>
         <fullName>FEC_Error_MessageError_Hold_Case</fullName>
@@ -12732,12 +13645,675 @@
         <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_Invalid_OwnerId</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Invalid OwnerId</shortDescription>
         <value>Invalid ownerId:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
+        <categories>Case Business LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
+        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Number_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Number Deals</shortDescription>
+        <value>pageNumber is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Size_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Size Deals</shortDescription>
+        <value>pageSize is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contract_Number_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Contract_Number_Is_Null</shortDescription>
+        <value>Contract Number is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Account_Number_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Account_Number_Null</shortDescription>
+        <value>Account is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Amount_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Amount_Null</shortDescription>
+        <value>Amount is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CRM_ID_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CRM_ID_Null</shortDescription>
+        <value>CRM ID is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_DisbChannel_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_DisbChannel_Null</shortDescription>
+        <value>DisbChannel is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NationalIDs_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_NationalIDs_Null</shortDescription>
+        <value>National IDs are null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Tenure_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Tenure_Null</shortDescription>
+        <value>Tenure is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Record_Type_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Record_Type_Is_Null</shortDescription>
+        <value>Record Type is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Callout_Insurance</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
+        <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket modal title</shortDescription>
+        <value>New Relevant Ticket</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Section_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket section header</shortDescription>
+        <value>Relevant Ticket Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Field_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket interaction field label</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket search placeholder</shortDescription>
+        <value>Search by Case Number or ID...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket no results message</shortDescription>
+        <value>No results found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Select_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket select required error</shortDescription>
+        <value>Please select an Interaction.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Case_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket case not found error</shortDescription>
+        <value>Could not determine the current Case. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save error</shortDescription>
+        <value>An error occurred while saving. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save success</shortDescription>
+        <value>Relevant Ticket was created successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Conversations_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Conversations section label</shortDescription>
+        <value>Conversations</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_History_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Chat History field label</shortDescription>
+        <value>Chat History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Save_Failed</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Save failed error message</shortDescription>
+        <value>Save failed. Please try again.</value>
+    </labels>
+<labels>
+        <fullName>FEC_Account_Contract_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Number</shortDescription>
+        <value>Account/ Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address</shortDescription>
+        <value>Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent ID</shortDescription>
+        <value>Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Name</shortDescription>
+        <value>Agent Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Allocation_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Allocation Date</shortDescription>
+        <value>Allocation Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Name</shortDescription>
+        <value>Campaign Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Date</shortDescription>
+        <value>Communication Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Template</shortDescription>
+        <value>Communication Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Type</shortDescription>
+        <value>Communication Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contacted_Person</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contacted Person</shortDescription>
+        <value>Contacted Person</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Pool</shortDescription>
+        <value>Current Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Sub_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Sub Pool</shortDescription>
+        <value>Current Sub Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DPD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DPD</shortDescription>
+        <value>DPD</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Due_Reason</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Due Reason</shortDescription>
+        <value>Due Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Agent ID</shortDescription>
+        <value>Interacted Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Code</shortDescription>
+        <value>Interacted Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Date</shortDescription>
+        <value>Interacted Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Phone</shortDescription>
+        <value>Interacted Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Job</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Job</shortDescription>
+        <value>Job</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUExpiryDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUExpiryDate</shortDescription>
+        <value>NFU Expired Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStartDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStartDate</shortDescription>
+        <value>NFU Started Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStatus</shortDescription>
+        <value>NFU Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Next_Interaction_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next Interaction Date</shortDescription>
+        <value>Next Interaction Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Note</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Note</shortDescription>
+        <value>Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_POS</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POS</shortDescription>
+        <value>POS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Phone_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone Number</shortDescription>
+        <value>Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Promised_Repayment_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Promised Repayment Amount</shortDescription>
+        <value>Promised Repayment Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Customer_Username_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username label</shortDescription>
+        <value>Customer Username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Interaction Phone label</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_KYC_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - KYC Status label</shortDescription>
+        <value>KYC Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone invalid format error</shortDescription>
+        <value>Invalid phone format (10 digits starting with &quot;0&quot; or 11 digits starting with &quot;84&quot;).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone placeholder</shortDescription>
+        <value>Enter phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone required error</shortDescription>
+        <value>Phone is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username placeholder</shortDescription>
+        <value>Enter customer username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Username required error</shortDescription>
+        <value>Customer Username is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Eligible</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Not_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Not_Eligible</shortDescription>
+        <value>Not eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_External_Interaction_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - External Interaction ID label</shortDescription>
+        <value>External Interaction ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_No</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_No</shortDescription>
+        <value>Không</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Max_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Max_Amount</shortDescription>
+        <value>Max Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Requested_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Requested_Amount</shortDescription>
+        <value>Requested Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Loading</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Modal_Body</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Modal_Body</shortDescription>
+        <value>Bạn sắp thực hiện đăng ký Fast Cash. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_10</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_10</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_12</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_12</shortDescription>
+        <value>Số tiền đăng ký ít nhất là 2,000,000 VND và không vượt quá số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_15</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_15</shortDescription>
+        <value>Không đủ điều kiện đăng ký Fast Cash.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Block_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Block_Amount</shortDescription>
+        <value>Block Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_Yes</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_Yes</shortDescription>
+        <value>Có</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Code</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Code</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_01</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_01</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_02</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_02</shortDescription>
+        <value>Số tiền đăng ký phải từ 2,000,000 VND đến số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_08</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_08</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_09</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_09</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Description</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Description</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Processing</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Processing</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorExceedRange</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
+        <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
+    </labels>
+<labels>
+        <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CollectionDateFilter SuccessMsg</shortDescription>
+        <value>Đã áp dụng bộ lọc ngày từ {0} đến {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorFromGtTo</shortDescription>
+        <value>From Date không được lớn hơn To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorMissingDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorMissingDate</shortDescription>
+        <value>Vui lòng chọn đầy đủ From Date và To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_FromDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_FromDate</shortDescription>
+        <value>From Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_HintText</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_HintText</shortDescription>
+        <value>Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ToDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ToDate</shortDescription>
+        <value>To Date</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Allocation_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Allocation History</shortDescription>
+        <value>Allocation</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Collection_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Collection Interaction</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Communication_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Communication History</shortDescription>
+        <value>Communication</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_NFU</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
+        <value>NFU</value>
     </labels>
 </CustomLabels>

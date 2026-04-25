@@ -11,7 +11,8 @@ public with sharing class FEC_CardLockUnLockController {
                     FEC_Account_or_Contract__r.FEC_Card_Number__c,
                     FEC_Process_Action_Count__c,
                     FEC_Current_Case_Stage__c,
-                    FEC_Current_Case_Stage__r.Name
+                    FEC_Current_Case_Stage__r.Name,
+                    FEC_Is_Test_API__c
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -20,10 +21,6 @@ public with sharing class FEC_CardLockUnLockController {
             String transId = FEC_CommonUltils.generateTransactionId();
             String requestorId = FEC_ConstantCommon.API_REQUESTOR_ID;
             // Function indicator: "B" for block, "U" for unblock.
-            String blockCodeParam = blockCode;
-            if (funcCode == 'U') {
-                blockCodeParam = objCasse.FEC_New_Block_Code__c;
-            }
 
             // FEC_CardLockUnLockCallout.ValidationResult validateResult = FEC_CardLockUnLockCallout.validateRequest(
             //     transId,
@@ -40,10 +37,11 @@ public with sharing class FEC_CardLockUnLockController {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
                 requestorId,
-                blockCodeParam,
+                blockCode,
                 funcCode,
                 cardNumber,
-                objCasse.FEC_Account_Number__c
+                objCasse.FEC_Account_Number__c,
+                objCasse.FEC_Is_Test_API__c
             );
             // Log API response
             FEC_CardLockUnLockCallout.logApiResponse();
@@ -141,7 +139,8 @@ public with sharing class FEC_CardLockUnLockController {
             List<FEC_Block_Code_Matrix__c> blockCodeMatrixs = [
                 SELECT Id, FEC_Action__c
                 FROM FEC_Block_Code_Matrix__c
-                WHERE FEC_Current_Block_Code__c = :currentBlockCode
+                WHERE (FEC_Current_Block_Code__c = :currentBlockCode
+                        OR FEC_Current_Block_Code__c = 'OTHER')
                     AND FEC_New_Block_Code__c = :newBlockCode
                 LIMIT 1
             ];

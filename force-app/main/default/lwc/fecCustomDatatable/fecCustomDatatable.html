@@ -3,7 +3,7 @@
         <div class="datatable-container" onclick={captureClickPosition}>
             <lightning-datatable
                 key-field={keyField}
-                data={displayData}
+                data={paginatedData}
                 columns={internalColumns}
                 hide-checkbox-column={hideCheckboxColumn}
                 onsort={handleSort}
@@ -13,6 +13,22 @@
                 onrowaction={handleRowAction}>
             </lightning-datatable>
         </div>
+
+        <template if:true={showPagination}>
+            <div class="slds-var-p-around_small slds-grid slds-grid_align-center slds-grid_vertical-align-center">
+                <lightning-button
+                    label={label.previous}
+                    disabled={hasPrevious}
+                    onclick={handlePrevious}>
+                </lightning-button>
+                <span class="slds-var-p-horizontal_small">{pageInfo}</span>
+                <lightning-button
+                    label={label.next}
+                    disabled={hasNext}
+                    onclick={handleNext}>
+                </lightning-button>
+            </div>
+        </template>
 
         <template if:true={isFilterOpen}>
             <div onclick={handleInsideClick}>
