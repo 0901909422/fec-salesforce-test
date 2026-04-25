@@ -100,7 +100,7 @@ public with sharing class FEC_CardReplacementAddressController {
         }
     }
 
-    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
+    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
         try {
@@ -117,7 +117,7 @@ public with sharing class FEC_CardReplacementAddressController {
             ];
             String transactionId = FEC_CommonUltils.generateTransactionUUID();
             String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-            String replacementFeeFlag = replacementFee != null ? '1' : '0';
+            String replacementFeeFlag = String.isNotBlank(replacementFee) ? '1' : '0';
             FEC_ReplacementCardCallout.ReplaceCardResponse response = FEC_ReplacementCardCallout.callReplaceCard(
                 transactionId,
                 requestorId,
