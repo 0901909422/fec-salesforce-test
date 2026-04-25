@@ -10,6 +10,7 @@ public with sharing class FEC_CardReplacementAddressController {
                     FEC_Mailing_Address__c
                 FROM FEC_Address_Info__c
                 WHERE FEC_Customer_History__c = :objCase.FEC_Account_or_Contract__c
+                    AND FEC_Case__c = null
             ];
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
@@ -17,15 +18,54 @@ public with sharing class FEC_CardReplacementAddressController {
     }
 
     @AuraEnabled
-    public static String getProvinceId(String provinceCode) {
-        List<FEC_Province__c> provinces = [SELECT Id FROM FEC_Province__c WHERE FEC_Code__c = :provinceCode LIMIT 1];
-        return !provinces.isEmpty() ? provinces.get(0).Id : '';
+    public static FEC_Address_Info__c getAddressInfo(String addressId) {
+        return [
+            SELECT Id,
+                FEC_Address__c
+            FROM FEC_Address_Info__c
+            WHERE Id = :addressId
+        ];
     }
 
-    @AuraEnabled
-    public static String getWardId(String wardCode) {
-        List<FEC_Ward__c> wards = [SELECT Id FROM FEC_Ward__c WHERE FEC_Code__c = :wardCode LIMIT 1];
-        return !wards.isEmpty() ? wards.get(0).Id : '';
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistOptionDTO> getProvinceOptionsForAddress() {
+        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
+        for (FEC_Province__c p : [
+            SELECT Id, Name, FEC_Name_VN__c
+            FROM FEC_Province__c
+            WHERE FEC_Country__r.FEC_Code__c = '2'
+            ORDER BY FEC_Name_VN__c NULLS LAST, Name
+        ]) {
+            PicklistOptionDTO o = new PicklistOptionDTO();
+            o.value = p.Id;
+            o.label = String.isNotBlank(p.FEC_Name_VN__c) ? p.FEC_Name_VN__c : p.Name;
+            opts.add(o);
+        }
+        return opts;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<PicklistOptionDTO> getWardOptionsForProvinceCode(String provinceId) {
+        List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
+        for (FEC_District__c d : [
+            SELECT Id, Name, FEC_Name_VN__c
+            FROM FEC_District__c
+            WHERE FEC_Country__r.FEC_Code__c = '2'
+                AND FEC_Province__c = :provinceId
+            ORDER BY FEC_Name_VN__c NULLS LAST, Name
+        ]) {
+            PicklistOptionDTO o = new PicklistOptionDTO();
+            o.value = d.Id;
+            o.label = String.isNotBlank(d.FEC_Name_VN__c) ? d.FEC_Name_VN__c : d.Name;
+            opts.add(o);
+        }
+        return opts;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static String getCountryId() {
+        List<FEC_Country__c> countries = [SELECT Id FROM FEC_Country__c WHERE FEC_Code__c = '2' LIMIT 1];
+        return !countries.isEmpty() ? countries.get(0).Id : null;
     }
 
     @AuraEnabled
@@ -37,15 +77,32 @@ public with sharing class FEC_CardReplacementAddressController {
             Case objCase = [
                 SELECT Id, 
                     FEC_Interaction__c,
-                    FEC_Account_or_Contract__r.FEC_Block_Code__c,
-                    FEC_Account_or_Contract__r.FEC_Block_Code_1__c
+                    FEC_Account_Number__c
                 FROM Case 
                 WHERE Id = :caseId
             ];
-            if ((String.isNotBlank(objCase.FEC_Account_or_Contract__r.FEC_Block_Code__c)
-                    && inValidBlockCode.contains(objCase.FEC_Account_or_Contract__r.FEC_Block_Code__c))
-                || (String.isNotBlank(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c)
-                    && inValidBlockCode1.contains(objCase.FEC_Account_or_Contract__r.FEC_Block_Code_1__c))) {
+            Boolean isSuccess = false;
+            String blockCode;
+            String blockCode1;
+            FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
+            blockCode = cardStatus?.currentBlockCode;
+
+            FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
+            input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
+            input.name       = UserInfo.getUserId();
+            input.org        = FEC_ConstantCommon.REQUESTOR_ORG;
+            input.account    = objCase.FEC_Account_Number__c;
+            input.dualInd    = FEC_ConstantCommon.SUCCESS_STATUS_CODE;
+            input.vmxVersion = FEC_ConstantCommon.REQUESTOR_VMXVERSION_EMEA;
+
+            FEC_EmeaAccountInqService.EmeaResult emeaRes = FEC_EmeaAccountInqService.callAccountInquiry(input);
+            blockCode1 = emeaRes?.blkCd1;
+
+            if (String.isNotBlank(blockCode) || String.isNotBlank(blockCode1)) {
+                isSuccess = true;
+            }
+
+            if (isSuccess && (inValidBlockCode.contains(blockCode) || inValidBlockCode1.contains(blockCode1))) {
                 result.isShowAction = false;
                 result.strMsg = System.Label.FEC_MSG_CARD_REPLACEMENT_CS_D2C;
             } else {
@@ -70,7 +127,7 @@ public with sharing class FEC_CardReplacementAddressController {
         }
     }
 
-    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, Decimal replacementFee) {
+    public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {
         UpdateResult result = new UpdateResult();
         Case objCasse;
         try {
@@ -87,7 +144,7 @@ public with sharing class FEC_CardReplacementAddressController {
             ];
             String transactionId = FEC_CommonUltils.generateTransactionUUID();
             String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
-            String replacementFeeFlag = replacementFee != null ? '1' : '0';
+            String replacementFeeFlag = String.isNotBlank(replacementFee) ? '1' : '0';
             FEC_ReplacementCardCallout.ReplaceCardResponse response = FEC_ReplacementCardCallout.callReplaceCard(
                 transactionId,
                 requestorId,
@@ -142,5 +199,10 @@ public with sharing class FEC_CardReplacementAddressController {
         public Boolean success { get; set; }
         @AuraEnabled
         public Decimal actionCount { get; set; }
+    }
+
+    public class PicklistOptionDTO {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
     }
 }
