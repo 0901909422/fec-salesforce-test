@@ -331,6 +331,8 @@ public with sharing class FEC_UpdateCustomerContact {
         FEC_Updated_Info_Phone_Number__c,
         FEC_Updated_Info_Email__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
+        FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+        FEC_Account_or_Contract__r.FEC_Email__c,
         FEC_Process_Action_Count__c,
         FEC_Current_Case_Stage__c,
         FEC_Current_Case_Stage__r.Name
@@ -351,9 +353,9 @@ public with sharing class FEC_UpdateCustomerContact {
     }
 
     if (PHONE_UPDATE.equals(method)) {
-      req.ContactString = selectedCase.FEC_Updated_Info_Phone_Number__c;
+      req.ContactString = selectedCase.FEC_Account_or_Contract__r.FEC_Primary_Phone__c;
     } else if (EMAIL_UPDATE.equals(method)) {
-      req.ContactString = selectedCase.FEC_Updated_Info_Email__c;
+      req.ContactString = selectedCase.FEC_Account_or_Contract__r.FEC_Email__c;
     }
 
     List<FEC_Contact_List__c> contactlst = getMatchingContactList(
