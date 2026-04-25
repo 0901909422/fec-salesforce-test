@@ -105,24 +105,15 @@ export default class Fec_CollectionDateFilter extends LightningElement {
         const message = FEC_CollectionDateFilter_SuccessMsg
             .replace('{0}', fromDateStr)
             .replace('{1}', toDateStr);
-
-        const evt = new ShowToastEvent({
-            title: 'Thành công',
-            message,
-            variant: 'success',
-            mode: 'dismissable'
-        });
-        this.dispatchEvent(evt);
+        this.showToast('Thành công', message, 'success');
     }
 
     showErrorToast(message) {
-        const evt = new ShowToastEvent({
-            title: 'Lỗi',
-            message: message,
-            variant: 'error',
-            mode: 'dismissable'
-        });
-        this.dispatchEvent(evt);
+        this.showToast('Lỗi', message, 'error');
+    }
+
+    showToast(title, message, variant = 'info') {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode: 'dismissable' }));
     }
 
     /** YYYY-MM-DD cho lightning-input[type=date] */
