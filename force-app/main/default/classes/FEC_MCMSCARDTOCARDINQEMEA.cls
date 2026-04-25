@@ -96,6 +96,25 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
     ) {
         validateRequest(transID, requestorId, dateTimeStr, vmxVersion, context, signOnName, org, cardNbr, name);
 
+        // ================= CONFIG =================
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
+
+        // =====================================================
+        // ENV OVERRIDE 
+        // =====================================================
+        String cardNbrParam;
+
+        if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+            && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+
+            cardNbrParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+
+        } else {
+            cardNbrParam = cardNbr;
+        }
+            
+
         String soapBody = buildSoapRequest(
             transID,
             requestorId,
@@ -104,12 +123,9 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
             context,
             signOnName,
             org,
-            cardNbr,
+            cardNbrParam,
             name
         );
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
 
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
