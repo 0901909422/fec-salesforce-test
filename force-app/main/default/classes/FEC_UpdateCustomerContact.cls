@@ -358,8 +358,10 @@ public with sharing class FEC_UpdateCustomerContact {
     if (!contactlst.isEmpty()) {
       FEC_Contact_List__c matched = contactlst.get(0);
       req.ContactId = matched.FEC_Contact_ID__c;
-      req.Channel = matched.FEC_Channel__c;
-      req.CommunicationType = matched.FEC_Communication_Type__c;
+      req.Channel = selectedCase.FEC_Channel__c;
+      req.CommunicationType = PHONE_UPDATE.equals(method)
+        ? FEC_ConstantCommon.PHONE
+        : FEC_ConstantCommon.EMAIL;
       req.ContactString = matched.FEC_Contact_String__c;
     } else {
       throw new FEC_APIServiceException(
