@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
-    <masterLabel>FEC Pin Reset</masterLabel>
-    <isExposed>true</isExposed>
     <description>Message channel for PIN reset communication</description>
+    <isExposed>true</isExposed>
     <lightningMessageFields>
-        <fieldName>status</fieldName>
         <description>SUCCESS | ERROR</description>
+        <fieldName>status</fieldName>
     </lightningMessageFields>
     <lightningMessageFields>
-        <fieldName>caseId</fieldName>
         <description>Case Id</description>
+        <fieldName>caseId</fieldName>
     </lightningMessageFields>
     <lightningMessageFields>
-        <fieldName>message</fieldName>
         <description>Optional message</description>
+        <fieldName>message</fieldName>
     </lightningMessageFields>
+    <masterLabel>FEC Pin Reset</masterLabel>
 </LightningMessageChannel>

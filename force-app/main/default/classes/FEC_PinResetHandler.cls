@@ -46,7 +46,7 @@ public without sharing class FEC_PinResetHandler {
             List<Case> caselst = [
                         SELECT
                             Id,
-                            FEC_Process_Action_Count__c
+                            FEC_Process_Action_Count__c, FEC_Is_Test_API__c 
                         FROM Case
                         WHERE Id = :caseId
                         ];
@@ -56,7 +56,7 @@ public without sharing class FEC_PinResetHandler {
             
             Case selectedCase = caselst.get(0);
             String transactionId = String.valueOf(UUID.randomUUID());
-            FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile);
+            FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile, selectedCase.FEC_Is_Test_API__c);
             FEC_PINReissueServiceCallout.logApiResponse();
             
             if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {

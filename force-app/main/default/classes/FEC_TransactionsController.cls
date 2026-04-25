@@ -252,7 +252,7 @@ public without sharing class FEC_TransactionsController {
             new Map<String, FEC_GetCardFinancialTransactions.FinancialTransaction>();
 
         for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
-            Date postDate = FEC_CommonUltils.parseDate(f.PostingDate);
+            Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
             if (postDate == null || f.TRNXAmount == null) continue;
 
             String key = buildKey(
@@ -290,7 +290,7 @@ public without sharing class FEC_TransactionsController {
         Map<String, FEC_Transaction__c> working = new Map<String, FEC_Transaction__c>();
 
         for (FEC_GetUnbilledTransactions.TransactionRecord u : uList) {
-            Date postDate = FEC_CommonUltils.parseDate(u.PostingDate);
+            Date postDate = FEC_CommonUltils.toDateStr(u.PostingDate);
             if (postDate == null || u.Amount == null) continue;
 
             String key = buildKey(
@@ -309,7 +309,7 @@ public without sharing class FEC_TransactionsController {
                         );
 
             // ===== Base fields (Unbilled) =====
-            rec.FEC_Effective_Date__c = FEC_CommonUltils.parseDate(u.TransactionDate);
+            rec.FEC_Effective_Date__c = FEC_CommonUltils.toDateStr(u.TransactionDate);
             rec.FEC_Post_Date__c = postDate;
             rec.FEC_Transaction_Amount__c = u.Amount;
             rec.FEC_Credit_Debit_Flag__c = u.TransactionType;
