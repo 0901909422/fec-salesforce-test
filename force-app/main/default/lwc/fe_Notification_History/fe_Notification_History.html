@@ -1,0 +1,599 @@
+<template>
+    <div class="notification-history-root fec-section--bordered">
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+
+            <lightning-accordion-section name="sms" label={labelTabSms}>
+                <div class={smsSectionClass}>
+                    <template lwc:if={resolvedPhoneDisplay}>
+                        <div class="channel-phone-hint">{labelPhonePrefix} {resolvedPhoneDisplay}</div>
+                    </template>
+                    <div class="slds-is-relative">
+                        <template lwc:if={smsHasRows}>
+                            <template lwc:if={smsLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <c-fec_-related-list-paging
+                                records={smsRows}
+                                columns={smsColumns}
+                                page-size={pageSizeDefault}
+                                page-size-options={pageSizeOptions}
+                                default-sorted-by="dateTime"
+                                default-sort-direction="desc"
+                                sorted-by-description={labelSortDateTime}
+                                hide-updated-time="true"
+                                column-count="3">
+                            </c-fec_-related-list-paging>
+                        </template>
+                        <template lwc:else>
+                            <template lwc:if={smsLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <div class="notification-history-paging-mimic" data-mimic="sms-empty">
+                                <div class="addresses-border-wrapper">
+                                    <div class="addresses-table-wrapper">
+                                        <div class="table-info">
+                                            <div class="table-info-left">
+                                                <span class="item-count">{mimicZeroItemsLabel}</span>
+                                                <span class="sorted-by">• Sorted by {labelSortDateTime}</span>
+                                            </div>
+                                        </div>
+                                        <div class="table-container">
+                                            <table class="address-table">
+                                                <thead>
+                                                    <tr>
+                                                        <template for:each={smsMimicHeaders} for:item="col">
+                                                            <th
+                                                                key={col.fieldName}
+                                                                class="sortable-header header-center"
+                                                                style={col.headerStyle}>
+                                                                <div class="header-content">
+                                                                    <span>{col.label}</span>
+                                                                    <template lwc:if={col.showSortIcon}>
+                                                                        <lightning-icon
+                                                                            icon-name="utility:arrowdown"
+                                                                            size="xx-small"
+                                                                            class="sort-icon inactive"
+                                                                            alternative-text="Sort (preview)">
+                                                                        </lightning-icon>
+                                                                    </template>
+                                                                </div>
+                                                            </th>
+                                                        </template>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td
+                                                            colspan={smsTableColspan}
+                                                            class={smsEmptyMsgClass}>
+                                                            {smsEmptyMessage}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div
+                                            class="table-pagination nh-mimic-pagination"
+                                            aria-hidden="true"
+                                            data-mimic-footer="static">
+                                            <div class="page-size">
+                                                <span>Page size</span>
+                                                <select
+                                                    class="page-size-select"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Page size (preview, disabled)"
+                                                    aria-label="Page size (preview, disabled)">
+                                                    <option>10</option>
+                                                </select>
+                                            </div>
+                                            <div class="pagination-controls">
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Previous (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronleft"
+                                                        size="xx-small"
+                                                        alternative-text="Previous page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                                <button
+                                                    class="page-btn active"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Current (preview)">
+                                                    1
+                                                </button>
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Next (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronright"
+                                                        size="xx-small"
+                                                        alternative-text="Next page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                            </div>
+                                            <div class="go-to-page">
+                                                <span>Go to page</span>
+                                                <input
+                                                    class="page-input"
+                                                    type="number"
+                                                    value="1"
+                                                    min="1"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go to page (preview, disabled)"
+                                                    title="Go to page (preview, disabled)" />
+                                                <span class="page-total">of 1</span>
+                                                <button
+                                                    class="go-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go (preview, disabled)"
+                                                    title="Go (preview, disabled)">
+                                                    Go
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <template lwc:if={smsInfoBanner}>
+                        <div class="channel-banner">{smsInfoBanner}</div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="zns" label={labelTabZns}>
+                <div class={znsSectionClass}>
+                    <template lwc:if={znsHasRows}>
+                        <c-fec_-related-list-paging
+                            records={znsRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={znsHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <div class="notification-history-paging-mimic" data-mimic="zns-empty">
+                                <div class="addresses-border-wrapper">
+                                    <div class="addresses-table-wrapper">
+                                        <div class="table-info">
+                                            <div class="table-info-left">
+                                                <span class="item-count">{mimicZeroItemsLabel}</span>
+                                                <span class="sorted-by">• Sorted by {mimicExtendedSortLabel}</span>
+                                            </div>
+                                        </div>
+                                        <div class="table-container">
+                                            <table class="address-table">
+                                                <thead>
+                                                    <tr>
+                                                        <template for:each={extendedMimicHeaders} for:item="col">
+                                                            <th
+                                                                key={col.fieldName}
+                                                                class="sortable-header header-center"
+                                                                style={col.headerStyle}>
+                                                                <div class="header-content">
+                                                                    <span>{col.label}</span>
+                                                                    <template lwc:if={col.showSortIcon}>
+                                                                        <lightning-icon
+                                                                            icon-name="utility:arrowdown"
+                                                                            size="xx-small"
+                                                                            class="sort-icon inactive"
+                                                                            alternative-text="Sort (preview)">
+                                                                        </lightning-icon>
+                                                                    </template>
+                                                                </div>
+                                                            </th>
+                                                        </template>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td
+                                                            colspan={extendedTableColspan}
+                                                            class={znsEmptyMsgClass}>
+                                                            {znsEmptyMessage}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div
+                                            class="table-pagination nh-mimic-pagination"
+                                            aria-hidden="true"
+                                            data-mimic-footer="static">
+                                            <div class="page-size">
+                                                <span>Page size</span>
+                                                <select
+                                                    class="page-size-select"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Page size (preview, disabled)"
+                                                    aria-label="Page size (preview, disabled)">
+                                                    <option>10</option>
+                                                </select>
+                                            </div>
+                                            <div class="pagination-controls">
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Previous (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronleft"
+                                                        size="xx-small"
+                                                        alternative-text="Previous page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                                <button
+                                                    class="page-btn active"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Current (preview)">
+                                                    1
+                                                </button>
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Next (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronright"
+                                                        size="xx-small"
+                                                        alternative-text="Next page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                            </div>
+                                            <div class="go-to-page">
+                                                <span>Go to page</span>
+                                                <input
+                                                    class="page-input"
+                                                    type="number"
+                                                    value="1"
+                                                    min="1"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go to page (preview, disabled)"
+                                                    title="Go to page (preview, disabled)" />
+                                                <span class="page-total">of 1</span>
+                                                <button
+                                                    class="go-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go (preview, disabled)"
+                                                    title="Go (preview, disabled)">
+                                                    Go
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="email" label={labelTabEmail}>
+                <div class={emailSectionClass}>
+                    <template lwc:if={emailHasRows}>
+                        <c-fec_-related-list-paging
+                            records={emailRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={emailHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <div class="notification-history-paging-mimic" data-mimic="email-empty">
+                                <div class="addresses-border-wrapper">
+                                    <div class="addresses-table-wrapper">
+                                        <div class="table-info">
+                                            <div class="table-info-left">
+                                                <span class="item-count">{mimicZeroItemsLabel}</span>
+                                                <span class="sorted-by">• Sorted by {mimicExtendedSortLabel}</span>
+                                            </div>
+                                        </div>
+                                        <div class="table-container">
+                                            <table class="address-table">
+                                                <thead>
+                                                    <tr>
+                                                        <template for:each={extendedMimicHeaders} for:item="col">
+                                                            <th
+                                                                key={col.fieldName}
+                                                                class="sortable-header header-center"
+                                                                style={col.headerStyle}>
+                                                                <div class="header-content">
+                                                                    <span>{col.label}</span>
+                                                                    <template lwc:if={col.showSortIcon}>
+                                                                        <lightning-icon
+                                                                            icon-name="utility:arrowdown"
+                                                                            size="xx-small"
+                                                                            class="sort-icon inactive"
+                                                                            alternative-text="Sort (preview)">
+                                                                        </lightning-icon>
+                                                                    </template>
+                                                                </div>
+                                                            </th>
+                                                        </template>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td
+                                                            colspan={extendedTableColspan}
+                                                            class={emailEmptyMsgClass}>
+                                                            {emailEmptyMessage}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div
+                                            class="table-pagination nh-mimic-pagination"
+                                            aria-hidden="true"
+                                            data-mimic-footer="static">
+                                            <div class="page-size">
+                                                <span>Page size</span>
+                                                <select
+                                                    class="page-size-select"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Page size (preview, disabled)"
+                                                    aria-label="Page size (preview, disabled)">
+                                                    <option>10</option>
+                                                </select>
+                                            </div>
+                                            <div class="pagination-controls">
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Previous (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronleft"
+                                                        size="xx-small"
+                                                        alternative-text="Previous page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                                <button
+                                                    class="page-btn active"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Current (preview)">
+                                                    1
+                                                </button>
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Next (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronright"
+                                                        size="xx-small"
+                                                        alternative-text="Next page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                            </div>
+                                            <div class="go-to-page">
+                                                <span>Go to page</span>
+                                                <input
+                                                    class="page-input"
+                                                    type="number"
+                                                    value="1"
+                                                    min="1"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go to page (preview, disabled)"
+                                                    title="Go to page (preview, disabled)" />
+                                                <span class="page-total">of 1</span>
+                                                <button
+                                                    class="go-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go (preview, disabled)"
+                                                    title="Go (preview, disabled)">
+                                                    Go
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="mobileApp" label={labelTabMobileApp}>
+                <div class={mobileAppSectionClass}>
+                    <template lwc:if={mobileAppHasRows}>
+                        <c-fec_-related-list-paging
+                            records={mobileAppRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={mobileAppHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <div class="notification-history-paging-mimic" data-mimic="mobileApp-empty">
+                                <div class="addresses-border-wrapper">
+                                    <div class="addresses-table-wrapper">
+                                        <div class="table-info">
+                                            <div class="table-info-left">
+                                                <span class="item-count">{mimicZeroItemsLabel}</span>
+                                                <span class="sorted-by">• Sorted by {mimicExtendedSortLabel}</span>
+                                            </div>
+                                        </div>
+                                        <div class="table-container">
+                                            <table class="address-table">
+                                                <thead>
+                                                    <tr>
+                                                        <template for:each={extendedMimicHeaders} for:item="col">
+                                                            <th
+                                                                key={col.fieldName}
+                                                                class="sortable-header header-center"
+                                                                style={col.headerStyle}>
+                                                                <div class="header-content">
+                                                                    <span>{col.label}</span>
+                                                                    <template lwc:if={col.showSortIcon}>
+                                                                        <lightning-icon
+                                                                            icon-name="utility:arrowdown"
+                                                                            size="xx-small"
+                                                                            class="sort-icon inactive"
+                                                                            alternative-text="Sort (preview)">
+                                                                        </lightning-icon>
+                                                                    </template>
+                                                                </div>
+                                                            </th>
+                                                        </template>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td
+                                                            colspan={extendedTableColspan}
+                                                            class={mobileAppEmptyMsgClass}>
+                                                            {mobileAppEmptyMessage}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div
+                                            class="table-pagination nh-mimic-pagination"
+                                            aria-hidden="true"
+                                            data-mimic-footer="static">
+                                            <div class="page-size">
+                                                <span>Page size</span>
+                                                <select
+                                                    class="page-size-select"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Page size (preview, disabled)"
+                                                    aria-label="Page size (preview, disabled)">
+                                                    <option>10</option>
+                                                </select>
+                                            </div>
+                                            <div class="pagination-controls">
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Previous (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronleft"
+                                                        size="xx-small"
+                                                        alternative-text="Previous page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                                <button
+                                                    class="page-btn active"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Current (preview)">
+                                                    1
+                                                </button>
+                                                <button
+                                                    class="page-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    title="Next (preview)">
+                                                    <lightning-icon
+                                                        icon-name="utility:chevronright"
+                                                        size="xx-small"
+                                                        alternative-text="Next page (preview)">
+                                                    </lightning-icon>
+                                                </button>
+                                            </div>
+                                            <div class="go-to-page">
+                                                <span>Go to page</span>
+                                                <input
+                                                    class="page-input"
+                                                    type="number"
+                                                    value="1"
+                                                    min="1"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go to page (preview, disabled)"
+                                                    title="Go to page (preview, disabled)" />
+                                                <span class="page-total">of 1</span>
+                                                <button
+                                                    class="go-btn"
+                                                    type="button"
+                                                    disabled
+                                                    tabindex="-1"
+                                                    aria-label="Go (preview, disabled)"
+                                                    title="Go (preview, disabled)">
+                                                    Go
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+        </lightning-accordion>
+    </div>
+</template>
