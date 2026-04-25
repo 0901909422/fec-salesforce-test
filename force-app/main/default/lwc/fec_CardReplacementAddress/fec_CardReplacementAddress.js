@@ -20,6 +20,7 @@ import getProvinceOptionsForAddress from '@salesforce/apex/FEC_CardReplacementAd
 import getWardOptionsForProvinceCode from '@salesforce/apex/FEC_CardReplacementAddressController.getWardOptionsForProvinceCode';
 import getAddressInfos from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfos';
 import getCountryId from '@salesforce/apex/FEC_CardReplacementAddressController.getCountryId';
+import getAddressInfo from '@salesforce/apex/FEC_CardReplacementAddressController.getAddressInfo';
 
 export default class Fec_CardReplacementAddress extends LightningElement {
     @api recordId;
@@ -45,6 +46,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     street;
     selectedRows = [];
     newSelectedAddressId;
+    addressInfoValue;
 
     customLabel = {
         btnAddTempAddress: FEC_LBL_ContractClosure_Add_Temp_Address,
@@ -92,22 +94,6 @@ export default class Fec_CardReplacementAddress extends LightningElement {
     }
 
     connectedCallback() {
-        this.handleGetAddressInfos();
-
-        getProvinceOptionsForAddress()
-        .then((provinces) => {
-            const mapped = (provinces || []).map((o) => ({
-                label: o.label != null ? o.label : o.Label,
-                value: o.value != null ? o.value : o.Value
-            }));
-            this.provinceOptions = mapped;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    }
-
-    handleGetAddressInfos() {
         getAddressInfos({ caseId: this.recordId })
         .then((addressInfos) => {
             this.addressInfos = addressInfos.map(item => {
@@ -120,6 +106,31 @@ export default class Fec_CardReplacementAddress extends LightningElement {
                 this.selectedRows = [this.selectedAddressId];
                 this.newSelectedAddressId = this.selectedAddressId;
             }
+            if (this.selectedAddressId && !this.isEdit) {
+                getAddressInfo({ addressId: this.selectedAddressId })
+                .then((addressInfo) => {
+                    this.isDisableBtnAddTempAddress = true;
+                    this.newTempAddressOptions = [
+                        { label: addressInfo.FEC_Address__c, value: addressInfo.Id }
+                    ];
+                    this.addressInfoValue = addressInfo.Id;
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+
+        getProvinceOptionsForAddress()
+        .then((provinces) => {
+            const mapped = (provinces || []).map((o) => ({
+                label: o.label != null ? o.label : o.Label,
+                value: o.value != null ? o.value : o.Value
+            }));
+            this.provinceOptions = mapped;
         })
         .catch((error) => {
             console.log(error);
@@ -224,6 +235,7 @@ export default class Fec_CardReplacementAddress extends LightningElement {
             this.newTempAddressOptions = [
                 { label: address, value: this.newAddressInfoId }
             ];
+            this.addressInfoValue = this.newAddressInfoId;
             this.selectedRows = [];
             this.newSelectedAddressId = this.newAddressInfoId;
         } catch (error) {

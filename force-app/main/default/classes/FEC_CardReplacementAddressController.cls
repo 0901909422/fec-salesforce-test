@@ -17,6 +17,16 @@ public with sharing class FEC_CardReplacementAddressController {
         }
     }
 
+    @AuraEnabled
+    public static FEC_Address_Info__c getAddressInfo(String addressId) {
+        return [
+            SELECT Id,
+                FEC_Address__c
+            FROM FEC_Address_Info__c
+            WHERE Id = :addressId
+        ];
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceOptionsForAddress() {
         List<PicklistOptionDTO> opts = new List<PicklistOptionDTO>();
