@@ -3,12 +3,14 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
+import { formatDateField } from 'c/fec_DateFormatter';
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
 
 import fetchCollectionData from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionData';
 import fetchCollectionDataWithDates from '@salesforce/apex/FEC_FetchCollectionDataServiceCallout.fetchCollectionDataWithDates';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import Fetch_Collection_Data_Record_Type_NFU from '@salesforce/label/c.Fetch_Collection_Data_Record_Type_NFU';
 import FEC_NFUStatus from '@salesforce/label/c.FEC_NFUStatus';
 import FEC_NFUStartDate from '@salesforce/label/c.FEC_NFUStartDate';
 import FEC_NFU_Reason from '@salesforce/label/c.FEC_NFU_Reason';
@@ -109,13 +111,13 @@ export default class Fec_NFU extends LightningElement {
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
                     contractNumber: this._contractNumber,
-                    recordType: this._recordTypeName,
+                    recordType: Fetch_Collection_Data_Record_Type_NFU,
                     startDate: this._startDate,
                     endDate: this._endDate
                 })
                 : await fetchCollectionData({
                     contractNumber: this._contractNumber,
-                    recordType: this._recordTypeName
+                    recordType: Fetch_Collection_Data_Record_Type_NFU
                 });
 
             if (!response || response.Success === false || !response.NFUDetailsList || response.NFUDetailsList.length === 0) {
@@ -141,12 +143,33 @@ export default class Fec_NFU extends LightningElement {
             return raw != null && String(raw).trim() !== STR_EMPTY ? raw : EMPTY;
         };
 
+        const formatNFUStatus = (api) => {
+            const raw = d[api];
+            if (!raw || String(raw).trim() === STR_EMPTY) {
+                return EMPTY;
+            }
+            const rawStr = String(raw).trim().toUpperCase();
+            if (rawStr === 'Y') {
+                return 'Yes';
+            }
+            if (rawStr === 'N') {
+                return 'No';
+            }
+            return raw;
+        };
+
+        const fmtDate = (api) => {
+            const raw = d[api];
+            const result = formatDateField(raw);
+            return result === STR_EMPTY ? EMPTY : result;
+        };
+
         return [
-            this.buildField('NFUStatus', FEC_NFUStatus, val('NFUStatus')),
-            this.buildField('NFUStartDate', FEC_NFUStartDate, val('NFUStartDate')),
+            this.buildField('NFUStatus', FEC_NFUStatus, formatNFUStatus('NFUStatus')),
+            this.buildField('NFUStartDate', FEC_NFUStartDate, fmtDate('NFUStartDate')),
             this.buildField('NFUReason', FEC_NFU_Reason, val('NFUReason')),
             this.buildField('NFUCode', FEC_NFU_Code, val('NFUCode')),
-            this.buildField('NFUExpiryDate', FEC_NFUExpiryDate, val('NFUExpiryDate'))
+            this.buildField('NFUExpiryDate', FEC_NFUExpiryDate, fmtDate('NFUExpiryDate'))
         ];
     }
 
