@@ -58,10 +58,23 @@ export const DATA_NAME_ROLES = 'roles';
 // Additional field constants used by modal
 export const FIELD_FIELD_OBJECT_NAME = 'FEC_Field_Object_Name__c';
 export const FIELD_FIELD_API_NAME = 'FEC_Field_API_Name__c';
+export const FIELD_FIELD_LABEL_NAME = 'FEC_Field_Label_Name__c';
 export const FIELD_EDITABLE_ROLE = 'FEC_Editable_Role__c';
 export const FIELD_CASE_CHANNEL = 'FEC_Case_Channel__c';
 export const FIELD_FIELD_EDITABLE = 'FEC_Field_Editable__c';
 export const FIELD_DATA_INTEGRATION_MAPPING = 'FEC_Data_Integration_Mapping__c';
+export const FIELD_FIELD_MASKING = 'FEC_Field_Masking__c';
+export const FIELD_MASKING_TYPE = 'FEC_Masking_Type__c';
+export const FIELD_FIELD_REVERTED = 'FEC_Field_Reverted__c';
+export const FIELD_SUB_SECTION = 'FEC_Sub_Section__c';
+export const FIELD_SUB_SECTION_FIELD_LAYOUT = 'FEC_Sub_Section_Field_Layout__c';
+export const FIELD_SUB_SECTION_LAYOUT = 'FEC_Sub_Section_Layout__c';
+export const FIELD_SUB_SECTION_ORDER = 'FEC_Sub_Section_Order__c';
+export const FIELD_EDITABLE_USER_GROUP = 'FEC_Editable_User_Group__c';
+export const DATA_NAME_EDITABLE_USER_GROUPS = 'editableUserGroups';
+
+// Default Integration Channel Code (must match FEC_FraudConstantCommon.DEFAULT_CHANNEL_INTEGRATION_CODE in Apex)
+export const DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
 
 // sObject API name constants for lookup calls
 export const SOBJECT_CASE_STAGE = 'FEC_Case_Stage__c';
@@ -222,6 +235,7 @@ export const OBJECT_MDM_CHANNEL = 'FEC_MDM_Channel__c';
 export const FIELD_CHANNEL_ID = 'FEC_Channel_ID__c';
 export const FIELD_CHANNEL_VN_NAME = 'FEC_Channel_Vietnamese_name__c'; // Note: check internal spelling
 export const FIELD_CHANNEL_STATUS = 'FEC_Channel_Status__c';
+export const FIELD_SELF_SERVICE_FLAG = 'FEC_Self_Service_Flag__c';
 
 // FEC Additional Field List Value constants
 export const OBJECT_MDM_ADDITIONAL_FIELD_LIST_VALUE = 'FEC_MDM_Additional_Field_List_Value__c';
@@ -236,11 +250,20 @@ export const MASTER_DATA_SETTING_COLUMNS = [
     { label: LABEL_COL_APPLICABLE_ROLE, fieldName: FIELD_APPLICABLE_ROLE, type: TYPE_TEXT, sortable: true },
     { label: LABEL_COL_PROPERTY_NAME, fieldName: FIELD_ADDITIONAL_FIELD, type: TYPE_TEXT, sortable: true },
     { label: LABEL_COL_SECTION, fieldName: FIELD_SECTION, type: TYPE_TEXT, sortable: true },
+    { label: 'Sub Section', fieldName: FIELD_SUB_SECTION, type: TYPE_TEXT, sortable: true },
+    { label: 'Sub Section Order', fieldName: FIELD_SUB_SECTION_ORDER, type: TYPE_NUMBER, sortable: true },
+    { label: 'Sub Section Layout', fieldName: FIELD_SUB_SECTION_LAYOUT, type: TYPE_NUMBER, sortable: true },
+    { label: 'Sub Section Field Layout', fieldName: FIELD_SUB_SECTION_FIELD_LAYOUT, type: TYPE_NUMBER, sortable: true },
+    { label: LABEL_COL_STATUS, fieldName: FIELD_FIELD_STATUS, type: TYPE_BOOLEAN, sortable: true },
+    { label: LABEL_LABEL_READONLY, fieldName: FIELD_FIELD_READONLY, type: TYPE_BOOLEAN, sortable: true },
+    { label: LABEL_LABEL_MANDATORY, fieldName: FIELD_FIELD_MANDATORY, type: TYPE_BOOLEAN, sortable: true },
+    { label: 'Editable', fieldName: FIELD_FIELD_EDITABLE, type: TYPE_BOOLEAN, sortable: true },
+    { label: 'Masking', fieldName: FIELD_FIELD_MASKING, type: TYPE_BOOLEAN, sortable: true },
+    { label: 'Masking Type', fieldName: FIELD_MASKING_TYPE, type: TYPE_TEXT, sortable: true },
+    { label: 'Reverted', fieldName: FIELD_FIELD_REVERTED, type: TYPE_BOOLEAN, sortable: true },
+    { label: 'Editable Role', fieldName: FIELD_EDITABLE_ROLE, type: TYPE_TEXT, sortable: true },
     { label: LABEL_COL_ORDER, fieldName: FIELD_FIELD_ORDER_DISPLAY, sortable: true },
-    { label: LABEL_COL_STATUS, fieldName: FIELD_FIELD_STATUS, type: TYPE_BOOLEAN },
-    { label: LABEL_LABEL_READONLY, fieldName: FIELD_FIELD_READONLY, type: TYPE_BOOLEAN },
-    { label: LABEL_LABEL_MANDATORY, fieldName: FIELD_FIELD_MANDATORY, type: TYPE_BOOLEAN },
-    { label: 'Process Status', fieldName: FIELD_PROCESS_CHANGE_STATUS, type: TYPE_TEXT },
+    { label: 'Process Status', fieldName: FIELD_PROCESS_CHANGE_STATUS, type: TYPE_TEXT, sortable: true },
     { type: 'action', typeAttributes: { rowActions: [ { label: LABEL_ACTION_EDIT, name: 'edit' }, { label: LABEL_ACTION_DELETE, name: 'delete' } ] } }
 ];
 

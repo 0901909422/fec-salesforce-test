@@ -3,7 +3,6 @@
     <fullName>FEC_Product_Type__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin loại sản phẩm</description>
-    <externalId>false</externalId>
     <label>Product Type</label>
     <lookupFilter>
         <active>true</active>

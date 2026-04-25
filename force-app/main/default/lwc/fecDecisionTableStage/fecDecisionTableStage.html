@@ -1,0 +1,21 @@
+<template>
+    <!-- Leaf node message (wrapper handles this) -->
+    <template if:true={_showLeafMessage}>
+        <div class="empty-state slds-p-around_large slds-text-align_center">
+            <lightning-icon icon-name="utility:info" size="large" variant="bare"></lightning-icon>
+            <p class="slds-m-top_small">Vui lòng chọn Business Process để xem Decision Table Stage</p>
+        </div>
+    </template>
+
+    <!-- Render generic core when we have a valid BP context -->
+    <template if:false={_showLeafMessage}>
+        <c-fec-decision-engine-view
+            table-key="STAGE_TRANSITION"
+            business-process-id={_businessProcessId}
+            dropdown-hints={_dropdownHints}
+            suggested-condition-columns={_suggestedConditionColumns}
+            suggested-action-columns={_suggestedActionColumns}
+            context-label={_selectedBPLabel}>
+        </c-fec-decision-engine-view>
+    </template>
+</template>

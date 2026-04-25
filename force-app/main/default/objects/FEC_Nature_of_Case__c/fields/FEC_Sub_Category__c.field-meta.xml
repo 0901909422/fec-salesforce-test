@@ -3,7 +3,6 @@
     <fullName>FEC_Sub_Category__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Thông tin danh mục phụ</description>
-    <externalId>false</externalId>
     <label>Sub Category</label>
     <lookupFilter>
         <active>true</active>

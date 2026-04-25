@@ -37,9 +37,9 @@ public with sharing class FEC_NatureOfCaseTreeItem {
         this.mapChilds = new Map<String, FEC_NatureOfCaseTreeItem>();
 
         if (status == true) {
-            this.iconName = FEC_Constants.ICON_RECORD;
+            this.iconName = FEC_UIConstants.ICON_RECORD;
         } else {
-            this.iconName = FEC_Constants.ICON_LOCK;
+            this.iconName = FEC_UIConstants.ICON_LOCK;
         }
     }
 
