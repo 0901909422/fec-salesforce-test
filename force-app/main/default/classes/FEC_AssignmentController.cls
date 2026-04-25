@@ -378,7 +378,7 @@ public without sharing class FEC_AssignmentController {
     }
 
     private static String mapDecisionToTeam(String decision) {
-        return FEC_CommonUltils.DECISION_TEAM_MAP.get(decision);
+        return FEC_ConstantCommon.decisionToTeamMap.get(decision);
     }
 
     private static Map<Id, String> buildTeamMap(List<FEC_Routing_Action_History__c> histories) {
