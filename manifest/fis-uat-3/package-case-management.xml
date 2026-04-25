@@ -41,6 +41,7 @@
 		<members>fec_communicationHistory</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_DateFormatter</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -122,6 +123,7 @@
 		<members>FEC_CollectionDateFilter_ErrorMissingDate</members>
 		<members>FEC_CollectionDateFilter_ErrorFromGtTo</members>
 		<members>FEC_CollectionDateFilter_ErrorExceedRange</members>
+		<members>FEC_CollectionDateFilter_SuccessMsg</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

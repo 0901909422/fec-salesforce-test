@@ -14230,6 +14230,13 @@
         <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
         <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
     </labels>
+<labels>
+        <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CollectionDateFilter SuccessMsg</shortDescription>
+        <value>Đã áp dụng bộ lọc ngày từ {0} đến {1}</value>
+    </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
         <language>en_US</language>
