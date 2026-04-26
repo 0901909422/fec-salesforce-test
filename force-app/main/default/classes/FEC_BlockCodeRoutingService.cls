@@ -22,16 +22,16 @@ public without sharing class FEC_BlockCodeRoutingService {
 
   // --- Interaction + RC09 sibling + current RC27 → SP / DQ CS Support ---
   private static final String TEAM_DISPLAY_SP = 'SP';
-  private static final String REQUEST_CATEGORY_NAME = 'Request';
-  private static final String INTERACTION_RC09_SUBCATEGORY_NAME = 'RC09-Cập nhật thông tin';
-  private static final Set<String> INTERACTION_RC09_SUBCODE_NAMES = new Set<String>{
-    'RC09.01-Cập nhật số điện thoại',
-    'RC09.02-Cập nhật địa chỉ'
+  private static final String REQUEST_CATEGORY_CODE = 'Request';
+  private static final String INTERACTION_RC09_SUBCATEGORY_CODE = 'RC09';
+  private static final Set<String> INTERACTION_RC09_SUBCODE_CODES = new Set<String>{
+    FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_MOBILE,
+    FEC_ConstantCommon.SUB_CODE_PROCESS_UPDATE_ADDRESS
   };
-  private static final String CURRENT_RC27_SUBCATEGORY_NAME = 'RC27-Thay thế thẻ';
-  private static final Set<String> CURRENT_RC27_SUBCODE_NAMES = new Set<String>{
-    'RC27.01-Có phí',
-    'RC27.02-Miễn phí'
+  private static final String CURRENT_RC27_SUBCATEGORY_CODE = 'RC27';
+  private static final Set<String> CURRENT_RC27_SUBCODE_CODES = new Set<String>{
+    'RC27.01',
+    'RC27.02'
   };
 
   /** @author Toannd61 */
@@ -96,9 +96,9 @@ public without sharing class FEC_BlockCodeRoutingService {
       return false;
     }
 
-    String categoryName;
+    String categoryCode;
     List<FEC_Category__c> categoryRows = [
-      SELECT Name
+      SELECT FEC_Code__c
       FROM FEC_Category__c
       WHERE Id = :catId
       LIMIT 1
@@ -106,29 +106,29 @@ public without sharing class FEC_BlockCodeRoutingService {
     if (categoryRows.isEmpty()) {
       return false;
     }
-    categoryName = trimSafe(categoryRows[0].Name);
+    categoryCode = trimSafe(categoryRows[0].FEC_Code__c);
     if (
-      String.isBlank(categoryName) ||
-      categoryName.toLowerCase() != REQUEST_CATEGORY_NAME.toLowerCase()
+      String.isBlank(categoryCode) ||
+      categoryCode.toLowerCase() != REQUEST_CATEGORY_CODE.toLowerCase()
     ) {
       return false;
     }
 
     List<FEC_Sub_Category__c> subCategoryRows = [
-      SELECT Name
+      SELECT FEC_Code__c
       FROM FEC_Sub_Category__c
       WHERE Id = :subCatId
       LIMIT 1
     ];
     if (
       subCategoryRows.isEmpty() ||
-      CURRENT_RC27_SUBCATEGORY_NAME != trimSafe(subCategoryRows[0].Name)
+      CURRENT_RC27_SUBCATEGORY_CODE != trimSafe(subCategoryRows[0].FEC_Code__c)
     ) {
       return false;
     }
 
     List<FEC_Sub_Code__c> subCodeRows = [
-      SELECT Name
+      SELECT FEC_Code__c
       FROM FEC_Sub_Code__c
       WHERE Id = :subCodeRecId
       LIMIT 1
@@ -136,9 +136,9 @@ public without sharing class FEC_BlockCodeRoutingService {
     if (subCodeRows.isEmpty()) {
       return false;
     }
-    String subCodeName = trimSafe(subCodeRows[0].Name);
-    return String.isNotBlank(subCodeName) &&
-      CURRENT_RC27_SUBCODE_NAMES.contains(subCodeName);
+    String subCodeCode = trimSafe(subCodeRows[0].FEC_Code__c);
+    return String.isNotBlank(subCodeCode) &&
+      CURRENT_RC27_SUBCODE_CODES.contains(subCodeCode);
   }
 
   /**
@@ -149,14 +149,16 @@ public without sharing class FEC_BlockCodeRoutingService {
     if (c == null || c.FEC_Interaction__c == null) {
       return false;
     }
-    String categoryName = c.FEC_Category__r != null ? trimSafe(c.FEC_Category__r.Name) : null;
-    String subCategoryName = c.FEC_SubCategory__r != null ? trimSafe(c.FEC_SubCategory__r.Name) : null;
-    String subCodeName = c.FEC_SubCode__r != null ? trimSafe(c.FEC_SubCode__r.Name) : null;
-    return String.isNotBlank(categoryName) &&
-      categoryName.toLowerCase() == REQUEST_CATEGORY_NAME.toLowerCase() &&
-      CURRENT_RC27_SUBCATEGORY_NAME == subCategoryName &&
-      String.isNotBlank(subCodeName) &&
-      CURRENT_RC27_SUBCODE_NAMES.contains(subCodeName);
+    String categoryCode = c.FEC_Category__r != null ? trimSafe(c.FEC_Category__r.FEC_Code__c) : null;
+    String subCategoryCode = c.FEC_SubCategory__r != null
+      ? trimSafe(c.FEC_SubCategory__r.FEC_Code__c)
+      : null;
+    String subCodeCode = c.FEC_SubCode__r != null ? trimSafe(c.FEC_SubCode__r.FEC_Code__c) : null;
+    return String.isNotBlank(categoryCode) &&
+      categoryCode.toLowerCase() == REQUEST_CATEGORY_CODE.toLowerCase() &&
+      CURRENT_RC27_SUBCATEGORY_CODE == subCategoryCode &&
+      String.isNotBlank(subCodeCode) &&
+      CURRENT_RC27_SUBCODE_CODES.contains(subCodeCode);
   }
 
   /**
@@ -176,9 +178,9 @@ public without sharing class FEC_BlockCodeRoutingService {
         SELECT Id
         FROM Case
         WHERE FEC_Interaction__c = :parentInteractionId
-          AND FEC_Category__r.Name = :REQUEST_CATEGORY_NAME
-          AND FEC_SubCategory__r.Name = :INTERACTION_RC09_SUBCATEGORY_NAME
-          AND FEC_SubCode__r.Name IN :INTERACTION_RC09_SUBCODE_NAMES
+          AND FEC_Category__r.FEC_Code__c = :REQUEST_CATEGORY_CODE
+          AND FEC_SubCategory__r.FEC_Code__c = :INTERACTION_RC09_SUBCATEGORY_CODE
+          AND FEC_SubCode__r.FEC_Code__c IN :INTERACTION_RC09_SUBCODE_CODES
         LIMIT 1
       ];
     } else {
@@ -187,9 +189,9 @@ public without sharing class FEC_BlockCodeRoutingService {
         FROM Case
         WHERE FEC_Interaction__c = :parentInteractionId
           AND Id != :currentCaseId
-          AND FEC_Category__r.Name = :REQUEST_CATEGORY_NAME
-          AND FEC_SubCategory__r.Name = :INTERACTION_RC09_SUBCATEGORY_NAME
-          AND FEC_SubCode__r.Name IN :INTERACTION_RC09_SUBCODE_NAMES
+          AND FEC_Category__r.FEC_Code__c = :REQUEST_CATEGORY_CODE
+          AND FEC_SubCategory__r.FEC_Code__c = :INTERACTION_RC09_SUBCATEGORY_CODE
+          AND FEC_SubCode__r.FEC_Code__c IN :INTERACTION_RC09_SUBCODE_CODES
         LIMIT 1
       ];
     }

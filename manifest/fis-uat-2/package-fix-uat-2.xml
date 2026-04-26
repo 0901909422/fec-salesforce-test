@@ -199,7 +199,6 @@
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
-		<members>fec_BlockCodeRouteToInfo</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
