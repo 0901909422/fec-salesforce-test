@@ -1337,12 +1337,27 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Assignment__c.FEC_Assignment_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Assignment__c.FEC_Assignment_Owner__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Assignment_Remark__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1353,6 +1368,16 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Date_Time__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_OwnerID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Team__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1441,10 +1466,21 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Case_Remarks__c.FEC_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Case_Remarks__c.FEC_Case_Remarks__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Case_Remarks__c.FEC_Remark_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Case_Remarks__c.FEC_Stage_Name__c</field>
@@ -1662,17 +1698,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Category_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Category_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Sub_Category_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Sub_Category_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</field>
+        <field>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

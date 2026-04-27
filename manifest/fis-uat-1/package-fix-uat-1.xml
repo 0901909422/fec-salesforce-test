@@ -160,9 +160,9 @@
 		<members>FEC_Relevant_Ticket__c.FEC_Account_or_Contract_Revelant__c</members>
 		<members>FEC_Relevant_Ticket__c.FEC_User_Relevant__c</members>
 		<members>FEC_Relevant_Ticket__c.FEC_User_Role_Relevant__c</members>
-		<members>FEC_Relevant_Ticket__c.FE_Category_Relevant__c</members>
-		<members>FEC_Relevant_Ticket__c.FE_Sub_Category_Relevant__c</members>
-		<members>FEC_Relevant_Ticket__c.FE_Sub_Code_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</members>
 		<members>Case.FEC_Global_Search__c</members>
 		<members>FEC_KYC__c.FEC_Field_Type__c</members>
 		<members>Case.FEC_Manager_ID_List__c</members>

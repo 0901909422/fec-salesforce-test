@@ -4649,7 +4649,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Team__c = ra.FEC_Team__c,
           FEC_Assignment_Remark__c = remarkContent,
           FEC_User_Role__c = userRoleName,
-          Assignment_Routing_Action__c = stageName
+          FEC_Assignment_Routing_Action__c = stageName
         ));
       }
       System.debug('FEC_DEBUG createAssignmentsOnRoute inserting ' + assignments.size() + ' assignments');
@@ -4758,7 +4758,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Team__c = teamName,
           FEC_Assignment_Remark__c = remark,
           FEC_User_Role__c = userRoleName,
-          Assignment_Routing_Action__c = stageName
+          FEC_Assignment_Routing_Action__c = stageName
         ));
         remarkList.add(remark);
       }

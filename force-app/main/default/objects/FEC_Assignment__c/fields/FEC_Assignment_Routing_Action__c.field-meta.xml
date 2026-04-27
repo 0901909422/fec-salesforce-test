@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_OwnerID__c</fullName>
-    <description>Trường lưu trữ giá trị user id, queue id là owner của assignment</description>
+    <fullName>FEC_Assignment_Routing_Action__c</fullName>
+    <description>Trường tạo ra để lưu trữ các Routing Action đã thực hiện trên level Assignment</description>
     <externalId>false</externalId>
-    <label>OwnerID</label>
+    <label>Assignment Routing Action</label>
     <length>255</length>
     <required>false</required>
     <trackHistory>false</trackHistory>

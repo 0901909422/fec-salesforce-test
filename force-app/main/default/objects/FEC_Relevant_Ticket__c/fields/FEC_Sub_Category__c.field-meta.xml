@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FE_Sub_Code_Relevant__c</fullName>
+    <fullName>FEC_Sub_Category__c</fullName>
+    <description>Thông tin lấy từ Case (nếu có)</description>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.FEC_SubCode__r.FEC_Name_VN__c</formula>
-    <label>Sub Code</label>
+    <label>Sub Category</label>
+    <length>255</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

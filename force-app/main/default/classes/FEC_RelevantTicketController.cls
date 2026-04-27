@@ -5,8 +5,8 @@ public with sharing class FEC_RelevantTicketController {
     public static List<FEC_Relevant_Ticket__c> getRelevantTickets(String caseId) {
         if (String.isBlank(caseId)) return new List<FEC_Relevant_Ticket__c>();
         return [
-            SELECT Id, FEC_Relevant_Ticket_ID__c, FE_Category_Relevant__c,
-                   FE_Sub_Category_Relevant__c, FE_Sub_Code_Relevant__c,
+            SELECT Id, FEC_Relevant_Ticket_ID__c, FEC_Category_Relevant__c,
+                   FEC_Sub_Category_Relevant__c, FEC_Sub_Code_Relevant__c,
                    FEC_User_Relevant__c, FEC_User_Role_Relevant__c,
                    FEC_Account_Contract_Number__c,
                    FEC_Related_To__r.FEC_ID_Search__c,
@@ -62,5 +62,4 @@ public with sharing class FEC_RelevantTicketController {
         }
         return results;
     }
-    
 }

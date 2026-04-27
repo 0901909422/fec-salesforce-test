@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Remark_Type__c</fullName>
+    <fullName>FEC_Remark_Type__c</fullName>
     <description>Trường giúp phân biệt Remark level Case và Assignment</description>
     <label>Remark Type</label>
     <required>false</required>
