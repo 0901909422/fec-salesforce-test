@@ -327,20 +327,19 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-    <c-fec_-modal
+  <c-fec_-modal
     header={header}
     onclose={handleCloseModal}
     if:true={isModalOpen}
   >
-
-   <div class="t-a-c"><p>{content}</p></div>
+    <div slot="content">
+      <div class="t-a-c"><p>{content}</p></div>
     </div>
     <div slot="footer">
-        <lightning-button
+      <lightning-button
         label="Không"
         onclick={handleCloseModal}
       ></lightning-button>
-
 
       <lightning-button
         variant="brand"
@@ -348,7 +347,6 @@
         onclick={handleRun}
         class="slds-m-left_x-small"
       ></lightning-button>
-
     </div>
   </c-fec_-modal>
 </template>
