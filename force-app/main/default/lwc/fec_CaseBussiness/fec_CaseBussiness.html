@@ -271,7 +271,7 @@
           </div>
             <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.queueLabel}</p>
-            <p class="value">{business.nextQueue.label}</p>
+            <p class="value">{routeToQueueDisplayLabel}</p>
             </div>
                 </template>
           <!-- tungnm37 thêm: Routing Assignment LWC nằm bên phải, cùng cột 6-of-12 với Team/Queue cũ -->
@@ -291,7 +291,7 @@
         <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
           <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.decisionLabel}</p>
-            <p class="value">{business.lastUser}</p>
+            <p class="value">{revertDecisionDisplayLabel}</p>
           </div>
         </div>
         <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
@@ -327,21 +327,28 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <!--Hieutt74: Update ngày 21/4/2026-->
-  <!--Assigment Routing Action-->
-  <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
-  </c-fec_-assignment-list>
-  <!--END: Hieutt74: Update ngày 21/4/2026-->
-  <c-fec_-modal header={header} onclose={handleCloseModal} if:true={isModalOpen}>
-    <div slot="content">
-      <div class="t-a-c">
-        <p>{content}</p>
-      </div>
+    <c-fec_-modal
+    header={header}
+    onclose={handleCloseModal}
+    if:true={isModalOpen}
+  >
+
+   <div class="t-a-c"><p>{content}</p></div>
     </div>
     <div slot="footer">
-      <lightning-button label="Không" onclick={handleCloseModal}></lightning-button>
+        <lightning-button
+        label="Không"
+        onclick={handleCloseModal}
+      ></lightning-button>
 
-      <lightning-button variant="brand" label="Có" onclick={handleRun} class="slds-m-left_x-small"></lightning-button>
+
+      <lightning-button
+        variant="brand"
+        label="Có"
+        onclick={handleRun}
+        class="slds-m-left_x-small"
+      ></lightning-button>
+
     </div>
   </c-fec_-modal>
 </template>

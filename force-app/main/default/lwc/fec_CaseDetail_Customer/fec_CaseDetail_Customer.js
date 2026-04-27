@@ -382,8 +382,19 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       if (submitted === false) {
         return;
       }
-
+      // PhuongNT add reset msg process action after submit success
+      caseBusinessEle.resetMsgProcessAction();
+      
       // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
+       await caseRemarksEle.createRemark(stageName);
+      await caseRemarksEle.submitRemark(stageName);
+      this.loadRemarkHistory();
+
+      if (
+        caseBusinessEle &&
+        typeof caseBusinessEle.refreshFileUploadCards === "function"
+      ) {
+        caseBusinessEle.refreshFileUploadCards();
       // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;
