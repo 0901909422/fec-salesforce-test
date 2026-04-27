@@ -1439,6 +1439,8 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       String blockCode = (String)params.get('blockCode');
+      String replacementFee = (String)params.get('replacementFee');
+      String last4Digit = (String)params.get('last4Digit');
 
       switch on selectedMethod {
         when ROUTE_TO {
@@ -1618,7 +1620,7 @@ public without sharing class FEC_CaseBusinessService {
           return FEC_PinReplacementController.pinReplacement(caseId, PIN_REISSUE);
         }
         when REPLACE_CARD {
-          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, '', '', null);
+          return FEC_CardReplacementAddressController.cardReplacement(caseId, REPLACE_CARD, blockCode, last4Digit, replacementFee);
         }
         when else {
           // throw new CaseBusinessServiceException('Method not found.');

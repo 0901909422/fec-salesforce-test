@@ -284,6 +284,7 @@ const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 const FIELD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
+const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
 
 const FIELD_READ_ONLY_UPDATE = [
   FIELD_NEW_BLOCK_CODE,
@@ -500,6 +501,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   currentBlockCode;
   currentCardStatus;
   cardReplacementReason;
+  newBlockCodeCardReplace;
+  cardReplacementFee;
+  last4Digit;
   isHiddenLwc = false;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
@@ -2826,6 +2830,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_REPLACE_CARD:
         params = {
           caseId: this.recordId,
+          blockCode: this.newBlockCodeCardReplace,
+          replacementFee: this.cardReplacementFee,
+          last4Digit: this.last4Digit,
         };
         break;
 
@@ -2891,6 +2898,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
 
           // thangtv send message re-isuse pin success to NOC component
+          // PhuongNT cmt change logic send message
+          // if (this.processActionMethod == ACTION_PIN_REISSUE) {
+          //     this.publishPinReissueResult("SUCCESS");
+          // }
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
               this.publishPinReissueResult("SUCCESS");
           }
@@ -2936,6 +2947,21 @@ export default class Fec_CaseBussiness extends LightningElement {
           // thangtv send message re-isuse pin error to NOC component
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
               this.publishPinReissueResult("ERROR",msgError);
+          }
+        }
+
+        // PhuongNT add publish message to NOC
+        if (isSuccess || !this.isProcessActionValid) {
+          // thangtv send message re-isuse pin success to NOC component
+          if (this.processActionMethod == ACTION_PIN_REISSUE) {
+            this.publishPinReissueResult("SUCCESS");
+          }
+          // PhuongNT send message call api to NOC component
+          if (this.processActionMethod == ACTION_BLOCK_CARD
+            || this.processActionMethod == ACTION_UNBLOCK_CARD
+            || this.processActionMethod == ACTION_REPLACE_CARD
+          ) {
+            this.publishProcessActionResult("SUCCESS");
           }
         }
 
@@ -3529,6 +3555,12 @@ export default class Fec_CaseBussiness extends LightningElement {
           obj.fieldlst.forEach(field => {
             if (field.apiName === FIELD_NEW_BLOCK_CODE) {
               this.newBlockCode = field.value;
+            } else if (field.apiName === FIELD_NEW_BLOCK_CODE_CARD_REPLACE) {
+              this.newBlockCodeCardReplace = field.value;
+            } else if (field.apiName === FIELD_CARD_REPLACEMENT_FEE) {
+              this.cardReplacementFee = field.value;
+            } else if (field.apiName === FIELD_LAST_4_DIGIT) {
+              this.last4Digit = field.value;
             }
           });
         });
