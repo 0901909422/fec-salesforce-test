@@ -343,6 +343,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
+      isAllValid = false;
+      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       // tungnm37 thêm: COF/GSR Stage 2 với manual items → không bắt buộc Case Remarks
       const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
@@ -386,7 +388,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       caseBusinessEle.resetMsgProcessAction();
       
       // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
-       await caseRemarksEle.createRemark(stageName);
+      await caseRemarksEle.createRemark(stageName);
       await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
 
