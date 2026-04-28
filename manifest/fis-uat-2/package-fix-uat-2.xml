@@ -121,6 +121,7 @@
 		<members>FEC_GetUnbilledTransactions</members>
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
+		<members>FEC_TerminationLoanController</members>
         <name>ApexClass</name>
     </types>
     <types>
