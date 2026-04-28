@@ -1,39 +1,17 @@
 public with sharing class FEC_AutoIntegratingPropertyMappingCtrl {
 
     @AuraEnabled
-    public static Map<String, Object> getRecords(Id recordId) {
-        // Resolve FEC_Unique_ID__c from the Additional Field record
-        String uniqueId = null;
-        if (recordId != null) {
-            String sObjName = recordId.getSObjectType().getDescribe().getName();
-            if (sObjName == 'FEC_MDM_Additional_Field__c') {
-                List<FEC_MDM_Additional_Field__c> fields = [
-                    SELECT FEC_Unique_ID__c FROM FEC_MDM_Additional_Field__c WHERE Id = :recordId LIMIT 1
-                ];
-                if (!fields.isEmpty()) uniqueId = fields[0].FEC_Unique_ID__c;
-            } else if (sObjName == 'FEC_Additional_Field__c') {
-                List<FEC_Additional_Field__c> fields = [
-                    SELECT FEC_Unique_ID__c FROM FEC_Additional_Field__c WHERE Id = :recordId LIMIT 1
-                ];
-                if (!fields.isEmpty()) uniqueId = fields[0].FEC_Unique_ID__c;
-            }
-        }
-
-        List<FEC_Auto_Intetgrating_Property_Mapping__c> records;
-        if (uniqueId != null) {
-            records = [
-                SELECT Id, Name, FEC_Is_Mandatory__c, FEC_Property_ID__c,
-                       FEC_Property_Name_VN__c, FEC_Property_Type__c,
-                       FEC_Soure_Property_ID__c, FEC_Status__c, FEC_Channel__c,
-                       FEC_Sync_Status__c, CreatedDate, LastModifiedDate
-                FROM FEC_Auto_Intetgrating_Property_Mapping__c
-                WHERE FEC_Soure_Property_ID__c = :uniqueId
-                  AND FEC_Is_Deleted__c = false
-                ORDER BY CreatedDate DESC
-            ];
-        } else {
-            records = new List<FEC_Auto_Intetgrating_Property_Mapping__c>();
-        }
+    public static Map<String, Object> getRecords(String sourePropertyId) {
+        List<FEC_Auto_Intetgrating_Property_Mapping__c> records = [
+            SELECT Id, Name, FEC_Is_Mandatory__c, FEC_Property_ID__c,
+                   FEC_Property_Name_VN__c, FEC_Property_Type__c,
+                   FEC_Soure_Property_ID__c, FEC_Status__c, FEC_Channel__c,
+                   FEC_Sync_Status__c, CreatedDate, LastModifiedDate
+            FROM FEC_Auto_Intetgrating_Property_Mapping__c
+            WHERE FEC_Soure_Property_ID__c = :sourePropertyId
+              AND FEC_Is_Deleted__c = false
+            ORDER BY CreatedDate DESC
+        ];
 
         Map<String, Object> result = new Map<String, Object>();
         result.put('records', records);
@@ -77,7 +55,7 @@ public with sharing class FEC_AutoIntegratingPropertyMappingCtrl {
         FEC_Auto_Intetgrating_Property_Mapping__c rec = [
             SELECT Id FROM FEC_Auto_Intetgrating_Property_Mapping__c WHERE Id = :recordId LIMIT 1
         ];
-        rec.FEC_Sync_Status__c = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_DELETED;
+        //rec.FEC_Sync_Status__c = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_DELETED;
         rec.FEC_Is_Deleted__c = true;
         update rec;
     }
@@ -105,31 +83,53 @@ public with sharing class FEC_AutoIntegratingPropertyMappingCtrl {
     }
 
     @AuraEnabled
-    public static FEC_Additional_Field__c getAdditionalFieldById(Id fieldId) {
-        String sObjName = fieldId.getSObjectType().getDescribe().getName();
-        if (sObjName == 'FEC_MDM_Additional_Field__c') {
-            List<FEC_MDM_Additional_Field__c> mdmFields = [
-                SELECT Id, Name, FEC_Field_Mandatory__c, FEC_Unique_ID__c, FEC_Type__c, FEC_Name_VN__c
-                FROM FEC_MDM_Additional_Field__c
-                WHERE Id = :fieldId
-                LIMIT 1
-            ];
-            if (mdmFields.isEmpty()) return null;
-            FEC_MDM_Additional_Field__c m = mdmFields[0];
-            FEC_Additional_Field__c result = new FEC_Additional_Field__c();
-            result.Name = m.Name;
-            result.FEC_Field_Mandatory__c = m.FEC_Field_Mandatory__c;
-            result.FEC_Unique_ID__c = m.FEC_Unique_ID__c;
-            result.FEC_Type__c = m.FEC_Type__c;
-            result.FEC_Name_VN__c = m.FEC_Name_VN__c;
-            return result;
-        }
+    public static FEC_Additional_Field__c getAdditionalFieldByUniqueID(String uniqueID) {
         List<FEC_Additional_Field__c> fields = [
             SELECT Id, Name, FEC_Field_Mandatory__c, FEC_Unique_ID__c, FEC_Type__c, FEC_Data_Type__c, FEC_Name_VN__c
             FROM FEC_Additional_Field__c
-            WHERE Id = :fieldId
+            WHERE FEC_Unique_ID__c = :uniqueID
             LIMIT 1
         ];
         return fields.isEmpty() ? null : fields[0];
+    }
+
+    @AuraEnabled
+    public static Map<String, Integer> autoSyncIntegratingPropertyMappingtoApply() {
+        String syncedStatus = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_SYNCED;
+        Set<String> pendingStatuses = new Set<String>{
+            FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_NEW,
+            FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_UPDATE
+        };
+
+        List<FEC_Auto_Intetgrating_Property_Mapping__c> records = [
+            SELECT Id, FEC_Property_ID__c, FEC_Sync_Status__c, FEC_Property_ID_Synced__c
+            FROM FEC_Auto_Intetgrating_Property_Mapping__c
+            WHERE FEC_Sync_Status__c IN :pendingStatuses
+              AND FEC_Status__c = true
+              AND FEC_Is_Deleted__c = false
+              AND FEC_Property_ID__c != null
+        ];
+
+        Integer totalToUpdate = records.size();
+        Integer totalUpdated = 0;
+
+        for (FEC_Auto_Intetgrating_Property_Mapping__c rec : records) {
+            rec.FEC_Sync_Status__c = syncedStatus;
+            rec.FEC_Property_ID_Synced__c = rec.FEC_Property_ID__c;
+        }
+
+        if (!records.isEmpty()) {
+            List<Database.SaveResult> results = Database.update(records, false);
+            for (Database.SaveResult sr : results) {
+                if (sr.isSuccess()) {
+                    totalUpdated++;
+                }
+            }
+        }
+
+        return new Map<String, Integer>{
+            'totalToUpdate' => totalToUpdate,
+            'totalUpdated' => totalUpdated
+        };
     }
 }

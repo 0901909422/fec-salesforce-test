@@ -828,6 +828,9 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             // =======================
             // 7. SFT Case
             // =======================
+            log('[processTKCase] isCreateSFTCase=' + isCreateSFTCase 
+                + ' | isUicCS=' + isUicCS 
+                + ' | isResultDetailCode=' + isResultDetailCode);
             if (isCreateSFTCase && isUicCS && isResultDetailCode) {
                 List<FEC_Integration_Case_Info__c> getFHCaseInfo = 
                 [ 
@@ -873,71 +876,66 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             log('Input caseId        = ' + caseId);
             log('Parent record Id   = ' + parentRec.Id);
             log('Channel            = ' + parentRec.FEC_Sys_Channel__c);
-
-            // ==========================================================
-            // 1. Build Interaction DTO from integration data
-            // ==========================================================
-            // FEC_CreateCaseHanlder.FEC_InteractionCaseDTO dto =
-            //     new FEC_CreateCaseHanlder.FEC_InteractionCaseDTO();
-
-            // // Required: integration channel
-            // dto.channel = parentRec.FEC_Sys_Channel__c;
-
-            // Optional customer & contract data
-            String phoneNumber = null;
-            String nationId = null;
-            String accountNumber = null;
-            String contractNumber = null;
-            for (FEC_Integration_Case_Info__c i : newInfos) {
-                if (i.FEC_Info_ID__c == caseField.PHONE_FIELD) {
-                    phoneNumber = i.FEC_Info_Value__c;
-                }
-                if (i.FEC_Info_ID__c == caseField.CONTRACT_NUMBER_FIELD) {
-                    contractNumber = i.FEC_Info_Value__c;
-                }
-                if (i.FEC_Info_ID__c == caseField.NATIONS_FIELD || i.FEC_Info_ID__c == caseField.NATION_FIELD) {
-                    nationId = i.FEC_Info_Value__c;
-                }
-                if (i.FEC_Info_ID__c == caseField.ACCOUNT_NUMBER_FIELD) {
-                    accountNumber = i.FEC_Info_Value__c;
-                }
+            // 2. Create SFT Case (standard Case + FEC_Additional_Info__c)
+            log('Creating SFT Case...');
+             List<FEC_Category__c> sftCategories = [
+                SELECT Id FROM FEC_Category__c
+                WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_CATEGORY_CODE
+                LIMIT 1
+            ];
+            String sftCaseCategory = null;
+            if (!sftCategories.isEmpty()) {
+                sftCaseCategory = sftCategories[0].Id;
             }
-            // dto.phoneNumber    = phoneNumber;
-            // dto.nationalId     = nationId;
-            // dto.accountNumber  = accountNumber;
-            // dto.contractNumber = contractNumber;
- 
+            String sftCaseSubCategory = null;
+            List<FEC_Sub_Category__c> sftSubCategories = [
+                SELECT Id FROM FEC_Sub_Category__c
+                WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_SUB_CATEGORY_CODE
+                LIMIT 1
+            ];
+            if (!sftSubCategories.isEmpty()) {
+                sftCaseSubCategory = sftSubCategories[0].Id;
+            }
+           List<FEC_Sub_Code__c> sftSubCodes = [
+                SELECT Id FROM FEC_Sub_Code__c
+                WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_SUB_CODE
+                LIMIT 1
+            ];
+             String sftCaseSubCode = null;
+            if (!sftSubCodes.isEmpty()) {
+                sftCaseSubCode = sftSubCodes[0].Id;
+            }
+            Case sftCase = createSFTCase(
+                parentRec.FEC_Service_Case_ID__c,
+                parentRec.FEC_Sys_Channel__c,
+                caseId,
+                sftCaseCategory,
+                sftCaseSubCategory,
+                sftCaseSubCode
+            );
 
-            //log('DTO prepared: ' + JSON.serializePretty(dto));
+            if (sftCase == null || sftCase.Id == null) {
+                log('Failed to create SFT Case');
+                return FEC_IntegrationFraudCaseUtil.errorResponseXml(
+                    'Failed to create SFT Case',
+                    FEC_FraudConstantCommon.CLIENT_ERROR
+                ).toXmlString();
+            }
 
-            // ==========================================================
-            // 2. Create Interaction Case
-            // ==========================================================
-            log('Calling createInteractionCase...');
-            //FEC_CreateCaseHanlder.FEC_InteractionCaseResponse response =
-            //FEC_CreateCaseHanlder.createInteractionCase(dto);
-            //Mockup response data
-            // FEC_CreateCaseHanlder.FEC_InteractionCaseResponse resultData = new FEC_CreateCaseHanlder.FEC_InteractionCaseResponse();
-            // resultData.caseNo = randomSFTCaseId();
-            log('Interaction Case created');
-            //log('New Case Id  = ' + resultData.caseNo);
-            //log('Case Link Id = ' + response.linkId);
-            //log('Case Number  = ' + response.caseNo);
+            String sftCaseId = sftCase.FEC_ID_Search__c;
+            log('SFT Case created: Id=' + sftCase.Id + ', FEC_ID_Search__c=' + sftCaseId);
 
-            // ==========================================================
-            // 3. Link new SFT Case back to integration record
-            // ==========================================================
-            //parentRec.FEC_Service_Case_ID__c = resultData.caseNo;
-            String caseSFT = randomSFTCaseId();
-            parentRec.FEC_Service_Case_ID__c = caseSFT;
-            update parentRec;
+            // Update parent integration record with SFT Case Id
+            if (String.isNotBlank(sftCaseId)) {
+                parentRec.FEC_Service_Case_ID__c = sftCaseId;
+                parentRec.FEC_Integrate_Case_ID__c = sftCase.Id;
+                update parentRec;
+            }
 
-            log('Parent integration record updated with Service Case Id');
-
+            log('Parent integration record updated with SFT Case Id: ' + sftCaseId);
             log('==================== processSFTCase SUCCESS ====================');
-           
             return FEC_IntegrationFraudCaseUtil.successResponseXml(
-                caseSFT, MSG_FRAUD_UPDATE_SUCCESS ).toXmlString();
+                sftCaseId, MSG_FRAUD_UPDATE_SUCCESS).toXmlString();
         }
         catch (Exception ex) {
             log('==================== processSFTCase ERROR ====================');
@@ -947,7 +945,6 @@ global with sharing class FEC_IntegrationFraudCaseApi {
                 ex.getMessage(),
                 FEC_FraudConstantCommon.CLIENT_ERROR
             ).toXmlString();
-            
         }
     }
 
@@ -972,6 +969,212 @@ global with sharing class FEC_IntegrationFraudCaseApi {
      *
      * @param msg The message to be written to the debug log.
      */
+    /**
+     * Creates a new SFT (Service Fraud Task) case record.
+     *
+     * Generates FEC_Case_ID__c in format: SFT-XXXXXXXXXXXXXXXX
+     * Sequence starts from 5000000 and auto-increments.
+     * Also creates a corresponding standard Case record in Salesforce.
+     *
+     * @param serviceCaseId  The service case reference ID (FEC_ID_Search__c from Case)
+     * @param channelId      The integration channel ID
+     * @param parentCaseId   The parent fraud case ID (FH case)
+     * @return The created FEC_Integration_Case__c record
+     */
+    public static Case createSFTCase(
+        String serviceCaseId,
+        String channelId,
+        String parentCaseId
+    ) {
+        return createSFTCase(serviceCaseId, channelId, parentCaseId, null, null, null);
+    }
+
+    /**
+     * Creates a new SFT (Service Fraud Task) case record with category info.
+     *
+     * @param serviceCaseId  The service case reference ID
+     * @param channelId      The integration channel ID
+     * @param parentCaseId   The parent fraud case ID
+     * @param category       The fraud category
+     * @param subCategory    The fraud sub-category
+     * @param subCode        The fraud sub-code
+     * @return The created Case record
+     */
+    public static Case createSFTCase(
+        String serviceCaseId,
+        String channelId,
+        String parentCaseId,
+        String category,
+        String subCategory,
+        String subCode
+    ) {
+        try {
+            String sftCaseId = generateSFTCaseId();
+            log('[createSFTCase] Generated SFT Case ID: ' + sftCaseId);
+
+            // 1. Create standard Case record with SFT_Case record type
+            Id recordTypeId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_FraudConstantCommon.CASE_SFT_RECORD_TYPE_DEV_NAME);
+            List<FEC_Product_Type__c> productTypes = [
+                SELECT Id 
+                FROM FEC_Product_Type__c 
+                WHERE FEC_Code__c = :FEC_FraudConstantCommon.CASE_SFT_REQUEST
+                LIMIT 1
+            ];
+            log('recordTypeId: '+ recordTypeId);
+
+            Case sfCase = new Case();
+            sfCase.Subject = 'SFT - ' + sftCaseId;
+            //sfCase.FEC_Channel__c = channelId;
+            sfCase.Status = FEC_FraudConstantCommon.INITIAL;
+            sfCase.FEC_ID_Search__c = sftCaseId;
+            sfCase.RecordTypeId = recordTypeId;
+            sfCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_ALL_REQUEST;
+            sfCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+            sfCase.FEC_Skip_Search_Internal_Case__c = true;
+            //sfCase.FEC_Case_Status__c = FEC_FraudConstantCommon.INITIAL;
+            //sfCase.FEC_Case_Created_On__c = Datetime.now();
+            //sfCase.FEC_Case_ID__c  = sftCaseId;
+            if (!productTypes.isEmpty()) {
+                sfCase.FEC_Product_Type__c = productTypes.get(0).Id;
+            }
+
+            // Set category: use passed value or default to SFT category
+            if (String.isNotBlank(category)) {
+                sfCase.FEC_Category__c = category;
+            } else {
+                List<FEC_Category__c> sftCategories = [
+                    SELECT Id FROM FEC_Category__c
+                    WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_CATEGORY_CODE
+                    LIMIT 1
+                ];
+                if (!sftCategories.isEmpty()) {
+                    sfCase.FEC_Category__c = sftCategories[0].Id;
+                }
+            }
+
+            // Set subcategory: use passed value or default to SFT subcategory
+            if (String.isNotBlank(subCategory)) {
+                sfCase.FEC_SubCategory__c = subCategory;
+            } else {
+                List<FEC_Sub_Category__c> sftSubCategories = [
+                    SELECT Id FROM FEC_Sub_Category__c
+                    WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_SUB_CATEGORY_CODE
+                    LIMIT 1
+                ];
+                if (!sftSubCategories.isEmpty()) {
+                    sfCase.FEC_SubCategory__c = sftSubCategories[0].Id;
+                }
+            }
+
+            if (String.isNotBlank(subCode)) {
+                sfCase.FEC_SubCode__c = subCode;
+            } else {
+                List<FEC_Sub_Code__c> sftSubCodes = [
+                    SELECT Id FROM FEC_Sub_Code__c
+                    WHERE FEC_Code__c = :FEC_FraudConstantCommon.SFT_SUB_CODE
+                    LIMIT 1
+                ];
+                if (!sftSubCodes.isEmpty()) {
+                    sfCase.FEC_SubCode__c = sftSubCodes[0].Id;
+                }
+            }
+            log('[createSFTCase] RecordTypeId=' + recordTypeId + ' | ProductType=' + (productTypes.isEmpty() ? 'NONE' : productTypes[0].Id));
+            log('[createSFTCase] Category=' + sfCase.FEC_Category__c + ' | SubCategory=' + sfCase.FEC_SubCategory__c + ' | SubCode=' + sfCase.FEC_SubCode__c);
+
+            // Determine owner: assign to current user if they created the parent FH case, otherwise assign to queue
+            Id currentUserId = UserInfo.getUserId();
+            Boolean assignToCurrentUser = false;
+
+            if (String.isNotBlank(parentCaseId)) {
+                 List<FEC_Integration_Case__c> parentCasesBU = [
+                    SELECT Id, FEC_Parent_CaseID__c
+                    FROM FEC_Integration_Case__c
+                    WHERE FEC_CaseID__c = :parentCaseId
+                    LIMIT 1
+                ];
+                if (!parentCasesBU.isEmpty() && String.isNotBlank(parentCasesBU[0].FEC_Parent_CaseID__c)) {
+                    
+                    List<FEC_Integration_Case__c> parentCases = [
+                        SELECT Id, CreatedById
+                        FROM FEC_Integration_Case__c
+                        WHERE FEC_CaseID__c = :parentCasesBU[0].FEC_Parent_CaseID__c
+                        LIMIT 1
+                    ];
+                    if (!parentCases.isEmpty() && parentCases[0].CreatedById == currentUserId) {
+                        assignToCurrentUser = true;
+                    }
+                }
+               
+
+            }
+
+            if (assignToCurrentUser) {
+                sfCase.OwnerId = currentUserId;
+                log('[createSFTCase] Assigned to current user: ' + currentUserId);
+            } else {
+                // Assign to SFT queue
+                List<Group> queues = [
+                    SELECT Id FROM Group
+                    WHERE Type = 'Queue'
+                    AND DeveloperName = :FEC_FraudConstantCommon.SFT_QUEUE_NAME
+                    LIMIT 1
+                ];
+                if (!queues.isEmpty()) {
+                    sfCase.OwnerId = queues[0].Id;
+                    log('[createSFTCase] Assigned to queue: ' + queues[0].Id);
+                } else {
+                    log('[createSFTCase] SFT queue not found, using default owner');
+                }
+            }
+
+            insert sfCase;
+            FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+                    FEC_Case__c = sfCase.Id
+                );
+            insert newInfo;
+            log('[createSFTCase] Created SF Case: ' + sfCase.Id);
+
+            return sfCase;
+        } catch (Exception ex) {
+            log('[createSFTCase] ERROR: ' + ex.getMessage());
+            log('[createSFTCase] Stack: ' + ex.getStackTraceString());
+            throw ex;
+        }
+    }
+
+    /**
+     * Generates the next SFT case ID in format: SFT-XXXXXXXXXXXXXXXX
+     * Starts from SFT-5000000, increments sequentially.
+     */
+    private static String generateSFTCaseId() {
+        Long startNumber = FEC_FraudConstantCommon.START_NUMBER_CASE_SFT;
+        String prefix = 'SFT-';
+
+        // Find the highest existing SFT case number
+        List<FEC_Integration_Case__c> lastCase = [
+            SELECT FEC_Service_Case_ID__c
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Service_Case_ID__c LIKE 'SFT-%'
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+
+        if (!lastCase.isEmpty()) {
+            String lastId = lastCase[0].FEC_Service_Case_ID__c;
+            String numberPart = lastId.replace(prefix, '');
+            try {
+                Long lastNumber = Long.valueOf(numberPart);
+                if (lastNumber >= startNumber) {
+                    startNumber = lastNumber + 1;
+                }
+            } catch (Exception e) {
+                log('[generateSFTCaseId] Could not parse last SFT number: ' + numberPart);
+            }
+        }
+
+        return prefix + String.valueOf(startNumber);
+    }
+
     private static void log(String msg) {
         if (DEBUG_LOG) {
             System.debug(LoggingLevel.INFO, msg);
