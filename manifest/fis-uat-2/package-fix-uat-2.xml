@@ -120,6 +120,8 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_GetUnbilledTransactions</members>
 		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_BlockCodeRoutingService</members>
+		<members>FEC_TerminationLoanController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -214,6 +216,7 @@
 		<members>Master_Data_Setting_Record_Page</members>
 		<members>Stage_Change_Record_Page</members>
 		<members>Stage_Screen_Record_Page</members>
+		<members>Nature_of_Cases_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -761,6 +764,7 @@
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_IsReverted__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<members>FEC_Additional_Info__c.FEC_IPP_Plan__c</members>
 		<members>FEC_Additional_Info__c.FEC_Test_Field_01__c</members>
@@ -775,6 +779,7 @@
 		<members>Case.FEC_Province_City__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
+		<members>FEC_Stage_Change__c.FEC_IsReverted__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
 		<members>Case.FEC_Created_by__c</members>
@@ -875,6 +880,9 @@
 		<members>Case.FEC_Is_Test_API__c</members>
 		<members>Case.FEC_Selected_Address__c</members>
 		<members>FEC_Address_Info__c.FEC_Case__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
