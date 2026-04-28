@@ -1,10 +1,7 @@
-/**
- * tungnm37: Service xÃ¡Â»Â­ lÃƒÂ½ COF/GSR Assignment, Routing Action History, Case Remarks
- * TÃƒÂ¡ch ra tÃ¡Â»Â« FEC_CaseBusinessService theo yÃƒÂªu cÃ¡ÂºÂ§u review
- */
+/** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
 public without sharing class FEC_CofGsrAssignmentService {
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Private helpers (duplicate tÃ¡Â»Â« FEC_CaseBusinessService Ã„â€˜Ã¡Â»Æ’ trÃƒÂ¡nh circular dependency) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Private helpers (duplicate tÃƒÂ¡Ã‚Â»Ã‚Â« FEC_CaseBusinessService Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ trÃƒÆ’Ã‚Â¡nh circular dependency) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
     private static String emailLocalPart(String email) {
         if (String.isBlank(email)) return null;
@@ -24,9 +21,9 @@ public without sharing class FEC_CofGsrAssignmentService {
         return fallbackName;
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Public API Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Public API ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
 
-    /** LÃ¡ÂºÂ¥y danh sÃƒÂ¡ch Team/Queue tÃ¡Â»Â« FEC_Team_Queue__c cho Manual Assignment */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getTeamQueueOptions() {
         List<FEC_Team_Queue__c> records = [
@@ -44,10 +41,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         return result;
     }
 
-    /**
-     * Query FEC_Routing_Assignment__c theo NOC + CustomerType
-     * natureOfCaseId cÃƒÂ³ thÃ¡Â»Æ’ lÃƒÂ  ID cÃ¡Â»Â§a FEC_Nature_of_Case__c hoÃ¡ÂºÂ·c FEC_Actual_Nature_of_Case__c
-     */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     @AuraEnabled
     public static List<Map<String, String>> getRoutingAssignments(String natureOfCaseId, String customerType) {
         if (String.isBlank(natureOfCaseId)) return new List<Map<String, String>>();
@@ -78,8 +72,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     LIMIT 20
                 ];
                 if (!siblingNocs.isEmpty()) {
-                    Set<Id> siblingIds = new Set<Id>();
-                    for (FEC_Nature_of_Case__c n : siblingNocs) siblingIds.add(n.Id);
+                    Set<Id> siblingIds = new Map<Id, FEC_Nature_of_Case__c>(siblingNocs).keySet();
                     records = [
                         SELECT FEC_Team__c, FEC_Queue__c, FEC_Customer_Type__c
                         FROM FEC_Routing_Assignment__c
@@ -108,8 +101,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     LIMIT 10
                 ];
                 if (!matchNocs.isEmpty()) {
-                    Set<Id> nocIds = new Set<Id>();
-                    for (FEC_Nature_of_Case__c n : matchNocs) nocIds.add(n.Id);
+                    Set<Id> nocIds = new Map<Id, FEC_Nature_of_Case__c>(matchNocs).keySet();
                     records = [
                         SELECT FEC_Team__c, FEC_Queue__c, FEC_Customer_Type__c
                         FROM FEC_Routing_Assignment__c
@@ -132,10 +124,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         return result;
     }
 
-    /**
-     * TÃ¡ÂºÂ¡o FEC_Assignment__c + FEC_Case_Remarks__c + FEC_Routing_Action_History__c
-     * khi Route to COF/GSR (Stage 1, khÃƒÂ´ng phÃ¡ÂºÂ£i CC/SP)
-     */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -245,20 +234,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG createAssignmentsOnRoute error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
-            try {
-                insert new FEC_Log__c(
-                    FEC_Function_Name__c = 'createAssignmentsOnRoute',
-                    FEC_Error_Message__c = e.getMessage(),
-                    FEC_Stack_Trace_String__c = e.getStackTraceString()
-                );
-            } catch (Exception logEx) {}
+            FEC_CommonUltils.logException('tungnm37', 'createAssignmentsOnRoute', e.getMessage(), e.getStackTraceString());
         }
     }
 
-    /**
-     * TÃ¡ÂºÂ¡o Assignment tÃ¡Â»Â« manual items (Stage 2 - Add Item)
-     * manualItemsJson: JSON array [{teamName, queueName, remark}]
-     */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     public static void createAssignmentsFromManualItems(
         String caseId, String manualItemsJson, User currentUser, String stageName
     ) {
@@ -350,20 +330,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
         } catch (Exception e) {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
-            try {
-                insert new FEC_Log__c(
-                    FEC_Function_Name__c = 'createAssignmentsFromManualItems',
-                    FEC_Error_Message__c = e.getMessage(),
-                    FEC_Stack_Trace_String__c = e.getStackTraceString()
-                );
-            } catch (Exception logEx) {}
+            FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
     }
 
-    /**
-     * Resolve natureOfCaseId (FEC_Actual_Nature_of_Case__c hoÃ¡ÂºÂ·c FEC_Nature_of_Case__c)
-     * Ã¢â€ â€™ trÃ¡ÂºÂ£ vÃ¡Â»Â Set<Id> tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ FEC_Nature_of_Case__c IDs cÃƒÂ³ Routing Assignment cÃƒÂ¹ng Sub_Code
-     */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     public static Set<Id> resolveToNocIds(String inputId) {
         Set<Id> result = new Set<Id>();
         if (String.isBlank(inputId)) return result;
@@ -406,8 +377,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             ];
             if (matchNocs.isEmpty()) return result;
 
-            Set<Id> allNocIds = new Set<Id>();
-            for (FEC_Nature_of_Case__c n : matchNocs) allNocIds.add(n.Id);
+            Set<Id> allNocIds = new Map<Id, FEC_Nature_of_Case__c>(matchNocs).keySet();
 
             for (AggregateResult ar : [
                 SELECT FEC_Nature_of_Cases__c nocId
@@ -426,10 +396,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         return result;
     }
 
-    /**
-     * tungnm37: Xử lý toàn bộ luồng ROUTE_TO_COF_GSR
-     * Được gọi từ FEC_CaseBusinessService.run() khi method = ROUTE_TO_COF_GSR_ACTION
-     */
+    /** tungnm37: Service xu ly COF/GSR Assignment, Routing Action History, Case Remarks. Tach ra tu FEC_CaseBusinessService theo yeu cau review */
     public static Object handleRouteToCofGsr(String caseId, Map<String, Object> params, String stageName) {
         String natureOfCaseId = (String) params.get('natureOfCaseId');
         String manualItemsJson = (String) params.get('manualItemsJson');
