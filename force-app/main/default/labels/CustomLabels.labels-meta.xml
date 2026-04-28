@@ -12597,4 +12597,322 @@
         <shortDescription>Type column label for fee/charge row on termination</shortDescription>
         <value>Interest on Overdue Interest</value>
     </labels>
+    <labels>
+        <fullName>FEC_Col_Team_User_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Col Team User Group</shortDescription>
+        <value>Team/User Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Uploaded_File_Contains_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Uploaded file contains errors</shortDescription>
+        <value>Uploaded file contains errors</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Records_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate records found</shortDescription>
+        <value>Duplicate records found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Mapping_Could_Not_Be_Found_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>This Mapping could not be found</shortDescription>
+        <value>This Mapping could not be found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Please_Select_A_Campaign_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Please select a Campaign</shortDescription>
+        <value>Please select a Campaign</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Saving_Configuration_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error saving</shortDescription>
+        <value>Error saving</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cannot_Read_File_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cannot read file</shortDescription>
+        <value>Cannot read file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Unable_To_Load_Records_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unable to load records</shortDescription>
+        <value>Unable to load records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CS_Campaign_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS Campaign Name</shortDescription>
+        <value>CS Campaign Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Genesys_Campaign</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Genesys Campaign</shortDescription>
+        <value>Genesys Campaign</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Mapping_Configuration_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Mapping Configuration Title</shortDescription>
+        <value>Campaign Mapping Configuration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Upload_Campaign_Data</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Upload Campaign Data</shortDescription>
+        <value>Upload Campaign Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Upload_Instruction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Upload Instruction</shortDescription>
+        <value>Choose an excel file with the template to upload details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_No_Template_Question</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Template Question</shortDescription>
+        <value>Don't have the template?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Campaign_Configuration</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Configuration Title</shortDescription>
+        <value>Campaign Configuration</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CS_Campaign_Mapping</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS Campaign Mapping</shortDescription>
+        <value>CS Campaign Mapping</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Placeholder_Select_Campaign</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select Campaign Placeholder</shortDescription>
+        <value>Select Campaign...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_No_Of_Inprogress_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Number of Inprogress records</shortDescription>
+        <value>No. of Inprogress records: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Download_Excel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Download Excel Button</shortDescription>
+        <value>Download Excel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_DB_Job_Announcement</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DB Job Time Announcement</shortDescription>
+        <value>DB job will be run between 6 AM - 6 PM only</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Enable_Schedule</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Enable Schedule</shortDescription>
+        <value>Enable Schedule</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Run_Weekend_Question</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Run Weekend Question</shortDescription>
+        <value>Do you want to run the campaign on weekends?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Saturday</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Saturday</shortDescription>
+        <value>Saturday</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Sunday</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sunday</shortDescription>
+        <value>Sunday</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Push_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Push Record Button</shortDescription>
+        <value>Push Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Header_Mismatch_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Header Mismatch Message</shortDescription>
+        <value>The uploaded file headers do not match the expected template. Please download the template and try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Empty_File_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty File Message</shortDescription>
+        <value>The uploaded file contains no data rows. Please add data and try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Record_Lifetime</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Record Lifetime</shortDescription>
+        <value>Record Lifetime</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Push_Records_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Push Records Modal Title</shortDescription>
+        <value>Push Records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Type_Of_Record</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type of Record Label</shortDescription>
+        <value>Type of Record</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Existing_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Existing Records Option</shortDescription>
+        <value>Existing records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Fresh_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fresh Records Option</shortDescription>
+        <value>Fresh records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Callback_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Call Back Records Option</shortDescription>
+        <value>Call back records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Btn_Complete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Complete Button</shortDescription>
+        <value>Complete</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Error_MaxJsonSize</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Error MaxJsonSize</shortDescription>
+        <value>maxJsonSize must be a positive integer</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Error_RecordNull</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Error Record Null</shortDescription>
+        <value>FEC_DataCampaign__c record cannot be null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_RowNull</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Row Null</shortDescription>
+        <value>Row {0}: Row data is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_CampaignIdMismatch</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Campaign ID Mismatch</shortDescription>
+        <value>Row {0}: Field ''Campaign ID'' - value does not match expected campaign code ''{1}''</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_FieldBlank</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Field Blank</shortDescription>
+        <value>Row {0}: Field ''{1}'' - must not be blank</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_FieldExceedsMaxLength</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Field Exceeds Max Length</shortDescription>
+        <value>Row {0}: Field ''{1}'' - exceeds max length of {2} characters</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_ProductLineInvalid</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation ProductLine Invalid</shortDescription>
+        <value>Row {0}: Field ''ProductLine'' - value ''{1}'' is invalid, only ''Loan'' or ''Card'' accepted</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_AtLeastOneRequired</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation At Least One Required</shortDescription>
+        <value>Row {0}: At least one of ''App ID'' or ''Account or Contract number'' must not be blank</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_InvalidNumber</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Invalid Number</shortDescription>
+        <value>Row {0}: Field ''{1}'' - value ''{2}'' is not a valid number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Validation_DuplicateKey</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Validation Duplicate Key</shortDescription>
+        <value>Row {0}: Duplicate composite key ''{1}''</value>
+    </labels>
 </CustomLabels>
