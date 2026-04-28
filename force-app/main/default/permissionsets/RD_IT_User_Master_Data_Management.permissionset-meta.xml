@@ -927,12 +927,22 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Nature_of_Case__c.FEC_Product_Type_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Product_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -953,6 +963,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Sub_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

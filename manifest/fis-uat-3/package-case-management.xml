@@ -47,6 +47,8 @@
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_CustomerAdditionalInfoConfig__c</members>
+		<members>FEC_CustomerAdditionalInfo__c</members>
 		<members>FEC_Routing_Assignment__c</members>
 		<members>FEC_Relevant_Ticket__c</members>
 		<name>CustomObject</name>
@@ -274,6 +276,8 @@
 		<members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
 		<members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
 		<members>RD_IT_User_Master_Data_Management</members>
+		<!-- Customer Data Management -->
+		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
     </types>
     
