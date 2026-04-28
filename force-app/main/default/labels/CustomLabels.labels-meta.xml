@@ -12915,4 +12915,12 @@
         <shortDescription>Campaign Validation Duplicate Key</shortDescription>
         <value>Row {0}: Duplicate composite key ''{1}''</value>
     </labels>
+    <labels>
+        <fullName>FEC_Saving_Error_Message</fullName>
+        <categories>Campaign</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Saving Error Message</shortDescription>
+        <value>Lỗi khi lưu dữ liệu: </value>
+    </labels>
 </CustomLabels>
