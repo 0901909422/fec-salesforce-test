@@ -23,12 +23,16 @@
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
+		<members>FEC_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
 		<members>FEC_CustomerAdditionalInfo__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
