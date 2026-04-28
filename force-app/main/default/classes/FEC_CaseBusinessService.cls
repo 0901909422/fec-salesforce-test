@@ -125,7 +125,7 @@ public without sharing class FEC_CaseBusinessService {
       List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
 
       //  ===================================== GET CASE ===============================
-      List<Case> caselst = [
+            List<Case> caselst = [
         SELECT
           Id,
           FEC_Product_Type__c,
@@ -788,6 +788,14 @@ public without sharing class FEC_CaseBusinessService {
             );
         }
       }
+
+      FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+        selectedCase,
+        result,
+        categoryId,
+        subCategoryId,
+        subCodeId
+      );
 
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
@@ -1734,6 +1742,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCategory__r.FEC_Code__c,
           FEC_SubCategory__r.Name,
           FEC_SubCode__r.FEC_Code__c,
+          FEC_Category__r.Name,
+          FEC_SubCategory__r.Name,
           FEC_SubCode__r.Name
         FROM Case
         WHERE Id = :caseId
@@ -1900,6 +1910,11 @@ public without sharing class FEC_CaseBusinessService {
       queueId = applyFrontlineMainQueueIfUserOwner(queueId);
       //thangtv: fallback Queue->latest history updated user mapping
       queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+
+      queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+        updatedCase,
+        queueId
+      );
 
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
