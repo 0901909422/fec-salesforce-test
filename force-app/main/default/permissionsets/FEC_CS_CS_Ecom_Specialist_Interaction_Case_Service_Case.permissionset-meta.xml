@@ -2292,7 +2292,7 @@
         <field>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
-<hasActivationRequired>false</hasActivationRequired>
+    <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Ecom Specialist - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
     <objectPermissions>
