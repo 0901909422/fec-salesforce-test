@@ -859,7 +859,6 @@
 		<members>FEC_Customer_History__c.FEC_Interest_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Pending_Penal_Interest__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Remark__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Receiver__c</members>
 		<members>FEC_Customer_History__c.FEC_Current_Balance_Principal__c</members>
 		<members>FEC_Customer_History__c.FEC_Area__c</members>
