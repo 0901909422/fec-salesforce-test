@@ -683,15 +683,53 @@ export default class Fec_CaseBussiness extends LightningElement {
   get showRouteTo() {
     return ACTION_ROUTE_TO === this._getCurrentActionCode();
   }
+
+  //Thangtv
+  // Hiển thị Queue ổn định cho Route To (hỗ trợ cả string và object {label,value})
+  get routeToQueueDisplayLabel() {
+    const queue = this.business?.nextQueue;
+    if (!queue) {
+      return this.business?.nextQueueLabel || STR_EMPTY;
+    }
+    if (typeof queue === "string") {
+      return queue;
+    }
+    if (typeof queue === "object") {
+      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
+    }
+    return STR_EMPTY;
+  }
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
-    const actionValue = action?.value;
-    const resolvedMethod = action?.code || actionValue;
+    const KNOWN_ROUTING_METHODS = [
+        ACTION_ROUTE_TO,
+        ACTION_REVERT,
+        ACTION_TRANSFER,
+        ACTION_UPDATE,
+        ACTION_ESCALATE,
+        ACTION_REJECT,
+        ACTION_RESOLVE,
+        ACTION_CANCEL,
+    ];
+    // lightning-select value = Apex Action.value = custom label nếu có (vd "Route to"),
+    // trong khi Action.code luôn là FEC_Code__c ("Revert", "Route to", ...).
+    // Query Stage Change / run() phải theo code (nút thật), không theo label hiển thị.
+    const codeRaw = action?.code != null ? String(action.code).trim() : "";
+    const valueRaw = action?.value != null ? String(action.value).trim() : "";
+    let resolvedMethod;
+    if (codeRaw && KNOWN_ROUTING_METHODS.includes(codeRaw)) {
+      resolvedMethod = codeRaw;
+    } else if (valueRaw && KNOWN_ROUTING_METHODS.includes(valueRaw)) {
+      resolvedMethod = valueRaw;
+    } else {
+      resolvedMethod = valueRaw || codeRaw;
+    }
     console.log(
       "FEC_DEBUG _resolveRoutingMethodByAction",
       JSON.stringify({
         actionId: action?.id,
         actionValue: action?.value,
+        actionCode: action?.code,
         actionLabel: action?.label,
         customActionLabel,
         resolvedMethod,
@@ -701,10 +739,20 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   get showRevert() {
-    if (ACTION_REVERT !== this.actionValue) return false;
-    // Nếu action Revert được đặt custom label "Route to" thì showRouteTo đã xử lý — không hiện section Revert
+    // Ưu tiên code thật của action: code='Revert' luôn hiển thị decision logic của Revert
+    // kể cả khi custom label/value hiển thị là "Route to".
+    return ACTION_REVERT === this._getCurrentActionCode();
+  }
+
+  //thangtv
+  get revertDecisionDisplayLabel() {
     const action = this._findRoutingActionByValueOrCode(this.actionValue);
-    return action == null || action.label?.trim() !== ACTION_ROUTE_TO;
+    const isRouteToLabelOnRevertCode =
+      action?.code === ACTION_REVERT && action?.value === ACTION_ROUTE_TO;
+    if (isRouteToLabelOnRevertCode) {
+      return this.business?.lastUserForRouteToLabel || this.business?.lastUser || STR_EMPTY;
+    }
+    return this.business?.lastUser || STR_EMPTY;
   }
 
   get showTransfer() {
@@ -2305,7 +2353,15 @@ export default class Fec_CaseBussiness extends LightningElement {
           };
           break;
         case ACTION_REVERT:
-          params = { ...params, params: { caseId: this.recordId, actionId: actionId } };
+          params = {
+            ...params,
+            params: {
+              caseId: this.recordId,
+              actionId: actionId,
+              //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
+              routingActionValue: selectedAction?.value ?? "",
+            },
+          };
           break;
         case ACTION_TRANSFER:
           params = {
