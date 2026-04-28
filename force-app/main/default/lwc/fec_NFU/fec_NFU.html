@@ -7,15 +7,15 @@
         </template>
 
         <template if:false={isLoading}>
-            <!-- Cùng khung slds-accordion cho lỗi và có dữ liệu — khớp lề với fec_CollectionInteractions -->
+            <!-- Lỗi / không có data -->
             <template if:false={nfuData}>
                 <div class="slds-accordion">
-                    <section class="slds-accordion__section slds-is-open">
-                        <div class="slds-accordion__summary">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
-                                        icon-name="utility:chevrondown"
+                                        icon-name={iconName}
                                         size="x-small"
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
@@ -31,14 +31,15 @@
                 </div>
             </template>
 
+            <!-- Có data -->
             <template if:true={nfuData}>
                 <div class="slds-accordion">
-                    <section class="slds-accordion__section slds-is-open">
-                        <div class="slds-accordion__summary">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
-                                        icon-name="utility:chevrondown"
+                                        icon-name={iconName}
                                         size="x-small"
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
