@@ -537,18 +537,17 @@ public with sharing class FEC_IntegrationMappingController{
         List<PropertyDTO> result = new List<PropertyDTO>();
          //Choose correct name field
         Boolean isVietnamese = userLang != null && userLang.startsWith(FEC_FraudConstantCommon.LANG_VI);
-
+        String syncedStatus = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_SYNCED;
         /*
          * Step 1: Query FEC_Map_A_Properties_To_Master_Data_Item__c
          *   by channel (via FEC_Channel_ID__c) + Status + Sync Status
          *   Build map: FEC_Additional_Field__r.FEC_Unique_ID__c → FEC_Additional_Field__c (Id)
          */
         Map<String, String> additionalFieldMap = new Map<String, String>();
-        if (String.isNotBlank(channelCode)) {
-            String syncedStatus = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_SYNCED;
+        if (String.isNotBlank(channelCode)) {           
             for (FEC_Map_A_Properties_To_Master_Data_Item__c mapItem : [
-                SELECT FEC_Additional_Field__c,
-                       FEC_Additional_Field__r.FEC_Unique_ID__c
+                SELECT Id,FEC_Additional_Field_Unique_ID__c,
+                FEC_Additional_Field_Unique_ID_Synced__c
                 FROM FEC_Map_A_Properties_To_Master_Data_Item__c
                 WHERE FEC_Status__c = true
                   AND FEC_Is_Deleted__c = false
@@ -556,7 +555,7 @@ public with sharing class FEC_IntegrationMappingController{
                   AND FEC_Sync_Status__c = :syncedStatus
                   AND FEC_Channel__r.FEC_Channel_ID__c = :channelCode
             ]) {
-                String uniqueId = mapItem.FEC_Additional_Field__r.FEC_Unique_ID__c;
+                String uniqueId = mapItem.FEC_Additional_Field_Unique_ID_Synced__c;
                 if (String.isNotBlank(uniqueId) && !additionalFieldMap.containsKey(uniqueId)) {
                     additionalFieldMap.put(uniqueId, uniqueId);
                 }
@@ -564,6 +563,27 @@ public with sharing class FEC_IntegrationMappingController{
         }
 
         log('[loadAdditionalProperties] additionalFieldMap size = ' + additionalFieldMap.size());
+
+        // Step 1.5: Join additionalFieldMap to FEC_Auto_Intetgrating_Property_Mapping__c
+        // via FEC_Soure_Property_ID__c to get FEC_Property_ID_Synced__c
+        Map<String, String> autoIntegratingMap = new Map<String, String>();
+        if (!additionalFieldMap.isEmpty() && String.isNotBlank(channelCode)) {
+            Set<String> additionalFieldKeys = additionalFieldMap.keySet();
+            for (FEC_Auto_Intetgrating_Property_Mapping__c autoMap : [
+                SELECT Id, FEC_Property_ID_Synced__c, FEC_Soure_Property_ID__c
+                FROM FEC_Auto_Intetgrating_Property_Mapping__c
+                WHERE FEC_Soure_Property_ID__c IN :additionalFieldKeys
+                  AND FEC_Status__c = true
+                  AND FEC_Is_Deleted__c = false
+                  AND FEC_Sync_Status__c = :syncedStatus
+                  AND FEC_Channel__r.FEC_Channel_ID__c = :channelCode
+            ]) {
+                if (String.isNotBlank(autoMap.FEC_Property_ID_Synced__c) && String.isNotBlank(autoMap.FEC_Soure_Property_ID__c)) {
+                    autoIntegratingMap.put(autoMap.FEC_Property_ID_Synced__c, autoMap.FEC_Soure_Property_ID__c);
+                }
+            }
+        }
+        log('[loadAdditionalProperties] autoIntegratingMap size = ' + autoIntegratingMap.size());
 
         /*
          * Step 2: Query AdditionalProperty records
@@ -604,9 +624,9 @@ public with sharing class FEC_IntegrationMappingController{
             dto.csmProperty = null;
             dto.csmPropertyType = null;
 
-            // Populate autoMappingPropertySource if FEC_Source_Id__c matches a synced mapping
-            if (additionalFieldMap.containsKey(rec.FEC_Source_Id__c)) {
-                dto.autoMappingPropertySource = additionalFieldMap.get(rec.FEC_Source_Id__c);
+            // Populate autoMappingPropertySource from autoIntegratingMap (FEC_Property_ID_Synced__c match)
+            if (autoIntegratingMap.containsKey(rec.FEC_Source_Id__c)) {
+                dto.autoMappingPropertySource = autoIntegratingMap.get(rec.FEC_Source_Id__c);
                 dto.autoMapping = true;
             } else {
                 dto.autoMappingPropertySource = null;

@@ -1024,6 +1024,7 @@ global with sharing class FEC_IntegrationFraudCaseApi {
 
             Case sfCase = new Case();
             sfCase.Subject = 'SFT - ' + sftCaseId;
+            //sfCase.FEC_Channel__c = channelId;
             sfCase.Status = FEC_FraudConstantCommon.INITIAL;
             sfCase.FEC_ID_Search__c = sftCaseId;
             sfCase.RecordTypeId = recordTypeId;
@@ -1079,6 +1080,53 @@ global with sharing class FEC_IntegrationFraudCaseApi {
             }
             log('[createSFTCase] RecordTypeId=' + recordTypeId + ' | ProductType=' + (productTypes.isEmpty() ? 'NONE' : productTypes[0].Id));
             log('[createSFTCase] Category=' + sfCase.FEC_Category__c + ' | SubCategory=' + sfCase.FEC_SubCategory__c + ' | SubCode=' + sfCase.FEC_SubCode__c);
+
+            // Determine owner: assign to current user if they created the parent FH case, otherwise assign to queue
+            Id currentUserId = UserInfo.getUserId();
+            Boolean assignToCurrentUser = false;
+
+            if (String.isNotBlank(parentCaseId)) {
+                 List<FEC_Integration_Case__c> parentCasesBU = [
+                    SELECT Id, FEC_Parent_CaseID__c
+                    FROM FEC_Integration_Case__c
+                    WHERE FEC_CaseID__c = :parentCaseId
+                    LIMIT 1
+                ];
+                if (!parentCasesBU.isEmpty() && String.isNotBlank(parentCasesBU[0].FEC_Parent_CaseID__c)) {
+                    
+                    List<FEC_Integration_Case__c> parentCases = [
+                        SELECT Id, CreatedById
+                        FROM FEC_Integration_Case__c
+                        WHERE FEC_CaseID__c = :parentCasesBU[0].FEC_Parent_CaseID__c
+                        LIMIT 1
+                    ];
+                    if (!parentCases.isEmpty() && parentCases[0].CreatedById == currentUserId) {
+                        assignToCurrentUser = true;
+                    }
+                }
+               
+
+            }
+
+            if (assignToCurrentUser) {
+                sfCase.OwnerId = currentUserId;
+                log('[createSFTCase] Assigned to current user: ' + currentUserId);
+            } else {
+                // Assign to SFT queue
+                List<Group> queues = [
+                    SELECT Id FROM Group
+                    WHERE Type = 'Queue'
+                    AND DeveloperName = :FEC_FraudConstantCommon.SFT_QUEUE_NAME
+                    LIMIT 1
+                ];
+                if (!queues.isEmpty()) {
+                    sfCase.OwnerId = queues[0].Id;
+                    log('[createSFTCase] Assigned to queue: ' + queues[0].Id);
+                } else {
+                    log('[createSFTCase] SFT queue not found, using default owner');
+                }
+            }
+
             insert sfCase;
             FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
                     FEC_Case__c = sfCase.Id

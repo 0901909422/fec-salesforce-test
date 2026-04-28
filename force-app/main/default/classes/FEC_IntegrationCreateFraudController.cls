@@ -336,7 +336,9 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             List<FEC_User_Type__c> existUserType = [
                 SELECT FEC_Code__c
                 FROM FEC_User_Type__c
-                WHERE Id = :mapping.FEC_Int_User_Type_Id__c
+                WHERE 
+                    Id = :mapping.FEC_Int_User_Type_Id__c
+                    AND FEC_Status__c = true
                 LIMIT 1
             ];
 
@@ -744,6 +746,75 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
             log('ERROR submitCreateFraudCase: ' + ex.getMessage());
 
+            result.success = false;
+            result.responseCode = 0;
+            result.message = ex.getMessage();
+            return result;
+        }
+    }
+
+    /**
+     * Creates a fraud case locally without calling the external SOAP service.
+     * Same as submitCreateFraudCase but skips the callout.
+     */
+    @AuraEnabled
+    public static FEC_IntegrationFraudCaseUtil.FraudCaseResponse 
+    submitWithoutCreateFraudCase(Map<String,Object> payload) {
+
+        FEC_IntegrationFraudCaseUtil.FraudCaseResponse result =
+            new FEC_IntegrationFraudCaseUtil.FraudCaseResponse();
+
+        try {
+            log('========= SUBMIT WITHOUT CREATE FRAUD CASE START =========');
+            log('RAW PAYLOAD: ' + JSON.serializePretty(payload));
+
+            // 1. Extract payload
+            FEC_IntegrationFraudCaseUtil.FraudCaseRequestWrapper reqWrapper = FEC_IntegrationFraudCaseUtil.extractPayload(payload);
+
+            // 2. Build request objects (for local upsert only, no SOAP call)
+            FEC_IntegrationSoapFraudcaseService.SysType sys =
+                FEC_IntegrationFraudCaseUtil.buildSys(reqWrapper);
+
+            FEC_IntegrationSoapFraudcaseService.CustomerInfo_element cust =
+                FEC_IntegrationFraudCaseUtil.buildCustomer(reqWrapper);
+
+            FEC_IntegrationSoapFraudcaseService.RequestInfoCustom_element reqOriginal =
+                FEC_IntegrationFraudCaseUtil.buildRequestOriginal(reqWrapper);
+
+            FEC_IntegrationSoapFraudcaseService.CreatorInfoType creator =
+                FEC_IntegrationFraudCaseUtil.buildCreator(reqWrapper);
+
+            // 3. Generate a local case ID if not provided
+            if (String.isBlank(reqWrapper.caseId)) {
+                reqWrapper.caseId = 'LOCAL-' + FEC_IntegrationFraudCaseUtil.generateUUID().substring(0, 8);
+            }
+
+            String caseDataId = reqWrapper.caseDataId;
+
+            // 4. Upsert locally (skip SOAP call)
+            Boolean isUpsert = upsertFraudCaseService(
+                reqWrapper.serviceCaseId,
+                reqWrapper.channelCode,
+                null,
+                reqWrapper.caseId,
+                INIT_CASE_STATUS,
+                sys,
+                reqOriginal,
+                cust,
+                creator,
+                caseDataId
+            );
+
+            result.success = isUpsert;
+            result.responseCode = isUpsert ? 1 : 0;
+            result.message = isUpsert ? MSG_CREATE_SUCCESS : MSG_CREATE_FAILED;
+            result.fraudCaseId = reqWrapper.caseId;
+
+            log('========= SUBMIT WITHOUT CREATE FRAUD CASE END =========');
+            return result;
+
+        } catch (Exception ex) {
+            log('ERROR submitWithoutCreateFraudCase: ' + ex.getMessage());
             result.success = false;
             result.responseCode = 0;
             result.message = ex.getMessage();
@@ -1569,13 +1640,18 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
             return result;
         }
 
-        // Step 2: Collect all FEC_Auto_Mapping_Property_Source__c values
+        // Step 2: Collect all FEC_Auto_Mapping_Property_Source__c and FEC_CSM_Property__c values (deduplicated by Set)
         Set<String> autoMappingSources = new Set<String>();
         for (FEC_Data_Integration_Mapping_Info__c info : mappingInfos) {
             if (String.isNotBlank(info.FEC_Auto_Mapping_Property_Source__c) && !autoMappingSources.contains(info.FEC_Auto_Mapping_Property_Source__c)) {
                 autoMappingSources.add(info.FEC_Auto_Mapping_Property_Source__c);
             }
+            if (String.isNotBlank(info.FEC_CSM_Property__c) && !autoMappingSources.contains(info.FEC_CSM_Property__c)) {
+                autoMappingSources.add(info.FEC_CSM_Property__c);
+            }
         }
+
+        log('[getValueIntegrationMappingInfo] autoMappingSources size=' + autoMappingSources.size() + ' values=' + autoMappingSources);
 
         if (autoMappingSources.isEmpty()) {
             return result;
@@ -1589,7 +1665,7 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
         for (FEC_Auto_Intetgrating_Property_Mapping__c autoMap : [
             SELECT FEC_Property_ID_Synced__c, FEC_Soure_Property_ID__c
             FROM FEC_Auto_Intetgrating_Property_Mapping__c
-            WHERE FEC_Property_ID_Synced__c IN :autoMappingSources
+            WHERE FEC_Soure_Property_ID__c IN :autoMappingSources
               AND FEC_Is_Deleted__c = false
               AND FEC_Status__c = true
               AND FEC_Sync_Status__c = :syncedStatus
@@ -1604,11 +1680,11 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         // Step 3.5: Join FEC_Soure_Property_ID__c to FEC_Additional_Field__c to get FEC_Unique_ID__c
         Map<String, String> sourceIdToUniqueIdMap = new Map<String, String>();
-        if (!sourcePropertyIds.isEmpty()) {
+        if (!autoMappingSources.isEmpty()) {
             for (FEC_Additional_Field__c field : [
                 SELECT Id, FEC_Unique_ID__c
                 FROM FEC_Additional_Field__c
-                WHERE FEC_Unique_ID__c IN :sourcePropertyIds
+                WHERE FEC_Unique_ID__c IN :autoMappingSources
                 AND FEC_Field_Status__c = true
             ]) {
                 if (String.isNotBlank(field.FEC_Unique_ID__c)) {
@@ -1616,25 +1692,29 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
                 }
             }
         }
+        log('[getValueIntegrationMappingInfo] sourceIdToUniqueIdMap size=' + sourceIdToUniqueIdMap.size() + ' values=' + sourceIdToUniqueIdMap);
         //Step 4: Need get Property_Reference__c from FEC_Master_Data_Setting__c via FEC_Additional_Field__c
         Map<String, String> sourceReferenceIdToUniqueIdMap = new Map<String, String>();
         if (!sourceIdToUniqueIdMap.isEmpty()) {
+            Set<String> uniqueIdValues = new Set<String>(sourceIdToUniqueIdMap.values());
+            log('[getValueIntegrationMappingInfo] uniqueIdValues values=' + uniqueIdValues);
             for (FEC_Master_Data_Setting__c field : [
-                SELECT Id, FEC_Additional_Field__c, Property_Reference__c
+                SELECT Id, FEC_Additional_Field__c,FEC_Field_API_Name__c, Property_Reference__c
                 FROM FEC_Master_Data_Setting__c
-                WHERE FEC_Additional_Field__c IN :sourceIdToUniqueIdMap.keySet()
+                WHERE (FEC_Additional_Field__c IN :sourceIdToUniqueIdMap.keySet()
+                    OR FEC_Field_API_Name__c IN :uniqueIdValues)
                 AND FEC_Field_Status__c = true
             ]) {
                 if (String.isNotBlank(field.Property_Reference__c)) {
                     // Map: FEC_Unique_ID__c → Property_Reference__c
-                    String uniqueId = sourceIdToUniqueIdMap.get(field.FEC_Additional_Field__c);
+                    String uniqueId = field.FEC_Field_API_Name__c;
                     if (String.isNotBlank(uniqueId)) {
                         sourceReferenceIdToUniqueIdMap.put(uniqueId, field.Property_Reference__c);
                     }
                 }
             }
         }
-
+        log('[getValueIntegrationMappingInfo] sourceReferenceIdToUniqueIdMap size=' + sourceReferenceIdToUniqueIdMap.size() + ' values=' + sourceReferenceIdToUniqueIdMap);
         // Step 5: Load all field values from Case and FEC_Additional_Info__c
         Map<String, Object> caseFieldValues = new Map<String, Object>();
         if (String.isNotBlank(caseDataId)) {
@@ -1689,14 +1769,26 @@ private static FraudPropertyDTO getDataIntegrationMapping(String integrationMapp
 
         // Step 6: Build result map: integratingProperty → actual field value (resolved via referenceId)
         for (FEC_Data_Integration_Mapping_Info__c info : mappingInfos) {
+            String integratingProperty = info.FEC_Integrating_Property__c;
             String autoSource = info.FEC_Auto_Mapping_Property_Source__c;
-            if (String.isNotBlank(autoSource) && propertyToSourceMap.containsKey(autoSource)) {
-                String sourceUniqueId = propertyToSourceMap.get(autoSource);
-                String referenceId = sourceReferenceIdToUniqueIdMap.get(sourceUniqueId);
+            String csmProperty = info.FEC_CSM_Property__c;
+
+            // Try auto mapping source first
+            if (String.isNotBlank(autoSource)) {
+                String referenceId = sourceReferenceIdToUniqueIdMap.get(autoSource);
                 if (String.isNotBlank(referenceId)) {
-                    // referenceId is a field API name (e.g. FEC_Customer_Phone_Number__c)
                     Object fieldValue = caseFieldValues.get(referenceId);
-                    result.put(info.FEC_Integrating_Property__c, fieldValue != null ? String.valueOf(fieldValue) : null);
+                    result.put(integratingProperty, fieldValue != null ? String.valueOf(fieldValue) : null);
+                    continue;
+                }
+            }
+
+            // Fallback to CSM property
+            if (String.isNotBlank(csmProperty)) {
+                String referenceId = sourceReferenceIdToUniqueIdMap.get(csmProperty);
+                if (String.isNotBlank(referenceId)) {
+                    Object fieldValue = caseFieldValues.get(referenceId);
+                    result.put(integratingProperty, fieldValue != null ? String.valueOf(fieldValue) : null);
                 }
             }
         }

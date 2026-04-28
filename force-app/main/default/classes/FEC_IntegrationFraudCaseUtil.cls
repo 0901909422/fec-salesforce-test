@@ -254,6 +254,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         @AuraEnabled public List<RemarksInfo> remarksInfo;          // Case/Fraud remarks history
         @AuraEnabled public List<ServiceCasesInfo> serviceCasesInfo;// Related service case records
         @AuraEnabled public List<NotificationInfo> notificationInfo;// Notification tracking records
+        @AuraEnabled public Boolean isAssignedToCurrentUser;        // Whether case is assigned to current user
+        @AuraEnabled public String assignedToName;                  // Owner name (User or Queue)
     }
     /**
      * DTO representing customer profile information

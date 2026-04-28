@@ -33,9 +33,28 @@ public with sharing class FEC_ServiceFraudTaskCaseController {
         if (serviceCase == null) {
             return dto;
         }
+       
+    
+        dto.customer = getCustomerData(caseId);
     
         populateCaseAndTask(dto, serviceCase, integrateCaseId);
         populateFraudHierarchy(dto, serviceCase);
+
+        // Check if case is assigned to current user and get owner name
+        if (String.isNotBlank(caseId)) {
+            List<Case> ownerCheck = [SELECT OwnerId, Owner.Name, Owner.Type FROM Case WHERE Id = :caseId LIMIT 1];
+            if (!ownerCheck.isEmpty()) {
+                Case c = ownerCheck[0];
+                dto.isAssignedToCurrentUser = c.OwnerId == UserInfo.getUserId();
+                if (c.OwnerId.getSObjectType() == User.SObjectType) {
+                    dto.assignedToName = c.Owner.Name;
+                } else {
+                    // Owner is a Queue
+                    List<Group> queues = [SELECT Name FROM Group WHERE Id = :c.OwnerId LIMIT 1];
+                    dto.assignedToName = !queues.isEmpty() ? queues[0].Name : c.Owner.Name;
+                }
+            }
+        }
     
         return dto;
     }
@@ -260,12 +279,50 @@ public with sharing class FEC_ServiceFraudTaskCaseController {
 
         return remarks;
     }
+    public static FEC_IntegrationFraudCaseUtil.CustomerInfo getCustomerData(String caseId) {
+        FEC_IntegrationFraudCaseUtil.CustomerInfo cust = new FEC_IntegrationFraudCaseUtil.CustomerInfo();
+
+        if (String.isBlank(caseId)) return cust;
+
+        List<Case> cases = [
+            SELECT Id,
+                   FEC_Phone_Number__c,
+                   FEC_National_ID_Passport_ID__c,
+                   FEC_Contract_Number__c,
+                   FEC_Account_Number__c,
+                   FEC_Application_ID__c,
+                   FEC_Product_Type__r.Name,
+                   FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+
+        if (!cases.isEmpty()) {
+            Case c = cases[0];
+            cust.customerName = c.FEC_Account_or_Contract__r != null
+                ? c.FEC_Account_or_Contract__r.FEC_Customer_Name__c
+                : null;
+            cust.contractNumber = c.FEC_Contract_Number__c != null
+                ? c.FEC_Contract_Number__c
+                : (c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null);
+            cust.nationalId = c.FEC_National_ID_Passport_ID__c;
+            cust.primaryPhone = c.FEC_Phone_Number__c;
+            cust.applicationId = c.FEC_Application_ID__c;
+            cust.accountNumber = c.FEC_Account_Number__c != null
+                ? c.FEC_Account_Number__c
+                : (c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null);
+            cust.productType = c.FEC_Product_Type__r != null ? c.FEC_Product_Type__r.Name : null;
+        }
+
+        return cust;
+    }
     private static FEC_IntegrationFraudCaseUtil.ServiceFraudTaskDTO initBaseDTO(String caseId) {
 
         FEC_IntegrationFraudCaseUtil.ServiceFraudTaskDTO dto =
             new FEC_IntegrationFraudCaseUtil.ServiceFraudTaskDTO();
-    
-        dto.customer = FEC_FraudCaseMockData.getCustomerMockData();
         dto.fraud = new FEC_IntegrationFraudCaseUtil.FraudInfo();
         dto.task = new FEC_IntegrationFraudCaseUtil.TaskInfo();
         dto.caseInfo = new FEC_IntegrationFraudCaseUtil.CaseInfo();
@@ -604,6 +661,13 @@ public with sharing class FEC_ServiceFraudTaskCaseController {
      *
      * @param msg The message to be written to the debug log.
      */
+    @AuraEnabled
+    public static void assignCaseToMe(String caseId) {
+        if (String.isBlank(caseId)) return;
+        Case c = new Case(Id = caseId, OwnerId = UserInfo.getUserId());
+        update c;
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<FEC_Decison_Reason__c> getCancelReasons() {
         return [

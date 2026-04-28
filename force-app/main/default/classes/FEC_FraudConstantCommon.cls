@@ -294,6 +294,9 @@ public with sharing class FEC_FraudConstantCommon {
 	// Case Status for SFT decision
 	public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
 	public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+
+	// SFT Queue
+	public static final String SFT_QUEUE_NAME = 'FEC_Handling';
 	
 	
 	 // SEC Investigating

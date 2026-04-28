@@ -6,6 +6,7 @@ import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_Integrati
 import getIntegrationFieldTypes 
     from '@salesforce/apex/FEC_IntegrationCreateFraudController.getIntegrationFieldTypes';
 import submitCreateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCreateFraudCase';
+import submitWithoutCreateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitWithoutCreateFraudCase';
 import submitUpdateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitUpdateFraudCase';
 import submitCancelFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCancelFraudCase';
 
@@ -78,6 +79,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     createActionType = 'create';
     updateActionType = 'update';
     cancelActionType = 'cancel';
+    createWithoutCalloutType = 'createWithoutCallout';
 
 
     subCategoriesAll = [];    
@@ -374,112 +376,109 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         }
     }
     
-    async onSubmit() {
-
-        if (this.isCreateSubmitting) return; // extra protection against double click   
-        this.isCreateSubmitting = true;   
-        this.loading = true;  
-        //Validate standard lightning inputs
+    validateForm() {
         const allInputs = this.template.querySelectorAll(
             'lightning-input, lightning-combobox, lightning-textarea'
         );
-    
+
         let isValid = true;
         let firstInvalid = null;
-    
+
         allInputs.forEach(el => {
             if (!el.checkValidity()) {
                 el.reportValidity();
                 isValid = false;
-    
                 if (!firstInvalid) {
                     firstInvalid = el;
                 }
             }
         });
-    
-        //Validate dynamic additional properties
+
         const missingDynamic = this.additionalProps.filter(p => {
-    
             if (!p.mandatory) return false;
-    
-            if (p.isBoolean) {
-                return p.value !== true;
-            }
-    
-            if (p.isFile) {
-                return !p.fileName;
-            }
-    
+            if (p.isBoolean) return p.value !== true;
+            if (p.isFile) return !p.fileName;
             return !p.value || p.value === '';
         });
-    
+
         if (missingDynamic.length > 0) {
             isValid = false;
-    
             const firstMissing = missingDynamic[0];
-            const el = this.template.querySelector(
-                `[data-id="${firstMissing.id}"]`
-            );
-    
+            const el = this.template.querySelector(`[data-id="${firstMissing.id}"]`);
             if (el) {
                 el.reportValidity?.();
                 firstInvalid = el;
             }
         }
-    
+
         if (!isValid) {
             if (firstInvalid) {
-                firstInvalid.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-    
-            this.showErrorToast(
-                this.labels.missingRequiredTitle,
-                this.labels.missingRequiredMsg
-            );
-            this.loading = false;
-            this.isCreateSubmitting = false;   
-            return;
+            this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
+            return false;
         }
-    
+
         if (this.additionalProps.length === 0) {
-            this.showErrorToast(
-                this.labels.missingAdditionalTitle,
-                this.labels.missingAdditionalMsg
-            );
+            this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
+            return false;
+        }
+
+        return true;
+    }
+
+    async onSubmit() {
+        if (this.isCreateSubmitting) return;
+        this.isCreateSubmitting = true;
+        this.loading = true;
+
+        if (!this.validateForm()) {
             this.loading = false;
-            this.isCreateSubmitting = false;   
+            this.isCreateSubmitting = false;
             return;
         }
-    
-        // =============================
-        // PROCESSING STARTS HERE
-        // =============================    
+
         try {
             const payload = this.buildPayload();
             this.previewJson = JSON.stringify(payload, null, 2);
-    
+
             const isUpdate =
                 this.fraudCase && Object.keys(this.fraudCase).length > 0;
-    
+
             this.actionType = isUpdate
                 ? this.updateActionType
-                : this.createActionType;         
-            console.log('onSUbmit: ', this.previewJson);  
+                : this.createActionType;
+            console.log('onSUbmit: ', this.previewJson);
             await this.confirmSubmit();
-            
-            
         } catch (error) {
-            this.showErrorToast(
-                'Error',
-                error?.body?.message || error.message
-            );
+            this.showErrorToast('Error', error?.body?.message || error.message);
         } finally {
             this.loading = false;
-            this.isCreateSubmitting = false;   
+            this.isCreateSubmitting = false;
+        }
+    }
+
+    async onSubmitWithoutCallout() {
+        if (this.isCreateSubmitting) return;
+        this.isCreateSubmitting = true;
+        this.loading = true;
+
+        if (!this.validateForm()) {
+            this.loading = false;
+            this.isCreateSubmitting = false;
+            return;
+        }
+
+        try {
+            const payload = this.buildPayload();
+            this.previewJson = JSON.stringify(payload, null, 2);
+            this.actionType = this.createWithoutCalloutType;
+            await this.confirmSubmit();
+        } catch (error) {
+            this.showErrorToast('Error', error?.body?.message || error.message);
+        } finally {
+            this.loading = false;
+            this.isCreateSubmitting = false;
         }
     }
 
@@ -522,7 +521,10 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         } 
         else if (this.actionType === this.updateActionType) {
             actionPromise = await submitUpdateFraudCase({ payload });
-        } 
+        }
+        else if (this.actionType === this.createWithoutCalloutType) {
+            actionPromise = await submitWithoutCreateFraudCase({ payload });
+        }
         else {
             actionPromise = await submitCreateFraudCase({ payload });
         }
