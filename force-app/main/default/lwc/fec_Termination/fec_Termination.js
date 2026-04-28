@@ -31,7 +31,6 @@ import FEC_Termination_Field_Total_Overdue_Amount_Label from '@salesforce/label/
 import FEC_Termination_Field_Principal_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Principal_Overdue_Label';
 import FEC_Termination_Field_Interest_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Interest_Overdue_Label';
 import FEC_Termination_Field_Installments_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Installments_Overdue_Label';
-import FEC_Termination_Field_Repayment_Fee_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Repayment_Fee_Overdue_Label';
 import FEC_Termination_Field_Penalty_Fee_Overdue_Label from '@salesforce/label/c.FEC_Termination_Field_Penalty_Fee_Overdue_Label';
 import FEC_Termination_Field_Overdue_Penalty_Label from '@salesforce/label/c.FEC_Termination_Field_Overdue_Penalty_Label';
 
@@ -92,7 +91,6 @@ export default class Fec_Termination extends LightningElement {
             'FEC_Principal_Overdue__c': FEC_Termination_Field_Principal_Overdue_Label,
             'FEC_Interest_Overdue__c': FEC_Termination_Field_Interest_Overdue_Label,
             'FEC_Installments_Overdue__c': FEC_Termination_Field_Installments_Overdue_Label,
-            'FEC_Repayment_Fee_Overdue__c': FEC_Termination_Field_Repayment_Fee_Overdue_Label,
             'FEC_Penalty_Fee_Overdue__c': FEC_Termination_Field_Penalty_Fee_Overdue_Label,
             'FEC_Overdue_Penalty__c': FEC_Termination_Field_Overdue_Penalty_Label,
         };
@@ -177,7 +175,6 @@ export default class Fec_Termination extends LightningElement {
             FEC_Termination_Field_Principal_Overdue_Label,
             FEC_Termination_Field_Interest_Overdue_Label,
             FEC_Termination_Field_Installments_Overdue_Label,
-            FEC_Termination_Field_Repayment_Fee_Overdue_Label,
             FEC_Termination_Field_Penalty_Fee_Overdue_Label,
             FEC_Termination_Field_Overdue_Penalty_Label,
         ];
@@ -205,7 +202,6 @@ export default class Fec_Termination extends LightningElement {
             [FEC_Termination_Field_Principal_Overdue_Label]: 'FEC_Principal_Overdue__c',
             [FEC_Termination_Field_Interest_Overdue_Label]: 'FEC_Interest_Overdue__c',
             [FEC_Termination_Field_Installments_Overdue_Label]: 'FEC_Installments_Overdue__c',
-            [FEC_Termination_Field_Repayment_Fee_Overdue_Label]: 'FEC_Repayment_Fee_Overdue__c',
             [FEC_Termination_Field_Penalty_Fee_Overdue_Label]: 'FEC_Penalty_Fee_Overdue__c',
             [FEC_Termination_Field_Overdue_Penalty_Label]: 'FEC_Overdue_Penalty__c',
         };
@@ -278,9 +274,12 @@ export default class Fec_Termination extends LightningElement {
             return this.overdue.map((item) => {
                 const value = this.normalizeApiDisplayValue(item.valueFormatted);
                 const fieldApiName = labelToApi[item.label];
+                if (!fieldApiName) {
+                    return null;
+                }
                 const label = displayLabel(fieldApiName, item.label);
                 return this.buildField(label, value, fieldApiName);
-            });
+            }).filter((item) => item !== null);
         }
         return this.defaultOverdueLabels.map((label) => {
             const fieldApiName = labelToApi[label];

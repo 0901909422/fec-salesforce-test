@@ -9473,14 +9473,6 @@
         <value>Installments Overdue</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_Field_Repayment_Fee_Overdue_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Repayment Fee Overdue (Overdue)</shortDescription>
-        <value>Repayment Fee Overdue</value>
-    </labels>
-    <labels>
         <fullName>FEC_Termination_Field_Penalty_Fee_Overdue_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -13646,6 +13638,14 @@
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
     <labels>
+        <fullName>FEC_Invalid_OwnerId</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid OwnerId</shortDescription>
+        <value>Invalid ownerId:</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -14307,5 +14307,116 @@
         <protected>false</protected>
         <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
         <value>NFU</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Has_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Has_Data_Question</shortDescription>
+        <value>Đã có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Message</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Message</shortDescription>
+        <value>Bạn sắp câp nhật thông tin khách hàng vào danh sách DNB. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Title</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Title</shortDescription>
+        <value>Do Not Bother</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_NID_Placeholder</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_NID_Placeholder</shortDescription>
+        <value>Enter 9 or 12 digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_No_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_No_Data_Question</shortDescription>
+        <value>Chưa có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Update_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Update_Button</shortDescription>
+        <value>Update to DNB</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CC_Queue_Name</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Queue Name for COF/GSR routing</shortDescription>
+        <value>DQ - CS Customer Care</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Item_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add Item Label</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Remark Label</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Queue_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Queue combobox</shortDescription>
+        <value>-- Choose Queue --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Team_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Team combobox</shortDescription>
+        <value>-- Choose Team --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Label</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enter_Remark_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Assignment Remark textarea</shortDescription>
+        <value>Enter remark...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark column label</shortDescription>
+        <value>Remark</value>
     </labels>
 </CustomLabels>

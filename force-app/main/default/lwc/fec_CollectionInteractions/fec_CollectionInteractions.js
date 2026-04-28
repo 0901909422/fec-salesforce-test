@@ -53,11 +53,14 @@ export default class Fec_CollectionInteractions extends LightningElement {
 
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track interactions;
-    @track isLoading = true;
+    @track isLoading = false;
+    @track isExpanded = false;
 
     _startDate = null;
     _endDate = null;
     _subscription = null;
+    /** Chỉ gọi API sau khi user ấn Apply lần đầu */
+    _hasApplied = false;
 
     @wire(MessageContext)
     messageContext;
@@ -97,6 +100,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
             (msg) => {
                 this._startDate = msg.startDate;
                 this._endDate = msg.endDate;
+                this._hasApplied = true;
                 this.loadInteractions();
             },
             { scope: APPLICATION_SCOPE }
@@ -118,7 +122,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (data) {
             this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
             this._recordTypeName = data.fields.RecordType?.displayValue;
-            this.loadInteractions();
+            // Không tự gọi API — chờ user ấn Apply
         } else if (error) {
             this.interactions = null;
             this.isLoading = false;
@@ -131,6 +135,8 @@ export default class Fec_CollectionInteractions extends LightningElement {
             this.isLoading = false;
             return;
         }
+
+        if (!this._hasApplied) return;
 
         this.isLoading = true;
 
@@ -163,15 +169,20 @@ export default class Fec_CollectionInteractions extends LightningElement {
             this.interactions = null;
         } finally {
             this.isLoading = false;
+            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions) && this.interactions.length > 0;
         }
     }
 
+    get showCollapsed() {
+        return !this.isLoading && !this._hasApplied;
+    }
+
     get showErrorBanner() {
-        return !this.isLoading && this.interactions === null;
+        return !this.isLoading && this._hasApplied && this.interactions === null;
     }
 
     get showDataSection() {
-        return !this.isLoading && Array.isArray(this.interactions);
+        return !this.isLoading && this._hasApplied && Array.isArray(this.interactions);
     }
 
     /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
@@ -191,5 +202,17 @@ export default class Fec_CollectionInteractions extends LightningElement {
             DueReason: row?.DueReason ?? STR_EMPTY,
             OtherNotes: row?.OtherNotes ?? STR_EMPTY
         }));
+    }
+
+    handleToggle() {
+        this.isExpanded = !this.isExpanded;
+    }
+
+    get sectionClass() {
+        return `slds-accordion__section${this.isExpanded ? ' slds-is-open' : ''}`;
+    }
+
+    get iconName() {
+        return this.isExpanded ? 'utility:chevrondown' : 'utility:chevronright';
     }
 }

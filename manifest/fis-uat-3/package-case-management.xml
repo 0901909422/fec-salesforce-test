@@ -6,18 +6,61 @@
 		<members>FEC_FastCashCaseController</members>
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CaseRemarkController</members>
 		<members>FEC_CustomerAdditionalDataController</members>
+		<members>FEC_DNBHandler</members>
+		<members>FEC_CreateCaseHandler</members>
+		<members>FEC_CreateInteractionGenesys</members>
+		<members>FEC_AssignmentController</members>
+		<members>FEC_ConstantCommon</members>
+		<members>FEC_CofGsrAssignmentService</members>
 		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_RoutingActionHistoryTrigger</members>
+		<name>ApexTrigger</name>
 	</types>
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Remark__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
+		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
+		<members>FEC_Assignment__c.FEC_Team__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Case__c</members>
+		<members>FEC_Case_Remarks__c.FEC_Remark_Type__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Relevant_Ticket_ID__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Category_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Relevant__c</members>
+		<members>FEC_Relevant_Ticket__c.FEC_User_Role_Relevant__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Active__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Channel__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Customer_Type__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
+		<members>FEC_Routing_Assignment__c.FEC_Team__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
+		<members>FEC_Routing_Assignment__c</members>
+		<name>CustomTab</name>
+	</types>
+	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_CustomerAdditionalInfoConfig__c</members>
+		<members>FEC_CustomerAdditionalInfo__c</members>
+		<members>FEC_Routing_Assignment__c</members>
+		<members>FEC_Relevant_Ticket__c</members>
+		<members>FEC_Case_Remarks__c</members>
+		<members>FEC_Case_Flow_History__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -27,6 +70,7 @@
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
+		<members>FEC_Customer_Case_Record_Page</members>
 		<members>FEC_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
@@ -34,6 +78,7 @@
         <members>fecInteractionChatConversations</members>
         <members>fecInteractionChatInfo</members>
 		<members>fec_CaseBussiness</members>
+		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CommonConst</members>
 		<members>fec_FastCashCaseForm</members>
         <members>fec_CollectionInteractions</members>
@@ -43,7 +88,14 @@
 		<members>fec_customerAdditionalData</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_CaseRemarks</members>
+		<members>fec_RoutingAssignment</members>
 		<members>fec_DateFormatter</members>
+		<members>fec_DoNotBotherExistingCustomer</members>
+		<members>fec_DoNotBotherHandling</members>
+		<members>fec_DoNotBotherInformationView</members>
+		<members>fec_DoNotBotherNonExistingCustomer</members>
+		<members>fec_ReusableDNBCustomTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -130,9 +182,25 @@
 		<members>Fetch_Collection_Data_Record_Type_Communication_History</members>
 		<members>Fetch_Collection_Data_Record_Type_Collection_Interaction</members>
 		<members>Fetch_Collection_Data_Record_Type_Allocation_History</members>
+		<members>FEC_DNB_Has_Data_Question</members>
+		<members>FEC_DNB_Modal_Message</members>
+		<members>FEC_DNB_Modal_Title</members>
+		<members>FEC_DNB_NID_Placeholder</members>
+		<members>FEC_DNB_No_Data_Question</members>
+		<members>FEC_DNB_Update_Button</members>
+		<members>FEC_Invalid_OwnerId</members>
+		<members>FEC_CC_Queue_Name</members>
+		<members>FEC_Add_Item_Label</members>
+		<members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_Confirm_Label</members>
+		<members>FEC_Choose_Team_Placeholder</members>
+		<members>FEC_Choose_Queue_Placeholder</members>
+		<members>FEC_Enter_Remark_Placeholder</members>
+		<members>FEC_Remark_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
+		<!-- Interaction Case Service Case -->
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
@@ -186,6 +254,62 @@
 		<members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
 		<members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<!-- Data Management -->
+		<members>FEC_CS_CS_Ecom_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Operations_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Officer_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Manager_Master_Data_Management</members>
+		<members>FEC_CS_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Center_Director_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Manager_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Master_Data_Management</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Master_Data_Management</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Master_Data_Management</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Master_Data_Management</members>
+		<members>FEC_RD_Card_Operations_User_Master_Data_Management</members>
+		<members>FEC_RD_Collections_User_Master_Data_Management</members>
+		<members>FEC_RD_Contract_Processing_User_Master_Data_Management</members>
+		<members>FEC_RD_Credit_Assessment_User_Master_Data_Management</members>
+		<members>FEC_RD_Direct_Sales_User_Master_Data_Management</members>
+		<members>FEC_RD_Internal_Audit_User_Master_Data_Management</members>
+		<members>FEC_RD_Payment_User_Master_Data_Management</members>
+		<members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
+		<members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
+		<members>RD_IT_User_Master_Data_Management</members>
+		<!-- Customer Data Management -->
+		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
     </types>
     

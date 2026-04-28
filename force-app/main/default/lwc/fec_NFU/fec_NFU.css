@@ -37,3 +37,8 @@
     word-break: break-word;
     text-align: right;
 }
+
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}

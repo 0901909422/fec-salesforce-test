@@ -238,6 +238,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String DELIMITER_SEMICOLON = ';';
     public static final String DELIMITER_UNDERSCORE = '_';
 
+    // tungnm37 thêm: Assignment constants cho COF/GSR
+    public static final String ASSIGNMENT_NAME_CALL = 'Call';
+    public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
@@ -299,6 +305,17 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_TRANSFER_ACTION = 'Transfer';
+    public static final String CASE_ESCALATE_ACTION = 'Escalate';
+    public static final String CASE_REVERT_ACTION = 'Revert';
+    public static final String CASE_REVERTING_CREATOR = 'RevertingCreator';
+    public static final String CASE_DECISION_VALUE = 'Cannot Contact Customer';
+    public static final String CASE_UPDATE_VALUE = 'Update';
+    public static final String CASE_REJECT_ACTION = 'Reject';
+    public static final String CASE_RESOLVE_ACTION = 'Resolve';
+    public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
+    public static final String TEAM_VALUE = 'CannotContactCustomer';
+    
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
@@ -499,4 +516,25 @@ public with sharing class FEC_ConstantCommon {
     public static final String HTML_TAG_REGEX = '<[^>]+>';
     public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
+    
+    //HieuTT74: Update common constant - ngày 28-4-2026
+    public static final String CHANNEL_FACEBOOK = 'Facebook';
+    public static final String CHANNEL_WEBCHAT = 'Webchat';
+    
+    public static final String CHANNEL_FACEBOOK_LOWER = 'facebook';
+    public static final String CHANNEL_ZALO_LOWER = 'zalo';
+    public static final String CHANNEL_WEBCHAT_LOWER = 'webchat';
+    
+    // ===== KYC =====
+    public static final String KYC_METHOD_OTHER = 'Other';
+    public static final String KYC_STATUS_NOT_KYC = 'NOT KYC';
+    public static final String KYC_STATUS_KYC = 'KYC';
+    
+    public static final String KYC_RESULT_PASS = 'Pass';
+    public static final String KYC_RESULT_FAIL = 'Fail';
+    
+    
+    public static final String DNB_STATUS_ACTIVE = 'Active';
+    public static final String DNB_STATUS_INACTIVE = 'Inactive';
+    public static final String BOOLEAN_TRUE = 'true';
 }
