@@ -19,16 +19,6 @@
                 <default>false</default>
                 <label>Routing</label>
             </value>
-            <value>
-                <fullName>mmm</fullName>
-                <default>false</default>
-                <label>mmm</label>
-            </value>
-            <value>
-                <fullName>Test</fullName>
-                <default>false</default>
-                <label>Test</label>
-            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
