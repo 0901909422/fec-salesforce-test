@@ -10,7 +10,13 @@
 		<members>FEC_CaseRemarkController</members>
 		<members>FEC_RelevantTicketController</members>
 		<members>FEC_CustomerAdditionalDataController</members>
+		<members>FEC_AssignmentController</members>
+		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_RoutingActionHistoryTrigger</members>
+		<name>ApexTrigger</name>
 	</types>
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
@@ -165,6 +171,7 @@
 		<members>Fetch_Collection_Data_Record_Type_Communication_History</members>
 		<members>Fetch_Collection_Data_Record_Type_Collection_Interaction</members>
 		<members>Fetch_Collection_Data_Record_Type_Allocation_History</members>
+		<members>FEC_Invalid_OwnerId</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

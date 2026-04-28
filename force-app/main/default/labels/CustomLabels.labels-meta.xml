@@ -13638,6 +13638,14 @@
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
     <labels>
+        <fullName>FEC_Invalid_OwnerId</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid OwnerId</shortDescription>
+        <value>Invalid ownerId:</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>

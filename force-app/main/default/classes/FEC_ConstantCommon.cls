@@ -306,6 +306,17 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_TRANSFER_ACTION = 'Transfer';
+    public static final String CASE_ESCALATE_ACTION = 'Escalate';
+    public static final String CASE_REVERT_ACTION = 'Revert';
+    public static final String CASE_REVERTING_CREATOR = 'RevertingCreator';
+    public static final String CASE_DECISION_VALUE = 'Cannot Contact Customer';
+    public static final String CASE_UPDATE_VALUE = 'Update';
+    public static final String CASE_REJECT_ACTION = 'Reject';
+    public static final String CASE_RESOLVE_ACTION = 'Resolve';
+    public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
+    public static final String TEAM_VALUE = 'CannotContactCustomer';
+    
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
