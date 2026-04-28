@@ -590,7 +590,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -617,7 +617,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
