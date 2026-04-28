@@ -1,4 +1,4 @@
-﻿public without sharing class FEC_CaseBusinessService {
+public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
 
   public static final String ROUTE_TO = 'Route to';
@@ -1534,6 +1534,32 @@
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
+  }
+//PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    markCaseSubmittedAndClearDrafts(caseId);
+    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+  }
+  //PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+  /**
+   * Táº¡o báº£n ghi FEC_Case_Flow_History__c khi Case Ä‘Æ°á»£c submit láº§n Ä‘áº§u (creation stage).
+   * Chá»‰ táº¡o khi Case chÆ°a submit (FEC_Is_Submited__c = false trÆ°á»›c khi gá»i).
+   */
+  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    if (String.isBlank(caseId)) return;
+    try {
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson
+      );
+      if (String.isNotBlank(natureOfCaseId)) {
+        history.FEC_Nature_of_Cases__c = natureOfCaseId;
+      }
+      insert history;
+    } catch (Exception e) {
+      System.debug('createCaseFlowHistory error: ' + e.getMessage());
+    }
   }
 
   @AuraEnabled
