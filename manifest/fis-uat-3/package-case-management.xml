@@ -18,6 +18,8 @@
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_CustomerAdditionalInfoConfig__c</members>
+		<members>FEC_CustomerAdditionalInfo__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -186,6 +188,8 @@
 		<members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
 		<members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<!-- Customer Data Management -->
+		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
     </types>
     
