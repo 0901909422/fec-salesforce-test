@@ -1,10 +1,10 @@
 /**
- * tungnm37: Service xá»­ lÃ½ COF/GSR Assignment, Routing Action History, Case Remarks
- * TÃ¡ch ra tá»« FEC_CaseBusinessService theo yÃªu cáº§u review
+ * tungnm37: Service xÃ¡Â»Â­ lÃƒÂ½ COF/GSR Assignment, Routing Action History, Case Remarks
+ * TÃƒÂ¡ch ra tÃ¡Â»Â« FEC_CaseBusinessService theo yÃƒÂªu cÃ¡ÂºÂ§u review
  */
 public without sharing class FEC_CofGsrAssignmentService {
 
-    // â”€â”€â”€ Private helpers (duplicate tá»« FEC_CaseBusinessService Ä‘á»ƒ trÃ¡nh circular dependency) â”€â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Private helpers (duplicate tÃ¡Â»Â« FEC_CaseBusinessService Ã„â€˜Ã¡Â»Æ’ trÃƒÂ¡nh circular dependency) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private static String emailLocalPart(String email) {
         if (String.isBlank(email)) return null;
@@ -24,9 +24,9 @@ public without sharing class FEC_CofGsrAssignmentService {
         return fallbackName;
     }
 
-    // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Public API Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-    /** Láº¥y danh sÃ¡ch Team/Queue tá»« FEC_Team_Queue__c cho Manual Assignment */
+    /** LÃ¡ÂºÂ¥y danh sÃƒÂ¡ch Team/Queue tÃ¡Â»Â« FEC_Team_Queue__c cho Manual Assignment */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getTeamQueueOptions() {
         List<FEC_Team_Queue__c> records = [
@@ -46,7 +46,7 @@ public without sharing class FEC_CofGsrAssignmentService {
 
     /**
      * Query FEC_Routing_Assignment__c theo NOC + CustomerType
-     * natureOfCaseId cÃ³ thá»ƒ lÃ  ID cá»§a FEC_Nature_of_Case__c hoáº·c FEC_Actual_Nature_of_Case__c
+     * natureOfCaseId cÃƒÂ³ thÃ¡Â»Æ’ lÃƒÂ  ID cÃ¡Â»Â§a FEC_Nature_of_Case__c hoÃ¡ÂºÂ·c FEC_Actual_Nature_of_Case__c
      */
     @AuraEnabled
     public static List<Map<String, String>> getRoutingAssignments(String natureOfCaseId, String customerType) {
@@ -133,8 +133,8 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     /**
-     * Táº¡o FEC_Assignment__c + FEC_Case_Remarks__c + FEC_Routing_Action_History__c
-     * khi Route to COF/GSR (Stage 1, khÃ´ng pháº£i CC/SP)
+     * TÃ¡ÂºÂ¡o FEC_Assignment__c + FEC_Case_Remarks__c + FEC_Routing_Action_History__c
+     * khi Route to COF/GSR (Stage 1, khÃƒÂ´ng phÃ¡ÂºÂ£i CC/SP)
      */
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
@@ -226,7 +226,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     }
                 }
                 histories.add(new FEC_Routing_Action_History__c(
-                    FEC_Routing_Action__c = 'Route to',
+                    FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
                     FEC_Assignment__c = a.Id,
                     FEC_Perform_User__c = currentUser.Id,
@@ -256,7 +256,7 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     /**
-     * Táº¡o Assignment tá»« manual items (Stage 2 - Add Item)
+     * TÃ¡ÂºÂ¡o Assignment tÃ¡Â»Â« manual items (Stage 2 - Add Item)
      * manualItemsJson: JSON array [{teamName, queueName, remark}]
      */
     public static void createAssignmentsFromManualItems(
@@ -331,7 +331,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     }
                 }
                 histories.add(new FEC_Routing_Action_History__c(
-                    FEC_Routing_Action__c = 'Route to',
+                    FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
                     FEC_Assignment__c = a.Id,
                     FEC_Perform_User__c = currentUser.Id,
@@ -361,8 +361,8 @@ public without sharing class FEC_CofGsrAssignmentService {
     }
 
     /**
-     * Resolve natureOfCaseId (FEC_Actual_Nature_of_Case__c hoáº·c FEC_Nature_of_Case__c)
-     * â†’ tráº£ vá» Set<Id> táº¥t cáº£ FEC_Nature_of_Case__c IDs cÃ³ Routing Assignment cÃ¹ng Sub_Code
+     * Resolve natureOfCaseId (FEC_Actual_Nature_of_Case__c hoÃ¡ÂºÂ·c FEC_Nature_of_Case__c)
+     * Ã¢â€ â€™ trÃ¡ÂºÂ£ vÃ¡Â»Â Set<Id> tÃ¡ÂºÂ¥t cÃ¡ÂºÂ£ FEC_Nature_of_Case__c IDs cÃƒÂ³ Routing Assignment cÃƒÂ¹ng Sub_Code
      */
     public static Set<Id> resolveToNocIds(String inputId) {
         Set<Id> result = new Set<Id>();
@@ -424,5 +424,68 @@ public without sharing class FEC_CofGsrAssignmentService {
             System.debug('FEC_DEBUG resolveToNocIds error: ' + e.getMessage());
         }
         return result;
+    }
+
+    /**
+     * tungnm37: Xử lý toàn bộ luồng ROUTE_TO_COF_GSR
+     * Được gọi từ FEC_CaseBusinessService.run() khi method = ROUTE_TO_COF_GSR_ACTION
+     */
+    public static Object handleRouteToCofGsr(String caseId, Map<String, Object> params, String stageName) {
+        String natureOfCaseId = (String) params.get('natureOfCaseId');
+        String manualItemsJson = (String) params.get('manualItemsJson');
+        String remarkContent = (String) params.get('remarkContent');
+
+        try { FEC_CaseBusinessService.markCaseSubmittedAndClearDrafts(caseId); } catch (Exception e1) {
+            System.debug('markCaseSubmitted error: ' + e1.getMessage());
+        }
+        if (String.isNotBlank(natureOfCaseId)) {
+            try { FEC_CaseBusinessService.saveCaseNOC(caseId, natureOfCaseId); } catch (Exception e2) {
+                System.debug('saveCaseNOC error: ' + e2.getMessage());
+            }
+        }
+
+        User currentUser = [SELECT Email, UserRole.Name, Id, FEC_User_Group__c FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+
+        if (String.isNotBlank(manualItemsJson)) {
+            createAssignmentsFromManualItems(caseId, manualItemsJson, currentUser, stageName);
+            return null;
+        }
+
+        Set<Id> nocIds = resolveToNocIds(natureOfCaseId);
+        String firstTeam = null;
+        if (!nocIds.isEmpty()) {
+            List<FEC_Routing_Assignment__c> teamCheck = [
+                SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
+                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null LIMIT 1
+            ];
+            if (!teamCheck.isEmpty()) firstTeam = teamCheck[0].FEC_Team__c;
+        }
+
+        Boolean isCcSpTeam = 'CC'.equals(firstTeam) || 'SP'.equals(firstTeam);
+        if (isCcSpTeam) {
+            String targetQueueName = 'CC'.equals(firstTeam)
+                ? System.Label.FEC_CC_Queue_Name
+                : System.Label.FEC_CS_Support_Queue_Name;
+            List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = 'Queue' LIMIT 1];
+            if (!targetQueues.isEmpty()) {
+                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
+                Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
+            }
+            if (!nocIds.isEmpty()) {
+                List<FEC_Case_Stage__c> nextStages = [
+                    SELECT Id FROM FEC_Case_Stage__c
+                    WHERE FEC_Nature_of_Cases__c IN :nocIds
+                      AND FEC_Default_Stage__c = false
+                      AND FEC_Active__c = true
+                    ORDER BY Name ASC LIMIT 1
+                ];
+                if (!nextStages.isEmpty()) {
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                }
+            }
+        } else {
+            createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+        }
+        return null;
     }
 }

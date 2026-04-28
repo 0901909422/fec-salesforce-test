@@ -25,6 +25,8 @@
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  // tungnm37 thêm: COF/GSR route string constant
+  public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -100,7 +102,7 @@
     PIN_REISSUE => Method.PIN_REISSUE,
     REPLACE_CARD => Method.REPLACE_CARD,
     // tungnm37 thêm: COF/GSR route - không đổi owner
-    'Route to COF/GSR' => Method.ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
   };
 
   @AuraEnabled
@@ -1163,7 +1165,8 @@
   }
 
 
-  private static void markCaseSubmittedAndClearDrafts(String caseId) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
     List<Case> caselst = [
@@ -1246,61 +1249,8 @@
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
         when ROUTE_TO_COF_GSR {
-          String natureOfCaseId = (String) params.get('natureOfCaseId');
-          String manualItemsJson = (String) params.get('manualItemsJson');
-          // tungnm37 thêm: nhận remarkContent từ LWC để gắn vào Assignment Remark
-          String remarkContent = (String) params.get('remarkContent');
-          try { markCaseSubmittedAndClearDrafts(caseId); } catch (Exception e1) { System.debug('markCaseSubmitted error: ' + e1.getMessage()); }
-          if (String.isNotBlank(natureOfCaseId)) {
-            try { saveCaseNOC(caseId, natureOfCaseId); } catch (Exception e2) { System.debug('saveCaseNOC error: ' + e2.getMessage()); }
-          }
-          User currentUser = [SELECT Email, UserRole.Name, Id, FEC_User_Group__c FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
-
-          // tungnm37 thêm: nếu có manual items (Stage 2) → tạo Assignment từ manual items
-          if (String.isNotBlank(manualItemsJson)) {
-            FEC_CofGsrAssignmentService.createAssignmentsFromManualItems(caseId, manualItemsJson, currentUser, stageName);
-            return null;
-          }
-
-          // tungnm37 sửa: resolve về tất cả FEC_Nature_of_Case__c IDs có RA
-          Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
-          // tungnm37 thêm: check team CC/SP → chuyển Owner sang Queue tương ứng, không tạo Assignment
-          String firstTeam = null;
-          if (!nocIds.isEmpty()) {
-            List<FEC_Routing_Assignment__c> teamCheck = [
-              SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
-              WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null LIMIT 1
-            ];
-            if (!teamCheck.isEmpty()) firstTeam = teamCheck[0].FEC_Team__c;
-          }
-          Boolean isCcSpTeam = 'CC'.equals(firstTeam) || 'SP'.equals(firstTeam);
-          if (isCcSpTeam) {
-            // tungnm37: CC → DQ - CS Customer Care, SP → DQ - CS Support
-            String targetQueueName = 'CC'.equals(firstTeam)
-              ? System.Label.FEC_CC_Queue_Name
-              : System.Label.FEC_CS_Support_Queue_Name;
-            List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = 'Queue' LIMIT 1];
-            if (!targetQueues.isEmpty()) {
-              registerSkipOwnerChangeRoutingHistory(caseId);
-              Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
-            }
-            // tungnm37 thêm: chuyển Case sang Stage 2 sau khi submit Stage 1 (CC/SP)
-            if (!nocIds.isEmpty()) {
-              List<FEC_Case_Stage__c> nextStages = [
-                SELECT Id FROM FEC_Case_Stage__c
-                WHERE FEC_Nature_of_Cases__c IN :nocIds
-                  AND FEC_Default_Stage__c = false
-                  AND FEC_Active__c = true
-                ORDER BY Name ASC LIMIT 1
-              ];
-              if (!nextStages.isEmpty()) {
-                Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
-              }
-            }
-          } else {
-            FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
-          }
-          return null;
+          // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
+          return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
         when REVERT {
           markCaseSubmittedAndClearDrafts(caseId);
