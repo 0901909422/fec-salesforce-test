@@ -40,244 +40,36 @@
     border-radius: 4px;
 }
 
-/* ========== Bảng tạm: clone bố cục / màu / khoảng cách từ fec_RelatedListPaging ========== */
-.notification-history-paging-mimic .addresses-border-wrapper {
+.nh-empty-state-msg--neutral {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    color: #706e6b;
+    font-size: 13px;
+    padding: 0.75rem;
     border: 1px solid #dddbda;
     border-radius: 0.5rem;
-    margin-top: 0;
-}
-
-.notification-history-paging-mimic .addresses-table-wrapper {
-    background: #ffffff;
-    padding: 16px;
-    width: 100%;
-}
-
-.notification-history-paging-mimic .table-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    color: #706e6b;
-    margin-bottom: 12px;
-}
-
-.notification-history-paging-mimic .table-info-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.notification-history-paging-mimic .item-count {
-    font-weight: 600;
-}
-
-.notification-history-paging-mimic .sorted-by {
-    margin-left: 4px;
-}
-
-.notification-history-paging-mimic .table-container {
-    border: 1px solid #d8dde6;
-    border-radius: 4px;
-    overflow-x: auto;
-    overflow-y: visible;
-    scrollbar-width: thin;
-    scrollbar-color: #c9c7c5 #f3f2f2;
-}
-
-.notification-history-paging-mimic .table-container::-webkit-scrollbar {
-    height: 8px;
-}
-
-.notification-history-paging-mimic .table-container::-webkit-scrollbar-track {
-    background: #f3f2f2;
-    border-radius: 4px;
-}
-
-.notification-history-paging-mimic .table-container::-webkit-scrollbar-thumb {
-    background: #c9c7c5;
-    border-radius: 4px;
-}
-
-.notification-history-paging-mimic .address-table {
-    width: 100%;
-    min-width: max-content;
-    table-layout: auto;
-    border-collapse: collapse;
-    background: #ffffff;
-}
-
-.notification-history-paging-mimic .address-table thead {
-    background: #f3f2f2;
-}
-
-.notification-history-paging-mimic .address-table th,
-.notification-history-paging-mimic .address-table td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.notification-history-paging-mimic .address-table th {
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #3e3e3c;
-    border-bottom: 1px solid #d8dde6;
-    border-right: 1px solid rgb(208, 196, 196);
-}
-
-.notification-history-paging-mimic .address-table th.sortable-header {
-    text-align: center !important;
     vertical-align: middle;
 }
 
-.notification-history-paging-mimic .address-table th:last-child {
-    border-right: none;
-}
-
-.notification-history-paging-mimic .header-center .header-content {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.notification-history-paging-mimic .header-content .sort-icon {
-    margin-left: 0;
-    color: #c9c7c5;
-}
-
-.notification-history-paging-mimic .address-table td {
-    padding: 12px 16px;
-    font-size: 13px;
-    color: #3e3e3c;
-    border-bottom: 1px solid #e5e5e5;
-    white-space: normal;
-    word-break: break-word;
-    line-height: 1.45;
-}
-
-.notification-history-paging-mimic .address-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.notification-history-paging-mimic .table-pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-top: 1px solid #e5e5e5;
-    background: #fafaf9;
-}
-
-.notification-history-paging-mimic .page-size {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: #3e3e3c;
-}
-
-.notification-history-paging-mimic .page-size-select {
-    padding: 4px 8px;
-    border: 1px solid #c9c7c5;
-    border-radius: 4px;
-    font-size: 13px;
-    background: #ffffff;
-}
-
-.notification-history-paging-mimic .pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.notification-history-paging-mimic .page-btn {
-    width: 32px;
-    height: 32px;
-    border: 1px solid #c9c7c5;
-    border-radius: 4px;
-    background: #ffffff;
-    cursor: default;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #3e3e3c;
-}
-
-.notification-history-paging-mimic .page-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.notification-history-paging-mimic .page-btn.active {
-    background: #0176d3;
-    color: #ffffff;
-    border-color: #0176d3;
-}
-
-.notification-history-paging-mimic .go-to-page {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: #3e3e3c;
-}
-
-.notification-history-paging-mimic .page-input {
-    width: 60px;
-    padding: 4px 8px;
-    border: 1px solid #c9c7c5;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 13px;
-}
-
-.notification-history-paging-mimic .page-total {
-    color: #706e6b;
-}
-
-.notification-history-paging-mimic .go-btn {
-    padding: 6px 16px;
-    background: #0176d3;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: default;
-}
-
-/* Ô dòng duy nhất: thông báo (trung tính) vs lỗi */
-.notification-history-paging-mimic .nh-empty-state-msg--neutral {
-    text-align: center;
-    color: #706e6b;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.notification-history-paging-mimic .nh-empty-state-msg--error {
+.nh-empty-state-msg--error {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
     text-align: center;
     color: #a30018;
     font-size: 13px;
     font-weight: 500;
+    padding: 0.75rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
     vertical-align: middle;
 }
 
-/* Footer phân trang tĩnh: chỉ bối cảnh, không tương tác */
-.notification-history-paging-mimic .nh-mimic-pagination {
-    pointer-events: none;
-    user-select: none;
-    opacity: 0.88;
-}
-
 @media (max-width: 768px) {
-    .notification-history-paging-mimic .table-pagination {
-        flex-direction: column;
-        gap: 12px;
+    .nh-empty-state-msg--neutral,
+    .nh-empty-state-msg--error {
+        padding: 0.5rem;
     }
 }

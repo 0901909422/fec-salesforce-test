@@ -9,16 +9,11 @@ import getNotificationHistoryForCase from '@salesforce/apex/FEC_NotificationHist
 
 import lblLoading from '@salesforce/label/c.FEC_Notification_History_Loading';
 import lblCaseReadError from '@salesforce/label/c.FEC_Notification_History_Case_Read_Error';
-import lblSmsNoPrimaryPhone from '@salesforce/label/c.FEC_Notification_History_SMS_No_Primary_Phone';
-import lblSmsNoRecords from '@salesforce/label/c.FEC_Notification_History_SMS_No_Records';
 import lblSmsNoLogDefault from '@salesforce/label/c.FEC_Notification_History_SMS_No_Log_Default';
 import lblSmsLoadFailed from '@salesforce/label/c.FEC_Notification_History_SMS_Load_Failed';
 import lblSmsHttpFailed from '@salesforce/label/c.FEC_Notification_History_SMS_Http_Failed';
 import lblErrorUnknown from '@salesforce/label/c.FEC_Notification_History_Error_Unknown';
-import lblEmailNoRecords from '@salesforce/label/c.FEC_Notification_History_Email_No_Records';
 import lblEmailNeedRecord from '@salesforce/label/c.FEC_Notification_History_Email_Need_Record';
-import lblZnsNoRecords from '@salesforce/label/c.FEC_Notification_History_ZNS_No_Records';
-import lblMobileAppNoRecords from '@salesforce/label/c.FEC_Notification_History_MobileApp_No_Records';
 import lblPhonePrefix from '@salesforce/label/c.FEC_Notification_History_Phone_Prefix';
 import lblTabSms from '@salesforce/label/c.FEC_Notification_History_Tab_SMS';
 import lblTabZns from '@salesforce/label/c.FEC_Notification_History_Tab_ZNS';
@@ -35,6 +30,7 @@ import lblColFailureReason from '@salesforce/label/c.FEC_Notification_History_Co
 import lblColCaseId from '@salesforce/label/c.FEC_Notification_History_Col_Case_Id';
 import lblSortDateTime from '@salesforce/label/c.FEC_Notification_History_Sort_DateTime';
 import lblEmptyDash from '@salesforce/label/c.FEC_Notification_History_Empty_Dash';
+import lblNoResults from '@salesforce/label/c.FEC_List_relevant_case_empty';
 
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
@@ -141,31 +137,6 @@ export default class Fe_Notification_History extends LightningElement {
         return Array.isArray(this.mobileAppRows) && this.mobileAppRows.length > 0;
     }
 
-    get smsMimicHeaders() {
-        return this._mimicColumnHeaders(SMS_COLUMNS);
-    }
-
-    get extendedMimicHeaders() {
-        return this._mimicColumnHeaders(EXTENDED_COLUMNS);
-    }
-
-    get smsTableColspan() {
-        return SMS_COLUMNS.length;
-    }
-
-    get extendedTableColspan() {
-        return EXTENDED_COLUMNS.length;
-    }
-
-    /** Giống fec_RelatedListPaging: dòng “0 items” + “Sorted by …” khi bảng trống. */
-    get mimicZeroItemsLabel() {
-        return '0 items';
-    }
-
-    get mimicExtendedSortLabel() {
-        return lblColNotificationType;
-    }
-
     get smsEmptyMsgClass() {
         return this._emptyStateMsgClass(!!this.smsLoadError);
     }
@@ -184,18 +155,6 @@ export default class Fe_Notification_History extends LightningElement {
 
     _emptyStateMsgClass(isError) {
         return 'nh-empty-state-msg' + (isError ? ' nh-empty-state-msg--error' : ' nh-empty-state-msg--neutral');
-    }
-
-    /**
-     * Header cho bảng tạm (mimic fec_RelatedListPaging): cùng label, width, icon sort mờ.
-     */
-    _mimicColumnHeaders(columns) {
-        return columns.map((c) => ({
-            fieldName: c.fieldName,
-            label: c.label,
-            headerStyle: c.width ? `width: ${c.width}; min-width: ${c.width}` : '',
-            showSortIcon: true
-        }));
     }
 
     connectedCallback() {
@@ -269,14 +228,14 @@ export default class Fe_Notification_History extends LightningElement {
         if (this.smsLoading) {
             return lblLoading;
         }
-        if (!this.resolvedPhone) {
-            return lblSmsNoPrimaryPhone;
-        }
         if (this.smsLoadError) {
             return this.smsLoadError;
         }
+        if (!this.resolvedPhone) {
+            return lblNoResults;
+        }
         if (this.smsFetched && (!this.smsRows || this.smsRows.length === 0)) {
-            return lblSmsNoRecords;
+            return lblNoResults;
         }
         return lblEmptyDash;
     }
@@ -292,7 +251,7 @@ export default class Fe_Notification_History extends LightningElement {
             return this.znsHistoryError;
         }
         if (!this.znsRows || this.znsRows.length === 0) {
-            return lblZnsNoRecords;
+            return lblNoResults;
         }
         return lblEmptyDash;
     }
@@ -308,7 +267,7 @@ export default class Fe_Notification_History extends LightningElement {
             return this.emailHistoryError;
         }
         if (!this.emailRows || this.emailRows.length === 0) {
-            return lblEmailNoRecords;
+            return lblNoResults;
         }
         return lblEmptyDash;
     }
@@ -324,7 +283,7 @@ export default class Fe_Notification_History extends LightningElement {
             return this.mobileAppHistoryError;
         }
         if (!this.mobileAppRows || this.mobileAppRows.length === 0) {
-            return lblMobileAppNoRecords;
+            return lblNoResults;
         }
         return lblEmptyDash;
     }

@@ -49,6 +49,7 @@
         <members>FEC_Notification_History_Col_Case_Id</members>
         <members>FEC_Notification_History_Sort_DateTime</members>
         <members>FEC_Notification_History_Empty_Dash</members>
+        <members>FEC_List_relevant_case_empty</members>
         <members>FEC_Toast_Error</members>
         <members>FEC_Toast_Error_Generic</members>
         <members>FEC_CardEligibility_Section_Title</members>
