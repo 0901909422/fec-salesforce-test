@@ -1,4 +1,4 @@
-import { LightningElement, track , wire} from 'lwc';
+import { LightningElement, track , wire, api} from 'lwc';
 
 import { CurrentPageReference } from 'lightning/navigation';
 
@@ -56,12 +56,14 @@ import LBL_DownloadFile from '@salesforce/label/c.LBL_DownloadFile';
 
 export default class IntegrationCreateFraudCase extends LightningElement {
 
+    @api fraudHandlingCaseId;
     @track caseId;
     @track loading = true;
     @track showPreview = false;
     @track previewJson = '';
     isUpdateSubmitting = false;
     isCancelSubmitting = false;
+    @track showCancelConfirm = false;
     
     fraudIntUserType = '';
     fraudIntChannel = '';
@@ -149,13 +151,13 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     }
 
     @wire(CurrentPageReference)
-    handlePageRef(pageRef) {
-        const caseId = pageRef?.state?.c__caseId;        
-        if (!caseId || this.caseId === caseId) {
+    handlePageReference(pageRef) {
+        if (pageRef && pageRef.state) {
+            this.caseId = pageRef.state.c__caseId || this.fraudHandlingCaseId;
+        } else {
             this.loading = false;
             return;
-        }
-        this.caseId = caseId;        
+        }        
         console.log('this.caseId: ', this.caseId);
          // Load case data
          this.loadIntegrationCaseInfo(this.caseId);
@@ -166,7 +168,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         try {
             this.fieldTypes = await getIntegrationFieldTypes();    
             const caseData = await getFraudCaseById({ fraudCaseId: recordId });   
-            //console.log('caseData: ', JSON.stringify(caseData));
+            console.log('caseData: ', JSON.stringify(caseData));
             const infoList = caseData.propertyValues || [];
     
             this.fraudIntChannel = caseData.intChannel;
@@ -257,91 +259,6 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         });
     }
    
-
-    /* ================= CATEGORY CHANGE ================= */
-
-    handleCategory(e) {
-        this.category = e.detail.value;
-        this.additionalProps = [];
-        console.log('[CHANGE] Category:', this.category);
-    
-        this.subCategory = null;
-        this.subCode = null;
-    
-        this.subCategoryOptions = this.subCategoriesAll
-            .filter(sc => sc.parentId === this.category)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));
-    
-        this.subCodeOptions = [];
-        this.rows = [];
-    }
-    
-      
-    /* ================= SUB CATEGORY CHANGE ================= */
-
-    handleSubCategory(e) {
-        this.subCategory = e.detail.value;   
-        this.additionalProps = []; 
-        this.subCode = null;
-        this.subCodeOptions = [];    
-        this.subCodeOptions = this.subCodesAll
-            .filter(sc => sc.parentId === this.subCategory)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));    
-        //If no subcode → load mapping at SubCategory level
-        if (this.subCodeOptions.length === 0) {
-            // find selected subcategory
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            let mappingId = selectedSubCat?.mappingId ?? null;        
-            // If SubCategory mapping not found → fallback to Category
-            if (mappingId == null) {                
-                const selectedCat = this.categoryOptions.find(sc => sc.value === this.category);   
-                mappingId = selectedCat?.mappingId ?? null;
-            }
-        
-            // Load only if mappingId exists
-            if (mappingId != null) {
-                this.loadMasterDataIntegrationMapping(mappingId);
-            }
-        }
-        
-        
-    }
-    
-
-    /* ================= SUB CODE CHANGE ================= */
-
-    handleSubCode(e) {
-        this.subCode = e.detail.value;
-        this.additionalProps = [];
-        console.log('[CHANGE] SubCode:', this.subCode);
-        const selectedSubCode = this.subCodesAll.find(
-            sc => sc.value === this.subCode
-        );
-    
-        let mappingId = selectedSubCode?.mappingId || null;
-        if(mappingId == null) {
-            //Get mapping at SubCategory level
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            mappingId = selectedSubCat?.mappingId || null;
-            if(mappingId == null) {
-                //Get mapping at Category level               
-                const selectedCat = this.categoryOptions.find(
-                    sc => sc.value === this.category
-                );
-                mappingId = selectedCat?.mappingId || null;
-            }
-        }
-        console.log('[LOAD] Mapping at handleSubCode:', mappingId);
-        if(mappingId != null) {
-            this.loadMasterDataIntegrationMapping(mappingId);
-        }    
-    }
 
 
     loadAdditionalProps(responseData) {
@@ -495,6 +412,15 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     async onSubmitCancel() {
         if (this.isCancelSubmitting) return;
+        this.showCancelConfirm = true;
+    }
+
+    closeCancelConfirm() {
+        this.showCancelConfirm = false;
+    }
+
+    async confirmCancelFraudCase() {
+        this.showCancelConfirm = false;
         this.loading = true;
         this.isCancelSubmitting = true;
         try {

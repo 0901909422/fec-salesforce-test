@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Case_Stage__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>FEC Case Stage</label>
     <referenceTo>FEC_Case_Stage__c</referenceTo>
     <relationshipLabel>FEC Data Integration Mappings</relationshipLabel>

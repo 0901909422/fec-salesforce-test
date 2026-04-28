@@ -93,4 +93,44 @@ public with sharing class FEC_MapAPropertiesToMasterDataItemCtrl {
             LIMIT 20
         ];
     }
+
+    @AuraEnabled
+    public static Map<String, Integer> autoSyncMapAPropertiesToMasterDataItemtoApply() {
+        String syncedStatus = FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_SYNCED;
+        Set<String> pendingStatuses = new Set<String>{
+            FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_NEW,
+            FEC_FraudConstantCommon.CONFIG_SYNC_STATUS_UPDATE
+        };
+
+        List<FEC_Map_A_Properties_To_Master_Data_Item__c> records = [
+            SELECT Id, FEC_Additional_Field_Unique_ID_Synced__c, FEC_Sync_Status__c, FEC_Additional_Field_Unique_ID__c
+            FROM FEC_Map_A_Properties_To_Master_Data_Item__c
+            WHERE FEC_Sync_Status__c IN :pendingStatuses
+              AND FEC_Status__c = true
+              AND FEC_Is_Deleted__c = false
+              AND FEC_Additional_Field_Unique_ID__c != null
+        ];
+
+        Integer totalToUpdate = records.size();
+        Integer totalUpdated = 0;
+
+        for (FEC_Map_A_Properties_To_Master_Data_Item__c rec : records) {
+            rec.FEC_Sync_Status__c = syncedStatus;
+            rec.FEC_Additional_Field_Unique_ID_Synced__c = rec.FEC_Additional_Field_Unique_ID__c;
+        }
+
+        if (!records.isEmpty()) {
+            List<Database.SaveResult> results = Database.update(records, false);
+            for (Database.SaveResult sr : results) {
+                if (sr.isSuccess()) {
+                    totalUpdated++;
+                }
+            }
+        }
+
+        return new Map<String, Integer>{
+            'totalToUpdate' => totalToUpdate,
+            'totalUpdated' => totalUpdated
+        };
+    }
 }
