@@ -2276,7 +2276,27 @@
         <field>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <hasActivationRequired>false</hasActivationRequired>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Assessed_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Collected_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Waived_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Outstanding_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+<hasActivationRequired>false</hasActivationRequired>
     <label>CS - Card Risk Monitoring Specialist - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
     <objectPermissions>
@@ -2586,26 +2606,7 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Assessed_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Collected_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Waived_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Outstanding_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-</PermissionSet>
+    </PermissionSet>
+
 
 
