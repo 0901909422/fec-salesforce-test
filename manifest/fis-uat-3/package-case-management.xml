@@ -8,13 +8,13 @@
 		<members>FEC_FetchCollectionDataService_Test</members>
 		<members>FEC_CaseBusinessService</members>
 		<members>FEC_CaseRemarkController</members>
-		<members>FEC_RelevantTicketController</members>
 		<members>FEC_CustomerAdditionalDataController</members>
 		<members>FEC_DNBHandler</members>
 		<members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
+		<members>FEC_CofGsrAssignmentService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -50,9 +50,8 @@
 		<name>CustomField</name>
 	</types>
 	<types>
-		<members>FEC_Assignment__c.All</members>
-		<members>FEC_Routing_Assignment__c.All</members>
-		<name>ListView</name>
+		<members>FEC_Routing_Assignment__c</members>
+		<name>CustomTab</name>
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
@@ -60,6 +59,7 @@
 		<members>FEC_CustomerAdditionalInfo__c</members>
 		<members>FEC_Routing_Assignment__c</members>
 		<members>FEC_Relevant_Ticket__c</members>
+		<members>FEC_Case_Remarks__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -69,14 +69,15 @@
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
-		<members>FEC_Assignment_Record_Page</members>
 		<members>FEC_Customer_Case_Record_Page</members>
+		<members>FEC_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
         <members>fecInteractionChatConversations</members>
         <members>fecInteractionChatInfo</members>
 		<members>fec_CaseBussiness</members>
+		<members>fec_CaseDetail_Customer</members>
 		<members>fec_CommonConst</members>
 		<members>fec_FastCashCaseForm</members>
         <members>fec_CollectionInteractions</members>
