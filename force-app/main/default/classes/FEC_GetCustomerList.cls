@@ -95,8 +95,11 @@ public with sharing class FEC_GetCustomerList {
         System.debug('personId: ' + personId);
 
         // tungnm37 thêm: hardcode email → accountNumber mapping cho môi trường test
+        // Chỉ áp dụng khi FEC_Enviroment__c = Non-Production
         // Khi search bằng email này, chuyển thành search theo accountNumber tương ứng
-        if (String.isNotBlank(email) && String.isBlank(accountNumber)) {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        Boolean isNonProduction = FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION.equals(apiSetting?.FEC_Enviroment__c);
+        if (isNonProduction && String.isNotBlank(email) && String.isBlank(accountNumber)) {
             Map<String, String> emailToAccountMap = new Map<String, String>{
                 'huyen.nguyen.7@fecredit.com.vn' => '0001500010000000261',
                 'thanh.vu.5@fecredit.com.vn'     => '0001500010000009734'
