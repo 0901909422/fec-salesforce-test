@@ -91,30 +91,30 @@ public with sharing class FEC_NotificationHistoryController {
             return new List<String>{
                 FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_EMAIL,
-                'email'
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_EMAIL_LOWER
             };
         }
         if (c == FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_ZNS) {
             return new List<String>{
-                'ZNS',
-                'Zns',
-                'zns',
-                'Zalo ZNS',
-                'Zalo',
-                'ZaloZNS'
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_ZNS,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZNS_TITLE,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZNS_LOWER,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS_COMPACT
             };
         }
         if (c == FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_MOBILE_APP) {
             return new List<String>{
-                'Mobile App',
-                'MobileApp',
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_COMPACT,
                 FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
                 FEC_ConstantCommon.REQUESTOR_MOBILE,
-                'mobile app',
-                'App',
-                'Push',
-                'Push Notification',
-                'Mobile Application'
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_LOWER,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_APP,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_PUSH,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_PUSH_NOTIFICATION,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APPLICATION
             };
         }
         return new List<String>();

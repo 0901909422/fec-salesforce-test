@@ -1,36 +1,87 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>*</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_NotificationHistoryController</members>
+        <members>FEC_CheckEligibleController</members>
+        <members>FEC_CardEligibilityController</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexComponent</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexPage</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTestSuite</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTrigger</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
+        <members>fe_Notification_History</members>
+        <members>fec_CardEligibilitySection</members>
+        <members>fecCheckEligibleLoanSection</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
-        <members>*</members>
-        <name>StaticResource</name>
+        <members>FEC_MSG_Param_Required</members>
+        <members>FEC_MSG_CheckEligible_No_Matching_History</members>
+        <members>FEC_MSG_CheckEligible_Card_Not_Found</members>
+        <members>FEC_MSG_Status_Eligible</members>
+        <members>FEC_MSG_Status_Not_Eligible</members>
+        <members>FEC_MSG_CancelCS_Success</members>
+        <members>FEC_Notification_History_Loading</members>
+        <members>FEC_Notification_History_Case_Read_Error</members>
+        <members>FEC_Notification_History_SMS_No_Primary_Phone</members>
+        <members>FEC_Notification_History_SMS_No_Records</members>
+        <members>FEC_Notification_History_SMS_No_Log_Default</members>
+        <members>FEC_Notification_History_SMS_Load_Failed</members>
+        <members>FEC_Notification_History_SMS_Http_Failed</members>
+        <members>FEC_Notification_History_Error_Unknown</members>
+        <members>FEC_Notification_History_Email_No_Records</members>
+        <members>FEC_Notification_History_Email_Need_Record</members>
+        <members>FEC_Notification_History_ZNS_No_Records</members>
+        <members>FEC_Notification_History_MobileApp_No_Records</members>
+        <members>FEC_Notification_History_Phone_Prefix</members>
+        <members>FEC_Notification_History_Tab_SMS</members>
+        <members>FEC_Notification_History_Tab_ZNS</members>
+        <members>FEC_Notification_History_Tab_Email</members>
+        <members>FEC_Notification_History_Tab_MobileApp</members>
+        <members>FEC_Notification_History_Col_DateTime</members>
+        <members>FEC_Notification_History_Col_Notification_Type</members>
+        <members>FEC_Notification_History_Col_Notification_Content</members>
+        <members>FEC_Notification_History_Col_Sent_Type</members>
+        <members>FEC_Notification_History_Col_Sent_System</members>
+        <members>FEC_Notification_History_Col_User</members>
+        <members>FEC_Notification_History_Col_Sent_Status</members>
+        <members>FEC_Notification_History_Col_Failure_Reason</members>
+        <members>FEC_Notification_History_Col_Case_Id</members>
+        <members>FEC_Notification_History_Sort_DateTime</members>
+        <members>FEC_Notification_History_Empty_Dash</members>
+        <members>FEC_Toast_Error</members>
+        <members>FEC_Toast_Error_Generic</members>
+        <members>FEC_CardEligibility_Section_Title</members>
+        <members>FEC_CardEligibility_Btn_TopUp</members>
+        <members>FEC_CardEligibility_Btn_IPP</members>
+        <members>FEC_CardEligibility_Lbl_Available_Credit_Limit</members>
+        <members>FEC_CardEligibility_Lbl_Reason</members>
+        <members>FEC_CardEligibility_Lbl_Fast_Cash_Status</members>
+        <members>FEC_CardEligibility_Lbl_IPP_Status</members>
+        <members>FEC_CardEligibility_Lbl_Limit</members>
+        <members>FEC_CardEligibility_Lbl_Error_Code</members>
+        <members>FEC_CardEligibility_Lbl_Description</members>
+        <members>FEC_Lbl_Loading</members>
+        <members>FEC_Toast_Success</members>
+        <members>FEC_Toast_Warning</members>
+        <members>FEC_CardEligibility_TopUp_Load_Success</members>
+        <members>FEC_CardEligibility_IPP_Load_Success</members>
+        <members>FEC_CardEligibility_No_Account_Warning</members>
+        <members>FEC_CardEligibility_Request_Failed_Http</members>
+        <members>FEC_CardEligibility_Request_Failed_Http_Unknown</members>
+        <members>FEC_CardEligibility_Unknown_Error</members>
+        <members>FEC_CardEligibility_Unexpected_Error</members>
+        <members>FEC_CardEligibility_IPP_Col_Tenure</members>
+        <members>FEC_CardEligibility_IPP_Col_Rate</members>
+        <members>FEC_CardEligibility_IPP_Col_Registration_Rate</members>
+        <members>FEC_CardEligibility_IPP_Col_Monthly_Installment</members>
+        <members>FEC_CardEligibility_IPP_Col_Conversion_Fee</members>
+        <members>FEC_Lbl_CheckEligible_Loan_Section</members>
+        <members>FEC_Lbl_CheckEligible_TopUp_Xsell_Eligibility</members>
+        <members>FEC_Lbl_CheckEligible_TopUp_Xsell_Min</members>
+        <members>FEC_Lbl_CheckEligible_TopUp_Xsell_Max</members>
+        <members>FEC_MSG_Error_API_Label</members>
+        <name>CustomLabel</name>
     </types>
-    <version>45.0</version>
+    <version>61.0</version>
 </Package>

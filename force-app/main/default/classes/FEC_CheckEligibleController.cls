@@ -7,7 +7,10 @@ public with sharing class FEC_CheckEligibleController {
     @AuraEnabled
     public static FEC_CheckEligibleCallout.CheckEligibleResponse checkCustomerEligibility(Id caseId) {
         if (caseId == null) {
-            return errResponse('VALIDATION_ERROR', 'Case Id is required');
+            return errResponse(
+                FEC_ConstantCommon.ERROR_CODE_VALIDATION,
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
+            );
         }
         List<Case> caseRows = [
             SELECT Id, FEC_Account_or_Contract__c
@@ -16,7 +19,7 @@ public with sharing class FEC_CheckEligibleController {
             LIMIT 1
         ];
         if (caseRows.isEmpty()) {
-            return errResponse('VALIDATION_ERROR', 'Case not found');
+            return errResponse(FEC_ConstantCommon.ERROR_CODE_VALIDATION, 'Case not found');
         }
         Id chId = caseRows[0].FEC_Account_or_Contract__c;
         if (chId == null) {
@@ -46,7 +49,7 @@ public with sharing class FEC_CheckEligibleController {
 
         String errId = validateIdParamForCallout(cardNum);
         if (errId != null) {
-            return errResponse('VALIDATION_ERROR', errId);
+            return errResponse(FEC_ConstantCommon.ERROR_CODE_VALIDATION, errId);
         }
         // Chuẩn hóa trước khi gọi (callout không trim/validate)
         String idForCallout = cardNum.trim();
