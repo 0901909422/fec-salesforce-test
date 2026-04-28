@@ -142,7 +142,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 if (String.isNotBlank(ra.FEC_Queue__c)) queueNames.add(ra.FEC_Queue__c);
             }
             Map<String, Id> queueNameToId = new Map<String, Id>();
-            for (Group g : [SELECT Id, Name FROM Group WHERE Name IN :queueNames AND Type = 'Queue']) {
+            for (Group g : [SELECT Id, Name FROM Group WHERE Name IN :queueNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                 queueNameToId.put(g.Name, g.Id);
             }
 
@@ -152,7 +152,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 List<FEC_Case_Remarks__c> latestRemarks = [
                     SELECT Id, FEC_Case_Remarks__c, FEC_User__c
                     FROM FEC_Case_Remarks__c
-                    WHERE FEC_Case__c = :caseId AND FEC_Remark_Type__c != 'Assignment'
+                    WHERE FEC_Case__c = :caseId AND FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
                     ORDER BY CreatedDate DESC LIMIT 1
                 ];
                 remarkContent = latestRemarks.isEmpty() ? '' : latestRemarks[0].FEC_Case_Remarks__c;
@@ -174,9 +174,9 @@ public without sharing class FEC_CofGsrAssignmentService {
                     ? String.valueOf(queueNameToId.get(ra.FEC_Queue__c)) : null;
                 assignments.add(new FEC_Assignment__c(
                     FEC_Case__c = caseId,
-                    FEC_Assignment_Name__c = 'Call',
-                    FEC_Assignment_Type__c = 'Routing',
-                    FEC_Assignment_Status__c = 'Open',
+                    FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
+                    FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
+                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
                     FEC_OwnerID__c = queueId,
                     FEC_Assignment_Owner__c = currentUser.Id,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -191,7 +191,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             for (FEC_Assignment__c a : assignments) {
                 remarksToInsert.add(new FEC_Case_Remarks__c(
                     FEC_Case__c = caseId,
-                    FEC_Remark_Type__c = 'Assignment',
+                    FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkContent,
                     FEC_User__c = remarkUserEmail,
                     FEC_Assignment__c = a.Id,
@@ -247,7 +247,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 if (String.isNotBlank(qn)) queueNames.add(qn);
             }
             Map<String, Id> queueNameToId = new Map<String, Id>();
-            for (Group g : [SELECT Id, Name FROM Group WHERE Name IN :queueNames AND Type = 'Queue']) {
+            for (Group g : [SELECT Id, Name FROM Group WHERE Name IN :queueNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                 queueNameToId.put(g.Name, g.Id);
             }
 
@@ -268,9 +268,9 @@ public without sharing class FEC_CofGsrAssignmentService {
                     ? String.valueOf(queueNameToId.get(queueName)) : null;
                 assignments.add(new FEC_Assignment__c(
                     FEC_Case__c = caseId,
-                    FEC_Assignment_Name__c = 'Call',
-                    FEC_Assignment_Type__c = 'Routing',
-                    FEC_Assignment_Status__c = 'Open',
+                    FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
+                    FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
+                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
                     FEC_OwnerID__c = queueId,
                     FEC_Assignment_Owner__c = currentUser.Id,
                     FEC_Team__c = teamName,
@@ -286,7 +286,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             for (Integer i = 0; i < assignments.size(); i++) {
                 remarks.add(new FEC_Case_Remarks__c(
                     FEC_Case__c = caseId,
-                    FEC_Remark_Type__c = 'Assignment',
+                    FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkList[i],
                     FEC_User__c = currentUser.Email,
                     FEC_Assignment__c = assignments[i].Id,
@@ -425,7 +425,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             String targetQueueName = 'CC'.equals(firstTeam)
                 ? System.Label.FEC_CC_Queue_Name
                 : System.Label.FEC_CS_Support_Queue_Name;
-            List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = 'Queue' LIMIT 1];
+            List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
             if (!targetQueues.isEmpty()) {
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
                 Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
