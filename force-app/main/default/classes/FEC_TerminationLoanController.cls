@@ -151,10 +151,10 @@ public with sharing class FEC_TerminationLoanController {
 
     /** Lưu Fee/Charge + Overdue (GetLoanBasicInfo) → FEC_Customer_History__c. */
     private static void saveFeeChargeToRecord(Id customerHistoryId, FEC_GetLoanBasicInfo.ResponseWrapper basicRes) {
-        FEC_GetLoanBasicInfo.InterestOnOverdueInterest iooi = basicRes?.LoanBasicInfo?.InterestOnOverdueInterest;
+        FEC_GetLoanBasicInfo.Loan loan = basicRes?.LoanBasicInfo?.Loan;
         FEC_GetLoanBasicInfo.PassDue passDue = basicRes?.LoanBasicInfo?.PassDue;
         FEC_GetLoanBasicInfo.Product product = basicRes?.LoanBasicInfo?.Product;
-        if (iooi == null && passDue == null && product == null) {
+        if (loan == null && passDue == null && product == null) {
             return;
         }
 
@@ -169,11 +169,11 @@ public with sharing class FEC_TerminationLoanController {
         }
         FEC_Customer_History__c rec = histories[0];
 
-        if (iooi != null) {
-            rec.FEC_Assessed_Amount__c = iooi.AssessedAmount;
-            rec.FEC_Collected_Amount__c = iooi.CollectedAmount;
-            rec.FEC_Waived_Amount__c = iooi.WaivedAmount;
-            rec.FEC_Outstanding_Amount__c = iooi.OutstandingAmount;
+        if (loan != null) {
+            rec.FEC_Assessed_Amount__c = loan.SysCalcChargeAmount;
+            rec.FEC_Collected_Amount__c = loan.ChargeAmtCollected;
+            rec.FEC_Waived_Amount__c = loan.ChargeWaived;
+            rec.FEC_Outstanding_Amount__c = loan.OutstandingChargeAmount;
         }
         if (passDue != null) {
             rec.FEC_Overdue_Penalty__c = parseDecimalFromString(String.valueOf(passDue.OverduePenalty));
@@ -211,9 +211,17 @@ public with sharing class FEC_TerminationLoanController {
     ) {
         List<Map<String, Object>> listData = new List<Map<String, Object>>();
 
-        FEC_GetLoanBasicInfo.InterestOnOverdueInterest iooi = basicRes?.LoanBasicInfo?.InterestOnOverdueInterest;
-        if (iooi != null) {
-            listData.add(buildFeeRow('Interest on Overdue Interest', iooi.AssessedAmount, iooi.CollectedAmount, iooi.WaivedAmount, iooi.OutstandingAmount));
+        FEC_GetLoanBasicInfo.Loan loan = basicRes?.LoanBasicInfo?.Loan;
+        if (loan != null) {
+            listData.add(
+                buildFeeRow(
+                    System.Label.FEC_Fee_Charge_Label,
+                    loan.SysCalcChargeAmount,
+                    loan.ChargeAmtCollected,
+                    loan.ChargeWaived,
+                    loan.OutstandingChargeAmount
+                )
+            );
         }
 
         result.put('feeChargeList', listData);

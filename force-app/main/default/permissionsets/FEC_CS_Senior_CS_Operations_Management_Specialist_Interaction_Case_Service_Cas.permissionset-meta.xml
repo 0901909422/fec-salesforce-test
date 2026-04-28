@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
         <editable>true</editable>
@@ -2242,7 +2242,27 @@
         <field>FEC_Additional_Info__c.FEC_Test_Field_03__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <hasActivationRequired>false</hasActivationRequired>
+        <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Assessed_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Collected_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Waived_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.FEC_Outstanding_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+<hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Operations Management Specialist - Interaction Case &amp; Service Cas</label>
     <license>Salesforce</license>
     <objectPermissions>
@@ -2553,4 +2573,7 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-</PermissionSet>
+    </PermissionSet>
+
+
+
