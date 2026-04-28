@@ -1,6 +1,8 @@
 public with sharing class FEC_UpdateCustomerContact {
   public static final String PHONE_UPDATE = 'Phone Update';
   public static final String EMAIL_UPDATE = 'Email Update';
+  public static final String API_NAME = 'FEC_UpdateCustomerContact';
+  public static FEC_ResponseLog responseLog;
 
   public class CustomerContactRequest {
     public String CIFNumber;
@@ -197,8 +199,23 @@ public with sharing class FEC_UpdateCustomerContact {
     String transId = generateTransId();
     String timestamp = formatTimestamp();
     String envelope = buildEnvelope(req, transId, timestamp);
+    String endpoint = '';
+    String method = FEC_ConstantCommon.API_METHOD_POST;
     try {
+      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Update_Customer_Contact');
+      endpoint = apiSetting?.FEC_Call_Mock__c
+        ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
+        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
       HttpResponse res = sendRequest(envelope);
+      responseLog = new FEC_ResponseLog(
+        API_NAME,
+        endpoint,
+        method,
+        envelope,
+        res,
+        null
+      );
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
       finalResult = parseResponse(body, status);
@@ -209,10 +226,36 @@ public with sharing class FEC_UpdateCustomerContact {
       if (finalResult.rawResponse == null)
         finalResult.rawResponse = body;
     } catch (Exception ex) {
+      if (responseLog != null) {
+        responseLog.errorMessage = ex.getMessage();
+      } else {
+        responseLog = new FEC_ResponseLog(
+          API_NAME,
+          endpoint,
+          method,
+          envelope,
+          null,
+          ex.getMessage()
+        );
+      }
       finalResult.errorMessage = ex.getMessage();
       finalResult.success = false;
     }
     return finalResult;
+  }
+
+  public static void logApiResponse() {
+    if (responseLog != null) {
+      FEC_CommonUltils.logApi(
+        responseLog.apiName,
+        responseLog.endpoint,
+        responseLog.method,
+        responseLog.requestBody,
+        responseLog.response,
+        responseLog.errorMessage
+      );
+      responseLog = null;
+    }
   }
 
   private static void validate(
@@ -307,12 +350,6 @@ public with sharing class FEC_UpdateCustomerContact {
       throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Customer History'}));
     }
 
-    if (PHONE_UPDATE.equals(method)) {
-      req.ContactString = selectedCase.FEC_Updated_Info_Phone_Number__c;
-    } else if (EMAIL_UPDATE.equals(method)) {
-      req.ContactString = selectedCase.FEC_Updated_Info_Email__c;
-    }
-
     List<FEC_Contact_List__c> contactlst = getMatchingContactList(
       selectedCase,
       method
@@ -321,15 +358,23 @@ public with sharing class FEC_UpdateCustomerContact {
     if (!contactlst.isEmpty()) {
       FEC_Contact_List__c matched = contactlst.get(0);
       req.ContactId = matched.FEC_Contact_ID__c;
-      req.Channel = matched.FEC_Channel__c;
-      req.CommunicationType = matched.FEC_Communication_Type__c;
+      req.Channel = selectedCase.FEC_Channel__c;
+      req.CommunicationType = PHONE_UPDATE.equals(method)
+        ? FEC_ConstantCommon.PHONE
+        : FEC_ConstantCommon.EMAIL;
+      req.ContactString = matched.FEC_Contact_String__c;
     } else {
       throw new FEC_APIServiceException(
         String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Matching FEC_Contact_List__c'})
       );
     }
 
-    UpdateContactResult result = updateCustomerContact(req);
+    UpdateContactResult result;
+    try {
+      result = updateCustomerContact(req);
+    } finally {
+      logApiResponse();
+    }
 
     if (result.success) {
       selectedCase.FEC_Process_Action_Count__c = -1;
@@ -366,16 +411,10 @@ public with sharing class FEC_UpdateCustomerContact {
   ) {
     Id accountOrContractId = selectedCase.FEC_Account_or_Contract__c;
 
-    String commTypeForQuery;
-    if (PHONE_UPDATE.equals(method)) {
-      commTypeForQuery = FEC_ConstantCommon.PHONE;
-    } else if (EMAIL_UPDATE.equals(method)) {
-      commTypeForQuery = FEC_ConstantCommon.EMAIL;
-    } else {
+    Boolean isPhoneMethod = PHONE_UPDATE.equals(method);
+    if (!isPhoneMethod && !EMAIL_UPDATE.equals(method)) {
       return new List<FEC_Contact_List__c>();
     }
-
-    String caseChannel = selectedCase.FEC_Channel__c;
 
     String originalContactString;
     if (accountOrContractId != null) {
@@ -392,6 +431,22 @@ public with sharing class FEC_UpdateCustomerContact {
       }
     }
 
+    if (String.isNotBlank(originalContactString) && isPhoneMethod) {
+      return [
+        SELECT
+          Id,
+          FEC_Customer_History__c,
+          FEC_Communication_Type__c,
+          FEC_Channel__c,
+          FEC_Contact_ID__c,
+          FEC_Contact_String__c
+        FROM FEC_Contact_List__c
+        WHERE
+          FEC_Customer_History__c = :accountOrContractId
+          AND FEC_Contact_String__c = :originalContactString
+      ];
+    }
+
     if (String.isNotBlank(originalContactString)) {
       return [
         SELECT
@@ -404,9 +459,23 @@ public with sharing class FEC_UpdateCustomerContact {
         FROM FEC_Contact_List__c
         WHERE
           FEC_Customer_History__c = :accountOrContractId
-          AND FEC_Communication_Type__c = :commTypeForQuery
-          AND FEC_Channel__c = :caseChannel
+          AND FEC_Communication_Type__c = :FEC_ConstantCommon.EMAIL
           AND FEC_Contact_String__c = :originalContactString
+      ];
+    }
+
+    if (isPhoneMethod) {
+      return [
+        SELECT
+          Id,
+          FEC_Customer_History__c,
+          FEC_Communication_Type__c,
+          FEC_Channel__c,
+          FEC_Contact_ID__c,
+          FEC_Contact_String__c
+        FROM FEC_Contact_List__c
+        WHERE
+          FEC_Customer_History__c = :accountOrContractId
       ];
     }
 
@@ -421,8 +490,7 @@ public with sharing class FEC_UpdateCustomerContact {
       FROM FEC_Contact_List__c
       WHERE
         FEC_Customer_History__c = :accountOrContractId
-        AND FEC_Communication_Type__c = :commTypeForQuery
-        AND FEC_Channel__c = :caseChannel
+        AND FEC_Communication_Type__c = :FEC_ConstantCommon.EMAIL
     ];
   }
 }
