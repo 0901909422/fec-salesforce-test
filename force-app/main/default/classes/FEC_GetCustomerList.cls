@@ -94,10 +94,12 @@ public with sharing class FEC_GetCustomerList {
         System.debug('email: ' + email);
         System.debug('personId: ' + personId);
 
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
+        
         // tungnm37 thêm: hardcode email → accountNumber mapping cho môi trường test
         // Chỉ áp dụng khi FEC_Enviroment__c = Non-Production
         // Khi search bằng email này, chuyển thành search theo accountNumber tương ứng
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         Boolean isNonProduction = FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION.equals(apiSetting?.FEC_Enviroment__c);
         if (isNonProduction && String.isNotBlank(email) && String.isBlank(accountNumber)) {
             Map<String, String> emailToAccountMap = new Map<String, String>{
@@ -143,9 +145,6 @@ public with sharing class FEC_GetCustomerList {
                 personId
             );
 
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Customer_List');
-        
          String endpoint = apiSetting?.FEC_Call_Mock__c
                 ? FEC_MockupEndpoint.GET_CUSTOMER_LIST_ENDPOINT_MOCKUP
                 : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
