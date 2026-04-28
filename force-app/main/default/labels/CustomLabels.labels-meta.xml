@@ -14355,4 +14355,68 @@
         <shortDescription>FEC_DNB_Update_Button</shortDescription>
         <value>Update to DNB</value>
     </labels>
+    <labels>
+        <fullName>FEC_CC_Queue_Name</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Queue Name for COF/GSR routing</shortDescription>
+        <value>DQ - CS Customer Care</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Item_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add Item Label</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Remark Label</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Queue_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Queue combobox</shortDescription>
+        <value>-- Choose Queue --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Team_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Team combobox</shortDescription>
+        <value>-- Choose Team --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Label</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enter_Remark_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Assignment Remark textarea</shortDescription>
+        <value>Enter remark...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark column label</shortDescription>
+        <value>Remark</value>
+    </labels>
 </CustomLabels>
