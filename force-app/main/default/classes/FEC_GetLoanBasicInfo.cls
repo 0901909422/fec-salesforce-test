@@ -57,6 +57,10 @@ public with sharing class FEC_GetLoanBasicInfo {
         public Decimal ChargeAmtCollected;
         public Decimal ChargeWaived;
         public Decimal OutstandingChargeAmount;
+        public Decimal AssessedAmount;
+        public Decimal CollectedAmount;
+        public Decimal WaivedAmount;
+        public Decimal OutstandingAmount;
         public String Purpose;
         public String CompanyName;
     }
@@ -322,6 +326,10 @@ public with sharing class FEC_GetLoanBasicInfo {
         l.ChargeAmtCollected = FEC_CommonUltils.xmlValToDecimal(n, 'ChargeAmtCollected');
         l.ChargeWaived = FEC_CommonUltils.xmlValToDecimal(n, 'ChargeWaived');
         l.OutstandingChargeAmount = FEC_CommonUltils.xmlValToDecimal(n, 'OutstandingChargeAmount');
+        l.AssessedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'AssessedAmount');
+        l.CollectedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'CollectedAmount');
+        l.WaivedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'WaivedAmount');
+        l.OutstandingAmount = FEC_CommonUltils.xmlValToDecimal(n, 'OutstandingAmount');
         l.Purpose = FEC_CommonUltils.getXmlValue(n, 'Purpose');
         l.CompanyName = FEC_CommonUltils.getXmlValue(n, 'CompanyName');
         return l;
