@@ -280,9 +280,7 @@ public class FEC_Constants {
 
     // === Campaign API Configuration ===
     public static final Integer CAMPAIGN_MAX_JSON_SIZE = 1000000;
-    public static final String CAMPAIGN_API_ENDPOINT = 'callout:FEC_API/api/v1/cases/ingest_campaign';
-    public static final String CAMPAIGN_CHECK_STATUS_ENDPOINT = 'callout:FEC_API/api/v1/cases/campaign-status';
-    public static final String CAMPAIGN_CALLING_LIST_ENDPOINT = 'callout:Your_Service_API/get-calling-list-result';
+    public static final String CAMPAIGN_API_CONFIG_NAME = 'FEC_Campaign_Ingest';
 
     // === HTTP Constants ===
     public static final Integer HTTP_STATUS_OK = 200;
