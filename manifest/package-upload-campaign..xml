@@ -26,6 +26,8 @@
         <members>FEC_CampaignApiResponse</members>
         <members>FEC_CampaignBatchLogger</members>
         <members>FEC_CampaignValidator</members>
+        <!-- Endpoint resolver -->
+        <members>FEC_EndpointResolver</members>
         <!-- New push batch classes -->
         <members>FEC_PushExistingRecordsBatch</members>
         <members>FEC_PushCallbackRecordsBatch</members>
@@ -49,6 +51,7 @@
         <members>FEC_Campaign__c</members>
         <members>FEC_Batch_Log__c</members>
         <members>FEC_Campaign_Config__mdt</members>
+        <members>FEC_API_Config__mdt</members>
         <name>CustomObject</name>
     </types>
     <types>
@@ -57,6 +60,7 @@
     </types>
     <types>
         <members>FEC_Campaign_Config.FEC_Default_Campaign_Config</members>
+        <members>FEC_API_Config.FEC_Campaign_Ingest</members>
         <name>CustomMetadata</name>
     </types>
     <types>

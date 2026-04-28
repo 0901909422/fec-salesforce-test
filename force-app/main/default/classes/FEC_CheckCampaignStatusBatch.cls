@@ -13,18 +13,18 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
     public Database.QueryLocator start(Database.BatchableContext BC) {
         String query = 'SELECT Id, FEC_RecordId__c, FEC_RecordStatus__c, ' +
             'FEC_InsertionDate__c, FEC_CurrentCallAttempt__c, ' +
-            'FEC_RecordCurrentLifetime__c, FEC_RecordLifetime__c, FEC_Number4__c, FEC_Number5__c, ' +
+            'FEC_RecordCurrentLifetime__c, FEC_RecordLifeTime__c, FEC_Number4__c, FEC_Number5__c, ' +
             'FEC_CallbackRequested__c, FEC_SendToCommsDB__c, FEC_AccountOrContractNumber__c ' +
             'FROM FEC_DataCampaign__c ' +
             'WHERE FEC_IsPushed__c = true ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
-            'AND FEC_RecordCurrentLifetime__c <= FEC_RecordLifetime__c';
+            'AND FEC_IsWithinLifetime__c = true';
 
         Integer totalRecords = Database.countQuery(
             'SELECT count() FROM FEC_DataCampaign__c ' +
             'WHERE FEC_IsPushed__c = true ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
-            'AND FEC_RecordCurrentLifetime__c <= FEC_RecordLifetime__c'
+            'AND FEC_IsWithinLifetime__c = true'
         );
         this.batchLogId = FEC_CampaignBatchLogger.logStart('FEC_CheckCampaignStatusBatch', totalRecords);
 
@@ -126,12 +126,12 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
 
     @TestVisible
     private Boolean applyODataUpdate(FEC_DataCampaign__c rec, SObject odataData) {
-        rec.FEC_Number4__c = (Decimal) odataData.get('number4__c');
-        rec.FEC_Number5__c = (Decimal) odataData.get('number5__c');
-        rec.FEC_RecordCurrentLifetime__c = (Decimal) odataData.get('record_current_lifetime__c');
-        rec.FEC_InsertionDate__c = (DateTime) odataData.get('insertion_date__c');
+        rec.FEC_Number4__c = FEC_CommonUltils.parseDecimal(odataData.get('number4__c'));
+        rec.FEC_Number5__c = FEC_CommonUltils.parseDecimal(odataData.get('number5__c'));
+        rec.FEC_RecordCurrentLifetime__c = FEC_CommonUltils.parseDecimal(odataData.get('record_current_lifetime__c'));
+        rec.FEC_InsertionDate__c = FEC_CommonUltils.parseDateTime(odataData.get('insertion_date__c'));
         rec.FEC_CallbackRequested__c = (String) odataData.get('callback_requested__c');
-        rec.FEC_CurrentCallAttempt__c = (Decimal) odataData.get('current_call_attempt__c');
+        rec.FEC_CurrentCallAttempt__c = FEC_CommonUltils.parseDecimal(odataData.get('current_call_attempt__c'));
         rec.FEC_SendToCommsDB__c = (String) odataData.get('send_to_commsdb__c');
         rec.FEC_SentInstantly__c = (String) odataData.get('sent_instantly__c');
         rec.FEC_IsMaxAttempt__c = (String) odataData.get('is_max_attempt__c');
