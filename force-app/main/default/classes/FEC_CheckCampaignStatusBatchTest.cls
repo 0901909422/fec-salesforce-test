@@ -123,13 +123,12 @@ private class FEC_CheckCampaignStatusBatchTest {
 
     @isTest
     static void testProcessODataResults_CompositeKeyMatching() {
-        // Build mock scope record with known account + record ID
+        // Build mock scope record — FEC_RecordId__c is AutoNumber, auto-generated on insert
         FEC_CS_Campaign__c csMapping = [SELECT Id FROM FEC_CS_Campaign__c LIMIT 1];
         FEC_DataCampaign__c scopeRec = new FEC_DataCampaign__c(
             FEC_CS_Campaign__c = csMapping.Id,
             FEC_AppId__c = 'APP_EXPLORE',
             FEC_AccountOrContractNumber__c = 'ACC001',
-            FEC_RecordId__c = 'REC001',
             FEC_ProductLine__c = 'Loan',
             FEC_RecordStatus__c = FEC_Constants.CAMPAIGN_STATUS_NEW,
             FEC_IsPushed__c = true,
@@ -141,12 +140,16 @@ private class FEC_CheckCampaignStatusBatchTest {
         );
         insert scopeRec;
 
+        // Re-query to get auto-generated FEC_RecordId__c
+        scopeRec = [SELECT Id, FEC_RecordId__c, FEC_AccountOrContractNumber__c
+                     FROM FEC_DataCampaign__c WHERE Id = :scopeRec.Id];
+
         // Build mock OData SObject using the external object type
         // The external object uses lowercase field names per PostgreSQL schema
         SObject mockOData = Schema.getGlobalDescribe()
             .get('PostgresCampaignLog__x').newSObject();
-        mockOData.put('account_or_contract_number__c', 'ACC001');
-        mockOData.put('record_id__c', 'REC001');
+        mockOData.put('account_or_contract_number__c', scopeRec.FEC_AccountOrContractNumber__c);
+        mockOData.put('record_id__c', scopeRec.FEC_RecordId__c);
         mockOData.put('number4__c', 42);
         mockOData.put('number5__c', 99);
         mockOData.put('record_current_lifetime__c', 1);
@@ -176,13 +179,12 @@ private class FEC_CheckCampaignStatusBatchTest {
 
     @isTest
     static void testApplyODataUpdate_LowercaseFieldMapping() {
-        // Build a target FEC_DataCampaign__c record
+        // Build a target FEC_DataCampaign__c record — FEC_RecordId__c is AutoNumber
         FEC_CS_Campaign__c csMapping = [SELECT Id FROM FEC_CS_Campaign__c LIMIT 1];
         FEC_DataCampaign__c rec = new FEC_DataCampaign__c(
             FEC_CS_Campaign__c = csMapping.Id,
             FEC_AppId__c = 'APP_FIELD_MAP',
             FEC_AccountOrContractNumber__c = 'ACC002',
-            FEC_RecordId__c = 'REC002',
             FEC_ProductLine__c = 'Loan',
             FEC_RecordStatus__c = FEC_Constants.CAMPAIGN_STATUS_NEW,
             FEC_IsPushed__c = true,
