@@ -188,6 +188,14 @@
 		<members>FEC_DNB_No_Data_Question</members>
 		<members>FEC_DNB_Update_Button</members>
 		<members>FEC_Invalid_OwnerId</members>
+		<members>FEC_CC_Queue_Name</members>
+		<members>FEC_Add_Item_Label</members>
+		<members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_Confirm_Label</members>
+		<members>FEC_Choose_Team_Placeholder</members>
+		<members>FEC_Choose_Queue_Placeholder</members>
+		<members>FEC_Enter_Remark_Placeholder</members>
+		<members>FEC_Remark_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

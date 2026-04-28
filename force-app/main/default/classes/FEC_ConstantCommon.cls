@@ -243,7 +243,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
-    public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
 
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
