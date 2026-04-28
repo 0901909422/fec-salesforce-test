@@ -1744,7 +1744,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Category__r.FEC_Code__c,
           FEC_SubCategory__r.Name,
           FEC_SubCategory__r.FEC_Code__c,
-          FEC_SubCode__r.Name
+          FEC_SubCode__r.Name,
           FEC_SubCode__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
