@@ -271,6 +271,7 @@ export default class FraudIntegrationMapping extends LightningElement {
             subCategory: this.subCategory,
             subCode: this.subCode,
             channelCode: this.channel,
+            serviceType: this.serviceType,
             userTypeId: this.userType
         })
             .then(r => {

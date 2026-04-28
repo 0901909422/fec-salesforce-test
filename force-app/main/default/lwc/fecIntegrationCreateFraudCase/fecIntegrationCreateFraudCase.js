@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadMasterDataIntegrationMappingById';
@@ -6,9 +6,10 @@ import loadMasterDataIntegrationMappingById from '@salesforce/apex/FEC_Integrati
 import getIntegrationFieldTypes 
     from '@salesforce/apex/FEC_IntegrationCreateFraudController.getIntegrationFieldTypes';
 import submitCreateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCreateFraudCase';
+import submitWithoutCreateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitWithoutCreateFraudCase';
 import submitUpdateFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitUpdateFraudCase';
 import submitCancelFraudCase from '@salesforce/apex/FEC_IntegrationCreateFraudController.submitCancelFraudCase';
-import loadCategoryMapping from '@salesforce/apex/FEC_IntegrationCreateFraudController.loadCategoryMapping';
+
 
 
 
@@ -53,6 +54,11 @@ import LBL_Create_Fraud_Case_Button from '@salesforce/label/c.LBL_Create_Fraud_C
 
 export default class IntegrationCreateFraudCase extends LightningElement {
 
+    @api serviceCaseId;
+    @api natureOfCaseId;
+    @api mappingId;
+    @api caseDataId;
+
     @track loading = true;
     @track showPreview = false;
     @track previewJson = '';
@@ -73,6 +79,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     createActionType = 'create';
     updateActionType = 'update';
     cancelActionType = 'cancel';
+    createWithoutCalloutType = 'createWithoutCallout';
 
 
     subCategoriesAll = [];    
@@ -101,7 +108,7 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     remarks = '';
     creatorEmail = '';
     fraudCase = '';
-    ServiceCaseId = '';
+
     actionType = this.createActionType; // create | update | cancel
     labels = {
         Integration_Mapping_Title,
@@ -153,40 +160,16 @@ export default class IntegrationCreateFraudCase extends LightningElement {
 
     connectedCallback() {
         this.loading = true;
-    
         getIntegrationFieldTypes()
             .then(types => {
                 this.fieldTypes = types;
-                //console.log('fieldTypes: ', JSON.stringify(this.fieldTypes));
-    
-                // RETURN this promise
-                return loadCategoryMapping({ channelCode: this.fraudIntChannel });
+                if (this.mappingId) {
+                    console.log('case-data-id: ', this.caseDataId);
+                    return this.loadMasterDataIntegrationMapping(this.mappingId, this.caseDataId);
+                }
             })
-            .then(resultData => {
-                //console.log('resultData: ', JSON.stringify(resultData));
-    
-                this.categoryOptions = (resultData.categoryAll || []).map(item => ({
-                    label: item.displayName,
-                    value: item.value
-                }));
-                
-                this.subCategoriesAll = (resultData.subCategoriesAll || []).map(item => ({
-                    label: item.displayName,
-                    value: item.value,
-                    parentId: item.parentId,
-                    mappingId: item.mappingId
-                }));
-                
-                this.subCodesAll = (resultData.subCodesAll || []).map(item => ({
-                    label: item.displayName,
-                    value: item.value,
-                    parentId: item.parentId,
-                    mappingId: item.mappingId
-                }));
-            })
-            .catch(error => {
-                console.error('[ERROR] Load data', error);
-                console.error('Error body:', JSON.stringify(error.body));
+            .catch(err => {
+                console.error('[ERROR] connectedCallback:', err);
             })
             .finally(() => {
                 this.loading = false;
@@ -194,21 +177,22 @@ export default class IntegrationCreateFraudCase extends LightningElement {
     }
 
 
-   loadMasterDataIntegrationMapping(mappingId) {
+   loadMasterDataIntegrationMapping(mappingId, caseDataId) {
         console.log('[CALL] loadMasterDataIntegrationMapping:', mappingId);
-        loadMasterDataIntegrationMappingById({
-            integrationMappingId: mappingId
+        return loadMasterDataIntegrationMappingById({
+            integrationMappingId: mappingId,
+            caseDataId: caseDataId
         })
         .then(data => {
             console.log('[SUCCESS] loadMasterDataIntegrationMapping list:', data);
-            this.fraudIntChannel = data.intChannel;
+            this.fraudIntChannel = data.intChannel;           
             this.fraudIntUserType = data.intUserType;
             this.fraudIntProductLine = data.intProductLine;
             this.fraudIntServiceType = data.intServiceType;
-            this.fraudIntCategory = data.intCategory;
-            this.fraudIntSubCategory = data.intSubCategory;
-            this.fraudIntSubCode = data.intSubCode;            
-            this.loadAdditionalProps(data.propertyValues);
+            this.category = data.intCategory;
+            this.subCategory = data.intSubCategory;
+            this.subCode = data.intSubCode;            
+            this.loadAdditionalProps(data.propertyValues, data.propertyMappingValues);
         })
         .catch(err => {
             console.error('[ERROR] loadMasterDataIntegrationMapping:', err);
@@ -216,104 +200,23 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         });
     }
 
-    /* ================= CATEGORY CHANGE ================= */
 
-    handleCategory(e) {
-        this.category = e.detail.value;
-        this.additionalProps = [];
-        this.selectedCategory = e.detail;
-        console.log('[CHANGE] Category:', this.category);
-    
-        this.subCategory = null;
-        this.subCode = null;
-    
-        this.subCategoryOptions = this.subCategoriesAll
-            .filter(sc => sc.parentId === this.category)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));
-    
-        this.subCodeOptions = [];
-        this.rows = [];
-    }
-    
-      
-    /* ================= SUB CATEGORY CHANGE ================= */
-
-    handleSubCategory(e) {
-        this.subCategory = e.detail.value;   
-        this.additionalProps = []; 
-        this.subCode = null;
-        this.subCodeOptions = [];    
-        this.subCodeOptions = this.subCodesAll
-            .filter(sc => sc.parentId === this.subCategory)
-            .map(sc => ({
-                label: sc.label,
-                value: sc.value
-            }));    
-        //If no subcode → load mapping at SubCategory level
-        if (this.subCodeOptions.length === 0) {
-            // find selected subcategory
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            let mappingId = selectedSubCat?.mappingId ?? null;        
-            // If SubCategory mapping not found → fallback to Category
-            if (mappingId == null) {                
-                const selectedCat = this.categoryOptions.find(sc => sc.value === this.category);   
-                mappingId = selectedCat?.mappingId ?? null;
-            }
-        
-            // Load only if mappingId exists
-            if (mappingId != null) {
-                this.loadMasterDataIntegrationMapping(mappingId);
-            }
-        }
-        
-        
-    }
-    
-
-    /* ================= SUB CODE CHANGE ================= */
-
-    handleSubCode(e) {
-        this.subCode = e.detail.value;
-        this.additionalProps = [];
-        console.log('[CHANGE] SubCode:', this.subCode);
-        const selectedSubCode = this.subCodesAll.find(
-            sc => sc.value === this.subCode
-        );
-    
-        let mappingId = selectedSubCode?.mappingId || null;
-        if(mappingId == null) {
-            //Get mapping at SubCategory level
-            const selectedSubCat = this.getSubCategoryByValue(this.subCategory);
-            mappingId = selectedSubCat?.mappingId || null;
-            if(mappingId == null) {
-                //Get mapping at Category level               
-                const selectedCat = this.categoryOptions.find(
-                    sc => sc.value === this.category
-                );
-                mappingId = selectedCat?.mappingId || null;
-            }
-        }
-        console.log('[LOAD] Mapping at handleSubCode:', mappingId);
-        if(mappingId != null) {
-            this.loadMasterDataIntegrationMapping(mappingId);
-        }    
-    }
-
-
-    loadAdditionalProps(responseData) {
+    loadAdditionalProps(responseData, propertyMappingValues) {
         console.log('[SUCCESS] Additional Properties:', responseData);
+        console.log('[SUCCESS] Property Mapping Values:', propertyMappingValues);
         const list = Array.isArray(responseData) ? responseData : [];
+        const mappingValues = propertyMappingValues || {};
         console.log('[SUCCESS] Additional Properties list:', list);
         this.additionalProps = list.map(p => {
             const type = p.type?.trim().toLowerCase();
-    
+            // Auto-populate value from propertyMappingValues if exists
+            const mappedValue = mappingValues[p.property] || null;
+
             return {
                 ...p,
                 type,
-    
+                value: mappedValue,
+
                 // type flags
                 isString: type === this.fieldTypes.STRING,
                 isMulti: type === this.fieldTypes.MULTI,
@@ -434,7 +337,8 @@ export default class IntegrationCreateFraudCase extends LightningElement {
             UserType: this.fraudIntUserType,
             CreatorEmail: this.creatorEmail,
             FraudCaseId: this.fraudCase,
-            ServiceCaseId: this.ServiceCaseId,
+            ServiceCaseId: this.serviceCaseId,
+            caseDataId: this.caseDataId,
             AdditionalInfo: additionalInfoPayload
         };
     }
@@ -472,112 +376,109 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         }
     }
     
-    async onSubmit() {
-
-        if (this.isCreateSubmitting) return; // extra protection against double click   
-        this.isCreateSubmitting = true;   
-        this.loading = true;  
-        //Validate standard lightning inputs
+    validateForm() {
         const allInputs = this.template.querySelectorAll(
             'lightning-input, lightning-combobox, lightning-textarea'
         );
-    
+
         let isValid = true;
         let firstInvalid = null;
-    
+
         allInputs.forEach(el => {
             if (!el.checkValidity()) {
                 el.reportValidity();
                 isValid = false;
-    
                 if (!firstInvalid) {
                     firstInvalid = el;
                 }
             }
         });
-    
-        //Validate dynamic additional properties
+
         const missingDynamic = this.additionalProps.filter(p => {
-    
             if (!p.mandatory) return false;
-    
-            if (p.isBoolean) {
-                return p.value !== true;
-            }
-    
-            if (p.isFile) {
-                return !p.fileName;
-            }
-    
+            if (p.isBoolean) return p.value !== true;
+            if (p.isFile) return !p.fileName;
             return !p.value || p.value === '';
         });
-    
+
         if (missingDynamic.length > 0) {
             isValid = false;
-    
             const firstMissing = missingDynamic[0];
-            const el = this.template.querySelector(
-                `[data-id="${firstMissing.id}"]`
-            );
-    
+            const el = this.template.querySelector(`[data-id="${firstMissing.id}"]`);
             if (el) {
                 el.reportValidity?.();
                 firstInvalid = el;
             }
         }
-    
+
         if (!isValid) {
             if (firstInvalid) {
-                firstInvalid.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-    
-            this.showErrorToast(
-                this.labels.missingRequiredTitle,
-                this.labels.missingRequiredMsg
-            );
-            this.loading = false;
-            this.isCreateSubmitting = false;   
-            return;
+            this.showErrorToast(this.labels.missingRequiredTitle, this.labels.missingRequiredMsg);
+            return false;
         }
-    
+
         if (this.additionalProps.length === 0) {
-            this.showErrorToast(
-                this.labels.missingAdditionalTitle,
-                this.labels.missingAdditionalMsg
-            );
+            this.showErrorToast(this.labels.missingAdditionalTitle, this.labels.missingAdditionalMsg);
+            return false;
+        }
+
+        return true;
+    }
+
+    async onSubmit() {
+        if (this.isCreateSubmitting) return;
+        this.isCreateSubmitting = true;
+        this.loading = true;
+
+        if (!this.validateForm()) {
             this.loading = false;
-            this.isCreateSubmitting = false;   
+            this.isCreateSubmitting = false;
             return;
         }
-    
-        // =============================
-        // PROCESSING STARTS HERE
-        // =============================    
+
         try {
             const payload = this.buildPayload();
             this.previewJson = JSON.stringify(payload, null, 2);
-    
+
             const isUpdate =
                 this.fraudCase && Object.keys(this.fraudCase).length > 0;
-    
+
             this.actionType = isUpdate
                 ? this.updateActionType
-                : this.createActionType;         
-            //console.log('onSUbmit: ', this.previewJson);  
+                : this.createActionType;
+            console.log('onSUbmit: ', this.previewJson);
             await this.confirmSubmit();
-            
-            
         } catch (error) {
-            this.showErrorToast(
-                'Error',
-                error?.body?.message || error.message
-            );
+            this.showErrorToast('Error', error?.body?.message || error.message);
         } finally {
             this.loading = false;
-            this.isCreateSubmitting = false;   
+            this.isCreateSubmitting = false;
+        }
+    }
+
+    async onSubmitWithoutCallout() {
+        if (this.isCreateSubmitting) return;
+        this.isCreateSubmitting = true;
+        this.loading = true;
+
+        if (!this.validateForm()) {
+            this.loading = false;
+            this.isCreateSubmitting = false;
+            return;
+        }
+
+        try {
+            const payload = this.buildPayload();
+            this.previewJson = JSON.stringify(payload, null, 2);
+            this.actionType = this.createWithoutCalloutType;
+            await this.confirmSubmit();
+        } catch (error) {
+            this.showErrorToast('Error', error?.body?.message || error.message);
+        } finally {
+            this.loading = false;
+            this.isCreateSubmitting = false;
         }
     }
 
@@ -620,7 +521,10 @@ export default class IntegrationCreateFraudCase extends LightningElement {
         } 
         else if (this.actionType === this.updateActionType) {
             actionPromise = await submitUpdateFraudCase({ payload });
-        } 
+        }
+        else if (this.actionType === this.createWithoutCalloutType) {
+            actionPromise = await submitWithoutCreateFraudCase({ payload });
+        }
         else {
             actionPromise = await submitCreateFraudCase({ payload });
         }
@@ -629,6 +533,12 @@ export default class IntegrationCreateFraudCase extends LightningElement {
                 this.labels.responseSuccess,
                 actionPromise.message
             );
+            // Notify parent to reload
+            this.dispatchEvent(new CustomEvent('fraudcasesuccess', {
+                detail: { message: actionPromise.message },
+                bubbles: true,
+                composed: true
+            }));
         } else {
             this.showErrorToast(
                 this.labels.responseFailed,

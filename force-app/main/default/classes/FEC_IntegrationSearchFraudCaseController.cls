@@ -100,7 +100,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             Id, Name, FEC_CaseID__c, FEC_Service_Case_ID__c, FEC_Parent_CaseID__c,
             FEC_Case_Status__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c,
             FEC_Remark__c, CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, 
-            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email 
+            CreatedBy.Id, CreatedBy.Name, CreatedBy.Email,FEC_Integrate_Case_ID__c 
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c IN :buIds
             AND FEC_CaseID__c LIKE :likeTKValue
@@ -508,7 +508,7 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
             'FEC_Parent_CaseID__c, FEC_Case_Status__c, FEC_Category__c, ' +
             'FEC_Sub_Category__c, FEC_Sub_Code__c, FEC_Remark__c, ' +
             'CreatedDate, FEC_Sys_Channel__c, FEC_Creator_Email__c, ' +
-            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email ' +
+            'CreatedBy.Id, CreatedBy.Name, CreatedBy.Email, FEC_Integrate_Case_ID__c ' +
             'FROM FEC_Integration_Case__c';
     
         if (!parentWhere.isEmpty()) {
@@ -719,8 +719,8 @@ global with sharing class FEC_IntegrationSearchFraudCaseController {
 
                 //Hyperlink for LWC
                  'ServiceCaseLink'        => (c.FEC_Service_Case_ID__c != null && (c.FEC_Service_Case_ID__c.startsWith(fraudConstant.CASE_SERVICE)))
-                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.Id
-                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_CaseID__c,
+                ? + FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view'
+                : + FEC_FraudConstantCommon.SERVICE_SFT_CASE_LINK + c.FEC_Integrate_Case_ID__c + '/view',
                 'FraudCaseLink'        => (c.FEC_CaseID__c != null && (c.FEC_CaseID__c.startsWith(fraudConstant.CASEFH) || c.FEC_CaseID__c.startsWith(fraudConstant.CASETK)))
                 ? '/lightning/n/'+ FEC_FraudConstantCommon.FRAUD_HANDLING_CASE_DETAIL_PATH + '?c__caseId=' + c.FEC_CaseID__c
                 : null,

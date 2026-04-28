@@ -42,3 +42,26 @@ export const getTomorrowDate = () => {
     tomorrow.setDate(tomorrow.getDate() + 1); 
     return tomorrow.toISOString().split('T')[0];
 }
+
+export const convertExcelToTimestamp = (value) => {
+    if (!value) return null;
+
+    let date;
+    // Trường hợp 1: Excel trả về số (Serial Number)
+    if (typeof value === 'number') {
+        // Logic convert: (Value - 25569) * 86400 * 1000
+        // 25569 là độ lệch ngày giữa Excel (1900) và Unix (1970)
+        date = new Date(Math.round((value - 25569) * 86400 * 1000));
+    } 
+    // Trường hợp 2: Excel trả về String (VD: "10/25/2023")
+    else {
+        date = new Date(value);
+    }
+
+    // Kiểm tra xem date có hợp lệ không
+    if (isNaN(date.getTime())) {
+        return null; 
+    }
+
+    return date.toISOString(); // Trả về dạng: "2024-01-20T12:00:00.000Z"
+}

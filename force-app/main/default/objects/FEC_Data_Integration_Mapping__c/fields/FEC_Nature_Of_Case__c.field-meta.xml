@@ -2,8 +2,9 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Nature_Of_Case__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>FEC Nature Of Case</label>
-    <referenceTo>FEC_Nature_of_Case__c</referenceTo>
+    <referenceTo>FEC_Nature_Of_Case__c</referenceTo>
     <relationshipLabel>FEC Data Integration Mappings</relationshipLabel>
     <relationshipName>FEC_Data_Integration_Mappings</relationshipName>
     <required>false</required>
