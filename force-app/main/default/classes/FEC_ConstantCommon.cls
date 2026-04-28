@@ -130,6 +130,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PORTAL = 'PORTAL';
     public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
     public static final String REQUESTOR_PEGA_CSM = 'PegaCSM';
+    /** Giá trị RequestorID trong mẫu SOAP/CMS (chữ hoa + gạch ngang). */
+    public static final String REQUESTOR_PEGA_CSM_LEGACY = 'PEGA-CSM';
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
