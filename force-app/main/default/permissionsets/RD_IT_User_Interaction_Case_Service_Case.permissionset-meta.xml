@@ -2336,6 +2336,16 @@
         <field>FEC_Customer_History__c.FEC_Outstanding_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
