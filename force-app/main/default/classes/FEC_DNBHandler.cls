@@ -16,7 +16,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String interactionMaskedEmail;
         @AuraEnabled public String channel;
     }
-
+    
     public class CaseInfoNonExistingResponse{
         @AuraEnabled public String customerName;
         @AuraEnabled public String nationalId;
@@ -57,8 +57,8 @@ public with sharing class FEC_DNBHandler {
         return response;
         
     }
-
-
+    
+    
     @AuraEnabled
     public static CaseInfoNonExistingResponse getCaseNonExistingData(Id caseId) {
         // Simulate fetching data from server
@@ -80,28 +80,66 @@ public with sharing class FEC_DNBHandler {
     }
     
     
+    // @AuraEnabled
+    // public static Boolean checkDNB(Id categoryId, Id subCategoryId, Id subCodeId) {
+        //     try {
+            //         if (categoryId != null) {
+                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Category__c WHERE Id = :categoryId LIMIT 1].FEC_Do_Not_Bother__c) {
+                    //                 return true;
+                //             }
+            //         }
+            
+            //         if (subCategoryId != null) {
+                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Category__c WHERE Id = :subCategoryId LIMIT 1].FEC_Do_Not_Bother__c) {
+                    //                 return true;
+                //             }
+            //         }
+            
+            //         if (subCodeId != null) {
+                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Code__c WHERE Id = :subCodeId LIMIT 1].FEC_Do_Not_Bother__c) {
+                    //                 return true;
+                //             }
+            //         }
+            
+            //         return false;
+            
+        //     } catch (Exception e) {
+            //         throw new AuraHandledException(e.getMessage());
+        //     }
+    // }
+    
     @AuraEnabled
     public static Boolean checkDNB(Id categoryId, Id subCategoryId, Id subCodeId) {
         try {
+            // Không có input → false
+            if (categoryId == null && subCategoryId == null && subCodeId == null) {
+                return false;
+            }
+            
+            // Build query động theo input có giá trị
+            String soql =
+                'SELECT Id, Name, FEC_Do_Not_Bother__c ' +
+                'FROM FEC_Nature_of_Case__c WHERE ';
+            
+            List<String> conditions = new List<String>();
+            
             if (categoryId != null) {
-                if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Category__c WHERE Id = :categoryId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    return true;
-                }
+                conditions.add('FEC_Category__c = :categoryId');
             }
-            
             if (subCategoryId != null) {
-                if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Category__c WHERE Id = :subCategoryId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    return true;
-                }
+                conditions.add('FEC_Sub_Category__c = :subCategoryId');
             }
-            
             if (subCodeId != null) {
-                if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Code__c WHERE Id = :subCodeId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    return true;
-                }
+                conditions.add('FEC_Sub_Code__c = :subCodeId');
             }
             
-            return false;
+            soql += String.join(conditions, ' AND ') + ' LIMIT 1';
+            
+            List<FEC_Nature_of_Case__c> results = Database.query(soql);
+            
+            if (results.isEmpty()) return false;
+            
+            return results[0].FEC_Do_Not_Bother__c;
             
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
