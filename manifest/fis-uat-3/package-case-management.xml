@@ -60,6 +60,7 @@
 		<members>FEC_Routing_Assignment__c</members>
 		<members>FEC_Relevant_Ticket__c</members>
 		<members>FEC_Case_Remarks__c</members>
+		<members>FEC_Case_Flow_History__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
