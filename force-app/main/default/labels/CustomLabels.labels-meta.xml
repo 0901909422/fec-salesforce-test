@@ -9752,7 +9752,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11822,6 +11822,13 @@
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
     <labels>
+        <fullName>FEC_Auto_Integrating_Add_Item</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add item link</shortDescription>
+        <value>Thêm mục</value>
+    </labels>
+    <labels>
         <fullName>FEC_Invalid_OwnerId</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -11914,6 +11921,13 @@
         <protected>false</protected>
         <shortDescription>Actions column header</shortDescription>
         <value>Actions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Auto_Integrating_Col_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel column header</shortDescription>
+        <value>Channel</value>
     </labels>
     <labels>
         <fullName>FEC_RelevantTicket_Title</fullName>
@@ -12197,8 +12211,8 @@
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Channel column header</shortDescription>
-        <value>Channel</value>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
     </labels>
     <labels>
         <fullName>FEC_Auto_Integrating_Col_Integrating_Channel</fullName>
@@ -12915,12 +12929,6 @@
         <protected>false</protected>
         <shortDescription>Warning: only New status records can be deleted</shortDescription>
         <value>Only records with Process Status &quot;New&quot; can be deleted.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
-        <categories>Case Business LWC</categories>
-        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
-        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_No_Response</fullName>
