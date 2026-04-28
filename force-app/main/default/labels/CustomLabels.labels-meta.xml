@@ -14282,6 +14282,13 @@
         <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
         <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
     </labels>
+<labels>
+        <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CollectionDateFilter SuccessMsg</shortDescription>
+        <value>Đã áp dụng bộ lọc ngày từ {0} đến {1}</value>
+    </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
         <language>en_US</language>
@@ -14316,5 +14323,33 @@
         <protected>false</protected>
         <shortDescription>FEC_CollectionDateFilter_ToDate</shortDescription>
         <value>To Date</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Allocation_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Allocation History</shortDescription>
+        <value>Allocation</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Collection_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Collection Interaction</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Communication_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Communication History</shortDescription>
+        <value>Communication</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_NFU</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
+        <value>NFU</value>
     </labels>
 </CustomLabels>

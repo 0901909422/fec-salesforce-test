@@ -6,6 +6,7 @@
 		<members>FEC_FastCashCaseController</members>
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
+		<members>FEC_CustomerAdditionalDataController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -17,6 +18,8 @@
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_CustomerAdditionalInfoConfig__c</members>
+		<members>FEC_CustomerAdditionalInfo__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -39,8 +42,10 @@
 		<members>fec_NFU</members>
 		<members>fec_allocationHistory</members>
 		<members>fec_communicationHistory</members>
+		<members>fec_customerAdditionalData</members>
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
+		<members>fec_DateFormatter</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -122,6 +127,11 @@
 		<members>FEC_CollectionDateFilter_ErrorMissingDate</members>
 		<members>FEC_CollectionDateFilter_ErrorFromGtTo</members>
 		<members>FEC_CollectionDateFilter_ErrorExceedRange</members>
+		<members>FEC_CollectionDateFilter_SuccessMsg</members>
+		<members>Fetch_Collection_Data_Record_Type_NFU</members>
+		<members>Fetch_Collection_Data_Record_Type_Communication_History</members>
+		<members>Fetch_Collection_Data_Record_Type_Collection_Interaction</members>
+		<members>Fetch_Collection_Data_Record_Type_Allocation_History</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -178,6 +188,8 @@
 		<members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
 		<members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<!-- Customer Data Management -->
+		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
     </types>
     
