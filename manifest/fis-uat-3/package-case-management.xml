@@ -13,7 +13,13 @@
 		<members>FEC_PsDNBServiceCallout</members>
 		<members>FEC_PINReissueServiceCallout</members>
 		<members>FEC_PinResetHandler</members>
+		<members>FEC_AssignmentController</members>
+		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_RoutingActionHistoryTrigger</members>
+		<name>ApexTrigger</name>
 	</types>
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
@@ -24,6 +30,8 @@
 	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
+		<members>FEC_CustomerAdditionalInfoConfig__c</members>
+		<members>FEC_CustomerAdditionalInfo__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -150,6 +158,7 @@
 		<members>FEC_DNB_NID_Placeholder</members>
 		<members>FEC_DNB_No_Data_Question</members>
 		<members>FEC_DNB_Update_Button</members>
+		<members>FEC_Invalid_OwnerId</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -206,6 +215,8 @@
 		<members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
 		<members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+		<!-- Customer Data Management -->
+		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
     </types>
     

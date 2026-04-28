@@ -9473,14 +9473,6 @@
         <value>Installments Overdue</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_Field_Repayment_Fee_Overdue_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Repayment Fee Overdue (Overdue)</shortDescription>
-        <value>Repayment Fee Overdue</value>
-    </labels>
-    <labels>
         <fullName>FEC_Termination_Field_Penalty_Fee_Overdue_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -13644,6 +13636,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
         <value>Không thể thực hiện khoá thẻ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Invalid_OwnerId</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid OwnerId</shortDescription>
+        <value>Invalid ownerId:</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
