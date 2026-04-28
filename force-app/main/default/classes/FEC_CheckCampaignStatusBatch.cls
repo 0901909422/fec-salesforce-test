@@ -35,20 +35,28 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
         System.debug('>>> [CheckCampaignStatus] execute() — scope size: ' + scope.size());
         Set<String> accountSet = collectAccountNumbers(scope);
         System.debug('>>> [CheckCampaignStatus] accountSet size: ' + accountSet.size());
-        if (accountSet.isEmpty()) {
-            System.debug('>>> [CheckCampaignStatus] accountSet is empty — skipping');
+        Set<String> recordIdSet = new Set<String>();
+        for (FEC_DataCampaign__c rec : scope) {
+            if (String.isNotBlank(rec.FEC_RecordId__c)) {
+                recordIdSet.add(rec.FEC_RecordId__c);
+            }
+        }
+        System.debug('>>> [CheckCampaignStatus] recordIdSet size: ' + recordIdSet.size());
+        if (accountSet.isEmpty() || recordIdSet.isEmpty()) {
+            System.debug('>>> [CheckCampaignStatus] accountSet or recordIdSet is empty — skipping');
             return;
         }
 
         try {
-            String query = 'SELECT ExternalId, CONTRACT_NUMBER__c, RECORD_ID__c, ' +
-                'NUMBER4__c, NUMBER5__c, RECORD_CURRENT_LIFETIME__c, ' +
-                'INSERTION_DATE__c, CALLBACK_REQUESTED__c, ' +
-                'CURRENT_CALL_ATTEMPT__c, IS_MAX_ATTEMPT__c, ' +
-                'SEND_TO_COMMSDB__c, SENT_INSTANTLY__c ' +
+            String query = 'SELECT account_or_contract_number__c, record_id__c, ' +
+                'number4__c, number5__c, record_current_lifetime__c, ' +
+                'insertion_date__c, callback_requested__c, ' +
+                'current_call_attempt__c, is_max_attempt__c, ' +
+                'send_to_commsdb__c, sent_instantly__c ' +
                 'FROM PostgresCampaignLog__x ' +
-                'WHERE CONTRACT_NUMBER__c IN :accountSet ' +
-                'AND STATUS__c = \'COMPLETED\'';
+                'WHERE account_or_contract_number__c IN :accountSet ' +
+                'AND record_id__c IN :recordIdSet ' +
+                'AND status__c = \'COMPLETED\'';
             System.debug('>>> [CheckCampaignStatus] OData query: ' + query);
             List<SObject> odataResults = Database.query(query);
             System.debug('>>> [CheckCampaignStatus] OData results returned: ' + odataResults.size());
@@ -96,16 +104,18 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
     private List<FEC_DataCampaign__c> processODataResults(List<SObject> odataResults, List<FEC_DataCampaign__c> scope) {
         Map<String, SObject> resultMap = new Map<String, SObject>();
         for (SObject odataRec : odataResults) {
-            String contractNumber = (String) odataRec.get('CONTRACT_NUMBER__c');
-            if (String.isNotBlank(contractNumber)) {
-                resultMap.put(contractNumber, odataRec);
+            String accountNumber = (String) odataRec.get('account_or_contract_number__c');
+            String recordId = (String) odataRec.get('record_id__c');
+            if (String.isNotBlank(accountNumber) && String.isNotBlank(recordId)) {
+                resultMap.put(accountNumber + '_' + recordId, odataRec);
             }
         }
 
         List<FEC_DataCampaign__c> recordsToUpdate = new List<FEC_DataCampaign__c>();
         for (FEC_DataCampaign__c rec : scope) {
-            if (resultMap.containsKey(rec.FEC_AccountOrContractNumber__c)) {
-                SObject odataData = resultMap.get(rec.FEC_AccountOrContractNumber__c);
+            String compositeKey = rec.FEC_AccountOrContractNumber__c + '_' + rec.FEC_RecordId__c;
+            if (resultMap.containsKey(compositeKey)) {
+                SObject odataData = resultMap.get(compositeKey);
                 if (applyODataUpdate(rec, odataData)) {
                     recordsToUpdate.add(rec);
                 }
@@ -116,23 +126,26 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
 
     @TestVisible
     private Boolean applyODataUpdate(FEC_DataCampaign__c rec, SObject odataData) {
-        rec.FEC_Number4__c = (Decimal) odataData.get('NUMBER4__c');
-        rec.FEC_Number5__c = (Decimal) odataData.get('NUMBER5__c');
-        rec.FEC_RecordCurrentLifetime__c = (Decimal) odataData.get('RECORD_CURRENT_LIFETIME__c');
-        rec.FEC_InsertionDate__c = (DateTime) odataData.get('INSERTION_DATE__c');
-        rec.FEC_CallbackRequested__c = (String) odataData.get('CALLBACK_REQUESTED__c');
-        rec.FEC_CurrentCallAttempt__c = (Decimal) odataData.get('CURRENT_CALL_ATTEMPT__c');
-        rec.FEC_SendToCommsDB__c = (String) odataData.get('SEND_TO_COMMSDB__c');
-        rec.FEC_SentInstantly__c = (String) odataData.get('SENT_INSTANTLY__c');
+        rec.FEC_Number4__c = (Decimal) odataData.get('number4__c');
+        rec.FEC_Number5__c = (Decimal) odataData.get('number5__c');
+        rec.FEC_RecordCurrentLifetime__c = (Decimal) odataData.get('record_current_lifetime__c');
+        rec.FEC_InsertionDate__c = (DateTime) odataData.get('insertion_date__c');
+        rec.FEC_CallbackRequested__c = (String) odataData.get('callback_requested__c');
+        rec.FEC_CurrentCallAttempt__c = (Decimal) odataData.get('current_call_attempt__c');
+        rec.FEC_SendToCommsDB__c = (String) odataData.get('send_to_commsdb__c');
+        rec.FEC_SentInstantly__c = (String) odataData.get('sent_instantly__c');
+        rec.FEC_IsMaxAttempt__c = (String) odataData.get('is_max_attempt__c');
 
         System.debug('>>> [CheckCampaignStatus] applyODataUpdate — contract: ' + rec.FEC_AccountOrContractNumber__c +
+            ' | recordId: ' + rec.FEC_RecordId__c +
             ' | num4: ' + rec.FEC_Number4__c + ' | num5: ' + rec.FEC_Number5__c +
             ' | lifetime: ' + rec.FEC_RecordCurrentLifetime__c +
             ' | insertion: ' + rec.FEC_InsertionDate__c +
             ' | callback: ' + rec.FEC_CallbackRequested__c +
             ' | attempt: ' + rec.FEC_CurrentCallAttempt__c +
             ' | commsDB: ' + rec.FEC_SendToCommsDB__c +
-            ' | sentInstantly: ' + rec.FEC_SentInstantly__c);
+            ' | sentInstantly: ' + rec.FEC_SentInstantly__c +
+            ' | isMaxAttempt: ' + rec.FEC_IsMaxAttempt__c);
 
         return true;
     }
