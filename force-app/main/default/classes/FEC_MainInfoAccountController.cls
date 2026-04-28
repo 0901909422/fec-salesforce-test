@@ -552,7 +552,7 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-        update new FEC_Customer_History__c(
+        FEC_Customer_History__c accountToUpdate = new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
             FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
@@ -583,7 +583,6 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
-            FEC_Block_Code__c = m != null ? m.BlockCode: null,
             FEC_Block_Date__c   = m != null ? m.BlckDate : null,
             //FEC_Blocked_By__c = m
             FEC_Card_Activation_Status__c = m != null ? FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag) : null,
@@ -592,6 +591,11 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Local_Use__c = localUse
             /* ===== DEBT SALE ===== */
         );
+        // Do not clear existing block code on page reload when upstream API omits/returns blank value.
+        if (m != null && String.isNotBlank(m.BlockCode)) {
+            accountToUpdate.FEC_Block_Code__c = m.BlockCode;
+        }
+        update accountToUpdate;
     } 
 
     private static void updateAccountFromRefreshAPI(
