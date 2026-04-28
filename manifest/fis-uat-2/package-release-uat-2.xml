@@ -420,7 +420,6 @@
         <members>FEC_Termination_Field_Principal_Overdue_Label</members>
         <members>FEC_Termination_Field_Interest_Overdue_Label</members>
         <members>FEC_Termination_Field_Installments_Overdue_Label</members>
-        <members>FEC_Termination_Field_Repayment_Fee_Overdue_Label</members>
         <members>FEC_Termination_Field_Penalty_Fee_Overdue_Label</members>
         <members>FEC_Termination_Field_Overdue_Penalty_Label</members>
         <members>FEC_Repay_Total_Installment_Amount_Label</members>
