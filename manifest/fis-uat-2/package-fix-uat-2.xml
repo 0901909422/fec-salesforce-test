@@ -834,6 +834,10 @@
 		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
 		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
 		<members>FEC_Customer_History__c.FEC_Received_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Interest_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Provided_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_MRC_Zone__c</members>
