@@ -58,11 +58,14 @@ export default class Fec_communicationHistory extends LightningElement {
 
     /** null = lỗi / không hợp lệ; mảng (có thể rỗng) = tải API thành công */
     @track communicationHistories;
-    @track isLoading = true;
+    @track isLoading = false;
+    @track isExpanded = false;
 
     _startDate = null;
     _endDate = null;
     _subscription = null;
+    /** Chỉ gọi API sau khi user ấn Apply lần đầu */
+    _hasApplied = false;
 
     @wire(MessageContext)
     messageContext;
@@ -100,6 +103,7 @@ export default class Fec_communicationHistory extends LightningElement {
             (msg) => {
                 this._startDate = msg.startDate;
                 this._endDate = msg.endDate;
+                this._hasApplied = true;
                 this.loadCommunicationHistory();
             },
             { scope: APPLICATION_SCOPE }
@@ -121,7 +125,7 @@ export default class Fec_communicationHistory extends LightningElement {
         if (data) {
             this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
             this._recordTypeName = data.fields.RecordType?.displayValue;
-            this.loadCommunicationHistory();
+            // Không tự gọi API — chờ user ấn Apply
         } else if (error) {
             this.communicationHistories = null;
             this.isLoading = false;
@@ -134,6 +138,8 @@ export default class Fec_communicationHistory extends LightningElement {
             this.isLoading = false;
             return;
         }
+
+        if (!this._hasApplied) return;
 
         this.isLoading = true;
 
@@ -166,15 +172,20 @@ export default class Fec_communicationHistory extends LightningElement {
             this.communicationHistories = null;
         } finally {
             this.isLoading = false;
+            if (this._hasApplied) this.isExpanded = Array.isArray(this.communicationHistories) && this.communicationHistories.length > 0;
         }
     }
 
+    get showCollapsed() {
+        return !this.isLoading && !this._hasApplied;
+    }
+
     get showErrorBanner() {
-        return !this.isLoading && this.communicationHistories === null;
+        return !this.isLoading && this._hasApplied && this.communicationHistories === null;
     }
 
     get showDataSection() {
-        return !this.isLoading && Array.isArray(this.communicationHistories);
+        return !this.isLoading && this._hasApplied && Array.isArray(this.communicationHistories);
     }
 
     /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
@@ -192,5 +203,17 @@ export default class Fec_communicationHistory extends LightningElement {
             CommunicatedDate: formatDateField(row?.CommunicatedDate),
             Address2: row?.Address2 ?? STR_EMPTY
         }));
+    }
+
+    handleToggle() {
+        this.isExpanded = !this.isExpanded;
+    }
+
+    get sectionClass() {
+        return `slds-accordion__section${this.isExpanded ? ' slds-is-open' : ''}`;
+    }
+
+    get iconName() {
+        return this.isExpanded ? 'utility:chevrondown' : 'utility:chevronright';
     }
 }

@@ -7,14 +7,45 @@
         </template>
 
         <template if:false={isLoading}>
-            <template if:true={showErrorBanner}>
+            <!-- Chưa apply: collapsed -->
+            <template if:true={showCollapsed}>
                 <div class="slds-accordion">
-                    <section class="slds-accordion__section slds-is-open">
-                        <div class="slds-accordion__summary">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
-                                        icon-name="utility:chevrondown"
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>{sectionTitleText}</span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content">
+                            <c-fec_-related-list-paging
+                                records={recordsForTable}
+                                columns={columns}
+                                default-sorted-by="AllocationDate"
+                                default-sort-direction="desc"
+                                sorted-by-description={sortedByDescription}
+                                empty-state-message={labelNoData}>
+                            </c-fec_-related-list-paging>
+                        </div>
+                    </section>
+                </div>
+            </template>
+
+            <!-- Lỗi API -->
+            <template if:true={showErrorBanner}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
                                         size="x-small"
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
@@ -30,14 +61,15 @@
                 </div>
             </template>
 
+            <!-- Có data (kể cả rỗng): auto expand sau apply -->
             <template if:true={showDataSection}>
                 <div class="slds-accordion">
-                    <section class="slds-accordion__section slds-is-open">
-                        <div class="slds-accordion__summary">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
-                                        icon-name="utility:chevrondown"
+                                        icon-name={iconName}
                                         size="x-small"
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
