@@ -15,6 +15,7 @@
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CofGsrAssignmentService</members>
+		<members>FEC_CaseEditNOCController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
