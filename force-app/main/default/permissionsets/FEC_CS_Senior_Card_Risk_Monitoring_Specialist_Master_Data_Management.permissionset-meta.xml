@@ -645,11 +645,7 @@
         <field>FEC_Routing_Assignment__c.FEC_Customer_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
+    
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Routing_Assignment__c.FEC_Queue__c</field>

@@ -346,6 +346,30 @@ public with sharing class FEC_CaseEditNOCController {
     }
   }
 
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  @AuraEnabled
+  public static String getPropertyFieldsFromFlowHistory(String caseId) {
+    try {
+      // FEC_Field_List__c là Long Text Area — không filter được trong WHERE, lấy nhiều rồi tìm record có giá trị
+      List<FEC_Case_Flow_History__c> historyList = [
+        SELECT Id, FEC_Field_List__c
+        FROM FEC_Case_Flow_History__c
+        WHERE FEC_Case__c = :caseId
+        ORDER BY CreatedDate DESC
+        LIMIT 10
+      ];
+      for (FEC_Case_Flow_History__c h : historyList) {
+        if (String.isNotBlank(h.FEC_Field_List__c)) {
+          return h.FEC_Field_List__c;
+        }
+      }
+      return null;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+
   @AuraEnabled
   public static List<FEC_CommonUltils.PicklistOption> getSubCodelst(
     String recordId,
