@@ -25,6 +25,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  // tungnm37 thêm: COF/GSR route string constant
+  public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -71,7 +73,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD,
     UNBLOCK_CARD,
     PIN_REISSUE,
-    REPLACE_CARD
+    REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
+    ROUTE_TO_COF_GSR
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -96,7 +100,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
     PIN_REISSUE => Method.PIN_REISSUE,
-    REPLACE_CARD => Method.REPLACE_CARD
+    REPLACE_CARD => Method.REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR route - không đổi owner
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
   };
 
   @AuraEnabled
@@ -801,6 +807,10 @@ public without sharing class FEC_CaseBusinessService {
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
+      // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
+      result.customerType = selectedCase.FEC_Customer_Type__c;
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
@@ -933,7 +943,8 @@ public without sharing class FEC_CaseBusinessService {
    * Nhãn cho FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c:
    * Owner là User → phần email trước @; Owner là Queue → Name queue.
    */
-  private static String emailLocalPart(String email) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String emailLocalPart(String email) {
     if (String.isBlank(email)) {
       return null;
     }
@@ -941,7 +952,8 @@ public without sharing class FEC_CaseBusinessService {
     return parts.isEmpty() ? email.trim() : parts[0].trim();
   }
 
-  private static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
     if (ownerId == null) {
       return fallbackName;
     }
@@ -1494,7 +1506,8 @@ public without sharing class FEC_CaseBusinessService {
   }
 
 
-  private static void markCaseSubmittedAndClearDrafts(String caseId) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
     List<Case> caselst = [
@@ -1521,6 +1534,32 @@ public without sharing class FEC_CaseBusinessService {
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
+  }
+//PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    markCaseSubmittedAndClearDrafts(caseId);
+    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+  }
+  //PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+  /**
+   * Táº¡o báº£n ghi FEC_Case_Flow_History__c khi Case Ä‘Æ°á»£c submit láº§n Ä‘áº§u (creation stage).
+   * Chá»‰ táº¡o khi Case chÆ°a submit (FEC_Is_Submited__c = false trÆ°á»›c khi gá»i).
+   */
+  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    if (String.isBlank(caseId)) return;
+    try {
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson
+      );
+      if (String.isNotBlank(natureOfCaseId)) {
+        history.FEC_Nature_of_Cases__c = natureOfCaseId;
+      }
+      insert history;
+    } catch (Exception e) {
+      System.debug('createCaseFlowHistory error: ' + e.getMessage());
+    }
   }
 
   @AuraEnabled
@@ -1575,6 +1614,11 @@ public without sharing class FEC_CaseBusinessService {
           markCaseSubmittedAndClearDrafts(caseId);
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
           return null;
+        }
+        // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
+        when ROUTE_TO_COF_GSR {
+          // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
+          return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
         when REVERT {
           String revertActionId = (String) params.get('actionId');
@@ -1989,6 +2033,17 @@ public without sharing class FEC_CaseBusinessService {
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
       );
+
+      // tungnm37 thêm: tạo Assignment + Case Remarks khi Route to
+      // Bỏ qua khi nextTeam = CC hoặc SP (luồng Manual, user tự thêm qua nút Add Item)
+      String nextTeamForAssignment = selectedChange != null
+        ? [SELECT FEC_Team_User_Group__c FROM FEC_Stage_Change__c WHERE Id = :selectedChange.Id LIMIT 1]?.FEC_Team_User_Group__c
+        : null;
+      Boolean isManualTeam = ('CC'.equals(nextTeamForAssignment) || 'SP'.equals(nextTeamForAssignment));
+      if (!isManualTeam) {
+        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+        FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
+      }
 
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       // Trigger sau insert history đã cập nhật FEC_Team__c / Status — merge để không ghi đè
@@ -3226,6 +3281,14 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String draftRoutingActionCode;
 
+    // tungnm37 thêm: isSubmited - để LWC biết Case đã Submit chưa (dùng cho showManualAddItem Stage 2)
+    @AuraEnabled
+    public Boolean isSubmited;
+
+    // tungnm37 thêm: customerType - để LWC fec_RoutingAssignment query đúng theo Customer Type
+    @AuraEnabled
+    public String customerType;
+
     @AuraEnabled
     public String code;
 
@@ -4097,6 +4160,18 @@ public without sharing class FEC_CaseBusinessService {
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
       update selectedCase;
     }
+  }
+
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled(cacheable=true)
+  public static List<Map<String, String>> getTeamQueueOptions() {
+    return FEC_CofGsrAssignmentService.getTeamQueueOptions();
+  }
+
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled
+  public static List<Map<String, String>> getRoutingAssignments(String natureOfCaseId, String customerType) {
+    return FEC_CofGsrAssignmentService.getRoutingAssignments(natureOfCaseId, customerType);
   }
 
   @AuraEnabled(cacheable=true)

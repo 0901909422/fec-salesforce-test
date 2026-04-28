@@ -17,7 +17,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
                 // Build a valid response based on your inner classes
                 FEC_FetchCollectionDataServiceCallout.CollectionDataResponse mockRes = 
                     new FEC_FetchCollectionDataServiceCallout.CollectionDataResponse();
-                mockRes.Success = true;
+                mockRes.Success = 'true';
                 
                 FEC_FetchCollectionDataServiceCallout.AllocationHistory item = 
                     new FEC_FetchCollectionDataServiceCallout.AllocationHistory();
@@ -45,7 +45,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
         Test.stopTest();
 
         System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(true, result.Success, 'Success flag should be true');
+        System.assertEquals('true', result.Success, 'Success flag should be true');
         System.assertEquals(1, result.AllocationHistory.size(), 'History list should be populated');
         System.assertEquals('Test Agent', result.AllocationHistory[0].AgentName);
     }
@@ -60,7 +60,7 @@ public with sharing class FEC_FetchCollectionDataService_Test {
             FEC_FetchCollectionDataServiceCallout.fetchCollectionData('CONT-001', 'Individual');
         Test.stopTest();
 
-        System.assertEquals(false, result.Success, 'Success flag should be false on HTTP error');
+        System.assertEquals('false', result.Success, 'Success flag should be false on HTTP error');
     }
 
     @isTest
