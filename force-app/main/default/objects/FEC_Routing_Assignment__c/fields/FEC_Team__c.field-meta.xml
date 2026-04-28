@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FE_Sub_Code_Relevant__c</fullName>
+    <fullName>FEC_Team__c</fullName>
+    <description>Hiển thị danh sách các Team đã được cấu hình để chuyển Case tới</description>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.FEC_SubCode__r.FEC_Name_VN__c</formula>
-    <label>Sub Code</label>
+    <label>Team</label>
+    <length>255</length>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>
     <unique>false</unique>
