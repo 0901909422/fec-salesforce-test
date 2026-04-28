@@ -149,16 +149,13 @@ public without sharing class FEC_BlockCodeRoutingService {
     if (c == null || c.FEC_Interaction__c == null) {
       return false;
     }
-    String categoryCode = c.FEC_Category__r != null ? trimSafe(c.FEC_Category__r.FEC_Code__c) : null;
-    String subCategoryCode = c.FEC_SubCategory__r != null
-      ? trimSafe(c.FEC_SubCategory__r.FEC_Code__c)
-      : null;
-    String subCodeCode = c.FEC_SubCode__r != null ? trimSafe(c.FEC_SubCode__r.FEC_Code__c) : null;
-    return String.isNotBlank(categoryCode) &&
-      categoryCode.toLowerCase() == REQUEST_CATEGORY_CODE.toLowerCase() &&
-      CURRENT_RC27_SUBCATEGORY_CODE == subCategoryCode &&
-      String.isNotBlank(subCodeCode) &&
-      CURRENT_RC27_SUBCODE_CODES.contains(subCodeCode);
+    // Dùng NOC Id trên Case + query mã (tránh lỗi khi SOQL Case không SELECT FEC_*__r.FEC_Code__c).
+    return isCurrentCaseRc27ByCurrentNoc(
+      c,
+      c.FEC_Category__c != null ? String.valueOf(c.FEC_Category__c) : null,
+      c.FEC_SubCategory__c != null ? String.valueOf(c.FEC_SubCategory__c) : null,
+      c.FEC_SubCode__c != null ? String.valueOf(c.FEC_SubCode__c) : null
+    );
   }
 
   /**
