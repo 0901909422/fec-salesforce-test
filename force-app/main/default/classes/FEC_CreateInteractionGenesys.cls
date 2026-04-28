@@ -106,7 +106,6 @@ public without sharing class FEC_CreateInteractionGenesys {
             
             return new InteractionResult(true, System.Label.FEC_MSG_Create_Interaction_Success, createdCase.Id, response);
         } catch (Exception e) {
-            System.debug('Error creating interaction: ' + e.getMessage());
             return new InteractionResult(false, String.format(System.Label.FEC_MSG_Create_Interaction_Error, new List<String>{e.getMessage()}), null, null);
         }
     }
@@ -163,33 +162,32 @@ public without sharing class FEC_CreateInteractionGenesys {
     private static String normalizeChannel(String channel) {
         if (String.isBlank(channel)) return null;
         
-        switch on channel.toLowerCase() {
-            when 'facebook' {
-                return 'Facebook';
-            }
-            when 'zalo' {
-                return 'Zalo';
-            }
-            when 'webchat' {
-                return 'Webchat';
-            }
-            when else {
-                return FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
-            }
+        String normalized = channel.trim().toLowerCase();
+        
+        if (normalized == FEC_ConstantCommon.CHANNEL_FACEBOOK_LOWER) {
+            return FEC_ConstantCommon.CHANNEL_FACEBOOK;
         }
+        if (normalized == FEC_ConstantCommon.CHANNEL_ZALO_LOWER) {
+            return FEC_ConstantCommon.CHANNEL_ZALO;
+        }
+        if (normalized == FEC_ConstantCommon.CHANNEL_WEBCHAT_LOWER) {
+            return FEC_ConstantCommon.CHANNEL_WEBCHAT;
+        }
+        
+        return FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME;
     }
     
     private static String mapKycMethod(String kycStatus) {
         if (String.isBlank(kycStatus)) return null;
         
-        return 'Other';
+        return FEC_ConstantCommon.KYC_METHOD_OTHER;
     }
     
     private static String deriveKycResult(String kycStatus) {
         if (String.isBlank(kycStatus)) return null;
         
-        if (kycStatus == 'NOT KYC') return 'Fail';
-        if (kycStatus == 'KYC') return 'Pass';
+        if (kycStatus == FEC_ConstantCommon.KYC_STATUS_NOT_KYC ) return FEC_ConstantCommon.KYC_RESULT_FAIL ;
+        if (kycStatus == FEC_ConstantCommon.KYC_STATUS_KYC ) return FEC_ConstantCommon.KYC_RESULT_PASS ;
         
         return 'Fail';
     }
@@ -275,9 +273,9 @@ public without sharing class FEC_CreateInteractionGenesys {
             
             Case c = new Case(
                 RecordTypeId                   = rtId,
-            FEC_Channel__c                 = 'Email',
-            FEC_Interaction_Subchannel__c  = 'Incoming Email',
-            FEC_Interaction_View_Mode__c   = 'handling',
+            FEC_Channel__c                 = FEC_ConstantCommon.CHANNEL_EMAIL_NAME,
+            FEC_Interaction_Subchannel__c  = FEC_ConstantCommon.CHANNEL_EMAIL_INCOMING_SUBCHANNEL_NAME,
+            FEC_Interaction_View_Mode__c   = FEC_ConstantCommon.INTERACTION_HANDLING_MODE,
             Subject                        = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail),
             // Interaction Email: từ Genesys, ghi vào cả 2 field (search + display)
             FEC_Interaction_Email__c       = request.fromEmail,
@@ -295,7 +293,7 @@ public without sharing class FEC_CreateInteractionGenesys {
             FEC_Search_Contract_Number__c  = request.contractNum,
             FEC_Account_Number__c          = request.cardAccountNum,
             FEC_Search_Account_Number__c   = request.cardAccountNum,
-            Status                         = 'Open'
+            Status                         = FEC_ConstantCommon.CASE_STATUS_OPEN
                 );
             insert c;
             
@@ -325,7 +323,7 @@ public without sharing class FEC_CreateInteractionGenesys {
                 Subject      = emailSubject,
                 TextBody     = String.isNotBlank(request.subject) ? request.subject : ('Email from ' + request.fromEmail),
                 Incoming     = true,
-                Status       = '0' // New
+                Status       = FEC_ConstantCommon.SUCCESS_STATUS_CODE // New
                     );
                 insert em;
             }
@@ -351,8 +349,7 @@ public without sharing class FEC_CreateInteractionGenesys {
             InteractionResult result = FEC_GenesysCreateDummyInteraction.createDummyInteraction();
             return result;
         } catch (Exception e) {
-            System.debug('Error creating dummy interaction: ' + e.getMessage());
-            return new InteractionResult(false, 'Create Dummy Interaction failed: ' + e.getMessage(), null, null);
+            return new InteractionResult(false,  e.getMessage(), null, null);
         }
     }
 }
