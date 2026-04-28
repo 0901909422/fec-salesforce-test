@@ -62,6 +62,15 @@ public class FEC_InsertCustomerDataQueueable implements Queueable {
         } else {
             // Hết data -> Update trạng thái cho TOÀN BỘ Configs và Files
             finalizeProcess();
+
+            // Enqueue BIX Ingest job (fire-and-forget)
+            String linkedFilename = null;
+            if (fullDataList != null && !fullDataList.isEmpty()) {
+                linkedFilename = fullDataList[0].FEC_LinkedFilename__c;
+            }
+            if (String.isNotBlank(linkedFilename) && !Test.isRunningTest()) {
+                System.enqueueJob(new FEC_BixIngestQueueable(linkedFilename));
+            }
         }
     }
 

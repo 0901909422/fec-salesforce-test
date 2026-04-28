@@ -10,6 +10,9 @@ import { STR_EMPTY } from 'c/fec_CommonConst';
 export default class Fec_CaseRemarks extends LightningElement {
   @api caseId;
 
+  // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
+  @api isCofGsr = false;
+
   _isEdit = false;
   @api get isEdit() {
     return this._isEdit;
@@ -58,6 +61,8 @@ export default class Fec_CaseRemarks extends LightningElement {
 
         this.remarklst = res
           .filter((item) => item.Id)
+          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
+          .filter((item) => !this.isCofGsr || item.Remark_Type__c !== 'Assignment')
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -79,6 +84,12 @@ export default class Fec_CaseRemarks extends LightningElement {
     }
 
     return true;
+  }
+
+  // tungnm37 thêm: lấy giá trị remark hiện tại để truyền vào Apex khi submit
+  @api getRemarkValue() {
+    const textarea = this.template.querySelector('lightning-textarea');
+    return (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
   }
 
   @api async createRemark(stageNameFromClient) {

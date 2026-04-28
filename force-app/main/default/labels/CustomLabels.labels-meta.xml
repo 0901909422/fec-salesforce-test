@@ -11575,7 +11575,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-    <labels>
+     <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -13433,6 +13433,20 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
+        <fullName>FEC_BIX_Ingest_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Error</shortDescription>
+        <value>BIX Ingest API call failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BIX_Ingest_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Success</shortDescription>
+        <value>BIX Ingest API call succeeded</value>
+    </labels>
+    <labels>
         <fullName>FEC_RESET_PIN_ERROR</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -13638,11 +13652,815 @@
         <value>Không thể thực hiện khoá thẻ.</value>
     </labels>
     <labels>
+        <fullName>FEC_Invalid_OwnerId</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid OwnerId</shortDescription>
+        <value>Invalid ownerId:</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
         <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Number_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Number Deals</shortDescription>
+        <value>pageNumber is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Page_Size_Deals</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Page Size Deals</shortDescription>
+        <value>pageSize is required and must be &gt; 0</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contract_Number_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Contract_Number_Is_Null</shortDescription>
+        <value>Contract Number is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Account_Number_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Account_Number_Null</shortDescription>
+        <value>Account is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Amount_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Amount_Null</shortDescription>
+        <value>Amount is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CRM_ID_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_CRM_ID_Null</shortDescription>
+        <value>CRM ID is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_DisbChannel_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_DisbChannel_Null</shortDescription>
+        <value>DisbChannel is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NationalIDs_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_NationalIDs_Null</shortDescription>
+        <value>National IDs are null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Tenure_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Tenure_Null</shortDescription>
+        <value>Tenure is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Record_Type_Is_Null</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Record_Type_Is_Null</shortDescription>
+        <value>Record Type is null</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Callout_Insurance</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
+        <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket modal title</shortDescription>
+        <value>New Relevant Ticket</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Section_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket section header</shortDescription>
+        <value>Relevant Ticket Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Field_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket interaction field label</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket search placeholder</shortDescription>
+        <value>Search by Case Number or ID...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket no results message</shortDescription>
+        <value>No results found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Select_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket select required error</shortDescription>
+        <value>Please select an Interaction.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Case_Not_Found</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket case not found error</shortDescription>
+        <value>Could not determine the current Case. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save error</shortDescription>
+        <value>An error occurred while saving. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RelevantTicket_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket save success</shortDescription>
+        <value>Relevant Ticket was created successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Conversations_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Conversations section label</shortDescription>
+        <value>Conversations</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_History_Label</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Chat History field label</shortDescription>
+        <value>Chat History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Save_Failed</fullName>
+        <categories>FEC_ChatHub</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Save failed error message</shortDescription>
+        <value>Save failed. Please try again.</value>
+    </labels>
+<labels>
+        <fullName>FEC_Account_Contract_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Number</shortDescription>
+        <value>Account/ Contract Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Address</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Address</shortDescription>
+        <value>Address</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent ID</shortDescription>
+        <value>Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Name</shortDescription>
+        <value>Agent Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Allocation_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Allocation Date</shortDescription>
+        <value>Allocation Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Campaign_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Campaign Name</shortDescription>
+        <value>Campaign Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Date</shortDescription>
+        <value>Communication Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Template</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Template</shortDescription>
+        <value>Communication Template</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Communication_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Communication Type</shortDescription>
+        <value>Communication Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Contacted_Person</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Contacted Person</shortDescription>
+        <value>Contacted Person</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Pool</shortDescription>
+        <value>Current Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Sub_Pool</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Sub Pool</shortDescription>
+        <value>Current Sub Pool</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DPD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DPD</shortDescription>
+        <value>DPD</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Due_Reason</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Due Reason</shortDescription>
+        <value>Due Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Agent_ID</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Agent ID</shortDescription>
+        <value>Interacted Agent ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Code</shortDescription>
+        <value>Interacted Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Date</shortDescription>
+        <value>Interacted Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Interacted_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Interacted Phone</shortDescription>
+        <value>Interacted Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Job</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Job</shortDescription>
+        <value>Job</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUExpiryDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUExpiryDate</shortDescription>
+        <value>NFU Expired Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStartDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStartDate</shortDescription>
+        <value>NFU Started Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFUStatus</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFUStatus</shortDescription>
+        <value>NFU Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Next_Interaction_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Next Interaction Date</shortDescription>
+        <value>Next Interaction Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Note</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Note</shortDescription>
+        <value>Note</value>
+    </labels>
+    <labels>
+        <fullName>FEC_POS</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>POS</shortDescription>
+        <value>POS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Phone_Number</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Phone Number</shortDescription>
+        <value>Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Promised_Repayment_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Promised Repayment Amount</shortDescription>
+        <value>Promised Repayment Amount</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No response from server</shortDescription>
+        <value>No response from server</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unexpected_SOAP_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected SOAP response</shortDescription>
+        <value>Unexpected SOAP response</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unknown Sys.Code</shortDescription>
+        <value>Unknown Sys.Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Customer_Username_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username label</shortDescription>
+        <value>Customer Username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Interaction_Phone_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Interaction Phone label</shortDescription>
+        <value>Interaction Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_KYC_Status_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - KYC Status label</shortDescription>
+        <value>KYC Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone invalid format error</shortDescription>
+        <value>Invalid phone format (10 digits starting with &quot;0&quot; or 11 digits starting with &quot;84&quot;).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone placeholder</shortDescription>
+        <value>Enter phone number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Phone_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Phone required error</shortDescription>
+        <value>Phone is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Customer Username placeholder</shortDescription>
+        <value>Enter customer username</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_Username_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - Username required error</shortDescription>
+        <value>Customer Username is required.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Eligible</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status_Not_Eligible</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status_Not_Eligible</shortDescription>
+        <value>Not eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Chat_External_Interaction_ID_Label</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Chat - External Interaction ID label</shortDescription>
+        <value>External Interaction ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_No</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_No</shortDescription>
+        <value>Không</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Max_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Max_Amount</shortDescription>
+        <value>Max Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Requested_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Requested_Amount</shortDescription>
+        <value>Requested Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Loading</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Modal_Body</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Modal_Body</shortDescription>
+        <value>Bạn sắp thực hiện đăng ký Fast Cash. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_10</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_10</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_12</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_12</shortDescription>
+        <value>Số tiền đăng ký ít nhất là 2,000,000 VND và không vượt quá số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_15</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_15</shortDescription>
+        <value>Không đủ điều kiện đăng ký Fast Cash.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Block_Amount</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Block_Amount</shortDescription>
+        <value>Block Amount</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Btn_Yes</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Btn_Yes</shortDescription>
+        <value>Có</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Code</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Code</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Status</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Status</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_01</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_01</shortDescription>
+        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_02</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_02</shortDescription>
+        <value>Số tiền đăng ký phải từ 2,000,000 VND đến số tiền tối đa.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_08</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_08</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Fast_Cash_Noti_09</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_Fast_Cash_Noti_09</shortDescription>
+        <value>Đăng ký khoản tiền mặt nhanh thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Error_Description</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Error_Description</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Fast_Cash_Spinner_Processing</fullName>
+        <categories>Fast Cash Case LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Fast_Cash_Spinner_Processing</shortDescription>
+        <value>Processing</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorExceedRange</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
+        <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
+    </labels>
+<labels>
+        <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC CollectionDateFilter SuccessMsg</shortDescription>
+        <value>Đã áp dụng bộ lọc ngày từ {0} đến {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorFromGtTo</shortDescription>
+        <value>From Date không được lớn hơn To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ErrorMissingDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ErrorMissingDate</shortDescription>
+        <value>Vui lòng chọn đầy đủ From Date và To Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_FromDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_FromDate</shortDescription>
+        <value>From Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_HintText</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_HintText</shortDescription>
+        <value>Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CollectionDateFilter_ToDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_CollectionDateFilter_ToDate</shortDescription>
+        <value>To Date</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Allocation_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Allocation History</shortDescription>
+        <value>Allocation</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Collection_Interaction</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Collection Interaction</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_Communication_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type Communication History</shortDescription>
+        <value>Communication</value>
+    </labels>
+    <labels>
+        <fullName>Fetch_Collection_Data_Record_Type_NFU</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fetch Collection Data Record Type NFU</shortDescription>
+        <value>NFU</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Has_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Has_Data_Question</shortDescription>
+        <value>Đã có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Message</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Message</shortDescription>
+        <value>Bạn sắp câp nhật thông tin khách hàng vào danh sách DNB. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Title</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Title</shortDescription>
+        <value>Do Not Bother</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_NID_Placeholder</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_NID_Placeholder</shortDescription>
+        <value>Enter 9 or 12 digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_No_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_No_Data_Question</shortDescription>
+        <value>Chưa có thông tin khách hàng tại danh sách DNB. Bạn có muốn cập nhật thông tin không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Update_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Update_Button</shortDescription>
+        <value>Update to DNB</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CC_Queue_Name</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Queue Name for COF/GSR routing</shortDescription>
+        <value>DQ - CS Customer Care</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Item_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add Item Label</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Remark Label</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Queue_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Queue combobox</shortDescription>
+        <value>-- Choose Queue --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Team_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Team combobox</shortDescription>
+        <value>-- Choose Team --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Label</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enter_Remark_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Assignment Remark textarea</shortDescription>
+        <value>Enter remark...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark column label</shortDescription>
+        <value>Remark</value>
     </labels>
 </CustomLabels>

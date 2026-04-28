@@ -1,0 +1,77 @@
+<template>
+    <div class="customer-info-container slds-card slds-p-around_small">
+        <template if:true={isLoading}>
+            <div class="fec-nfu-spinner">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Lỗi / không có data -->
+            <template if:false={nfuData}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>
+                                        {sectionTitleText}&nbsp;-&nbsp;
+                                        <span class="fec-nfu-sync-fail">{labelMsgApiError}</span>
+                                    </span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content slds-hide"></div>
+                    </section>
+                </div>
+            </template>
+
+            <!-- Có data -->
+            <template if:true={nfuData}>
+                <div class="slds-accordion">
+                    <section class={sectionClass}>
+                        <div class="slds-accordion__summary" onclick={handleToggle}>
+                            <h3 class="slds-accordion__summary-heading">
+                                <span class="slds-accordion__summary-content slds-grid">
+                                    <lightning-icon
+                                        icon-name={iconName}
+                                        size="x-small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                    <span>{sectionTitleText}</span>
+                                </span>
+                            </h3>
+                        </div>
+                        <div class="slds-accordion__content">
+                            <div class="slds-form slds-p-around_small" role="list">
+                                <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                    <template for:each={nfuFields} for:item="field">
+                                        <div key={field.key} class="slds-size_1-of-3">
+                                            <div class="slds-p-around_x-small">
+                                                <div
+                                                    class="slds-grid slds-grid_vertical-align-start slds-border_bottom slds-p-bottom_x-small fec-nfu-field-row">
+                                                    <div
+                                                        class="slds-grid slds-grid_vertical-align-center slds-text-title_bold fec-nfu-label">
+                                                        <span>{field.label}</span>
+                                                    </div>
+                                                    <div class="slds-text-body_regular fec-nfu-value">
+                                                        <span>{field.value}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>
