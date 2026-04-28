@@ -9295,14 +9295,6 @@
         <value>Installments Overdue</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_Field_Repayment_Fee_Overdue_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Repayment Fee Overdue (Overdue)</shortDescription>
-        <value>Repayment Fee Overdue</value>
-    </labels>
-    <labels>
         <fullName>FEC_Termination_Field_Penalty_Fee_Overdue_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
