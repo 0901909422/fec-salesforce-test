@@ -1,0 +1,66 @@
+<template>
+  <div class="slds-box slds-theme_shade">
+    <template if:true={uiContextLoading}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+
+    <h2 class="slds-text-heading_small slds-m-bottom_small">{customLabel.pendingSection}</h2>
+
+    <lightning-datatable
+      key-field="id"
+      data={pendingRowData}
+      columns={pendingColumns}
+      hide-checkbox-column>
+    </lightning-datatable>
+
+    <template if:true={showBlockCardButton}>
+      <div class="slds-m-top_medium">
+        <template if:true={isSubmitting}>
+          <lightning-spinner alternative-text="Processing" size="small"></lightning-spinner>
+        </template>
+        <lightning-button
+          label={customLabel.blockCard}
+          variant="brand"
+          onclick={handleBlockCardClick}
+          disabled={blockCardLocked}>
+        </lightning-button>
+      </div>
+    </template>
+
+    <template if:true={resultMessage}>
+      <p class={resultClass}>{resultMessage}</p>
+    </template>
+  </div>
+
+  <template if:true={showConfirmModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title slds-hyphenate confirm-modal-title">{customLabel.confirmTitle}</h2>
+          <button
+            class="slds-button slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={handleConfirmNo}>
+          </button>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <p>{customLabel.confirmBody}</p>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Không"
+            variant="neutral"
+            class="slds-m-right_x-small"
+            onclick={handleConfirmNo}>
+          </lightning-button>
+          <lightning-button
+            label="Có"
+            variant="brand"
+            onclick={handleConfirmYes}>
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

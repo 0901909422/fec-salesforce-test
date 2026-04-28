@@ -1,0 +1,15 @@
+.result-success {
+    margin-top: 0.75rem;
+    font-weight: 700;
+    color: #2e844a;
+}
+
+.result-error {
+    margin-top: 0.75rem;
+    font-weight: 700;
+    color: #ba0517;
+}
+
+.confirm-modal-title {
+    color: #032d60;
+}

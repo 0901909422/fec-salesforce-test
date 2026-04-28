@@ -287,7 +287,9 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String CONFIG_SYNC_STATUS_DELETED               = 'Deleted';
 
 	// Mock flags for testing
+
 	public static Boolean USE_MOCK_PROCESS_CASE = false;
+
 	public static String PROCESS_CASE_SUCCESS_STATUS = 'Success';
 	public static String PROCESS_CASE_CANCEL_STATUS = 'Cancel';
 
@@ -296,8 +298,7 @@ public with sharing class FEC_FraudConstantCommon {
 	public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
 
 	// SFT Queue
-	public static final String SFT_QUEUE_NAME = 'FEC_Handling';
-	
+	public static final String SFT_QUEUE_NAME = 'FEC_Handling';	
 	
 	 // SEC Investigating
 	 public static final String ALLOCATING            = 'Allocating';

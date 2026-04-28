@@ -1,0 +1,255 @@
+<template>
+    <lightning-card>
+        <!-- Header with Back button và icon IPP -->
+        <div slot="title">
+            <div class="slds-media slds-media_center">
+                
+                <div class="slds-media__figure ipp-header-icon-wrap">
+                    <span class="ipp-header-icon" title={customLabel.ippDetailLabel}>
+                        <lightning-icon icon-name="standard:account" size="small" class="ipp-header-icon-svg"></lightning-icon>
+                    </span>
+                </div>
+                <div class="slds-media__body">
+                    <div class="ipp-header-title-block">
+                        <h2 class="slds-card__header-title ipp-header-label">{customLabel.ippLabel}</h2>
+                        <div class="ipp-header-plan-name">{planNumber}</div>
+                        <!-- <div class="ipp-header-details-label">{customLabel.detailsLabel}</div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-is-relative slds-p-around_large">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Main content -->
+        <template if:false={isLoading}>
+            <template if:true={hasData}>
+                <div class="ipp-detail-tabset-wrapper">
+                <lightning-tabset class="ipp-detail-tabset">
+                    <lightning-tab label={customLabel.detailsLabel}>
+                        <div class="slds-p-around_medium">
+                            
+                            <!-- IPP Schedule Section -->
+                    <div class="slds-accordion">
+                        <section class={ippScheduleSectionClass}>
+                            <div class="slds-accordion__summary" onclick={handleIPPScheduleToggle}>
+                                <h3 class="slds-accordion__summary-heading">
+                                    <span class="slds-accordion__summary-content slds-grid">
+                                        <lightning-icon 
+                                            icon-name={ippScheduleIconName} 
+                                            size="x-small" 
+                                            class="slds-m-right_x-small">
+                                        </lightning-icon>
+                                        <span>{customLabel.ippScheduleLabel}</span>
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class={ippScheduleContentClass}>
+                            <!-- Schedule Totals: grid 3 cột, format giống Card Payment (gạch dài bằng nhau, label wrap, icon căn, dữ liệu trái + 13px) -->
+                            <div class="ipp-schedule-summary slds-m-bottom_medium">
+                                <div class="ipp-schedule-summary-item">
+                                    <div class="ipp-detail-row-inner">
+                                        <label class="slds-form-element__label ipp-label-red ipp-detail-label">
+                                            {customLabel.totalIPPPaymentAmountLabel}
+                                            <span class="ipp-help-icon">
+                                                <template if:true={helpTextMap.FEC_Total_IPP_Payment_Amount__c}>
+                                                    <lightning-helptext content={helpTextMap.FEC_Total_IPP_Payment_Amount__c}></lightning-helptext>
+                                                </template>
+                                            </span>
+                                        </label>
+                                        <div class="ipp-detail-value">
+                                            <span class={totalPaymentAmountNegative}>{totalPaymentAmount}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ipp-schedule-summary-item">
+                                    <div class="ipp-detail-row-inner">
+                                        <label class="slds-form-element__label slds-text-color_weak ipp-detail-label">
+                                            {customLabel.totalIPPMonthlyPrincipalLabel}
+                                            <span class="ipp-help-icon">
+                                                <template if:true={helpTextMap.FEC_Total_IPP_Monthly_Principal__c}>
+                                                    <lightning-helptext content={helpTextMap.FEC_Total_IPP_Monthly_Principal__c}></lightning-helptext>
+                                                </template>
+                                            </span>
+                                        </label>
+                                        <div class="ipp-detail-value">
+                                            <span class={totalMonthlyPrincipalNegative}>{totalMonthlyPrincipal}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ipp-schedule-summary-item">
+                                    <div class="ipp-detail-row-inner">
+                                        <label class="slds-form-element__label slds-text-color_weak ipp-detail-label">
+                                            {customLabel.totalIPPMonthlyInterestLabel}
+                                            <span class="ipp-help-icon">
+                                                <template if:true={helpTextMap.FEC_Total_IPP_Monthly_Interest__c}>
+                                                    <lightning-helptext content={helpTextMap.FEC_Total_IPP_Monthly_Interest__c}></lightning-helptext>
+                                                </template>
+                                            </span>
+                                        </label>
+                                        <div class="ipp-detail-value">
+                                            <span class={totalMonthlyInterestNegative}>{totalMonthlyInterest}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Schedule Table -->
+                            <template if:true={hasSchedules}>
+                                <c-fec_-related-list-paging
+                                    records={ippSchedules}
+                                    columns={scheduleColumns}
+                                    page-size={schedulePageSize}
+                                    hide-row-number={hideRowNumber}
+                                    default-sorted-by="paymentNo"
+                                    default-sort-direction="desc">
+                                </c-fec_-related-list-paging>
+                            </template>
+                            <template if:false={hasSchedules}>
+                                <div class="slds-text-align_center slds-p-around_medium">
+                                    <p>{customLabel.noIPPScheduleDataLabel}</p>
+                                </div>
+                            </template>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Sales Info Section -->
+                    <div class="slds-accordion slds-m-top_medium">
+                        <section class={salesInfoSectionClass}>
+                            <div class="slds-accordion__summary" onclick={handleSalesInfoToggle}>
+                                <h3 class="slds-accordion__summary-heading">
+                                    <span class="slds-accordion__summary-content slds-grid">
+                                        <lightning-icon 
+                                            icon-name={salesInfoIconName} 
+                                            size="x-small" 
+                                            class="slds-m-right_x-small">
+                                        </lightning-icon>
+                                        <span>{customLabel.salesInfoLabel}</span>
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class={salesInfoContentClass}>
+                                <div class="slds-p-around_small">
+                                    <div class="slds-grid slds-wrap slds-gutters_small ipp-detail-sales-info-grid">
+                                        <!-- Row 1: Application ID, CC Code, DSA Code, TSA Code - label và giá trị cùng hàng -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.applicationIdLabel}
+                                                    <template if:true={helpTextMap.FEC_Application_ID__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_Application_ID__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{applicationId}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.ccCodeLabel}
+                                                    <template if:true={helpTextMap.FEC_CC_Code__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_CC_Code__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{ccCode}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.dsaCodeLabel}
+                                                    <template if:true={helpTextMap.FEC_DSA_Code__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_DSA_Code__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{dsaCode}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.tsaCodeLabel}
+                                                    <template if:true={helpTextMap.FEC_TSA_Code__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_TSA_Code__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{tsaCode}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Row 2: Disbursement Channel, CC Name, DSA Name, TSA Name -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.disbursementChannelLabel}
+                                                    <template if:true={helpTextMap.FEC_Disbursement_Channel__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_Disbursement_Channel__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{disbursementChannel}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.ccNameLabel}
+                                                    <template if:true={helpTextMap.FEC_CC_Name__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_CC_Name__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{ccName}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.dsaNameLabel}
+                                                    <template if:true={helpTextMap.FEC_DSA_Name__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_DSA_Name__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{dsaName}</span>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.tsaNameLabel}
+                                                    <template if:true={helpTextMap.FEC_TSA_Name__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_TSA_Name__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{tsaName}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Row 3: Origination Channel - cùng độ rộng 1 cột như các trường khác -->
+                                        <div class="slds-col slds-size_1-of-4 slds-p-bottom_small">
+                                            <div class="ipp-sales-info-field">
+                                                <label class="ipp-sales-info-label slds-text-color_weak">{customLabel.originationChannelLabel}
+                                                    <template if:true={helpTextMap.FEC_Origination_Channel__c}>
+                                                        <lightning-helptext content={helpTextMap.FEC_Origination_Channel__c}></lightning-helptext>
+                                                    </template>
+                                                </label>
+                                                <span class="ipp-sales-info-value">{originationChannel}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                        </div>
+                    </lightning-tab>
+                </lightning-tabset>
+                </div>
+            </template>
+
+            <!-- No data message -->
+            <template if:false={hasData}>
+                <div class="slds-text-align_center slds-p-around_large">
+                    <p>{customLabel.noDataToDisplayLabel}</p>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

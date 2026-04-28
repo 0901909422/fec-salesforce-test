@@ -1,0 +1,99 @@
+<template>
+    <lightning-record-edit-form object-api-name={OBJECT_API_NAME} record-id={recordId} 
+        onsubmit={handleSubmit} 
+        onsuccess={handleSuccess}
+        onerror={handleError}
+        onload={handleRecordLoad}>
+
+        <div class="slds-grid slds-wrap slds-gutters">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <template if:true={isNewMode}>
+                    <lightning-input-field field-name={FIELD_FEC_UNIQUE_ID} required></lightning-input-field>
+                </template>
+                <template if:true={isEditMode}>
+                    <lightning-output-field field-name={FIELD_FEC_UNIQUE_ID}></lightning-output-field>
+                </template>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_NAME} required></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_NAME_VN} required></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FEC_TYPE} required onchange={handleTypeChange}></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FIELD_STATUS} value={fieldStatusValue}></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input-field field-name={FIELD_FIELD_MANDATORY}></lightning-input-field>
+            </div>
+        </div>
+
+        <!-- Inline List Values section (visible only when Type = "List") -->
+        <template if:true={showListValues}>
+            <div class="slds-box slds-m-top_small slds-p-around_small slds-theme_shade">
+                <div class="slds-grid slds-grid_align-spread slds-m-bottom_x-small">
+                    <h3 class="slds-text-heading_small">List Values</h3>
+                    <lightning-button label="Add Value" icon-name="utility:add" onclick={handleAddListValue} variant="brand" size="small"></lightning-button>
+                </div>
+
+                <template if:true={hasListValueRows}>
+                    <table class="slds-table slds-table_bordered slds-table_cell-buffer" role="grid">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="width:25%">Code</th>
+                                <th scope="col" style="width:30%">Name EN</th>
+                                <th scope="col" style="width:30%">Name VN</th>
+                                <th scope="col" style="width:15%"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={listValueRows} for:item="row">
+                                <tr key={row.key}>
+                                    <td>
+                                        <lightning-input type="text" value={row.code} data-key={row.key} data-field="code"
+                                            onchange={handleListValueInputChange} variant="label-hidden" placeholder="Code"></lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input type="text" value={row.nameEN} data-key={row.key} data-field="nameEN"
+                                            onchange={handleListValueInputChange} variant="label-hidden" placeholder="Name EN"></lightning-input>
+                                    </td>
+                                    <td>
+                                        <lightning-input type="text" value={row.nameVN} data-key={row.key} data-field="nameVN"
+                                            onchange={handleListValueInputChange} variant="label-hidden" placeholder="Name VN"></lightning-input>
+                                    </td>
+                                    <td class="slds-text-align_center">
+                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Remove"
+                                            data-key={row.key} onclick={handleRemoveListValue} variant="bare" size="medium"></lightning-button-icon>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+
+                <template if:false={hasListValueRows}>
+                    <p class="slds-text-body_small slds-text-color_weak slds-p-vertical_small slds-text-align_center">
+                        No values added yet. Click "Add Value" to start.
+                    </p>
+                </template>
+
+                <!-- Validation errors -->
+                <template if:true={hasListValueErrors}>
+                    <div class="slds-text-color_error slds-m-top_xx-small">
+                        <template for:each={listValueErrors} for:item="err">
+                            <p key={err}>{err}</p>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <div class="slds-m-top_medium slds-float_right">
+            <lightning-button label={labelCancel} onclick={handleCancel} class="slds-m-right_x-small" title={titleCancel} variant="neutral"></lightning-button>
+            <lightning-button label={labelSave} type="submit" variant="brand" title={titleSave}></lightning-button>
+        </div>
+    </lightning-record-edit-form>
+</template>

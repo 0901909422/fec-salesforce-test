@@ -1,0 +1,269 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:record_lookup">
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button label={labelRefresh} icon-name="utility:refresh" onclick={handleRefresh}
+                    variant="neutral">
+                </lightning-button>
+                <lightning-button label={labelReset} variant="brand" icon-name="utility:sync"
+                    onclick={handleSyncDataToMDM} loading={isSyncing} disabled={isSyncing}>
+                </lightning-button>
+                <lightning-button label={labelPush} variant="brand" icon-name="utility:upload"
+                    onclick={handlePushToLive} disabled={isSyncing}>
+                </lightning-button>
+            </lightning-button-group>
+        </div>
+        <div class="slds-p-around_small">
+            <lightning-tabset variant="scoped">
+
+                <!-- Product Type -->
+                <lightning-tab label={labelTabProduct}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="ProductType"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedProductType}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="ProductType" onclick={handleFirst} disabled={isPrevDisabledProductType} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="ProductType" onclick={handlePrev} disabled={isPrevDisabledProductType} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="ProductType" onclick={handleNext} disabled={isNextDisabledProductType} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="ProductType" onclick={handleLast} disabled={isNextDisabledProductType} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoProductType}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Business Process -->
+                <lightning-tab label={labelTabBP}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="BusinessProcess"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedBusinessProcess}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="BusinessProcess" onclick={handleFirst} disabled={isPrevDisabledBusinessProcess} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="BusinessProcess" onclick={handlePrev} disabled={isPrevDisabledBusinessProcess} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="BusinessProcess" onclick={handleNext} disabled={isNextDisabledBusinessProcess} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="BusinessProcess" onclick={handleLast} disabled={isNextDisabledBusinessProcess} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoBusinessProcess}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Category -->
+                <lightning-tab label={labelTabCategory}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="Category"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedCategory}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="Category" onclick={handleFirst} disabled={isPrevDisabledCategory} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="Category" onclick={handlePrev} disabled={isPrevDisabledCategory} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="Category" onclick={handleNext} disabled={isNextDisabledCategory} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="Category" onclick={handleLast} disabled={isNextDisabledCategory} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoCategory}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Sub Category -->
+                <lightning-tab label={labelTabSubCategory}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="SubCategory"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedSubCategory}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="SubCategory" onclick={handleFirst} disabled={isPrevDisabledSubCategory} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="SubCategory" onclick={handlePrev} disabled={isPrevDisabledSubCategory} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="SubCategory" onclick={handleNext} disabled={isNextDisabledSubCategory} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="SubCategory" onclick={handleLast} disabled={isNextDisabledSubCategory} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoSubCategory}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Sub Code -->
+                <lightning-tab label={labelTabSubCode}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="SubCode"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedSubCode}
+                        columns={columnsBasic} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="SubCode" onclick={handleFirst} disabled={isPrevDisabledSubCode} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="SubCode" onclick={handlePrev} disabled={isPrevDisabledSubCode} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="SubCode" onclick={handleNext} disabled={isNextDisabledSubCode} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="SubCode" onclick={handleLast} disabled={isNextDisabledSubCode} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoSubCode}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Master Setting -->
+                <lightning-tab label={labelTabMasterSetting}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="MasterSetting"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedMasterSetting}
+                        columns={columnsMsSetting} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="MasterSetting" onclick={handleFirst} disabled={isPrevDisabledMasterSetting} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="MasterSetting" onclick={handlePrev} disabled={isPrevDisabledMasterSetting} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="MasterSetting" onclick={handleNext} disabled={isNextDisabledMasterSetting} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="MasterSetting" onclick={handleLast} disabled={isNextDisabledMasterSetting} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoMasterSetting}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Channel -->
+                <lightning-tab label={labelTabChannel}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="Channel"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedChannel}
+                        columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="Channel" onclick={handleFirst} disabled={isPrevDisabledChannel} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="Channel" onclick={handlePrev} disabled={isPrevDisabledChannel} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="Channel" onclick={handleNext} disabled={isNextDisabledChannel} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="Channel" onclick={handleLast} disabled={isNextDisabledChannel} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoChannel}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Nature of Case -->
+                <lightning-tab label={labelTabNOC}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="NatureOfCase"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedNatureOfCase}
+                        columns={columnsNOC} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="NatureOfCase" onclick={handleFirst} disabled={isPrevDisabledNatureOfCase} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="NatureOfCase" onclick={handlePrev} disabled={isPrevDisabledNatureOfCase} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="NatureOfCase" onclick={handleNext} disabled={isNextDisabledNatureOfCase} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="NatureOfCase" onclick={handleLast} disabled={isNextDisabledNatureOfCase} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoNatureOfCase}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Additional Field -->
+                <lightning-tab label={labelTabAddField}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="AdditionalField"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedAdditionalField}
+                        columns={columnsField} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="AdditionalField" onclick={handleFirst} disabled={isPrevDisabledAdditionalField} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="AdditionalField" onclick={handlePrev} disabled={isPrevDisabledAdditionalField} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="AdditionalField" onclick={handleNext} disabled={isNextDisabledAdditionalField} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="AdditionalField" onclick={handleLast} disabled={isNextDisabledAdditionalField} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoAdditionalField}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Additional Field List -->
+                <lightning-tab label={labelTabAddFieldList}>
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="AdditionalFieldList"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedAdditionalFieldList}
+                        columns={columnsSetting} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="AdditionalFieldList" onclick={handleFirst} disabled={isPrevDisabledAdditionalFieldList} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="AdditionalFieldList" onclick={handlePrev} disabled={isPrevDisabledAdditionalFieldList} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="AdditionalFieldList" onclick={handleNext} disabled={isNextDisabledAdditionalFieldList} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="AdditionalFieldList" onclick={handleLast} disabled={isNextDisabledAdditionalFieldList} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoAdditionalFieldList}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Case Stage -->
+                <lightning-tab label={labelTabCaseStage} value="CaseStage">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="CaseStage"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedCaseStage}
+                        columns={columnsStage} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="CaseStage" onclick={handleFirst} disabled={isPrevDisabledCaseStage} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="CaseStage" onclick={handlePrev} disabled={isPrevDisabledCaseStage} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="CaseStage" onclick={handleNext} disabled={isNextDisabledCaseStage} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="CaseStage" onclick={handleLast} disabled={isNextDisabledCaseStage} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoCaseStage}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Action Button -->
+                <lightning-tab label={labelTabActionButton} value="ActionButton">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="ActionButton"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedActionButton}
+                        columns={columnsActionButton} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="ActionButton" onclick={handleFirst} disabled={isPrevDisabledActionButton} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="ActionButton" onclick={handlePrev} disabled={isPrevDisabledActionButton} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="ActionButton" onclick={handleNext} disabled={isNextDisabledActionButton} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="ActionButton" onclick={handleLast} disabled={isNextDisabledActionButton} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoActionButton}</span>
+                    </div>
+                </lightning-tab>
+
+                <!-- Stage Change -->
+                <lightning-tab label={labelTabStageChange} value="StageChange">
+                    <div class="slds-p-bottom_x-small">
+                        <lightning-input type="search" placeholder={labelSearchAll} data-tab="StageChange"
+                            onchange={handleSearch} variant="label-hidden"></lightning-input>
+                    </div>
+                    <lightning-datatable key-field="Id" data={pagedStageChange}
+                        columns={columnsStageChange} hide-checkbox-column></lightning-datatable>
+                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
+                        <lightning-button-group>
+                            <lightning-button label="First" data-tab="StageChange" onclick={handleFirst} disabled={isPrevDisabledStageChange} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronleft" data-tab="StageChange" onclick={handlePrev} disabled={isPrevDisabledStageChange} variant="neutral"></lightning-button>
+                            <lightning-button icon-name="utility:chevronright" data-tab="StageChange" onclick={handleNext} disabled={isNextDisabledStageChange} variant="neutral"></lightning-button>
+                            <lightning-button label="Last" data-tab="StageChange" onclick={handleLast} disabled={isNextDisabledStageChange} variant="neutral"></lightning-button>
+                        </lightning-button-group>
+                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoStageChange}</span>
+                    </div>
+                </lightning-tab>
+
+            </lightning-tabset>
+        </div>
+    </lightning-card>
+</template>

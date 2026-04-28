@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CaseTriggerHandler</members>
+        <members>FEC_AttachmentController</members>
+        <members>FEC_ChatHistoryController</members>
+        <members>FEC_ChatHubCaseController</members>
+        <members>FEC_ChatHubInitController</members>
+        <members>FEC_Utils</members>
+        <members>FEC_AttachmentControllerTest</members>
+        <members>FEC_ChatControllersTest</members>
+        <members>FEC_ChatHubInitControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+
+    <types>
+        <members>fecChatHistoryForCase</members>
+        <members>fecChathubContainer</members>
+        <members>fecChathubStatus</members>
+        <members>fecChathubUtils</members>
+        <members>fecSelectAttachment</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
+        <members>FecChatHubStatus</members>
+        <members>FecChatUpdate</members>
+        <name>LightningMessageChannel</name>
+    </types>
+
+    <types>
+        <members>FEC_ChatHistory__c</members>
+        <members>FEC_SystemSetting__mdt</members>
+        <name>CustomObject</name>
+    </types>
+
+    <types>
+        <members>AWS_FIS</members>
+        <members>ChatHubURL</members>
+        <members>CloudFont_Upload</members>
+        <members>Facebook_CDN_atl3_1</members>
+        <members>Facebook_CDN_atl3_2</members>
+        <members>Facebook_CDN_atl3_3</members>
+        <members>Facebook_CDN_sin2_1</members>
+        <members>Facebook_CDN</members>
+        <members>S3_FPT</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+
+    <types>
+        <members>Cloudfront_Upload</members>
+        <members>Facebook_CDN_2</members>
+        <members>Facebook_CDN</members>
+        <members>FE_ChatHub</members>
+        <members>S3_FPT</members>
+        <name>CspTrustedSite</name>
+    </types>
+
+    <types>
+        <members>FEC_SystemSetting.ChatHub_Settings</members>
+        <name>CustomMetadata</name>
+    </types>
+
+    <types>
+        <members>Admin</members>
+        <name>Profile</name>
+    </types>
+
+    <types>
+        <members>FEC_ChatHubAccess</members>
+        <name>CustomPermission</name>
+    </types>
+
+    <types>
+        <members>Case.FEC_External_Interaction_ID__c</members>
+        <name>CustomField</name>
+    </types>
+    
+    <types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
+
+    <types>
+        <members>FEC_Service_UtilityBar</members>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
+    <version>66.0</version>
+</Package>
