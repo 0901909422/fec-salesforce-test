@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>fecUploadCampaignData</members>
+        <members>fecUploadCampaignModal</members>
+        <members>fecCampaignSetting</members>
+        <members>fecPushRecordsModal</members>
+        <members>fecUtils</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <!-- Existing classes -->
+        <members>FEC_ScheduledPushCampaignDataBatch</members>
+        <members>FEC_PushCampaignDataBatch</members>
+        <members>FEC_DataCampaign</members>
+        <members>FEC_Constants</members>
+        <members>FEC_ConstantCommon</members>
+        <members>FEC_CommonUltils</members>
+        <members>FEC_GetCallingListResultBatch</members>
+        <members>FEC_CheckCampaignStatusBatch</members>
+        <members>FEC_CampaignController</members>
+        <members>FEC_Util</members>
+        <!-- New service classes -->
+        <members>FEC_CampaignBatchService</members>
+        <members>FEC_CampaignApiCaller</members>
+        <members>FEC_CampaignApiResponse</members>
+        <members>FEC_CampaignBatchLogger</members>
+        <members>FEC_CampaignValidator</members>
+        <!-- New push batch classes -->
+        <members>FEC_PushExistingRecordsBatch</members>
+        <members>FEC_PushCallbackRecordsBatch</members>
+        <!-- Test classes -->
+        <members>FEC_CampaignBatchServiceTest</members>
+        <members>FEC_CampaignApiCallerTest</members>
+        <members>FEC_CampaignApiResponseTest</members>
+        <members>FEC_CampaignBatchLoggerTest</members>
+        <members>FEC_CampaignValidatorTest</members>
+        <members>FEC_DataCampaignTest</members>
+        <members>FEC_PushCampaignDataBatchTest</members>
+        <members>FEC_ScheduledPushCampaignDataBatchTest</members>
+        <members>FEC_CheckCampaignStatusBatchTest</members>
+        <members>FEC_GetCallingListResultBatchTest</members>
+        <members>FEC_CampaignControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_CS_Campaign__c</members>
+        <members>FEC_DataCampaign__c</members>
+        <members>FEC_Campaign__c</members>
+        <members>FEC_Batch_Log__c</members>
+        <members>FEC_Campaign_Config__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomLabel</name>
+    </types>
+    <types>
+        <members>FEC_Campaign_Config.FEC_Default_Campaign_Config</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>FEC_SheetJSStyle</members>
+        <name>StaticResource</name>
+    </types>
+    <version>65.0</version>
+</Package>

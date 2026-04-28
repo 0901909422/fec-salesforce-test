@@ -10,7 +10,9 @@ public class FEC_Constants {
     public static final String OPERATION_SUCCESS = System.Label.FEC_Operation_Success;
     public static final String ERROR_DELETE_RECORD_PREFIX = System.Label.FEC_Error_Delete_Record_Prefix;
     public static final String ERROR_DELETE_FIELDLIST_PREFIX = System.Label.FEC_Error_Delete_FieldList_Prefix;
-    
+    public static final String MSG_FILE_ERR = System.Label.FEC_Uploaded_File_Contains_Error_Message;
+    public static final String MSG_DUP_ERR  = System.Label.FEC_Duplicate_Records_Message;
+
     // Additional message labels (use generic error title label as fallback)
     public static final String ERROR_GENERIC_PREFIX = System.Label.FEC_Error_Title;
     public static final String ERROR_CANNOT_START_SYNC = System.Label.FEC_Error_Title;
@@ -239,4 +241,72 @@ public class FEC_Constants {
     public static final String FIELD_NEXT_STAGE              = 'FEC_Next_Stage__c';
     public static final String FIELD_NEXT_QUEUE              = 'FEC_Next_Queue__c';
     public static final String FIELD_TEAM_USER_GROUP         = 'FEC_Team_User_Group__c';
+
+    // Campaign
+    public static final Integer CAMPAIGN_LIFETIME = 2;
+    public static final Integer MAX_CALL_ATTEMPTS = 3;
+    public static final Integer CURRENT_CALL_ATTEMPT = 0;
+    public static final Integer RECORD_CURRENT_LIFETIME = 0;
+
+    // === Campaign Status Values ===
+    public static final String CAMPAIGN_STATUS_NEW = 'New';
+    public static final String CAMPAIGN_STATUS_FAILED = 'Failed';
+    public static final String CAMPAIGN_STATUS_RESOLVED_PREFIX = 'Resolved-';
+    public static final String CAMPAIGN_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
+    public static final String CAMPAIGN_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+    public static final String CAMPAIGN_STATUS_PENDING_CALLBACK = 'Pending-callback';
+    public static final String CAMPAIGN_STATUS_PENDING_RETRY = 'Pending-Retry';
+
+    // === Campaign Call Result Codes ===
+    public static final String CALL_RESULT_COMPLETED_33 = '33';
+    public static final String CALL_RESULT_COMPLETED_9 = '9';
+    public static final String CALL_RESULT_CANCELLED_52 = '52';
+    public static final String CALL_RESULT_CANCELLED_51 = '51';
+    public static final String CALL_RESULT_CALLBACK_47 = '47';
+    public static final String CALL_RESULT_CALLBACK_48 = '48';
+    public static final String CALL_RESULT_CALLBACK_4 = '4';
+    public static final String CALL_RESULT_RETRY_21 = '21';
+    public static final String CALL_RESULT_RETRY_6 = '6';
+    public static final String CALL_RESULT_RETRY_3 = '3';
+    public static final String CALL_RESULT_RETRY_7 = '7';
+    public static final String CALL_RESULT_RETRY_32 = '32';
+    public static final String CALL_RESULT_RETRY_46 = '46';
+    public static final String CALL_RESULT_RETRY_28 = '28';
+
+    // === Campaign Call Result Sets (for evaluateCallStatus) ===
+    public static final Set<String> CALL_RESULTS_COMPLETED = new Set<String>{ CALL_RESULT_COMPLETED_33, CALL_RESULT_COMPLETED_9 };
+    public static final Set<String> CALL_RESULTS_CANCELLED = new Set<String>{ CALL_RESULT_CANCELLED_52, CALL_RESULT_CANCELLED_51 };
+    public static final Set<String> CALL_RESULTS_CALLBACK = new Set<String>{ CALL_RESULT_CALLBACK_47, CALL_RESULT_CALLBACK_48, CALL_RESULT_CALLBACK_4 };
+
+    // === Campaign API Configuration ===
+    public static final Integer CAMPAIGN_MAX_JSON_SIZE = 1000000;
+    public static final String CAMPAIGN_API_ENDPOINT = 'callout:FEC_API/api/v1/cases/ingest_campaign';
+    public static final String CAMPAIGN_CHECK_STATUS_ENDPOINT = 'callout:FEC_API/api/v1/cases/campaign-status';
+    public static final String CAMPAIGN_CALLING_LIST_ENDPOINT = 'callout:Your_Service_API/get-calling-list-result';
+
+    // === HTTP Constants ===
+    public static final Integer HTTP_STATUS_OK = 200;
+    public static final Integer HTTP_STATUS_CREATED = 201;
+    public static final String HTTP_METHOD_POST = 'POST';
+    public static final String HTTP_CONTENT_TYPE_JSON = 'application/json';
+
+    // === Campaign API Response Status ===
+    public static final String API_STATUS_OK = 'OK';
+    public static final String API_CHECK_STATUS_SUCCESS = '1';
+    public static final String API_CHECK_STATUS_FAILED = '-1';
+
+    // === Batch Log Status ===
+    public static final String BATCH_LOG_IN_PROGRESS = 'In Progress';
+    public static final String BATCH_LOG_COMPLETED = 'Completed';
+    public static final String BATCH_LOG_FAILED = 'Failed';
+
+    // === Campaign Validation ===
+    public static final Integer CAMPAIGN_PRODUCT_LINE_MAX_LENGTH = 12;
+    public static final Integer CAMPAIGN_APP_ID_MAX_LENGTH = 32;
+    public static final Integer CAMPAIGN_ACCOUNT_NUMBER_MAX_LENGTH = 32;
+    public static final String CAMPAIGN_PRODUCT_LOAN = 'Loan';
+    public static final String CAMPAIGN_PRODUCT_CARD = 'Card';
+
+    // === SendToCommsDB Flag ===
+    public static final String CAMPAIGN_SEND_TO_COMMS_Y = 'Y';
 }
