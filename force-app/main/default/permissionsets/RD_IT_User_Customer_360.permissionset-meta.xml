@@ -1597,27 +1597,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Repayment_Waived_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Repayment_Outstanding_Amount__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_Total_Installment_Paid__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
