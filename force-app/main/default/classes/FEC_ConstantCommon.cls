@@ -510,4 +510,25 @@ public with sharing class FEC_ConstantCommon {
     public static final String HTML_TAG_REGEX = '<[^>]+>';
     public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
+    
+    //HieuTT74: Update common constant - ngày 28-4-2026
+    public static final String CHANNEL_FACEBOOK = 'Facebook';
+    public static final String CHANNEL_WEBCHAT = 'Webchat';
+    
+    public static final String CHANNEL_FACEBOOK_LOWER = 'facebook';
+    public static final String CHANNEL_ZALO_LOWER = 'zalo';
+    public static final String CHANNEL_WEBCHAT_LOWER = 'webchat';
+    
+    // ===== KYC =====
+    public static final String KYC_METHOD_OTHER = 'Other';
+    public static final String KYC_STATUS_NOT_KYC = 'NOT KYC';
+    public static final String KYC_STATUS_KYC = 'KYC';
+    
+    public static final String KYC_RESULT_PASS = 'Pass';
+    public static final String KYC_RESULT_FAIL = 'Fail';
+    
+    
+    public static final String DNB_STATUS_ACTIVE = 'Active';
+    public static final String DNB_STATUS_INACTIVE = 'Inactive';
+    public static final String BOOLEAN_TRUE = 'true';
 }

@@ -1,0 +1,105 @@
+.page-input {
+  width: 70px;
+  margin-right: 8px;
+}
+
+.horizontal-radio .slds-radio {
+  display: inline-block;
+  margin-right: 16px;
+}
+
+.dnb-container {
+  background: #fff;
+}
+
+/* TITLE */
+.dnb-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #3e3e3c;
+}
+
+/* RADIO */
+.horizontal-radio {
+  margin-top: 8px;
+}
+
+.horizontal-radio .slds-radio {
+  display: inline-flex;
+  margin-right: 20px;
+}
+
+/* TABLE WRAPPER */
+.dnb-table {
+  margin-top: 16px;
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+
+.custom-question {
+  font-size: 16px;
+  color: #3e3e3c;
+  margin-bottom: 8px;
+}
+/* HEADER */
+.dnb-table thead th {
+  background: #f3f3f3;
+  font-weight: 600;
+  font-size: 13px;
+  color: #3e3e3c;
+}
+
+/* ROW */
+.dnb-table tbody tr {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* CELL */
+.dnb-table td {
+  font-size: 13px;
+  padding: 10px 12px;
+  color: #3e3e3c;
+}
+
+/* BUTTON SELECT (pill style giống ảnh) */
+.select-btn {
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 13px;
+  border: 1px solid #c9c9c9;
+  background: #fff;
+}
+
+.select-btn:hover {
+  background: #f4f6f9;
+}
+
+/* PAGINATION */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* PAGE BUTTON */
+.page-btn {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #c9c9c9;
+}
+
+/* INPUT PAGE */
+.page-input {
+  width: 60px;
+  text-align: center;
+}
+
+.btn-wrapper {
+    padding-top: 16px;
+}

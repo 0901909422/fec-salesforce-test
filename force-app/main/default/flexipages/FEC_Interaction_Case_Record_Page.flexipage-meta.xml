@@ -916,7 +916,17 @@
                 <identifier>c_fec_NFU</identifier>
             </componentInstance>
         </itemInstances>
-        <name>Facet-41923fb5-14e8-4398-994a-8598f9f56cc4</name>
+        <name>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_DoNotBotherInformationView</componentName>
+                <identifier>c_fec_DoNotBotherInformationView</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-ba1dc064-1f07-4725-8018-8dfe9986cb59</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -946,6 +956,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab28</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-ba1dc064-1f07-4725-8018-8dfe9986cb59</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Do Not Bother</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab31</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

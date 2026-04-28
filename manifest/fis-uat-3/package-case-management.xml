@@ -7,6 +7,9 @@
         <members>FEC_FetchCollectionDataServiceCallout</members>
 		<members>FEC_FetchCollectionDataService_Test</members>
 		<members>FEC_CustomerAdditionalDataController</members>
+		<members>FEC_DNBHandler</members>
+		<members>FEC_CreateCaseHandler</members>
+		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
@@ -36,6 +39,7 @@
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
 		<members>FEC_Assignment_Record_Page</members>
+		<members>FEC_Customer_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -52,6 +56,11 @@
 		<members>fec_CollectionDateFilter</members>
 		<members>fec_DatePicker</members>
 		<members>fec_DateFormatter</members>
+		<members>fec_DoNotBotherExistingCustomer</members>
+		<members>fec_DoNotBotherHandling</members>
+		<members>fec_DoNotBotherInformationView</members>
+		<members>fec_DoNotBotherNonExistingCustomer</members>
+		<members>fec_ReusableDNBCustomTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -138,6 +147,12 @@
 		<members>Fetch_Collection_Data_Record_Type_Communication_History</members>
 		<members>Fetch_Collection_Data_Record_Type_Collection_Interaction</members>
 		<members>Fetch_Collection_Data_Record_Type_Allocation_History</members>
+		<members>FEC_DNB_Has_Data_Question</members>
+		<members>FEC_DNB_Modal_Message</members>
+		<members>FEC_DNB_Modal_Title</members>
+		<members>FEC_DNB_NID_Placeholder</members>
+		<members>FEC_DNB_No_Data_Question</members>
+		<members>FEC_DNB_Update_Button</members>
 		<members>FEC_Invalid_OwnerId</members>
 		<name>CustomLabel</name>
 	</types>
