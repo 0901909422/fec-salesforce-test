@@ -122,6 +122,7 @@
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
 		<members>FEC_TerminationLoanController</members>
+		<members>FEC_MainInfoLoanAccountController</members>
         <name>ApexClass</name>
     </types>
     <types>
