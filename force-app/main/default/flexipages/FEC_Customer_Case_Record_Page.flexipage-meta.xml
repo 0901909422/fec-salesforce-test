@@ -177,6 +177,12 @@
                 <identifier>c_fec_CaseDetail_Customer</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_DoNotBotherHandling</componentName>
+                <identifier>c_fec_DoNotBotherHandling</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -665,13 +671,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>
@@ -753,13 +759,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>
