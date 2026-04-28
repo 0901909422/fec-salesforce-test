@@ -3,7 +3,6 @@
     <fullName>FEC_Active__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Indicates if this Nature of Case record is active</description>
-    <externalId>false</externalId>
     <label>Active</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
