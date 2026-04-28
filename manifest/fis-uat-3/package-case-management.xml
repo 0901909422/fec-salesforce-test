@@ -10,9 +10,6 @@
 		<members>FEC_DNBHandler</members>
 		<members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionGenesys</members>
-		<members>FEC_PsDNBServiceCallout</members>
-		<members>FEC_PINReissueServiceCallout</members>
-		<members>FEC_PinResetHandler</members>
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
 		<name>ApexClass</name>
@@ -63,13 +60,11 @@
 		<members>fec_DoNotBotherHandling</members>
 		<members>fec_DoNotBotherInformationView</members>
 		<members>fec_DoNotBotherNonExistingCustomer</members>
-		<members>fec_PinResetView</members>
 		<members>fec_ReusableDNBCustomTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
-		<members>FEC_PinReset</members>
         <name>LightningMessageChannel</name>
     </types>
 	<types>
