@@ -227,11 +227,17 @@
         </template>
 
         <template if:true={section.isLastSection}>
-          <div if:true={isProcessActionFailed} class="process-action-result process-action-result--error">
+           <div
+            if:true={isProcessActionFailed}
+            class="process-action-result process-action-result--error"
+          >
             <p>{processActionMsg}</p>
           </div>
 
-          <div if:true={isProcessActionSuccessed} class="process-action-result process-action-result--success">
+           <div
+            if:true={isProcessActionSuccessed}
+            class="process-action-result process-action-result--success"
+          >
             <p>{processActionMsg}</p>
           </div>
 
@@ -288,25 +294,44 @@
             </c-fec_-routing-assignment>
           </template>
         </div>
-        <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+        <div
+          if:true={showRevert}
+          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+        >
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
             <p class="label">{customLabel.decisionLabel}</p>
             <p class="value">{revertDecisionDisplayLabel}</p>
           </div>
         </div>
-        <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <lightning-combobox name="decision" label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
-              options={decisionOptions} required>
+         <div
+          if:true={showTransfer}
+          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+        >
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
+            <lightning-combobox
+              name="decision"
+              label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel}
+              value={decisionValue}
+              onchange={handleChange}
+              options={decisionOptions}
+              required
+            >
             </lightning-combobox>
           </div>
 
-          <div if:true={decisionValue}
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <div
+            if:true={decisionValue}
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
             <template if:true={isSubDecisionOptionsDisplay}>
-              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel}
-                placeholder={customLabel.chooseSubDecisionLabel} value={subDecisionValue} onchange={handleChange}
+               <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder=
+{customLabel.chooseSubDecisionLabel}
+                value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
                 options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
@@ -316,11 +341,22 @@
             
           </div>
         </div>
-        <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <lightning-combobox name="decision" label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
-              options={decisionUpdateOptions} required>
+         <div
+          if:true={showUpdate}
+          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
+        >
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
+            <lightning-combobox
+              name="decision"
+              label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel}
+              value={decisionValue}
+              onchange={handleChange}
+              options={decisionUpdateOptions}
+              required
+            >
             </lightning-combobox>
           </div>
         </div>
