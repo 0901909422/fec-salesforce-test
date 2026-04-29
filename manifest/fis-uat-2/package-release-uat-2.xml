@@ -1407,6 +1407,7 @@
 		<members>FEC_GetUnbilledTransactions</members>
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
+		<members>FEC_GetCustomerList</members>
         <name>ApexClass</name>
     </types>
 	<types>
