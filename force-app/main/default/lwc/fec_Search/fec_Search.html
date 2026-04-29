@@ -187,7 +187,11 @@
                             </lightning-tab>
                             <template if:false={isAccountContractSearch}>
                                 <lightning-tab label="Insurance" value="Insurance">
-                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
+                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column 
+                                    onrowaction={handleRowAction}
+                                    onshowhistory={handleInsuranceDblClick}
+                                    >
+                                </c-masked-toggle-datatable>
                                 </lightning-tab>
                             </template>
                         </lightning-tabset>

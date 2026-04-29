@@ -7,38 +7,7 @@
                 <lightning-spinner alternative-text="Loading"></lightning-spinner>
             </template>
 
-            <template lwc:if={notLoading}>
-                
-                <div class="slds-box slds-m-bottom_medium">            
-                    <div class="slds-grid slds-wrap slds-gutters">        
-                        <lightning-combobox
-                            label={labels.Int_Category}
-                            required
-                            class="slds-col slds-size_1-of-4"
-                            options={categoryOptions}
-                            value={fraudIntCategory}
-                            onchange={handleCategory}>
-                        </lightning-combobox>
-        
-                        <lightning-combobox
-                            label={labels.Int_Sub_Category}
-                            required
-                            class="slds-col slds-size_1-of-4"
-                            options={subCategoryOptions}
-                            value={fraudIntSubCategory}
-                            onchange={handleSubCategory}>
-                        </lightning-combobox>
-        
-                        <lightning-combobox
-                            label={labels.Int_Sub_Code}
-                            class="slds-col slds-size_1-of-4"
-                            options={subCodeOptions}
-                            value={fraudIntSubCode}
-                            onchange={handleSubCode}>
-                        </lightning-combobox>
-        
-                    </div>
-                </div>
+            <template lwc:if={notLoading}> 
                 <!-- Additional Properties -->
                 <template lwc:if={additionalProps.length}>
                     <div class="slds-m-top_medium slds-p-around_small slds-box">
@@ -292,6 +261,27 @@
 
             </template>
             
+            <!-- Cancel Confirmation Modal -->
+            <template lwc:if={showCancelConfirm}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeCancelConfirm}>
+                                <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                            </button>
+                            <h2 class="slds-modal__title">Confirm Cancel</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <p>Are you sure you want to cancel this fraud case? This action cannot be undone.</p>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="neutral" label="No" onclick={closeCancelConfirm}></lightning-button>
+                            <lightning-button variant="destructive" label="Yes, Cancel" onclick={confirmCancelFraudCase} class="slds-m-left_small"></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
 
         </div>
     </lightning-card>

@@ -1,0 +1,23 @@
+/* CSS Nội dung bên trong Modal */
+.instruction-text { font-size: 14px; color: #333; font-weight: 600 }
+
+.file-input-wrapper { display: flex; align-items: center; gap: 12px; }
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 4px 12px;
+    cursor: pointer;
+    background: #efefef;
+    border: 1px solid #767676;
+    border-radius: 3px;
+    font-size: 14px;
+    color: black;
+}
+.custom-file-upload input[type="file"] { display: none; }
+
+.file-name-display { font-size: 14px; color: #666; }
+
+.template-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+.template-question { font-weight: 600; font-size: 14px; color: #444; }
+
+.blue-icon { --slds-c-icon-color-foreground: #0070d2; }

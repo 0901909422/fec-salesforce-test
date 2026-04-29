@@ -23,6 +23,7 @@
               placeholder={placeholder}
               onchange={handleSearch}
               oninput={handleSearchInput}
+              onblur={handleSearchBlur}
               onclick={handleFocus}
               disabled={disabled}
             ></lightning-input>
@@ -78,6 +79,7 @@
                 <li
                   class="slds-listbox__item"
                   key={item.value}
+                  onmousedown={handleOptionMouseDown}
                   onclick={handleChoose}
                   data-id={item.value}
                 >

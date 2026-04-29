@@ -155,7 +155,7 @@ span.slds-text-color_error,
 /* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
 .error-text {
     color: #ea001e !important;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .card-payment-empty {

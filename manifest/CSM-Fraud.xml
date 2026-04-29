@@ -15,6 +15,11 @@
         <members>FEC_IntegrationFraudCaseApi</members>
         <members>FEC_IntegrationCreateFraudController</members>
         <members>FEC_IntegrationMappingController</members>
+        <members>FEC_IntegrationLocationService</members>
+		<members>FEC_LocationSyncScheduler</members>
+		<members>FEC_AutoIntegratingPropertyMappingCtrl</members>
+		<members>FEC_MapAPropertiesToMasterDataItemCtrl</members>
+		<members>FEC_IntegrationManageFraudCaseCtrl</members>
         
         
         <name>ApexClass</name>
@@ -28,7 +33,11 @@
         <members>FEC_User_Type__c</members>
         <members>FEC_Data_Integration_Mapping_Info__c</members>
         <members>FEC_Data_Integration_Mapping__c</members>   
-        <members>FEC_Additional_Field__c</members>   
+        <members>FEC_Additional_Field__c</members>   		
+		<members>FEC_Decison_Reason__c</members>   
+		<members>FEC_Auto_Intetgrating_Property_Mapping__c</members>   
+		<members>FEC_Map_A_Properties_To_Master_Data_Item__c</members>   
+
              
         <name>CustomObject</name>
     </types>
@@ -51,6 +60,11 @@
         <members>fecIntegrationMapping</members>
         <members>fecIntegrationFraudCaseDetail</members>
         <members>fecIntegrationUpdateFraudCase</members>
+        <members>fecServiceCallLogs</members>		
+		<members>fecAutoIntegratingPropertyMapping</members>
+		<members>fecIntegrationManageFraudCase</members>
+		<members>fecMapAPropertiesToMasterDataItem</members>
+		
         <name>LightningComponentBundle</name>
     </types>
     <version>65.0</version>

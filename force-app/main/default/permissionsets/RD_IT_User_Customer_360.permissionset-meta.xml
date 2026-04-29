@@ -17,6 +17,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Address_Info__c.FEC_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Address_Info__c.FEC_Country_Text__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -533,6 +538,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Contact_List__c.FEC_Contact_String__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Contact_List__c.FEC_Temporary_Email__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

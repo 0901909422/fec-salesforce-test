@@ -158,7 +158,7 @@
     <nameField>
         <displayFormat>MDS-{0}</displayFormat>
         <label>MDS Name</label>
-        <trackHistory>false</trackHistory>
+        <trackHistory>true</trackHistory>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Master MDM Data Setting</pluralLabel>

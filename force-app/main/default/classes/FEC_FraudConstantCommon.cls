@@ -3,8 +3,23 @@ public with sharing class FEC_FraudConstantCommon {
 
 	public static final String LANG_VI      = 'vi';
 
-	public static final String SET_ENPOINT_FRAUD_HEALTH = 'callout:FECredit_Service/archival/actuator/health';
-	public static final String SET_ENPOINT_FRAUD_SERVICE = 'callout:FIMA/fima/';
+	public static final Long START_NUMBER_CASE_SFT      = 5000000;	
+	public static final Integer LOCATION_PAGE_SIZE = 1000;
+	public static final Integer LOCATION_OFFSET = 2000;
+	public static final String LOCATION_SCHEME_COUNTRY      = 'Country';
+	public static final String LOCATION_SCHEME_PROVINCE      = 'Province';
+	public static final String LOCATION_SCHEME_CITY_DISTRICT      = 'City District';
+	public static final String LOCATION_SCHEME_WARD      = 'Ward';
+
+	public static final String CASE_SFT_REQUEST = 'SFTCASE';
+	public static final String CASE_SFT_RECORD_TYPE_DEV_NAME = 'SFT_Case';
+	// SFT Case category/subcategory/subcode codes
+	public static final String SFT_CATEGORY_CODE = 'SFT_CATEGORY';
+	public static final String SFT_SUB_CATEGORY_CODE = 'SFT_SUB_CATEGORY';
+	public static final String SFT_SUB_CODE = 'SFT_SUB_CODE';
+
+	public static final String SET_ENPOINT_FRAUD_HEALTH = 'callout:FECredit_Service/health';
+	public static final String SET_ENPOINT_FRAUD_SERVICE = 'callout:FECredit_Service/fima/Soap/SCLService.svc';
 	
 	public static final String FRAUD_X_API_KEY = 'RkVDX1NBTEVTRk9SQ0U';
 	public static final String CLIENT_ENDPOINT_XF = 'callout:FimaFraudService';
@@ -56,8 +71,8 @@ public with sharing class FEC_FraudConstantCommon {
 
 	
 
-	public static final String SERVICE_CASE_LINK = '/lightning/n/integration_fraud_handling_case_update?c__caseId=';
-	public static final String SERVICE_SFT_CASE_LINK = '/lightning/n/Service_Fraud_Task_Case_Action?c__caseId=';
+	public static final String SERVICE_CASE_LINK = '/lightning/r/Case/';
+	public static final String SERVICE_SFT_CASE_LINK = '/lightning/r/Case/';
 	public static final String FRAUD_HANDLING_CASE_DETAIL_PATH = 'integration_fraud_handling_case_detail';
 	public static final String SYSTEM_CHANNEL = 'PEGACSM';
     public static final String DEFAULT_CHANNEL_INTEGRATION_CODE = 'FIMA';
@@ -192,6 +207,7 @@ public with sharing class FEC_FraudConstantCommon {
 		// =====================================================
 		public final String ROW_PROPERTY                 = 'property';
 		public final String ROW_PROPERTY_TYPE            = 'type';
+		public final String ROW_AUTO_MAPPING_PROPERTY_SOURCE_ID            = 'autoMappingPropertySource';
 		public final String ROW_CSM_PROPERTY             = 'csmProperty';
 		public final String ROW_CSM_PROPERTY_TYPE        = 'csmPropertyType';
 		public final String ROW_AUTO_MAPPING             = 'autoMapping';
@@ -264,6 +280,25 @@ public with sharing class FEC_FraudConstantCommon {
 
 		
     }
+	//Sync Status
+	public static final String CONFIG_SYNC_STATUS_SYNCED            = 'Synced';
+	public static final String CONFIG_SYNC_STATUS_UPDATE            = 'Updated';
+	public static final String CONFIG_SYNC_STATUS_NEW               = 'New';
+	public static final String CONFIG_SYNC_STATUS_DELETED               = 'Deleted';
+
+	// Mock flags for testing
+
+	public static Boolean USE_MOCK_PROCESS_CASE = false;
+
+	public static String PROCESS_CASE_SUCCESS_STATUS = 'Success';
+	public static String PROCESS_CASE_CANCEL_STATUS = 'Cancel';
+
+	// Case Status for SFT decision
+	public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
+	public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
+
+	// SFT Queue
+	public static final String SFT_QUEUE_NAME = 'FEC_Handling';	
 	
 	 // SEC Investigating
 	 public static final String ALLOCATING            = 'Allocating';
@@ -307,6 +342,16 @@ public with sharing class FEC_FraudConstantCommon {
 	 // CS
 	 public static final String CS_UPDATING            = 'CS_Updating';
 	 public static final String PROVIDE_INFORMATION    = 'Provide Information';
+
+	 public static final String INTEGRATING_FRAUD_CREATE_MODE    = 'CreateMode';
+	 public static final String INTEGRATING_FRAUD_EDIT_MODE    = 'EditMode';
+	 public static final String INTEGRATING_FRAUD_VIEW_MODE    = 'ViewMode';
+	 public static final String INTEGRATING_FRAUD_NOTMAPPING_MODE    = 'NotMapping';
+
+	 public static final String CASE_STATUS_PENDING_FRAUD_TASK            = 'Pending-FraudTask';
+	 
+
+	 
 
 	
 }

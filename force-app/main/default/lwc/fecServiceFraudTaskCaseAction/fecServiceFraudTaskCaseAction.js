@@ -1,9 +1,11 @@
 import { LightningElement, api, wire, track } from 'lwc';
-
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getFocusedTabInfo, setTabLabel, setTabIcon } from 'lightning/platformWorkspaceApi';
 
 import getCaseData from '@salesforce/apex/FEC_ServiceFraudTaskCaseController.getCaseData';
 import submitProcessCaseDecision from '@salesforce/apex/FEC_ServiceFraudTaskCaseController.submitProcessCaseDecision';
+import getCancelReasons from '@salesforce/apex/FEC_ServiceFraudTaskCaseController.getCancelReasons';
+import assignCaseToMeSFT from '@salesforce/apex/FEC_ServiceFraudTaskCaseController.assignCaseToMe';
 
 // =====================
 // Custom Labels
@@ -96,6 +98,7 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     @api recordId;
     @track isLoading = true;
     @track effectiveRecordId;
+    isSubmitting = false;
    
     labels = {
         // ===== HEADER =====
@@ -261,23 +264,53 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
             console.error('No caseId provided!');
             this.isLoading = false;
         }
+
+        this.loadCancelReasons();
     }
 
     // ===== OPTIONS =====
     decisionOptions = [
-        { label: 'Completed', value: 'Completed' },
+        { label: 'Completed', value: 'Success' },
         { label: 'Cancel', value: 'Cancel' }
     ];
 
-    cancelOptions = [
-        { label: 'Task was done before', value: 'DONE_BEFORE' },
-        { label: 'Not for task', value: 'NOT_FOR_TASK' }
-    ];
+    cancelOptions = [];
+
+    loadCancelReasons() {
+        getCancelReasons()
+            .then(result => {
+                this.cancelOptions = (result || []).map(r => ({
+                    label: r.FEC_Name_VN__c || r.Name,
+                    value: r.FEC_Code__c
+                }));
+            })
+            .catch(err => {
+                console.error('[loadCancelReasons] Error:', err);
+            });
+    }
     // Status flag
     get isPending() {
         return this.caseInfo && this.caseInfo.caseStatus
             ? this.caseInfo.caseStatus.toLowerCase().includes('pending')
             : false;
+    }
+
+    get isResolved() {
+        return this.caseInfo && this.caseInfo.caseStatus
+            ? this.caseInfo.caseStatus.startsWith('Resolved-')
+            : false;
+    }
+
+    get isEditMode() {
+        return !this.isResolved;
+    }
+
+    get isViewMode() {
+        return this.isResolved;
+    }
+
+    get showAssignButton() {
+        return this.isEditMode && this.data && !this.data.isAssignedToCurrentUser;
     }
     
 
@@ -297,7 +330,14 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
         this.assignCaseToMe();
     }
     assignCaseToMe() {
-
+        assignCaseToMeSFT({ caseId: this.effectiveRecordId })
+            .then(() => {
+                this.showToast('Success', 'Case assigned to you', 'success');
+                setTimeout(() => { location.reload(); }, 1500);
+            })
+            .catch(error => {
+                this.showToast('Error', error?.body?.message || 'Failed to assign case', 'error');
+            });
     }
     async updateTabTitle(retry = 0) {
         try {
@@ -331,9 +371,11 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     // ===== LOAD DATA =====
     @wire(getCaseData, { caseId: '$effectiveRecordId' })
     wiredCase({ data, error }) {
-        if (data) {            
+        if (data) {    
+            console.log('data:', data);
             this.data = data;
             this.caseInfo = data.caseInfo;
+            this.assignedToName = data.assignedToName || '';
             this.customer = data.customer;
             this.sortedFraudCasesData = Array.isArray(data.fraudCasesList)
             ? data.fraudCasesList
@@ -593,6 +635,8 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
         console.log('subDecision (cancelReason):', this.cancelReason);
         console.log('remarks:', this.remarks);
     
+        this.isSubmitting = true;
+
         submitProcessCaseDecision({
             caseId: this.effectiveRecordId,
             decision: this.decision,
@@ -606,16 +650,20 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     
             if (result && result.success) {
                 const resultMessage = result.message || 'Submit successfully';
-                alert(resultMessage);
-                location.reload();
+                this.showToast('Success', resultMessage, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
             } else {
                 const resultMessage = result?.message || 'Submit failed';
-                alert(resultMessage);
+                this.showToast('Error', resultMessage, 'error');
+                this.isSubmitting = false;
             }
         })
         .catch(error => {
             console.error('Submit error:', error);
-            alert(error?.body?.message || 'Submit failed');
+            this.showToast('Error', error?.body?.message || 'Submit failed', 'error');
+            this.isSubmitting = false;
         });
     }
     
@@ -653,5 +701,9 @@ export default class ServiceFraudTaskCaseAction extends LightningElement {
     maskValue(value) {
         const visible = 3;
         return '*'.repeat(value.length - visible) + value.slice(-visible);
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

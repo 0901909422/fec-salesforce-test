@@ -13,6 +13,9 @@ import {
   closeTab,
   IsConsoleNavigation,
 } from "lightning/platformWorkspaceApi";
+// tungnm37 thêm: lấy businessCode để check COF/GSR
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import CASE_BUSINESS_PROCESS_CODE from "@salesforce/schema/Case.FEC_Business_Process__r.FEC_Code__c";
 import saveCaseDrafts from "@salesforce/apex/FEC_CaseBusinessService.saveCaseDrafts";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
 import clearDraftRemarks from "@salesforce/apex/FEC_CaseRemarkController.clearDraftRemarks";
@@ -21,9 +24,11 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
+import { updateRecord } from "lightning/uiRecordApi";
 
 import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst";
 
@@ -38,12 +43,23 @@ import {
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
+const PROCESS_CARD_REPLACEMENT = "Card Replacement";
+
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
   @api modeEditCase;
 
   @wire(MessageContext)
   messageContext;
+
+  // tungnm37 thêm: wire lấy businessCode để check COF/GSR
+  @wire(getRecord, { recordId: '$recordId', fields: [CASE_BUSINESS_PROCESS_CODE] })
+  wiredCase({ data }) {
+    if (data) {
+      const code = getFieldValue(data, CASE_BUSINESS_PROCESS_CODE);
+      this._isCofGsr = typeof code === 'string' && (code.startsWith('COF') || code.startsWith('GSR'));
+    }
+  }
 
   @wire(IsConsoleNavigation)
   isConsoleNavigation;
@@ -84,6 +100,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   isLoaded = false;
   isSubmitting = false;
 
+  // tungnm37 thêm: track COF/GSR để filter remark type Assignment
+  _isCofGsr = false;
+
   get remarkColumnlst() {
     return [
       { label: FEC_Case_Remark_Label, fieldName: "FEC_Case_Remarks__c" },
@@ -106,6 +125,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
+          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
+          .filter((item) => !this._isCofGsr || item.Remark_Type__c !== 'Assignment')
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -202,6 +223,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         message.subCodeId,
         message.natureOfCaseId,
       );
+      // tungnm37 thêm: track COF/GSR sau khi getData
+      setTimeout(() => {
+        this._isCofGsr = !!caseBusinessEle.isRoutingAssignmentMode;
+      }, 500);
     }
   }
 
@@ -294,6 +319,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (caseBusinessEle && !caseBusinessEle.getNatureOfCaseId() && this.lastNatureOfCaseIdFromNOC) {
       caseBusinessEle.setNatureOfCaseId(this.lastNatureOfCaseIdFromNOC);
     }
+    let addressInfoId;
     if (caseBusinessEle) {
       const validateResult = caseBusinessEle.validate();
       const validateNatureResult = caseBusinessEle.validateNatureOfCase();
@@ -307,10 +333,25 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         //   this.errlst.push(REQUIRED_MSG.replace("{0}", accountContractErr));
         // }
       }
+      // PhuongNT add validate card replacement select address
+      if (caseBusinessEle.handleGetCurrentProcessAction() == PROCESS_CARD_REPLACEMENT) {
+        addressInfoId = caseBusinessEle.handleValidateAddressSelected();
+        if (!addressInfoId) {
+          isAllValid = false;
+          this.errlst.push(FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT);
+        }
+      }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
       isAllValid = false;
       this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
+      // tungnm37 thêm: COF/GSR Stage 2 với manual items → không bắt buộc Case Remarks
+      const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
+      const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
+      if (!(isRoutingMode && hasManualItems)) {
+        isAllValid = false;
+        this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
+      }
     }
 
     if (!isAllValid) {
@@ -334,15 +375,49 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       // Xóa draft cũ, chỉ lưu 1 bản ghi = nội dung hiện tại trong ô (tránh sinh nhiều bản ghi từ Save & Close trước đó)
       await clearDraftRemarks({ caseId: this.recordId });
 
+      // tungnm37 thêm: lấy remark value trước khi submit để truyền vào Apex (createAssignmentsOnRoute cần)
+      if (caseBusinessEle && caseRemarksEle) {
+        caseBusinessEle.remarkContent = caseRemarksEle.getRemarkValue();
+      }
+
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
       }
-
+      // PhuongNT add reset msg process action after submit success
+      caseBusinessEle.resetMsgProcessAction();
+      
       // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
       await caseRemarksEle.createRemark(stageName);
       await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
+
+      if (
+        caseBusinessEle &&
+        typeof caseBusinessEle.refreshFileUploadCards === "function"
+      ) {
+        caseBusinessEle.refreshFileUploadCards();
+      }
+      // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
+      const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
+      const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;
+      if (!(isRoutingModeSubmit && hasManualItemsSubmit && !caseRemarksEle?.validate())) {
+        await caseRemarksEle.createRemark(stageName);
+        await caseRemarksEle.submitRemark(stageName);
+      }
+      // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
+      this._isCofGsr = isRoutingModeSubmit;
+      this.loadRemarkHistory();
+
+      // PhuongNT add update select address for Case
+      if (addressInfoId) {
+        let fields = {
+          'Id': this.recordId,
+          'FEC_Selected_Address__c': addressInfoId,
+        };
+        let recordInput = { fields };
+        updateRecord(recordInput);
+      }
 
       // Chuyển sang Case Review (chế độ xem), không đóng tab
       setTimeout(() => {

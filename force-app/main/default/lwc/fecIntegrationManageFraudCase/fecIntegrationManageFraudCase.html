@@ -1,0 +1,53 @@
+<template>
+    <template if:true={loading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+
+    <template if:true={error}>
+        <div class="slds-text-color_error slds-p-around_medium">{error}</div>
+    </template>
+
+    <template if:true={notLoading}>
+        <template if:true={hasMapping}>
+            <!-- Fraud Information Collapsible Section -->
+            <div class={fraudSectionClass}>
+                <h3 class="slds-section__title">
+                    <button class="slds-button slds-section__title-action" onclick={toggleFraudSection} type="button">
+                        <lightning-icon icon-name={fraudSectionIcon} size="xx-small" class="slds-m-right_x-small"></lightning-icon>
+                        <span class="slds-truncate">Fraud Information</span>
+                    </button>
+                </h3>
+                <div class="slds-section__content">
+                    <template if:true={isCreateMode}>
+                        <c-fec-integration-create-fraud-case
+                            service-case-id={serviceCSCaseId}
+                            nature-of-case-id={natureOfCaseId}
+                            mapping-id={integrateMappingId}
+                            case-data-id={caseDataId}
+                            onfraudcasesuccess={handleFraudCaseSuccess}>
+                        </c-fec-integration-create-fraud-case>
+                    </template>
+
+                    <template if:true={isEditMode}>
+                        <c-fec-integration-update-fraud-case
+                            service-case-id={serviceCaseId}
+                            fraud-handling-case-id={fraudCaseId}
+                            case-data-id={caseDataId}
+                            action-mode="EditMode"
+                            onfraudcasesuccess={handleFraudCaseSuccess}>
+                        </c-fec-integration-update-fraud-case>
+                    </template>
+
+                    <template if:true={isViewMode}>
+                        <c-fec-integration-fraud-case-detail
+                            service-case-id={serviceCaseId}
+                            case-data-id={caseDataId}
+                            fraud-handling-case-id={fraudCaseId}
+                            action-mode="ViewMode">
+                        </c-fec-integration-fraud-case-detail>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </template>
+</template>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
         <editable>false</editable>
@@ -13,6 +13,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Address_Info__c.FEC_Mailing_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Address_Info__c.FEC_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -498,6 +503,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Contact_List__c.FEC_Contact_String__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Contact_List__c.FEC_Temporary_Email__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

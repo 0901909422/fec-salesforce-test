@@ -9,7 +9,8 @@ public without sharing class FEC_CaseRemarkController {
       List<FEC_Case_Remarks__c> result = new List<FEC_Case_Remarks__c>();
 
       List<Case> caselst = [
-        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c
+        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c, 
+               FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -23,18 +24,23 @@ public without sharing class FEC_CaseRemarkController {
         result.addAll(jsonToRemarks(caselst[0].FEC_Draft_Remarks__c));
       }
 
-      result.addAll([
-        SELECT
-          Id,
-          FEC_Case_Remarks__c,
-          FEC_Stage_Name__c,
-          FEC_User__c,
-          FEC_User_Role__c,
-          CreatedDate
-        FROM FEC_Case_Remarks__c
-        WHERE FEC_Case__c = :caseId
-        ORDER BY CreatedDate DESC
-      ]);
+      // tungnm37 thêm: COF/GSR chỉ hiện Assignment Remark, ẩn Case Remark (type=Case)
+      String businessCode = null;
+      if (!caselst.isEmpty() && caselst[0].FEC_Actual_Nature_of_Case__r != null 
+          && caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r != null) {
+        businessCode = caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c;
+      }
+      Boolean isCofGsr = businessCode != null && (businessCode.startsWith('COF') || businessCode.startsWith('GSR'));
+
+      String remarkTypeFilter = isCofGsr ? 'AND Remark_Type__c = \'Assignment\'' : '';
+
+      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, CreatedDate ' +
+        'FROM FEC_Case_Remarks__c ' +
+        'WHERE FEC_Case__c = :caseId ' +
+        remarkTypeFilter + ' ' +
+        'ORDER BY CreatedDate DESC';
+
+      result.addAll((List<FEC_Case_Remarks__c>) Database.query(soql));
 
       return result;
     } catch (Exception e) {

@@ -56,12 +56,31 @@
 
 /* ===== Table Layout Improvements ===== */
 
+/* Scrollable wrapper for the table */
+.table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
 /* Grid container - Using a specific class to avoid conflicts with standard SLDS grids */
 .custom-table-grid {
     gap: 0;
-    width: 100%;
     display: grid;
-    grid-template-columns: repeat(24, 1fr);
+    /* 
+     * Column sizing: min-width ensures text doesn't overlap.
+     * Columns: STT(35) Icon(40) Channel(120) Role(1fr) Property(1fr) 
+     * Section(1fr) SubSection(1fr) SubSecOrder(60) SubSecLayout(60) SubSecFieldLayout(60)
+     * Status(55) EditableRole(1fr) Order(55) ProcessStatus(75) Action(70)
+     */
+    grid-template-columns:
+        35px 40px 120px minmax(80px, 1fr) minmax(100px, 1fr)
+        minmax(70px, 1fr) minmax(70px, 1fr)
+        60px 60px 60px
+        55px minmax(80px, 1fr) 55px 75px 70px;
+    min-width: 1100px;
     align-items: stretch;
     border-left: 1px solid #d8d8d8;
     border-right: 1px solid #d8d8d8;
@@ -100,17 +119,21 @@
 .slds-border_bottom {
     border-bottom: 1px solid #d8d8d8;
     width: 100%;
+    position: relative;
 }
 
 /* Header row specific styling */
 .slds-theme_shade.custom-table-grid .slds-col {
-    padding: 10px 6px !important;
-    font-size: 11px;
+    padding: 8px 4px !important;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: #3e3e3c;
     background-color: #f3f3f3;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.3;
 }
 
 /* Data row specific styling */
@@ -126,12 +149,31 @@
 }
 
 /* Truncate text with tooltip support */
-.slds-truncate {
+.custom-table-grid .slds-truncate {
     display: block !important;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
     width: 100%;
+}
+
+/* Scrollbar styling for the table wrapper */
+.table-scroll-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
 
 /* ===== Delete Column Styling ===== */
@@ -207,4 +249,36 @@
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+
+/* ===== Action Menu Dropdown Fix ===== */
+
+/* ===== Tab Content — Remove excess bottom whitespace ===== */
+lightning-tabset,
+lightning-tab {
+    --sds-c-tabs-scoped-panel-sizing-min-height: 0 !important;
+}
+
+/* Stretch the scoped tabset content to fill available vertical space */
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Action menu dropdown: overlay instead of pushing layout */
+.custom-table-grid lightning-button-menu {
+    position: relative;
+    z-index: 10;
+}
+
+/* Delete icon red color */
+.delete-icon-red {
+    --sds-c-icon-color-foreground-default: #c23934;
+    --lwc-colorTextIconDefault: #c23934;
+    --slds-c-icon-color-foreground-default: #c23934;
+    --sds-c-button-icon-color-foreground: #c23934;
+    color: #c23934;
 }
