@@ -1321,8 +1321,9 @@ public with sharing class FEC_CommonUltils {
     } catch (Exception ex) {
       System.debug('Log Exception Error:' + ex.getMessage());
     }
-  }
 
+    }
+    
   /**
    * Lấy Profile name của current user
    */

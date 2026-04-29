@@ -722,4 +722,38 @@ public without sharing class FEC_InteractionInforHandler {
         if (parentList.isEmpty()) return null;
         return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
     }
+
+    @AuraEnabled(cacheable=true)
+    public static Case getChatInteractionInfo(Id recordId) {
+        List<Case> caseList = [
+            SELECT FEC_Customer_Username__c,
+                   FEC_Interaction_Masked_Phone__c,
+                   FEC_Phone_Number__c,
+                   FEC_Created_On__c,
+                   FEC_Created_by__c,
+                   FEC_External_Interaction_ID__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        return caseList.isEmpty() ? null : caseList[0];
+    }
+
+    @AuraEnabled
+    public static void updateChatInteractionFields(Id recordId, String username, String phone) {
+        if (recordId == null) return;
+        Case c = new Case(Id = recordId);
+        if (String.isNotBlank(username)) c.FEC_Customer_Username__c = username;
+        if (String.isNotBlank(phone)) {
+            c.FEC_Phone_Number__c = phone;
+            c.FEC_Search_Phone_Number__c = phone;
+        }
+        update c;
+    }
+
+    @AuraEnabled
+    public static void saveChatHistory(Id recordId, String chatHistory) {
+        if (recordId == null) return;
+        update new Case(Id = recordId, FEC_Chat_History__c = chatHistory);
+    }
 }
