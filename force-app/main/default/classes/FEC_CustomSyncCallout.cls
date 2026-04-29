@@ -99,7 +99,7 @@ public with sharing class FEC_CustomSyncCallout {
                             if(!successSfIds.isEmpty()){ 
                                 FEC_API_Log__c successLog = new FEC_API_Log__c();
                                 successLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
-                                successLog.FEC_Quantity_Call__c = 1;
+                                successLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
                                 successLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
                                 successLog.FEC_Method__c = log.FEC_Method__c;
                                 successLog.FEC_Request_String__c = log.FEC_Request_String__c;
