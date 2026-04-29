@@ -16,6 +16,9 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CofGsrAssignmentService</members>
 		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
+        <members>FEC_AssignmentListHandler</members>
+        <members>FEC_AssignmentRoutingActionHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -104,6 +107,8 @@
 		<members>fec_ReusableDNBCustomTable</members>
 		<members>fec_CaseEditNOC</members>
 		<members>fec_CaseNocUpdatedSection</members>
+		<members>fec_AssignmentList</members>
+        <members>fec_AssignmentRemarkHistoryTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -205,6 +210,18 @@
 		<members>FEC_Choose_Queue_Placeholder</members>
 		<members>FEC_Enter_Remark_Placeholder</members>
 		<members>FEC_Remark_Label</members>
+		<members>FEC_ERR_ASSIGNMENT_NOT_FOUND</members>
+        <members>FEC_ERR_DECISION_REQUIRED</members>
+        <members>FEC_ERR_ESCALATE_NO_MANAGER</members>
+        <members>FEC_ERR_ESCALATE_NO_OWNER</members>
+        <members>FEC_ERR_INVALID_INPUT</members>
+        <members>FEC_ERR_QUEUE_NOT_FOUND</members>
+        <members>FEC_ERR_TEAM_REQUIRED</members>
+        <members>FEC_MSG_ASSIGNMENT_ID_REQUIRED</members>
+        <members>FEC_MSG_LOAD_ASSIGNMENT_FAILED</members>
+        <members>FEC_MSG_LOAD_REMARK_FAILED</members>
+        <members>FEC_MSG_NO_ACCESS_ASSIGNMENT</members>
+        <members>FEC_MSG_NO_ACCESS_REMARK</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

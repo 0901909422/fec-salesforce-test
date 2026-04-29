@@ -192,10 +192,93 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     
     List<FEC_Case_Remarks__c> remarklst = new List<FEC_Case_Remarks__c>();
     
+    List<FEC_Routing_Action_History__c> historyList = new List<FEC_Routing_Action_History__c>();
+    
+    Set<Id> ownerIds = new Set<Id>();
+    
+    for (Case item : interationlst) {
+      ownerIds.add(item.OwnerId);
+    }
+    
+    // Users
+    Map<Id, User> userMap = new Map<Id, User>(
+      [SELECT Id, Email FROM User WHERE Id IN :ownerIds]
+      );
+    
+    // Queues
+    Map<Id, Group> queueMap = new Map<Id, Group>(
+      [SELECT Id, Name FROM Group WHERE Id IN :ownerIds]
+      );
+    
+    
+    Set<Id> caseIds = new Set<Id>();
+    for (Case c : serviceCaselst) {
+      caseIds.add(c.Id);
+    }
+    
+    Set<Id> existedHistoryCaseIds = new Set<Id>();
+    
+    for (FEC_Routing_Action_History__c h : [
+    SELECT FEC_Case__c
+    FROM FEC_Routing_Action_History__c
+    WHERE FEC_Case__c IN :caseIds
+    AND FEC_Routing_Action__c = 'Cancel'
+    ]) {
+      existedHistoryCaseIds.add(h.FEC_Case__c);
+    }
+    
+    
     for (Case item : interationlst) {
       if (interationToServiceCaseMap.containsKey(item.Id)) {
         for (Case child : interationToServiceCaseMap.get(item.Id)) {
-          child.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
+          
+          if (existedHistoryCaseIds.contains(child.Id)) continue;
+          
+          // ===== BEFORE =====
+          String oldStatus = child.Status;
+          String oldStage = child.FEC_Stage_Name__c;
+          Id ownerId = item.OwnerId;
+          
+          // ===== AFTER =====
+          String newStatus = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
+          
+          // ===== OWNER DISPLAY =====
+          String ownerDisplay;
+          
+          if (userMap.containsKey(ownerId)) {
+            ownerDisplay = userMap.get(ownerId).Email.substringBefore('@');
+          } else if (queueMap.containsKey(ownerId)) {
+            ownerDisplay = queueMap.get(ownerId).Name;
+          }
+          
+          // ===== CREATE HISTORY =====
+          FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c();
+          
+          history.FEC_Routing_Action__c = 'Cancel';
+          history.FEC_Routing_Action_Type__c = 'Case';
+          history.FEC_Case__c = child.Id;
+          
+          history.FEC_Assignment__c = null;
+          history.FEC_Decision__c = null;
+          
+          history.FEC_Original_User_Queue__c = ownerDisplay;
+          history.FEC_Updated_User_Queue__c = ownerDisplay;
+          history.FEC_Updated_User_Queue_ID__c = ownerId;
+          
+          history.FEC_Stage_Name__c = oldStage;
+          
+          history.FEC_User__c = emailId;
+          history.FEC_User_Role__c =roleName;
+          
+          // history.FEC_Date_Time__c = System.now();
+          
+          history.FEC_Current_Status__c = oldStatus;
+          history.FEC_Changed_Status__c = newStatus;
+          
+          historyList.add(history);
+          
+          // ===== UPDATE CASE =====
+          child.Status = newStatus;
           
           updatedlst.add(child);
           
@@ -203,7 +286,7 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
           caseRemark.FEC_Case_Remarks__c = Label.FEC_RemarkMsg;
           caseRemark.FEC_User__c = emailId;
           caseRemark.FEC_User_Role__c = roleName;
-          caseRemark.FEC_Stage_Name__c = child.FEC_Stage_Name__c;
+          caseRemark.FEC_Stage_Name__c = oldStage;
           caseRemark.FEC_Case__c = child.Id;
           
           remarklst.add(caseRemark);
@@ -225,6 +308,10 @@ public without sharing class FEC_CloseInterationSchedulerBatch implements Schedu
     
     if (!remarklst.isEmpty())
       insert remarklst;
+    
+    if(!historyList.isEmpty()){
+      insert historyList;
+    }
   }
   
   public void finish(Database.BatchableContext bc) {
