@@ -15,6 +15,7 @@
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CofGsrAssignmentService</members>
+		<members>FEC_CaseEditNOCController</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -101,6 +102,8 @@
 		<members>fec_DoNotBotherInformationView</members>
 		<members>fec_DoNotBotherNonExistingCustomer</members>
 		<members>fec_ReusableDNBCustomTable</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_CaseNocUpdatedSection</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
