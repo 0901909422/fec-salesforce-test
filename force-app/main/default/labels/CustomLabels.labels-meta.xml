@@ -14567,4 +14567,44 @@
         <shortDescription>No access to Case Remarks records</shortDescription>
         <value>You do not have access to Case Remarks records</value>
     </labels>
+    <labels>
+        <fullName>FEC_Assignment_Routing_Action</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Routing_Action</shortDescription>
+        <value>Assignment Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_List</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_List</shortDescription>
+        <value>Assignment List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Status</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Owner</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Owner</shortDescription>
+        <value>Owner</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Id</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Id</shortDescription>
+        <value>Assignment ID</value>
+    </labels>
 </CustomLabels>
