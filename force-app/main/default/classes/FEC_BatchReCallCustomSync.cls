@@ -37,7 +37,8 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
                 fieldList = 'Id';
             }else{ 
               fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.RequestBodyMapping__c);
-              recordIdObject = (List<String>) JSON.deserialize(log.Records__c, List<String>.class);
+              String cleanRecords = log.Records__c.stripHtmlTags().unescapeHtml4();
+              recordIdObject = (List<String>) JSON.deserialize(cleanRecords, List<String>.class);
             }
             String queryString = 'Select ' + fieldList +
              ' From ' + cus.TargetObject__c + 
@@ -50,6 +51,7 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
             }
             
         }Catch(Exception e){  
+            log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
             log.FEC_Is_Success__c = false;
             log.FEC_Error_Message__c = 'Error FEC_BatchReCallCustomSync: Line '+e.getLinenumber() + ' - '+ e.getMessage();
             uLog.add(log);
@@ -58,7 +60,7 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
  
     global void finish(Database.BatchableContext bc) {   
         if(!uLog.isEmpty()){
-            update uLog;
+            upsert uLog;
         }
     } 
 }

@@ -11,13 +11,13 @@ public with sharing class FEC_CustomSyncCallout {
     
     public static List<FEC_API_Log__c> sendRequest(CustomSync__c cus, FEC_API_Log__c log, List<SObject> scope) {
         List<FEC_API_Log__c> resultLogs = new List<FEC_API_Log__c>();
+        log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
         try {   
             CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix'); 
 
             String jsonBody = toJson(cus,scope);
             
-            log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
             log.FEC_Endpoint__c = apiSetting?.Endpoint__c + apiConfig?.FEC_Endpoint__c;
             log.FEC_Method__c = 'POST'; 
 
@@ -47,7 +47,7 @@ public with sharing class FEC_CustomSyncCallout {
                     
                     if (totalFailed > 0) {
                         // Build map: FEC_ID_Search__c -> SFID
-                        Map<String, String> extIdToSfId = new Map<String, String>();
+                         Map<String, String> extIdToSfId = new Map<String, String>();
                         for (SObject record : scope) {
                             String extId = (String) record.get('FEC_ID_Search__c');
                             if (extId != null) {
@@ -85,23 +85,50 @@ public with sharing class FEC_CustomSyncCallout {
                             }
                         }
 
-                        // Log 1: Success records
-                        log.Records__c = JSON.serialize(successSfIds);
-                        log.FEC_Is_Success__c = true;
-                        resultLogs.add(log);
+                        Boolean isReCall = log.Id != null;
 
-                        // Log 2: Failed records
-                        FEC_API_Log__c failLog = new FEC_API_Log__c();
-                        failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
-                        failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
-                        failLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
-                        failLog.FEC_Method__c = log.FEC_Method__c;
-                        failLog.FEC_Request_String__c = log.FEC_Request_String__c;
-                        failLog.FEC_Response_String__c = truncatedRes;
-                        failLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
-                        failLog.Records__c = JSON.serialize(failedSfIds);
-                        failLog.FEC_Is_Success__c = false;
-                        resultLogs.add(failLog);
+                        if (isReCall) {
+                            // Case 2: Recall - có cả Fail và Success
+                            // Giữ log gốc là fail, remove success records, FEC_Quantity_Call__c đã +1 ở trên
+                            log.Records__c = JSON.serialize(failedSfIds);
+                            log.FEC_Is_Success__c = false;
+                            log.FEC_Response_String__c = truncatedRes;
+                            resultLogs.add(log);
+
+                            // Tạo log MỚI cho success records
+                            if(!successSfIds.isEmpty()){ 
+                                FEC_API_Log__c successLog = new FEC_API_Log__c();
+                                successLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
+                                successLog.FEC_Quantity_Call__c = 1;
+                                successLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
+                                successLog.FEC_Method__c = log.FEC_Method__c;
+                                successLog.FEC_Request_String__c = log.FEC_Request_String__c;
+                                successLog.FEC_Response_String__c = truncatedRes;
+                                successLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
+                                successLog.Records__c = JSON.serialize(successSfIds);
+                                successLog.FEC_Is_Success__c = true;
+                                resultLogs.add(successLog);
+                            }
+                        } else {
+                            // First call - giữ logic cũ
+                            // Log 1: Success records
+                            log.Records__c = JSON.serialize(successSfIds);
+                            log.FEC_Is_Success__c = true;
+                            resultLogs.add(log);
+
+                            // Log 2: Failed records
+                            FEC_API_Log__c failLog = new FEC_API_Log__c();
+                            failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
+                            failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
+                            failLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
+                            failLog.FEC_Method__c = log.FEC_Method__c;
+                            failLog.FEC_Request_String__c = log.FEC_Request_String__c;
+                            failLog.FEC_Response_String__c = truncatedRes;
+                            failLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
+                            failLog.Records__c = JSON.serialize(failedSfIds);
+                            failLog.FEC_Is_Success__c = false;
+                            resultLogs.add(failLog);
+                        }
 
                         return resultLogs;
                     }
