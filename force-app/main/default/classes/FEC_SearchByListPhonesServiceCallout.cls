@@ -55,18 +55,12 @@ public with sharing class FEC_SearchByListPhonesServiceCallout {
 
     @AuraEnabled
     public static PhonesResponse searchByListPhones(List<String> phones) {
-        if (phones == null || phones.isEmpty()) {
-            throw new CalloutException('Phone list cannot be empty');
-        }
 
         String transactionId = String.valueOf(UUID.randomUUID());
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Search_By_List_Phones');
     
-        if (String.isBlank(apiConfig?.FEC_Endpoint__c)) {
-            throw new CalloutException('Missing API endpoint config: FEC_Search_By_List_Phones');
-        }
         String endpointPath = apiConfig.FEC_Endpoint__c;
         String endpoint =
             (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '') +

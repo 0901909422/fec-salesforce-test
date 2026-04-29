@@ -75,8 +75,8 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
 
         HttpResponse resp = FEC_CommonUltils.calloutApi(
             endpoint,
-            'POST',
-            'application/json',
+            FEC_ConstantCommon.API_METHOD_POST,
+            FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
             null,
             null,
             requestBody
