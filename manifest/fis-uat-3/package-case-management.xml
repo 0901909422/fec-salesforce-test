@@ -222,6 +222,11 @@
         <members>FEC_MSG_LOAD_REMARK_FAILED</members>
         <members>FEC_MSG_NO_ACCESS_ASSIGNMENT</members>
         <members>FEC_MSG_NO_ACCESS_REMARK</members>
+        <members>FEC_Assignment_Routing_Action</members>
+        <members>FEC_Assignment_List</members>
+        <members>FEC_Assignment_Status</members>
+        <members>FEC_Assignment_Owner</members>
+        <members>FEC_Assignment_Id</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
