@@ -54,6 +54,12 @@
                   ></lightning-radio-group>
                 </template>
                 <template if:false={hasEmailRadioOptions}>
+                  <lightning-input
+                    type="email"
+                    label={customLabel.emailLabel}
+                    value={demographicEmail}
+                    readonly
+                  ></lightning-input>
                   <template if:true={showNoC360EmailHint}>
                     <p class="slds-text-color_weak">
                       {customLabel.msgNoC360Email}
