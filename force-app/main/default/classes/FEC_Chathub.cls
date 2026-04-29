@@ -204,7 +204,7 @@ public without sharing class FEC_Chathub {
         }
 
         Case c   = cases[0];
-        c.Status = FEC_ConstantCommon.CASE_STATUS_CLOSED;
+        c.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         update c;
 
         // ---------------------------

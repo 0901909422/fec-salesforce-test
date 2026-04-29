@@ -122,6 +122,7 @@
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
 		<members>FEC_TerminationLoanController</members>
+		<members>FEC_MainInfoLoanAccountController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -496,6 +497,7 @@
         <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
+		<members>FEC_Termination_Fee_Charge_Type_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -834,6 +836,10 @@
 		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
 		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
 		<members>FEC_Customer_History__c.FEC_Received_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Interest_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Provided_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_MRC_Zone__c</members>
