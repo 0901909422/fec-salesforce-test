@@ -215,7 +215,7 @@ public with sharing class FEC_TerminationLoanController {
         if (loan != null) {
             listData.add(
                 buildFeeRow(
-                    System.Label.FEC_Fee_Charge_Label,
+                    System.Label.FEC_Termination_Fee_Charge_Type_Label,
                     loan.SysCalcChargeAmount,
                     loan.ChargeAmtCollected,
                     loan.ChargeWaived,
