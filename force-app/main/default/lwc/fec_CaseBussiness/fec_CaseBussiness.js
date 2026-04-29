@@ -1997,7 +1997,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.displayValue = field.value;
                 field.readonlyDisplayValue = field.value;
                 this.newBlockCode = field.value;
-                this.handleCheckProcessActionCardBlock();
               }
             });
           });
