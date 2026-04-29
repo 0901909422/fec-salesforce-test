@@ -619,7 +619,7 @@ public without sharing class FEC_MainInfoAccountController {
             blockDate2 = emeaRes.dtBlkCd2;
 
             if (emeaRes.warnCodes != null && !emeaRes.warnCodes.isEmpty()) {
-                warningCode = emeaRes.warnCodes[0];
+                warningCode = String.join(emeaRes.warnCodes, ' ');
             }
         }
 
@@ -627,13 +627,50 @@ public without sharing class FEC_MainInfoAccountController {
 
         FEC_MCMSCARDTOCARDINQEMEA.OutputData data;
 
+        // ===================== 1. LẤY CARD LOCAL =====================
+        FEC_Customer_History__c acc = [
+            SELECT FEC_Card_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
+
+        String last4 = null;
+        if (String.isNotBlank(acc.FEC_Card_Number__c)) {
+            last4 = acc.FEC_Card_Number__c.trim().right(4);
+        }
+
+
         if (mcms != null
             && mcms.VMXMsgOut != null
             && mcms.VMXMsgOut.OUTPUT_AREA != null
             && mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA != null
             && !mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA.isEmpty()) {
 
-            data = mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA[0];
+           for (FEC_MCMSCARDTOCARDINQEMEA.OutputData item 
+                : mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA) {
+
+                if (String.isNotBlank(item.CARD_NBR) && last4 != null) {
+
+                    String cardNbr = item.CARD_NBR.trim();
+
+                    String cardLast4 = cardNbr.length() >= 4 
+                        ? cardNbr.right(4) 
+                        : cardNbr;
+
+                    if (cardLast4 == last4) {
+
+                        data = item;
+                        break;
+
+                    } else {
+                        System.debug(FEC_ConstantCommon.NO_MATCH);
+                    }
+
+                } else {
+                    System.debug(FEC_ConstantCommon.SKIP_ITEM);
+                }
+            }
         }
 
         Date cardBlockDate;
