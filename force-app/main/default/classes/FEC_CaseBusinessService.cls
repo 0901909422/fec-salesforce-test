@@ -280,6 +280,7 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Routing_Action_History__c hRevert = historylst.get(0);
         result.lockApiLwcsAfterRevertToDefaultStage =
           hRevert.FEC_Next_Stage__c != null &&
+          hRevert.FEC_Next_Stage__c == selectedCase.FEC_Current_Case_Stage__c &&
           hRevert.FEC_Next_Stage__r != null &&
           hRevert.FEC_Next_Stage__r.FEC_Default_Stage__c == true;
       }
