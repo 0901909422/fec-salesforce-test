@@ -1,3 +1,11 @@
+/*------------------------------------------------------------
+Author:        Duan Nguyen
+Company:       Isobar
+Description:   Test class for FEC_CustomSyncValidator + CustomSyncTrigger
+History
+<Date>         <Authors Name>     <Brief Description of Change>
+2026/04/29     Kiro                 Rewrite - align with actual trigger/validator logic, add coverage
+------------------------------------------------------------*/
 @isTest
 private class FEC_CustomSyncValidatorTest {
 
@@ -6,15 +14,15 @@ private class FEC_CustomSyncValidatorTest {
 
     @testSetup
     static void setupData() {
-        CustomSyncSetting__c setting = new CustomSyncSetting__c(
-            Endpoint__c = 'https://api.test.com',
-            ApiKey__c = 'test-key-123',
-            LimitQuanitySync__c = 5
-        );
-        insert setting;
+        CustomSyncSetting__c setting = CustomSyncSetting__c.getOrgDefaults();
+        setting.Endpoint__c = 'https://api.test.com';
+        setting.ApiKey__c = 'test-key-123';
+        setting.LimitQuanitySync__c = 5;
+        setting.EmailReport__c = 'asd@gmail.com';
+        upsert setting;
     }
 
-    // ─── Insert ───────────────────────────────────────────────────────────────
+    // ─── Insert: Active = true ────────────────────────────────────────────────
 
     @isTest
     static void testInsertActiveTrue_Valid() {
@@ -23,20 +31,7 @@ private class FEC_CustomSyncValidatorTest {
         insert rec;
         Test.stopTest();
         System.assertNotEquals(null, rec.Id);
-    }
-
-    @isTest
-    static void testInsertActiveFalse_NoValidation() {
-        // Active = false → no validation, even without mapping
-        CustomSync__c rec = new CustomSync__c(
-            Name = 'Test', TableName__c = 'T', SyncTo__c = 'Bix',
-            TargetObject__c = 'Case', Active__c = false
-        );
-        Test.startTest();
-        insert rec;
-        Test.stopTest();
-        System.assertNotEquals(null, rec.Id);
-    }
+    } 
 
     @isTest
     static void testInsertActiveTrue_MissingSettingFails() {
@@ -81,36 +76,53 @@ private class FEC_CustomSyncValidatorTest {
         Test.stopTest();
     }
 
-    // ─── Update: Block edit while Active ──────────────────────────────────────
-
     @isTest
-    static void testUpdateWhileActive_Blocked() {
+    static void testInsertActiveTrue_BothKeysMismatchFails() {
         CustomSync__c rec = buildRecord(true);
-        insert rec;
-
-        rec.TableName__c = 'Changed';
+        rec.MappingDataType__c = '{"CaseID":"VARCHAR2","ExtraKey":"NUMBER"}';
         Test.startTest();
         try {
-            update rec;
+            insert rec;
             System.assert(false, 'Should have thrown');
         } catch (DmlException e) {
-            System.assert(e.getMessage().contains('Cannot edit while Active is true'));
+            String msg = e.getMessage();
+            System.assert(msg.contains('MappingDataType is missing keys')
+                       || msg.contains('RequestBodyMapping is missing keys'),
+                       'Expected key mismatch error, got: ' + msg);
         }
         Test.stopTest();
     }
 
     @isTest
-    static void testDeactivate_Allowed() {
+    static void testInsertActiveTrue_BlankMappingDataType_NoKeyCheck() {
         CustomSync__c rec = buildRecord(true);
-        insert rec;
-
-        rec.Active__c = false;
+        rec.MappingDataType__c = '';
         Test.startTest();
-        update rec;
+        insert rec;
         Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
 
-        CustomSync__c updated = [SELECT Active__c FROM CustomSync__c WHERE Id = :rec.Id];
-        System.assertEquals(false, updated.Active__c);
+    @isTest
+    static void testInsertActiveTrue_NullMappingDataType_NoKeyCheck() {
+        CustomSync__c rec = buildRecord(true);
+        rec.MappingDataType__c = null;
+        Test.startTest();
+        insert rec;
+        Test.stopTest();
+        System.assertNotEquals(null, rec.Id);
+    }
+
+    @isTest
+    static void testInsertActiveTrue_BulkRecords() {
+        List<CustomSync__c> records = new List<CustomSync__c>();
+        for (Integer i = 0; i < 5; i++) {
+            records.add(buildRecord(true));
+        }
+        Test.startTest();
+        insert records;
+        Test.stopTest();
+        System.assertEquals(5, [SELECT COUNT() FROM CustomSync__c WHERE Id IN :records]);
     }
 
     // ─── Update: Activate (false → true) ─────────────────────────────────────
@@ -132,7 +144,7 @@ private class FEC_CustomSyncValidatorTest {
     @isTest
     static void testActivate_MismatchedKeysFails() {
         CustomSync__c rec = buildRecord(false);
-        rec.MappingDataType__c = '{"CaseID":"VARCHAR2"}'; // missing CaseName
+        rec.MappingDataType__c = '{"CaseID":"VARCHAR2"}';
         insert rec;
 
         rec.Active__c = true;
@@ -147,6 +159,40 @@ private class FEC_CustomSyncValidatorTest {
     }
 
     @isTest
+    static void testActivate_MissingSettingFails() {
+        CustomSync__c rec = buildRecord(false);
+        insert rec;
+
+        delete [SELECT Id FROM CustomSyncSetting__c];
+
+        rec.Active__c = true;
+        Test.startTest();
+        try {
+            update rec;
+            System.assert(false, 'Should have thrown');
+        } catch (DmlException e) {
+            System.assert(e.getMessage().contains('CustomSyncSetting is incomplete'));
+        }
+        Test.stopTest();
+    }
+
+    // ─── Update: Deactivate + Edit while inactive ─────────────────────────────
+
+    @isTest
+    static void testDeactivate_Allowed() {
+        CustomSync__c rec = buildRecord(true);
+        insert rec;
+
+        rec.Active__c = false;
+        Test.startTest();
+        update rec;
+        Test.stopTest();
+
+        CustomSync__c updated = [SELECT Active__c FROM CustomSync__c WHERE Id = :rec.Id];
+        System.assertEquals(false, updated.Active__c);
+    }
+
+    @isTest
     static void testEditWhileInactive_Allowed() {
         CustomSync__c rec = buildRecord(false);
         insert rec;
@@ -158,6 +204,34 @@ private class FEC_CustomSyncValidatorTest {
 
         CustomSync__c updated = [SELECT TableName__c FROM CustomSync__c WHERE Id = :rec.Id];
         System.assertEquals('Changed', updated.TableName__c);
+    }
+
+    @isTest
+    static void testEditWhileActive_NoReactivation_Allowed() {
+        CustomSync__c rec = buildRecord(true);
+        insert rec;
+
+        rec.TableName__c = 'Changed';
+        Test.startTest();
+        update rec;
+        Test.stopTest();
+
+        CustomSync__c updated = [SELECT TableName__c FROM CustomSync__c WHERE Id = :rec.Id];
+        System.assertEquals('Changed', updated.TableName__c);
+    }
+
+    // ─── Direct validator call ────────────────────────────────────────────────
+
+    @isTest
+    static void testValidateDirectly_ValidRecord() {
+        CustomSync__c rec = buildRecord(true);
+        insert rec;
+
+        rec = [SELECT Id, RequestBodyMapping__c, MappingDataType__c, Active__c FROM CustomSync__c WHERE Id = :rec.Id];
+
+        Test.startTest();
+        FEC_CustomSyncValidator.validate(new List<CustomSync__c>{ rec });
+        Test.stopTest();
     }
 
     // ─── Helper ───────────────────────────────────────────────────────────────

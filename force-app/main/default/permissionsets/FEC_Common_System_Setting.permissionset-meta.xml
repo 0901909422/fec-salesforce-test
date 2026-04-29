@@ -784,32 +784,12 @@
         <editable>true</editable>
         <field>CustomSync__c.SyncTo__c</field>
         <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSync__c.TableName__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSync__c.TargetObject__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSync__c.WhatSync__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
+    </fieldPermissions>  
     <fieldPermissions>
         <editable>true</editable>
         <field>CustomSync__c.MappingDataType__c</field>
         <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSync__c.PkColumn__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
+    </fieldPermissions> 
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_API_Log__c.Records__c</field>
@@ -849,12 +829,7 @@
         <editable>true</editable>
         <field>FEC_API_Log__c.FEC_Status_Code__c</field>
         <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSyncSetting__c.EmailReport__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
+    </fieldPermissions> 
     <fieldPermissions>
         <editable>true</editable>
         <field>CustomLog__c.ActionName__c</field>
