@@ -2328,11 +2328,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Do_Not_Bother__c.FEC_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Do_Not_Bother__c.FEC_Current_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
