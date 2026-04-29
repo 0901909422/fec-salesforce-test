@@ -1238,7 +1238,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.showProcessAction = true;
         }
         // PhuongNT add show button process action with process Card Replacement
-        if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT && this._isEdit) {
           this.handleCheckProcessAction();
         }
 
@@ -2597,10 +2597,17 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
 
           // thangtv send message re-isuse pin success to NOC component
-          // PhuongNT cmt change logic send message
-          // if (this.processActionMethod == ACTION_PIN_REISSUE) {
-          //     this.publishPinReissueResult("SUCCESS");
-          // }
+          if (this.processActionMethod == ACTION_PIN_REISSUE) {
+              this.publishPinReissueResult("SUCCESS");
+          }
+
+          // PhuongNT send message process action Card to NOC
+          if (this.processActionMethod == ACTION_BLOCK_CARD 
+            || this.processActionMethod == ACTION_UNBLOCK_CARD
+            || this.processActionMethod == ACTION_REPLACE_CARD
+          ) {
+            this.publishProcessActionResult("SUCCESS");
+          }
 
           if (
             this.processActionMethod === ACTION_ADDRESS_UPDATE ||
@@ -2636,20 +2643,12 @@ export default class Fec_CaseBussiness extends LightningElement {
           if (this.processActionMethod == ACTION_PIN_REISSUE) {
               this.publishPinReissueResult("ERROR",msgError);
           }
-        }
-
-        // PhuongNT add publish message to NOC
-        if (isSuccess || !this.isProcessActionValid) {
-          // thangtv send message re-isuse pin success to NOC component
-          if (this.processActionMethod == ACTION_PIN_REISSUE) {
-            this.publishPinReissueResult("SUCCESS");
-          }
-          // PhuongNT send message call api to NOC component
+          // PhuongNT send message process action Card to NOC
           if (this.processActionMethod == ACTION_BLOCK_CARD 
             || this.processActionMethod == ACTION_UNBLOCK_CARD
             || this.processActionMethod == ACTION_REPLACE_CARD
           ) {
-            this.publishProcessActionResult("SUCCESS");
+            this.publishProcessActionResult("ERROR", msgError);
           }
         }
 
@@ -3104,7 +3103,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
     // PhuongNT add check process action Card Block
-    if (this.business?.code === PROCESS_BLOCK_CARD) {
+    if (this.business?.code === PROCESS_BLOCK_CARD && this._isEdit) {
       this.handleCheckProcessActionCardBlock();
     }
   }
