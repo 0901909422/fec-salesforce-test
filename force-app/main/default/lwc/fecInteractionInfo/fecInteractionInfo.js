@@ -208,9 +208,9 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   get lastUpdatedOn() {
-    if (!this.record?.FEC_Last_Updated_On__c) return "";
+    if (!this.record?.FEC_Last_Updated_On_View__c) return "";
 
-    const d = new Date(this.record.FEC_Last_Updated_On__c);
+    const d = new Date(this.record.FEC_Last_Updated_On_View__c);
     return formatDateTime(d);
   }
 
@@ -219,7 +219,7 @@ export default class FecInteractionInfo extends LightningElement {
   }
 
   get lastUpdatedBy() {
-    return this.record?.FEC_Last_Updated_By__c;
+    return this.record?.FEC_Last_Updated_By_View__c;
   }
 
   get outcomeCode() {

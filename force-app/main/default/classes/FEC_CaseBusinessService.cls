@@ -814,6 +814,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
+          FEC_CaseTriggerHandler.isSystemUpdate = true;
           update selectedCase;
         } catch (DmlException e) {
           // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
