@@ -11845,6 +11845,14 @@
         <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
     </labels>
     <labels>
+        <fullName>FEC_Termination_Fee_Charge_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type column label for fee/charge row on termination</shortDescription>
+        <value>Interest on Overdue Interest</value>
+    </labels>
+    <labels>
         <fullName>FEC_Page_Number_Deals</fullName>
         <categories>Label</categories>
         <language>en_US</language>
