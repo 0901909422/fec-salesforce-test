@@ -82,6 +82,7 @@
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Remark__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
@@ -103,6 +104,9 @@
 		<members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
 		<members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
 		<members>FEC_Routing_Assignment__c.FEC_Team__c</members>
+		<members>FEC_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -117,6 +121,7 @@
 		<members>FEC_Relevant_Ticket__c</members>
 		<members>FEC_Case_Remarks__c</members>
 		<members>FEC_Case_Flow_History__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
