@@ -1449,7 +1449,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.showProcessAction = true;
         }
         // PhuongNT add show button process action with process Card Replacement
-        if (this.business?.code === PROCESS_CARD_REPLACEMENT) {
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT && this._isEdit) {
           this.handleCheckProcessAction();
         }
 
@@ -1997,7 +1997,6 @@ export default class Fec_CaseBussiness extends LightningElement {
                 field.displayValue = field.value;
                 field.readonlyDisplayValue = field.value;
                 this.newBlockCode = field.value;
-                this.handleCheckProcessActionCardBlock();
               }
             });
           });
@@ -3474,7 +3473,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
     // PhuongNT add check process action Card Block
-    if (this.business?.code === PROCESS_BLOCK_CARD) {
+    if (this.business?.code === PROCESS_BLOCK_CARD && this._isEdit) {
       this.handleCheckProcessActionCardBlock();
     }
   }
