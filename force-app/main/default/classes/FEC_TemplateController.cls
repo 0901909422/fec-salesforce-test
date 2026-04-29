@@ -161,4 +161,20 @@ public with sharing class FEC_TemplateController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    // tungnm37 thêm: lấy picklist values của FEC_Applicable_for_Mailbox__c từ metadata
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getMailboxOptions() {
+        List<Map<String, String>> result = new List<Map<String, String>>();
+        Schema.DescribeFieldResult fieldDesc = FEC_Template__c.FEC_Applicable_for_Mailbox__c.getDescribe();
+        for (Schema.PicklistEntry entry : fieldDesc.getPicklistValues()) {
+            if (entry.isActive()) {
+                result.add(new Map<String, String>{
+                    'label' => entry.getLabel(),
+                    'value' => entry.getValue()
+                });
+            }
+        }
+        return result;
+    }
 }
