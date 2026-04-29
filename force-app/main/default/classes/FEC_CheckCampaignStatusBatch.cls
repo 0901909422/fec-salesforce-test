@@ -3,12 +3,16 @@
  * Batch job to check campaign record status via OData external object.
  * Uses dynamic SOQL to query PostgresCampaignLog__x and update records.
  */
-public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batchable<sObject>, Database.Stateful {
+public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batchable<sObject>, Database.Stateful, Schedulable {
 
     private Id batchLogId;
     private Integer processedCount = 0;
     private Integer errorCount = 0;
     private String errorDetails = '';
+
+    public void execute(SchedulableContext sc) {
+        Database.executeBatch(new FEC_CheckCampaignStatusBatch());
+    }
 
     public Database.QueryLocator start(Database.BatchableContext BC) {
         String query = 'SELECT Id, FEC_RecordId__c, FEC_RecordStatus__c, ' +
