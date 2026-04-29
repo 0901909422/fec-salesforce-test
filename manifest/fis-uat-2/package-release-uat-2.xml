@@ -420,7 +420,6 @@
         <members>FEC_Termination_Field_Principal_Overdue_Label</members>
         <members>FEC_Termination_Field_Interest_Overdue_Label</members>
         <members>FEC_Termination_Field_Installments_Overdue_Label</members>
-        <members>FEC_Termination_Field_Repayment_Fee_Overdue_Label</members>
         <members>FEC_Termination_Field_Penalty_Fee_Overdue_Label</members>
         <members>FEC_Termination_Field_Overdue_Penalty_Label</members>
         <members>FEC_Repay_Total_Installment_Amount_Label</members>
@@ -1407,6 +1406,8 @@
 		<members>FEC_ContentDocumentTriggerHandler</members>
 		<members>FEC_GetUnbilledTransactions</members>
 		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_BlockCodeRoutingService</members>
+		<members>FEC_GetCustomerList</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1673,6 +1674,7 @@
 		<members>Master_Data_Setting_Record_Page</members>
 		<members>Stage_Change_Record_Page</members>
 		<members>Stage_Screen_Record_Page</members>
+		<members>Nature_of_Cases_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>

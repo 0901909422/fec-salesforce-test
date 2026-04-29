@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FE_Sub_Code_Relevant__c</fullName>
+    <fullName>FEC_Assessed_Amount__c</fullName>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.FEC_SubCode__r.FEC_Name_VN__c</formula>
-    <label>Sub Code</label>
+    <label>Assessed Amount</label>
+    <precision>18</precision>
     <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Text</type>
+    <type>Number</type>
     <unique>false</unique>
 </CustomField>

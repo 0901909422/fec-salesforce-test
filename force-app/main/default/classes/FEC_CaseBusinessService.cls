@@ -25,6 +25,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  // tungnm37 thêm: COF/GSR route string constant
+  public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -71,7 +73,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD,
     UNBLOCK_CARD,
     PIN_REISSUE,
-    REPLACE_CARD
+    REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
+    ROUTE_TO_COF_GSR
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -96,7 +100,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
     PIN_REISSUE => Method.PIN_REISSUE,
-    REPLACE_CARD => Method.REPLACE_CARD
+    REPLACE_CARD => Method.REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR route - không đổi owner
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
   };
 
   @AuraEnabled
@@ -125,7 +131,7 @@ public without sharing class FEC_CaseBusinessService {
       List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
 
       //  ===================================== GET CASE ===============================
-      List<Case> caselst = [
+            List<Case> caselst = [
         SELECT
           Id,
           FEC_Product_Type__c,
@@ -179,7 +185,11 @@ public without sharing class FEC_CaseBusinessService {
           FEC_National_ID_Passport_ID__c,
           FEC_Case_Phone_Number__c,
           FEC_Case_Email__c,
-          FEC_Account_or_Contract__r.FEC_Customer_Type__c
+          FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+          FEC_Interaction__c,
+          FEC_Category__r.Name,
+          FEC_SubCategory__r.Name,
+          FEC_SubCode__r.Name
         FROM Case
         WHERE Id = :caseId
       ];
@@ -235,9 +245,14 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Previous_Stage__r.FEC_Default_Stage__c,
           FEC_Routing_Action__c,
           FEC_Perform_User__c,
+          FEC_Perform_User__r.Name,
           FEC_Perform_User__r.FEC_User_Division_Group__c,
           FEC_Next_Stage__c,
           FEC_Next_Stage__r.FEC_Default_Stage__c,
+          FEC_Updated_User_Queue__c,
+          FEC_Updated_User_Queue_ID__c,
+          //thangtv: đọc cờ Revert trên history mới nhất để getByCase chọn Stage Change Route to (IsReverted true/false)
+          FEC_IsReverted__c,
           CreatedDate
         FROM FEC_Routing_Action_History__c
         WHERE
@@ -247,71 +262,36 @@ public without sharing class FEC_CaseBusinessService {
         LIMIT 1
       ];
 
+      //thangtv: history mới nhất có FEC_IsReverted__c = true → UI/query Route to dùng bản ghi Stage Change IsReverted = true
+      Boolean latestRoutingHistoryIsReverted =
+        !historylst.isEmpty() &&
+        historylst.get(0).FEC_IsReverted__c == true;
+
       List<Group> queuelst;
-      FEC_Routing_Action_History__c selectedHistory;
+      // Lưu riêng REVERT record trước khi selectedHistory bị override bởi routeToHistorylst.
+      // routeToHistorylst không SELECT FEC_Perform_User__r.Name nên không thể dùng selectedHistory
+      // sau khi bị override để lấy Name → SObjectException → nextQueue.value = null → lỗi UI.
+      FEC_Routing_Action_History__c revertHistory;
 
       if (!historylst.isEmpty()) {
-        selectedHistory = historylst.get(0);
-        isRevert = REVERT.equals(selectedHistory.FEC_Routing_Action__c);
-      }
-
-      List<FEC_Routing_Action_History__c> routeToHistorylst = [
-        SELECT
-          Id,
-          FEC_Previous_Stage__c,
-          FEC_Previous_Stage__r.FEC_Default_Stage__c,
-          FEC_Perform_User__c,
-          FEC_Perform_User__r.FEC_User_Division_Group__c,
-          CreatedDate
-        FROM FEC_Routing_Action_History__c
-        WHERE
-          FEC_Routing_Action__c = :ROUTE_TO
-          AND FEC_Case__c = :selectedCase.Id
-        ORDER BY CreatedDate DESC, Id DESC
-        LIMIT 1
-      ];
-
-      if (!routeToHistorylst.isEmpty()) {
-        selectedHistory = routeToHistorylst.get(0);
-
-        if (String.isNotBlank(selectedHistory.FEC_Perform_User__c)) {
-          result.lastUser = FRONT_LINE.equals(
-              selectedHistory.FEC_Perform_User__r.FEC_User_Division_Group__c
-            ) && selectedHistory.FEC_Previous_Stage__r.FEC_Default_Stage__c
-            ? 'User\'s Team Queue'
-            : 'User';
-
-          // if (
-          //   String.isNotBlank(
-          //     selectedHistory.FEC_Perform_User__r.FEC_Main_Queue__c
-          //   )
-          // ) {
-          // queuelst = [
-          //   SELECT Id, Name, DeveloperName, Type
-          //   FROM Group
-          //   WHERE
-          //     Type = 'Queue'
-          //     AND DeveloperName = :selectedHistory.FEC_Perform_User__r.FEC_Main_Queue__c
-          // ];
-
-          // if (!queuelst.isEmpty())
-          //   result.lastQueue = new FEC_CommonUltils.PicklistOption(
-          //     queuelst.get(0).Name,
-          //     (String) queuelst.get(0).Id,
-          //     null
-          //   );
-          // }
+        isRevert = REVERT.equals(historylst.get(0).FEC_Routing_Action__c);
+        if (isRevert) {
+          revertHistory = historylst.get(0);
         }
-      } else {
-        // ======================= UPDATE DATA FROM API =============================
-
-        // if (
-        //   String.isBlank(selectedCase.FEC_Current_Case_Stage__c) ||
-        //   selectedCase.FEC_Current_Case_Stage__r?.FEC_Default_Stage__c
-        // ) {
-        // FEC_MainInfoAccountController.refreshAccountInfo(selectedCase.Id);
-        // }
       }
+
+      //thangtv
+      result.lastUser = resolveLastUserForRevertDecisionDisplay(
+        selectedCase.Id,
+        selectedCase.FEC_Current_Case_Stage__c,
+        false
+      );
+      //thangtv
+      result.lastUserForRouteToLabel = resolveLastUserForRevertDecisionDisplay(
+        selectedCase.Id,
+        selectedCase.FEC_Current_Case_Stage__c,
+        true
+      );
 
       List<String> customerTypelst = new List<String>{
         'All',
@@ -726,12 +706,15 @@ public without sharing class FEC_CaseBusinessService {
       );
 
       String routeToId;
+      String revertId;
 
       // get actions
       for (FEC_Stage_Screen__c item : actionlst) {
         if ('Routing Action'.equals(item.FEC_Action_Button__r.FEC_Type__c)) {
           if (ROUTE_TO.equals(item.FEC_Action_Button__r.FEC_Code__c)) {
             routeToId = item.FEC_Action_Button__c;
+          } else if (REVERT.equals(item.FEC_Action_Button__r.FEC_Code__c)) {
+            revertId = item.FEC_Action_Button__c;
           }
           Action act = new Action(
             item.FEC_Action_Button__c,
@@ -768,40 +751,66 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
-      // get next stage metadata
-      List<FEC_Stage_Change__c> stageChangelst = [
-        SELECT FEC_Next_Stage__c, FEC_Next_Queue__c, Id, FEC_Team_User_Group__c
-        FROM FEC_Stage_Change__c
-        WHERE
-          FEC_Previous_Stage__c = :selectedStage.Id
-          AND FEC_Active__c = TRUE
-          AND FEC_Action_Button__c = :routeToId
-      ];
-
-      // add queue and team
-      if (!stageChangelst.isEmpty()) {
-        result.nextTeam = stageChangelst.get(0).FEC_Team_User_Group__c;
-
-        queuelst = [
-          SELECT Id, Name, DeveloperName, Type
-          FROM Group
-          WHERE
-            Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND DeveloperName = :stageChangelst.get(0).FEC_Next_Queue__c
-        ];
-
-        if (!queuelst.isEmpty())
-          result.nextQueue = new FEC_CommonUltils.PicklistOption(
-            queuelst.get(0).Name,
-            (String) queuelst.get(0).Id,
-            null
-          );
+      // Hiển thị Team/Queue Route to theo nhánh Stage Change (không ảnh hưởng logic submit route()).
+      RouteToDisplayInfo routeToDisplayInfo = resolveRouteToDisplayInfo(
+        selectedCase.Id,
+        selectedStage != null ? selectedStage.Id : null,
+        routeToId,
+        revertId,
+        latestRoutingHistoryIsReverted
+      );
+      if (routeToDisplayInfo != null) {
+        result.nextTeam = routeToDisplayInfo.nextTeam;
+        if (routeToDisplayInfo.nextQueue != null) {
+          result.nextQueue = routeToDisplayInfo.nextQueue;
+        }
       }
+
+      // get next stage metadata for Revert action display
+      if (revertId != null) {
+        List<FEC_Stage_Change__c> revertChangelst = [
+          SELECT FEC_Next_Stage__c, FEC_Next_Queue__c, Id, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :selectedStage.Id
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :revertId
+            AND FEC_IsReverted__c = true
+        ];
+        if (!revertChangelst.isEmpty()) {
+          result.revertNextTeam = revertChangelst.get(0).FEC_Team_User_Group__c;
+          List<Group> revertQueuelst = [
+            SELECT Id, Name, DeveloperName, Type
+            FROM Group
+            WHERE
+              Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+              AND DeveloperName = :revertChangelst.get(0).FEC_Next_Queue__c
+          ];
+          if (!revertQueuelst.isEmpty())
+            result.revertNextQueue = new FEC_CommonUltils.PicklistOption(
+              revertQueuelst.get(0).Name,
+              (String) revertQueuelst.get(0).Id,
+              null
+            );
+        }
+      }
+
+      FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
+        selectedCase,
+        result,
+        categoryId,
+        subCategoryId,
+        subCodeId
+      );
 
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
+      // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
+      result.customerType = selectedCase.FEC_Customer_Type__c;
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
@@ -934,7 +943,8 @@ public without sharing class FEC_CaseBusinessService {
    * Nhãn cho FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c:
    * Owner là User → phần email trước @; Owner là Queue → Name queue.
    */
-  private static String emailLocalPart(String email) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String emailLocalPart(String email) {
     if (String.isBlank(email)) {
       return null;
     }
@@ -942,7 +952,8 @@ public without sharing class FEC_CaseBusinessService {
     return parts.isEmpty() ? email.trim() : parts[0].trim();
   }
 
-  private static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
     if (ownerId == null) {
       return fallbackName;
     }
@@ -982,6 +993,312 @@ public without sharing class FEC_CaseBusinessService {
     return String.isNotBlank(local)
       ? local
       : (String.isNotBlank(u.Name) ? u.Name : fallbackName);
+  }
+
+  private class RouteToDisplayInfo {
+    String nextTeam;
+    FEC_CommonUltils.PicklistOption nextQueue;
+  }
+
+  // Chỉ dùng để hiển thị Team/Queue trên UI Route to theo nhánh Stage Change hiện hành.
+  private static RouteToDisplayInfo resolveRouteToDisplayInfo(
+    Id caseId,
+    Id currentStageId,
+    String routeToActionId,
+    String revertActionId,
+    Boolean latestRoutingHistoryIsReverted
+  ) {
+    if (currentStageId == null) {
+      return null;
+    }
+
+    //thangtv: đồng bộ hiển thị với logic submit Route to mới.
+    // Nếu history mới nhất là Revert + IsReverted=true thì nhánh đích = latestHist.PreviousStage.
+    List<FEC_Routing_Action_History__c> latestHist = [
+      SELECT Id, FEC_Routing_Action__c, FEC_IsReverted__c, FEC_Previous_Stage__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 1
+    ];
+    Boolean routeByLatestRevertHistory =
+      !latestHist.isEmpty() &&
+      REVERT.equals(latestHist[0].FEC_Routing_Action__c) &&
+      latestHist[0].FEC_IsReverted__c == true &&
+      latestHist[0].FEC_Previous_Stage__c != null;
+
+    Boolean shouldRouteByNonRevertedStageChange = false;
+    List<FEC_Routing_Action_History__c> latestStageHistoryForRoute = [
+      SELECT
+        Id,
+        FEC_IsReverted__c,
+        FEC_Previous_Stage__c,
+        FEC_Next_Stage__c
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
+        AND FEC_Previous_Stage__c != null
+      ORDER BY CreatedDate DESC, Id DESC
+      LIMIT 2
+    ];
+    shouldRouteByNonRevertedStageChange =
+      latestStageHistoryForRoute.size() == 2 &&
+      latestStageHistoryForRoute.get(0).FEC_IsReverted__c == true &&
+      latestStageHistoryForRoute.get(1).FEC_IsReverted__c == false &&
+      latestStageHistoryForRoute.get(0).FEC_Previous_Stage__c != null &&
+      latestStageHistoryForRoute.get(0).FEC_Next_Stage__c != null &&
+      latestStageHistoryForRoute.get(1).FEC_Previous_Stage__c ==
+      latestStageHistoryForRoute.get(0).FEC_Next_Stage__c &&
+      latestStageHistoryForRoute.get(1).FEC_Next_Stage__c ==
+      latestStageHistoryForRoute.get(0).FEC_Previous_Stage__c;
+
+    List<FEC_Stage_Change__c> routeToChangelst = new List<FEC_Stage_Change__c>();
+    if (String.isNotBlank(routeToActionId)) {
+      if (routeByLatestRevertHistory) {
+        routeToChangelst = [
+          SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :routeToActionId
+            AND FEC_Next_Stage__c = :latestHist[0].FEC_Previous_Stage__c
+          LIMIT 1
+        ];
+      } else if (shouldRouteByNonRevertedStageChange) {
+        routeToChangelst = [
+          SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :routeToActionId
+            AND FEC_IsReverted__c = false
+          LIMIT 1
+        ];
+      } else if (latestRoutingHistoryIsReverted) {
+        routeToChangelst = [
+          SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :routeToActionId
+            AND FEC_IsReverted__c = true
+          LIMIT 1
+        ];
+      }
+      if (routeToChangelst.isEmpty()) {
+        routeToChangelst = [
+          SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :currentStageId
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :routeToActionId
+            AND FEC_IsReverted__c = false
+          LIMIT 1
+        ];
+      }
+    }
+
+    // Trường hợp custom label "Route to" nhưng action code thực là Revert.
+    if (routeToChangelst.isEmpty() && String.isNotBlank(revertActionId)) {
+      routeToChangelst = [
+        SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :revertActionId
+          AND FEC_IsReverted__c = true
+        LIMIT 1
+      ];
+    }
+
+    if (routeToChangelst.isEmpty()) {
+      return null;
+    }
+
+    RouteToDisplayInfo info = new RouteToDisplayInfo();
+    info.nextTeam = routeToChangelst.get(0).FEC_Team_User_Group__c;
+    info.nextQueue = new FEC_CommonUltils.PicklistOption();
+
+    if (String.isNotBlank(routeToChangelst.get(0).FEC_Next_Queue__c)) {
+      List<Group> queues = [
+        SELECT Id, Name
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :routeToChangelst.get(0).FEC_Next_Queue__c
+        LIMIT 1
+      ];
+      if (!queues.isEmpty()) {
+        info.nextQueue = new FEC_CommonUltils.PicklistOption(
+          queues.get(0).Name,
+          (String) queues.get(0).Id,
+          null
+        );
+      }
+    }
+    return info;
+  }
+
+  //thangtv: hỗ trợ hiển thị Decision (business.lastUser) cho Revert theo Stage Change trước, fallback logic Route to cũ
+  //thangtv
+  private static String resolveLastUserForRevertDecisionDisplay(
+    Id caseId,
+    Id currentStageId,
+    Boolean useNonRevertedFirst
+  ) {
+    FEC_Routing_Action_History__c matchedRouteToHistory;
+
+    if (currentStageId != null && useNonRevertedFirst == true) {
+      // Nhánh cho trường hợp value='Route to' nhưng code='Revert'
+      List<FEC_Stage_Change__c> revertByNonReverted = [
+        SELECT FEC_Next_Stage__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__r.FEC_Code__c = :REVERT
+          AND FEC_IsReverted__c = FALSE
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+
+      if (!revertByNonReverted.isEmpty() && revertByNonReverted[0].FEC_Next_Stage__c != null) {
+        List<FEC_Routing_Action_History__c> routeToByStage2Histories = [
+          SELECT
+            Id,
+            FEC_Previous_Stage__c,
+            FEC_Previous_Stage__r.FEC_Default_Stage__c,
+            FEC_Perform_User__c,
+            FEC_Perform_User__r.FEC_User_Division_Group__c,
+            CreatedDate
+          FROM FEC_Routing_Action_History__c
+          WHERE
+            FEC_Case__c = :caseId
+            AND FEC_Routing_Action__c = :ROUTE_TO
+            AND FEC_Previous_Stage__c = :revertByNonReverted[0].FEC_Next_Stage__c
+          ORDER BY CreatedDate DESC, Id DESC
+          LIMIT 1
+        ];
+        if (!routeToByStage2Histories.isEmpty()) {
+          matchedRouteToHistory = routeToByStage2Histories[0];
+        }
+      }
+    }
+
+    // Nhánh Revert chuẩn (value='Revert', code='Revert')
+    if (matchedRouteToHistory == null && currentStageId != null) {
+      List<FEC_Stage_Change__c> revertByReverted = [
+        SELECT FEC_Next_Stage__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__r.FEC_Code__c = :REVERT
+          AND FEC_IsReverted__c = TRUE
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+
+      if (
+        !revertByReverted.isEmpty() &&
+        revertByReverted[0].FEC_Next_Stage__c != null
+      ) {
+        List<FEC_Routing_Action_History__c> routeToByStageHistories = [
+          SELECT
+            Id,
+            FEC_Previous_Stage__c,
+            FEC_Previous_Stage__r.FEC_Default_Stage__c,
+            FEC_Perform_User__c,
+            FEC_Perform_User__r.FEC_User_Division_Group__c,
+            CreatedDate
+          FROM FEC_Routing_Action_History__c
+          WHERE
+            FEC_Case__c = :caseId
+            AND FEC_Routing_Action__c = :ROUTE_TO
+            AND FEC_Previous_Stage__c = :revertByReverted[0].FEC_Next_Stage__c
+          ORDER BY CreatedDate DESC, Id DESC
+          LIMIT 1
+        ];
+        if (!routeToByStageHistories.isEmpty()) {
+          matchedRouteToHistory = routeToByStageHistories[0];
+        }
+      }
+    }
+
+    // Nếu đang tính cho route-label mà chưa ra dữ liệu thì fallback về nhánh revert chuẩn.
+    if (matchedRouteToHistory == null && currentStageId != null && useNonRevertedFirst == true) {
+      List<FEC_Stage_Change__c> revertByReverted = [
+        SELECT FEC_Next_Stage__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__r.FEC_Code__c = :REVERT
+          AND FEC_IsReverted__c = TRUE
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+      if (!revertByReverted.isEmpty() && revertByReverted[0].FEC_Next_Stage__c != null) {
+        List<FEC_Routing_Action_History__c> routeToByStageHistories = [
+          SELECT
+            Id,
+            FEC_Previous_Stage__c,
+            FEC_Previous_Stage__r.FEC_Default_Stage__c,
+            FEC_Perform_User__c,
+            FEC_Perform_User__r.FEC_User_Division_Group__c,
+            CreatedDate
+          FROM FEC_Routing_Action_History__c
+          WHERE
+            FEC_Case__c = :caseId
+            AND FEC_Routing_Action__c = :ROUTE_TO
+            AND FEC_Previous_Stage__c = :revertByReverted[0].FEC_Next_Stage__c
+          ORDER BY CreatedDate DESC, Id DESC
+          LIMIT 1
+        ];
+        if (!routeToByStageHistories.isEmpty()) {
+          matchedRouteToHistory = routeToByStageHistories[0];
+        }
+      }
+    }
+
+    // Fallback 2 giữ nguyên logic cũ: lấy Route to history mới nhất
+    if (matchedRouteToHistory == null) {
+      List<FEC_Routing_Action_History__c> latestRouteToHistories = [
+        SELECT
+          Id,
+          FEC_Previous_Stage__c,
+          FEC_Previous_Stage__r.FEC_Default_Stage__c,
+          FEC_Perform_User__c,
+          FEC_Perform_User__r.FEC_User_Division_Group__c,
+          CreatedDate
+        FROM FEC_Routing_Action_History__c
+        WHERE
+          FEC_Routing_Action__c = :ROUTE_TO
+          AND FEC_Case__c = :caseId
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+      if (!latestRouteToHistories.isEmpty()) {
+        matchedRouteToHistory = latestRouteToHistories[0];
+      }
+    }
+
+    if (matchedRouteToHistory != null && String.isNotBlank(matchedRouteToHistory.FEC_Perform_User__c)) {
+      return FRONT_LINE.equals(
+          matchedRouteToHistory.FEC_Perform_User__r.FEC_User_Division_Group__c
+        )
+        ? 'User\'s Team Queue'
+        : 'User';
+    }
+    return null;
   }
 
   //thangtv: Sau Route to / Revert - nếu Owner là User thuộc CS Frontline thì map sang Queue chính của user đó
@@ -1046,6 +1363,42 @@ public without sharing class FEC_CaseBusinessService {
       return resolved != null ? String.valueOf(resolved) : ownerIdStr;
     } catch (Exception e) {
       return ownerIdStr;
+    }
+  }
+
+  //thangtv: Stage Change.FEC_Next_Queue__c có thể là Queue Id hoặc DeveloperName, luôn quy đổi về Queue Id để set Owner
+  private static String resolveQueueOwnerIdFromStageChangeValue(String nextQueueValue) {
+    if (String.isBlank(nextQueueValue)) {
+      return nextQueueValue;
+    }
+    String normalized = nextQueueValue.trim();
+    try {
+      Id qid = Id.valueOf(normalized);
+      if (qid.getSobjectType() == Group.SObjectType) {
+        List<Group> grp = [
+          SELECT Id, Type
+          FROM Group
+          WHERE Id = :qid
+          LIMIT 1
+        ];
+        if (
+          !grp.isEmpty() &&
+          FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type)
+        ) {
+          return String.valueOf(grp[0].Id);
+        }
+      }
+      return normalized;
+    } catch (Exception e) {
+      List<Group> q = [
+        SELECT Id
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :normalized
+        LIMIT 1
+      ];
+      return q.isEmpty() ? normalized : String.valueOf(q[0].Id);
     }
   }
 
@@ -1153,7 +1506,8 @@ public without sharing class FEC_CaseBusinessService {
   }
 
 
-  private static void markCaseSubmittedAndClearDrafts(String caseId) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
     List<Case> caselst = [
@@ -1181,6 +1535,32 @@ public without sharing class FEC_CaseBusinessService {
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
   }
+//PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    markCaseSubmittedAndClearDrafts(caseId);
+    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+  }
+  //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  /**
+   * Tạo bản ghi FEC_Case_Flow_History__c khi Case được submit lần đầu (creation stage).
+   * Chỉ tạo khi Case chưa submit (FEC_Is_Submited__c = false trước khi gọi).
+   */
+  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    if (String.isBlank(caseId)) return;
+    try {
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson
+      );
+      if (String.isNotBlank(natureOfCaseId)) {
+        history.FEC_Nature_of_Cases__c = natureOfCaseId;
+      }
+      insert history;
+    } catch (Exception e) {
+      System.debug('createCaseFlowHistory error: ' + e.getMessage());
+    }
+  }
 
   @AuraEnabled
   public static Object run(String method, Map<String, String> params) {
@@ -1207,6 +1587,7 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Account_Contract_Number_PL__c
           FROM Case
           WHERE Id = :caseId
+          LIMIT 1
         ];
         // if (FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER.equals(c.FEC_Customer_Type__c) && String.isBlank(c.FEC_Account_Contract_Number_PL__c)) {
         //   throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Account/ Contract Number' }));
@@ -1227,16 +1608,35 @@ public without sharing class FEC_CaseBusinessService {
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          // Kiểm tra creation stage trước khi mark submitted
+          Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           markCaseSubmittedAndClearDrafts(caseId);
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          if (isCreationStage) {
+            createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+          }
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
           return null;
         }
+        // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
+        when ROUTE_TO_COF_GSR {
+          // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
+          return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
+        }
         when REVERT {
+          String revertActionId = (String) params.get('actionId');
+          //thangtv: action.value (LWC) → phân nhánh Stage Change FEC_IsReverted__c + custom label history
+          String routingActionValue = params != null
+            ? (String) params.get('routingActionValue')
+            : null;
           markCaseSubmittedAndClearDrafts(caseId);
-          revert(caseId, finalStatusBeforeSubmit);
+          revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
           return null;
         }
         when RECALL {
@@ -1386,7 +1786,19 @@ public without sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
-          FEC_Actual_Nature_of_Case__c, FEC_Team__c
+          FEC_Actual_Nature_of_Case__c,
+          FEC_Team__c,
+          FEC_Account_or_Contract__c,
+          FEC_Interaction__c,
+          FEC_Category__c,
+          FEC_SubCategory__c,
+          FEC_SubCode__c,
+          FEC_Category__r.Name,
+          FEC_Category__r.FEC_Code__c,
+          FEC_SubCategory__r.Name,
+          FEC_SubCategory__r.FEC_Code__c,
+          FEC_SubCode__r.Name,
+          FEC_SubCode__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -1449,25 +1861,64 @@ public without sharing class FEC_CaseBusinessService {
       );
       Id currentOwnerId = updatedCase.OwnerId;
 
-      //thangtv: fix bug - không ghi đè queueId từ lịch sử Revert cũ
-      // Truy vấn "Routing History mới nhất có action = Revert" luôn trả về lần revert gần nhất
-      // trong cả lifecycle Case (vd sau S2→S1 revert), kể cả khi đã có Route to mới hơn (S1→S2).
-      // Gán queueId = FEC_Perform_User__c của revert đó làm mọi Route to sau đó sai Owner
-      // (thường trùng user hiện tại → đổi Stage nhưng không đổi Owner).
-      // queueId đúng = FEC_Next_Queue__c theo stage hiện tại (getByCase / LWC).
+      //thangtv: Route to — đọc history mới nhất (IsReverted + Perform user) để chọn Stage Change và gán Owner khi cần
+      List<FEC_Routing_Action_History__c> latestHistForRoute = [
+        SELECT
+          Id,
+          FEC_Routing_Action__c,
+          FEC_IsReverted__c,
+          FEC_Previous_Stage__c,
+          FEC_Perform_User__c
+        FROM FEC_Routing_Action_History__c
+        WHERE
+          FEC_Case__c = :caseId
+          AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+      Boolean routeByLatestRevertHistory =
+        !latestHistForRoute.isEmpty() &&
+        REVERT.equals(latestHistForRoute.get(0).FEC_Routing_Action__c) &&
+        latestHistForRoute.get(0).FEC_IsReverted__c == true &&
+        latestHistForRoute.get(0).FEC_Previous_Stage__c != null;
+      Id targetNextStageIdFromHistory = routeByLatestRevertHistory
+        ? latestHistForRoute.get(0).FEC_Previous_Stage__c
+        : null;
 
-      List<FEC_Stage_Change__c> changelst = [
+      //thangtv
+      List<FEC_Stage_Change__c> changelst = new List<FEC_Stage_Change__c>();
+      if (routeByLatestRevertHistory) {
+        changelst = [
+          SELECT
+            Id,
+            FEC_Previous_Stage__c,
+            FEC_Previous_Stage__r.FEC_Code__c,
+            FEC_Next_Stage__c,
+            FEC_Next_Queue__c
+          FROM FEC_Stage_Change__c
+          WHERE
+            FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+            AND FEC_Active__c = TRUE
+            AND FEC_Action_Button__c = :actionId
+            AND FEC_Next_Stage__c = :targetNextStageIdFromHistory
+          LIMIT 1
+        ];
+      } else {
+        changelst = [
         SELECT
           Id,
           FEC_Previous_Stage__c,
           FEC_Previous_Stage__r.FEC_Code__c,
-          FEC_Next_Stage__c
+          FEC_Next_Stage__c,
+          FEC_Next_Queue__c
         FROM FEC_Stage_Change__c
         WHERE
           FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
           AND FEC_Active__c = TRUE
           AND FEC_Action_Button__c = :actionId
-      ];
+            AND FEC_IsReverted__c = false
+        ];
+      }
 
       if (changelst.isEmpty()) {
         throw new CaseBusinessServiceException(
@@ -1500,10 +1951,24 @@ public without sharing class FEC_CaseBusinessService {
         cloneMasterDataSetting(tgt.Id, natureOfCaseId);
       }
 
+      //thangtv
+      if (routeByLatestRevertHistory && String.isNotBlank(latestHistForRoute.get(0).FEC_Perform_User__c)) {
+        queueId = String.valueOf(latestHistForRoute.get(0).FEC_Perform_User__c);
+      } else if (selectedChange.FEC_Next_Queue__c != null) {
+        queueId = resolveQueueOwnerIdFromStageChangeValue(
+          String.valueOf(selectedChange.FEC_Next_Queue__c)
+        );
+      }
+
       //thangtv: nếu Owner là Frontline User thì map sang Queue chính
       queueId = applyFrontlineMainQueueIfUserOwner(queueId);
       //thangtv: fallback Queue->latest history updated user mapping
       queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+
+      queueId = FEC_BlockCodeRoutingService.applyRouteQueueOverrideIfApplicable(
+        updatedCase,
+        queueId
+      );
 
       updatedCase.OwnerId = queueId;
       updatedCase.FEC_Current_Case_Stage__c = selectedChange.FEC_Next_Stage__c;
@@ -1578,6 +2043,17 @@ public without sharing class FEC_CaseBusinessService {
         ' description=' + history.FEC_Description__c
       );
 
+      // tungnm37 thêm: tạo Assignment + Case Remarks khi Route to
+      // Bỏ qua khi nextTeam = CC hoặc SP (luồng Manual, user tự thêm qua nút Add Item)
+      String nextTeamForAssignment = selectedChange != null
+        ? [SELECT FEC_Team_User_Group__c FROM FEC_Stage_Change__c WHERE Id = :selectedChange.Id LIMIT 1]?.FEC_Team_User_Group__c
+        : null;
+      Boolean isManualTeam = ('CC'.equals(nextTeamForAssignment) || 'SP'.equals(nextTeamForAssignment));
+      if (!isManualTeam) {
+        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+        FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
+      }
+
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       // Trigger sau insert history đã cập nhật FEC_Team__c / Status — merge để không ghi đè
       Case postHistory = [
@@ -1624,7 +2100,7 @@ public without sharing class FEC_CaseBusinessService {
     );
 
     Case c = [
-      SELECT Id, OwnerId, Owner.Name, FEC_Stage_Name__c, FEC_Final_Status__c
+      SELECT Id, OwnerId, Owner.Name, FEC_Stage_Name__c, FEC_Final_Status__c, FEC_Current_Case_Stage__c
       FROM Case
       WHERE Id = :caseId
     ];
@@ -1652,7 +2128,7 @@ public without sharing class FEC_CaseBusinessService {
           : null,
         FEC_Stage_Name__c = stageName,
         FEC_Custom_Action_Button_Label__c = getCustomActionButtonLabel(
-          currentStageId,
+          c.FEC_Current_Case_Stage__c,
           routingAction,
           null
         ),
@@ -2095,7 +2571,13 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  private static void revert(String caseId, String finalStatusBeforeSubmit) {
+  //thangtv: Revert — routingActionDisplayValue = action.value (LWC); Stage Change theo FEC_IsReverted__c; owner ưu tiên history có Previous = next stage
+  private static void revert(
+    String caseId,
+    String actionId,
+    String finalStatusBeforeSubmit,
+    String routingActionDisplayValue
+  ) {
     try {
       List<Case> caselst = [
         SELECT
@@ -2109,10 +2591,11 @@ public without sharing class FEC_CaseBusinessService {
         WHERE Id = :caseId
       ];
 
-      if (caselst.isEmpty())
+      if (caselst.isEmpty()) {
         throw new CaseBusinessServiceException(
           String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Case Id' })
         );
+      }
 
       Case updatedCase = caselst.get(0);
 
@@ -2120,71 +2603,88 @@ public without sharing class FEC_CaseBusinessService {
         updatedCase.OwnerId,
         updatedCase.Owner?.Name
       );
-      List<String> validActionlst = new List<String>{ ROUTE_TO };
 
-      List<FEC_Routing_Action_History__c> historylst = [
+      if (String.isBlank(actionId)) {
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Invalid, new List<String>{ 'Action Id' })
+        );
+      }
+
+      //thangtv: action.value = "Revert" → Stage Change + history IsReverted true; khác Revert (vd "Route to") → false
+      String actionValTrim = String.isBlank(routingActionDisplayValue)
+        ? REVERT
+        : routingActionDisplayValue.trim();
+      Boolean scIsRevertedFilter = REVERT.equals(actionValTrim);
+      //thangtv: đồng bộ cờ history với nhánh Stage Change (theo action.value)
+      Boolean historyIsRevertedFlag = scIsRevertedFilter;
+
+      List<FEC_Stage_Change__c> scRowList = [
         SELECT
-          Id,
-          FEC_Previous_Stage__c,
-          FEC_Previous_Stage__r.FEC_Default_Stage__c,
-          FEC_Routing_Action__c,
-          FEC_Perform_User__c,
-          FEC_Perform_User__r.Name,
-          FEC_Perform_User__r.Email,
-          FEC_Perform_User__r.FEC_Main_Queue__c,
-          FEC_Perform_User__r.FEC_User_Division_Group__c,
           FEC_Next_Stage__c,
-          CreatedDate
+          FEC_Next_Stage__r.FEC_Default_Stage__c,
+          FEC_Next_Queue__c,
+          FEC_Previous_Stage__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :actionId
+          AND FEC_IsReverted__c = :scIsRevertedFilter
+        LIMIT 1
+      ];
+
+      if (scRowList.isEmpty()) {
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Stage Change' })
+        );
+      }
+
+      FEC_Stage_Change__c stagingRow = scRowList.get(0);
+      Id nextStageId = stagingRow.FEC_Next_Stage__c;
+
+      //thangtv: Next stage đã từng là FEC_Previous_Stage__c trên history → ưu tiên Owner = FEC_Perform_User__c tại bản ghi đó (fallback history mới nhất)
+      List<FEC_Routing_Action_History__c> histWhereNextWasPrevious = [
+        SELECT FEC_Perform_User__c
         FROM FEC_Routing_Action_History__c
         WHERE
-          FEC_Routing_Action__c IN :validActionlst
-          AND FEC_Case__c = :caseId
+          FEC_Case__c = :caseId
+          AND FEC_Previous_Stage__c = :nextStageId
+        ORDER BY CreatedDate DESC, Id DESC
+        LIMIT 1
+      ];
+
+      List<FEC_Routing_Action_History__c> latestHist = [
+        SELECT FEC_Perform_User__c
+        FROM FEC_Routing_Action_History__c
+        WHERE
+          FEC_Case__c = :caseId
+          AND FEC_Routing_Action__c IN :new List<String>{ ROUTE_TO, REVERT }
         ORDER BY CreatedDate DESC, Id DESC
         LIMIT 1
       ];
 
       String queueId;
-      String nextUser;
-
-      if (!historylst.isEmpty()) {
-        FEC_Routing_Action_History__c history = historylst.get(0);
-
-        if (ROUTE_TO.equals(history.FEC_Routing_Action__c)) {
-          String customActionButtonLabel = getCustomActionButtonLabel(
-            updatedCase.FEC_Current_Case_Stage__c,
-            REVERT,
-            null
-          );
-          if (
-            history.FEC_Previous_Stage__r?.FEC_Default_Stage__c &&
-            FRONT_LINE.equals(
-              history.FEC_Perform_User__r.FEC_User_Division_Group__c
-            )
+      //thangtv: chọn ownerId (queueId) — ưu tiên histWhereNextWasPrevious, không có thì latestHist Perform user
+      if (
+        !histWhereNextWasPrevious.isEmpty() &&
+        String.isNotBlank(histWhereNextWasPrevious.get(0).FEC_Perform_User__c)
           ) {
-            List<Group> queuelst = [
-              SELECT Id, Name, DeveloperName, Type
-              FROM Group
-              WHERE
-                Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-                AND DeveloperName = :history.FEC_Perform_User__r.FEC_Main_Queue__c
-            ];
-
-            if (!queuelst.isEmpty()) {
-              queueId = queuelst.get(0).Id;
-              nextUser = queuelst.get(0).Name;
-            }
+        queueId = histWhereNextWasPrevious.get(0).FEC_Perform_User__c;
+      } else if (
+        !latestHist.isEmpty() &&
+        String.isNotBlank(latestHist.get(0).FEC_Perform_User__c)
+      ) {
+        queueId = latestHist.get(0).FEC_Perform_User__c;
           } else {
-            queueId = history.FEC_Perform_User__c;
-            nextUser = userDisplayForRoutingHistory(
-              history.FEC_Perform_User__r,
-              history.FEC_Perform_User__r?.Name
+        throw new CaseBusinessServiceException(
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Routing Action History' })
             );
           }
 
-          //thangtv: resolve owner sau revert - Frontline User → map sang Queue chính
+      //thangtv: giữ map Frontline → main queue như cũ
           queueId = applyFrontlineMainQueueIfUserOwner(queueId);
-          //thangtv: fallback Queue->latest history updated user mapping
-          queueId = applyUserOwnerFromHistoryWhenCurrentOwnerIsQueue(caseId, queueId);
+
+      String nextUser;
           if (String.isNotBlank(queueId)) {
             try {
               nextUser = resolveRoutingHistoryOwnerLabel(
@@ -2192,7 +2692,13 @@ public without sharing class FEC_CaseBusinessService {
                 null
               );
             } catch (Exception ignore) {
+          nextUser = null;
             }
+      } else {
+        nextUser = null;
+      }
+      if (String.isBlank(nextUser)) {
+        nextUser = currentOwnerName;
           }
 
           List<User> userlst = [
@@ -2202,12 +2708,22 @@ public without sharing class FEC_CaseBusinessService {
             LIMIT 1
           ];
 
-          if (userlst.isEmpty())
+      if (userlst.isEmpty()) {
             return;
+      }
+
+      //thangtv: lưu label hiển thị user chọn (action.value); không gửi thì fallback getCustomActionButtonLabel
+      String customActionButtonLabel = String.isNotBlank(routingActionDisplayValue)
+        ? routingActionDisplayValue.trim()
+        : getCustomActionButtonLabel(
+            updatedCase.FEC_Current_Case_Stage__c,
+            REVERT,
+            actionId
+          );
 
           FEC_Routing_Action_History__c newHistory = new FEC_Routing_Action_History__c(
             FEC_Previous_Stage__c = updatedCase.FEC_Current_Case_Stage__c,
-            FEC_Next_Stage__c = history.FEC_Previous_Stage__c,
+        FEC_Next_Stage__c = nextStageId,
             FEC_Routing_Action__c = REVERT,
             FEC_Case__c = caseId,
             FEC_Perform_User__c = userlst.get(0).Id,
@@ -2220,16 +2736,17 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Original_User_Queue_ID__c = String.valueOf(updatedCase.OwnerId),
             FEC_Updated_User_Queue__c = nextUser,
             FEC_Updated_User_Queue_ID__c = queueId,
-            FEC_Stage_Name__c = updatedCase.FEC_Current_Case_Stage__r
-              ?.FEC_Code__c,
-            FEC_Custom_Action_Button_Label__c = customActionButtonLabel,
+        FEC_Stage_Name__c = updatedCase.FEC_Current_Case_Stage__r?.FEC_Code__c,
+        FEC_Custom_Action_Button_Label__c = customActionButtonLabel,
             FEC_User__c = emailLocalPart(userlst.get(0).Email),
             FEC_User_Role__c = userlst.get(0).UserRole?.Name,
-            FEC_Current_Status__c = finalStatusBeforeSubmit
+        FEC_Current_Status__c = finalStatusBeforeSubmit,
+        //thangtv: cờ IsReverted trên history theo action.value / nhánh Stage Change
+        FEC_IsReverted__c = historyIsRevertedFlag
           );
 
-          updatedCase.FEC_Current_Case_Stage__c = history.FEC_Previous_Stage__c;
-          updatedCase.OwnerId = queueId;
+      updatedCase.OwnerId = Id.valueOf(queueId.trim());
+      updatedCase.FEC_Current_Case_Stage__c = nextStageId;
           registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
           insert newHistory; 
           update updatedCase;
@@ -2242,8 +2759,6 @@ public without sharing class FEC_CaseBusinessService {
           ];
           newHistory.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
           update newHistory;
-        }
-      }
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
@@ -2760,10 +3275,28 @@ public without sharing class FEC_CaseBusinessService {
     public FEC_CommonUltils.PicklistOption nextQueue;
 
     @AuraEnabled
+    public String revertNextTeam;
+
+    @AuraEnabled
+    public FEC_CommonUltils.PicklistOption revertNextQueue;
+
+    @AuraEnabled
     public String lastUser;
 
     @AuraEnabled
+    //thangtv
+    public String lastUserForRouteToLabel;
+
+    @AuraEnabled
     public String draftRoutingActionCode;
+
+    // tungnm37 thêm: isSubmited - để LWC biết Case đã Submit chưa (dùng cho showManualAddItem Stage 2)
+    @AuraEnabled
+    public Boolean isSubmited;
+
+    // tungnm37 thêm: customerType - để LWC fec_RoutingAssignment query đúng theo Customer Type
+    @AuraEnabled
+    public String customerType;
 
     @AuraEnabled
     public String code;
@@ -3636,6 +4169,18 @@ public without sharing class FEC_CaseBusinessService {
       selectedCase.FEC_Delay_Note__c = cardDeliveryInfo.deliveryNotes;
       update selectedCase;
     }
+  }
+
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled(cacheable=true)
+  public static List<Map<String, String>> getTeamQueueOptions() {
+    return FEC_CofGsrAssignmentService.getTeamQueueOptions();
+  }
+
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled
+  public static List<Map<String, String>> getRoutingAssignments(String natureOfCaseId, String customerType) {
+    return FEC_CofGsrAssignmentService.getRoutingAssignments(natureOfCaseId, customerType);
   }
 
   @AuraEnabled(cacheable=true)
