@@ -6,7 +6,7 @@
     <fields>FEC_Service_Case_Owner__c</fields>
     <fields>FEC_Case_Created_On__c</fields>
     <fields>FEC_Case_Created_By__c</fields>
-    <fields>FEC_Last_Updated_On__c</fields>
-    <fields>FEC_Last_Updated_By__c</fields>
+    <fields>FEC_Last_Updated_On_View__c</fields>
+    <fields>FEC_Last_Updated_By_View__c</fields>
     <label>Customer Case Compact</label>
 </CompactLayout>
