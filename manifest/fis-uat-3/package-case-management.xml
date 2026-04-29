@@ -109,6 +109,10 @@
         <name>LightningMessageChannel</name>
     </types>
 	<types>
+		<members>FEC_DNB_Reason</members>
+		<name>GlobalValueSet</name>
+	</types>
+	<types>
         <members>FEC_RelevantTicket_Title</members>
         <members>FEC_RelevantTicket_Section_Information</members>
         <members>FEC_RelevantTicket_Field_Interaction</members>
