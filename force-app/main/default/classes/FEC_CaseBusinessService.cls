@@ -1535,16 +1535,16 @@ public without sharing class FEC_CaseBusinessService {
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
   }
-//PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+//PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   @AuraEnabled
   public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
     markCaseSubmittedAndClearDrafts(caseId);
     createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
   }
-  //PhongBT: táº¡o FEC_Case_Flow_History__c khi submit case láº§n Ä‘áº§u.
+  //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   /**
-   * Táº¡o báº£n ghi FEC_Case_Flow_History__c khi Case Ä‘Æ°á»£c submit láº§n Ä‘áº§u (creation stage).
-   * Chá»‰ táº¡o khi Case chÆ°a submit (FEC_Is_Submited__c = false trÆ°á»›c khi gá»i).
+   * Tạo bản ghi FEC_Case_Flow_History__c khi Case được submit lần đầu (creation stage).
+   * Chỉ tạo khi Case chưa submit (FEC_Is_Submited__c = false trước khi gọi).
    */
   private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
     if (String.isBlank(caseId)) return;
@@ -1608,10 +1608,19 @@ public without sharing class FEC_CaseBusinessService {
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          // Kiểm tra creation stage trước khi mark submitted
+          Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           markCaseSubmittedAndClearDrafts(caseId);
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          if (isCreationStage) {
+            createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+          }
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
           return null;
         }
@@ -3273,7 +3282,7 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String lastUser;
-    
+
     @AuraEnabled
     //thangtv
     public String lastUserForRouteToLabel;
