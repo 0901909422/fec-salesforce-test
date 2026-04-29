@@ -175,6 +175,12 @@
                 <identifier>lst_dynamicRelatedList</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AssignmentRemarkHistoryTable</componentName>
+                <identifier>c_fec_AssignmentRemarkHistoryTable</identifier>
+            </componentInstance>
+        </itemInstances>
         <mode>Replace</mode>
         <name>main</name>
         <type>Region</type>
