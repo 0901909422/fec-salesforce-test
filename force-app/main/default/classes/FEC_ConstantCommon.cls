@@ -1,23 +1,31 @@
 public with sharing class FEC_ConstantCommon {
+
     public static final String API_CONTENT_TYPE = 'text/xml; charset=utf-8';
     public static final String API_CONTENT_TYPE_JSON = 'application/json';
-    public static final String API_METHOD_POST = 'POST';
+    public static final String API_CONTENT_TYPE_JSON_UTF8 = 'application/json;charset=UTF-8';
     public static final String API_METHOD_GET = 'GET';
+    public static final String API_METHOD_POST = 'POST';
     public static final String API_REQUESTOR_ID = 'SALESFORE-CSM';
     public static final String SOAP_ENV = 'http://schemas.xmlsoap.org/soap/envelope/';
-    
+
+    public static final String HTTP_HEADER_CONTENT_TYPE = 'Content-Type';
+    public static final String HTTP_HEADER_ACCEPT = 'Accept';
+    public static final Integer HTTP_TIMEOUT_MAX = 120000;
+    public static final Integer HTTP_TIMEOUT_DEFAULT = 60000;
+    public static final Integer HTTP_STATUS_OK = 200;
+
     /** Chuỗi rỗng dùng chung (default khi value blank). */
     public static final String STR_EMPTY = '';
-    
+
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
-    
+
     /** Dấu phân tách trong FEC_ID_Search__c (format: Prefix-Số, vd S-0001). */
     public static final String FEC_ID_SEARCH_DELIMITER = '-';
-    
+
     /** Prefix cho các trạng thái Case đã resolved (Resolved-Completed, Resolved-Cancelled, ...) */
     public static final String CASE_STATUS_PREFIX_RESOLVED = 'Resolved';
-    
+
     /** Follow-up: giá trị picklist "Until Case is Resolved" */
     public static final String FOLLOW_UP_TYPE_UNTIL_RESOLVED = 'Until Case is Resolved';
     /** Follow-up: giá trị picklist "Until choosing Unfollow" */
@@ -32,7 +40,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String FOLLOW_UP_COMPACT_UNFOLLOW = 'U';
     /** Dấu phân tách giữa các entry trong FEC_Follow_Up_User__c */
     public static final String FOLLOW_UP_FIELD_DELIMITER = ';';
-    
+
+    public static final String DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss\'.0 GMT\'';
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
     public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
@@ -41,13 +50,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
     public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+
     public static final String PAYMENT_PREFIX = 'pay_';
     
     public static final String CASE_INTERACTION_RECORD_TYPE_DEV_NAME = 'Interaction';
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
     public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
-    
+
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
     public static final String CHANNEL_INBOUND_NAME = 'Inbound';
@@ -58,7 +68,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CHANNEL_EXTERNAL = 'External';
     public static final String CHANNEL_INTERNAL = 'Internal';
     public static final String STR_NA = 'N/A';
-    
+
     public static final String CHANNEL_INBOUND_SUBCHANNEL_NAME = 'Inbound Call';
     public static final String CHANNEL_OUTBOUND_SUBCHANNEL_NAME = 'Outbound Call';
     /** Channel/Subchannel dùng cho Interaction SLA (FEC_InteractionSLAController) */
@@ -108,14 +118,13 @@ public with sharing class FEC_ConstantCommon {
     
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
-    
+
     // LOAN: nhiều format khác nhau
     public static final String PATTERN_LOAN = '^(\\d{8}-\\d{6}-\\d{4}|\\d{8}-\\d{7}-\\d{3}|\\d{8}-\\d{7}-\\d{2}|\\d{8}-\\d{7}-\\d{1}|\\d{8}-\\d{7}|\\d{2}-\\d{2}-\\d{2}-\\d{2})$';
-    
+
     // INSURANCE
     public static final String PATTERN_INSURANCE = '^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z0-9]+$';
-    
-    
+
     public static final String REQUESTOR_CRM = 'CRM';
     public static final String REQUESTOR_PORTAL = 'PORTAL';
     public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
@@ -149,12 +158,37 @@ public with sharing class FEC_ConstantCommon {
     public static final String SF_ADDRESS_TYPE_OFFICE = 'Office Address';
     public static final String SF_ADDRESS_TYPE_CURRENT = 'Current Address';
     public static final String TEXT_YES = 'Yes';
+
     public static final String TEXT_NO = 'No';
     
     public static final String ORIGINAL_USER_UPLOAD = 'Original_User_Upload';
     public static final String JSON_DATA_FOR_PROCESSING = 'JSON_Data_For_Processing';
+    // === Customer Additional Data — Status constants ===
     public static final String UPLOADED_STATUS = 'Uploaded';
     public static final String PROCESSED_STATUS = 'Processed';
+    public static final String REUPLOADED_STATUS = 'Reuploaded';
+    public static final String PROCESSING_STATUS = 'Processing';
+    public static final String REPROCESS_STATUS = 'Reprocess';
+    public static final String CANCELLED_STATUS = 'Cancelled';
+    public static final String FAILURE_STATUS = 'Failure';
+
+    // === Customer Additional Data — Status groups ===
+    public static final Set<String> PENDING_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, PROCESSING_STATUS, REPROCESS_STATUS, FAILURE_STATUS
+    };
+    public static final Set<String> PROCESSED_STATUSES = new Set<String>{
+        PROCESSED_STATUS, CANCELLED_STATUS
+    };
+    public static final Set<String> BATCH_QUERY_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS
+    };
+    public static final Set<String> DELETABLE_STATUSES = new Set<String>{
+        UPLOADED_STATUS, REUPLOADED_STATUS, FAILURE_STATUS
+    };
+
+    // === Customer Additional Data — Composite Key ===
+    public static final String COMPOSITE_KEY_DELIMITER = '!';
+
     public static final String JSON_EXTENSION = '.json';
     public static final String SUCCESS_MESSAGE = 'Success';
     public static final String SUCCESS_STATUS_CODE = '0';
@@ -172,24 +206,24 @@ public with sharing class FEC_ConstantCommon {
     public static final String KEY_UPLOADED_TIME = 'uploadedTime';
     public static final String KEY_STATUS = 'status';
     public static final String YES_VALUE = 'yes';
-    
+
     public static final String PRODUCT_TYPE_INSURANCE = 'INSURANCE';
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
-    
+
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
     public static final String CASE_STATUS_RESOLVED_REJECTED = 'Resolved-Rejected';
     public static final String CASE_STATUS_RESOLVED_COMPLETED = 'Resolved-Completed';
     public static final String CASE_STATUS_AUTO_CANCELLED = 'Resolved-AutoCancelled';
     public static final String CASE_STATUS_AUTO_CLOSED = 'Auto-Closed';
     public static final String INTERACTION_STATUS_CLOSED = 'Closed';
-    
+
     public static final String INTERACTION_VIEW_MODE = 'view';
     public static final String INTERACTION_HANDLING_MODE = 'handling';
     public static final String INTERACTION_REVIEW_MODE = 'review';
-    
+
     public static final String CASE_STATUS_NEW = 'New';
     public static final String CASE_STATUS_OPEN = 'Open';
     public static final String CASE_STATUS_PENDING = 'Pending';
@@ -197,21 +231,28 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_STATUS_PENDING_PREFIX = 'Pending-';
 
     public static final String CASE_WEB_ORIGIN = 'Web';
-    
+
     public static final String GROUP_TYPE_QUEUE = 'Queue';
     public static final String SOBJECT_USER = 'User';
     public static final String SOBJECT_GROUP = 'Group';
     public static final String DELIMITER_SEMICOLON = ';';
     public static final String DELIMITER_UNDERSCORE = '_';
 
+    // tungnm37 thêm: Assignment constants cho COF/GSR
+    public static final String ASSIGNMENT_NAME_CALL = 'Call';
+    public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
-    
+
     public static final String CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER = 'Non-existing';
     public static final String CUSTOMER_HISTORY_EXISTING_CUSTOMER = 'Existing';
-    
+
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
     
     public static final String FEC_CATEGORY_REQUEST = 'Request';
     public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
@@ -221,20 +262,20 @@ public with sharing class FEC_ConstantCommon {
     public static final String FEC_COMPLAIN_TYPE_HIGH_RISK = 'High Risk';
     public static final String FEC_SUB_CATEGORY_CODE_CL01 = 'CL01';
     public static final String FEC_SUB_CATEGORY_CODE_CC01 = 'CC01';
-    
+
     public static final String CUSTOMER_CATEGORY_SUSPECTED_FRAUD = 'Suspected Fraud';
     public static final String CUSTOMER_CATEGORY_MEDIA = 'Media';
     public static final String CUSTOMER_CATEGORY_SERIOUS_COMPLAINT = 'Serious Complaint';
     public static final String CUSTOMER_CATEGORY_UNHAPPY = 'Unhappy';
     public static final String CUSTOMER_CATEGORY_VIP = 'VIP';
     public static final String CUSTOMER_CATEGORY_NEUTRAL = 'Neutral';
-    
+
     public static final String SECTION_INTERACTION_DETAILS = 'Interaction Details';
     public static final String SECTION_SEARCH_INFORMARION = 'Search Information';
     public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
-    
+
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';
     public static final String PRIMARY_PHONE = 'Primary Phone';
@@ -264,6 +305,17 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_TRANSFER_ACTION = 'Transfer';
+    public static final String CASE_ESCALATE_ACTION = 'Escalate';
+    public static final String CASE_REVERT_ACTION = 'Revert';
+    public static final String CASE_REVERTING_CREATOR = 'RevertingCreator';
+    public static final String CASE_DECISION_VALUE = 'Cannot Contact Customer';
+    public static final String CASE_UPDATE_VALUE = 'Update';
+    public static final String CASE_REJECT_ACTION = 'Reject';
+    public static final String CASE_RESOLVE_ACTION = 'Resolve';
+    public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
+    public static final String TEAM_VALUE = 'CannotContactCustomer';
+    
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
@@ -466,4 +518,25 @@ public with sharing class FEC_ConstantCommon {
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
     public static final String NO_MATCH = 'No match';
     public static final String SKIP_ITEM = 'Skip item (null/blank)';
+    
+    //HieuTT74: Update common constant - ngày 28-4-2026
+    public static final String CHANNEL_FACEBOOK = 'Facebook';
+    public static final String CHANNEL_WEBCHAT = 'Webchat';
+    
+    public static final String CHANNEL_FACEBOOK_LOWER = 'facebook';
+    public static final String CHANNEL_ZALO_LOWER = 'zalo';
+    public static final String CHANNEL_WEBCHAT_LOWER = 'webchat';
+    
+    // ===== KYC =====
+    public static final String KYC_METHOD_OTHER = 'Other';
+    public static final String KYC_STATUS_NOT_KYC = 'NOT KYC';
+    public static final String KYC_STATUS_KYC = 'KYC';
+    
+    public static final String KYC_RESULT_PASS = 'Pass';
+    public static final String KYC_RESULT_FAIL = 'Fail';
+    
+    
+    public static final String DNB_STATUS_ACTIVE = 'Active';
+    public static final String DNB_STATUS_INACTIVE = 'Inactive';
+    public static final String BOOLEAN_TRUE = 'true';
 }

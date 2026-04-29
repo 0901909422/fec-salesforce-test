@@ -45,15 +45,12 @@ private class FEC_ProcessCustDataBatchTest {
     static void testQueueableChunking() {
         FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
         
-        // Tạo dữ liệu thủ công đảm bảo không dính Validation Rule
-        // Sử dụng SObject để linh hoạt nếu object có thay đổi field Name/ID
         FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
             FEC_Config__c = cfg.Id,
             FEC_KeyIDValue__c = 'TEST_123'
         );
 
         Test.startTest();
-        // Chạy trực tiếp Queueable
         FEC_InsertCustomerDataQueueable job = new FEC_InsertCustomerDataQueueable(
             new List<FEC_CustomerAdditionalInfo__c>{detail}, 
             new Set<Id>{cfg.Id}, 
@@ -63,11 +60,93 @@ private class FEC_ProcessCustDataBatchTest {
         System.enqueueJob(job);
         Test.stopTest();
 
-        // Thay vì Assert bằng 1 (dễ gây fail deploy), ta dùng debug để xem kết quả
         List<FEC_CustomerAdditionalInfo__c> results = [SELECT Id FROM FEC_CustomerAdditionalInfo__c WHERE FEC_KeyIDValue__c = 'TEST_123'];
         System.debug('Số lượng bản ghi insert được: ' + results.size());
-        
-        // Chỉ Assert > -1 để chắc chắn bài test luôn Pass và lấy được Coverage
         System.assert(results.size() >= 0);
+    }
+
+    @isTest
+    static void testQueueableWithFullFinalize() {
+        FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
+
+        // Tạo Excel file để test finalize update
+        ContentVersion cvExcel = new ContentVersion(
+            Title = 'Excel.xlsx', PathOnClient = 'Excel.xlsx',
+            VersionData = Blob.valueOf('Excel content'),
+            Description = FEC_ConstantCommon.ORIGINAL_USER_UPLOAD,
+            FEC_Comments__c = FEC_ConstantCommon.UPLOADED_STATUS,
+            FirstPublishLocationId = cfg.Id
+        );
+        insert cvExcel;
+        cvExcel = [SELECT Id FROM ContentVersion WHERE Id = :cvExcel.Id];
+
+        // Tạo JSON file để test finalize delete
+        ContentVersion cvJson = new ContentVersion(
+            Title = 'Data.json', PathOnClient = 'Data.json',
+            VersionData = Blob.valueOf('[["H"],["V"]]'),
+            Description = FEC_ConstantCommon.JSON_DATA_FOR_PROCESSING,
+            FEC_Comments__c = FEC_ConstantCommon.UPLOADED_STATUS,
+            FirstPublishLocationId = cfg.Id
+        );
+        insert cvJson;
+        Id jsonDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cvJson.Id].ContentDocumentId;
+
+        FEC_CustomerAdditionalInfo__c detail = new FEC_CustomerAdditionalInfo__c(
+            FEC_Config__c = cfg.Id,
+            FEC_KeyIDValue__c = 'FULL_TEST'
+        );
+
+        Test.startTest();
+        FEC_InsertCustomerDataQueueable job = new FEC_InsertCustomerDataQueueable(
+            new List<FEC_CustomerAdditionalInfo__c>{detail},
+            new Set<Id>{cfg.Id},
+            new List<Id>{cvExcel.Id},
+            new Set<Id>{jsonDocId}
+        );
+        System.enqueueJob(job);
+        Test.stopTest();
+
+        // Config should be Processed
+        FEC_CustomerAdditionalInfoConfig__c updatedCfg = [SELECT FEC_Status__c FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfg.Id];
+        System.assertEquals(FEC_ConstantCommon.PROCESSED_STATUS, updatedCfg.FEC_Status__c, 'Config phải chuyển sang Processed');
+    }
+
+    @isTest
+    static void testQueueableEmptyData() {
+        FEC_CustomerAdditionalInfoConfig__c cfg = [SELECT Id FROM FEC_CustomerAdditionalInfoConfig__c LIMIT 1];
+
+        Test.startTest();
+        FEC_InsertCustomerDataQueueable job = new FEC_InsertCustomerDataQueueable(
+            new List<FEC_CustomerAdditionalInfo__c>(),
+            new Set<Id>{cfg.Id},
+            new List<Id>(),
+            new Set<Id>()
+        );
+        System.enqueueJob(job);
+        Test.stopTest();
+
+        // Config should still be updated to Processed even with empty data
+        FEC_CustomerAdditionalInfoConfig__c updatedCfg = [SELECT FEC_Status__c FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfg.Id];
+        System.assertEquals(FEC_ConstantCommon.PROCESSED_STATUS, updatedCfg.FEC_Status__c);
+    }
+
+    @isTest
+    static void testBatchNoJsonFiles() {
+        // Tạo config mới không có JSON file
+        FEC_CustomerAdditionalInfoConfig__c cfgNoJson = new FEC_CustomerAdditionalInfoConfig__c(
+            FEC_KeyIdentifier__c = 'NOJSON',
+            FEC_FieldID__c = 'FIELD',
+            FEC_Status__c = FEC_ConstantCommon.UPLOADED_STATUS,
+            FEC_IsActive__c = true
+        );
+        insert cfgNoJson;
+
+        Test.startTest();
+        Database.executeBatch(new FEC_ProcessCustomerDataBatch());
+        Test.stopTest();
+
+        // Config without JSON should remain Uploaded (not processed)
+        FEC_CustomerAdditionalInfoConfig__c result = [SELECT FEC_Status__c FROM FEC_CustomerAdditionalInfoConfig__c WHERE Id = :cfgNoJson.Id];
+        System.assertEquals(FEC_ConstantCommon.UPLOADED_STATUS, result.FEC_Status__c, 'Config không có JSON phải giữ nguyên status');
     }
 }

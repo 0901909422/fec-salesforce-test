@@ -505,10 +505,31 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>
@@ -575,10 +596,28 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Relevant_Ticket_ID__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Account_or_Contract_Revelant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Sub_Category_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Sub_Code_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Relevant__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CREATED_DATE</value>

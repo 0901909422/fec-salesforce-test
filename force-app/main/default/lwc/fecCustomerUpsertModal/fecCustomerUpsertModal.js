@@ -47,6 +47,8 @@ import errorCreateTemplate from '@salesforce/label/c.FEC_Error_Create_Template';
 import cannotDeleteFileMsg from '@salesforce/label/c.FEC_Cannot_Delete_File';
 import endDateLessThanTodayMsg from '@salesforce/label/c.End_Date_Less_Than_Today_Validation_Msg';
 import endDateAfterOrEquealStartDateMsg from '@salesforce/label/c.End_Date_After_Or_Equal_Start_Date_Validation_Msg';
+import errorDuplicateKeyInFile from '@salesforce/label/c.FEC_Error_Duplicate_Key_In_File';
+import startDateLessThanTodayMsg from '@salesforce/label/c.FEC_Start_Date_Less_Than_Today';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -82,6 +84,10 @@ export default class FecCustomerUpsertModal extends LightningElement {
         return getTomorrowDate();
     }
 
+    get isUploadButtonDisabled() {
+        return this.isUploadDisabled || this.isLoading;
+    }
+
     @wire(getRecord, { recordId: USER_ID, fields: [USER_NAME_FIELD] })
     wiredUser({ error, data }) {
         if (data) {
@@ -91,7 +97,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         this.localData = {
             Id: this.initialData.Id || null,
             FEC_KeyIdentifier__c: this.initialData.FEC_KeyIdentifier__c || '',
@@ -100,14 +106,22 @@ export default class FecCustomerUpsertModal extends LightningElement {
             FEC_IsActive__c: this.initialData.FEC_IsActive__c !== undefined ? this.initialData.FEC_IsActive__c : false,
             FEC_StartDate__c: this.initialData.FEC_StartDate__c || this.tomorrowDate,
             FEC_EndDate__c: this.initialData.FEC_EndDate__c || null,
+            FEC_Status__c: this.initialData.FEC_Status__c || null
         };
 
         if (this.initialData.Id) {
-            this.fetchExistingFiles(this.initialData.Id);
+            this.isLoading = true;
+            try {
+                await this.fetchExistingFiles(this.initialData.Id);
+            } finally {
+                this.isLoading = false;
+            }
             this.isEditting = true;
         } else {
+            this.existingFiles = [];
             this.isEditting = false;
         }
+        this.pendingFiles = [];
         this.resetFileState();
     }
 
@@ -134,6 +148,15 @@ export default class FecCustomerUpsertModal extends LightningElement {
         const field = event.target.name;
         const val = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
         this.localData = { ...this.localData, [field]: val };
+    }
+
+    // Auto-fill Field Name khi user rời khỏi Field ID input và Field Name rỗng (chỉ create mode)
+    handleFieldIdBlur() {
+        const currentFieldName = this.localData.FEC_FieldName__c;
+        const isFieldNameEmpty = !currentFieldName || !currentFieldName.trim();
+        if (isFieldNameEmpty && this.localData.FEC_FieldID__c) {
+            this.localData = { ...this.localData, FEC_FieldName__c: this.localData.FEC_FieldID__c };
+        }
     }
 
     resetFileState() {
@@ -170,8 +193,8 @@ export default class FecCustomerUpsertModal extends LightningElement {
         const fieldId = this.localData.FEC_FieldID__c;
         const keyId = this.localData.FEC_KeyIdentifier__c;
     
-        const isKeyMatch = fileHeader[0] && String(fileHeader[0]).trim().toUpperCase() === String(keyId).trim().toUpperCase();
-        const isFieldMatch = fileHeader[1] && String(fileHeader[1]).trim().toUpperCase() === String(fieldId).trim().toUpperCase();
+        const isKeyMatch = fileHeader[0] && String(fileHeader[0]).trim().localeCompare(String(keyId).trim(), undefined, { sensitivity: 'accent' }) === 0;
+        const isFieldMatch = fileHeader[1] && String(fileHeader[1]).trim().localeCompare(String(fieldId).trim(), undefined, { sensitivity: 'accent' }) === 0;
     
         if (!isKeyMatch || !isFieldMatch) {
             let errorMsg = '';
@@ -190,6 +213,39 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
     
         return true;
+    }
+
+    /**
+     * Hàm kiểm tra trùng lặp giá trị Key Identifier trong file Excel
+     * @param {Array} lstRows - Danh sách các dòng từ file Excel (row[0] là header)
+     * @throws {Error} Nếu có giá trị Key Identifier trùng lặp
+     */
+    validateDuplicateKeys(lstRows) {
+        const keyMap = new Map();
+        // Bắt đầu từ row 1 (bỏ header)
+        for (let i = 1; i < lstRows.length; i++) {
+            const row = lstRows[i];
+            if (!row || row.length === 0) continue;
+            const keyValue = String(row[0] ?? '').trim();
+            if (!keyValue) continue;
+            
+            if (keyMap.has(keyValue.toUpperCase())) {
+                keyMap.get(keyValue.toUpperCase()).count++;
+            } else {
+                keyMap.set(keyValue.toUpperCase(), { original: keyValue, count: 1 });
+            }
+        }
+
+        const duplicates = [];
+        for (const [, entry] of keyMap) {
+            if (entry.count > 1) {
+                duplicates.push(entry.original);
+            }
+        }
+
+        if (duplicates.length > 0) {
+            throw new Error(formatString(errorDuplicateKeyInFile, duplicates.join(', ')));
+        }
     }
 
     /**
@@ -259,6 +315,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
             return;
         }
 
+        const startDate = this.localData.FEC_StartDate__c;
+        const today = new Date().toISOString().split('T')[0];
+        if (startDate && startDate < today) {
+            this.showToast(FAIL_TITLE, startDateLessThanTodayMsg, 'error');
+            return;
+        }
+
         const endDate = this.localData.FEC_EndDate__c;
         if (endDate && endDate < this.tomorrowDate) {
             this.showToast(FAIL_TITLE, endDateLessThanTodayMsg, 'error');
@@ -315,16 +378,12 @@ export default class FecCustomerUpsertModal extends LightningElement {
      */
     processExcelFile(file) {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            // Đọc dưới dạng DataURL để lấy Base64 trước
-            reader.onload = (e) => {
+            // Đọc file 2 lần: ArrayBuffer cho SheetJS, DataURL cho base64 upload
+            const readerBuffer = new FileReader();
+            readerBuffer.onload = (bufferEvent) => {
                 try {
-                    const base64WithHeader = e.target.result;
-                    const base64Data = base64WithHeader.split(',')[1]; // Lấy phần data sau dấu phẩy
-    
-                    // Chuyển từ base64 sang ArrayBuffer để SheetJS xử lý
-                    const data = new Uint8Array(atob(base64Data).split("").map(c => c.charCodeAt(0)));
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const arrayBuffer = bufferEvent.target.result;
+                    const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', cellDates: true });
                     
                     if (!workbook || !workbook.SheetNames.length) {
                         throw new Error(errorFileInvalid);
@@ -333,20 +392,30 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     
-                    // Validate Header
+                    // Validate Header — dùng localeCompare cho tiếng Việt
                     this.validateFileHeader(rawRows, file.name);
-    
-                    // Trả về tất cả kết quả xử lý
-                    resolve({
-                        jsonString: JSON.stringify(rawRows),
-                        base64Data: base64Data
-                    });
+
+                    // Validate duplicate Key Identifier values
+                    this.validateDuplicateKeys(rawRows);
+
+                    // Đọc base64 riêng cho upload lên server
+                    const readerBase64 = new FileReader();
+                    readerBase64.onload = (base64Event) => {
+                        const base64WithHeader = base64Event.target.result;
+                        const base64Data = base64WithHeader.split(',')[1];
+                        resolve({
+                            jsonString: JSON.stringify(rawRows),
+                            base64Data: base64Data
+                        });
+                    };
+                    readerBase64.onerror = (err) => reject(err);
+                    readerBase64.readAsDataURL(file);
                 } catch (err) {
                     reject(err);
                 }
             };
-            reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(file); // Đọc 1 lần lấy DataURL (Base64)
+            readerBuffer.onerror = (err) => reject(err);
+            readerBuffer.readAsArrayBuffer(file);
         });
     }
 
@@ -436,22 +505,22 @@ export default class FecCustomerUpsertModal extends LightningElement {
         return this.existingFiles ? this.existingFiles : [];
     }
 
-    fetchExistingFiles(recordId) {
-        getRelatedFiles({ recordId: recordId })
-            .then(result => {
-                this.existingFiles = result.map(file => ({
-                        id: file.id,
-                        name: file.name,
-                        downloadUrl: `/sfc/servlet.shepherd/document/download/${file.id}`,
-                        uploadedBy: file.uploadedBy,
-                        uploadedTime: formatDateDDMMYYYY(file.uploadedTime),
-                        status: file.status,
-                        isProcessing: file.status === 'Uploaded'
-                    }));
-            })
-            .catch(error => {
-                console.error('### FEC_ERROR fetchFiles:', error);
-            });
+    async fetchExistingFiles(recordId) {
+        try {
+            const result = await getRelatedFiles({ recordId: recordId });
+            this.existingFiles = result.map(file => ({
+                id: file.id,
+                name: file.name,
+                downloadUrl: `/sfc/servlet.shepherd/document/download/${file.id}`,
+                uploadedBy: file.uploadedBy,
+                uploadedTime: formatDateDDMMYYYY(file.uploadedTime),
+                status: file.status,
+                isProcessing: file.status === 'Uploaded'
+            }));
+        } catch (error) {
+            console.error('### FEC_ERROR fetchFiles:', error);
+            this.existingFiles = [];
+        }
     }
 
     showToast(title, message, variant) {
