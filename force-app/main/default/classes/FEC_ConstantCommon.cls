@@ -519,6 +519,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String HTML_TAG_REGEX = '<[^>]+>';
     public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
+    public static final String NO_MATCH = 'No match';
+    public static final String SKIP_ITEM = 'Skip item (null/blank)';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';
