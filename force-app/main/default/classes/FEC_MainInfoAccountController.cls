@@ -552,7 +552,7 @@ public without sharing class FEC_MainInfoAccountController {
         if (emeaRes != null) {
             localUse = emeaRes.localUseInd;
         }
-        update new FEC_Customer_History__c(
+        FEC_Customer_History__c accountToUpdate = new FEC_Customer_History__c(
             Id = accountId,
             FEC_Account_Number__c = m != null ? m.AccountNumber : null,
             FEC_Contract_Number__c = m != null ? m.ContractNumber : null,
@@ -583,7 +583,6 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Scheme_ID__c      = a != null ? a.SchemeId : null,
             FEC_Scheme_Desc__c    = a != null ? a.SchemeDesc : null,
             /* ===== CARD STATUS ===== */
-            FEC_Block_Code__c = m != null ? m.BlockCode: null,
             FEC_Block_Date__c   = m != null ? m.BlckDate : null,
             //FEC_Blocked_By__c = m
             FEC_Card_Activation_Status__c = m != null ? FEC_CommonUltils.checkActiveAndInacive(m.ActivatedFlag) : null,
@@ -592,6 +591,11 @@ public without sharing class FEC_MainInfoAccountController {
             FEC_Local_Use__c = localUse
             /* ===== DEBT SALE ===== */
         );
+        // Do not clear existing block code on page reload when upstream API omits/returns blank value.
+        if (m != null && String.isNotBlank(m.BlockCode)) {
+            accountToUpdate.FEC_Block_Code__c = m.BlockCode;
+        }
+        update accountToUpdate;
     } 
 
     private static void updateAccountFromRefreshAPI(
@@ -619,7 +623,7 @@ public without sharing class FEC_MainInfoAccountController {
             blockDate2 = emeaRes.dtBlkCd2;
 
             if (emeaRes.warnCodes != null && !emeaRes.warnCodes.isEmpty()) {
-                warningCode = emeaRes.warnCodes[0];
+                warningCode = String.join(emeaRes.warnCodes, ' ');
             }
         }
 
@@ -627,13 +631,50 @@ public without sharing class FEC_MainInfoAccountController {
 
         FEC_MCMSCARDTOCARDINQEMEA.OutputData data;
 
+        // ===================== 1. LẤY CARD LOCAL =====================
+        FEC_Customer_History__c acc = [
+            SELECT FEC_Card_Number__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
+
+        String last4 = null;
+        if (String.isNotBlank(acc.FEC_Card_Number__c)) {
+            last4 = acc.FEC_Card_Number__c.trim().right(4);
+        }
+
+
         if (mcms != null
             && mcms.VMXMsgOut != null
             && mcms.VMXMsgOut.OUTPUT_AREA != null
             && mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA != null
             && !mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA.isEmpty()) {
 
-            data = mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA[0];
+           for (FEC_MCMSCARDTOCARDINQEMEA.OutputData item 
+                : mcms.VMXMsgOut.OUTPUT_AREA.OUTPUT_DATA) {
+
+                if (String.isNotBlank(item.CARD_NBR) && last4 != null) {
+
+                    String cardNbr = item.CARD_NBR.trim();
+
+                    String cardLast4 = cardNbr.length() >= 4 
+                        ? cardNbr.right(4) 
+                        : cardNbr;
+
+                    if (cardLast4 == last4) {
+
+                        data = item;
+                        break;
+
+                    } else {
+                        System.debug(FEC_ConstantCommon.NO_MATCH);
+                    }
+
+                } else {
+                    System.debug(FEC_ConstantCommon.SKIP_ITEM);
+                }
+            }
         }
 
         Date cardBlockDate;

@@ -77,19 +77,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
             System.debug('### GET LOAN SEC INFO ERROR: ' + e.getMessage());
         }
 
-        String productCodeFromCard = null;
-        try {
-            FEC_GetCardBasicInfo.ResponseWrapper cardRes = FEC_GetCardBasicInfo.callGetCardBasicInfo(
-                transId, FEC_ConstantCommon.REQUESTOR_CRM, dateTimeStr, accountNumber
-            );
-            if (cardRes?.CardBasicInfo?.MainCard != null) {
-                productCodeFromCard = cardRes.CardBasicInfo.MainCard.Product;
-            }
-        } catch (Exception e) {
-            System.debug('### GET CARD BASIC INFO (Product Code) ERROR: ' + e.getMessage());
-        }
-
-        saveApiDataToCustomerHistory(c.FEC_Account_or_Contract__c, loanResponse, schemeID, schemeDesc, installmentsRemaining, productCodeFromCard);
+        saveApiDataToCustomerHistory(c.FEC_Account_or_Contract__c, loanResponse, schemeID, schemeDesc, installmentsRemaining);
     }
 
     /** Sync API rồi load từ DB (gọi mỗi khi load trang, giống loadSecondaryAccount / getSectionData). */
@@ -172,8 +160,7 @@ public with sharing class FEC_MainInfoLoanAccountController {
         FEC_GetLoanBasicInfo.ResponseWrapper loanResponse,
         String schemeID,
         String schemeDesc,
-        Integer installmentsRemaining,
-        String productCodeFromCard
+        Integer installmentsRemaining
     ) {
         if (customerHistoryId == null || loanResponse?.LoanBasicInfo == null) {
             return;
@@ -197,10 +184,8 @@ public with sharing class FEC_MainInfoLoanAccountController {
             rec.FEC_Company_Name__c     = loan.CompanyName;
         }
 
-        /* Product Code chỉ lấy từ GetCardBasicInfo → FEC_Customer_History__c.FEC_Product_Code__c */
-        rec.FEC_Product_Code__c = productCodeFromCard;
-
         if (product != null) {
+            rec.FEC_Product_Code__c               = product.Product;
             rec.FEC_Charge_Off_Date__c            = product.ChargeOffDate;
             rec.FEC_Rate__c                       = product.Rate;
             rec.FEC_Account_Status_Change_Date__c = product.ClosureDate;
