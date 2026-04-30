@@ -536,7 +536,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     return [...pendingList, vendorOption, ...bottomList];
   }
 
-  draftKey = 'case-draft';
+  /** Mỗi Case một key — tránh tab Case khác ghi đè / xóa draft khi đổi tab Console. */
+  get draftStorageKey() {
+    return this.recordId ? `fec_case_business_draft_${this.recordId}` : "fec_case_business_draft";
+  }
   handleChange(event) {
     const fieldName = event.target.name;
     const value = event.detail.value;
@@ -971,7 +974,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._boundHandleIppClosureSelection,
       );
     }
-    localStorage.removeItem(this.draftKey);
+    localStorage.removeItem(this.draftStorageKey);
   }
 
   _maskDisplayPhone(raw) {
@@ -1275,6 +1278,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
+            caseId: this.recordId,
             productTypeId: productTypeId,
             categoryId: categoryId,
             subCategoryId: subCategoryId,
@@ -3026,7 +3030,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   applyDraft() {
-    const draft = JSON.parse(localStorage.getItem(this.draftKey));
+    const draft = JSON.parse(localStorage.getItem(this.draftStorageKey));
     if (!draft || !this.business) return;
     this.business.sectionlst.forEach(section => {
       section.subSectionlst.forEach(sub => {
@@ -3046,10 +3050,10 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   setDraft(objId, fieldName, value) {
-    let draft = JSON.parse(localStorage.getItem(this.draftKey)) || {};
+    let draft = JSON.parse(localStorage.getItem(this.draftStorageKey)) || {};
     const key = objId + '_' + fieldName;
     draft[key] = value;
-    localStorage.setItem(this.draftKey, JSON.stringify(draft));
+    localStorage.setItem(this.draftStorageKey, JSON.stringify(draft));
   }
   //Thangtv update logic remove routing action Reject, Cancel after run API success
   removeRoutingActions(actionsToRemove = []) {

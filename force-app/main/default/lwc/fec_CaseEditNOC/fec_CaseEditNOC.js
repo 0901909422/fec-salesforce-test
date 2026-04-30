@@ -261,6 +261,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleCaseNOCMessage(message) {
     if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
 
     const accountType = message.accountType;
     const isInternalType = accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
@@ -337,6 +340,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   async handlePublishMessageChanel() {
     const payload = {
+      caseId: this.recordId,
       productTypeId: this.productTypeSelectedId,
       categoryId: this.categorySelectedId,
       subCategoryId: this.subCategorySelectedId,
