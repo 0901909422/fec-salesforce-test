@@ -268,7 +268,7 @@
         <members>FEC_LBL_Payment_Method</members>
         <members>FEC_LBL_Payment_Method_Bank_Transfer</members>
         <members>FEC_LBL_Payment_Method_Other_Channels</members>
-        <members>FEC_LBL_No_Payment_History_Found</members>
+        <members>FEC_Common_No_Results_Label</members>
         <members>FEC_LBL_Bill_Date</members>
         <members>FEC_LBL_Bill_Amount</members>
         <members>FEC_LBL_Excess_Amount</members>

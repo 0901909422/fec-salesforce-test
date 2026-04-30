@@ -111,7 +111,7 @@
                                 </c-fec_-related-list-paging>
                             </template>
                             <template if:false={hasSchedules}>
-                                <div class="slds-text-align_center slds-p-around_medium">
+                                <div class="ipp-empty-state">
                                     <p>{customLabel.noIPPScheduleDataLabel}</p>
                                 </div>
                             </template>
@@ -246,7 +246,7 @@
 
             <!-- No data message -->
             <template if:false={hasData}>
-                <div class="slds-text-align_center slds-p-around_large">
+                <div class="ipp-empty-state">
                     <p>{customLabel.noDataToDisplayLabel}</p>
                 </div>
             </template>

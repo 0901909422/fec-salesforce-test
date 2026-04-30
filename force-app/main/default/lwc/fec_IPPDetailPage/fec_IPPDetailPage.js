@@ -22,8 +22,7 @@ import TSA_NAME_LABEL from '@salesforce/label/c.FEC_TSA_Name_Label';
 import ORIGINATION_CHANNEL_LABEL from '@salesforce/label/c.FEC_Origination_Channel_Label';
 import DISBURSEMENT_CHANNEL_LABEL from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
-import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 import FEC_IPP_Label from '@salesforce/label/c.FEC_IPP_Label';
 import FEC_Details_Label from '@salesforce/label/c.FEC_Details_Label';
@@ -91,8 +90,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             tsaNameLabel: TSA_NAME_LABEL,
             originationChannelLabel: ORIGINATION_CHANNEL_LABEL,
             disbursementChannelLabel: DISBURSEMENT_CHANNEL_LABEL,
-            noIPPScheduleDataLabel: NO_IPP_SCHEDULE_DATA_LABEL,
-            noDataToDisplayLabel: NO_DATA_TO_DISPLAY_LABEL
+            noIPPScheduleDataLabel: FEC_Common_No_Results_Label,
+            noDataToDisplayLabel: FEC_Common_No_Results_Label
         };
     }
 
