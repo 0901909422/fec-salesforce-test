@@ -1,7 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { CurrentPageReference } from 'lightning/navigation';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
 import refreshIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.refreshIPPScheduleData';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
@@ -45,6 +44,10 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     // Loading state
     isLoading = true;
+
+    // Error states for section-level API failure display
+    hasIPPScheduleError = false;
+    hasSalesInfoError = false;
     
     // Help text map for field inline help (giống IPPDetails / Card Payment)
     helpTextMap = {};
@@ -130,6 +133,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             this.updateServiceConsoleTab();
             return;
         }
+        this.hasIPPScheduleError = false;
+        this.hasSalesInfoError = false;
         refreshIPPScheduleData({ ippId: this.recordId })
             .then(data => {
                 console.log('[IPPDetailPage] refreshIPPScheduleData response:', {
@@ -202,19 +207,17 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
                     };
                 }
+                this.hasIPPScheduleError = false;
+                this.hasSalesInfoError = false;
                 this.updateServiceConsoleTab();
                 this.isLoading = false;
             })
-            .catch(error => {
+            .catch(() => {
                 this.ippSchedules = [];
+                this.hasIPPScheduleError = true;
+                this.hasSalesInfoError = true;
                 this.isLoading = false;
                 this.updateServiceConsoleTab();
-                const msg = (error && error.body && error.body.message) ? error.body.message : (error.message || String(error));
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Không tải được IPP Schedule',
-                    message: msg,
-                    variant: 'error'
-                }));
             });
     }
     
@@ -292,6 +295,26 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     get hasSchedules() {
         return this.ippSchedules && this.ippSchedules.length > 0;
+    }
+
+    get hasSalesInfoData() {
+        if (!this.ippRecord || !this.hasSchedules) {
+            return false;
+        }
+
+        const salesValues = [
+            this.ippRecord.applicationId,
+            this.ippRecord.ccCode,
+            this.ippRecord.ccName,
+            this.ippRecord.dsaCode,
+            this.ippRecord.dsaName,
+            this.ippRecord.tsaCode,
+            this.ippRecord.tsaName,
+            this.ippRecord.originationChannel,
+            this.ippRecord.disbursementChannel
+        ];
+
+        return salesValues.some(value => value !== null && value !== undefined && String(value).trim() !== '');
     }
 
     get schedulePageSize() {
