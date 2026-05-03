@@ -3,6 +3,10 @@
     <description>Channel for FEC Case Notification</description>
     <isExposed>true</isExposed>
     <lightningMessageFields>
+        <description>Case Id</description>
+        <fieldName>caseId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
         <description>Product Type Id</description>
         <fieldName>productTypeId</fieldName>
     </lightningMessageFields>
