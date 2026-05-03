@@ -8,8 +8,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Created_On__c,
                FEC_Created_by__c,
                FEC_External_Interaction_ID__c,
-               FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c,
+               FEC_Last_Updated_On_View__c,
+               FEC_Last_Updated_By_View__c,
                FEC_Outcome_Code__c,
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
@@ -111,8 +111,8 @@ public without sharing class FEC_InteractionInforHandler {
         List<Case> caseList = [
         SELECT FEC_Interaction_ID__c,
                FEC_Interaction_Status__c,
-               FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c,
+               FEC_Last_Updated_On_View__c,
+               FEC_Last_Updated_By_View__c,
                FEC_Channel__c,
                FEC_Interaction_Subchannel__c
         FROM Case

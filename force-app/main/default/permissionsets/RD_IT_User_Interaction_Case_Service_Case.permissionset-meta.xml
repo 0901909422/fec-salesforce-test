@@ -591,8 +591,18 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Last_Updated_By_View__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Last_Updated_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Last_Updated_On_View__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2737,4 +2747,4 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-</PermissionSet>
+    </PermissionSet>
