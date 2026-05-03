@@ -834,6 +834,7 @@
     </types>
 	<types>
         <members>Case.Internal_Case_Compact_Layout</members>
+		<members>Case.Customer_Case_Compact</members>
         <name>CompactLayout</name>
     </types>
 	<types>
@@ -1361,6 +1362,8 @@
 		<members>Case.FEC_Is_Test_API__c</members>
 		<members>Case.FEC_Selected_Address__c</members>
 		<members>FEC_Address_Info__c.FEC_Case__c</members>
+		<members>Case.FEC_Last_Updated_By_View__c</members>
+		<members>Case.FEC_Last_Updated_On_View__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1408,6 +1411,7 @@
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
 		<members>FEC_GetCustomerList</members>
+		<members>FEC_InteractionHighlightController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1666,6 +1670,7 @@
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
+		<members>fecInteractionInfo</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
