@@ -16,7 +16,7 @@ public with sharing class FEC_GetInteractionCases {
             'SELECT Id, FEC_ID_Search__c, FEC_Interaction_Status__c, FEC_Created_On__c, ' +
             'FEC_Created_by__c, FEC_Interaction_Duration__c, FEC_Phone_Number__c, ' +
             'FEC_Channel__c, FEC_Interaction_Subchannel__c, FEC_External_Interaction_ID__c, ' +
-            'FEC_Interaction_Email__c, FEC_Last_Updated_On__c, FEC_Last_Updated_By__c ' +
+            'FEC_Interaction_Email__c, FEC_Last_Updated_On_View__c, FEC_Last_Updated_By_View__c ' +
             'FROM Case ' +
             'WHERE RecordType.DeveloperName IN :rtNames ' +
             //'AND (IsClosed = false OR ClosedDate >= :archiveThreshold) ' +
@@ -46,8 +46,8 @@ public with sharing class FEC_GetInteractionCases {
             row.interactionSubChannel = c.FEC_Interaction_Subchannel__c;
             row.externalInteractionId = c.FEC_External_Interaction_ID__c;
             row.interactionEmail = c.FEC_Interaction_Email__c;
-            row.lastUpdatedOn = c.FEC_Last_Updated_On__c;
-            row.lastUpdatedBy = c.FEC_Last_Updated_By__c;
+            row.lastUpdatedOn = c.FEC_Last_Updated_On_View__c;
+            row.lastUpdatedBy = c.FEC_Last_Updated_By_View__c;
             rows.add(row);
         }
         return rows;

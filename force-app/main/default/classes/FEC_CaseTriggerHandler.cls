@@ -7,6 +7,7 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
+    public static Boolean isSystemUpdate = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -112,6 +113,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
         if (!FEC_GetNextWorkController.isGetNextWork) {
@@ -988,6 +990,25 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
+
+    private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> caseUpdates = new List<Case>();
+        for (Case c : newCases) {
+            Case oldCase = oldMap.get(c.Id);
+            if (isSystemUpdate || c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                continue;
+            }
+            Case caseUpdate = new Case(
+                Id = c.Id,
+                FEC_Last_Updated_By_View__c = c.FEC_Last_Updated_By__c,
+                FEC_Last_Updated_On_View__c = c.FEC_Last_Updated_On__c
+            );
+            caseUpdates.add(caseUpdate);
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
         }
     }
 }
