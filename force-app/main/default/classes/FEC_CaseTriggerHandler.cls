@@ -995,7 +995,6 @@ public without sharing class FEC_CaseTriggerHandler {
 
     private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
         List<Case> caseUpdates = new List<Case>();
-        Formula.recalculateFormulas(newCases);
         for (Case c : newCases) {
             Case oldCase = oldMap.get(c.Id);
             if (isSystemUpdate || c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
