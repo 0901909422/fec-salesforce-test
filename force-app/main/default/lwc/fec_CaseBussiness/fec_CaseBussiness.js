@@ -926,13 +926,29 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business = { ...this.business };
   }
 
+  //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+  _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
+    const master =
+      typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
+    if (
+      this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
+      (componentName === "fec_IPPConversionRetailForm" ||
+        componentName === "fec_CardClosureRefundForm")
+    ) {
+      return false;
+    }
+    return master;
+  }
+
   _updateDynCmpIsEditFlags() {
     if (!this.business?.sectionlst) return;
     this.business.sectionlst.forEach((section) => {
       section.resolvedComponentlst?.forEach((d) => {
         if (!d) return;
-        const master =
-          typeof d.fecMasterDataSettingIsEdit === "boolean" ? d.fecMasterDataSettingIsEdit : true;
+        const master = this._resolveDynCmpMasterIsEdit(
+          d.componentName,
+          d.fecMasterDataSettingIsEdit,
+        );
         d.isEdit = this._isEdit && master;
         console.log(`[DEBUG][fec_CaseBussiness] _updateDynCmpIsEditFlags — component="${d.componentName}", _isEdit=${this._isEdit}, master=${master}, finalIsEdit=${d.isEdit}`);
       });
@@ -2918,6 +2934,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (!name) return;
 
         const fecMasterDataSettingIsEdit = meta.fecMasterDataSettingIsEdit;
+        //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+        const masterResolved = this._resolveDynCmpMasterIsEdit(name, fecMasterDataSettingIsEdit);
 
         const loader = DYNAMIC_COMPONENT_REGISTRY[name];
         if (!loader) {
@@ -2942,13 +2960,13 @@ export default class Fec_CaseBussiness extends LightningElement {
                 SLDS_MEDIUM_SIZE_OF_12[12]) +
               " slds-m-top_medium";
             const fecSubSectionOrder = meta.order;
-            console.log(`[DEBUG][fec_CaseBussiness] _resolveComponentlst — component="${name}", _isEdit=${this._isEdit}, fecMasterDataSettingIsEdit=${fecMasterDataSettingIsEdit}, finalIsEdit=${this._isEdit && fecMasterDataSettingIsEdit}`);
+            console.log(`[DEBUG][fec_CaseBussiness] _resolveComponentlst — component="${name}", _isEdit=${this._isEdit}, fecMasterDataSettingIsEdit=${fecMasterDataSettingIsEdit}, finalIsEdit=${this._isEdit && masterResolved}`);
             slots[idx] = {
               key: `${name}-${idx}`,
               ctor: mod.default,
               componentName: name,
               fecMasterDataSettingIsEdit,
-              isEdit: this._isEdit && fecMasterDataSettingIsEdit,
+              isEdit: this._isEdit && masterResolved,
               /** Thứ tự merge: cùng nguồn FEC_Sub_Section_Order__c (Apex → meta.order). */
               sortOrder: fecSubSectionOrder,
               fecSubSectionOrder,
