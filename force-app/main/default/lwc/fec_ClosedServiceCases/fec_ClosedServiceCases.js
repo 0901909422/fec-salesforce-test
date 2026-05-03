@@ -111,8 +111,8 @@ export default class Fec_ClosedServiceCases extends NavigationMixin(LightningEle
       { label: this.customLabel.interactionSubChannelLabel, fieldName: 'interactionSubChannel', fieldApiName: 'FEC_Interaction_Subchannel__c', type: 'text' },
       { label: this.customLabel.caseCreatedOnLabel, fieldName: 'caseCreatedOnFormatted', fieldApiName: 'FEC_Case_Created_On__c', type: 'text', cellAlign: 'center' },
       { label: this.customLabel.caseCreatedByLabel, fieldName: 'caseCreatedBy', fieldApiName: 'FEC_Case_Created_By__c', type: 'text' },
-      { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On__c', type: 'text', cellAlign: 'center' },
-      { label: this.customLabel.lastUpdatedByLabel, fieldName: 'lastUpdatedBy', fieldApiName: 'FEC_Last_Updated_By__c', type: 'text' },
+      { label: this.customLabel.lastUpdatedOnLabel, fieldName: 'lastUpdatedOnFormatted', fieldApiName: 'FEC_Last_Updated_On_View__c', type: 'text', cellAlign: 'center' },
+      { label: this.customLabel.lastUpdatedByLabel, fieldName: 'lastUpdatedBy', fieldApiName: 'FEC_Last_Updated_By_View__c', type: 'text' },
     ];
   }
 
