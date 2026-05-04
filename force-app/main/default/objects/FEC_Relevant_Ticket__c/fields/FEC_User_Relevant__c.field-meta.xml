@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_User_Relevant__c</fullName>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.Owner:User.Alias</formula>
+    <formula>LEFT(CreatedBy.Email, FIND(&quot;@&quot;, CreatedBy.Email) - 1)</formula>
     <label>User</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

@@ -11575,7 +11575,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -13796,6 +13796,13 @@
         <value>Relevant Ticket was created successfully.</value>
     </labels>
     <labels>
+        <fullName>FEC_RelevantTicket_Cannot_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket cannot delete</shortDescription>
+        <value>Không thể xóa Ticket đã liên kết</value>
+    </labels>
+    <labels>
         <fullName>FEC_Chat_Conversations_Label</fullName>
         <categories>FEC_ChatHub</categories>
         <language>en_US</language>
@@ -13819,7 +13826,7 @@
         <shortDescription>Chat - Save failed error message</shortDescription>
         <value>Save failed. Please try again.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_Account_Contract_Number</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -14238,7 +14245,7 @@
         <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
         <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
         <language>en_US</language>
         <protected>false</protected>

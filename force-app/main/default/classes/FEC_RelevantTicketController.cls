@@ -29,6 +29,24 @@ public with sharing class FEC_RelevantTicketController {
         return rt.Id;
     }
 
+    // tungnm37 thêm: không cho xóa ticket đã liên kết, hiển thị cảnh báo
+    @AuraEnabled
+    public static void deleteRelevantTicket(String ticketId) {
+        if (String.isBlank(ticketId)) return;
+        List<FEC_Relevant_Ticket__c> tickets = [
+            SELECT Id, FEC_Related_To__c, FEC_Interaction__c
+            FROM FEC_Relevant_Ticket__c
+            WHERE Id = :ticketId LIMIT 1
+        ];
+        if (tickets.isEmpty()) return;
+        // Không cho xóa nếu đã có liên kết (cả 2 chiều đều có giá trị)
+        FEC_Relevant_Ticket__c ticket = tickets[0];
+        if (String.isNotBlank(ticket.FEC_Related_To__c) && String.isNotBlank(ticket.FEC_Interaction__c)) {
+            throw new AuraHandledException(System.Label.FEC_RelevantTicket_Cannot_Delete);
+        }
+        delete ticket;
+    }
+
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getCaseById(String caseId) {
         if (String.isBlank(caseId)) return null;
