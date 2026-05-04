@@ -125,6 +125,7 @@
 		<members>FEC_MainInfoLoanAccountController</members>
 		<members>FEC_GetInteractionCases</members>
 		<members>FEC_InteractionHighlightController</members>
+		<members>FEC_RepaySchedPayHistController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -987,6 +988,7 @@
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
 		<members>FEC_ProcessAction</members>
+		<members>FEC_Case_NOC</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
