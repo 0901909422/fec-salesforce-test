@@ -508,6 +508,7 @@
         <members>FEC_Common_No_Results_Label</members>
         <members>FEC_MSG_No_Pending_Disbursement</members>
         <members>FEC_LBL_Select_Contract_Number</members>
+        <members>FEC_LBL_Selected_Contract_Number</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
