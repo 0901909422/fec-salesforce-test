@@ -307,7 +307,7 @@ public with sharing class FEC_ChatHubCaseController {
             Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME).getRecordTypeId();
             Case interactionCase = new Case();
             interactionCase.RecordTypeId = interactionRecordTypeId;
-            
+            interactionCase.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         // ---------------------------
             // CHANNEL / STATUS
         // ---------------------------
@@ -318,10 +318,10 @@ public with sharing class FEC_ChatHubCaseController {
 
             interactionCase.FEC_Other_Subchannel__c = dto.subChannel == 'Other' ? dto.otherSubChannel : null;
             interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
-            if (dto.channel == 'Chat') {
-                interactionCase.Status = 'Pending';
+            if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
+                interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
             } else {
-                interactionCase.Status = 'Open';
+                interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
             }
             if(dto.campaignName != null) {
                 interactionCase.FEC_Genesys_campaign_Name__c = dto.campaignName;

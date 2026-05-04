@@ -359,8 +359,6 @@
         <members>FEC_Early_Termination_Label</members>
         <members>FEC_Overdue_Label</members>
         <members>FEC_Fee_Charge_Label</members>
-        <members>FEC_Termination_No_Fee_Charge_Data</members>
-        <members>FEC_Termination_No_Data</members>
         <members>FEC_Termination_Type_Label</members>
         <members>FEC_Termination_Assessed_Amount_Label</members>
         <members>FEC_Termination_Collected_Amount_Label</members>
@@ -441,7 +439,6 @@
         <members>FEC_Repay_Payment_Amount_Label</members>
         <members>FEC_Repay_Particulars_Label</members>
         <members>FEC_Repay_Payment_Channel_Label</members>
-        <members>FEC_Repay_No_Data_Label</members>
         <members>FEC_Repay_Refresh_Button_Label</members>
         <name>CustomLabel</name>
     </types>
@@ -834,6 +831,7 @@
     </types>
 	<types>
         <members>Case.Internal_Case_Compact_Layout</members>
+		<members>Case.Customer_Case_Compact</members>
         <name>CompactLayout</name>
     </types>
 	<types>
@@ -1361,6 +1359,8 @@
 		<members>Case.FEC_Is_Test_API__c</members>
 		<members>Case.FEC_Selected_Address__c</members>
 		<members>FEC_Address_Info__c.FEC_Case__c</members>
+		<members>Case.FEC_Last_Updated_By_View__c</members>
+		<members>Case.FEC_Last_Updated_On_View__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1408,6 +1408,7 @@
 		<members>FEC_GetCardFinancialTransactions</members>
 		<members>FEC_BlockCodeRoutingService</members>
 		<members>FEC_GetCustomerList</members>
+		<members>FEC_InteractionHighlightController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1634,6 +1635,7 @@
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<members>FEC_Termination_Fee_Charge_Type_Label</members>
+		<members>FEC_Common_No_Results_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -1666,6 +1668,8 @@
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
+		<members>fecInteractionInfo</members>
+		<members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -1782,6 +1786,7 @@
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
 		<members>FEC_ProcessAction</members>
+		<members>FEC_Case_NOC</members>
 		<name>LightningMessageChannel</name>
 	</types>
 	<types>

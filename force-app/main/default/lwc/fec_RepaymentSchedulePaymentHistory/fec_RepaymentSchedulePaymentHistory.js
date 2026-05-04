@@ -29,7 +29,7 @@ import FEC_Repay_Booking_Date_Label from '@salesforce/label/c.FEC_Repay_Booking_
 import FEC_Repay_Payment_Amount_Label from '@salesforce/label/c.FEC_Repay_Payment_Amount_Label';
 import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particulars_Label';
 import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
-import FEC_Repay_No_Data_Label from '@salesforce/label/c.FEC_Repay_No_Data_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
@@ -86,7 +86,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         totalPrincipal: FEC_Repay_Total_Principal_Label,
         totalInterest: FEC_Repay_Total_Interest_Label,
         totalPaymentAmount: FEC_Repay_Total_Payment_Amount_Label,
-        noData: FEC_Repay_No_Data_Label,
+        noData: FEC_Common_No_Results_Label,
         refreshButton: FEC_Repay_Refresh_Button_Label,
     };
 
