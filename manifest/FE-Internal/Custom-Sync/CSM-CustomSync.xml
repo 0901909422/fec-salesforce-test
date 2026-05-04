@@ -57,6 +57,8 @@
         <members>FEC_CustomSyncAllInOneTest</members>  
         <members>FEC_CustomSyncValidator</members>
         <members>FEC_CustomSyncValidatorTest</members>
+        <members>FEC_BatchCustomSyncByIds</members>
+        <members>FEC_BatchCustomSyncByIdsTest</members>
         <name>ApexClass</name>
     </types>
     <types>

@@ -56,3 +56,9 @@ if(!lst.isEmpty()){
     FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync);
     Database.executeBatch(batch,1);
 } 
+
+
+script run Custumsync by Id
+Map<Id,Case> mCase = new Map<Id,Case>([Select id from Case limit 100]);
+FEC_BatchCustomSyncByIds batch = new FEC_BatchCustomSyncByIds('a1FAz000001KdxVMAS', mCase.keyset());
+Database.executeBatch(batch, 10);
