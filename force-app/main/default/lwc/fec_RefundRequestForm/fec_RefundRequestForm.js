@@ -433,9 +433,6 @@ export default class Fec_RefundRequestForm extends LightningElement {
         if (this.isReadOnly) {
             return true;
         }
-        if (!this._shouldRunRefundSave(false)) {
-            return true;
-        }
         return this._performClientSaveValidation(true);
     }
 

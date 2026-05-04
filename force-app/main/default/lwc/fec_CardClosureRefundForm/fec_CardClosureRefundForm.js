@@ -14,6 +14,7 @@ import FEC_LBL_Pending_Disbursement_Disbursed_Amount from '@salesforce/label/c.F
 import FEC_LBL_Pending_Disbursement_Approval_Date from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_Approval_Date';
 import FEC_LBL_Pending_Disbursement_Disbursement_Status from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_Disbursement_Status';
 import FEC_LBL_Pending_Disbursement_CS_Decision from '@salesforce/label/c.FEC_LBL_Pending_Disbursement_CS_Decision';
+import FEC_MSG_No_Pending_Disbursement from '@salesforce/label/c.FEC_MSG_No_Pending_Disbursement';
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
 import { STR_EMPTY, RESULT_ERROR, RESULT_SUCCESS } from 'c/fec_CommonConst';
 
@@ -72,7 +73,8 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
         pendingDisbursementDisbursedAmount: FEC_LBL_Pending_Disbursement_Disbursed_Amount,
         pendingDisbursementApprovalDate: FEC_LBL_Pending_Disbursement_Approval_Date,
         pendingDisbursementStatus: FEC_LBL_Pending_Disbursement_Disbursement_Status,
-        pendingDisbursementCsDecision: FEC_LBL_Pending_Disbursement_CS_Decision
+        pendingDisbursementCsDecision: FEC_LBL_Pending_Disbursement_CS_Decision,
+        noPendingDisbursement: FEC_MSG_No_Pending_Disbursement
     };
 
     pendingColumns = [
@@ -111,11 +113,45 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
             ? SUB_CODE_RC16_01 === parentCode
             : ctx.hideBlockCardBySubCode === true;
         const cardBlocked = ctx.cardBlocked === true;
-        return !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked;
+        return this.hasPendingDisbursementData && !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked;
     }
 
     get blockCardLocked() {
         return this.isSubmitting || this.formLocked || this.isEdit === false;
+    }
+
+    get hasPendingDisbursementData() {
+        const ctx = this.uiContext;
+        if (!ctx) {
+            return false;
+        }
+        if (ctx.pendingApplicationId) {
+            return true;
+        }
+        if (ctx.pendingApplicationStatus) {
+            return true;
+        }
+        if (ctx.pendingDisbursementStatus) {
+            return true;
+        }
+        if (ctx.pendingCsDecision) {
+            return true;
+        }
+        if (ctx.pendingDisbursementApprovalDate != null && ctx.pendingDisbursementApprovalDate !== undefined) {
+            return true;
+        }
+        if (ctx.pendingDisbursedAmount != null && ctx.pendingDisbursedAmount !== undefined) {
+            return true;
+        }
+        return false;
+    }
+
+    get showPendingDisbursementTable() {
+        return !this.uiContextLoading && this.uiContext && this.hasPendingDisbursementData;
+    }
+
+    get showNoPendingDisbursementMessage() {
+        return !this.uiContextLoading && this.uiContext && !this.hasPendingDisbursementData;
     }
 
     get pendingRowData() {
