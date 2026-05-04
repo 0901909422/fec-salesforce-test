@@ -8985,22 +8985,6 @@
         <value>Fee &amp; Charge</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No fee charge data message</shortDescription>
-        <value>No fee charge data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Termination_No_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data message</shortDescription>
-        <value>No data</value>
-    </labels>
-    <labels>
         <fullName>FEC_Termination_Type_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -9639,14 +9623,6 @@
         <protected>false</protected>
         <shortDescription>Payment Channel</shortDescription>
         <value>Payment Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Repay_No_Data_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
-        <value>No data</value>
     </labels>
     <labels>
         <fullName>FEC_Repay_Refresh_Button_Label</fullName>
@@ -13433,6 +13409,20 @@
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
+        <fullName>FEC_BIX_Ingest_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Error</shortDescription>
+        <value>BIX Ingest API call failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BIX_Ingest_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>BIX Ingest Success</shortDescription>
+        <value>BIX Ingest API call succeeded</value>
+    </labels>
+    <labels>
         <fullName>FEC_RESET_PIN_ERROR</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -13652,6 +13642,22 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
         <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Fee_Charge_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type column label for fee/charge row on termination</shortDescription>
+        <value>Interest on Overdue Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Common_No_Results_Label</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty list / table / section (no rows)</shortDescription>
+        <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
         <fullName>FEC_Page_Number_Deals</fullName>
@@ -14007,6 +14013,36 @@
         <protected>false</protected>
         <shortDescription>Promised Repayment Amount</shortDescription>
         <value>Promised Repayment Amount</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
+        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No response from server</shortDescription>
+        <value>No response from server</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unexpected_SOAP_Response</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected SOAP response</shortDescription>
+        <value>Unexpected SOAP response</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unknown Sys.Code</shortDescription>
+        <value>Unknown Sys.Code</value>
     </labels>
     <labels>
         <fullName>FEC_Chat_Customer_Username_Label</fullName>
@@ -14418,5 +14454,141 @@
         <protected>false</protected>
         <shortDescription>Remark column label</shortDescription>
         <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ASSIGNMENT_NOT_FOUND</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment not found</shortDescription>
+        <value>Assignment not found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_DECISION_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision required</shortDescription>
+        <value>Decision is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ESCALATE_NO_MANAGER</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Escalate failed no manager</shortDescription>
+        <value>Escalate failed: Current owner has no manager. Please update user data.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ESCALATE_NO_OWNER</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Escalate failed no owner</shortDescription>
+        <value>Escalate failed: Assignment has no owner.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_INVALID_INPUT</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid input</shortDescription>
+        <value>Invalid input</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_QUEUE_NOT_FOUND</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue not found</shortDescription>
+        <value>Queue not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_TEAM_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team required</shortDescription>
+        <value>Team is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ASSIGNMENT_ID_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Id is required error message</shortDescription>
+        <value>Assignment Id is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_LOAD_ASSIGNMENT_FAILED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed to load assignment list</shortDescription>
+        <value>Failed to load assignments. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_LOAD_REMARK_FAILED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed to load case remarks</shortDescription>
+        <value>Failed to load case remarks. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NO_ACCESS_ASSIGNMENT</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No access to Assignment records</shortDescription>
+        <value>You do not have access to Assignment records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NO_ACCESS_REMARK</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No access to Case Remarks records</shortDescription>
+        <value>You do not have access to Case Remarks records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Routing_Action</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Routing_Action</shortDescription>
+        <value>Assignment Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_List</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_List</shortDescription>
+        <value>Assignment List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Status</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Owner</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Owner</shortDescription>
+        <value>Owner</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Id</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Id</shortDescription>
+        <value>Assignment ID</value>
     </labels>
 </CustomLabels>

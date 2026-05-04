@@ -592,7 +592,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_Last_Updated_By_View__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_Last_Updated_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Last_Updated_On_View__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1994,6 +2004,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Sensitive_Data__c.FEC_Case_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2233,6 +2249,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Assignment_Count__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Card_Type_1__c</field>
         <readable>true</readable>
@@ -2310,11 +2331,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Do_Not_Bother__c.FEC_Action__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Do_Not_Bother__c.FEC_Case__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

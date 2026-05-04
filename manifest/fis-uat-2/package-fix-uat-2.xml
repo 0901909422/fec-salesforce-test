@@ -123,6 +123,9 @@
 		<members>FEC_BlockCodeRoutingService</members>
 		<members>FEC_TerminationLoanController</members>
 		<members>FEC_MainInfoLoanAccountController</members>
+		<members>FEC_GetInteractionCases</members>
+		<members>FEC_InteractionHighlightController</members>
+		<members>FEC_RepaySchedPayHistController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -201,6 +204,10 @@
 		<members>fec_CardInfo</members>
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
+		<members>fec_ClosedServiceCases</members>
+		<members>fec_InteractionCases</members>
+        <members>fec_PendingServiceCases</members>
+        <members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -497,6 +504,8 @@
         <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
+		<members>FEC_Termination_Fee_Charge_Type_Label</members>
+        <members>FEC_Common_No_Results_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -678,6 +687,7 @@
     </types>
 	<types>
         <members>Case.Internal_Case_Compact_Layout</members>
+		<members>Case.Customer_Case_Compact</members>
         <name>CompactLayout</name>
     </types>
     <types>
@@ -888,6 +898,8 @@
 		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
+		<members>Case.FEC_Last_Updated_By_View__c</members>
+		<members>Case.FEC_Last_Updated_On_View__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -978,6 +990,7 @@
 		<members>FEC_PinReissue</members>
 		<members>FEC_Case_Notification</members>
 		<members>FEC_ProcessAction</members>
+		<members>FEC_Case_NOC</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
