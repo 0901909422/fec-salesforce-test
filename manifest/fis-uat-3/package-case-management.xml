@@ -70,6 +70,7 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Max__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Min__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
+		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
