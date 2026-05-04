@@ -1,7 +1,7 @@
 1) Open the Setup page >> External Objects >> Choose "AthenaCases"
 >> Buttons, Links, and Actions >> Click Edit "View"
-In "Lightning Experience Override" and "Mobile Override" choose Lightning component.
-In Combobox, choose "c:ArchiveCaseRedirect". Then click Save
+In "Salesforce Classic Override" choose Visualforce page.
+In Combobox, choose "ArchiveCaseRedirect". Then click Save
 
 
 2) Open the Developer Console and run this script to insert the Schedule Job

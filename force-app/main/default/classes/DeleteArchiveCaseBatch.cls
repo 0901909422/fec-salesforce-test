@@ -9,11 +9,9 @@ History
 ------------------------------------------------------------*/
 global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Database.Stateful, Schedulable {
 
-    // Attachment uses Name prefix with custom label = TECH_ATTACHMENT_ARCHIVE_PREFIX.
     // All other objects use IsArchiveTemp__c = true.
     // Deletion order: Case + Attachment first (they reference lookup objects), then lookup objects.
     private static final List<String> DELETION_ORDER = new List<String>{
-        'Attachment',
         'Case',
         'FEC_Actual_Nature_of_Case__c',
         'FEC_Customer_History__c',
@@ -43,10 +41,7 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
         
         String sObjectName = DELETION_ORDER[currentObjectIndex];
         String query;
-        if (sObjectName == 'Attachment') {
-            query = 'SELECT Id FROM Attachment WHERE Name LIKE \'' 
-                + label.TECH_ATTACHMENT_ARCHIVE_PREFIX + '%\'';
-        } else if (sObjectName == 'Case') {
+        if (sObjectName == 'Case') {
             query = 'SELECT Id FROM Case WHERE ArchiveExternalId__c != NULL AND ArchiveExternalId__c != ' 
                         + '\'' + '\'';
             if (listIdArchiveCaseToDeleted.size() > 0) {

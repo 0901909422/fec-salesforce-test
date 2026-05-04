@@ -36,5 +36,5 @@ public with sharing class FEC_MockupEndpoint {
     public static final String ADD_IPP_ENDPOINT_MOCKUP = 'https://159f99a4-6074-434e-94d7-49cf48012dd6.mock.pstmn.io/AddIPP';
     public static final String GET_DISB_INFO_BY_ACCT_ENDPOINT_MOCKUP = 'https://8d4e2c3b-5f6a-47e8-9c01-2b3d4e5f6a7b.mock.pstmn.io';
     public static final String GET_SMS_INFO_FROM_IT_TELCO_ENDPOINT_MOCKUP = 'https://0ad0dbbf-693f-473e-a8db-d69d703f19a2.mock.pstmn.io/SMSLogWS';
-    public static final String GET_CASE_ARCHIVE_ENDPOINT_MOCKUP = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/case-archive?s3Key=salesforce/archive/2026/04/01/case_salesforce.json&source=SALESFORCE';
+
 }

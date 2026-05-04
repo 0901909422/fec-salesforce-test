@@ -53,9 +53,12 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
+        List<Case> listCase = new List<Case>();
+        filterCaseForBeforeInsert(listCase, newCases);
+
         setEmail2CaseChannelBeforeInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
-        generateFECIdSearch(newCases);
+        generateFECIdSearch(listCase);
         updateCaseParticipantsOnInsert(newCases);
         assignEntitlement(newCases);
                 
@@ -988,6 +991,14 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
+
+    public static void filterCaseForBeforeInsert(List<Case> listCase, List<Case> newCases){
+        for (Case caseIns : newCases) {
+            if (String.isBlank(caseIns.ArchiveExternalId__c)) {
+                listCase.add(caseIns);
+            }
         }
     }
 }

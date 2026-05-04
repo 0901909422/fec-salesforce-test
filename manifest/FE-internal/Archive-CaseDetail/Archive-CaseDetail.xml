@@ -3,10 +3,19 @@
 
     <types>
         <members>Case.ArchiveExternalId__c</members>
-        <members>Case.ArchieveCreatedDate__c</members>
-        <members>Case.ArchieveLastModifiedDate__c</members>
+        <members>Case.ArchiveCreatedDate__c</members>
+        <members>Case.ArchiveLastModifiedDate__c</members>
         <members>Case.FEC_Case_Created_On__c</members>
         <members>Case.FEC_Last_Updated_On__c</members>
+        <members>Case.ArchiveInteractionId__c</members>
+        <members>Case.FEC_Interaction_ID__c</members>
+        <members>Case.ArchiveAttachment__c</members>
+        <members>Case.ArchiveServiceCaseOwner__c</members>
+        <members>Case.FEC_Service_Case_Owner__c</members>
+        <members>Case.ArchiveCaseCreatedBy__c</members>
+        <members>Case.FEC_Case_Created_By__c</members>
+        <members>Case.ArchiveLastUpdatedBy__c</members>
+        <members>Case.FEC_Last_Updated_By__c</members>
         <members>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</members>
         <members>FEC_Customer_History__c.IsArchiveTemp__c</members>
         <members>FEC_Product_Type__c.IsArchiveTemp__c</members>
@@ -23,14 +32,23 @@
         <members>DeleteArchiveCaseBatch</members>
         <members>DeleteArchiveCaseBatch_Test</members>
         <members>FEC_MockupEndpoint</members>
-        <members>ArchiveCaseAttachmentQueueable</members>
-        <members>ArchiveCaseAttachmentQueueable_Test</members>
+        <members>ArchiveInteractionCaseController</members>
+        <members>ArchiveInteractionCaseRedirectCtrl_Test</members>
+        <members>FEC_CaseTriggerHandler</members>
+        <members>ArchiveCaseAttachmentController</members>
+        <members>ArchiveCaseAttachmentController_Test</members>
         <name>ApexClass</name>
     </types>
 
     <types>
         <members>ArchiveCaseRedirect</members>
-        <name>AuraDefinitionBundle</name>
+        <members>ArchiveInteractionCaseRedirect</members>
+        <name>ApexPage</name>
+    </types>
+
+    <types>
+        <members>fec_ArchiveAttachments</members>
+        <name>LightningComponentBundle</name>
     </types>
 
     <types>
@@ -44,6 +62,17 @@
         <members>TECH_ATTACHMENT_ARCHIVE_PREFIX</members>
         <members>TECH_API_GET_ARCHIVE_ATTACHMENT</members>
         <name>CustomLabel</name>
+    </types>
+
+     <types>
+        <members>fec_ArchiveAttachments</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <types>
+        <members>FEC_API_Config.FEC_Get_Archive_Detail_Case</members>
+        <members>FEC_API_Config.FEC_Get_Archive_Attachment</members>
+        <name>CustomMetadata</name>
     </types>
 
     <types>

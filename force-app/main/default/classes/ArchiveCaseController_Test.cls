@@ -18,7 +18,9 @@ global with sharing class ArchiveCaseController_Test {
         insert localCase;
         
         Test.startTest();
-            ArchiveCaseController.getOrCreateCase('test');
+            ApexPages.StandardController stdController = new ApexPages.StandardController(fakeRecord);
+            ArchiveCaseController controller = new ArchiveCaseController(stdController);
+            PageReference result = controller.fetchAndRedirect();
         Test.stopTest();
     }
 
@@ -453,7 +455,9 @@ global with sharing class ArchiveCaseController_Test {
         ArchiveCaseController.mockExternalRecords = new List<AthenaCases__x>{ fakeExternalRecord };
         
         Test.startTest();
-            ArchiveCaseController.getOrCreateCase('x00123456789ABC');
+            ApexPages.StandardController stdController = new ApexPages.StandardController(fakeExternalRecord);
+            ArchiveCaseController controller = new ArchiveCaseController(stdController);
+            PageReference result = controller.fetchAndRedirect();
         Test.stopTest();
     }
 }
