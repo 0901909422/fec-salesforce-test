@@ -994,6 +994,14 @@ public without sharing class FEC_CaseTriggerHandler {
         }
     }
 
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Filter Case
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/04/07      Thanh Van           Init
+    ------------------------------------------------------------*/
     public static void filterCaseForBeforeInsert(List<Case> listCase, List<Case> newCases){
         for (Case caseIns : newCases) {
             if (String.isBlank(caseIns.ArchiveExternalId__c)) {
