@@ -506,6 +506,9 @@
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<members>FEC_Termination_Fee_Charge_Type_Label</members>
         <members>FEC_Common_No_Results_Label</members>
+        <members>FEC_MSG_No_Pending_Disbursement</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
+        <members>FEC_LBL_Selected_Contract_Number</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -859,17 +862,16 @@
 		<members>FEC_Customer_History__c.FEC_Overdue_Penalty__c</members>
 		<members>FEC_Customer_History__c.FEC_Status_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Original_MRC_Receiver__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Outstanding_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Penalty_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_Repayment_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Installments_Overdue__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Pending_Penal_Interest__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Remark__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Receiver__c</members>
 		<members>FEC_Customer_History__c.FEC_Current_Balance_Principal__c</members>
 		<members>FEC_Customer_History__c.FEC_Area__c</members>
@@ -882,11 +884,8 @@
 		<members>FEC_Customer_History__c.FEC_Total_Overdue_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Interest_On_Termination__c</members>
 		<members>FEC_Customer_History__c.FEC_Modified_Date__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Installment_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
 		<members>FEC_Contact_List__c.FEC_Temporary_Email__c</members>
@@ -900,6 +899,7 @@
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Last_Updated_By_View__c</members>
 		<members>Case.FEC_Last_Updated_On_View__c</members>
+		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
