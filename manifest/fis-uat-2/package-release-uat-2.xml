@@ -276,29 +276,6 @@
 
 	<!-- cus360 info -->
 	<types>
-        <members>FEC_Termination__c.FEC_Assessed_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Case__c</members>
-        <members>FEC_Termination__c.FEC_Collected_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Current_Balance_Principal__c</members>
-        <members>FEC_Termination__c.FEC_Excess_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Installments_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Interest_On_Termination__c</members>
-        <members>FEC_Termination__c.FEC_Interest_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Interest_on_Overdue_Interest__c</members>
-        <members>FEC_Termination__c.FEC_LPI_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Outstanding_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Overdue_Penalty__c</members>
-        <members>FEC_Termination__c.FEC_Penalty_Fee_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Pending_Penal_Interest__c</members>
-        <members>FEC_Termination__c.FEC_Pre_Payment_Penalty__c</members>
-        <members>FEC_Termination__c.FEC_Principal_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Repayment_Fee_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Termination_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Total_Installment_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Total_Interest_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Total_Overdue_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Total_Principal_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Waived_Amount__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Case__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_EMI__c</members>
@@ -315,12 +292,10 @@
         <name>CustomField</name>
     </types>
     <types>
-        <members>FEC_Termination__c</members>
         <members>FEC_RePayment_Schedule__c</members>
         <name>CustomObject</name>
     </types>
     <types>
-        <members>FEC_Termination__c.All</members>
         <members>FEC_RePayment_Schedule__c.All</members>
         <name>ListView</name>
     </types>
@@ -1361,6 +1336,7 @@
 		<members>FEC_Address_Info__c.FEC_Case__c</members>
 		<members>Case.FEC_Last_Updated_By_View__c</members>
 		<members>Case.FEC_Last_Updated_On_View__c</members>
+		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
 		<name>CustomField</name>
 	</types>
     <types>
@@ -1636,6 +1612,8 @@
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<members>FEC_Termination_Fee_Charge_Type_Label</members>
 		<members>FEC_Common_No_Results_Label</members>
+        <members>FEC_MSG_No_Pending_Disbursement</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
