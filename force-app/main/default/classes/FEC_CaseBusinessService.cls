@@ -1,4 +1,4 @@
-﻿public without sharing class FEC_CaseBusinessService {
+public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
 
   public static final String ROUTE_TO = 'Route to';
@@ -278,6 +278,17 @@
         if (isRevert) {
           revertHistory = historylst.get(0);
         }
+      }
+
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+      result.lockApiLwcsAfterRevertToDefaultStage = false;
+      if (!historylst.isEmpty() && REVERT.equals(historylst.get(0).FEC_Routing_Action__c)) {
+        FEC_Routing_Action_History__c hRevert = historylst.get(0);
+        result.lockApiLwcsAfterRevertToDefaultStage =
+          hRevert.FEC_Next_Stage__c != null &&
+          hRevert.FEC_Next_Stage__c == selectedCase.FEC_Current_Case_Stage__c &&
+          hRevert.FEC_Next_Stage__r != null &&
+          hRevert.FEC_Next_Stage__r.FEC_Default_Stage__c == true;
       }
 
       //thangtv
@@ -814,6 +825,7 @@
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
+          FEC_CaseTriggerHandler.isSystemUpdate = true;
           update selectedCase;
         } catch (DmlException e) {
           // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
@@ -1535,6 +1547,32 @@
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
   }
+//PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    markCaseSubmittedAndClearDrafts(caseId);
+    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+  }
+  //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  /**
+   * Tạo bản ghi FEC_Case_Flow_History__c khi Case được submit lần đầu (creation stage).
+   * Chỉ tạo khi Case chưa submit (FEC_Is_Submited__c = false trước khi gọi).
+   */
+  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    if (String.isBlank(caseId)) return;
+    try {
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson
+      );
+      if (String.isNotBlank(natureOfCaseId)) {
+        history.FEC_Nature_of_Cases__c = natureOfCaseId;
+      }
+      insert history;
+    } catch (Exception e) {
+      System.debug('createCaseFlowHistory error: ' + e.getMessage());
+    }
+  }
 
   @AuraEnabled
   public static Object run(String method, Map<String, String> params) {
@@ -1582,10 +1620,19 @@
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          // Kiểm tra creation stage trước khi mark submitted
+          Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           markCaseSubmittedAndClearDrafts(caseId);
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          if (isCreationStage) {
+            createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+          }
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
           return null;
         }
@@ -3247,10 +3294,15 @@
 
     @AuraEnabled
     public String lastUser;
-    
+
     @AuraEnabled
     //thangtv
     public String lastUserForRouteToLabel;
+
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+    /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
+    @AuraEnabled
+    public Boolean lockApiLwcsAfterRevertToDefaultStage;
 
     @AuraEnabled
     public String draftRoutingActionCode;

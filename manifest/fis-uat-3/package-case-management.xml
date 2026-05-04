@@ -15,6 +15,11 @@
 		<members>FEC_AssignmentController</members>
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_CofGsrAssignmentService</members>
+		<members>FEC_CaseEditNOCController</members>
+		<members>FEC_CloseInterationSchedulerBatch</members>
+        <members>FEC_AssignmentListHandler</members>
+        <members>FEC_AssignmentRoutingActionHandler</members>
+        <members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -25,7 +30,9 @@
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
+        <members>Case.FEC_Assignment_Count__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Remark__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
@@ -47,6 +54,9 @@
 		<members>FEC_Routing_Assignment__c.FEC_Nature_of_Cases__c</members>
 		<members>FEC_Routing_Assignment__c.FEC_Queue__c</members>
 		<members>FEC_Routing_Assignment__c.FEC_Team__c</members>
+		<members>FEC_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -60,6 +70,8 @@
 		<members>FEC_Routing_Assignment__c</members>
 		<members>FEC_Relevant_Ticket__c</members>
 		<members>FEC_Case_Remarks__c</members>
+		<members>FEC_Case_Flow_History__c</members>
+		<members>FEC_Do_Not_Bother__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -95,12 +107,20 @@
 		<members>fec_DoNotBotherInformationView</members>
 		<members>fec_DoNotBotherNonExistingCustomer</members>
 		<members>fec_ReusableDNBCustomTable</members>
+		<members>fec_CaseEditNOC</members>
+		<members>fec_CaseNocUpdatedSection</members>
+		<members>fec_AssignmentList</members>
+        <members>fec_AssignmentRemarkHistoryTable</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
         <name>LightningMessageChannel</name>
     </types>
+	<types>
+		<members>FEC_DNB_Reason</members>
+		<name>GlobalValueSet</name>
+	</types>
 	<types>
         <members>FEC_RelevantTicket_Title</members>
         <members>FEC_RelevantTicket_Section_Information</members>
@@ -188,6 +208,31 @@
 		<members>FEC_DNB_No_Data_Question</members>
 		<members>FEC_DNB_Update_Button</members>
 		<members>FEC_Invalid_OwnerId</members>
+		<members>FEC_CC_Queue_Name</members>
+		<members>FEC_Add_Item_Label</members>
+		<members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_Confirm_Label</members>
+		<members>FEC_Choose_Team_Placeholder</members>
+		<members>FEC_Choose_Queue_Placeholder</members>
+		<members>FEC_Enter_Remark_Placeholder</members>
+		<members>FEC_Remark_Label</members>
+		<members>FEC_ERR_ASSIGNMENT_NOT_FOUND</members>
+        <members>FEC_ERR_DECISION_REQUIRED</members>
+        <members>FEC_ERR_ESCALATE_NO_MANAGER</members>
+        <members>FEC_ERR_ESCALATE_NO_OWNER</members>
+        <members>FEC_ERR_INVALID_INPUT</members>
+        <members>FEC_ERR_QUEUE_NOT_FOUND</members>
+        <members>FEC_ERR_TEAM_REQUIRED</members>
+        <members>FEC_MSG_ASSIGNMENT_ID_REQUIRED</members>
+        <members>FEC_MSG_LOAD_ASSIGNMENT_FAILED</members>
+        <members>FEC_MSG_LOAD_REMARK_FAILED</members>
+        <members>FEC_MSG_NO_ACCESS_ASSIGNMENT</members>
+        <members>FEC_MSG_NO_ACCESS_REMARK</members>
+        <members>FEC_Assignment_Routing_Action</members>
+        <members>FEC_Assignment_List</members>
+        <members>FEC_Assignment_Status</members>
+        <members>FEC_Assignment_Owner</members>
+        <members>FEC_Assignment_Id</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

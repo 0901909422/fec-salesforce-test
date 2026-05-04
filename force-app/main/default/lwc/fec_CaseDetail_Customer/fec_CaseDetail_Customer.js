@@ -210,6 +210,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleNOCMsg(message) {
     if (message == null) return;
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
     if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
@@ -397,6 +400,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         typeof caseBusinessEle.refreshFileUploadCards === "function"
       ) {
         caseBusinessEle.refreshFileUploadCards();
+      }
       // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;

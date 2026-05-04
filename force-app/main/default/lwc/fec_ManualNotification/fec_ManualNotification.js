@@ -164,6 +164,9 @@ export default class Fec_ManualNotification extends NavigationMixin(LightningEle
 
     handleCaseNotifMessage(message) {
         if (!message) return;
+        if (message.caseId != null && message.caseId !== this.recordId) {
+            return;
+        }
         this.productTypeId = message?.productTypeId;
         this.categoryId = message?.categoryId;
         this.subCategoryId = message?.subCategoryId;
