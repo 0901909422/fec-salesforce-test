@@ -1,3 +1,4 @@
+
 /****************************************************************************************
  * File Name    : FEC_SearchByListNIDsServiceCallout.Apex
  * Author       : LongNH76
@@ -24,11 +25,10 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
         @AuraEnabled public Integer code;
         @AuraEnabled public String description;
         @AuraEnabled public String pxObjClass; 
-    }
+
 
     public class Result {
         @AuraEnabled public String pxObjClass;
-
         @AuraEnabled public String userID;
         @AuraEnabled public String buyerName;
         @AuraEnabled public String buyerDOB;
@@ -91,6 +91,5 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
         err.sys.code = resp.getStatusCode();
         err.sys.description = 'HTTP Error: ' + resp.getStatus();
         err.sys.transID = transactionId;
-        return err;
-    }
+
 }
