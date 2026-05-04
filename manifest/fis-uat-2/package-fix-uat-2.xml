@@ -207,6 +207,7 @@
 		<members>fec_ClosedServiceCases</members>
 		<members>fec_InteractionCases</members>
         <members>fec_PendingServiceCases</members>
+        <members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

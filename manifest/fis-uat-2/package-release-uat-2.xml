@@ -1669,6 +1669,7 @@
 		<members>fec_IPPDetails</members>
 		<members>fec_FileUploadCard</members>
 		<members>fecInteractionInfo</members>
+		<members>fec_IPPDetailPage</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
