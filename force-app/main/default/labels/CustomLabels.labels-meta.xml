@@ -10117,6 +10117,14 @@
         <value>CS Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_No_Pending_Disbursement</fullName>
+        <categories>Card LockUnlock LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No pending disbursement for account</shortDescription>
+        <value>Không có khoản chờ giải ngân.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Card_Block_Beneficiary_Required</fullName>
         <categories>Card LockUnlock LWC</categories>
         <language>en_US</language>
