@@ -84,7 +84,8 @@ public with sharing class FEC_CardLockUnLockController {
             Case objCasse = [
                 SELECT Id,
                     FEC_Account_Number__c,
-                    FEC_Customer_Name__c
+                    FEC_Customer_Name__c,
+                    FEC_Current_Card_Status__c
                 FROM Case
                 WHERE Id = :recordId
             ];
@@ -119,6 +120,9 @@ public with sharing class FEC_CardLockUnLockController {
             }
             if (result.isSuccess == null || !result.isSuccess) {
                 result.currentCardStatus = 'Not Blocked';
+            }
+            if (String.isNotBlank(objCasse.FEC_Current_Card_Status__c)) {
+                result.currentCardStatus = objCasse.FEC_Current_Card_Status__c;
             }
         } catch (Exception ex) {
             FEC_CommonUltils.logException(
