@@ -1,5 +1,17 @@
+/****************************************************************************************
+ * File Name    : FEC_SearchByListPhonesServiceCallout.Apex
+ * Author       : LongNH76
+ * Date         : 2026-04-27
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-04-27     LongNH76             Create
+ 
+****************************************************************************************/
+
 public with sharing class FEC_SearchByListPhonesServiceCallout {
-    private static final String DEFAULT_ENDPOINT_PATH = '/esb/banca/customer_banca_info/v1/SearchByListPhones';
     //tạo ra cho đỡ cần Metadata file
     private static final String API_NAME = 'FEC_Search_By_List_Phones';
     public class PhonesResponse {
@@ -43,26 +55,20 @@ public with sharing class FEC_SearchByListPhonesServiceCallout {
 
     @AuraEnabled
     public static PhonesResponse searchByListPhones(List<String> phones) {
-        if (phones == null || phones.isEmpty()) {
-            throw new CalloutException('Phone list cannot be empty');
-        }
 
         String transactionId = String.valueOf(UUID.randomUUID());
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Search_By_List_Phones');
-        //test xong thì đóng lại dùng cái dưới
-        String endpointPath = DEFAULT_ENDPOINT_PATH;
-        // String endpointPath = String.isNotBlank(apiConfig?.FEC_Endpoint__c)
-        //     ? apiConfig.FEC_Endpoint__c
-        //     : DEFAULT_ENDPOINT_PATH;
+    
+        String endpointPath = apiConfig.FEC_Endpoint__c;
         String endpoint =
             (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '') +
             endpointPath;
 
         Map<String, Object> bodyMap = new Map<String, Object>();
         bodyMap.put('sys', new Map<String, Object>{
-            'dateTime' => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
+            'dateTime' => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_SSSSSS_XXX),
             'transID' => transactionId,
             'requestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM
         });
