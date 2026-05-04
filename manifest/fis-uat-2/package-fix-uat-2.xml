@@ -896,6 +896,7 @@
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Last_Updated_By_View__c</members>
 		<members>Case.FEC_Last_Updated_On_View__c</members>
+		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
