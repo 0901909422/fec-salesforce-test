@@ -1,0 +1,20 @@
+.validation-msg {
+    font-weight: bold;
+}
+.validation-msg-red {
+    color: #c23934;
+    font-weight: bold;
+}
+.validation-msg-blue {
+    color: #0176d3;
+    font-weight: bold;
+}
+.validation-msg-green {
+    color: #2e844a;
+    font-weight: bold;
+}
+.fec-fc-readonly-line {
+    border-bottom: 1px solid var(--lwc-colorBorder, #c9c9c9);
+    padding-bottom: 0.25rem;
+    min-height: 1.75rem;
+}

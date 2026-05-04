@@ -52,7 +52,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const nodeType = this.item?.type;
         if (nodeType === 'Product Type' || nodeType === 'Product_Line') return 'FEC_MDM_Product_Type__c';
         if (nodeType === 'Business Process' || nodeType === 'Service_Type') return 'FEC_MDM_Business_Process__c';
-        if (nodeType === 'Category' || nodeType === 'Sub Category') return 'FEC_MDM_Category__c';
+        if (nodeType === 'Category') return 'FEC_MDM_Category__c';
         if (nodeType === 'Sub Category' || nodeType === 'Sub_Category') return 'FEC_MDM_Sub_Category__c';
         if (nodeType === 'Sub Code' || nodeType === 'Action') return 'FEC_MDM_Sub_Code__c';
 
@@ -74,6 +74,8 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const historyComp = this.template.querySelector('[data-id="historyComponent"]');
         if (historyComp) {
             historyComp.refreshData();
+        } else {
+            this._pendingHistoryRefresh = true;
         }
     }
 
@@ -201,7 +203,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
             if (isValueChanged) {
                 console.log('[DEBUG][item setter] Server data updated, updating _originalItem to serve as new baseline for Undo');
                 this._item = value;
-                
+
                 // Cập nhật lại bản gốc từ server để Undo
                 this._originalItem = value ? JSON.parse(JSON.stringify(value)) : {};
 
@@ -295,6 +297,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
                     bubbles: true,
                     composed: true
                 }));
+                // Bắt buộc gọi lại History panel sau khi save
                 this.refreshHistoryPanel();
             })
             .catch(error => {
@@ -331,7 +334,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
             }
         }
         this.isDirty = dirty;
-        
+
         console.log('[DEBUG][handleInputChange] isDirty evaluated to:', this.isDirty, 'Field changed:', field);
 
         this.dispatchEvent(new CustomEvent('nodebufferchange', {
@@ -427,7 +430,7 @@ export default class FecMasterDataItemDetail extends LightningElement {
         // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
         this.isDirty = false;
-        
+
         // 2. Chỉ báo cho Cha biết idType để Cha xóa dòng đó khỏi pendingChanges
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
             detail: { idType: this.item?.idType },
@@ -452,9 +455,9 @@ export default class FecMasterDataItemDetail extends LightningElement {
         this._originalItem = JSON.parse(JSON.stringify(updatedItem));
         this._item = JSON.parse(JSON.stringify(updatedItem)); // Sync _item too
         this.editedItem = JSON.parse(JSON.stringify(updatedItem));
-        
+
         // Tắt trạng thái thay đổi -> Nút Undo sẽ lập tức bị Disable
-        this.isDirty = false; 
+        this.isDirty = false;
         showLog('markAsSaved', 'Đã cập nhật bản gốc và disable nút Undo');
     }
 

@@ -1,0 +1,159 @@
+<template>
+    <lightning-card title={labelTitle} icon-name="standard:merge">
+        <div slot="actions">
+            <lightning-button label={labelQuery} variant="brand" onclick={handleSearch}
+                disabled={isSearchDisabled} icon-name="utility:search"></lightning-button>
+        </div>
+
+        <!-- Cascading Filters -->
+        <div class="slds-p-around_medium filter-bar">
+            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                <div class="slds-col slds-size_1-of-6">
+                    <lightning-combobox label={labelCustomerType} options={customerTypes}
+                        onchange={handleCustomerTypeChange} value={val.ct}
+                        placeholder={placeholderCustomerType}></lightning-combobox>
+                </div>
+                <template if:true={val.ct}>
+                    <div class="slds-col slds-size_1-of-6">
+                        <lightning-combobox label={labelProduct} options={products}
+                            onchange={handlePChange} value={val.p}
+                            placeholder={placeholderProduct}></lightning-combobox>
+                    </div>
+                </template>
+                <template if:true={val.p}>
+                    <div class="slds-col slds-size_1-of-6">
+                        <lightning-combobox label={labelBiz} options={bizs}
+                            onchange={handleBChange} value={val.b}
+                            placeholder={placeholderBiz}></lightning-combobox>
+                    </div>
+                </template>
+                <template if:true={val.b}>
+                    <div class="slds-col slds-size_1-of-6">
+                        <lightning-combobox label={labelCategory} options={cats}
+                            onchange={handleCChange} value={val.c}
+                            placeholder={placeholderCategory}></lightning-combobox>
+                    </div>
+                </template>
+                <template if:true={val.c}>
+                    <div class="slds-col slds-size_1-of-6">
+                        <lightning-combobox label={labelSubCat} options={subCats}
+                            onchange={handleSubCatChange} value={val.sc}
+                            placeholder={placeholderSubCat}></lightning-combobox>
+                    </div>
+                </template>
+                <template if:true={val.sc}>
+                    <div class="slds-col slds-size_1-of-6">
+                        <lightning-combobox label={labelSubCode} options={subCodes}
+                            onchange={handleSubCodeChange} value={val.scc}
+                            placeholder={placeholderSubCode}></lightning-combobox>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Summary Bar -->
+        <template if:true={hasData}>
+            <div class="summary-bar">
+                <template for:each={sections} for:item="section">
+                    <div key={section.id} class={section.summaryClass}>
+                        <lightning-icon icon-name={section.icon} size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                        <span class="summary-label">{section.label}</span>
+                        <span class="summary-count">{section.count}</span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Content -->
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-around_xx-large">
+                    <lightning-spinner size="medium" alternative-text="Loading"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template for:each={sections} for:item="section">
+                    <div key={section.label} if:true={section.hasData} class="section-block">
+                        <!-- Section Header -->
+                        <div class="section-header">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <span class={section.badgeClass}>{section.count}</span>
+                                <lightning-icon icon-name={section.icon} size="small" class="slds-m-horizontal_x-small"></lightning-icon>
+                                <h3 class="section-title">{section.label}</h3>
+                            </div>
+                            <lightning-button-group>
+                                <lightning-button label={labelExpandAll} icon-name="utility:expand_all" variant="neutral"
+                                    data-section={section.id} onclick={handleExpandAll}></lightning-button>
+                                <lightning-button label={labelCollapseAll} icon-name="utility:collapse_all" variant="neutral"
+                                    data-section={section.id} onclick={handleCollapseAll}></lightning-button>
+                            </lightning-button-group>
+                        </div>
+
+                        <!-- Two-column header: Live | MDM -->
+                        <div class="dual-header">
+                            <div class="dual-col-left">
+                                <lightning-icon icon-name="utility:database" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                {labelLiveValue}
+                            </div>
+                            <div class="dual-col-right">
+                                <lightning-icon icon-name="utility:change_record_type" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                {labelMdmValue}
+                            </div>
+                        </div>
+
+                        <!-- Records -->
+                        <template for:each={section.data} for:item="row">
+                            <div key={row.externalId} class="diff-card">
+                                <!-- Row: Property Name spanning both columns -->
+                                <div class={row.headerClass} onclick={handleToggle} data-id={row.externalId}>
+                                    <div class="slds-grid slds-grid_vertical-align-center slds-grow">
+                                        <lightning-icon icon-name={row.iconName} size="xx-small" class="slds-m-right_x-small toggle-icon"></lightning-icon>
+                                        <span class="property-name">{row.displayName}</span>
+                                        <span class="external-id">({row.externalId})</span>
+                                    </div>
+                                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-end">
+                                        <template if:true={row.diffCount}>
+                                            <span class="diff-badge">{row.diffCount} {labelDiffCount}</span>
+                                        </template>
+                                        <span class={row.statusClass}>{row.status}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Expanded: Two-column diff view -->
+                                <template if:true={row.expanded}>
+                                    <div class="dual-body">
+                                        <template for:each={row.diffs} for:item="d">
+                                            <div key={d.label} class={d.rowClass}>
+                                                <div class="dual-row-live">
+                                                    <span class="field-label">{d.label}</span>
+                                                    <span class="field-value">{d.oldVal}</span>
+                                                </div>
+                                                <div class="dual-row-mdm">
+                                                    <span class="field-label">{d.label}</span>
+                                                    <span class="field-value">
+                                                        <template if:true={d.isDifferent}>
+                                                            <lightning-icon icon-name="utility:forward" size="xx-small" class="slds-m-right_xx-small arrow-icon"></lightning-icon>
+                                                        </template>
+                                                        {d.newVal}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <template if:false={hasData}>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:filterList" size="large" class="empty-icon"></lightning-icon>
+                        <p class="empty-text">{labelNoData}</p>
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

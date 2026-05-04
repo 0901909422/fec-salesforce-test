@@ -1,0 +1,38 @@
+<apex:page controller="FEC_PDFRendererController" renderAs="pdf" applyBodyTag="false" applyHtmlTag="false" showHeader="false" sidebar="false" standardStylesheets="false">
+    <html>
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+            <style type="text/css">
+                @font-face {
+                    font-family: 'FEC_TimesNewRoman';
+                    src: url('{!URLFOR($Resource.FEC_TimesNewRoman)}') format('truetype');
+                    -fs-pdf-font-embed: embed;
+                    -fs-pdf-font-encoding: Identity-H;
+                }
+                @font-face {
+                    font-family: 'FEC_TimesNewRoman';
+                    src: url('{!URLFOR($Resource.FEC_TimesNewRomanBold)}') format('truetype');
+                    font-weight: bold;
+                    -fs-pdf-font-embed: embed;
+                    -fs-pdf-font-encoding: Identity-H;
+                }
+                @font-face {
+                    font-family: 'FEC_TimesNewRoman';
+                    src: url('{!URLFOR($Resource.FEC_TimesNewRomanItalic)}') format('truetype');
+                    font-style: italic;
+                    -fs-pdf-font-embed: embed;
+                    -fs-pdf-font-encoding: Identity-H;
+                }
+                @page {
+                    margin: 0 61px 0 61px;
+                }
+                body, div, p, span, td, th, tr, table, b, strong, i, em, u, li, ul, ol, h1, h2, h3, h4, h5, h6, a, label {
+                    font-family: 'Arial Unicode MS', sans-serif;;
+                }
+            </style>
+        </head>
+        <body>
+            <apex:outputText value="{!renderedHtml}" escape="false" />
+        </body>
+    </html>
+</apex:page>

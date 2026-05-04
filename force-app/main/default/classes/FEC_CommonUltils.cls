@@ -36,7 +36,7 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
-  public static void notifyUsers(
+  public static Boolean notifyUsers(
     Set<String> recipientsIds,
     Id targetId,
     String targetPageRef,
@@ -62,8 +62,10 @@ public with sharing class FEC_CommonUltils {
     // Actually send the notification
     try {
       notification.send(recipientsIds);
+      return true;
     } catch (Exception e) {
       System.debug('Problem sending notification: ' + e.getMessage());
+      return false;
     }
   }
 
@@ -96,6 +98,38 @@ public with sharing class FEC_CommonUltils {
    */
   public static Boolean isCaseStatusResolved(String status) {
     return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * FEC_Notification__c.FEC_Customer_Type__c là Multi-Select Picklist (lưu token cách nhau bởi ;).
+   * Khớp nếu rule chứa token CASE_ALL_REQUEST (FEC_ConstantCommon) hoặc chứa đúng giá trị customer type của Case.
+   */
+  public static Boolean notificationCustomerTypeMatchesCase(
+    String notificationMultiSelectValue,
+    String caseCustomerType
+  ) {
+    if (String.isBlank(notificationMultiSelectValue)) {
+      return false;
+    }
+    if (notificationMultiSelectIncludesToken(notificationMultiSelectValue, FEC_ConstantCommon.CASE_ALL_REQUEST)) {
+      return true;
+    }
+    if (String.isBlank(caseCustomerType)) {
+      return false;
+    }
+    return notificationMultiSelectIncludesToken(notificationMultiSelectValue, caseCustomerType);
+  }
+
+  private static Boolean notificationMultiSelectIncludesToken(String multiSelectStoredValue, String token) {
+    if (String.isBlank(multiSelectStoredValue) || String.isBlank(token)) {
+      return false;
+    }
+    for (String part : multiSelectStoredValue.split(FEC_ConstantCommon.DELIMITER_SEMICOLON)) {
+      if (token.equals(part.trim())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -556,7 +590,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -583,7 +617,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -1153,7 +1187,7 @@ public with sharing class FEC_CommonUltils {
       if (owas.isEmpty()) return null;
       // Ưu tiên Default No-Reply Address
       for (OrgWideEmailAddress owa : owas) {
-        if (owa.Purpose == 'Default No-Reply Address') return owa.Id;
+        if (owa.Purpose == 'DefaultNoreply') return owa.Id;
       }
       // Fallback: đầu tiên
       return owas[0].Id;
@@ -1176,13 +1210,17 @@ public with sharing class FEC_CommonUltils {
 
   /**
    * Gửi nhiều email cùng lúc (bulk).
+   * @return Kết quả từng email (cùng thứ tự với tham số), rỗng nếu không gửi hoặc lỗi toàn bộ trước khi có kết quả.
    */
-  public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
-    if (emails == null || emails.isEmpty()) return;
+  public static List<Messaging.SendEmailResult> sendEmails(List<Messaging.SingleEmailMessage> emails) {
+    if (emails == null || emails.isEmpty()) {
+      return new List<Messaging.SendEmailResult>();
+    }
     try {
-      Messaging.sendEmail(emails, false);
+      return Messaging.sendEmail(emails, false);
     } catch (Exception e) {
       System.debug('FEC_CommonUltils.sendEmails failed: ' + e.getMessage());
+      return new List<Messaging.SendEmailResult>();
     }
   }
 
@@ -1283,5 +1321,45 @@ public with sharing class FEC_CommonUltils {
     } catch (Exception ex) {
       System.debug('Log Exception Error:' + ex.getMessage());
     }
+
+    }
+    
+  /**
+   * Lấy Profile name của current user
+   */
+  public static String getCurrentUserProfileName() {
+    try {
+      User u = [SELECT Profile.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+      return u.Profile.Name;
+    } catch (Exception e) {
+      System.debug('getCurrentUserProfileName error: ' + e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Parse an Object value to Decimal.
+   * Handles both Decimal and String (varchar from OData/PostgreSQL).
+   */
+  public static Decimal parseDecimal(Object val) {
+    if (val == null) return null;
+    if (val instanceof Decimal) return (Decimal) val;
+    String s = String.valueOf(val).trim();
+    return String.isBlank(s) ? null : Decimal.valueOf(s);
+  }
+
+  /**
+   * Parse an Object value to DateTime.
+   * Handles DateTime, epoch millis as String (varchar from OData/PostgreSQL).
+   */
+  public static DateTime parseDateTime(Object val) {
+    if (val == null) return null;
+    if (val instanceof DateTime) return (DateTime) val;
+    String s = String.valueOf(val).trim();
+    if (String.isBlank(s)) return null;
+    if (s.isNumeric()) {
+      return DateTime.newInstance(Long.valueOf(s));
+    }
+    return null;
   }
 }

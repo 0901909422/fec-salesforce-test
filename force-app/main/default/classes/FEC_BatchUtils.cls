@@ -8,15 +8,15 @@ public with sharing class FEC_BatchUtils {
         try {
             SObject parentMDM = mdm.getSObject(relName);
             if (parentMDM != null) {
-                String extId = (String)parentMDM.get(FEC_Constants.FIELD_EXTERNAL_ID);
+                String extId = (String)parentMDM.get(FEC_FieldConstants.FIELD_EXTERNAL_ID);
                 if (String.isNotBlank(extId)) {
                     SObject parentLive = Schema.getGlobalDescribe().get(parentObjName).newSObject();
-                    parentLive.put(FEC_Constants.FIELD_EXTERNAL_ID, extId);
+                    parentLive.put(FEC_FieldConstants.FIELD_EXTERNAL_ID, extId);
                     target.putSObject(relName, parentLive);
                 }
             }
         } catch(Exception e) {
-            if (uniqueErrors != null) uniqueErrors.add(FEC_Constants.ERROR_LOOKUP_PREFIX + relName + ': ' + e.getMessage());
+            if (uniqueErrors != null) uniqueErrors.add(FEC_UIConstants.ERROR_LOOKUP_PREFIX + relName + ': ' + e.getMessage());
         }
     }
 
@@ -25,7 +25,7 @@ public with sharing class FEC_BatchUtils {
             try {
                 target.put(commonFieldMap.get(f), mdm.get(f));
             } catch(Exception ex) {
-                if (uniqueErrors != null) uniqueErrors.add(FEC_Constants.ERROR_COMMON_FIELD_PREFIX + f + ': ' + ex.getMessage());
+                if (uniqueErrors != null) uniqueErrors.add(FEC_UIConstants.ERROR_COMMON_FIELD_PREFIX + f + ': ' + ex.getMessage());
             }
         }
     }
@@ -38,7 +38,7 @@ public with sharing class FEC_BatchUtils {
                     try {
                         target.put(targetField, mdm.get(mdmField));
                     } catch(Exception ex) {
-                        if (uniqueErrors != null) uniqueErrors.add(FEC_Constants.ERROR_DATA_PREFIX + mdmField + ' - ' + ex.getMessage());
+                        if (uniqueErrors != null) uniqueErrors.add(FEC_UIConstants.ERROR_DATA_PREFIX + mdmField + ' - ' + ex.getMessage());
                     }
                 }
             }
@@ -62,10 +62,10 @@ public with sharing class FEC_BatchUtils {
         try {
             SObject parentLive = live.getSObject(relName);
             if (parentLive != null) {
-                String extId = (String)parentLive.get(FEC_Constants.FIELD_EXTERNAL_ID);
+                String extId = (String)parentLive.get(FEC_FieldConstants.FIELD_EXTERNAL_ID);
                 if (String.isNotBlank(extId)) {
                     SObject parentMdmRef = Schema.getGlobalDescribe().get(parentMdmObjName).newSObject();
-                    parentMdmRef.put(FEC_Constants.FIELD_EXTERNAL_ID, extId);
+                    parentMdmRef.put(FEC_FieldConstants.FIELD_EXTERNAL_ID, extId);
                     mdm.putSObject(relName, parentMdmRef);
                 }
             }

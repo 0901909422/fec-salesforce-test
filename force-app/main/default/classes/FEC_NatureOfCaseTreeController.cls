@@ -10,11 +10,11 @@ public with sharing class FEC_NatureOfCaseTreeController {
     @AuraEnabled
     public static Integer getNextPosOrder(String parentId, String childFieldName) {
             String targetChildField;
-            if (childFieldName == FEC_Constants.NOC_FIELD_PRODUCT_TYPE) targetChildField = FEC_Constants.NOC_FIELD_BUSINESS_PROCESS;
-            else if (childFieldName == FEC_Constants.NOC_FIELD_BUSINESS_PROCESS) targetChildField = FEC_Constants.NOC_FIELD_CATEGORY;
-            else if (childFieldName == FEC_Constants.NOC_FIELD_CATEGORY) targetChildField = FEC_Constants.NOC_FIELD_SUB_CATEGORY;
-            else if (childFieldName == FEC_Constants.NOC_FIELD_SUB_CATEGORY) targetChildField = FEC_Constants.NOC_FIELD_SUB_CODE;
-            else targetChildField = FEC_Constants.NOC_FIELD_PRODUCT_TYPE;
+            if (childFieldName == FEC_FieldConstants.NOC_FIELD_PRODUCT_TYPE) targetChildField = FEC_FieldConstants.NOC_FIELD_BUSINESS_PROCESS;
+            else if (childFieldName == FEC_FieldConstants.NOC_FIELD_BUSINESS_PROCESS) targetChildField = FEC_FieldConstants.NOC_FIELD_CATEGORY;
+            else if (childFieldName == FEC_FieldConstants.NOC_FIELD_CATEGORY) targetChildField = FEC_FieldConstants.NOC_FIELD_SUB_CATEGORY;
+            else if (childFieldName == FEC_FieldConstants.NOC_FIELD_SUB_CATEGORY) targetChildField = FEC_FieldConstants.NOC_FIELD_SUB_CODE;
+            else targetChildField = FEC_FieldConstants.NOC_FIELD_PRODUCT_TYPE;
             
             String query = FEC_Constants.SQL_SELECT_COUNT_DISTINCT + targetChildField + FEC_Constants.SQL_FROM_NOC;
             

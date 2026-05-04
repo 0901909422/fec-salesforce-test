@@ -14,6 +14,7 @@ public without sharing class FEC_CreateCaseHandler {
         // =========================
         // CUSTOMER INFO
         // =========================
+        public String customerName;
         public String phoneNumber;
         public String nationalId;
         public String accountNumber;
@@ -421,11 +422,113 @@ public without sharing class FEC_CreateCaseHandler {
         c.OwnerId = UserInfo.getUserId();
         c.Status = FEC_ConstantCommon.CASE_STATUS_NEW;
         c.Origin = FEC_ConstantCommon.CASE_WEB_ORIGIN;
+        c.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
         c.FEC_Customer_Name__c = customerName;
         c.FEC_National_ID_Passport_ID__c = nationalId;
         c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
         
         insert c;
+        
+        FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
+        FEC_Case__c = c.Id
+        );
+        insert newInfo;
+
         return c.Id;
     }
+
+    // create CaseRecordTypeDevName
+    @AuraEnabled(cacheable=true)
+    public static String getCaseRecordTypeDevName(Id caseId) {
+        if (caseId == null) return null;
+
+        try {
+            Case c = [
+                SELECT RecordType.DeveloperName
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            return c.RecordType.DeveloperName;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static FEC_InteractionCaseResponse createInteractionCaseChat(FEC_InteractionCaseDTO dto) {
+        
+        if (dto == null) {
+            throw new IllegalArgumentException(System.Label.FEC_MSG_Interaction_Case_DTO_Null);
+        }
+        
+        // Validate bắt buộc đúng channel CHAT
+        if (dto.channel != FEC_ConstantCommon.CHANNEL_CHAT) {
+            throw new IllegalArgumentException('Channel must be CHAT');
+        }
+        
+        Id interactionRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName()
+            .get(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME)
+            .getRecordTypeId();
+        
+        Case interactionCase = new Case();
+        interactionCase.RecordTypeId = interactionRecordTypeId;
+        
+        // ---------------------------
+        // CHANNEL (FIXED = CHAT)
+        // ---------------------------
+        interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_CHAT;
+        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
+        
+        // ---------------------------
+        // SUB CHANNEL
+        // ---------------------------
+        if (dto.subChannel != null) {
+            interactionCase.FEC_Interaction_Subchannel__c = dto.subChannel;
+        }
+        
+        interactionCase.FEC_Other_Subchannel__c =
+            dto.subChannel == FEC_ConstantCommon.CHANNEL_EXTERNAL_SUBCHANNEL_OTHER_NAME
+            ? dto.otherSubChannel
+            : null;
+        
+        interactionCase.FEC_External_Interaction_ID__c = dto.externalInteractionId;
+        
+        // ---------------------------
+        // CUSTOMER INFO
+        // ---------------------------
+        interactionCase.FEC_Customer_Username__c = dto.customerName;
+        interactionCase.FEC_Phone_Number__c = dto.phoneNumber;
+        interactionCase.FEC_National_ID_Passport_ID__c = dto.nationalId;
+        interactionCase.FEC_Account_Number__c = dto.accountNumber;
+        interactionCase.FEC_Contract_Number__c = dto.contractNumber;
+        
+        // ---------------------------
+        // INTERACTION DATA
+        // ---------------------------
+        interactionCase.FEC_Transcription__c = dto.transcription;
+        interactionCase.FEC_KYC_Method__c = dto.kycMethod;
+        
+        insert interactionCase;
+        
+        interactionCase = [
+            SELECT Id, FEC_Link_ID__c, OwnerId
+            FROM Case
+            WHERE Id = :interactionCase.Id
+        ];
+        
+        // ---------------------------
+        // RESPONSE
+        // ---------------------------
+        FEC_InteractionCaseResponse res = new FEC_InteractionCaseResponse();
+        res.caseId = interactionCase.Id;
+        res.linkId = interactionCase.FEC_Link_ID__c;
+        
+        if (res.linkId != null && res.linkId.contains('>')) {
+            res.caseNo = res.linkId.substringBetween('>', '</');
+        }
+        
+        return res;
+    }
+    
 }

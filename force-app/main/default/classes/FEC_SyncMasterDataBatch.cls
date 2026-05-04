@@ -1,77 +1,97 @@
-public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Database.Stateful {
+public with sharing class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Database.Stateful {
     
     // Constants - aliases for FEC_Constants fields used in this class
-    private static final String FIELD_CODE                     = FEC_Constants.FIELD_CODE;
-    private static final String FIELD_NAME                     = FEC_Constants.FIELD_NAME;
-    private static final String FIELD_PROCESS_CHANGE_STATUS    = FEC_Constants.FIELD_PROCESS_CHANGE_STATUS;
-    private static final String FIELD_ALIAS                    = FEC_Constants.FIELD_ALIAS;
-    private static final String FIELD_NAME_VN                  = FEC_Constants.FIELD_NAME_VN;
-    private static final String FIELD_STATUS                   = FEC_Constants.FIELD_STATUS;
-    private static final String FIELD_ACTIVE                   = FEC_Constants.FIELD_ACTIVE;
-    private static final String FIELD_POS_ORDER                = FEC_Constants.FIELD_POS_ORDER;
-    private static final String FIELD_FEC_UNIQUE_ID            = FEC_Constants.FIELD_FEC_UNIQUE_ID;
-    private static final String FIELD_FEC_TYPE                 = FEC_Constants.FIELD_FEC_TYPE;
-    private static final String FIELD_FEC_ORDER                = FEC_Constants.FIELD_FEC_ORDER;
-    private static final String FIELD_FIELD_MANDATORY          = FEC_Constants.FIELD_FIELD_MANDATORY;
-    private static final String FIELD_FIELD_STATUS             = FEC_Constants.FIELD_FIELD_STATUS;
-    private static final String FIELD_FIELD_READONLY           = FEC_Constants.FIELD_FIELD_READONLY;
-    private static final String FIELD_FIELD_OBJECT_NAME        = FEC_Constants.FIELD_FIELD_OBJECT_NAME;
-    private static final String FIELD_FIELD_ORDER_DISPLAY      = FEC_Constants.FIELD_FIELD_ORDER_DISPLAY;
-    private static final String FIELD_PROPERTY_REFERENCE       = FEC_Constants.FIELD_PROPERTY_REFERENCE;
-    private static final String FIELD_SECTION                  = FEC_Constants.FIELD_SECTION;
-    private static final String FIELD_APPLICABLE_ROLE          = FEC_Constants.FIELD_APPLICABLE_ROLE;
-    private static final String FIELD_DATA_INTEGRATION_MAPPING = FEC_Constants.FIELD_DATA_INTEGRATION_MAPPING;
-    private static final String FIELD_CHANNEL_ID               = FEC_Constants.FIELD_CHANNEL_ID;
-    private static final String FIELD_CHANNEL_STATUS           = FEC_Constants.FIELD_CHANNEL_STATUS;
-    private static final String FIELD_CHANNEL_VI_NAME          = FEC_Constants.FIELD_CHANNEL_VI_NAME;
-    private static final String FIELD_CHANNEL                  = FEC_Constants.FIELD_CHANNEL;
-    private static final String FIELD_NATURE_OF_CASE           = FEC_Constants.FIELD_NATURE_OF_CASE;
-    private static final String FIELD_STAGE_NAME               = FEC_Constants.FIELD_STAGE_NAME;
-    private static final String FIELD_CUSTOMER_TYPE            = FEC_Constants.FIELD_CUSTOMER_TYPE;
-    private static final String FIELD_BUSINESS_PROCESS         = FEC_Constants.FIELD_BUSINESS_PROCESS;
-    private static final String FIELD_PRODUCT_TYPE             = FEC_Constants.FIELD_PRODUCT_TYPE;
-    private static final String FIELD_PRODUCT_TYPE_STATUS      = FEC_Constants.FIELD_PRODUCT_TYPE_STATUS;
-    private static final String FIELD_CATEGORY                 = FEC_Constants.FIELD_CATEGORY;
-    private static final String FIELD_CATEGORY_STATUS          = FEC_Constants.FIELD_CATEGORY_STATUS;
-    private static final String FIELD_SUB_CATEGORY             = FEC_Constants.FIELD_SUB_CATEGORY;
-    private static final String FIELD_SUB_CATEGORY_STATUS      = FEC_Constants.FIELD_SUB_CATEGORY_STATUS;
-    private static final String FIELD_SUB_CODE                 = FEC_Constants.FIELD_SUB_CODE;
-    private static final String FIELD_SUB_CODE_STATUS          = FEC_Constants.FIELD_SUB_CODE_STATUS;
-    private static final String FIELD_USER_GROUP               = FEC_Constants.FIELD_USER_GROUP;
-    private static final String FIELD_ROLE_NAMES               = FEC_Constants.FIELD_ROLE_NAMES;
-    private static final String FIELD_ADDITIONAL_FIELD         = FEC_Constants.FIELD_ADDITIONAL_FIELD;
+    private static final String FIELD_CODE                     = FEC_FieldConstants.FIELD_CODE;
+    private static final String FIELD_NAME                     = FEC_FieldConstants.FIELD_NAME;
+    private static final String FIELD_PROCESS_CHANGE_STATUS    = FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS;
+    private static final String FIELD_ALIAS                    = FEC_FieldConstants.FIELD_ALIAS;
+    private static final String FIELD_NAME_VN                  = FEC_FieldConstants.FIELD_NAME_VN;
+    private static final String FIELD_STATUS                   = FEC_FieldConstants.FIELD_STATUS;
+    private static final String FIELD_ACTIVE                   = FEC_FieldConstants.FIELD_ACTIVE;
+    private static final String FIELD_POS_ORDER                = FEC_FieldConstants.FIELD_POS_ORDER;
+    private static final String FIELD_FEC_UNIQUE_ID            = FEC_FieldConstants.FIELD_FEC_UNIQUE_ID;
+    private static final String FIELD_FEC_TYPE                 = FEC_FieldConstants.FIELD_FEC_TYPE;
+    private static final String FIELD_FEC_ORDER                = FEC_FieldConstants.FIELD_FEC_ORDER;
+    private static final String FIELD_FIELD_MANDATORY          = FEC_FieldConstants.FIELD_FIELD_MANDATORY;
+    private static final String FIELD_FIELD_STATUS             = FEC_FieldConstants.FIELD_FIELD_STATUS;
+    private static final String FIELD_FIELD_READONLY           = FEC_FieldConstants.FIELD_FIELD_READONLY;
+    private static final String FIELD_FIELD_OBJECT_NAME        = FEC_FieldConstants.FIELD_FIELD_OBJECT_NAME;
+    private static final String FIELD_FIELD_ORDER_DISPLAY      = FEC_FieldConstants.FIELD_FIELD_ORDER_DISPLAY;
+    private static final String FIELD_PROPERTY_REFERENCE       = FEC_FieldConstants.FIELD_PROPERTY_REFERENCE;
+    private static final String FIELD_SECTION                  = FEC_FieldConstants.FIELD_SECTION;
+    private static final String FIELD_APPLICABLE_ROLE          = FEC_FieldConstants.FIELD_APPLICABLE_ROLE;
+    private static final String FIELD_DATA_INTEGRATION_MAPPING = FEC_FieldConstants.FIELD_DATA_INTEGRATION_MAPPING;
+    private static final String FIELD_CHANNEL_ID               = FEC_FieldConstants.FIELD_CHANNEL_ID;
+    private static final String FIELD_CHANNEL_STATUS           = FEC_FieldConstants.FIELD_CHANNEL_STATUS;
+    private static final String FIELD_CHANNEL_VI_NAME          = FEC_FieldConstants.FIELD_CHANNEL_VI_NAME;
+    private static final String FIELD_SELF_SERVICE_FLAG        = FEC_FieldConstants.FIELD_SELF_SERVICE_FLAG;
+    private static final String FIELD_CHANNEL                  = FEC_FieldConstants.FIELD_CHANNEL;
+    private static final String FIELD_NATURE_OF_CASE           = FEC_FieldConstants.FIELD_NATURE_OF_CASE;
+    private static final String FIELD_STAGE_NAME               = FEC_FieldConstants.FIELD_STAGE_NAME;
+    private static final String FIELD_CUSTOMER_TYPE            = FEC_FieldConstants.FIELD_CUSTOMER_TYPE;
+    private static final String FIELD_BUSINESS_PROCESS         = FEC_FieldConstants.FIELD_BUSINESS_PROCESS;
+    private static final String FIELD_PRODUCT_TYPE             = FEC_FieldConstants.FIELD_PRODUCT_TYPE;
+    private static final String FIELD_PRODUCT_TYPE_STATUS      = FEC_FieldConstants.FIELD_PRODUCT_TYPE_STATUS;
+    private static final String FIELD_CATEGORY                 = FEC_FieldConstants.FIELD_CATEGORY;
+    private static final String FIELD_CATEGORY_STATUS          = FEC_FieldConstants.FIELD_CATEGORY_STATUS;
+    private static final String FIELD_SUB_CATEGORY             = FEC_FieldConstants.FIELD_SUB_CATEGORY;
+    private static final String FIELD_SUB_CATEGORY_STATUS      = FEC_FieldConstants.FIELD_SUB_CATEGORY_STATUS;
+    private static final String FIELD_SUB_CODE                 = FEC_FieldConstants.FIELD_SUB_CODE;
+    private static final String FIELD_SUB_CODE_STATUS          = FEC_FieldConstants.FIELD_SUB_CODE_STATUS;
+    private static final String FIELD_USER_GROUP               = FEC_FieldConstants.FIELD_USER_GROUP;
+    private static final String FIELD_ROLE_NAMES               = FEC_FieldConstants.FIELD_ROLE_NAMES;
+    private static final String FIELD_DEFAULT_STAGE            = FEC_FieldConstants.FIELD_DEFAULT_STAGE;
+    private static final String FIELD_NATURE_OF_CASES          = FEC_FieldConstants.FIELD_NATURE_OF_CASES;
+    private static final String FIELD_ADDITIONAL_FIELD         = FEC_FieldConstants.FIELD_ADDITIONAL_FIELD;
+    private static final String FIELD_FIELD_MASKING            = FEC_FieldConstants.FIELD_FIELD_MASKING;
+    private static final String FIELD_MASKING_TYPE             = FEC_FieldConstants.FIELD_MASKING_TYPE;
+    private static final String FIELD_FIELD_REVERTED           = FEC_FieldConstants.FIELD_FIELD_REVERTED;
+    private static final String FIELD_SUB_SECTION              = FEC_FieldConstants.FIELD_SUB_SECTION;
+    private static final String FIELD_SUB_SECTION_FIELD_LAYOUT = FEC_FieldConstants.FIELD_SUB_SECTION_FIELD_LAYOUT;
+    private static final String FIELD_SUB_SECTION_LAYOUT       = FEC_FieldConstants.FIELD_SUB_SECTION_LAYOUT;
+    private static final String FIELD_SUB_SECTION_ORDER        = FEC_FieldConstants.FIELD_SUB_SECTION_ORDER;
+    private static final String FIELD_EDITABLE_USER_GROUP      = FEC_FieldConstants.FIELD_EDITABLE_USER_GROUP;
+    private static final String FIELD_FIELD_EDITABLE           = FEC_FieldConstants.FIELD_FIELD_EDITABLE;
+    private static final String FIELD_EDITABLE_ROLE            = FEC_FieldConstants.FIELD_EDITABLE_ROLE;
     private static final String FIELD_PREVIOUS_STAGE           = 'FEC_Previous_Stage__c';
     private static final String FIELD_ACTION_BUTTON            = 'FEC_Action_Button__c';
     private static final String FIELD_NEXT_STAGE               = 'FEC_Next_Stage__c';
     private static final String FIELD_NEXT_QUEUE               = 'FEC_Next_Queue__c';
     private static final String FIELD_TEAM_USER_GROUP          = 'FEC_Team_User_Group__c';
-    private static final String PROCESS_STATUS_SYNCED          = FEC_Constants.PROCESS_STATUS_SYNCED;
-    private static final String OBJ_MDM_PRODUCT_TYPE = FEC_Constants.OBJ_MDM_PRODUCT_TYPE;
-    private static final String OBJ_MDM_BUSINESS_PROCESS = FEC_Constants.OBJ_MDM_BUSINESS_PROCESS;
-    private static final String OBJ_MDM_CATEGORY = FEC_Constants.OBJ_MDM_CATEGORY;
-    private static final String OBJ_MDM_SUB_CATEGORY = FEC_Constants.OBJ_MDM_SUB_CATEGORY;
-    private static final String OBJ_MDM_SUB_CODE = FEC_Constants.OBJ_MDM_SUB_CODE;
-    private static final String OBJ_MDM_NATURE_OF_CASE = FEC_Constants.OBJ_MDM_NATURE_OF_CASE;
-    private static final String OBJ_MDM_CHANNEL = FEC_Constants.OBJ_MDM_CHANNEL;
-    private static final String OBJ_MDM_CASE_STAGE = FEC_Constants.OBJ_MDM_CASE_STAGE;
-    private static final String OBJ_MDM_ADDITIONAL_FIELD = FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD;
-    private static final String OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE = FEC_Constants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE;
-    private static final String OBJ_MDM_MASTER_DATA_SETTING = FEC_Constants.OBJ_MDM_MASTER_DATA_SETTING;
-    private static final String OBJ_PRODUCT_TYPE = FEC_Constants.OBJ_PRODUCT_TYPE;
-    private static final String OBJ_BUSINESS_PROCESS = FEC_Constants.OBJ_BUSINESS_PROCESS;
-    private static final String OBJ_CATEGORY = FEC_Constants.OBJ_CATEGORY;
-    private static final String OBJ_SUB_CATEGORY = FEC_Constants.OBJ_SUB_CATEGORY;
-    private static final String OBJ_SUB_CODE = FEC_Constants.OBJ_SUB_CODE;
-    private static final String OBJ_NATURE_OF_CASE = FEC_Constants.OBJ_NATURE_OF_CASE;
-    private static final String OBJ_CHANNEL = FEC_Constants.OBJ_CHANNEL;
-    private static final String OBJ_ADDITIONAL_FIELD = FEC_Constants.OBJ_ADDITIONAL_FIELD;
-    private static final String OBJ_ADDITIONAL_FIELD_LIST_VALUE = FEC_Constants.OBJ_ADDITIONAL_FIELD_LIST_VALUE;
-    private static final String OBJ_CASE_STAGE = FEC_Constants.OBJ_CASE_STAGE;
-    private static final String OBJ_MASTER_DATA_SETTING = FEC_Constants.OBJ_MASTER_DATA_SETTING;
+    private static final String PROCESS_STATUS_SYNCED          = FEC_UIConstants.PROCESS_STATUS_SYNCED;
+    private static final String OBJ_MDM_PRODUCT_TYPE = FEC_ObjectConstants.OBJ_MDM_PRODUCT_TYPE;
+    private static final String OBJ_MDM_BUSINESS_PROCESS = FEC_ObjectConstants.OBJ_MDM_BUSINESS_PROCESS;
+    private static final String OBJ_MDM_CATEGORY = FEC_ObjectConstants.OBJ_MDM_CATEGORY;
+    private static final String OBJ_MDM_SUB_CATEGORY = FEC_ObjectConstants.OBJ_MDM_SUB_CATEGORY;
+    private static final String OBJ_MDM_SUB_CODE = FEC_ObjectConstants.OBJ_MDM_SUB_CODE;
+    private static final String OBJ_MDM_NATURE_OF_CASE = FEC_ObjectConstants.OBJ_MDM_NATURE_OF_CASE;
+    private static final String OBJ_MDM_CHANNEL = FEC_ObjectConstants.OBJ_MDM_CHANNEL;
+    private static final String OBJ_MDM_CASE_STAGE = FEC_ObjectConstants.OBJ_MDM_CASE_STAGE;
+    private static final String OBJ_MDM_ADDITIONAL_FIELD = FEC_ObjectConstants.OBJ_MDM_ADDITIONAL_FIELD;
+    private static final String OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE = FEC_ObjectConstants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE;
+    private static final String OBJ_MDM_MASTER_DATA_SETTING = FEC_ObjectConstants.OBJ_MDM_MASTER_DATA_SETTING;
+    private static final String OBJ_PRODUCT_TYPE = FEC_ObjectConstants.OBJ_PRODUCT_TYPE;
+    private static final String OBJ_BUSINESS_PROCESS = FEC_ObjectConstants.OBJ_BUSINESS_PROCESS;
+    private static final String OBJ_CATEGORY = FEC_ObjectConstants.OBJ_CATEGORY;
+    private static final String OBJ_SUB_CATEGORY = FEC_ObjectConstants.OBJ_SUB_CATEGORY;
+    private static final String OBJ_SUB_CODE = FEC_ObjectConstants.OBJ_SUB_CODE;
+    private static final String OBJ_NATURE_OF_CASE = FEC_ObjectConstants.OBJ_NATURE_OF_CASE;
+    private static final String OBJ_CHANNEL = FEC_ObjectConstants.OBJ_CHANNEL;
+    private static final String OBJ_ADDITIONAL_FIELD = FEC_ObjectConstants.OBJ_ADDITIONAL_FIELD;
+    private static final String OBJ_ADDITIONAL_FIELD_LIST_VALUE = FEC_ObjectConstants.OBJ_ADDITIONAL_FIELD_LIST_VALUE;
+    private static final String OBJ_CASE_STAGE = FEC_ObjectConstants.OBJ_CASE_STAGE;
+    private static final String OBJ_MASTER_DATA_SETTING = FEC_ObjectConstants.OBJ_MASTER_DATA_SETTING;
     private static final String OBJ_MDM_STAGE_CHANGE = 'FEC_MDM_Stage_Change__c';
     private static final String OBJ_STAGE_CHANGE = 'FEC_Stage_Change__c';
     private static final String OBJ_MDM_ACTION_BUTTON = 'FEC_MDM_Action_Button__c';
     private static final String OBJ_ACTION_BUTTON = 'FEC_Action_Button__c';
+    private static final String OBJ_MDM_STAGE_CHANGE_CONDITION      = FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION;
+    private static final String OBJ_STAGE_CHANGE_CONDITION           = FEC_ObjectConstants.OBJ_STAGE_CHANGE_CONDITION;
+    private static final String FIELD_STAGE_CHANGE                   = FEC_FieldConstants.FIELD_STAGE_CHANGE;
+    private static final String FIELD_MASTER_DATA_SETTING            = FEC_FieldConstants.FIELD_MASTER_DATA_SETTING;
+    private static final String FIELD_OPERATOR                       = FEC_FieldConstants.FIELD_OPERATOR;
+    private static final String FIELD_VALUE                          = FEC_FieldConstants.FIELD_VALUE;
+    private static final String FIELD_VALUE_TYPE                     = FEC_FieldConstants.FIELD_VALUE_TYPE;
     
     // Map key constants
     private static final String MDM_FIELD_KEY = 'mdmField';
@@ -115,8 +135,12 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             MDM_FIELD_KEY => FIELD_NATURE_OF_CASE,
             MDM_OBJ_KEY   => OBJ_MDM_NATURE_OF_CASE
         },
+        FIELD_NATURE_OF_CASES => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_NATURE_OF_CASES,
+            MDM_OBJ_KEY   => OBJ_MDM_NATURE_OF_CASE
+        },
         FIELD_CHANNEL => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_CHANNEL,
+            MDM_FIELD_KEY => 'FEC_MDM_Channel__c',
             MDM_OBJ_KEY   => OBJ_MDM_CHANNEL
         },
         // Stage Change lookups
@@ -131,6 +155,15 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_ACTION_BUTTON => new Map<String, String>{
             MDM_FIELD_KEY => FIELD_ACTION_BUTTON,
             MDM_OBJ_KEY   => OBJ_MDM_ACTION_BUTTON
+        },
+        // Stage Change Condition lookups
+        FIELD_STAGE_CHANGE => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_STAGE_CHANGE,
+            MDM_OBJ_KEY   => OBJ_MDM_STAGE_CHANGE
+        },
+        FIELD_MASTER_DATA_SETTING => new Map<String, String>{
+            MDM_FIELD_KEY => FIELD_MASTER_DATA_SETTING,
+            MDM_OBJ_KEY   => OBJ_MDM_MASTER_DATA_SETTING
         }
     };
     
@@ -142,7 +175,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
             FIELD_SUB_CATEGORY, FIELD_SUB_CODE
         },
         OBJ_MDM_CASE_STAGE => new List<String>{
-            FIELD_BUSINESS_PROCESS
+            FIELD_BUSINESS_PROCESS, FIELD_NATURE_OF_CASES
         },
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE => new List<String>{
             FIELD_ADDITIONAL_FIELD
@@ -150,13 +183,17 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_MASTER_DATA_SETTING => new List<String>{
             FIELD_STAGE_NAME,
             FIELD_NATURE_OF_CASE,
-            FIELD_ADDITIONAL_FIELD
+            FIELD_ADDITIONAL_FIELD,
+            FIELD_CHANNEL
         },
         // Stage Change lookups: Previous Stage, Action Button, Next Stage
         OBJ_MDM_STAGE_CHANGE => new List<String>{
             FIELD_PREVIOUS_STAGE,
             FIELD_ACTION_BUTTON,
             FIELD_NEXT_STAGE
+        },
+        OBJ_MDM_STAGE_CHANGE_CONDITION => new List<String>{
+            FIELD_STAGE_CHANGE, FIELD_MASTER_DATA_SETTING
         }
     };
     
@@ -173,7 +210,8 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
         OBJ_MDM_MASTER_DATA_SETTING,
         OBJ_MDM_ACTION_BUTTON,      // Must be before Stage Change
-        OBJ_MDM_STAGE_CHANGE
+        OBJ_MDM_STAGE_CHANGE,
+        OBJ_MDM_STAGE_CHANGE_CONDITION
     };
     
     // Map object types that have special handling (lookups that need remapping)
@@ -182,14 +220,16 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_CASE_STAGE,
         OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
         OBJ_MDM_MASTER_DATA_SETTING,
-        OBJ_MDM_STAGE_CHANGE
+        OBJ_MDM_STAGE_CHANGE,
+        OBJ_MDM_STAGE_CHANGE_CONDITION
     };
     
     // Objects whose Name field is auto-number (not editable) - skip Name when copying
     private static final Set<String> OBJECTS_WITH_AUTONUMBER_NAME = new Set<String>{
         OBJ_MDM_MASTER_DATA_SETTING,
         OBJ_MDM_NATURE_OF_CASE,
-        OBJ_MDM_STAGE_CHANGE
+        OBJ_MDM_STAGE_CHANGE,
+        OBJ_MDM_STAGE_CHANGE_CONDITION
     };
     
     private Map<String, String> mdmToOriginalMap = new Map<String, String>{
@@ -205,7 +245,8 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         OBJ_MDM_CASE_STAGE          => OBJ_CASE_STAGE,
         OBJ_MDM_MASTER_DATA_SETTING => OBJ_MASTER_DATA_SETTING,
         OBJ_MDM_ACTION_BUTTON       => OBJ_ACTION_BUTTON,
-        OBJ_MDM_STAGE_CHANGE        => OBJ_STAGE_CHANGE
+        OBJ_MDM_STAGE_CHANGE        => OBJ_STAGE_CHANGE,
+        OBJ_MDM_STAGE_CHANGE_CONDITION => OBJ_STAGE_CHANGE_CONDITION
     };
     
     private Map<String, String> commonFieldMap = new Map<String, String>{
@@ -223,6 +264,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_CHANNEL_ID => FIELD_CHANNEL_ID,
         FIELD_CHANNEL_STATUS => FIELD_CHANNEL_STATUS,
         FIELD_CHANNEL_VI_NAME => FIELD_CHANNEL_VI_NAME,
+        FIELD_SELF_SERVICE_FLAG => FIELD_SELF_SERVICE_FLAG,
         //FEC_MDM_Master_Data_Setting__c Fields
         FIELD_APPLICABLE_ROLE => FIELD_APPLICABLE_ROLE,
         FIELD_FIELD_MANDATORY => FIELD_FIELD_MANDATORY,
@@ -232,8 +274,18 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_FIELD_STATUS => FIELD_FIELD_STATUS,
         FIELD_PROPERTY_REFERENCE => FIELD_PROPERTY_REFERENCE,
         FIELD_SECTION => FIELD_SECTION,
-        FIELD_CHANNEL => FIELD_CHANNEL,
+        // FIELD_CHANNEL => FIELD_CHANNEL, // Removed: Channel is now handled via OBJECT_LOOKUP_FIELDS remap (Lookup)
         FIELD_DATA_INTEGRATION_MAPPING => FIELD_DATA_INTEGRATION_MAPPING,
+        FIELD_FIELD_MASKING => FIELD_FIELD_MASKING,
+        FIELD_MASKING_TYPE => FIELD_MASKING_TYPE,
+        FIELD_FIELD_REVERTED => FIELD_FIELD_REVERTED,
+        FIELD_SUB_SECTION => FIELD_SUB_SECTION,
+        FIELD_SUB_SECTION_FIELD_LAYOUT => FIELD_SUB_SECTION_FIELD_LAYOUT,
+        FIELD_SUB_SECTION_LAYOUT => FIELD_SUB_SECTION_LAYOUT,
+        FIELD_SUB_SECTION_ORDER => FIELD_SUB_SECTION_ORDER,
+        FIELD_EDITABLE_USER_GROUP => FIELD_EDITABLE_USER_GROUP,
+        FIELD_FIELD_EDITABLE => FIELD_FIELD_EDITABLE,
+        FIELD_EDITABLE_ROLE => FIELD_EDITABLE_ROLE,
         'FEC_Field_API_Name__c' => 'FEC_Field_API_Name__c',
         'FEC_Field_Label_Name__c' => 'FEC_Field_Label_Name__c',
         //NOC Lookup Fields
@@ -255,6 +307,7 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_SUB_CODE_STATUS => FIELD_SUB_CODE_STATUS,
         FIELD_USER_GROUP => FIELD_USER_GROUP,
         FIELD_ROLE_NAMES => FIELD_ROLE_NAMES,
+        FIELD_DEFAULT_STAGE => FIELD_DEFAULT_STAGE,
         FIELD_STAGE_NAME => FIELD_STAGE_NAME,
         // Stage Change Fields (FEC_Stage_Change__c)
         FIELD_PREVIOUS_STAGE  => FIELD_PREVIOUS_STAGE,
@@ -262,7 +315,11 @@ public class FEC_SyncMasterDataBatch implements Database.Batchable<String>, Data
         FIELD_NEXT_STAGE      => FIELD_NEXT_STAGE,
         FIELD_NEXT_QUEUE      => FIELD_NEXT_QUEUE,
         FIELD_TEAM_USER_GROUP => FIELD_TEAM_USER_GROUP,
-        FIELD_ACTIVE          => FIELD_ACTIVE
+        FIELD_ACTIVE          => FIELD_ACTIVE,
+        // Stage Change Condition fields
+        FIELD_OPERATOR    => FIELD_OPERATOR,
+        FIELD_VALUE       => FIELD_VALUE,
+        FIELD_VALUE_TYPE  => FIELD_VALUE_TYPE
     };
     
     public Iterable<String> start(Database.BatchableContext bc) {

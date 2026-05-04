@@ -8,15 +8,13 @@ import FEC_Activity_ID_Label from '@salesforce/label/c.FEC_Activity_ID_Label';
 import FEC_Status_Label from '@salesforce/label/c.FEC_Status_Label';
 import FEC_Edit_Date_Label from '@salesforce/label/c.FEC_Edit_Date_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-import FEC_MSG_No_Data from '@salesforce/label/c.FEC_MSG_No_Data';
+import FEC_No_Data_Application_History from '@salesforce/label/c.FEC_No_Data_Application_History';
 
 export default class Fec_AppInfo extends LightningElement {
     @api recordId;
     @track histories = [];
     @track isLoading = false;
     @track errorText = '';
-    /** API OK nhưng không có bản ghi lịch sử (tránh hiển thị như lỗi callout). */
-    @track noDataOnly = false;
 
     activeSections = ['appHistory'];
 
@@ -27,11 +25,15 @@ export default class Fec_AppInfo extends LightningElement {
         statusLabel: FEC_Status_Label,
         editDateLabel: FEC_Edit_Date_Label,
         msgErrorAPI: FEC_MSG_Error_API_Label,
-        noDataLabel: FEC_MSG_No_Data
+        noDataApplicationHistory: FEC_No_Data_Application_History
     };
 
+    get emptyStateMessage() {
+        return this.customLabel.noDataApplicationHistory;
+    }
+
     get showDataTable() {
-        return !this.errorText && !this.noDataOnly && this.histories.length > 0;
+        return !this.errorText;
     }
 
     columns = [
@@ -74,17 +76,14 @@ export default class Fec_AppInfo extends LightningElement {
             .then((res) => {
                 this.errorText = '';
                 if (res) {
-                    this.noDataOnly = false;
                     this.histories = [this.mapHistory(res)];
                 } else {
                     this.histories = [];
-                    this.noDataOnly = true;
                 }
             })
             .catch((err) => {
                 console.error('[FEC] updateCaseApplicationHistory error', err);
                 this.histories = [];
-                this.noDataOnly = false;
                 this.errorText = this.customLabel.msgErrorAPI;
             })
             .finally(() => {

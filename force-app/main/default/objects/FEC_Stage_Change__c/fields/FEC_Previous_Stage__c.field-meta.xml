@@ -3,7 +3,6 @@
     <fullName>FEC_Previous_Stage__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Tên Stage hiện tại trước khi thay đổi</description>
-    <externalId>false</externalId>
     <label>Previous Stage</label>
     <referenceTo>FEC_Case_Stage__c</referenceTo>
     <relationshipLabel>Stage Change</relationshipLabel>

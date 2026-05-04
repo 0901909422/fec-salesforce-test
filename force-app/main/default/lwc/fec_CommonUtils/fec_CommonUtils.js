@@ -220,7 +220,7 @@ const maskValue = (value, showFull) => {
    * Ví dụ: 028*****456
   * ===================== */
   if (/^02\d{8,9}$/.test(v)) {
-  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
 
   /* =====================
@@ -668,7 +668,7 @@ const setConsoleTab = async (label, icon) => {
       });
     }
   } catch (e) {
-   console.error(e);
+    console.error(e);
   }
 };
 
@@ -705,8 +705,8 @@ const formatNumber = (value) => {
 };
 
 const getCaseIdNumber = (idText) => {
-    const match = idText?.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
+  const match = idText?.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
 };
 
 /**
@@ -783,26 +783,63 @@ const formatThousandsFromDigits = (digits) => {
   }).format(n);
 };
 
-const toUpperNoVietnameseAccent = (str) => {
-  if (!str) {
+const formatThousandsFromDigitsEnUs = (digits) => {
+  if (!digits) {
     return STR_EMPTY;
   }
-  let s = str.trim().toLowerCase();
-  const map = [
-    ['à', 'a'], ['á', 'a'], ['ạ', 'a'], ['ả', 'a'], ['ã', 'a'],
-    ['ầ', 'a'], ['ấ', 'a'], ['ậ', 'a'], ['ẩ', 'a'], ['ẫ', 'a'],
-    ['ằ', 'a'], ['ắ', 'a'], ['ặ', 'a'], ['ẳ', 'a'], ['ẵ', 'a'],
-    ['è', 'e'], ['é', 'e'], ['ẹ', 'e'], ['ẻ', 'e'], ['ẽ', 'e'], ['ê', 'e'], ['ề', 'e'], ['ế', 'e'], ['ệ', 'e'], ['ể', 'e'], ['ễ', 'e'],
-    ['ì', 'i'], ['í', 'i'], ['ị', 'i'], ['ỉ', 'i'], ['ĩ', 'i'],
-    ['ò', 'o'], ['ó', 'o'], ['ọ', 'o'], ['ỏ', 'o'], ['õ', 'o'], ['ô', 'o'], ['ồ', 'o'], ['ố', 'o'], ['ộ', 'o'], ['ổ', 'o'], ['ỗ', 'o'], ['ơ', 'o'], ['ờ', 'o'], ['ớ', 'o'], ['ợ', 'o'], ['ở', 'o'], ['ỡ', 'o'],
-    ['ù', 'u'], ['ú', 'u'], ['ụ', 'u'], ['ủ', 'u'], ['ũ', 'u'], ['ư', 'u'], ['ừ', 'u'], ['ứ', 'u'], ['ự', 'u'], ['ử', 'u'], ['ữ', 'u'],
-    ['ỳ', 'y'], ['ý', 'y'], ['ỵ', 'y'], ['ỷ', 'y'], ['ỹ', 'y'],
-    ['đ', 'd']
-  ];
-  map.forEach((pair) => {
-    s = s.split(pair[0]).join(pair[1]);
-  });
-  return s.toUpperCase();
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
+const toUpperNoVietnameseAccent = (str) => {
+  if (!str) return '';
+
+  const s = str.trim().toLowerCase();
+  const len = s.length;
+  const out = new Array(len);
+
+  for (let i = 0; i < len; i++) {
+    let c = s.charCodeAt(i);
+
+    switch (c) {
+      // a
+      case 224: case 225: case 7841: case 7843: case 227:
+      case 226: case 7847: case 7845: case 7853: case 7849: case 7851:
+      case 259: case 7857: case 7855: case 7863: case 7859: case 7861:
+        out[i] = 'a'; break;
+      // e
+      case 232: case 233: case 7865: case 7867: case 7869:
+      case 234: case 7873: case 7871: case 7879: case 7875: case 7877:
+        out[i] = 'e'; break;
+      // i
+      case 236: case 237: case 7883: case 7881: case 297:
+        out[i] = 'i'; break;
+      // o
+      case 242: case 243: case 7885: case 7887: case 245:
+      case 244: case 7891: case 7889: case 7897: case 7893: case 7895:
+      case 417: case 7901: case 7899: case 7907: case 7903: case 7905:
+        out[i] = 'o'; break;
+      // u
+      case 249: case 250: case 7909: case 7911: case 361:
+      case 432: case 7915: case 7913: case 7921: case 7917: case 7919:
+        out[i] = 'u'; break;
+      // y
+      case 7923: case 253: case 7925: case 7927: case 7929:
+        out[i] = 'y'; break;
+      // đ
+      case 273:
+        out[i] = 'd'; break;
+      default:
+        out[i] = s[i];
+    }
+  }
+  return out.join('').toUpperCase();
 };
 
 const todayIso = () => {
@@ -811,6 +848,112 @@ const todayIso = () => {
   const m = String(t.getMonth() + 1).padStart(2, '0');
   const d = String(t.getDate()).padStart(2, '0');
   return y + '-' + m + '-' + d;
+};
+
+/** Human-readable file size (B … GB). Dùng bởi fec_FileUploadCard và LWC khác. */
+const formatBytes = (bytes) => {
+  const n = Number(bytes);
+  if (!n || n <= 0) {
+    return "0 B";
+  }
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(n) / Math.log(k));
+  return `${(n / k ** i).toFixed(i > 0 ? 1 : 0)} ${sizes[i]}`;
+};
+
+/** Ngày ngắn theo locale (vd. "18 Apr 2026") — list file. */
+const formatShortDate = (dt) => {
+  if (!dt) {
+    return "";
+  }
+  try {
+    const d = new Date(dt);
+    return d.toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  } catch (e) {
+    return "";
+  }
+};
+
+/** Nhãn phần mở rộng file (tối đa 4 ký tự, in hoa). */
+const extensionBadge = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  if (!e) {
+    return "FILE";
+  }
+  return e.length <= 4 ? e.toUpperCase() : e.slice(0, 4).toUpperCase();
+};
+
+/**
+ * `lightning-icon` icon-name theo phần mở rộng (ContentDocument.FileExtension / tên file).
+ * Dùng cho bảng file / related list.
+ */
+const doctypeIconFromExtension = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  const map = {
+    pdf: "doctype:pdf",
+    xlsx: "doctype:excel",
+    xls: "doctype:excel",
+    csv: "doctype:csv",
+    doc: "doctype:word",
+    docx: "doctype:word",
+    ppt: "doctype:ppt",
+    pptx: "doctype:ppt",
+    txt: "doctype:txt",
+    xml: "doctype:xml",
+    png: "doctype:image",
+    jpg: "doctype:image",
+    jpeg: "doctype:image",
+    gif: "doctype:image",
+    zip: "doctype:zip"
+  };
+  return map[e] || "doctype:attachment";
+};
+
+/**
+ * Map 1 object cùng shape `FEC_CaseLinkedFilesController.CaseLinkedFileRow` → row UI bảng (Title / Owner / …).
+ */
+const mapLinkedFileToTableRow = (row) => {
+  if (!row) {
+    return null;
+  }
+  const ext = row.fileExtension || "";
+  const title = row.title || row.contentDocumentId;
+  return {
+    id: row.linkId,
+    linkLabel: title,
+    contentDocumentId: row.contentDocumentId,
+    ownerLabel: row.ownerName || "—",
+    lastModifiedLabel: formatDateTimeVNShort(row.lastModifiedDate) || "—",
+    sizeLabel: formatBytes(row.contentSize),
+    iconName: doctypeIconFromExtension(ext)
+  };
+};
+
+const formatCurrencyIncludeTax = (value, text) => {
+  let val = formatNumber(value);
+  if (!val || val == '0') return '';
+  return val + ' ' + text;
+}
+
+/** Currency(18,0): phân cách hàng nghìn, không thập phân. VD: 8,200,000 */
+const formatCurrency0 = (value) => {
+  if (value == null || value === '' || value === '-') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '-';
+  return Math.round(num).toLocaleString('en-US');
+};
+
+/** Currency(16,2): phân cách hàng nghìn, 2 thập phân. VD: 5,526,000.00 */
+const formatCurrency2 = (value) => {
+  if (value == null || value === '' || value === '-') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '-';
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export {
@@ -844,7 +987,16 @@ export {
   getCaseIdNumber,
   sortByStringField,
   formatThousandsFromDigits,
+  formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
-  toUpperNoVietnameseAccent
+  toUpperNoVietnameseAccent,
+  formatCurrencyIncludeTax,
+  formatCurrency0,
+  formatCurrency2,
+  formatBytes,
+  formatShortDate,
+  extensionBadge,
+  doctypeIconFromExtension,
+  mapLinkedFileToTableRow
 };

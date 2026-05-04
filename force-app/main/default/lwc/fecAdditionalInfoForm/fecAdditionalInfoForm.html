@@ -1,0 +1,188 @@
+<template>
+    <lightning-record-edit-form
+        object-api-name={objectApiName}
+        record-id={recordId}
+        onsuccess={handleSuccess}
+        onerror={handleError}>
+
+        <div class="slds-grid slds-wrap slds-gutters">
+
+            <!-- Case (MasterDetail): input when new, output when edit -->
+            <div class="slds-col slds-size_1-of-2">
+                <template if:true={isNewMode}>
+                    <lightning-input-field field-name="FEC_Case__c" required></lightning-input-field>
+                </template>
+                <template if:true={isEditMode}>
+                    <lightning-output-field field-name="FEC_Case__c"></lightning-output-field>
+                </template>
+            </div>
+
+            <!-- Core fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Callback__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Callback_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Gender__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Registered_Phone_Number__c"></lightning-input-field>
+            </div>
+
+            <!-- Card fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Card_Not_Received_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Card_Retention_Decline_Reason__c"></lightning-input-field>
+            </div>
+
+            <!-- Customer Info fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Correct_Customer_Full_Name__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Incorrect_Customer_Full_Name__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Correct_Date_of_Birth__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Incorrect_Date_of_Birth__c"></lightning-input-field>
+            </div>
+
+            <!-- ID fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_New_Citizen_ID_Number__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Old_Citizen_ID_Number__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_New_Issue_Date__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Old_Issue_Date__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_New_Place_of_Issue__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Old_Place_of_Issue__c"></lightning-input-field>
+            </div>
+
+            <!-- Delivery -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Delivery_Msg_Received__c"></lightning-input-field>
+            </div>
+
+            <!-- Dissatisfaction -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Dissatisfaction_Reason_1__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Dissatisfaction_Reason_2__c"></lightning-input-field>
+            </div>
+
+            <!-- Survey Q9-Q29 fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q9_Customer_Issue_Resolved__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q10_Reason_Issue_Not_Resolved__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q11_Staff_Support_Enthusiasm__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q12_Reason_Low_Staff_Enthusiasm__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q13_Staff_Support_Satisfaction__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q13_Reason_for_Low_Rating__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q14_Reason_for_Office_Visit__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q15_NPS_Score__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q16_BOT_Dissatisfaction_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q17_Dissatisfied_Process_Service__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q18_Staff_Dissatisfaction_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q19_Staff_Type__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q20_CS_Staff_Dissatisfaction_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q20_Survey_Refusal_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q21_Recommendation_Likelihood__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q22_Improvement_Suggestions__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q23_Satisfaction_Level__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q24_Collections_Feedback__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q25_Sales_Improvement_1__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q26_Sales_Improvement_2__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q27_Sales_Improvement_3__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q28_UW_Improvement__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Q29_Spending_Increase_Suggestion__c"></lightning-input-field>
+            </div>
+
+            <!-- Other fields -->
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Reason_Decline_IPP_Conversion__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Settlement_Request_Category__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Sync_Error__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Unmet_Need_Reason__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Verify_Information__c"></lightning-input-field>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-input-field field-name="FEC_Update_Reason__c"></lightning-input-field>
+            </div>
+        </div>
+
+        <!-- Footer buttons -->
+        <div class="slds-m-top_medium slds-float_right">
+            <lightning-button label={labelCancel} onclick={handleCancel} class="slds-m-right_x-small" variant="neutral"></lightning-button>
+            <lightning-button label={labelSave} type="submit" variant="brand"></lightning-button>
+        </div>
+
+    </lightning-record-edit-form>
+</template>

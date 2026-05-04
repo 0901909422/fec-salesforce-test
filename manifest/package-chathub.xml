@@ -14,7 +14,6 @@
     </types>
 
     <types>
-        <members>fecC360Info</members>
         <members>fecChatHistoryForCase</members>
         <members>fecChathubContainer</members>
         <members>fecChathubStatus</members>
@@ -31,14 +30,8 @@
 
     <types>
         <members>FEC_ChatHistory__c</members>
+        <members>FEC_SystemSetting__mdt</members>
         <name>CustomObject</name>
-    </types>
-
-    <types>
-        <members>FEC_ChatHub_Setting__mdt</members>
-        <members>FEC_ChatHubEncryptKey__mdt</members>
-        <members>FEC_ChatHubURL__mdt</members>
-        <name>CustomMetadata</name>
     </types>
 
     <types>
@@ -50,6 +43,7 @@
         <members>Facebook_CDN_atl3_3</members>
         <members>Facebook_CDN_sin2_1</members>
         <members>Facebook_CDN</members>
+        <members>S3_FPT</members>
         <name>RemoteSiteSetting</name>
     </types>
 
@@ -60,6 +54,37 @@
         <members>FE_ChatHub</members>
         <members>S3_FPT</members>
         <name>CspTrustedSite</name>
+    </types>
+
+    <types>
+        <members>FEC_SystemSetting.ChatHub_Settings</members>
+        <name>CustomMetadata</name>
+    </types>
+
+    <types>
+        <members>Admin</members>
+        <name>Profile</name>
+    </types>
+
+    <types>
+        <members>FEC_ChatHubAccess</members>
+        <name>CustomPermission</name>
+    </types>
+
+    <types>
+        <members>Case.FEC_External_Interaction_ID__c</members>
+        <name>CustomField</name>
+    </types>
+    
+    <types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
+
+    <types>
+        <members>FEC_Service_UtilityBar</members>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <name>FlexiPage</name>
     </types>
 
     <version>66.0</version>

@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Quản Lý FEC Channel" icon-name="standard:channel">
+    <lightning-card title="FEC Channel Management" icon-name="standard:channel">
         <lightning-button 
             slot="actions" 
             label={toggleHistoryLabel} 
@@ -58,6 +58,11 @@
                                     <lightning-input-field field-name={fieldChannelStatus} value={defaultChannelStatus}></lightning-input-field>
                                 </div>
                             </div>
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-2 slds-p-top_large">
+                                    <lightning-input-field field-name={fieldSelfServiceFlag}></lightning-input-field>
+                                </div>
+                            </div>
                             <div class="slds-m-top_small slds-text-align_right">
                                 <template if:true={selectedId}>
                                     <lightning-button label={labelCancelEdit} onclick={handleCancel}
@@ -73,11 +78,24 @@
                     </template>
 
                     <!-- Display filtered datatable -->
-                    <div class="table-wrapper slds-m-top_medium" style="height: 400px; max-width: 100%; overflow: hidden;">
+                    <div class="table-wrapper slds-m-top_medium">
                         <lightning-datatable key-field="Id" data={filteredChannels} columns={columns} hide-checkbox-column
-                            onrowaction={handleRowAction} onsort={handleSort} sorted-by={sortBy}
+                            show-row-number-column onrowaction={handleRowAction} onsort={handleSort} sorted-by={sortBy}
                             sorted-direction={sortDirection}>
                         </lightning-datatable>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="slds-grid slds-grid_align-center slds-m-top_small slds-m-bottom_small">
+                        <lightning-button label="Previous" icon-name="utility:chevronleft" 
+                            onclick={handlePreviousPage} disabled={isFirstPage} variant="neutral"
+                            class="slds-m-right_x-small">
+                        </lightning-button>
+                        <span class="slds-align-middle slds-p-horizontal_small">{paginationInfo}</span>
+                        <lightning-button label="Next" icon-name="utility:chevronright" icon-position="right"
+                            onclick={handleNextPage} disabled={isLastPage} variant="neutral"
+                            class="slds-m-left_x-small">
+                        </lightning-button>
                     </div>
                 </lightning-layout-item>
 
@@ -88,7 +106,7 @@
                             <c-fec-config-history 
                                 data-id="historyComponent"
                                 object-api-name={objectApiName}
-                                record-id={selectedId}>
+                                record-id="">
                             </c-fec-config-history>
                         </div>
                     </lightning-layout-item>

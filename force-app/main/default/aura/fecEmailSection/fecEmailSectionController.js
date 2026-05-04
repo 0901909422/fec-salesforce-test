@@ -54,27 +54,64 @@
         if (templateId) {
             var bodies = component.get('v.templateBodies');
             var subjects = component.get('v.templateSubjects');
+            var headers = component.get('v.templateHeaders') || {};
+            var footers = component.get('v.templateFooters') || {};
             var rawBody = bodies[templateId] || '';
+            var header = headers[templateId] || '';
+            var footer = footers[templateId] || '';
             var title = component.get('v.titleReply') || '';
             var body = helper.replaceDanhXung(rawBody, title);
-            component.set('v.body', body);
+            // Ghép header + body + footer
+            var fullBody = (header ? header : '') + body + (footer ? footer : '');
+            component.set('v.body', fullBody);
+            component.set('v.rawBody', fullBody); // tungnm37: lưu raw HTML để gửi email
             if (window._fecQuill) {
-                window._fecQuill.root.innerHTML = helper.cleanBody(body);
+                var _q = window._fecQuill;
+                var _body = helper.cleanBody(fullBody);
+                window.setTimeout(function() {
+                    if (_q.scroll && _q.scroll.observer) {
+                        _q.scroll.observer.disconnect();
+                    }
+                    _q.root.innerHTML = _body;
+                    _q.root.classList.remove('ql-blank');
+                    // tungnm37 thêm: đảm bảo td/th từ template có contenteditable
+                    helper._makeTableCellsEditable(_q.root);
+                    window.setTimeout(function() {
+                        if (_q.scroll && _q.scroll.observer) {
+                            _q.scroll.observer.observe(_q.root, _q.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                        }
+                    }, 100);
+                }, 50);
             }
-            // Apply subject từ template nếu có
+            // Apply subject từ template, giữ prefix RE:/FW: nếu đang reply/forward
             var templateSubject = subjects && subjects[templateId] ? subjects[templateId] : '';
             if (templateSubject) {
                 component.set('v.subject', templateSubject);
             }
+            // Load attachments từ template (pre-loaded in templateAttachments cache)
+            var allAtts = component.get('v.templateAttachments') || {};
+            var tmplAtts = allAtts[templateId] || [];
+            component.set('v.attachments', tmplAtts.map(function(a) {
+                return { name: a.fileName, size: 0, _fromTemplate: true, _base64: a.base64Data, _mime: a.mimeType };
+            }));
         } else {
             component.set('v.body', '');
+            component.set('v.subject', '');
+            component.set('v.attachments', []);
             if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+            // Khi bỏ chọn template, khôi phục subject gốc (RE:/FW: + originalSubject)
+            var prefix2 = component.get('v.replyPrefix') || '';
+            var orig = component.get('v.originalSubject') || '';
+            if (prefix2 && orig) {
+                component.set('v.subject', prefix2 + '<' + orig + '>');
+            }
         }
     },
 
     openCompose: function(component, event, helper) {
         var orig = component.get('v.originalSubject');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.replyPrefix', 'RE: ');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         var isServiceCase = component.get('v.isServiceCase');
@@ -96,11 +133,11 @@
         var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
         var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
         var orig = emailSubject || component.get('v.originalSubject');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.replyPrefix', 'RE: ');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         if (isServiceCase) {
-            // Pre-fill To = fromAddress của email khách (người gửi email đó)
             if (emailFrom) component.set('v.serviceCaseToEmail', emailFrom);
         } else {
             var toEmail = component.get('v.toEmail');
@@ -118,7 +155,8 @@
         var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
         var emailFrom = event.currentTarget ? event.currentTarget.dataset.from : null;
         var orig = emailSubject || component.get('v.originalSubject');
-        component.set('v.subject', orig ? 'RE: ' + orig : '');
+        component.set('v.replyPrefix', 'RE: ');
+        component.set('v.subject', orig ? 'RE: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         if (isServiceCase) {
@@ -137,7 +175,8 @@
     handleForward: function(component, event, helper) {
         var emailSubject = event.currentTarget ? event.currentTarget.dataset.subject : null;
         var orig = emailSubject || component.get('v.originalSubject');
-        component.set('v.subject', orig ? 'FW: ' + orig : '');
+        component.set('v.replyPrefix', 'FW: ');
+        component.set('v.subject', orig ? 'FW: <' + orig + '>' : '');
         component.set('v.errorMsg', '');
         component.set('v.serviceCaseToError', '');
         component.set('v.toTags', []);
@@ -253,12 +292,29 @@
     onAttachChange: function(component, event, helper) {
         var files = event.target.files;
         if (!files || files.length === 0) return;
+        // tungnm37 sửa: lưu ref trước khi Aura re-render
+        var inputTarget = event.target;
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
         var existing = component.get('v.attachments') || [];
         var newList = existing.slice();
         for (var i = 0; i < files.length; i++) {
-            newList.push({ name: files[i].name, size: files[i].size, file: files[i] });
+            var f = files[i];
+            var isImage = f.type && f.type.indexOf('image/') === 0;
+            // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
+            if (!isImage && f.size > MAX_SIZE) {
+                try {
+                    var t = $A.get('e.force:showToast');
+                    if (t) { t.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: f.name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 }); t.fire(); }
+                } catch(e) {}
+            } else {
+                newList.push({ name: f.name, size: f.size, file: f });
+            }
         }
         component.set('v.attachments', newList);
+        // tungnm37 sửa: reset sau setTimeout để lần 2 vẫn trigger onchange
+        window.setTimeout(function() {
+            try { if (inputTarget) inputTarget.value = ''; } catch(ex) {}
+        }, 0);
     },
 
     removeAttachment: function(component, event, helper) {
@@ -269,71 +325,17 @@
     },
 
     previewEmail: function(component, event, helper) {
-        var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
-
-        // Remove existing preview if any
-        var existing = document.getElementById('fec-preview-overlay');
-        if (existing) existing.parentNode.removeChild(existing);
-
-        var overlay = document.createElement('div');
-        overlay.id = 'fec-preview-overlay';
-        overlay.setAttribute('style', [
-            'position:fixed','top:0','left:0','right:0','bottom:0',
-            'width:100vw','height:100vh',
-            'background:rgba(0,0,0,.55)',
-            'z-index:2147483647',
-            'display:flex','align-items:center','justify-content:center'
-        ].join('!important;') + '!important;');
-
-        var modal = document.createElement('div');
-        modal.setAttribute('style', [
-            'background:#fff','border-radius:8px',
-            'width:760px','max-width:92vw','max-height:88vh',
-            'display:flex','flex-direction:column',
-            'box-shadow:0 8px 32px rgba(0,0,0,.35)',
-            'overflow:hidden','position:relative'
-        ].join('!important;') + '!important;');
-
-        // Header
-        var header = document.createElement('div');
-        header.setAttribute('style','display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e5e5;flex-shrink:0;');
-        var title = document.createElement('span');
-        title.textContent = 'Preview email';
-        title.setAttribute('style','font-size:17px;font-weight:600;color:#16325c;flex:1;text-align:center;');
-        var closeBtn = document.createElement('span');
-        closeBtn.innerHTML = '&#x2715;';
-        closeBtn.setAttribute('style','cursor:pointer;font-size:20px;color:#706e6b;line-height:1;padding:2px 6px;position:absolute;right:16px;top:14px;');
-        header.appendChild(title);
-        header.appendChild(closeBtn);
-
-        // Body
-        var bodyDiv = document.createElement('div');
-        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
-        bodyDiv.innerHTML = body;
-
-        // Footer
-        var footer = document.createElement('div');
-        footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
-        var footCloseBtn = document.createElement('button');
-        footCloseBtn.textContent = 'Close';
-        footCloseBtn.setAttribute('style','padding:8px 24px;border:none;border-radius:20px;background:#0070d2;color:#fff;font-size:14px;cursor:pointer;font-weight:500;');
-        footer.appendChild(footCloseBtn);
-
-        modal.appendChild(header);
-        modal.appendChild(bodyDiv);
-        modal.appendChild(footer);
-        overlay.appendChild(modal);
-
-        // Append to body
-        document.body.appendChild(overlay);
-
-        function closeModal() {
-            var el = document.getElementById('fec-preview-overlay');
-            if (el && el.parentNode) el.parentNode.removeChild(el);
+        var body = '';
+        if (window._fecQuill) {
+            body = window._fecQuill.root.innerHTML;
+            var text = window._fecQuill.getText().trim();
+            if (!text && !window._fecQuill.root.querySelector('table,img')) {
+                body = component.get('v.body') || '';
+            }
+        } else {
+            body = component.get('v.body') || '';
         }
-        closeBtn.addEventListener('click', closeModal);
-        footCloseBtn.addEventListener('click', closeModal);
-        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+        helper.showPreviewModal(body);
     },
 
     closePreview: function(component, event, helper) {
@@ -344,28 +346,90 @@
         event.stopPropagation();
     },
 
+    previewFeedEmail: function(component, event, helper) {
+        var body = event.currentTarget ? (event.currentTarget.getAttribute('data-body') || '') : '';
+        if (!body) return;
+        helper.showPreviewModal(body);
+    },
+
     discardEmail: function(component, event, helper) {
-        // Chỉ xóa nội dung text trong editor, không đóng compose
-        component.set('v.body', '');
-        if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
-        component.set('v.errorMsg', '');
+        // tungnm37 sửa: hiện popup xác nhận qua JS (append to body để tránh stacking context của Aura)
+        var existing = document.getElementById('fec-discard-popup');
+        if (existing) return;
+        var lblTitle = component.get('v.lblDiscardTitle') || 'Discard Draft?';
+        var lblMsg = component.get('v.lblDiscardMsg') || 'Recipients, subject, body text, and attachments are removed.';
+        var lblDiscard = component.get('v.lblDiscardBtn') || 'Discard';
+        var lblCancel = component.get('v.lblCancelBtn') || 'Cancel';
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-discard-popup';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.5);z-index:99999;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:32px 28px 24px;width:420px;max-width:92vw;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:100000;text-align:center;';
+        modal.innerHTML = '<div id="fec-discard-close" style="position:absolute;top:14px;right:18px;font-size:20px;cursor:pointer;color:#706e6b;line-height:1;">&#x2715;</div>'
+            + '<div style="font-size:20px;font-weight:700;color:#16325c;margin-bottom:12px;">' + lblTitle + '</div>'
+            + '<div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5;">' + lblMsg + '</div>'
+            + '<div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e5e5e5;padding-top:16px;">'
+            + '<button id="fec-discard-cancel" style="padding:7px 18px;border:1px solid #c8c8c8;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;color:#333;">' + lblCancel + '</button>'
+            + '<button id="fec-discard-confirm" style="padding:7px 18px;border:none;border-radius:20px;background:#0070d2;color:#fff;cursor:pointer;font-size:13px;">' + lblDiscard + '</button>'
+            + '</div>';
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+
+        function closePopup() {
+            var o = document.getElementById('fec-discard-popup');
+            var m = document.getElementById('fec-discard-modal-box');
+            if (o && o.parentNode) o.parentNode.removeChild(o);
+            if (m && m.parentNode) m.parentNode.removeChild(m);
+            // remove modal by finding it
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+        }
+        modal.id = 'fec-discard-modal-box';
+
+        overlay.addEventListener('click', closePopup);
+        document.getElementById('fec-discard-close').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-cancel').addEventListener('click', closePopup);
+        document.getElementById('fec-discard-confirm').addEventListener('click', $A.getCallback(function() {
+            closePopup();
+            component.set('v.body', '');
+            component.set('v.rawBody', '');
+            component.set('v.subject', '');
+            component.set('v.ccEmail', '');
+            component.set('v.toTags', []);
+            component.set('v.toInput', '');
+            component.set('v.attachments', []);
+            component.set('v.replyTemplate', '');
+            component.set('v.errorMsg', '');
+            if (window._fecQuill) { window._fecQuill.root.innerHTML = ''; }
+        }));
+    },
+
+    confirmDiscard: function(component, event, helper) {},
+    cancelDiscard: function(component, event, helper) {
+        component.set('v.showDiscardConfirm', false);
     },
 
     sendEmail: function(component, event, helper) {
         // Service Case: dùng serviceCaseToEmail; Interaction: dùng toEmail/toTags
         var isServiceCase = component.get('v.isServiceCase');
+        // tungnm37 sửa: dùng custom labels thay hardcode
+        var lblSnag = component.get('v.lblWeHitASnag');
+        var lblToReq = component.get('v.lblToRequired') || 'To email is required.';
+        var lblInvalidFmt = component.get('v.lblInvalidFormatTitle');
         var finalToEmail;
         if (isServiceCase) {
             finalToEmail = (component.get('v.serviceCaseToEmail') || '').trim();
             if (!finalToEmail) {
+                component.set('v.serviceCaseToError', lblToReq);
                 try {
                     var t1 = $A.get('e.force:showToast');
-                    if (t1) { t1.setParams({ title: 'Required field', message: 'To email is required.', type: 'error', duration: 4000 }); t1.fire(); }
+                    if (t1) { t1.setParams({ title: lblSnag, message: 'Review the errors on this page. ' + lblToReq, type: 'error', duration: 4000 }); t1.fire(); }
                 } catch(e) {}
                 return;
             }
             var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            // Normalize: đổi "; " thành "," rồi split
             var normalizedInput = finalToEmail.replace(/;/g, ',').replace(/,\s*/g, ',');
             var emailList = normalizedInput.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e && e.indexOf('@') > -1; });
             var invalidEmail = null;
@@ -373,9 +437,10 @@
                 if (!emailRe.test(emailList[i])) { invalidEmail = emailList[i]; break; }
             }
             if (invalidEmail) {
+                component.set('v.serviceCaseToError', '"' + invalidEmail + '" is not a valid To email address.');
                 try {
                     var t2 = $A.get('e.force:showToast');
-                    if (t2) { t2.setParams({ title: 'Invalid email', message: '"' + invalidEmail + '" is not a valid email address.', type: 'error', duration: 4000 }); t2.fire(); }
+                    if (t2) { t2.setParams({ title: lblInvalidFmt, message: '"' + invalidEmail + '" is not a valid To email address.', type: 'error', duration: 4000 }); t2.fire(); }
                 } catch(e) {}
                 return;
             }
@@ -384,33 +449,60 @@
             var tags = component.get('v.toTags');
             finalToEmail = toEmail || (tags && tags.length > 0 ? tags.join(',') : '');
             if (!finalToEmail) {
-                component.set('v.errorMsg', $A.get('$Label.c.FEC_Email_Error_Empty') || 'To email is required.');
+                component.set('v.errorMsg', lblToReq);
                 try {
                     var t3 = $A.get('e.force:showToast');
-                    if (t3) { t3.setParams({ title: 'Required field', message: 'To email is required.', type: 'error', duration: 4000 }); t3.fire(); }
+                    if (t3) { t3.setParams({ title: lblSnag, message: 'Review the errors on this page. ' + lblToReq, type: 'error', duration: 4000 }); t3.fire(); }
                 } catch(e) {}
                 return;
             }
         }
         var subject = component.get('v.subject');
         var body = window._fecQuill ? window._fecQuill.root.innerHTML : component.get('v.body');
+        // If v.body has table HTML but quill stripped it, use rawBody or v.body directly
+        var storedBody = component.get('v.rawBody') || component.get('v.body') || '';
+        if (storedBody.indexOf('<table') !== -1 && body.indexOf('<table') === -1) {
+            body = storedBody;
+        }
+        var lblSubjReq = component.get('v.lblSubjectRequired');
         if (!subject) {
-            component.set('v.errorMsg', 'Subject is required.');
-            try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:'Required field',message:'Subject is required.',type:'error',duration:4000});ts.fire();} } catch(e){}
+            component.set('v.errorMsg', lblSubjReq);
+            try { var ts=$A.get('e.force:showToast'); if(ts){ts.setParams({title:lblSnag,message:'Review the errors on this page. '+lblSubjReq,type:'error',duration:4000});ts.fire();} } catch(e){}
             return;
+        }
+        // Validate CC format
+        var ccRaw = (component.get('v.ccEmail') || '').trim();
+        if (ccRaw) {
+            var emailReCC = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            var ccNormalized = ccRaw.replace(/;/g, ',').replace(/,\s*/g, ',');
+            var ccList = ccNormalized.split(',').map(function(e) { return e.trim().replace(/\.+$/, ''); }).filter(function(e) { return e; });
+            var invalidCC = null;
+            for (var ci = 0; ci < ccList.length; ci++) {
+                if (!emailReCC.test(ccList[ci])) { invalidCC = ccList[ci]; break; }
+            }
+            if (invalidCC) {
+                component.set('v.errorMsg', '"' + invalidCC + '" is not a valid CC email address.');
+                try { var tcc=$A.get('e.force:showToast'); if(tcc){tcc.setParams({title:lblInvalidFmt,message:'"' + invalidCC + '" is not a valid CC email address.',type:'error',duration:4000});tcc.fire();} } catch(e){}
+                return;
+            }
         }
         var bodyText = window._fecQuill ? window._fecQuill.getText().trim() : (body || '').replace(/<[^>]+>/g,'').trim();
-        // Nếu getText() empty nhưng có table trong editor thì vẫn có content
         if (!bodyText && window._fecQuill) {
+            // tungnm37 sửa: check cả img (ảnh insert) không chỉ table
             var hasTable = window._fecQuill.root.querySelector('table') !== null;
-            if (hasTable) bodyText = 'table';
+            var hasImg = window._fecQuill.root.querySelector('img') !== null;
+            if (hasTable || hasImg) bodyText = 'content';
         }
+        // tungnm37 sửa: nếu body HTML có img tag thì cũng coi là có nội dung
+        if (!bodyText && body && body.indexOf('<img') !== -1) {
+            bodyText = 'content';
+        }
+        var lblBodyReq = component.get('v.lblBodyRequired');
         if (!bodyText) {
-            component.set('v.errorMsg', 'Body is required.');
-            try { var tb=$A.get('e.force:showToast'); if(tb){tb.setParams({title:'Required field',message:'Email body is required.',type:'error',duration:4000});tb.fire();} } catch(e){}
+            component.set('v.errorMsg', lblBodyReq);
+            try { var tb=$A.get('e.force:showToast'); if(tb){tb.setParams({title:lblSnag,message:'Review the errors on this page. '+lblBodyReq,type:'error',duration:4000});tb.fire();} } catch(e){}
             return;
         }
-        console.log('sendEmail: calling doSendEmail, fromEmail=', component.get('v.fromEmail'), 'toEmail=', finalToEmail);
         // Normalize: đổi ". " thành "," rồi split, trim trailing dots
         if (isServiceCase) {
             var normalizedInput2 = finalToEmail.replace(/;/g, ',').replace(/,\s*/g, ',');
@@ -427,41 +519,59 @@
             helper.doSendEmail(component, finalToEmail, subject, body, []);
             return;
         }
-
-        // Convert File objects to base64
         var converted = [];
-        var pending = attachments.length;
-        var MAX_SIZE = 25 * 1024 * 1024; // 25MB
+        var pending = 0;
+        var MAX_SIZE = 25 * 1024 * 1024; // 25MB - chỉ áp dụng cho file không phải ảnh
+        // tungnm37 sửa: ảnh insert vào body (_isInlineImg) không gửi kèm attachment
+        // chỉ strip blob URL khỏi body. File đính kèm thường mới convert base64.
+        var templateAtts = [];
+        var fileAtts = [];
         for (var i = 0; i < attachments.length; i++) {
-            if (attachments[i].size > MAX_SIZE) {
-                component.set('v.isSending', false);
-                var toastSize = $A.get('e.force:showToast');
-                if (toastSize) {
-                    toastSize.setParams({ title: 'File too large', message: attachments[i].name + ' exceeds the 25 MB limit.', type: 'error', duration: 6000 });
-                    toastSize.fire();
+            if (attachments[i]._fromTemplate) {
+                templateAtts.push({ fileName: attachments[i].name, base64Data: attachments[i]._base64, mimeType: attachments[i]._mime });
+            } else if (attachments[i]._isInlineImg) {
+                // Ảnh insert vào body — không gửi kèm, đã strip blob URL khỏi bodyToSend
+            } else {
+                // tungnm37 sửa: ảnh không giới hạn size, chỉ check 25MB với file thường
+                var attFile = attachments[i].file;
+                var isImg = attFile && attFile.type && attFile.type.indexOf('image/') === 0;
+                if (!isImg && attachments[i].size > MAX_SIZE) {
+                    component.set('v.isSending', false);
+                    var toastSize = $A.get('e.force:showToast');
+                    if (toastSize) {
+                        toastSize.setParams({ title: component.get('v.lblFileTooLargeTitle'), message: attachments[i].name + ' ' + component.get('v.lblFileTooLargeMsg'), type: 'error', duration: 6000 });
+                        toastSize.fire();
+                    }
+                    return;
                 }
-                return;
+                fileAtts.push(attachments[i]);
             }
         }
-        attachments.forEach(function(att, idx) {
+        if (fileAtts.length === 0) {
+            helper.doSendEmail(component, finalToEmail, subject, body, templateAtts);
+            return;
+        }
+        pending = fileAtts.length;
+        var fileConverted = [];
+        fileAtts.forEach(function(att, idx) {
             var reader = new FileReader();
             reader.onload = $A.getCallback(function(e) {
-                var dataUrl = e.target.result; // data:<mime>;base64,<data>
+                var dataUrl = e.target.result;
                 var parts = dataUrl.split(',');
                 var mimeMatch = parts[0].match(/:(.*?);/);
-                converted[idx] = {
+                fileConverted[idx] = {
                     fileName: att.name,
                     base64Data: parts[1],
                     mimeType: mimeMatch ? mimeMatch[1] : 'application/octet-stream'
                 };
                 pending--;
                 if (pending === 0) {
-                    helper.doSendEmail(component, finalToEmail, subject, body, converted);
+                    helper.doSendEmail(component, finalToEmail, subject, body, templateAtts.concat(fileConverted));
                 }
             });
             reader.onerror = $A.getCallback(function() {
                 component.set('v.isSending', false);
-                component.set('v.errorMsg', 'Lỗi đọc file đính kèm: ' + att.name);
+                component.set('v.errorMsg', 'Error reading attachment: ' + att.name);
             });
             reader.readAsDataURL(att.file);
         });

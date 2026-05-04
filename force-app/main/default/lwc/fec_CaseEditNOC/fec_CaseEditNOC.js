@@ -9,13 +9,22 @@ import {
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
-
+//PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+import getOriginalNOCFromFlowHistory from "@salesforce/apex/FEC_CaseEditNOCController.getOriginalNOCFromFlowHistory";
+//HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
+//Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
+import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+// PhuongNT disable NOC after process action call api success
+import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
 // import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
 // import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
 // import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
 // import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
 
 import getNatureOfCase from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCase";
+//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+import hasAutoRoutingAssignment from "@salesforce/apex/FEC_CaseEditNOCController.hasAutoRoutingAssignment";
 
 import getProductTypelst from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypelst";
 import getCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getCategorylst";
@@ -42,10 +51,58 @@ export default class Fec_CaseEditNOC extends LightningElement {
   @api recordId;
   @api modeEditCase;
 
-  isSubmited = true;
+  @track isSubmited = true;
   _isInternalRequest = false;
   _internalProductTypeId = null;
   _internalApplied = false;
+//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+  updatedCategoryId;       // Category đã chọn trong Updated section
+  updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
+  updatedSubCodeId;        // Sub-Code đã chọn trong Updated section
+  hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
+  //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+  @track originalNOC = null;
+
+  //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+  get originalNOCFields() {
+    if (!this.originalNOC) return [];
+    return [
+      { key: 'productType',  label: 'Product Type',  value: this.originalNOC.productType  || '-' },
+      { key: 'category',     label: 'Category',      value: this.originalNOC.category     || '-' },
+      { key: 'subCategory',  label: 'Sub-Category',  value: this.originalNOC.subCategory  || '-' },
+      { key: 'subCode',      label: 'Sub-Code',      value: this.originalNOC.subCode      || '-' }
+    ];
+  }
+
+  get isSubmittedState() {
+    return this.isSubmited === true;
+  }
+
+  // Khi isSubmited=true, Updated section luôn editable
+  // Không phụ thuộc viewMode hay modeEditCase — chỉ cần đã submit là được sửa NOC
+  get isUpdatedSectionEditable() {
+    return this.isSubmited === true;
+  }
+
+  get showUpdatedSection() {
+    return this.isSubmittedState && !this.hasAutoRoutingAssignment;
+  }
+
+  get serializedProductTypeOptions() {
+    return JSON.stringify(this.productTypeOptionlst ?? []);
+  }
+
+  get serializedCategoryOptions() {
+    return JSON.stringify(this.categoryOptionlst ?? []);
+  }
+
+  get serializedSubCategoryOptions() {
+    return JSON.stringify(this.subCategoryOptionlst ?? []);
+  }
+
+  get serializedSubCodeOptions() {
+    return JSON.stringify(this.subCodeOptionlst ?? []);
+  }
 
   get isEdit() {
     
@@ -75,6 +132,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   subscription = null;
   subscriptionNOC = null;
+  subscriptionResetPin = null;
+  subscriptionPinReissue = null;
 
   activeSection = ["noc"];
   productTypeSelectedId;
@@ -84,7 +143,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   natureOfCase;
 
   disableProdType;
-  interactionViewMode;
+  @track interactionViewMode;
   recordTypeDevName;
 
   get disableCategory() {
@@ -155,6 +214,36 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+        // [NOC-HANDLING-STAGE-UPDATE]: Khi đã submit, kiểm tra Auto-Routing Assignment
+        // và pre-populate Updated section với giá trị hiện tại của Case
+        if (res.FEC_Is_Submited__c) {
+          // Pre-populate Updated section với giá trị NOC hiện tại
+          this.updatedCategoryId = res.FEC_Category__c;
+          this.updatedSubCategoryId = res.FEC_SubCategory__c;
+          this.updatedSubCodeId = res.FEC_SubCode__c;
+
+          // Kiểm tra có Routing Assignment không — nếu có thì ẩn Updated section
+          hasAutoRoutingAssignment({ caseId: this.recordId })
+            .then((result) => {
+              this.hasAutoRoutingAssignment = result === true;
+            })
+            .catch((err) => {
+              // Default false để không ẩn Updated section một cách sai lầm
+              console.error("hasAutoRoutingAssignment error:", err);
+              this.hasAutoRoutingAssignment = false;
+            });
+
+          //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+          getOriginalNOCFromFlowHistory({ caseId: this.recordId })
+            .then((nocData) => {
+              this.originalNOC = nocData || null;
+            })
+            .catch((err) => {
+              console.error("getOriginalNOCFromFlowHistory error:", err);
+              this.originalNOC = null;
+            });
+        }
 
         getByCase({
           caseId: this.recordId,
@@ -207,6 +296,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
     unsubscribe(this.subscriptionNOC);
     this.subscriptionNOC = null;
 
+    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+    unsubscribe(this.subscriptionResetPin);
+    this.subscriptionResetPin = null;
+
     this.modeEditCase = false;
   }
 
@@ -223,6 +316,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
       CASE_NOC,
       (message) => this.handleCaseNOCMessage(message),
       { scope: APPLICATION_SCOPE }
+    );
+
+    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+    this.subscriptionResetPin = subscribe(
+      this.messageContext,
+      PIN_RESET_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
+    );
+    //Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
+    this.subscriptionPinReissue = subscribe(
+      this.messageContext,
+      PIN_REISSUE_MESSAGE_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
+    );
+    // PhuongNT disable NOC after process action call api success
+    this.subscriptionPinReissue = subscribe(
+      this.messageContext,
+      PROCESS_ACTION_MESSAGE_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
     );
   }
 
@@ -295,6 +410,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
+  //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+  handleMessageResetPin(message) {
+      this.handleDisableResetPinSuccess("category");
+      this.handleDisableResetPinSuccess("sub-category");
+      this.handleDisableResetPinSuccess("sub-code");
+  }
+
   async handlePublishMessageChanel() {
     const payload = {
       productTypeId: this.productTypeSelectedId,
@@ -336,6 +458,32 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+        // [NOC-HANDLING-STAGE-UPDATE]: Re-populate Updated section sau khi reload
+        if (res.FEC_Is_Submited__c) {
+          this.updatedCategoryId = res.FEC_Category__c;
+          this.updatedSubCategoryId = res.FEC_SubCategory__c;
+          this.updatedSubCodeId = res.FEC_SubCode__c;
+
+          hasAutoRoutingAssignment({ caseId: this.recordId })
+            .then((result) => {
+              this.hasAutoRoutingAssignment = result === true;
+            })
+            .catch((err) => {
+              console.error("hasAutoRoutingAssignment error (reloadData):", err);
+              this.hasAutoRoutingAssignment = false;
+            });
+
+          //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+          getOriginalNOCFromFlowHistory({ caseId: this.recordId })
+            .then((nocData) => {
+              this.originalNOC = nocData || null;
+            })
+            .catch((err) => {
+              console.error("getOriginalNOCFromFlowHistory error (reloadData):", err);
+              this.originalNOC = null;
+            });
+        }
       })
       .catch((err) => {
         console.log("reloadData err:", err);
@@ -637,6 +785,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
+  //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+  handleDisableResetPinSuccess(id) {
+    let element = this.template.querySelector(
+      `c-fec_-combo-box[data-id="${id}"]`,
+    );
+
+    if (element) {
+      element.disabled = true;
+    }
+  }
+
   handleEnable(id) {
     let element = this.template.querySelector(
       `c-fec_-combo-box[data-id="${id}"]`
@@ -669,5 +828,80 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (element) {
       element.option = JSON.stringify(optionlst);
     }
+  }
+//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+  // ─────────────────────────────────────────────────────────────────────────
+  // [NOC-HANDLING-STAGE-UPDATE]: Event handlers từ child component
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Handler khi Category thay đổi trong Updated section (từ child component).
+   * Reset Sub-Category và Sub-Code, reload Sub-Category options.
+   */
+  handleUpdatedCategoryChange(e) {
+    this.updatedCategoryId = e.detail.categoryId;
+    this.updatedSubCategoryId = null;
+    this.updatedSubCodeId = null;
+
+    // Reload Sub-Category options theo Category mới
+    if (this.updatedCategoryId) {
+      getSubCategorylst({
+        recordId: this.recordId,
+        productTypeId: this.productTypeSelectedId,
+        categoryId: this.updatedCategoryId
+      })
+        .then((res) => {
+          this.subCategoryOptionlst = res;
+        })
+        .catch((err) => {
+          console.error("getSubCategorylst error (Updated section):", err);
+        });
+    }
+  }
+
+  /**
+   * Handler khi Sub-Category thay đổi trong Updated section (từ child component).
+   * Reset Sub-Code, reload Sub-Code options.
+   */
+  handleUpdatedSubCategoryChange(e) {
+    this.updatedSubCategoryId = e.detail.subCategoryId;
+    this.updatedSubCodeId = null;
+
+    // Reload Sub-Code options theo Sub-Category mới
+    if (this.updatedSubCategoryId) {
+      getSubCodelst({
+        recordId: this.recordId,
+        productTypeId: this.productTypeSelectedId,
+        categoryId: this.updatedCategoryId,
+        subCategoryId: this.updatedSubCategoryId
+      })
+        .then((res) => {
+          this.subCodeOptionlst = res;
+        })
+        .catch((err) => {
+          console.error("getSubCodelst error (Updated section):", err);
+        });
+    }
+  }
+
+  /**
+   * Handler khi Sub-Code thay đổi trong Updated section (từ child component).
+   * Child đã gọi getNatureOfCase và trả về natureOfCaseId trong event.detail.
+   * Publish full payload lên CASE_NOC_Channel để trigger fec_CaseBussiness reload.
+   */
+  handleUpdatedSubCodeChange(e) {
+    this.updatedSubCodeId = e.detail.subCodeId;
+    const natureOfCaseId = e.detail.natureOfCaseId;
+
+    // Publish lên CASE_NOC_Channel với bộ NOC mới (Updated NOC)
+    const payload = {
+      productTypeId: this.productTypeSelectedId,
+      categoryId: this.updatedCategoryId,
+      subCategoryId: this.updatedSubCategoryId,
+      subCodeId: this.updatedSubCodeId,
+      natureOfCaseId: natureOfCaseId
+    };
+
+    publish(this.messageContext, CASE_NOC, payload);
   }
 }

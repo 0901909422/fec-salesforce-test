@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>FEC Campaign Ingest</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Endpoint__c</field>
+        <value xsi:type="xsd:string">https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/ingest_campaign</value>
+    </values>
+    <values>
+        <field>FEC_Use_Named_Credential__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>FEC_API_Key__c</field>
+        <value xsi:type="xsd:string">RkVDX1NBTEVTRk9SQ0U=</value>
+    </values>
+    <values>
+        <field>FEC_Named_Credential__c</field>
+        <value xsi:type="xsd:string">FEC_API</value>
+    </values>
+</CustomMetadata>

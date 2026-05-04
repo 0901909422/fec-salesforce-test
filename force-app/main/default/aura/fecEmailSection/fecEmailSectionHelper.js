@@ -126,7 +126,23 @@
         });
         var body = bodyHtml || component.get('v.body') || '';
         if (body) {
-            quill.root.innerHTML = self.cleanBody(body);
+            var cleanedBody = self.cleanBody(body);
+            // Disconnect Quill's MutationObserver to prevent table stripping
+            window.setTimeout(function() {
+                if (quill.scroll && quill.scroll.observer) {
+                    quill.scroll.observer.disconnect();
+                }
+                quill.root.innerHTML = cleanedBody;
+                quill.root.classList.remove('ql-blank');
+                // tungnm37 thêm: đảm bảo td/th từ template có contenteditable để xóa được nội dung
+                self._makeTableCellsEditable(quill.root);
+                // Reconnect after DOM is stable
+                window.setTimeout(function() {
+                    if (quill.scroll && quill.scroll.observer) {
+                        quill.scroll.observer.observe(quill.root, quill.scroll.observer._options || { childList: true, subtree: true, characterData: true });
+                    }
+                }, 100);
+            }, 50);
         }
         // Set default font Times New Roman
         quill.root.style.fontFamily = '"Times New Roman",serif';
@@ -136,6 +152,9 @@
         var tbMod = quill.getModule('toolbar');
         if (tbMod) tbMod.addHandler('image', function() {});
         self._wire(tbEl, quill, component);
+        // tungnm37 thêm: lắng nghe event thêm ảnh vào attachments list
+        // Không thêm vào attachments list — ảnh chỉ hiển thị inline trong editor
+        // (blob URL sẽ bị strip khi gửi, không gửi kèm attachment)
     },
 
 
@@ -181,7 +200,6 @@
             + grp(btn('align','',ic.align_l,'Align Left') + btn('align','center',ic.align_c,'Center')
                 + btn('align','right',ic.align_r,'Align Right') + btn('align','justify',ic.align_j,'Justify'))
             + grp(btn('link','',ic.link,'Insert Link') + btn('image','',ic.image,'Insert Image')
-                + btn('table','',ic.table,'Insert Table')
                 + btn('blockquote','',ic.quote,'Blockquote')
                 + btn('clean','',ic.clean,'Remove Formatting'))
             + '</div>';
@@ -423,7 +441,7 @@
                     imgDD.style.left = rr.left + 'px';
                     imgDD.style.top = (rr.bottom + 2) + 'px';
                     function closeImgDD() { var d=document.getElementById('fec-img-dd'); if(d&&d.parentNode) d.parentNode.removeChild(d); }
-                    // Browse or Upload → file picker → base64
+                    // Browse or Upload → file picker → base64 nếu ≤3MB, Object URL nếu lớn hơn
                     document.getElementById('fec-img-browse').addEventListener('mousedown', function(ev2) {
                         ev2.preventDefault(); closeImgDD();
                         var fi = document.createElement('input');
@@ -433,10 +451,23 @@
                         fi.addEventListener('change', function() {
                             var f = fi.files[0];
                             if (!f) { document.body.removeChild(fi); return; }
+                            var MAX_IMG = 3 * 1024 * 1024; // 3MB
+                            if (f.size > MAX_IMG) {
+                                // tungnm37 sửa: ảnh quá lớn → báo lỗi, không insert
+                                try {
+                                    var toastBig = $A.get('e.force:showToast');
+                                    // tungnm37 sửa: dùng custom labels
+                                    if (toastBig) { toastBig.setParams({ title: component.get('v.lblImgTooLargeTitle'), message: component.get('v.lblImgTooLargeMsg'), type: 'error', duration: 6000 }); toastBig.fire(); }
+                                } catch(ex) {}
+                                document.body.removeChild(fi);
+                                return;
+                            }
+                            // ≤3MB → dùng base64 để lưu được vào EmailMessage
                             var rd = new FileReader();
                             rd.onload = function(ev3) {
                                 var sel = quill.getSelection(true);
-                                quill.insertEmbed(sel.index, 'image', ev3.target.result);
+                                var idx = sel ? sel.index : quill.getLength();
+                                quill.insertEmbed(idx, 'image', ev3.target.result);
                                 document.body.removeChild(fi);
                             };
                             rd.readAsDataURL(f);
@@ -476,7 +507,11 @@
                     setTimeout(function() {
                         document.addEventListener('mousedown', function onOut(ev2) {
                             var d = document.getElementById('fec-img-dd');
-                            if (d && !d.contains(ev2.target)) { closeImgDD(); document.removeEventListener('mousedown', onOut); }
+                            // tungnm37 sửa: không đóng nếu click vào chính button ảnh (tránh toggle conflict)
+                            if (d && !d.contains(ev2.target) && !imgBtn.contains(ev2.target)) {
+                                closeImgDD();
+                                document.removeEventListener('mousedown', onOut);
+                            }
                         });
                     }, 50);
                 }
@@ -601,11 +636,16 @@
             }
 
             if (inTable) {
-                // Trong table: stop Quill intercept tất cả key trừ Backspace/Delete (để native xử lý)
-                if (e.keyCode !== 8 && e.keyCode !== 46) {
-                    e.stopImmediatePropagation();
+                // tungnm37 sửa: stop Quill intercept TẤT CẢ key trong table, để native browser xử lý
+                e.stopImmediatePropagation();
+                // Backspace/Delete: dùng execCommand để xóa nội dung trong td
+                if (e.keyCode === 8) {
+                    e.preventDefault();
+                    document.execCommand('delete', false, null);
+                } else if (e.keyCode === 46) {
+                    e.preventDefault();
+                    document.execCommand('forwardDelete', false, null);
                 }
-                // Backspace/Delete trong table → native browser xử lý bình thường
                 return;
             }
 
@@ -729,6 +769,10 @@
                 component.set('v.fromDisplay', d.fromDisplay||d.fromEmail||'');
                 component.set('v.toEmail', d.toEmail||'');
                 component.set('v.incomingToAddress', d.fromEmail||'');
+                // tungnm37 thêm: load templates theo fromEmail của Interaction (giống Service Case)
+                if (d.fromEmail) {
+                    self.loadTemplates(component, d.fromEmail);
+                }
             }
         });
         $A.enqueueAction(a1);
@@ -741,6 +785,7 @@
     },
 
     loadFromAddresses: function(component, incomingToAddress) {
+        var self = this;
         var a = component.get('c.getFromAddresses');
         a.setParams({ caseId: component.get('v.recordId') });
         a.setCallback(this, function(r) {
@@ -781,31 +826,108 @@
         $A.enqueueAction(a);
     },
 
+    showPreviewModal: function(body) {
+        var existing = document.getElementById('fec-preview-overlay');
+        if (existing) existing.parentNode.removeChild(existing);
+
+        var overlay = document.createElement('div');
+        overlay.id = 'fec-preview-overlay';
+        overlay.setAttribute('style', [
+            'position:fixed','top:0','left:0','right:0','bottom:0',
+            'width:100vw','height:100vh',
+            'background:rgba(0,0,0,.55)',
+            'z-index:2147483647',
+            'display:flex','align-items:center','justify-content:center'
+        ].join('!important;') + '!important;');
+
+        var modal = document.createElement('div');
+        modal.setAttribute('style', [
+            'background:#fff','border-radius:8px',
+            'width:760px','max-width:92vw','max-height:88vh',
+            'display:flex','flex-direction:column',
+            'box-shadow:0 8px 32px rgba(0,0,0,.35)',
+            'overflow:hidden','position:relative'
+        ].join('!important;') + '!important;');
+
+        var header = document.createElement('div');
+        header.setAttribute('style','display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #e5e5e5;flex-shrink:0;');
+        var title = document.createElement('span');
+        title.textContent = 'Preview email';
+        title.setAttribute('style','font-size:17px;font-weight:600;color:#16325c;flex:1;text-align:center;');
+        var closeBtn = document.createElement('span');
+        closeBtn.innerHTML = '&#x2715;';
+        closeBtn.setAttribute('style','cursor:pointer;font-size:20px;color:#706e6b;line-height:1;padding:2px 6px;position:absolute;right:16px;top:14px;');
+        header.appendChild(title);
+        header.appendChild(closeBtn);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.setAttribute('style','flex:1;overflow-y:auto;padding:24px 32px;font-family:"Times New Roman",serif;font-size:14px;line-height:1.5;color:#333;');
+        bodyDiv.innerHTML = body || '';
+
+        var footer = document.createElement('div');
+        footer.setAttribute('style','padding:12px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;flex-shrink:0;');
+        var footCloseBtn = document.createElement('button');
+        footCloseBtn.textContent = 'Close';
+        footCloseBtn.setAttribute('style','padding:8px 24px;border:none;border-radius:20px;background:#0070d2;color:#fff;font-size:14px;cursor:pointer;font-weight:500;');
+        footer.appendChild(footCloseBtn);
+
+        modal.appendChild(header);
+        modal.appendChild(bodyDiv);
+        modal.appendChild(footer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        function closeModal() {
+            var el = document.getElementById('fec-preview-overlay');
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+        closeBtn.addEventListener('click', closeModal);
+        footCloseBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+    },
+
     loadTemplates: function(component, mailboxAddress) {
+        var self = this;
         var actionName = mailboxAddress ? 'c.getEmailTemplatesByMailbox' : 'c.getEmailTemplates';
         var a = component.get(actionName);
         if (mailboxAddress) {
             a.setParams({ mailboxAddress: mailboxAddress });
-        } else {
-            a.setStorable();
         }
         a.setCallback(this, function(r) {
             if (r.getState()==='SUCCESS') {
-                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={};
+                var data=r.getReturnValue()||[], opts=[], bodies={}, subjects={}, headers={}, footers={};
+                var templateIds = [];
                 data.forEach(function(t){
-                    opts.push({label:t.FEC_Template_Name__c||t.Name, value:t.Id});
+                    opts.push({label:t.Name, value:t.Id});
                     bodies[t.Id] = t.FEC_Body__c || '';
                     subjects[t.Id] = t.FEC_Subject_Line__c || '';
+                    var lh = t.FEC_Enhanced_Letterhead__r;
+                    headers[t.Id] = (lh && lh.FEC_Header__c) ? lh.FEC_Header__c : '';
+                    footers[t.Id] = (lh && lh.FEC_Footer__c) ? lh.FEC_Footer__c : '';
+                    templateIds.push(t.Id);
                 });
                 component.set('v.templateOptions',opts);
                 component.set('v.templateBodies',bodies);
                 component.set('v.templateSubjects',subjects);
+                component.set('v.templateHeaders',headers);
+                component.set('v.templateFooters',footers);
                 // Reset template selection nếu template hiện tại không còn trong list
                 var currentTemplate = component.get('v.replyTemplate');
                 if (currentTemplate && !bodies[currentTemplate]) {
                     component.set('v.replyTemplate', '');
                     component.set('v.body', '');
                     if (window._fecQuill) window._fecQuill.root.innerHTML = '';
+                }
+                // Pre-load attachments cho tất cả templates
+                if (templateIds.length > 0) {
+                    var attAction = component.get('c.getTemplateAttachmentsBulk');
+                    attAction.setParams({ templateIds: templateIds });
+                    attAction.setCallback(self, function(ar) {
+                        if (ar.getState() === 'SUCCESS') {
+                            component.set('v.templateAttachments', ar.getReturnValue() || {});
+                        }
+                    });
+                    $A.enqueueAction(attAction);
                 }
             }
         });
@@ -827,6 +949,19 @@
         return result.split('\x00T\x00').join(title);
     },
 
+    // tungnm37 thêm: đảm bảo tất cả td/th trong editor có contenteditable để xóa/sửa được
+    _makeTableCellsEditable: function(rootEl) {
+        if (!rootEl) return;
+        var cells = rootEl.querySelectorAll('td, th');
+        for (var i = 0; i < cells.length; i++) {
+            cells[i].setAttribute('contenteditable', 'true');
+            // Nếu cell rỗng hoặc chỉ có &nbsp;, đặt nội dung là khoảng trắng để cursor vào được
+            if (!cells[i].textContent.trim() || cells[i].innerHTML === '&nbsp;') {
+                cells[i].innerHTML = '\u00a0';
+            }
+        }
+    },
+
     cleanBody: function(html) {
         var result = html
             // Strip any <p> tag containing only br/whitespace/nbsp (with or without attributes)
@@ -843,7 +978,7 @@
         if (!body) return;
         var updated = this.replaceDanhXung(body, title);
         component.set('v.body', updated);
-        if (window._fecQuill) window._fecQuill.root.innerHTML = this.cleanBody(updated);
+        if (window._fecQuill) window._fecQuill.clipboard.dangerouslyPasteHTML(this.cleanBody(updated));
     },
 
     doSendEmail: function(component, toEmail, subject, body, attachments) {
@@ -905,7 +1040,8 @@
                 try {
                     var toast = $A.get('e.force:showToast');
                     if (toast) {
-                        toast.setParams({ title: 'Thành công', message: 'Email was sent.', type: 'success', duration: 4000 });
+                        // tungnm37 sửa: dùng custom labels
+                        toast.setParams({ title: component.get('v.lblSuccessTitle'), message: component.get('v.lblSuccessSentMsg'), type: 'success', duration: 4000 });
                         toast.fire();
                     }
                 } catch(te) { console.log('toast error', te); }
@@ -920,11 +1056,11 @@
                 }
                 console.error('sendEmail error state=' + state + ' msg=' + msg, errors);
                 component.set('v.errorMsg', msg);
-                // Toast error
+                // Toast error - tungnm37 sửa: dùng custom label
                 try {
                     var toastErr = $A.get('e.force:showToast');
                     if (toastErr) {
-                        toastErr.setParams({ title: 'Lỗi gửi email', message: msg, type: 'error', duration: 8000 });
+                        toastErr.setParams({ title: component.get('v.lblWeHitASnag') || 'Lỗi gửi email', message: msg, type: 'error', duration: 8000 });
                         toastErr.fire();
                     }
                 } catch(te2) { console.log('toast error2', te2); }
@@ -949,7 +1085,7 @@
                         var h12=h%12||12, minStr=min<10?'0'+min:min;
                         ds = d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' at '+h12+':'+minStr+' '+ampm;
                     }
-                    var rb=(m.TextBody||m.HtmlBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
+                    var rb=(m.HtmlBody||m.TextBody||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').trim();
                     var subj=m.Subject||'';
                     var subjDisplay = subj.replace(/\s*\[\s*ref:[^\]]*:ref\s*\]/gi,'').trim();
                     return {Id:m.Id,fromName:m.FromName||m.FromAddress||'Unknown',fromAddress:m.FromAddress||'',toAddress:m.ToAddress||'',ccAddress:m.CcAddress||'',subject:subjDisplay,subjectPreview:subjDisplay||rb.substring(0,80),bodyFull:rb,bodyHtml:m.HtmlBody||'',messageDate:ds,messageRawDate:m.MessageDate||'',incoming:m.Incoming,expanded:false,showDD:false};
