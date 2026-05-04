@@ -801,10 +801,6 @@
         <label>Chọn Quyết định phụ</label>
     </customLabels>
     <customLabels>
-        <name>FEC_Common_No_Results_Label</name>
-        <label>Không tìm thấy kết quả</label>
-    </customLabels>
-    <customLabels>
         <name>End_Date_Less_Than_Today_Validation_Msg</name>
         <label>Ngày kết thúc không được nhỏ hơn ngày hôm nay</label>
     </customLabels>

@@ -95,8 +95,6 @@
         <members>FEC_Early_Termination_Label</members>
         <members>FEC_Overdue_Label</members>
         <members>FEC_Fee_Charge_Label</members>
-        <members>FEC_Termination_No_Fee_Charge_Data</members>
-        <members>FEC_Termination_No_Data</members>
         <members>FEC_Termination_Type_Label</members>
         <members>FEC_Termination_Assessed_Amount_Label</members>
         <members>FEC_Termination_Collected_Amount_Label</members>
@@ -177,7 +175,6 @@
         <members>FEC_Repay_Payment_Amount_Label</members>
         <members>FEC_Repay_Particulars_Label</members>
         <members>FEC_Repay_Payment_Channel_Label</members>
-        <members>FEC_Repay_No_Data_Label</members>
         <members>FEC_Repay_Refresh_Button_Label</members>
         <name>CustomLabel</name>
     </types>

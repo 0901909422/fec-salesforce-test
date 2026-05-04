@@ -8158,11 +8158,10 @@
         <value>Can&apos;t find next stage</value>
     </labels>
     <labels>
-        <fullName>FEC_Common_No_Results_Label</fullName>
-        <categories>Common</categories>
+        <fullName>FEC_List_relevant_case_empty</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Empty list / table / section (no rows)</shortDescription>
+        <shortDescription>List relevant case empty</shortDescription>
         <value>Không tìm thấy kết quả</value>
     </labels>
     <labels>
@@ -12716,5 +12715,13 @@
         <protected>false</protected>
         <shortDescription>Type column label for fee/charge row on termination</shortDescription>
         <value>Interest on Overdue Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Common_No_Results_Label</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty list / table / section (no rows)</shortDescription>
+        <value>Không tìm thấy kết quả</value>
     </labels>
 </CustomLabels>
