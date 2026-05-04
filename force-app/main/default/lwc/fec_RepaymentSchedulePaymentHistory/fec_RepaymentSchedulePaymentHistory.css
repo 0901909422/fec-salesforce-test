@@ -70,7 +70,12 @@
 }
 
 .repay-no-data {
+    min-height: 120px;
     padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     color: #706e6b;
     font-size: 0.875rem;
 }

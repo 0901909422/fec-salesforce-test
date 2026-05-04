@@ -8807,22 +8807,6 @@
         <value>Fee &amp; Charge</value>
     </labels>
     <labels>
-        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No fee charge data message</shortDescription>
-        <value>No fee charge data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Termination_No_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data message</shortDescription>
-        <value>No data</value>
-    </labels>
-    <labels>
         <fullName>FEC_Termination_Type_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -9461,14 +9445,6 @@
         <protected>false</protected>
         <shortDescription>Payment Channel</shortDescription>
         <value>Payment Channel</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Repay_No_Data_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
-        <value>No data</value>
     </labels>
     <labels>
         <fullName>FEC_Repay_Refresh_Button_Label</fullName>
@@ -12739,5 +12715,13 @@
         <protected>false</protected>
         <shortDescription>Type column label for fee/charge row on termination</shortDescription>
         <value>Interest on Overdue Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Common_No_Results_Label</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty list / table / section (no rows)</shortDescription>
+        <value>Không tìm thấy kết quả</value>
     </labels>
 </CustomLabels>

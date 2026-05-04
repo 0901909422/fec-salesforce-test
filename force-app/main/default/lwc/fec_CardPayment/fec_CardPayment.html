@@ -11,7 +11,7 @@
                         </lightning-icon>
                         <span>
                             {customLabel.cardPaymentLabel}
-                            <template if:true={hasError}>
+                            <template if:true={hasAnyError}>
                                 <span class="error-text"> - {ERROR_MESSAGE}</span>
                             </template>
                         </span>
@@ -202,7 +202,7 @@
                         </c-fec_-related-list-paging>
                     </template>
                     <template if:true={showCardPaymentNoData}>
-                        <div class="slds-text-align_center slds-p-around_large card-payment-empty">
+                        <div class="card-payment-empty">
                             <p>{noDataLabel}</p>
                         </div>
                     </template>
