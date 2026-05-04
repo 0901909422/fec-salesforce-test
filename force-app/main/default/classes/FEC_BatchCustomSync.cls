@@ -55,9 +55,9 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
                 List<FEC_API_Log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,scope);  
                 for (FEC_API_Log__c rLog : resultLogs) {
                     if (rLog.FEC_Is_Success__c ?? false) { 
-                        countSuccess++;
-                    } else { 
-                        countFail++;
+                         countSuccess = countSuccess + countIdsFromJsonString(rLog.Records__c); 
+                    } else {  
+                         countFail = countFail + countIdsFromJsonString(rLog.Records__c); 
                     }
                     logs.add(rLog);
                 }
@@ -80,6 +80,16 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
             upsert logs;
         }
         if(isEndJob) System.enqueueJob(new FEC_QueueReportCustomSyncBix());   
+    }
+    public static Integer countIdsFromJsonString(String jsonStringInput) { 
+        if (String.isBlank(jsonStringInput)) return 0; 
+        try { 
+            List<String> idList = (List<String>) JSON.deserialize(jsonStringInput, List<String>.class);
+            return idList.size(); 
+        } catch (Exception e) { 
+            System.debug('Đã có lỗi xảy ra khi parse JSON: ' + e.getMessage());
+            return 0;
+        }
     }
 
     public static String getFields(CustomSync__c cus) { 

@@ -39,8 +39,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
         htmlRows.add('<th>End At</th>');
         htmlRows.add('<th>Status (Success Rate)</th>');  
         htmlRows.add('<th>Failed</th>');
-        htmlRows.add('<th>Success</th>');
-        htmlRows.add('<th>Record Of Step</th>');  
+        htmlRows.add('<th>Success</th>'); 
         htmlRows.add('<th>Total Record</th>');
 
         htmlRows.add('</tr></thead><tbody>');
@@ -51,8 +50,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
             htmlRows.add('<tr>'); 
             Decimal failed = rec.SyncFailed__c != null ? rec.SyncFailed__c : 0;
             Decimal success = rec.SyncSuccessFully__c != null ? rec.SyncSuccessFully__c : 0;
-            Decimal total = rec.TotalRecordSync__c != null ? rec.TotalRecordSync__c : 0;
-            Decimal processing = rec.ProcessingQuantity__c != null ? rec.ProcessingQuantity__c : 0;  
+            Decimal total = rec.TotalRecordSync__c != null ? rec.TotalRecordSync__c : 0;  
             String statusHtml = '';
 
             if (failed > 0) {
@@ -80,8 +78,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
             
             htmlRows.add('<td style="text-align:center;">' + failed.format() + '</td>');
             htmlRows.add('<td style="text-align:center;">' + success.format() + '</td>');
-             
-            htmlRows.add('<td style="text-align:center;">' + processing.format() + '</td>');
+              
             
             htmlRows.add('<td style="text-align:center;">' + total.format() + '</td>');
             
