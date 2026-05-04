@@ -11,6 +11,7 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_GetDeals</members>
 		<members>FEC_GetDNBCalloutService</members>
+		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -19,6 +20,7 @@
 		<members>FEC_API_Config.FEC_Fetch_Collection_Data</members>
 		<members>FEC_API_Config.FEC_GetDeals</members>
 		<members>FEC_API_Config.FEC_Get_DNB</members>
+		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>
