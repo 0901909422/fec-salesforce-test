@@ -274,6 +274,17 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+      result.lockApiLwcsAfterRevertToDefaultStage = false;
+      if (!historylst.isEmpty() && REVERT.equals(historylst.get(0).FEC_Routing_Action__c)) {
+        FEC_Routing_Action_History__c hRevert = historylst.get(0);
+        result.lockApiLwcsAfterRevertToDefaultStage =
+          hRevert.FEC_Next_Stage__c != null &&
+          hRevert.FEC_Next_Stage__c == selectedCase.FEC_Current_Case_Stage__c &&
+          hRevert.FEC_Next_Stage__r != null &&
+          hRevert.FEC_Next_Stage__r.FEC_Default_Stage__c == true;
+      }
+
       //thangtv
       result.lastUser = resolveLastUserForRevertDecisionDisplay(
         selectedCase.Id,
@@ -3223,6 +3234,11 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     //thangtv
     public String lastUserForRouteToLabel;
+
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+    /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
+    @AuraEnabled
+    public Boolean lockApiLwcsAfterRevertToDefaultStage;
 
     @AuraEnabled
     public String draftRoutingActionCode;
