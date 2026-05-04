@@ -10121,7 +10121,7 @@
         <categories>Card LockUnlock LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>No pending disbursement for account</shortDescription>
+        <shortDescription>FEC_MSG_No_Pending_Disbursement</shortDescription>
         <value>Không có khoản chờ giải ngân.</value>
     </labels>
     <labels>
