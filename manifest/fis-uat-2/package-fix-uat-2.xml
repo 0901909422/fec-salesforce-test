@@ -506,6 +506,8 @@
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<members>FEC_Termination_Fee_Charge_Type_Label</members>
         <members>FEC_Common_No_Results_Label</members>
+        <members>FEC_MSG_No_Pending_Disbursement</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>

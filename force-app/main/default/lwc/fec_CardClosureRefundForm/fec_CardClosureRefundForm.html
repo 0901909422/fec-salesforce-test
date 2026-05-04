@@ -4,14 +4,20 @@
       <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
     </template>
 
-    <h2 class="slds-text-heading_small slds-m-bottom_small">{customLabel.pendingSection}</h2>
+    <template if:true={showPendingDisbursementTable}>
+      <h2 class="slds-text-heading_small slds-m-bottom_small">{customLabel.pendingSection}</h2>
 
-    <lightning-datatable
+      <lightning-datatable
       key-field="id"
       data={pendingRowData}
       columns={pendingColumns}
       hide-checkbox-column>
-    </lightning-datatable>
+      </lightning-datatable>
+    </template>
+
+    <template if:true={showNoPendingDisbursementMessage}>
+      <p class="slds-text-color_error slds-text-title_bold">{customLabel.noPendingDisbursement}</p>
+    </template>
 
     <template if:true={showBlockCardButton}>
       <div class="slds-m-top_medium">
