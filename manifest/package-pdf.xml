@@ -3,6 +3,8 @@
     <!-- Apex Classes -->
     <types>
         <members>FEC_ClientPDFService</members>
+        <members>FEC_ClientPDFServiceTest</members>
+        <members>FEC_PDFTemplateSelector</members>
         <name>ApexClass</name>
     </types>
 
