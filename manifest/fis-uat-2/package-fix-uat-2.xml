@@ -859,17 +859,16 @@
 		<members>FEC_Customer_History__c.FEC_Overdue_Penalty__c</members>
 		<members>FEC_Customer_History__c.FEC_Status_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Original_MRC_Receiver__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Outstanding_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Penalty_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_Repayment_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Installments_Overdue__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Pending_Penal_Interest__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Remark__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Receiver__c</members>
 		<members>FEC_Customer_History__c.FEC_Current_Balance_Principal__c</members>
 		<members>FEC_Customer_History__c.FEC_Area__c</members>
@@ -882,11 +881,8 @@
 		<members>FEC_Customer_History__c.FEC_Total_Overdue_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Interest_On_Termination__c</members>
 		<members>FEC_Customer_History__c.FEC_Modified_Date__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Installment_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
 		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
 		<members>FEC_Contact_List__c.FEC_Temporary_Email__c</members>
