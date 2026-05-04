@@ -504,6 +504,7 @@
         <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
         <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
 		<members>FEC_Termination_Fee_Charge_Type_Label</members>
+        <members>FEC_Common_No_Results_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
