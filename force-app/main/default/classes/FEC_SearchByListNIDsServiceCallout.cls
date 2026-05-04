@@ -1,89 +1,96 @@
-@isTest
-global with sharing class FEC_SearchByListNIDsServiceCallout_Test {
-    
-    @isTest
-    static void testCalloutShouldWork() {
-        // Assign the mock implementation to the test context
-        Test.setMock(HttpCalloutMock.class, new FEC_SearchByListNIDsMock());
-        // This should be the class/method that performs the WebService callout
-        Test.startTest();
-         FEC_SearchByListNIDsServiceCallout.NIDsResponse resItem = FEC_SearchByListNIDsServiceCallout.searchByListNIDs(new List<String> {'0123'});
-        Test.stopTest();
+/****************************************************************************************
+ * File Name    : FEC_SearchByListNIDsServiceCallout.Apex
+ * Author       : LongNH76
+ * Date         : 2026-04-21
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-04-21     LongNH76             Create
+ 
+****************************************************************************************/
+public with sharing class FEC_SearchByListNIDsServiceCallout {
 
-        System.Assert.areEqual('Data-Portal-NIDResponse', resItem.pxObjClass, 'Response shoul be not null');
+    public class NIDsResponse {
+        @AuraEnabled public String pxObjClass;
+        @AuraEnabled public Sys sys;
+        @AuraEnabled public List<Result> result;
     }
 
-    @isTest
-    static void testCalloutShouldReturnError() {
-        // Assign the mock implementation to the test context
-        Test.setMock(HttpCalloutMock.class, new FEC_SearchByListNIDsMockError());
-        // This should be the class/method that performs the WebService callout
-        Test.startTest();
-        FEC_SearchByListNIDsServiceCallout.NIDsResponse resItem;
-        try {
-            resItem = FEC_SearchByListNIDsServiceCallout.searchByListNIDs(new List<String> {'0123'});
-            
-        } catch (Exception ex) {
-            System.Assert.areEqual('', resItem.pxObjClass, 'Response shoul be  null');
-        }
-        Test.stopTest();
+    public class Sys {
+        @AuraEnabled public String transID;
+        @AuraEnabled public String datetime4;
+        @AuraEnabled public Integer code;
+        @AuraEnabled public String description;
+        @AuraEnabled public String pxObjClass; 
     }
 
-    global class FEC_SearchByListNIDsMock implements HttpCalloutMock {
-        global HTTPResponse respond(HTTPRequest req) {
-            // Create the top-level response object
-            FEC_SearchByListNIDsServiceCallout.NIDsResponse mockRes = new FEC_SearchByListNIDsServiceCallout.NIDsResponse();
-            mockRes.pxObjClass = 'Data-Portal-NIDResponse';
-            
-            // Populate Sys (Metadata/Status)
-            mockRes.sys = new FEC_SearchByListNIDsServiceCallout.Sys();
-            mockRes.sys.code = 200;
-            mockRes.sys.description = 'Success';
-            mockRes.sys.transID = 'TRX-123456';
-            mockRes.sys.datetime4 = '2026-04-02T14:12:25Z';
-            
-            // Populate Results (The data list)
-            FEC_SearchByListNIDsServiceCallout.Result resItem = new FEC_SearchByListNIDsServiceCallout.Result();
-            resItem.agentCode = 'AG-001';
-            resItem.agentName = 'Agent Smith';
-            resItem.buyerName = 'John Doe';
-            resItem.buyerNID = '123456789';
-            resItem.policyNumber = 'POL-998877';
-            resItem.collectedPremiumFee = '150.50';
-            resItem.StatusDisplay = 'Active';
-            resItem.effectiveDate = '2026-01-01';
-            resItem.expireDate = '2027-01-01';
-            
-            mockRes.result = new List<FEC_SearchByListNIDsServiceCallout.Result>{ resItem };
+    public class Result {
+        @AuraEnabled public String pxObjClass;
 
-            // Create the HTTP Response
-            HttpResponse res = new HttpResponse();
-            res.setHeader('Content-Type', 'application/json');
-            res.setBody(JSON.serialize(mockRes)); // Serializes the object into a JSON string
-            res.setStatusCode(200);
-            
-            return res;
-        }
+        @AuraEnabled public String userID;
+        @AuraEnabled public String buyerName;
+        @AuraEnabled public String buyerDOB;
+        @AuraEnabled public String buyerNID;
+        @AuraEnabled public String buyerPhone;
+        @AuraEnabled public String productNameEn;
+        @AuraEnabled public String collectedPremiumFee;
+        @AuraEnabled public String paymentID;
+        @AuraEnabled public String expireDate;
+        @AuraEnabled public String effectiveDate;
+        @AuraEnabled public String policyNumber;
+        @AuraEnabled public String insurerCompany;
+        @AuraEnabled public String agentCode;
+        @AuraEnabled public String agentName;
+        @AuraEnabled public String saleChannel;
+        @AuraEnabled public String saleSubChannel;
+        @AuraEnabled public String buyerGender;
+        @AuraEnabled public String cancelDate;
+        @AuraEnabled public String StatusDisplay;
     }
 
-    global class FEC_SearchByListNIDsMockError implements HttpCalloutMock {
-        global HTTPResponse respond(HTTPRequest req) {
-            // Create the top-level response object
-            FEC_SearchByListNIDsServiceCallout.NIDsResponse mockRes = new FEC_SearchByListNIDsServiceCallout.NIDsResponse();
-            // Populate Sys (Metadata/Status)
-            mockRes.sys = new FEC_SearchByListNIDsServiceCallout.Sys();
-            mockRes.sys.code = 200;
-            mockRes.sys.description = 'Success';
-            mockRes.sys.transID = 'TRX-123456';
-            mockRes.sys.datetime4 = '2026-04-02T14:12:25Z';
+    @AuraEnabled(cacheable=false)
+    public static NIDsResponse searchByListNIDs(List<String> nationalIDs) {
+
+        String transactionId = String.valueOf(UUID.randomUUID());
+
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Search_By_List_NIDs');
+
+        String endpoint =
+            (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '') +
+            (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
+
+        Map<String, Object> bodyMap = new Map<String, Object>{
+            'sys' => new Map<String, Object>{
+                'dateTime' => Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_SSSSSS_XXX),
+                'transID' => transactionId,
+                'requestorID' => FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN
+            },
+            'nationalID' => nationalIDs
+        };
+
+        String requestBody = JSON.serialize(bodyMap);
+
+        HttpResponse resp = FEC_CommonUltils.calloutApi(
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
+            null,
+            null,
+            requestBody
+        );
+
+        if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
+            return (NIDsResponse) JSON.deserialize(resp.getBody(), NIDsResponse.class);
             
-            // Create the HTTP Response
-            HttpResponse res = new HttpResponse();
-            res.setHeader('Content-Type', 'application/json');
-            res.setBody(JSON.serialize(mockRes)); // Serializes the object into a JSON string
-            res.setStatusCode(500);
-            
-            return res;
         }
+        NIDsResponse err = new NIDsResponse();
+        err.sys = new Sys();
+        err.sys.code = resp.getStatusCode();
+        err.sys.description = 'HTTP Error: ' + resp.getStatus();
+        err.sys.transID = transactionId;
+        return err;
     }
 }
