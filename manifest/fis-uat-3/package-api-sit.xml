@@ -17,6 +17,7 @@
 		<members>FEC_GetSMSInfoFromITTelcoCallout</members>
 		<members>FEC_Chathub</members>
 		<members>FEC_MockupEndpoint</members>
+		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -28,6 +29,7 @@
 		<members>FEC_API_Config.FEC_CheckEligible</members>
 		<members>FEC_API_Config.FEC_CMS_RewardDebitWS</members>
 		<members>FEC_API_Config.FEC_GetSMSInfoFromITTelco</members>
+		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>

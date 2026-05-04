@@ -133,7 +133,7 @@ const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sendi
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
 const FEC_SENT_SUCCESS = 'Notification sent successfully';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
-
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -227,5 +227,6 @@ export {
     MSG_ENTER_EMAIL_CORRECTLY,
     NOTIFICATION_CHANNEL_SF_APP,
     FEC_SENT_SUCCESS,
-    PROFILE_RELEVANT_DEPTS
+    PROFILE_RELEVANT_DEPTS,
+    PAGE_SIZE_OPTIONS
 };

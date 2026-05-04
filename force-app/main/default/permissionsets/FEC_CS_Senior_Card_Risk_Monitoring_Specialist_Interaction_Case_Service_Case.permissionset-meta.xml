@@ -1959,6 +1959,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Sensitive_Data__c.FEC_Case_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2195,6 +2200,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_RD_Payment_Contract_Assessment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Assignment_Count__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
