@@ -91,6 +91,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterInsert(List<Case> newCases) {
         isExecuting = true;
+        updateLastModified(newCases, null);
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -996,9 +997,14 @@ public without sharing class FEC_CaseTriggerHandler {
     private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
         List<Case> caseUpdates = new List<Case>();
         for (Case c : newCases) {
-            Case oldCase = oldMap.get(c.Id);
-            if (isSystemUpdate || c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+            if (isSystemUpdate) {
                 continue;
+            }
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                if (c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                    continue;
+                }
             }
             Case caseUpdate = new Case(
                 Id = c.Id,

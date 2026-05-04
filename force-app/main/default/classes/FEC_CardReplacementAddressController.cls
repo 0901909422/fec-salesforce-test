@@ -70,8 +70,8 @@ public with sharing class FEC_CardReplacementAddressController {
 
     @AuraEnabled
     public static ReplaceCardResult checkProcessAction(String caseId) {
+        ReplaceCardResult result = new ReplaceCardResult();
         try {
-            ReplaceCardResult result = new ReplaceCardResult();
             List<String> inValidBlockCode = new List<String>{'F', 'S', 'G', 'N'};
             List<String> inValidBlockCode1 = new List<String>{'F', 'G', 'N'};
             Case objCase = [
@@ -86,6 +86,10 @@ public with sharing class FEC_CardReplacementAddressController {
             String blockCode1;
             FEC_CardLockUnLockController.ResponseResult cardStatus = FEC_CardLockUnLockController.getCardStatus(caseId);
             blockCode = cardStatus?.currentBlockCode;
+            if (String.isBlank(blockCode)) {
+                // getCardStatus exception
+                return result;
+            }
 
             FEC_EmeaAccountInqService.EmeaInput input = new FEC_EmeaAccountInqService.EmeaInput();
             input.context    = FEC_ConstantCommon.REQUESTOR_CONTEXT;
@@ -121,10 +125,15 @@ public with sharing class FEC_CardReplacementAddressController {
             if (String.isBlank(result.strMsg)) {
                 result.isShowAction = true;
             }
-            return result;
         } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+            FEC_CommonUltils.logException(
+                'FEC_CardReplacementAddressController', 
+                'checkProcessAction', 
+                e.getMessage(),
+                e.getStackTraceString()
+            );
         }
+        return result;
     }
 
     public static UpdateResult cardReplacement(String recordId, String method, String cardBlockCode, String last4CardNumber, String replacementFee) {

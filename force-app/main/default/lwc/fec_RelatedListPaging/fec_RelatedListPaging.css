@@ -255,7 +255,11 @@
 
 /* No Data */
 .no-data {
+    min-height: 120px;
     padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: #706e6b;
     font-size: 14px;

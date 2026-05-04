@@ -15,6 +15,7 @@ import FEC_Total_IPP_Accrued_Interest_Label from '@salesforce/label/c.FEC_Total_
 import FEC_Total_Deferred_Interest_Label from '@salesforce/label/c.FEC_Total_Deferred_Interest_Label';
 import FEC_Total_Plan_Payment_Amount_Label from '@salesforce/label/c.FEC_Total_Plan_Payment_Amount_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import { formatDate } from 'c/fec_CommonUtils';
 
 
@@ -29,7 +30,7 @@ export default class Fec_CardPayment extends LightningElement {
     
     // Custom labels for template (khớp với customLabel.xxx trong HTML)
     /** Bảng: API OK nhưng không có dòng */
-    noDataLabel = 'No data';
+    noDataLabel = FEC_Common_No_Results_Label;
 
     customLabel = {
         cardPaymentLabel: FEC_Card_Payment_Label,
@@ -248,6 +249,11 @@ export default class Fec_CardPayment extends LightningElement {
     
     // Loading state for totals
     isTotalsLoading = true;
+
+    // Unified error state to match IPP/Card Info behavior
+    get hasAnyError() {
+        return this.hasError || this.hasTotalsError;
+    }
     
     columns = [
         { label: 'Rec', fieldName: 'FEC_Rec__c', type: 'text', width: '44px', minWidth: '44px', cellAlign: 'center' },
@@ -269,7 +275,7 @@ export default class Fec_CardPayment extends LightningElement {
     
     // Computed property for hasData - giống Card Info
     get hasData() {
-        return !this.hasError;
+        return !this.hasAnyError;
     }
 
     get hasCardPaymentTableData() {
@@ -277,14 +283,12 @@ export default class Fec_CardPayment extends LightningElement {
     }
 
     get showCardPaymentNoData() {
-        return !this.isLoading && !this.hasError && !this.hasCardPaymentTableData;
+        return !this.isLoading && !this.hasAnyError && !this.hasCardPaymentTableData;
     }
     
     // Hiển thị Payment Summary
     get showPaymentSummary() {
-        // TẠM THỜI: Luôn hiển thị vì đang dùng API mock
-        return true;
-        // return !this.hasError && !this.hasTotalsError && !this.isTotalsLoading;
+        return !this.hasAnyError && !this.isTotalsLoading;
     }
 
     // Getters for template properties

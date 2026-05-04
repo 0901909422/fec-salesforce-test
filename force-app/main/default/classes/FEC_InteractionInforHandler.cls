@@ -693,6 +693,7 @@ public without sharing class FEC_InteractionInforHandler {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
         
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
         update new Case(
             Id = recordId,
             FEC_Interaction_View_Mode__c = viewMode,
