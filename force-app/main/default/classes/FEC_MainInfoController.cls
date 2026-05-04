@@ -134,6 +134,7 @@ public without sharing class FEC_MainInfoController {
             hist.FEC_Contract_Number__c
         );
         String cifNumber = hist.FEC_CIF_Number__c;
+        String contractNumber = hist.FEC_Contract_Number__c;
         /* ===== CACHE HIT ===== */
         if (String.isNotBlank(hist.FEC_API_Cache__c)) {
             MainInfoDTO cached = (MainInfoDTO) JSON.deserialize(
@@ -217,7 +218,7 @@ public without sharing class FEC_MainInfoController {
 
         /* ===== 3. GetCustomerList ===== */
         try {
-            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly(accountNumber);
+            hist.FEC_Primary_Phone__c = getPrimaryPhoneOnly(accountNumber, contractNumber);
         } catch (Exception e) {
             System.debug('### GetCustomerList FAILED: ' + e.getMessage());
         }
@@ -731,18 +732,44 @@ public without sharing class FEC_MainInfoController {
         }
     }
 
-    private static String getPrimaryPhoneOnly(String accountNumber) {
-        FEC_GetCustomerList.ResponseWrapper res =
-            FEC_GetCustomerList.getCustomerList(
-                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, null, false,
-                null, null, null, null, accountNumber, null, null, null
+    private static String getPrimaryPhoneOnly(String accountNumber, String contractNumber) {
+
+        FEC_GetCustomerList.ResponseWrapper res;
+
+        if (String.isNotBlank(contractNumber)) {
+            res = FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null, null, null, null,
+                null,             
+                contractNumber,    
+                null, null
             );
+        }
+        else if (String.isNotBlank(accountNumber)) {
+            res = FEC_GetCustomerList.getCustomerList(
+                FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN,
+                null,
+                false,
+                null, null, null, null,
+                accountNumber,    
+                null,            
+                null, null
+            );
+        } else {
+            return null;
+        }
 
         if (res == null) return null;
 
-        for (FEC_GetCustomerList.Customer c : res.Customers)
-            for (FEC_GetCustomerList.Phone p : c.Phones)
-                if (p.Type == 'Mobile') return p.Phone;
+        for (FEC_GetCustomerList.Customer c : res.Customers) {
+            for (FEC_GetCustomerList.Phone p : c.Phones) {
+                if (p.Type == 'Mobile') {
+                    return p.Phone;
+                }
+            }
+        }
 
         return null;
     }
