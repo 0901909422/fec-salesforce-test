@@ -162,6 +162,20 @@ span.slds-text-color_error {
     color: #ea001e !important;
 }
 
+.ipp-empty-state {
+    min-height: 120px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #706e6b;
+}
+
+.ipp-empty-state p {
+    margin: 0;
+}
+
 .slds-section__title {
     font-size: 1rem;
     font-weight: 600;

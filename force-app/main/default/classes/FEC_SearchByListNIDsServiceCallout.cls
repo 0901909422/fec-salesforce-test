@@ -84,16 +84,13 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
 
         if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
             return (NIDsResponse) JSON.deserialize(resp.getBody(), NIDsResponse.class);
+            
         }
-
         NIDsResponse err = new NIDsResponse();
-        err.sys = new Sys();
-        err.sys.code = resp.getStatusCode();
-        err.sys.description = resp.getStatus();
-        err.sys.transID = transactionId;
-
-        err.result = new List<Result>();
-
+        err.sys2 = new Sys2();
+        err.sys2.code2 = String.valueOf(resp.getStatusCode());
+        err.sys2.description2 = 'HTTP Error: ' + resp.getStatus();
+        err.sys2.transID2 = transactionId;
         return err;
     }
 }

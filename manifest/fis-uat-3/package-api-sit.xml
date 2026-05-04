@@ -11,6 +11,12 @@
 		<members>FEC_ConstantCommon</members>
 		<members>FEC_GetDeals</members>
 		<members>FEC_GetDNBCalloutService</members>
+		<members>FEC_CheckEligibleCallout</members>
+		<members>FEC_CheckAccountEligibilityCallout</members>
+		<members>FEC_CheckEligibilityIPPCallout</members>
+		<members>FEC_GetSMSInfoFromITTelcoCallout</members>
+		<members>FEC_Chathub</members>
+		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<name>Apexclass</name>
 	</types>
@@ -20,6 +26,9 @@
 		<members>FEC_API_Config.FEC_Fetch_Collection_Data</members>
 		<members>FEC_API_Config.FEC_GetDeals</members>
 		<members>FEC_API_Config.FEC_Get_DNB</members>
+		<members>FEC_API_Config.FEC_CheckEligible</members>
+		<members>FEC_API_Config.FEC_CMS_RewardDebitWS</members>
+		<members>FEC_API_Config.FEC_GetSMSInfoFromITTelco</members>
 		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
 		<name>CustomMetadata</name>
 	</types>
@@ -39,6 +48,10 @@
 		<members>FEC_Page_Size_Deals</members>
 		<members>FEC_Page_Number_Deals</members>
 		<members>FEC_Error_Callout_Insurance</members>
+		<members>FEC_CustomerInfo_Null_Or_ChatSession_Null</members>
+		<members>FEC_MSG_No_Response</members>
+		<members>FEC_MSG_Unexpected_SOAP_Response</members>
+		<members>FEC_MSG_Unknown_Sys_Code</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>
