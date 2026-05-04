@@ -120,13 +120,9 @@ public with sharing class FEC_RepaySchedPayHistController {
 
         if (basicRes == null || basicRes.LoanBasicInfo == null) return;
 
-        FEC_GetLoanBasicInfo.Loan loan = basicRes.LoanBasicInfo.Loan;
-        if (loan != null && loan.TotalInstallmentAmount != null) {
-            result.repaymentScheduleTotals.totalInstallmentAmount = String.valueOf(loan.TotalInstallmentAmount);
-        }
-
         List<FEC_GetLoanBasicInfo.RepaymentSchedule> schedules = basicRes.LoanBasicInfo.RepaymentSchedules;
         if (schedules != null && !schedules.isEmpty()) {
+            Decimal sumInstallmentAmount = 0;
             Decimal sumPrincipal = 0;
             Decimal sumInterest = 0;
             Integer idx = 0;
@@ -144,9 +140,11 @@ public with sharing class FEC_RepaySchedPayHistController {
                 row.interest = FEC_CommonUltils.decimalToString(rs.Interest);
                 row.closingPrincipal = FEC_CommonUltils.decimalToString(rs.ClosingPrincipal);
                 result.repaymentScheduleTable.add(row);
+                if (rs.InstallmentAmount != null) sumInstallmentAmount += rs.InstallmentAmount;
                 if (rs.Principal != null) sumPrincipal += rs.Principal;
                 if (rs.Interest != null) sumInterest += rs.Interest;
             }
+            result.repaymentScheduleTotals.totalInstallmentAmount = sumInstallmentAmount != 0 ? String.valueOf(sumInstallmentAmount) : HYPHEN;
             result.repaymentScheduleTotals.totalPrincipal = sumPrincipal != 0 ? String.valueOf(sumPrincipal) : HYPHEN;
             result.repaymentScheduleTotals.totalInterest = sumInterest != 0 ? String.valueOf(sumInterest) : HYPHEN;
         }
@@ -167,14 +165,11 @@ public with sharing class FEC_RepaySchedPayHistController {
             || basicRes.LoanBasicInfo.RepaymentSchedules.isEmpty()) {
             return;
         }
-        Decimal totalInstallmentAmount = null;
-        FEC_GetLoanBasicInfo.Loan loan = basicRes.LoanBasicInfo.Loan;
-        if (loan != null && loan.TotalInstallmentAmount != null) {
-            totalInstallmentAmount = loan.TotalInstallmentAmount;
-        }
+        Decimal totalInstallmentAmount = 0;
         Decimal sumPrincipal = 0;
         Decimal sumInterest = 0;
         for (FEC_GetLoanBasicInfo.RepaymentSchedule rs : basicRes.LoanBasicInfo.RepaymentSchedules) {
+            if (rs.InstallmentAmount != null) totalInstallmentAmount += rs.InstallmentAmount;
             if (rs.Principal != null) sumPrincipal += rs.Principal;
             if (rs.Interest != null) sumInterest += rs.Interest;
         }

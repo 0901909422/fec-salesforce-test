@@ -13,6 +13,7 @@
 
 import { LightningElement, api, track } from 'lwc';
 import { isNegative, maskValue } from 'c/fec_CommonUtils';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 export default class Fec_RelatedListPaging extends LightningElement {
 
@@ -31,8 +32,8 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
-    /** Khi không có dòng dữ liệu. Mặc định giữ "No data" cho tương thích; component cha có thể truyền khác (vd. fec_AppInfo). */
-    @api emptyStateMessage = 'No data';
+    /** Khi không có dòng dữ liệu; component cha có thể truyền empty-state-message khác (vd. fec_AppInfo). */
+    @api emptyStateMessage = FEC_Common_No_Results_Label;
 
     /* ================= STATE ================= */
     _records = [];
