@@ -86,6 +86,7 @@
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
+        <members>Case.FEC_Assignment_Count__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
