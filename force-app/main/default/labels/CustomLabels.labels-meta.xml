@@ -10117,6 +10117,14 @@
         <value>CS Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_No_Pending_Disbursement</fullName>
+        <categories>Card LockUnlock LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_No_Pending_Disbursement</shortDescription>
+        <value>Không có khoản chờ giải ngân.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Card_Block_Beneficiary_Required</fullName>
         <categories>Card LockUnlock LWC</categories>
         <language>en_US</language>
@@ -11260,6 +11268,14 @@
         <protected>false</protected>
         <shortDescription>FEC_LBL_Select_Contract_Number</shortDescription>
         <value>Select contract number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_Select_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Selected_Contract_Number</shortDescription>
+        <value>Selected contract number</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Select_Payment_Method</fullName>
