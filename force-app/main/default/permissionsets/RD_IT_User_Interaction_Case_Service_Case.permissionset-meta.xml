@@ -2410,8 +2410,6 @@
         <field>FEC_Do_Not_Bother__c.FEC_Updated_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

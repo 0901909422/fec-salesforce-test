@@ -2360,8 +2360,6 @@
         <field>FEC_Do_Not_Bother__c.FEC_Updated_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Inbound Team Leader - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
