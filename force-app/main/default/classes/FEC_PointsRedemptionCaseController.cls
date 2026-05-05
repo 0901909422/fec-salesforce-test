@@ -14,7 +14,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (String.isNotBlank(paramSubCode)) {
             return paramSubCode.trim();
         }
-        return caseSubCode != null ? caseSubCode.trim() : '';
+        return caseSubCode != null ? caseSubCode.trim() : FEC_ConstantCommon.STR_EMPTY;
     }
 
     /** Nhánh đổi điểm thưởng (SRS RC33): sau khi chọn NOC cần gọi GetRewardEligibility để lấy AvailablePoints. */
@@ -67,7 +67,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case' }));
         }
         Case c = cases[0];
-        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : '';
+        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : FEC_ConstantCommon.STR_EMPTY;
         String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
         r.subCodeCode = String.isNotBlank(effectiveSub) ? effectiveSub : codeFromCase;
         if (!isPointsRedemptionNoc(effectiveSub)) {
@@ -145,7 +145,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case' }));
         }
         Case c = cases[0];
-        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : '';
+        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : FEC_ConstantCommon.STR_EMPTY;
         String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
         String expectedType = resolveProductType(effectiveSub);
         if (String.isBlank(expectedType) || expectedType != tier.productType) {
@@ -161,8 +161,8 @@ public without sharing class FEC_PointsRedemptionCaseController {
         }
         FEC_CMSRewardRedeemService.RedeemRequest req = new FEC_CMSRewardRedeemService.RedeemRequest();
         req.accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
-        req.customerName = el.customerName != null ? el.customerName : '';
-        req.customerMobile = el.customerMobile != null ? el.customerMobile : '';
+        req.customerName = FEC_CommonUltils.defaultToEmpty(el.customerName);
+        req.customerMobile = FEC_CommonUltils.defaultToEmpty(el.customerMobile);
         req.ticketId = c.CaseNumber != null ? c.CaseNumber : String.valueOf(c.Id);
         req.ticketPoint = tier.price;
         req.productId = tier.productId;
@@ -173,11 +173,11 @@ public without sharing class FEC_PointsRedemptionCaseController {
         req.cashback = tier.cashback != null ? tier.cashback : 0;
         req.redeemTypeId = Integer.valueOf(String.valueOf(tier.redeemTypeId.longValue()));
         FEC_CMSRewardRedeemService.RedeemResult res;
-        if (tier.productType == 'Cashback') {
+        if (tier.productType == FEC_ConstantCommon.PRODUCT_TYPE_CASHBACK) {
             res = FEC_CMSRewardRedeemService.generateCashback(req);
-        } else if (tier.productType == 'EVoucher') {
+        } else if (tier.productType == FEC_ConstantCommon.PRODUCT_TYPE_EVOUCHER) {
             res = FEC_CMSRewardRedeemService.generateEvoucher(req);
-        } else if (tier.productType == 'MVoucher') {
+        } else if (tier.productType == FEC_ConstantCommon.PRODUCT_TYPE_MVOUCHER) {
             res = FEC_CMSRewardRedeemService.generateMvoucher(req);
         } else {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'ProductType' }));
@@ -211,7 +211,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         }
         String codeFromCase = cases[0].FEC_SubCode__r != null && cases[0].FEC_SubCode__r.FEC_Code__c != null
             ? cases[0].FEC_SubCode__r.FEC_Code__c
-            : '';
+            : FEC_ConstantCommon.STR_EMPTY;
         String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
         String expectedType = resolveProductType(effectiveSub);
         if (String.isBlank(expectedType) || expectedType != tier.productType) {
@@ -255,13 +255,13 @@ public without sharing class FEC_PointsRedemptionCaseController {
         }
         String s = subCode.trim();
         if (s.contains('RC33.01')) {
-            return 'Cashback';
+            return FEC_ConstantCommon.PRODUCT_TYPE_CASHBACK;
         }
         if (s.contains('RC33.02')) {
-            return 'EVoucher';
+            return FEC_ConstantCommon.PRODUCT_TYPE_EVOUCHER;
         }
         if (s.contains('RC33.03')) {
-            return 'MVoucher';
+            return FEC_ConstantCommon.PRODUCT_TYPE_MVOUCHER;
         }
         return null;
     }
@@ -270,13 +270,13 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (el.redemptionOptions == null) {
             return true;
         }
-        if (productType == 'Cashback') {
+        if (productType == FEC_ConstantCommon.PRODUCT_TYPE_CASHBACK) {
             return el.redemptionOptions.cashbackEligible != false;
         }
-        if (productType == 'EVoucher') {
+        if (productType == FEC_ConstantCommon.PRODUCT_TYPE_EVOUCHER) {
             return el.redemptionOptions.evoucherEligible != false;
         }
-        if (productType == 'MVoucher') {
+        if (productType == FEC_ConstantCommon.PRODUCT_TYPE_MVOUCHER) {
             return el.redemptionOptions.mvoucherEligible != false;
         }
         return false;
@@ -284,7 +284,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
 
     private static String formatTierLabel(ProductTier t) {
         if (t == null || t.price == null) {
-            return '';
+            return FEC_ConstantCommon.STR_EMPTY;
         }
         return String.valueOf(t.price.longValue());
     }
@@ -323,8 +323,8 @@ public without sharing class FEC_PointsRedemptionCaseController {
         );
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Reward_Eligibility');
-        String endpoint = (apiSetting != null ? apiSetting.FEC_Endpoint__c : '') +
-            (apiConfig != null ? apiConfig.FEC_Endpoint__c : '');
+        String endpoint = (apiSetting != null ? apiSetting.FEC_Endpoint__c : FEC_ConstantCommon.STR_EMPTY) +
+            (apiConfig != null ? apiConfig.FEC_Endpoint__c : FEC_ConstantCommon.STR_EMPTY);
         if (String.isBlank(endpoint)) {
             return null;
         }

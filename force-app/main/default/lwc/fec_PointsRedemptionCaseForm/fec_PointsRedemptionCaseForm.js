@@ -14,6 +14,14 @@ import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
+import FEC_Points_Redeem_Button_Label from '@salesforce/label/c.FEC_Points_Redeem_Button_Label';
+import FEC_Points_Redeem_Fail_After_Max from '@salesforce/label/c.FEC_Points_Redeem_Fail_After_Max';
+import FEC_Points_Redeem_Fail_Prefix from '@salesforce/label/c.FEC_Points_Redeem_Fail_Prefix';
+import FEC_Points_Redeem_Success_Message from '@salesforce/label/c.FEC_Points_Redeem_Success_Message';
+import FEC_Points_Redeemed_Points_Label from '@salesforce/label/c.FEC_Points_Redeemed_Points_Label';
+import FEC_Points_Redemption_CMS_Phone_Label from '@salesforce/label/c.FEC_Points_Redemption_CMS_Phone_Label';
+import FEC_Points_Redemption_Confirm_Message from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Message';
+import FEC_Points_Redemption_Confirm_Title from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Title';
 import Loading from '@salesforce/label/c.Loading';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
@@ -120,9 +128,9 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             return;
         }
         const ok = await LightningConfirm.open({
-            message: 'Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?',
+            message: FEC_Points_Redemption_Confirm_Message,
             variant: 'header',
-            label: 'Xác nhận đổi điểm',
+            label: FEC_Points_Redemption_Confirm_Title,
             theme: 'default'
         });
         if (!ok) {
@@ -134,7 +142,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
                 if (res && res.success) {
                     this.persistOk();
                     this.redeemDisabled = true;
-                    this.toast(FEC_Success_Title, 'Đổi điểm thưởng thành công.', VARIANT.SUCCESS);
+                    this.toast(FEC_Success_Title, FEC_Points_Redeem_Success_Message, VARIANT.SUCCESS);
                     this.navigateCase();
                 } else {
                     this.onRedeemFail(res && res.errorMessage ? res.errorMessage : FEC_Toast_Error);
@@ -159,10 +167,10 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
         if (this.failCount >= MAX_FAIL) {
             this.redeemDisabled = true;
-            this.toast(FEC_Toast_Error, 'Đổi điểm thưởng thất bại (lần ' + MAX_FAIL + '). ' + message, VARIANT.ERROR);
+            this.toast(FEC_Toast_Error, FEC_Points_Redeem_Fail_After_Max.replace('{0}', String(MAX_FAIL)) + message, VARIANT.ERROR);
             this.navigateCase();
         } else {
-            this.toast(FEC_Toast_Error, 'Đổi điểm thưởng thất bại. ' + message, VARIANT.ERROR);
+            this.toast(FEC_Toast_Error, FEC_Points_Redeem_Fail_Prefix + message, VARIANT.ERROR);
         }
     }
 
@@ -211,5 +219,17 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     get loadingLabel() {
         return Loading;
+    }
+
+    get labelRedeemedPoints() {
+        return FEC_Points_Redeemed_Points_Label;
+    }
+
+    get labelCmsPhone() {
+        return FEC_Points_Redemption_CMS_Phone_Label;
+    }
+
+    get labelRedeemPoints() {
+        return FEC_Points_Redeem_Button_Label;
     }
 }

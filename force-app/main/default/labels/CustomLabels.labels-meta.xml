@@ -4367,6 +4367,70 @@
         <value>Please fill in all required fields.</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>Đổi điểm thưởng thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>Đổi điểm thưởng thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>Xác nhận đổi điểm</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>

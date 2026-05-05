@@ -15,7 +15,7 @@
         <lightning-layout-item size="6" padding="around-small">
           <lightning-combobox
             name="redeemedPoints"
-            label="Redeemed Points"
+            label={labelRedeemedPoints}
             value={selectedTierJson}
             options={tierOptionsUi}
             onchange={handleTierChange}
@@ -25,13 +25,13 @@
           </lightning-combobox>
         </lightning-layout-item>
         <lightning-layout-item size="6" padding="around-small">
-          <lightning-input type="tel" label="CMS Phone" value={cmsPhone} disabled></lightning-input>
+          <lightning-input type="tel" label={labelCmsPhone} value={cmsPhone} disabled></lightning-input>
         </lightning-layout-item>
         <lightning-layout-item size="12" padding="around-small">
           <template if:false={isReadOnly}>
             <lightning-button
               variant="brand"
-              label="Redeem Points"
+              label={labelRedeemPoints}
               onclick={handleRedeemClick}
               disabled={redeemDisabled}
             >
