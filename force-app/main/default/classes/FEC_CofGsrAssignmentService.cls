@@ -49,6 +49,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             WHERE FEC_Nature_of_Cases__c = :natureOfCaseId
               AND FEC_Team__c != null
               AND FEC_Queue__c != null
+              AND FEC_Active__c = true
             ORDER BY FEC_Team__c ASC
         ];
 
@@ -75,6 +76,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FROM FEC_Routing_Assignment__c
                         WHERE FEC_Nature_of_Cases__c IN :siblingIds
                           AND FEC_Team__c != null AND FEC_Queue__c != null
+                          AND FEC_Active__c = true
                         ORDER BY FEC_Team__c ASC
                     ];
                 }
@@ -134,6 +136,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 FROM FEC_Routing_Assignment__c
                 WHERE FEC_Nature_of_Cases__c IN :nocIds
                   AND FEC_Team__c != null AND FEC_Queue__c != null
+                  AND FEC_Active__c = true
                 ORDER BY FEC_Team__c ASC
             ];
             if (routingAssignments.isEmpty()) return;
@@ -382,6 +385,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 FROM FEC_Routing_Assignment__c
                 WHERE FEC_Nature_of_Cases__c IN :allNocIds
                   AND FEC_Team__c != null AND FEC_Queue__c != null
+                  AND FEC_Active__c = true
                 GROUP BY FEC_Nature_of_Cases__c
             ]) {
                 result.add((Id) ar.get('nocId'));
@@ -420,7 +424,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         if (!nocIds.isEmpty()) {
             List<FEC_Routing_Assignment__c> teamCheck = [
                 SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
-                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null LIMIT 1
+                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null AND FEC_Active__c = true LIMIT 1
             ];
             if (!teamCheck.isEmpty()) firstTeam = teamCheck[0].FEC_Team__c;
         }
