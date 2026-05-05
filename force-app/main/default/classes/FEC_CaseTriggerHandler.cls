@@ -24,24 +24,32 @@ public without sharing class FEC_CaseTriggerHandler {
 
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onBeforeInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeInsert(listCase);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onBeforeUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeUpdate(listCase, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onAfterInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterInsert(listCase);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onAfterUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterUpdate(listCase, oldMap);
         }
     }
 
@@ -53,12 +61,9 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
-        List<Case> listCase = new List<Case>();
-        filterCaseForBeforeInsert(listCase, newCases);
-
         setEmail2CaseChannelBeforeInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
-        generateFECIdSearch(listCase);
+        generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         assignEntitlement(newCases);
                 
@@ -1002,7 +1007,7 @@ public without sharing class FEC_CaseTriggerHandler {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    public static void filterCaseForBeforeInsert(List<Case> listCase, List<Case> newCases){
+    public static void filterCase(List<Case> listCase, List<Case> newCases){
         for (Case caseIns : newCases) {
             if (String.isBlank(caseIns.ArchiveExternalId__c)) {
                 listCase.add(caseIns);
