@@ -3,9 +3,10 @@
     <fullName>FEC_Service_Case_Owner__c</fullName>
     <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue</description>
     <externalId>false</externalId>
-    <formula>IF( Or(RecordType.Name = &apos;Customer Case&apos;, RecordType.Name = &apos;Internal Case&apos;),(IF(ISBLANK(Owner:Queue.Id),
-LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1),
-Owner:Queue.Name)),&apos;&apos;)</formula>
+    <formula>IF (NOT(ISBLANK(ArchiveServiceCaseOwner__c)), ArchiveServiceCaseOwner__c,
+    IF( Or(RecordType.Name = &apos;Customer Case&apos;, RecordType.Name = &apos;Internal Case&apos;),
+    (IF(ISBLANK(Owner:Queue.Id), LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1), Owner:Queue.Name)),&apos;&apos;)
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Service Case Owner</label>
     <required>false</required>
