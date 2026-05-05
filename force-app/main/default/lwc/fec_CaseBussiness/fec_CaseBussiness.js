@@ -371,6 +371,7 @@ function mergeSectionSortedRows(section) {
       isLwc: true,
       sortOrder,
       outerClass: dynCmp.lwcColClassName,
+      showLwcSubHeading: !!dynCmp.subSectionName,
       dynCmp,
     });
   });
