@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_User_Role_Relevant__c</fullName>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.Owner:User.UserRole.Name</formula>
+    <formula>CreatedBy.UserRole.Name</formula>
     <label>User Role</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

@@ -429,6 +429,28 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!targetQueues.isEmpty()) {
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
                 Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
+
+                // tungnm37: tạo Routing Action History cho luồng CC/SP
+                try {
+                    Case currentCase = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
+                    String originalOwnerLabel = resolveRoutingHistoryOwnerLabel(currentCase.OwnerId, currentCase.Owner?.Name);
+                    String userRoleName = currentUser.UserRole?.Name;
+                    Database.insert(new FEC_Routing_Action_History__c(
+                        FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
+                        FEC_Case__c = caseId,
+                        FEC_Perform_User__c = currentUser.Id,
+                        FEC_User__c = emailLocalPart(currentUser.Email),
+                        FEC_User_Role__c = userRoleName,
+                        FEC_Stage_Name__c = stageName,
+                        FEC_Original_User_Queue__c = originalOwnerLabel,
+                        FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
+                        FEC_Updated_User_Queue__c = targetQueueName,
+                        FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
+                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                    ));
+                } catch (Exception eh) {
+                    System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
+                }
             }
             if (!nocIds.isEmpty()) {
                 List<FEC_Case_Stage__c> nextStages = [
