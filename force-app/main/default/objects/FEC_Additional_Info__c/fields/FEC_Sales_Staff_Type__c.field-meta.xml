@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sales_Staff_Type__c</fullName>
+    <description>Loại tiếp xúc/hình thức làm việc của nhân viên bán hàng</description>
+    <label>Sales Staff Type</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Tại cửa hàng</fullName>
+                <default>false</default>
+                <label>Tại cửa hàng</label>
+            </value>
+            <value>
+                <fullName>Qua cuộc gọi</fullName>
+                <default>false</default>
+                <label>Qua cuộc gọi</label>
+            </value>
+            <value>
+                <fullName>Gặp trực tiếp</fullName>
+                <default>false</default>
+                <label>Gặp trực tiếp</label>
+            </value>
+            <value>
+                <fullName>Chưa có cơ hội khai thác</fullName>
+                <default>false</default>
+                <label>Chưa có cơ hội khai thác</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
