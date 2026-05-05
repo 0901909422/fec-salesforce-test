@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Error_Classification_1__c</fullName>
+    <description>Phân loại lỗi (1)</description>
+    <label>Error Classification 1</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Lỗi không đóng được HĐ</fullName>
+                <default>false</default>
+                <label>Lỗi không đóng được HĐ</label>
+            </value>
+            <value>
+                <fullName>Lỗi pair tiền góp</fullName>
+                <default>false</default>
+                <label>Lỗi pair tiền góp</label>
+            </value>
+            <value>
+                <fullName>Lỗi hệ thống Finacle</fullName>
+                <default>false</default>
+                <label>Lỗi hệ thống Finacle</label>
+            </value>
+            <value>
+                <fullName>Lỗi khác</fullName>
+                <default>false</default>
+                <label>Lỗi khác</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

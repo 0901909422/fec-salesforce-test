@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sales_Complaint_Issue_2__c</fullName>
+    <description>Vấn đề khiếu nại liên quan bán hàng (2)</description>
+    <label>Sales Complaint Issue 2</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Tiền góp</fullName>
+                <default>false</default>
+                <label>Tiền góp</label>
+            </value>
+            <value>
+                <fullName>Kỳ hạn</fullName>
+                <default>false</default>
+                <label>Kỳ hạn</label>
+            </value>
+            <value>
+                <fullName>Tiền góp và kỳ hạn</fullName>
+                <default>false</default>
+                <label>Tiền góp và kỳ hạn</label>
+            </value>
+            <value>
+                <fullName>Bảo hiểm khoản vay</fullName>
+                <default>false</default>
+                <label>Bảo hiểm khoản vay</label>
+            </value>
+            <value>
+                <fullName>Bảo hiểm Banca</fullName>
+                <default>false</default>
+                <label>Bảo hiểm Banca</label>
+            </value>
+            <value>
+                <fullName>Vấn đề về thanh lý</fullName>
+                <default>false</default>
+                <label>Vấn đề về thanh lý</label>
+            </value>
+            <value>
+                <fullName>Cách cấn trừ gốc lãi</fullName>
+                <default>false</default>
+                <label>Cách cấn trừ gốc lãi</label>
+            </value>
+            <value>
+                <fullName>Lãi suất</fullName>
+                <default>false</default>
+                <label>Lãi suất</label>
+            </value>
+            <value>
+                <fullName>Các loại phí</fullName>
+                <default>false</default>
+                <label>Các loại phí</label>
+            </value>
+            <value>
+                <fullName>Tổng khoản vay</fullName>
+                <default>false</default>
+                <label>Tổng khoản vay</label>
+            </value>
+            <value>
+                <fullName>Hạn mức thẻ</fullName>
+                <default>false</default>
+                <label>Hạn mức thẻ</label>
+            </value>
+            <value>
+                <fullName>Ngày sao kê</fullName>
+                <default>false</default>
+                <label>Ngày sao kê</label>
+            </value>
+            <value>
+                <fullName>Chương trình khuyến mãi</fullName>
+                <default>false</default>
+                <label>Chương trình khuyến mãi</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
