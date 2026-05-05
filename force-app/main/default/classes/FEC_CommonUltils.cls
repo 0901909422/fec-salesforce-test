@@ -36,6 +36,11 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /** Nhãn UI picklist từ master: chỉ dùng FEC_Name_VN__c (không fallback Name). */
+  public static String picklistLabelFromFecNameVn(String fecNameVn) {
+    return fecNameVn != null ? fecNameVn.trim() : '';
+  }
+
   public static Boolean notifyUsers(
     Set<String> recipientsIds,
     Id targetId,
@@ -1323,6 +1328,36 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  public static String buildDatetimeForAPI() {
+    Datetime dt = Datetime.now();
+
+    String base = dt.format('yyyy-MM-dd\'T\'HH:mm:ss');
+    String ms = String.valueOf(dt.millisecond()).leftPad(3, '0');
+    String micro = ms + '000';
+    String tz = dt.format('XXX');
+
+    return base + '.' + micro + tz;
+}
+
+  /**
+   * DateTime trên HTTP header Transfer Call / Pega — khớp Postman: yyyyMMddTHHmmss.SSS GMT.
+   */
+  public static String formatTransferCallRequestDateTime(Datetime dt) {
+    Datetime useDt = dt == null ? Datetime.now() : dt;
+    return useDt.formatGMT(FEC_ConstantCommon.TRANSFER_CALL_DATETIME_FORMAT_GMT) +
+      FEC_ConstantCommon.TRANSFER_CALL_DATETIME_SUFFIX_GMT;
+  }
+
+  /** Rút gọn chuỗi cho log (HTTP body, …). */
+  public static String truncateForLog(String text, Integer maxLen, String truncatedSuffix) {
+    if (String.isBlank(text) || maxLen == null || maxLen <= 0 || text.length() <= maxLen) {
+      return text;
+    }
+    String suffix = truncatedSuffix != null ? truncatedSuffix : '';
+    return text.substring(0, maxLen) + suffix;
+  }
+  
+    
   /**
    * Lấy Profile name của current user
    */
