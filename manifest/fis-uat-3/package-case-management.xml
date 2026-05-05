@@ -472,6 +472,7 @@
 	</types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
+        <members>FEC_Case_Action__c</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
