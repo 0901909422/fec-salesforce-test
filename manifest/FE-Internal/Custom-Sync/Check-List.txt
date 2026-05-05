@@ -8,7 +8,10 @@ Checklist
 	 - CustomSync__C  | object lưu config
 		- ProcessingQuantity__c: số lượng reocord trong 1 lần gửi 
 		- TotalRecordSync__c: Số lượng reocrd đc Sync trong kỳ trước 
-        - Field: Các field phải được query trước khi add(Tránh lỗi)
+        - Request Body Mapping: Là json với cấu trúc Map<'FieldBix','FieldSalesforce'> phải đúng cấu trúc và các field của SF phải đúng
+        - Mapping Data Type: là json với cấu trức Map<'FieldBix','DataType'> DataType của field dưới Bix
+        - PK Column: là Table của Bix
+        - TargetObject: là lấy data từ object nào 
 - Tất cả sử dụng permision FEC_Common_System_Setting
 
 
