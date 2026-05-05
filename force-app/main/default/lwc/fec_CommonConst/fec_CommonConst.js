@@ -134,6 +134,23 @@ const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
 const FEC_SENT_SUCCESS = 'Notification sent successfully';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
+const CATEGORY = {
+  COMPLAINT: "Complaint"
+};
+
+const COMPLAINT_TYPE_TEXT = {
+  HIGH_RISK: "High risk",
+  URGENT: "Urgent"
+};
+ const COMPLAINT_SOURCE_LABEL = {
+  SBV: "Ngân hàng Nhà nước Việt Nam",
+  CIC: "Trung tâm Thông tin Tín dụng",
+  VCCA: "Cục Cạnh tranh và Bảo vệ người tiêu dùng",
+  "PR/MKT": "Trung tâm Truyền thông",
+  VIP: "Cấp quản lý cao",
+  EA: "Quan hệ đối ngoại"
+};
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -228,5 +245,8 @@ export {
     NOTIFICATION_CHANNEL_SF_APP,
     FEC_SENT_SUCCESS,
     PROFILE_RELEVANT_DEPTS,
-    PAGE_SIZE_OPTIONS
+    PAGE_SIZE_OPTIONS,
+    CATEGORY,
+    COMPLAINT_TYPE_TEXT,
+    COMPLAINT_SOURCE_LABEL
 };

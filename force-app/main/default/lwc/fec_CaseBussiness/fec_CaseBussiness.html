@@ -227,21 +227,24 @@
         </template>
 
         <template if:true={section.isLastSection}>
-           <div
+          <div
             if:true={isProcessActionFailed}
             class="process-action-result process-action-result--error"
           >
             <p>{processActionMsg}</p>
           </div>
 
-           <div
+          <div
             if:true={isProcessActionSuccessed}
             class="process-action-result process-action-result--success"
           >
             <p>{processActionMsg}</p>
           </div>
 
-          <div if:true={isProcessActionInfo} class="process-action-result process-action-result--info">
+          <div
+            if:true={isProcessActionInfo}
+            class="process-action-result process-action-result--info"
+          >
             <p>{processActionMsg}</p>
           </div>
         </template>
@@ -275,7 +278,10 @@
             <p class="label">{customLabel.teamLabel}</p>
             <p class="value">{business.nextTeam}</p>
           </div>
-            <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+
+          <div
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
+          >
             <p class="label">{customLabel.queueLabel}</p>
             <p class="value">{routeToQueueDisplayLabel}</p>
             </div>
@@ -294,44 +300,25 @@
             </c-fec_-routing-assignment>
           </template>
         </div>
-        <div
-          if:true={showRevert}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+        <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.decisionLabel}</p>
             <p class="value">{revertDecisionDisplayLabel}</p>
           </div>
         </div>
-         <div
-          if:true={showTransfer}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
-            <lightning-combobox
-              name="decision"
-              label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel}
-              value={decisionValue}
-              onchange={handleChange}
-              options={decisionOptions}
-              required
-            >
+        <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionOptions} required>
             </lightning-combobox>
           </div>
 
-          <div
-            if:true={decisionValue}
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+          <div if:true={decisionValue}
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <template if:true={isSubDecisionOptionsDisplay}>
-               <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder=
-{customLabel.chooseSubDecisionLabel}
-                value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
+              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel}
+                placeholder={customLabel.chooseSubDecisionLabel} value={subDecisionValue} onchange={handleChange}
                 options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
@@ -341,50 +328,31 @@
             
           </div>
         </div>
-         <div
-          if:true={showUpdate}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
-            <lightning-combobox
-              name="decision"
-              label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel}
-              value={decisionValue}
-              onchange={handleChange}
-              options={decisionUpdateOptions}
-              required
-            >
+        <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionUpdateOptions} required>
             </lightning-combobox>
           </div>
         </div>
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <c-fec_-assignment-list record-id={recordId}>
+  <!--Hieutt74: Update ngày 21/4/2026-->
+  <!--Assigment Routing Action-->
+  <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
   </c-fec_-assignment-list>
-  <c-fec_-modal
-    header={header}
-    onclose={handleCloseModal}
-    if:true={isModalOpen}
-  >
+  <!--END: Hieutt74: Update ngày 21/4/2026-->
+  <c-fec_-modal header={header} onclose={handleCloseModal} if:true={isModalOpen}>
     <div slot="content">
-      <div class="t-a-c"><p>{content}</p></div>
+      <div class="t-a-c">
+        <p>{content}</p>
+      </div>
     </div>
     <div slot="footer">
-      <lightning-button
-        label="Không"
-        onclick={handleCloseModal}
-      ></lightning-button>
-
-      <lightning-button
-        variant="brand"
-        label="Có"
-        onclick={handleRun}
-        class="slds-m-left_x-small"
-      ></lightning-button>
+      <lightning-button label="Không" onclick={handleCloseModal}></lightning-button>
+      <lightning-button variant="brand" label="Có" onclick={handleRun} class="slds-m-left_x-small"></lightning-button>
     </div>
   </c-fec_-modal>
 </template>

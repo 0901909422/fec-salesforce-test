@@ -27,6 +27,7 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_COFFraudRelatedHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -466,6 +467,7 @@
         <members>fec_AssignmentRemarkHistoryTable</members>
 		<members>fec_AssignmentExecuteVisibility</members>
         <members>fec_CaseExecuteVisibility</members>
+        <members>fec_COFFraudRelatedView</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
