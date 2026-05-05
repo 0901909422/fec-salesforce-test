@@ -522,6 +522,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String NO_MATCH = 'No match';
     public static final String SKIP_ITEM = 'Skip item (null/blank)';
     
+    /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
+    public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
+    public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
+    
     //HieuTT74 - Update ngày 25/4/2026 - Assigment Routing Action
     // ================= ACTION =================
     public static final String ACTION_ESCALATE = 'Escalate';
