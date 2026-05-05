@@ -314,6 +314,17 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        if (funcCode == FUNC_BLOCK && c.FEC_Is_Test_API__c == true) {
+            Integer after = incrementCaseBlockServiceAttempts(caseId);
+            dto.success = false;
+            dto.code = '0';
+            dto.description = 'Test API failure';
+            dto.errorMessage = null;
+            dto.cardBlockServiceAttemptsAfter = after;
+            dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+            return dto;
+        }
+
         try {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
