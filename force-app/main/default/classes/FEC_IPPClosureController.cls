@@ -231,16 +231,24 @@ public without sharing class FEC_IPPClosureController {
             return blocked;
         }
         for (Case c : [
-            SELECT FEC_IPP_To_Close__c
+            SELECT FEC_IPP_To_Close__c, Status
             FROM Case
             WHERE FEC_IPP_To_Close__c IN :ippIds
               AND Id != :currentCaseId
         ]) {
-            if (c.FEC_IPP_To_Close__c != null) {
+            if (c.FEC_IPP_To_Close__c != null && isCaseStatusBlockingIppReuse(c.Status)) {
                 blocked.add(c.FEC_IPP_To_Close__c);
             }
         }
         return blocked;
+    }
+
+    private static Boolean isCaseStatusBlockingIppReuse(String status) {
+        if (String.isBlank(status)) {
+            return true;
+        }
+        return status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
+            && status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
     }
 
 }
