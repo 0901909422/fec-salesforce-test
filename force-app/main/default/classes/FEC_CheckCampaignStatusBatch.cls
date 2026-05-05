@@ -5,13 +5,18 @@
  */
 public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batchable<sObject>, Database.Stateful, Schedulable {
 
+    // OData server không handle được IN clause quá lớn — chia nhỏ query theo CHUNK_SIZE
+    private static final Integer ODATA_CHUNK_SIZE = 50;
+    // Batch scope size — tận dụng governor limits (100 SOQL/transaction)
+    private static final Integer BATCH_SCOPE_SIZE = 200;
+
     private Id batchLogId;
     private Integer processedCount = 0;
     private Integer errorCount = 0;
     private String errorDetails = '';
 
     public void execute(SchedulableContext sc) {
-        Database.executeBatch(new FEC_CheckCampaignStatusBatch());
+        Database.executeBatch(new FEC_CheckCampaignStatusBatch(), BATCH_SCOPE_SIZE);
     }
 
     public Database.QueryLocator start(Database.BatchableContext BC) {
@@ -37,33 +42,10 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
 
     public void execute(Database.BatchableContext BC, List<FEC_DataCampaign__c> scope) {
         System.debug('>>> [CheckCampaignStatus] execute() — scope size: ' + scope.size());
-        Set<String> accountSet = collectAccountNumbers(scope);
-        System.debug('>>> [CheckCampaignStatus] accountSet size: ' + accountSet.size());
-        Set<String> recordIdSet = new Set<String>();
-        for (FEC_DataCampaign__c rec : scope) {
-            if (String.isNotBlank(rec.FEC_RecordId__c)) {
-                recordIdSet.add(rec.FEC_RecordId__c);
-            }
-        }
-        System.debug('>>> [CheckCampaignStatus] recordIdSet size: ' + recordIdSet.size());
-        if (accountSet.isEmpty() || recordIdSet.isEmpty()) {
-            System.debug('>>> [CheckCampaignStatus] accountSet or recordIdSet is empty — skipping');
-            return;
-        }
 
         try {
-            String query = 'SELECT account_or_contract_number__c, record_id__c, ' +
-                'number4__c, number5__c, record_current_lifetime__c, ' +
-                'insertion_date__c, callback_requested__c, ' +
-                'current_call_attempt__c, is_max_attempt__c, ' +
-                'send_to_commsdb__c, sent_instantly__c ' +
-                'FROM PostgresCampaignLog__x ' +
-                'WHERE account_or_contract_number__c IN :accountSet ' +
-                'AND record_id__c IN :recordIdSet ' +
-                'AND status__c = \'COMPLETED\'';
-            System.debug('>>> [CheckCampaignStatus] OData query: ' + query);
-            List<SObject> odataResults = Database.query(query);
-            System.debug('>>> [CheckCampaignStatus] OData results returned: ' + odataResults.size());
+            List<SObject> odataResults = queryODataInChunks(scope);
+            System.debug('>>> [CheckCampaignStatus] OData total results returned: ' + odataResults.size());
 
             List<FEC_DataCampaign__c> recordsToUpdate = processODataResults(odataResults, scope);
             System.debug('>>> [CheckCampaignStatus] records to update: ' + recordsToUpdate.size());
@@ -94,14 +76,54 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
 
     // ─── Private Helpers ───────────────────────────────────────────
 
-    private Set<String> collectAccountNumbers(List<FEC_DataCampaign__c> scope) {
-        Set<String> accountSet = new Set<String>();
-        for (FEC_DataCampaign__c rec : scope) {
-            if (String.isNotBlank(rec.FEC_AccountOrContractNumber__c)) {
-                accountSet.add(rec.FEC_AccountOrContractNumber__c);
+    /**
+     * Chia nhỏ OData query theo ODATA_CHUNK_SIZE dựa trên scope records.
+     * Mỗi chunk gom accountSet + recordIdSet CHỈ của records trong chunk đó,
+     * đảm bảo IN clause luôn nhỏ và ổn định, không mất data.
+     */
+    private List<SObject> queryODataInChunks(List<FEC_DataCampaign__c> scope) {
+        List<SObject> allResults = new List<SObject>();
+        Integer total = scope.size();
+        Integer chunkCount = 0;
+
+        for (Integer i = 0; i < total; i += ODATA_CHUNK_SIZE) {
+            Integer endIdx = Math.min(i + ODATA_CHUNK_SIZE, total);
+            Set<String> accountChunk = new Set<String>();
+            Set<String> recordIdChunk = new Set<String>();
+            for (Integer j = i; j < endIdx; j++) {
+                FEC_DataCampaign__c rec = scope[j];
+                if (String.isNotBlank(rec.FEC_AccountOrContractNumber__c)) {
+                    accountChunk.add(rec.FEC_AccountOrContractNumber__c);
+                }
+                if (String.isNotBlank(rec.FEC_RecordId__c)) {
+                    recordIdChunk.add(rec.FEC_RecordId__c);
+                }
             }
+
+            if (accountChunk.isEmpty() || recordIdChunk.isEmpty()) {
+                continue;
+            }
+
+            String query = 'SELECT account_or_contract_number__c, record_id__c, ' +
+                'number4__c, number5__c, record_current_lifetime__c, ' +
+                'insertion_date__c, callback_requested__c, ' +
+                'current_call_attempt__c, is_max_attempt__c, ' +
+                'send_to_commsdb__c, sent_instantly__c ' +
+                'FROM PostgresCampaignLog__x ' +
+                'WHERE account_or_contract_number__c IN :accountChunk ' +
+                'AND record_id__c IN :recordIdChunk ' +
+                'AND status__c = \'COMPLETED\'';
+
+            chunkCount++;
+            System.debug('>>> [CheckCampaignStatus] OData chunk #' + chunkCount +
+                ' | accounts: ' + accountChunk.size() +
+                ' | recordIds: ' + recordIdChunk.size());
+            List<SObject> chunkResults = Database.query(query);
+            System.debug('>>> [CheckCampaignStatus] OData chunk #' + chunkCount +
+                ' returned: ' + chunkResults.size());
+            allResults.addAll(chunkResults);
         }
-        return accountSet;
+        return allResults;
     }
 
     @TestVisible
