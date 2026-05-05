@@ -164,10 +164,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+
+         // 👉 FIX: đặt ở đây
+        if (this.isDisableNOC) {
+          this.handleDisableResetPinSuccess("category");
+          this.handleDisableResetPinSuccess("sub-category");
+          this.handleDisableResetPinSuccess("sub-code");
+        }
+
 
         getByCase({
           caseId: this.recordId,
