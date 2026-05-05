@@ -466,4 +466,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
     public static final String NO_MATCH = 'No match';
     public static final String SKIP_ITEM = 'Skip item (null/blank)';
+    
+    /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
+    public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
+    public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
 }
