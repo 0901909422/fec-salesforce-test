@@ -8,12 +8,6 @@
         <name>ApexClass</name>
     </types>
 
-    <!-- Visualforce Pages -->
-    <types>
-        <members>FEC_PDFRenderer</members>
-        <name>ApexPage</name>
-    </types>
-
     <!-- Custom Metadata Type Object -->
     <types>
         <members>FEC_PDFTemplate__mdt</members>
