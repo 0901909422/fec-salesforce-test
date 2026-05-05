@@ -901,6 +901,7 @@
 		<members>Case.FEC_Last_Updated_By_View__c</members>
 		<members>Case.FEC_Last_Updated_On_View__c</members>
 		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
+		<members>Case.FEC_Is_Call_API_Success__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
