@@ -126,6 +126,7 @@
 		<members>FEC_GetInteractionCases</members>
 		<members>FEC_InteractionHighlightController</members>
 		<members>FEC_RepaySchedPayHistController</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
         <name>ApexClass</name>
     </types>
     <types>
