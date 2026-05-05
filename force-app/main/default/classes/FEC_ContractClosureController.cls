@@ -180,7 +180,7 @@ public without sharing class FEC_ContractClosureController {
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
                 ) {
                     for (FEC_Address_Info__c a : [
-                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c,
+                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c, FEC_Case__c,
                             FEC_Building__c, FEC_Number__c, FEC_Street__c,
                             FEC_Ward__c, FEC_Ward__r.FEC_Name_VN__c, FEC_Ward_Text__c,
                             FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c
@@ -188,6 +188,12 @@ public without sharing class FEC_ContractClosureController {
                         WHERE FEC_Customer_History__c = :histId
                         ORDER BY FEC_Address_Type__c
                     ]) {
+                        if (
+                            a.FEC_Address_Type__c == FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY &&
+                            a.FEC_Case__c != caseId
+                        ) {
+                            continue;
+                        }
                         AddressRowDTO row = new AddressRowDTO();
                         row.id = a.Id;
                         row.addressType = a.FEC_Address_Type__c;
@@ -410,6 +416,10 @@ public without sharing class FEC_ContractClosureController {
         if (String.isNotBlank(p.tempAddressRecordId)) {
             return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, caseId, histId, line, t);
         }
+        Id existingTempId = findTemporaryAddressIdByCase(caseId, histId);
+        if (existingTempId != null) {
+            return updateExistingTemporaryAddress(existingTempId, caseId, histId, line, t);
+        }
         if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
             throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
         }
@@ -429,6 +439,18 @@ public without sharing class FEC_ContractClosureController {
         }
         insert as user toIns;
         return toIns[0].Id;
+    }
+
+    private static Id findTemporaryAddressIdByCase(Id caseId, Id histId) {
+        List<FEC_Address_Info__c> rows = [
+            SELECT Id
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :histId
+                AND FEC_Case__c = :caseId
+                AND FEC_Address_Type__c = :FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0].Id;
     }
 
     private static void validateTempAddressParts(TempAddressPartsDTO t) {
@@ -478,12 +500,18 @@ public without sharing class FEC_ContractClosureController {
             throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
         }
         FEC_Address_Info__c row = [
-            SELECT Id, FEC_Customer_History__c
+            SELECT Id, FEC_Customer_History__c, FEC_Case__c, FEC_Address_Type__c
             FROM FEC_Address_Info__c
             WHERE Id = :rowId
             LIMIT 1
         ];
         if (row.FEC_Customer_History__c != histId) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
+        }
+        if (
+            row.FEC_Address_Type__c != FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY ||
+            row.FEC_Case__c != caseId
+        ) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
         }
         SObject addr = row;
