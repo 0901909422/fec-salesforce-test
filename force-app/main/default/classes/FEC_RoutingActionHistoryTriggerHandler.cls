@@ -29,7 +29,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   private void onBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
-    // TODO: Add before insert logic here
+    FEC_RoutingHistAssignedOnSvc.applyBeforeInsert(newRecords);
   }
 
   private void onBeforeUpdate(
