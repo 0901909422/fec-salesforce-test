@@ -3709,7 +3709,8 @@
         <editable>true</editable>
         <field>Case.FEC_Complaint_Source__c</field>
         <readable>true</readable>
-    </fieldPermissions><hasActivationRequired>false</hasActivationRequired>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Operations Management Specialist - Interaction Case &amp; Service Cas</label>
     <license>Salesforce</license>
     <objectPermissions>
@@ -4031,6 +4032,3 @@
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
-
-
-

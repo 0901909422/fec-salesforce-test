@@ -3709,7 +3709,8 @@
         <editable>true</editable>
         <field>Case.FEC_Complaint_Source__c</field>
         <readable>true</readable>
-    </fieldPermissions><hasActivationRequired>false</hasActivationRequired>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Center Director - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
     <objectPermissions>
@@ -4030,6 +4031,3 @@
         <visibility>Visible</visibility>
     </tabSettings>
 </PermissionSet>
-
-
-
