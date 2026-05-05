@@ -322,6 +322,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Disbursement_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Disbursement_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Draft_Remarks__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1551,6 +1561,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Manual__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Date_Time__c</field>
         <readable>true</readable>
@@ -1962,6 +1977,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Routing_Action_History__c.FEC_Stage_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2058,6 +2078,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Team_Queue__c.FEC_Team__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team_Queue__c.FEC_Select_Team__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
