@@ -18,6 +18,7 @@
 		<members>FEC_Chathub</members>
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
+		<members>FEC_UpdateDisbursementStatusRestService</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -52,6 +53,18 @@
 		<members>FEC_MSG_No_Response</members>
 		<members>FEC_MSG_Unexpected_SOAP_Response</members>
 		<members>FEC_MSG_Unknown_Sys_Code</members>
+        <members>FEC_UpdateDisb_Msg_InvalidRequest</members>
+        <members>FEC_UpdateDisb_Msg_TransID_Required</members>
+        <members>FEC_UpdateDisb_Msg_RequestorID_Required</members>
+        <members>FEC_UpdateDisb_Msg_DateTime_Required</members>
+        <members>FEC_UpdateDisb_Msg_DateTime_Invalid</members>
+        <members>FEC_UpdateDisb_Msg_CRMID_Required</members>
+        <members>FEC_UpdateDisb_Msg_DisbStatus_Invalid</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Invalid</members>
+        <members>FEC_UpdateDisb_Msg_CRMID_Invalid</members>
+        <members>FEC_UpdateDisb_Msg_Success</members>
+        <members>FEC_UpdateDisb_Msg_InternalError</members>
+        <members>FEC_UpdateDisb_Msg_AlreadyResolved</members>
         <name>CustomLabel</name>
     </types>
 	<version>66.0</version>

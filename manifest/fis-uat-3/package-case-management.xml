@@ -33,6 +33,17 @@
     <types>
         <members>Case.FEC_Max_Amount__c</members>
         <members>Case.FEC_Requested_Amount__c</members>
+        <members>FEC_RelevantTicketTriggerHandler</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_RoutingActionHistoryTrigger</members>
+		<members>FEC_RelevantTicketTrigger</members>
+		<name>ApexTrigger</name>
+	</types>
+	<types>
+		<members>Case.FEC_Max_Amount__c</members>
+		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
@@ -341,6 +352,7 @@
 		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case__c</members>
@@ -632,6 +644,11 @@
     </types>
     <types>
         <!-- Interaction Case Service Case -->
+        <members>FEC_RelevantTicket_Cannot_Delete</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<!-- Interaction Case Service Case -->
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
