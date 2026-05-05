@@ -92,6 +92,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (this.previewSampleData) {
             this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
             this.isLoading = false;
+            this.isExpanded = true;
             return;
         }
         this._subscription = subscribe(
@@ -117,6 +118,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (this.previewSampleData) {
             this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
             this.isLoading = false;
+            this.isExpanded = true;
             return;
         }
         if (data) {
@@ -169,12 +171,14 @@ export default class Fec_CollectionInteractions extends LightningElement {
             this.interactions = null;
         } finally {
             this.isLoading = false;
-            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions) && this.interactions.length > 0;
+            if (this._hasApplied) {
+                this.isExpanded = Array.isArray(this.interactions);
+            }
         }
     }
 
     get showCollapsed() {
-        return !this.isLoading && !this._hasApplied;
+        return !this.isLoading && !this._hasApplied && !this.previewSampleData;
     }
 
     get showErrorBanner() {
@@ -182,7 +186,11 @@ export default class Fec_CollectionInteractions extends LightningElement {
     }
 
     get showDataSection() {
-        return !this.isLoading && this._hasApplied && Array.isArray(this.interactions);
+        return (
+            !this.isLoading &&
+            Array.isArray(this.interactions) &&
+            (this._hasApplied || this.previewSampleData)
+        );
     }
 
     /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
