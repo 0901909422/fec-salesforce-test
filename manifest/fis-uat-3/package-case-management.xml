@@ -18,7 +18,6 @@
 		<members>FEC_CreateCaseHandler</members>
 		<members>FEC_CreateInteractionGenesys</members>
 		<members>FEC_AssignmentController</members>
-		<members>FEC_ConstantCommon</members>
 		<members>FEC_CofGsrAssignmentService</members>
 		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_CloseInterationSchedulerBatch</members>
