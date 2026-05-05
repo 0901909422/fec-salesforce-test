@@ -3,12 +3,21 @@
  * Batch job to retrieve calling list results from OData external object and update records.
  * Refactored to use shared service classes and constants.
  */
-public with sharing class FEC_GetCallingListResultBatch implements Database.Batchable<sObject>, Database.Stateful {
+public with sharing class FEC_GetCallingListResultBatch implements Database.Batchable<sObject>, Database.Stateful, Schedulable {
+
+    // OData server không handle được IN clause quá lớn — chia nhỏ query theo CHUNK_SIZE
+    private static final Integer ODATA_CHUNK_SIZE = 50;
+    // Batch scope size — tận dụng governor limits (100 SOQL/transaction)
+    private static final Integer BATCH_SCOPE_SIZE = 200;
 
     private Id batchLogId;
     private Integer processedCount = 0;
     private Integer errorCount = 0;
     private String errorDetails = '';
+
+    public void execute(SchedulableContext sc) {
+        Database.executeBatch(new FEC_GetCallingListResultBatch(), BATCH_SCOPE_SIZE);
+    }
 
     public Database.QueryLocator start(Database.BatchableContext BC) {
         String dayOfWeek = Datetime.now().format('EEEE');
@@ -36,21 +45,10 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
 
     public void execute(Database.BatchableContext BC, List<FEC_DataCampaign__c> scope) {
         System.debug('>>> [GetCallingListResult] execute() — scope size: ' + scope.size());
-        Set<String> accountSet = collectAccountNumbers(scope);
-        System.debug('>>> [GetCallingListResult] accountSet size: ' + accountSet.size());
-        if (accountSet.isEmpty()) {
-            System.debug('>>> [GetCallingListResult] accountSet is empty — skipping');
-            return;
-        }
 
         try {
-            String query = 'SELECT ExternalId, CONTRACT_NUMBER__c, CALL_TIME__c, ' +
-                'ATTEMPT__c, AGENT_ID__c, CALL_RESULT__c ' +
-                'FROM CommdbPegaCsResultTable__x ' +
-                'WHERE CONTRACT_NUMBER__c IN :accountSet';
-            System.debug('>>> [GetCallingListResult] OData query: ' + query);
-            List<SObject> odataResults = Database.query(query);
-            System.debug('>>> [GetCallingListResult] OData results returned: ' + odataResults.size());
+            List<SObject> odataResults = queryODataInChunks(scope);
+            System.debug('>>> [GetCallingListResult] OData total results returned: ' + odataResults.size());
 
             List<FEC_DataCampaign__c> recordsToUpdate = processODataResults(odataResults, scope);
             System.debug('>>> [GetCallingListResult] records to update: ' + recordsToUpdate.size());
@@ -81,14 +79,44 @@ public with sharing class FEC_GetCallingListResultBatch implements Database.Batc
 
     // ─── Private Helpers ───────────────────────────────────────────
 
-    private Set<String> collectAccountNumbers(List<FEC_DataCampaign__c> scope) {
-        Set<String> accountSet = new Set<String>();
-        for (FEC_DataCampaign__c rec : scope) {
-            if (String.isNotBlank(rec.FEC_AccountOrContractNumber__c)) {
-                accountSet.add(rec.FEC_AccountOrContractNumber__c);
+    /**
+     * Chia nhỏ OData query theo ODATA_CHUNK_SIZE dựa trên scope records.
+     * Mỗi chunk gom accountSet CHỈ của records trong chunk đó,
+     * đảm bảo IN clause luôn nhỏ và ổn định, không mất data.
+     */
+    private List<SObject> queryODataInChunks(List<FEC_DataCampaign__c> scope) {
+        List<SObject> allResults = new List<SObject>();
+        Integer total = scope.size();
+        Integer chunkCount = 0;
+
+        for (Integer i = 0; i < total; i += ODATA_CHUNK_SIZE) {
+            Integer endIdx = Math.min(i + ODATA_CHUNK_SIZE, total);
+            Set<String> accountChunk = new Set<String>();
+            for (Integer j = i; j < endIdx; j++) {
+                FEC_DataCampaign__c rec = scope[j];
+                if (String.isNotBlank(rec.FEC_AccountOrContractNumber__c)) {
+                    accountChunk.add(rec.FEC_AccountOrContractNumber__c);
+                }
             }
+
+            if (accountChunk.isEmpty()) {
+                continue;
+            }
+
+            String query = 'SELECT ExternalId, CONTRACT_NUMBER__c, CALL_TIME__c, ' +
+                'ATTEMPT__c, AGENT_ID__c, CALL_RESULT__c ' +
+                'FROM CommdbPegaCsResultTable__x ' +
+                'WHERE CONTRACT_NUMBER__c IN :accountChunk';
+
+            chunkCount++;
+            System.debug('>>> [GetCallingListResult] OData chunk #' + chunkCount +
+                ' | accounts: ' + accountChunk.size());
+            List<SObject> chunkResults = Database.query(query);
+            System.debug('>>> [GetCallingListResult] OData chunk #' + chunkCount +
+                ' returned: ' + chunkResults.size());
+            allResults.addAll(chunkResults);
         }
-        return accountSet;
+        return allResults;
     }
 
     @TestVisible
