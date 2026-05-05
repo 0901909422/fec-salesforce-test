@@ -512,4 +512,9 @@ export default class Fec_AssignmentList extends LightningElement {
       this.updatePagedData();
     }
   }
+
+  //getter
+  get hasAssignmentData() {
+    return Array.isArray(this.pagedData) && this.pagedData.length > 0;
+  }
 }

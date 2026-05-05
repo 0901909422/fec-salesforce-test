@@ -1,167 +1,182 @@
 <template>
-    <lightning-accordion allow-multiple-sections-open active-section-name="assignment">
-        <lightning-accordion-section name="assignment" label={label.FEC_Assignment_List}>
-            <div class="slds-p-around_medium">
-                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
-                    <!-- HEADER -->
-                    <thead>
-                        <tr class="slds-text-title_caps">
-                            <th>{label.FEC_Assignment_Id}</th>
-                            <th>{label.FEC_Assignment_Owner}</th>
-                            <th>{label.FEC_Assignment_Status}</th>
-                        </tr>
-                    </thead>
-                    <!-- BODY -->
-                    <tbody>
-                        <template for:each={pagedData} for:item="item">
-
-                            <!-- MAIN ROW -->
-                            <tr key={item.id}>
-                                <td>
-                                    <a href="javascript:void(0)" data-id={item.id} onclick={handleToggle}>
-                                        {item.assignmentId}
-                                    </a>
-                                </td>
-                                <td>{item.owner}</td>
-                                <td>{item.status}</td>
-                            </tr>
-
-                            <!-- EXPAND ROW -->
-
-                            <template if:true={item.isOpen}>
-                                <tr key={item.detailKey}>
-                                    <td colspan="100%">
-                                        <div class="slds-box">
-                                            <p class="slds-text-heading_small slds-m-bottom_small slds-bold">
-                                                {label.FEC_Assignment_Id}: {item.assignmentId}
-                                            </p>
-                                            <template if:true={modeEditCase}>
-                                                <template if:true={item.isOwner}>
-                                                    <lightning-accordion allow-multiple-sections-open
-                                                        active-section-name="assignment-routing-action">
-                                                        <lightning-accordion-section name="assignment"
-                                                            label="Assignment Routing Action">
-                                                            <div class="slds-p-around_medium">
-                                                                <lightning-combobox label="Action" value={item.action}
-                                                                    options={getActionOptions} data-id={item.id}
-                                                                    required onchange={handleActionChange}>
-                                                                </lightning-combobox>
-
-                                                                <template if:true={item.showDecision}>
-                                                                    <lightning-combobox label="Decision"
-                                                                        value={item.decision}
-                                                                        options={item.decisionOptions} data-id={item.id}
-                                                                        required onchange={handleDecisionChange}>
-                                                                    </lightning-combobox>
-                                                                </template>
-                                                                <template lwc:if={item.showTeam}>
-                                                                    <lightning-combobox data-id={item.id} label="Team"
-                                                                        options={teamOptions} value={item.decision}
-                                                                        onchange={handleTeamChange}>
-                                                                    </lightning-combobox>
-                                                                </template>
-                                                                <template lwc:if={item.showQueueByTeam}>
-                                                                    <lightning-combobox data-id={item.id} label="Queue"
-                                                                        options={queueOptionsByTeam}
-                                                                        value={item.subDecision}
-                                                                        onchange={handleSubDecisionChange}>
-                                                                    </lightning-combobox>
-                                                                </template>
-                                                                <template if:true={item.showSubDecision}>
-                                                                    <!-- USER PICKER -->
-                                                                    <template if:true={item.isUserDecision}>
-                                                                        <lightning-combobox label="Select User"
-                                                                            options={userOptions}
-                                                                            value={item.subDecision} data-id={item.id}
-                                                                            onchange={handleSubDecisionChange}>
-                                                                        </lightning-combobox>
-                                                                    </template>
-
-                                                                    <!-- QUEUE PICKER -->
-                                                                    <template if:true={item.isQueueDecision}>
-                                                                        <lightning-combobox label="Select Queue"
-                                                                            options={queueOptions}
-                                                                            value={item.subDecision} data-id={item.id}
-                                                                            onchange={handleSubDecisionChange}>
-                                                                        </lightning-combobox>
-                                                                    </template>
-                                                                </template>
-                                                                <lightning-textarea label="Assignment Remark"
-                                                                    class="slds-m-top_small" value={item.remark}
-                                                                    data-id={item.id} required
-                                                                    onchange={handleRemarkChange}>
-                                                                </lightning-textarea>
-
-                                                                <div
-                                                                    class="slds-m-top_medium slds-grid slds-grid_align-end slds-gutters_small">
-                                                                    <lightning-button variant="brand" label="Submit"
-                                                                        class="slds-m-right_small"
-                                                                        onclick={handleSubmit}>
-                                                                    </lightning-button>
-
-                                                                    <lightning-button variant="neutral"
-                                                                        label="Save & Close" onclick={handleClose}>
-                                                                    </lightning-button>
-                                                                </div>
-                                                            </div>
-                                                        </lightning-accordion-section>
-                                                    </lightning-accordion>
-                                                </template>
-                                            </template>
-                                            <c-fec_-assignment-remark-history-table record-id={recordId}
-                                                assignment-id={item.id}>
-                                            </c-fec_-assignment-remark-history-table>
-                                        </div>
-
-                                    </td>
+    <div>
+        <template if:true={hasAssignmentData}>
+            <lightning-accordion allow-multiple-sections-open active-section-name="assignment">
+                <lightning-accordion-section name="assignment" label={label.FEC_Assignment_List}>
+                    <div class="slds-p-around_medium">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <!-- HEADER -->
+                            <thead>
+                                <tr class="slds-text-title_caps">
+                                    <th>{label.FEC_Assignment_Id}</th>
+                                    <th>{label.FEC_Assignment_Owner}</th>
+                                    <th>{label.FEC_Assignment_Status}</th>
                                 </tr>
+                            </thead>
+                            <!-- BODY -->
+                            <tbody>
+                                <template for:each={pagedData} for:item="item">
 
-                            </template>
+                                    <!-- MAIN ROW -->
+                                    <tr key={item.id}>
+                                        <td>
+                                            <a href="javascript:void(0)" data-id={item.id} onclick={handleToggle}>
+                                                {item.assignmentId}
+                                            </a>
+                                        </td>
+                                        <td>{item.owner}</td>
+                                        <td>{item.status}</td>
+                                    </tr>
+
+                                    <!-- EXPAND ROW -->
+
+                                    <template if:true={item.isOpen}>
+                                        <tr key={item.detailKey}>
+                                            <td colspan="100%">
+                                                <div class="slds-box">
+                                                    <p class="slds-text-heading_small slds-m-bottom_small slds-bold">
+                                                        {label.FEC_Assignment_Id}: {item.assignmentId}
+                                                    </p>
+                                                    <template if:true={modeEditCase}>
+                                                        <template if:true={item.isOwner}>
+                                                            <lightning-accordion allow-multiple-sections-open
+                                                                active-section-name="assignment-routing-action">
+                                                                <lightning-accordion-section name="assignment"
+                                                                    label="Assignment Routing Action">
+                                                                    <div class="slds-p-around_medium">
+                                                                        <lightning-combobox label="Action"
+                                                                            value={item.action}
+                                                                            options={getActionOptions} data-id={item.id}
+                                                                            required onchange={handleActionChange}>
+                                                                        </lightning-combobox>
+
+                                                                        <template if:true={item.showDecision}>
+                                                                            <lightning-combobox label="Decision"
+                                                                                value={item.decision}
+                                                                                options={item.decisionOptions}
+                                                                                data-id={item.id} required
+                                                                                onchange={handleDecisionChange}>
+                                                                            </lightning-combobox>
+                                                                        </template>
+                                                                        <template lwc:if={item.showTeam}>
+                                                                            <lightning-combobox data-id={item.id}
+                                                                                label="Team" options={teamOptions}
+                                                                                value={item.decision}
+                                                                                onchange={handleTeamChange}>
+                                                                            </lightning-combobox>
+                                                                        </template>
+                                                                        <template lwc:if={item.showQueueByTeam}>
+                                                                            <lightning-combobox data-id={item.id}
+                                                                                label="Queue"
+                                                                                options={queueOptionsByTeam}
+                                                                                value={item.subDecision}
+                                                                                onchange={handleSubDecisionChange}>
+                                                                            </lightning-combobox>
+                                                                        </template>
+                                                                        <template if:true={item.showSubDecision}>
+                                                                            <!-- USER PICKER -->
+                                                                            <template if:true={item.isUserDecision}>
+                                                                                <lightning-combobox label="Select User"
+                                                                                    options={userOptions}
+                                                                                    value={item.subDecision}
+                                                                                    data-id={item.id}
+                                                                                    onchange={handleSubDecisionChange}>
+                                                                                </lightning-combobox>
+                                                                            </template>
+
+                                                                            <!-- QUEUE PICKER -->
+                                                                            <template if:true={item.isQueueDecision}>
+                                                                                <lightning-combobox label="Select Queue"
+                                                                                    options={queueOptions}
+                                                                                    value={item.subDecision}
+                                                                                    data-id={item.id}
+                                                                                    onchange={handleSubDecisionChange}>
+                                                                                </lightning-combobox>
+                                                                            </template>
+                                                                        </template>
+                                                                        <lightning-textarea label="Assignment Remark"
+                                                                            class="slds-m-top_small" value={item.remark}
+                                                                            data-id={item.id} required
+                                                                            onchange={handleRemarkChange}>
+                                                                        </lightning-textarea>
+
+                                                                        <div
+                                                                            class="slds-m-top_medium slds-grid slds-grid_align-end slds-gutters_small">
+                                                                            <lightning-button variant="brand"
+                                                                                label="Submit"
+                                                                                class="slds-m-right_small"
+                                                                                onclick={handleSubmit}>
+                                                                            </lightning-button>
+
+                                                                            <lightning-button variant="neutral"
+                                                                                label="Save & Close"
+                                                                                onclick={handleClose}>
+                                                                            </lightning-button>
+                                                                        </div>
+                                                                    </div>
+                                                                </lightning-accordion-section>
+                                                            </lightning-accordion>
+                                                        </template>
+                                                    </template>
+                                                    <c-fec_-assignment-remark-history-table record-id={recordId}
+                                                        assignment-id={item.id}>
+                                                    </c-fec_-assignment-remark-history-table>
+                                                </div>
+
+                                            </td>
+                                        </tr>
+
+                                    </template>
+                                </template>
+                            </tbody>
+                        </table>
+                        <template if:true={showPagination}>
+                            <div
+                                class="slds-m-top_medium slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+
+                                <!-- LEFT: Page size -->
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <span class="slds-m-right_small">Page size</span>
+
+                                    <lightning-combobox value={pageSizeStr} options={pageSizeOptions}
+                                        onchange={handlePageSizeChange} variant="label-hidden"
+                                        class="page-size-combobox">
+                                    </lightning-combobox>
+                                </div>
+
+                                <!-- CENTER: Pagination -->
+                                <div class="slds-grid slds-grid_vertical-align-center">
+
+                                    <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous"
+                                        onclick={handlePrevPage} disabled={isFirstPage}>
+                                    </lightning-button-icon>
+
+                                    <span class="slds-m-horizontal_small">{currentPage}</span>
+
+                                    <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next"
+                                        onclick={handleNextPage} disabled={isLastPage}>
+                                    </lightning-button-icon>
+
+                                </div>
+
+                                <!-- RIGHT: Go to -->
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <span class="slds-m-right_small">Go to</span>
+
+                                    <input type="number" value={gotoPageInputValue}
+                                        class="slds-input slds-m-right_small" style="width: 80px;"
+                                        oninput={handleGoToPageInput} onkeydown={handleGotoKeydown} />
+
+                                    <lightning-button label="Go" variant="brand" onclick={handleGoToPage}>
+                                    </lightning-button>
+                                </div>
+
+                            </div>
                         </template>
-                    </tbody>
-                </table>
-                <template if:true={showPagination}>
-                    <div class="slds-m-top_medium slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
-
-                        <!-- LEFT: Page size -->
-                        <div class="slds-grid slds-grid_vertical-align-center">
-                            <span class="slds-m-right_small">Page size</span>
-
-                            <lightning-combobox value={pageSizeStr} options={pageSizeOptions}
-                                onchange={handlePageSizeChange} variant="label-hidden" class="page-size-combobox">
-                            </lightning-combobox>
-                        </div>
-
-                        <!-- CENTER: Pagination -->
-                        <div class="slds-grid slds-grid_vertical-align-center">
-
-                            <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous"
-                                onclick={handlePrevPage} disabled={isFirstPage}>
-                            </lightning-button-icon>
-
-                            <span class="slds-m-horizontal_small">{currentPage}</span>
-
-                            <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next"
-                                onclick={handleNextPage} disabled={isLastPage}>
-                            </lightning-button-icon>
-
-                        </div>
-
-                        <!-- RIGHT: Go to -->
-                        <div class="slds-grid slds-grid_vertical-align-center">
-                            <span class="slds-m-right_small">Go to</span>
-
-                            <input type="number" value={gotoPageInputValue} class="slds-input slds-m-right_small"
-                                style="width: 80px;" oninput={handleGoToPageInput} onkeydown={handleGotoKeydown} />
-
-                            <lightning-button label="Go" variant="brand" onclick={handleGoToPage}>
-                            </lightning-button>
-                        </div>
-
                     </div>
-                </template>
-            </div>
 
-        </lightning-accordion-section>
-    </lightning-accordion>
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </template>
+    </div>
 </template>
