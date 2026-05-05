@@ -14615,4 +14615,309 @@
         <shortDescription>FEC_Assignment_Id</shortDescription>
         <value>Assignment ID</value>
     </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response_From_Server</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No HTTP response body from server</shortDescription>
+        <value>No response from server.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Unexpected_Missing_Node</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP body missing expected response element</shortDescription>
+        <value>Unexpected SOAP response (no {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Parsing_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP/XML parse failure message template</shortDescription>
+        <value>Error parsing response: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Response_Status_Detail</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Business status and description from SOAP SysResponse</shortDescription>
+        <value>API status: {0} | {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Code_And_Description</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP/CMS code and description for eligibility errors</shortDescription>
+        <value>Code: {0} | Description: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unrecognized Sys.Code in SOAP response</shortDescription>
+        <value>Unknown system response code: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short eligible status text</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Not_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short not eligible status text</shortDescription>
+        <value>Not Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Loan_Loading_Or_No_Data</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan eligibility section empty state</shortDescription>
+        <value>Loading or no data available.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_Loan_Section</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan section title</shortDescription>
+        <value>Loan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Eligibility</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell eligibility field label</shortDescription>
+        <value>Top-up Xsell Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Min</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell min amount label</shortDescription>
+        <value>Top-up Xsell Min</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Max</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell max amount label</shortDescription>
+        <value>Top-up Xsell Max</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Loading</fullName>
+        <categories>Common LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Spinner alternative text</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Section_Title</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card eligibility section title</shortDescription>
+        <value>Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_TopUp</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up E-voucher eligibility button</shortDescription>
+        <value>Top-up/ E-voucher Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_IPP</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash IPP eligibility button</shortDescription>
+        <value>Fast Cash/ IPP Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Available_Credit_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Available credit limit label</shortDescription>
+        <value>Available Credit Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Reason</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason field label</shortDescription>
+        <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Fast_Cash_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash status label</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_IPP_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP status label</shortDescription>
+        <value>IPP Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Credit limit label</shortDescription>
+        <value>Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Error_Code</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error code label</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Description</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description label</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Tenure</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP tenor table column</shortDescription>
+        <value>Tenure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP rate column</shortDescription>
+        <value>Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Registration_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP registration rate column</shortDescription>
+        <value>Registration Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Monthly_Installment</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP monthly installment column</shortDescription>
+        <value>Monthly Installment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Conversion_Fee</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP conversion fee column</shortDescription>
+        <value>Conversion Fee</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_TopUp_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after top-up eligibility load</shortDescription>
+        <value>Top-up / E-voucher eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after IPP eligibility load</shortDescription>
+        <value>Fast Cash / IPP eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_No_Account_Warning</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warn when account number missing before eligibility</shortDescription>
+        <value>No account number found. Link Account/Contract (FEC_Account_or_Contract__c) with FEC_Account_Number__c on Customer History, or enter account on the Case. Eligibility is saved on that Customer History record.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed with HTTP status placeholder</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http_Unknown</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed when HTTP status unknown</shortDescription>
+        <value>Request failed (HTTP status unknown).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unknown_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error for extractErrorMsg</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unexpected_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected error for extractErrorMsg fallback</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Card_Not_Found</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No card number on Customer History for Check Eligible</shortDescription>
+        <value>không tìm thấy số thẻ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_No_Matching_History</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
+        <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
+    </labels>
 </CustomLabels>
