@@ -3,7 +3,7 @@
     <fullName>FEC_Select_Team__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Select Team</label>
-    <referenceTo>Team__c</referenceTo>
+    <referenceTo>FEC_Team__c</referenceTo>
     <relationshipLabel>Team Queue</relationshipLabel>
     <relationshipName>Team_Queue</relationshipName>
     <required>false</required>

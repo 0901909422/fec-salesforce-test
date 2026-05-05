@@ -23,6 +23,7 @@ public without sharing class FEC_CofGsrAssignmentService {
 
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getTeamQueueOptions() {
+        // tungnm37 thêm: dùng FEC_Select_Team__r.Name (lookup đến FEC_Team__c)
         List<FEC_Team_Queue__c> records = [
             SELECT FEC_Select_Team__r.Name, FEC_Queue_Name__c
             FROM FEC_Team_Queue__c
