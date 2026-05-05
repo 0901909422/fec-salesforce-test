@@ -418,6 +418,7 @@
 		<members>FEC_Collection_Interactions__c</members>
 		<members>FEC_Communication_History__c</members>
 		<members>FEC_Fast_Cash_Info__c</members>
+        <members>FEC_Team_Queue__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
