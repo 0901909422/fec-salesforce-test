@@ -4318,53 +4318,10 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    Set<Id> allAssociatedIds = new Set<Id>{ userId };
+    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
 
-    // BƯỚC 1: Thu thập tất cả ID đại diện cho User (User ID, Role, Public Groups, v.v.)
-    if (roleId != null) {
-        Set<Id> roleIds = new Set<Id>{ roleId };
-        Map<Id, Id> roleToParentMap = new Map<Id, Id>();
-        
-        // Lấy toàn bộ cấu trúc Role để tìm Parent Roles
-        for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole]) {
-            roleToParentMap.put(ur.Id, ur.ParentRoleId);
-        }
-        
-        // Duyệt ngược lên để lấy toàn bộ Parent Roles
-        Id currentRoleId = roleId;
-        while (roleToParentMap.get(currentRoleId) != null) {
-            currentRoleId = roleToParentMap.get(currentRoleId);
-            roleIds.add(currentRoleId);
-        }
-
-        // Gộp query lấy Group của Role và RoleAndSubordinates làm 1
-        for (Group g : [
-            SELECT Id, Type, RelatedId 
-            FROM Group 
-            WHERE RelatedId IN :roleIds AND Type IN ('Role', 'RoleAndSubordinates')
-        ]) {
-            if (g.Type == 'RoleAndSubordinates' || (g.Type == 'Role' && g.RelatedId == roleId)) {
-                allAssociatedIds.add(g.Id);
-            }
-        }
-    }
-
-    // Quét các Public Groups lồng nhau (Nested Public Groups)
-    Integer previousSize;
-    do {
-        previousSize = allAssociatedIds.size();
-        for (GroupMember gm : [
-            SELECT GroupId 
-            FROM GroupMember 
-            WHERE UserOrGroupId IN :allAssociatedIds AND Group.Type = 'Regular'
-        ]) {
-            allAssociatedIds.add(gm.GroupId);
-        }
-    } while (allAssociatedIds.size() > previousSize);
-
-    // BƯỚC 2: Lấy Tên (Name) của các Queue này để map sang Custom Object
-    List<Group> userQueues = [
-        SELECT Name, DeveloperName  
+    return [
+        SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
         AND Id IN (
@@ -4374,54 +4331,6 @@ public without sharing class FEC_CaseBusinessService {
         )
     ];
 
-    Set<String> currentQueueNames = new Set<String>();
-    for (Group g : userQueues) {
-        currentQueueNames.add(g.DeveloperName);
-    }
-
-    if (currentQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
-    List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT FEC_Name__c 
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Queue_Name__c IN :currentQueueNames
-    ];
-
-    Set<String> teamNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.FEC_Name__c);
-    }
-
-    if (teamNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 4: Lấy danh sách Tên Queue (FEC_Queue_Name__c) thuộc các Team Name tìm được
-    List<FEC_Team_Queue__c> allQueuesInTeam = [
-        SELECT FEC_Queue_Name__c
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Name__c IN :teamNames
-    ];
-
-    Set<String> targetQueueNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : allQueuesInTeam) {
-        targetQueueNames.add(tq.FEC_Queue_Name__c);
-    }
-
-    if (targetQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 5: Query bảng Group để trả về Id và Name thật của Queue
-    return [
-        SELECT Id, Name, DeveloperName
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
-        ORDER BY Name ASC
-    ];
 }
 
   private static Section buildAccountInfor(Case c) {

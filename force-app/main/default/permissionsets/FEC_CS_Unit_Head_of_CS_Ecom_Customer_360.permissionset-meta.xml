@@ -2470,7 +2470,6 @@
         <field>FEC_Notification_History__c.FEC_Case_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Unit Head of CS Ecom - Customer 360</label>
     <license>Salesforce</license>
