@@ -76,6 +76,14 @@ public with sharing class FEC_CMSIPPBlockWS {
             + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
 
         HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
+        FEC_CommonUltils.logApi(
+            'FEC_CMS_IPP_BlockWS',
+            endpoint,
+            'POST',
+            soapBody,
+            res,
+            null
+        );
         System.debug('res: ' + res.getBody());
         if (res.getStatusCode() == 200 && String.isNotBlank(res.getBody())) {
 
@@ -237,12 +245,13 @@ public with sharing class FEC_CMSIPPBlockWS {
         Integer tenure
     ) {
         Set<String> validRequestors = new Set<String>{
-            FEC_ConstantCommon.REQUESTOR_CRM, 
-            FEC_ConstantCommon.REQUESTOR_CORE, 
-            FEC_ConstantCommon.REQUESTOR_MOBILE, 
+            FEC_ConstantCommon.REQUESTOR_CRM,
+            FEC_ConstantCommon.REQUESTOR_CORE,
+            FEC_ConstantCommon.REQUESTOR_MOBILE,
             FEC_ConstantCommon.REQUESTOR_PORTAL,
             FEC_ConstantCommon.REQUESTOR_VTIGER_CL,
-            FEC_ConstantCommon.REQUESTOR_VTIGER_PL
+            FEC_ConstantCommon.REQUESTOR_VTIGER_PL,
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM_LEGACY
         };
         /* ================= TransID ================= */
         if (String.isBlank(transId) || transId.length() > 36) {
@@ -302,4 +311,5 @@ public with sharing class FEC_CMSIPPBlockWS {
 
 
     }
+    
 }

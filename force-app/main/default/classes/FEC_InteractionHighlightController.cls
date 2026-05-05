@@ -16,8 +16,8 @@ public with sharing class FEC_InteractionHighlightController {
                     FEC_Interaction_Status__c,
                     FEC_Channel__c,
                     FEC_Interaction_Subchannel__c,
-                    FEC_Last_Updated_On__c,
-                    FEC_Last_Updated_By__c,
+                    FEC_Last_Updated_On_View__c,
+                    FEC_Last_Updated_By_View__c,
                     FEC_Account_or_Contract__c,
                     FEC_CIF_Number__c,
                     FEC_Category__r.Name,
@@ -46,8 +46,8 @@ public with sharing class FEC_InteractionHighlightController {
                         FEC_Interaction_Status__c,
                         FEC_Channel__c,
                         FEC_Interaction_Subchannel__c,
-                        FEC_Last_Updated_On__c,
-                        FEC_Last_Updated_By__c,
+                        FEC_Last_Updated_On_View__c,
+                        FEC_Last_Updated_By_View__c,
                         FEC_Account_or_Contract__c,
                         FEC_CIF_Number__c,
                         FEC_Category__r.Name,
@@ -75,8 +75,8 @@ public with sharing class FEC_InteractionHighlightController {
             result.interactionStatus = interactionCase.FEC_Interaction_Status__c;
             result.interactionChannel = interactionCase.FEC_Channel__c;
             result.interactionSubStatus = interactionCase.FEC_Interaction_Subchannel__c;
-            result.lastUpdatedOn = interactionCase.FEC_Last_Updated_On__c;
-            result.lastUpdatedBy = interactionCase.FEC_Last_Updated_By__c;
+            result.lastUpdatedOn = interactionCase.FEC_Last_Updated_On_View__c;
+            result.lastUpdatedBy = interactionCase.FEC_Last_Updated_By_View__c;
             FEC_Customer_History__c customerHistory = null;
             if (interactionCase.FEC_Account_or_Contract__c != null) {
                 List<FEC_Customer_History__c> histories = [

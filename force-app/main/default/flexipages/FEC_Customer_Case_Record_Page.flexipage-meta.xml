@@ -259,8 +259,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -281,8 +281,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b2ccf4d4-e823-4b23-b25a-cd1f5ebe8401</name>
