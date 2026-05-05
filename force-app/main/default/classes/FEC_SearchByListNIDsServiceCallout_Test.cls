@@ -35,12 +35,12 @@ global with sharing class FEC_SearchByListNIDsServiceCallout_Test {
             FEC_SearchByListNIDsServiceCallout.NIDsResponse mockRes = new FEC_SearchByListNIDsServiceCallout.NIDsResponse();
             mockRes.pxObjClass = 'Data-Portal-NIDResponse';
             
-            // Populate Sys2 (Metadata/Status)
-            mockRes.sys2 = new FEC_SearchByListNIDsServiceCallout.Sys2();
-            mockRes.sys2.code2 = '200';
-            mockRes.sys2.description2 = 'Success';
-            mockRes.sys2.transID2 = 'TRX-123456';
-            mockRes.sys2.datetime4 = '2026-04-02T14:12:25Z';
+            // Populate Sys (Metadata/Status)
+            mockRes.sys = new FEC_SearchByListNIDsServiceCallout.Sys();
+            mockRes.sys.code = 200;
+            mockRes.sys.description = 'Success';
+            mockRes.sys.transID = 'TRX-123456';
+            mockRes.sys.datetime4 = '2026-04-02T14:12:25Z';
             
             // Populate Results (The data list)
             FEC_SearchByListNIDsServiceCallout.Result resItem = new FEC_SearchByListNIDsServiceCallout.Result();
@@ -49,7 +49,7 @@ global with sharing class FEC_SearchByListNIDsServiceCallout_Test {
             resItem.buyerName = 'John Doe';
             resItem.buyerNID = '123456789';
             resItem.policyNumber = 'POL-998877';
-            resItem.collectedPremiumFee = 150.50;
+            resItem.collectedPremiumFee = '150.50';
             resItem.StatusDisplay = 'Active';
             resItem.effectiveDate = '2026-01-01';
             resItem.expireDate = '2027-01-01';
@@ -70,12 +70,12 @@ global with sharing class FEC_SearchByListNIDsServiceCallout_Test {
         global HTTPResponse respond(HTTPRequest req) {
             // Create the top-level response object
             FEC_SearchByListNIDsServiceCallout.NIDsResponse mockRes = new FEC_SearchByListNIDsServiceCallout.NIDsResponse();
-            // Populate Sys2 (Metadata/Status)
-            mockRes.sys2 = new FEC_SearchByListNIDsServiceCallout.Sys2();
-            mockRes.sys2.code2 = '200';
-            mockRes.sys2.description2 = 'Success';
-            mockRes.sys2.transID2 = 'TRX-123456';
-            mockRes.sys2.datetime4 = '2026-04-02T14:12:25Z';
+            // Populate Sys (Metadata/Status)
+            mockRes.sys = new FEC_SearchByListNIDsServiceCallout.Sys();
+            mockRes.sys.code = 200;
+            mockRes.sys.description = 'Success';
+            mockRes.sys.transID = 'TRX-123456';
+            mockRes.sys.datetime4 = '2026-04-02T14:12:25Z';
             
             // Create the HTTP Response
             HttpResponse res = new HttpResponse();
