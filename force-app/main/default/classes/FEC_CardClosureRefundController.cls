@@ -315,14 +315,27 @@ public without sharing class FEC_CardClosureRefundController {
         }
 
         if (funcCode == FUNC_BLOCK && c.FEC_Is_Test_API__c == true) {
-            Integer after = incrementCaseBlockServiceAttempts(caseId);
-            dto.success = false;
-            dto.code = '0';
-            dto.description = 'Test API failure';
-            dto.errorMessage = null;
-            dto.cardBlockServiceAttemptsAfter = after;
-            dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
-            return dto;
+            Boolean getDisbSuccess = false;
+            try {
+                FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
+                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumber, null);
+                FEC_GetDisbInfoByAcctCallout.logApiResponse();
+                FEC_GetDisbInfoByAcctCallout.ResultWrapper disbResult =
+                    FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
+                getDisbSuccess = disbResult != null && disbResult.isSuccess == true;
+            } catch (Exception ex) {
+                getDisbSuccess = false;
+            }
+            if (!getDisbSuccess) {
+                Integer after = incrementCaseBlockServiceAttempts(caseId);
+                dto.success = false;
+                dto.code = '0';
+                dto.description = 'GetDisbInfoByAcct failed';
+                dto.errorMessage = null;
+                dto.cardBlockServiceAttemptsAfter = after;
+                dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+                return dto;
+            }
         }
 
         try {
