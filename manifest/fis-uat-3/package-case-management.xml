@@ -37,6 +37,8 @@
 		<members>Case.FEC_Requested_Amount__c</members>
         <members>Case.FEC_Chat_History__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
+        <members>Case.FEC_Disbursement_Date__c</members>
+        <members>Case.FEC_Disbursement_Status__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
@@ -44,6 +46,7 @@
         <members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
         <members>FEC_Assignment__c.FEC_OwnerID__c</members>
         <members>FEC_Assignment__c.FEC_Team__c</members>
+        <members>FEC_Assignment__c.FEC_Manual__c</members>
         <members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
         <members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
         <members>FEC_Case_Remarks__c.FEC_Case__c</members>
@@ -338,6 +341,7 @@
         <members>FEC_Additional_Info__c.FEC_Zalo_Used__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Remark__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Routing_Action__c</members>
@@ -379,6 +383,7 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Min__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
+		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
         <name>CustomField</name>
     </types>
     <types>
