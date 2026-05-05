@@ -66,6 +66,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Assignment_Count__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
         <readable>true</readable>
@@ -533,6 +538,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_Submited__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_Call_API_Success__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1655,7 +1665,6 @@
         <field>FEC_Case_Remarks__c.FEC_Remark_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Case_Remarks__c.FEC_Stage_Name__c</field>
@@ -1851,7 +1860,6 @@
         <field>FEC_Relevant_Ticket__c.FEC_Relevant_Ticket_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Relevant_Ticket__c.FEC_Related_To__c</field>
@@ -1948,6 +1956,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Routing_Action_History__c.FEC_Stage_Name__c</field>
         <readable>true</readable>
@@ -1970,11 +1983,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Routing_Action_History__c.FEC_User__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2215,11 +2223,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_RD_Payment_Contract_Assessment__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Assignment_Count__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

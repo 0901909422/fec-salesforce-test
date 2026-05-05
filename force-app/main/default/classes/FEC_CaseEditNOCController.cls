@@ -188,7 +188,8 @@ public with sharing class FEC_CaseEditNOCController {
           FEC_SubCategory__c,
           FEC_SubCode__c, FEC_Is_Submited__c,
           FEC_Interaction_View_Mode__c,
-          RecordType.DeveloperName
+          RecordType.DeveloperName,
+          FEC_Is_Call_API_Success__c
         FROM Case
         WHERE Id = :recordId
       ];
@@ -474,4 +475,30 @@ public with sharing class FEC_CaseEditNOCController {
       throw new AuraHandledException(e.getMessage());
     }
   }
+  
+  //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,....
+  @AuraEnabled
+  public static void saveNOC(
+    String recordId,
+    String productTypeId,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId
+  ){
+    Case cs = new Case(
+      Id = recordId,
+      FEC_Product_Type__c = productTypeId,
+      FEC_Category__c = categoryId,
+      FEC_SubCategory__c = subCategoryId,
+      FEC_SubCode__c = subCodeId,
+      FEC_Is_Call_API_Success__c = true
+    );
+    
+    try {
+      update cs;
+    } catch (Exception e) {
+      throw new AuraHandledException('Update failed: ' + e.getMessage());
+    }
+  }
+  
 }
