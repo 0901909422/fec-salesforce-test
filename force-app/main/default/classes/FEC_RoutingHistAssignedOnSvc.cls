@@ -7,6 +7,12 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
   /** Bỏ qua email / logic nặng trên after update khi chỉ chain Submitted On */
   public static Boolean suppressAfterUpdateForChain = false;
 
+  private static Boolean fecBhLookupDone = false;
+  private static Id fecBusinessHoursId;
+
+  /** Business Hours đặt trong Setup; name phải khớp org (kèm holidays trong cấu hình BH). */
+  private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
+
   public static void applyBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
     if (newRecords == null || newRecords.isEmpty()) {
       return;
@@ -103,6 +109,58 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
         nowTs
       );
     }
+  }
+
+  /**
+   * Giờ làm việc giữa Assigned On và Submitted On (FEC Business Hours). Format số 2 chữ thập phân.
+   */
+  public static void applyTatBeforeSave(
+    List<FEC_Routing_Action_History__c> records,
+    Map<Id, FEC_Routing_Action_History__c> oldMap
+  ) {
+    if (records == null || records.isEmpty()) {
+      return;
+    }
+
+    Id bhId = resolveFecBusinessHoursId();
+    for (FEC_Routing_Action_History__c r : records) {
+      if (bhId == null) {
+        r.FEC_TAT_by_Assignment__c = null;
+        continue;
+      }
+      Datetime assigned = r.FEC_Assigned_On__c;
+      Datetime submitted = r.FEC_Submitted_On__c;
+
+      if (assigned == null || submitted == null) {
+        r.FEC_TAT_by_Assignment__c = null;
+        continue;
+      }
+
+      Long millis = BusinessHours.diff(bhId, assigned, submitted);
+      if (millis == null || millis < 0) {
+        r.FEC_TAT_by_Assignment__c = null;
+        continue;
+      }
+
+      Decimal hours = Decimal.valueOf(millis)
+        .divide(3600000, 12, System.RoundingMode.HALF_UP)
+        .setScale(2, System.RoundingMode.HALF_UP);
+      r.FEC_TAT_by_Assignment__c = hours;
+    }
+  }
+
+  private static Id resolveFecBusinessHoursId() {
+    if (!fecBhLookupDone) {
+      fecBhLookupDone = true;
+      List<BusinessHours> rows = [
+        SELECT Id
+        FROM BusinessHours
+        WHERE Name = :FEC_BUSINESS_HOURS_NAME AND IsActive = TRUE
+        LIMIT 1
+      ];
+      fecBusinessHoursId = rows.isEmpty() ? null : rows[0].Id;
+    }
+    return fecBusinessHoursId;
   }
 
   /**
