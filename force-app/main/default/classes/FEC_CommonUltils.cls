@@ -36,6 +36,11 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  /** Nhãn UI picklist từ master: chỉ dùng FEC_Name_VN__c (không fallback Name). */
+  public static String picklistLabelFromFecNameVn(String fecNameVn) {
+    return fecNameVn != null ? fecNameVn.trim() : '';
+  }
+
   public static Boolean notifyUsers(
     Set<String> recipientsIds,
     Id targetId,
@@ -1260,29 +1265,51 @@ public with sharing class FEC_CommonUltils {
       return accountNumber;
   }
 
+  private static final Map<String, String> UPPER_NO_ACCENT_CHAR_MAP = new Map<String, String>{
+    'à' => 'a', 'á' => 'a', 'ạ' => 'a', 'ả' => 'a', 'ã' => 'a',
+    'â' => 'a', 'ầ' => 'a', 'ấ' => 'a', 'ậ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a',
+    'ă' => 'a', 'ằ' => 'a', 'ắ' => 'a', 'ặ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a',
+    'À' => 'a', 'Á' => 'a', 'Ạ' => 'a', 'Ả' => 'a', 'Ã' => 'a',
+    'Â' => 'a', 'Ầ' => 'a', 'Ấ' => 'a', 'Ậ' => 'a', 'Ẩ' => 'a', 'Ẫ' => 'a',
+    'Ă' => 'a', 'Ằ' => 'a', 'Ắ' => 'a', 'Ặ' => 'a', 'Ẳ' => 'a', 'Ẵ' => 'a',
+    'è' => 'e', 'é' => 'e', 'ẹ' => 'e', 'ẻ' => 'e', 'ẽ' => 'e',
+    'ê' => 'e', 'ề' => 'e', 'ế' => 'e', 'ệ' => 'e', 'ể' => 'e', 'ễ' => 'e',
+    'È' => 'e', 'É' => 'e', 'Ẹ' => 'e', 'Ẻ' => 'e', 'Ẽ' => 'e',
+    'Ê' => 'e', 'Ề' => 'e', 'Ế' => 'e', 'Ệ' => 'e', 'Ể' => 'e', 'Ễ' => 'e',
+    'ì' => 'i', 'í' => 'i', 'ị' => 'i', 'ỉ' => 'i', 'ĩ' => 'i',
+    'Ì' => 'i', 'Í' => 'i', 'Ị' => 'i', 'Ỉ' => 'i', 'Ĩ' => 'i',
+    'ò' => 'o', 'ó' => 'o', 'ọ' => 'o', 'ỏ' => 'o', 'õ' => 'o',
+    'ô' => 'o', 'ồ' => 'o', 'ố' => 'o', 'ộ' => 'o', 'ổ' => 'o', 'ỗ' => 'o',
+    'ơ' => 'o', 'ờ' => 'o', 'ớ' => 'o', 'ợ' => 'o', 'ở' => 'o', 'ỡ' => 'o',
+    'Ò' => 'o', 'Ó' => 'o', 'Ọ' => 'o', 'Ỏ' => 'o', 'Õ' => 'o',
+    'Ô' => 'o', 'Ồ' => 'o', 'Ố' => 'o', 'Ộ' => 'o', 'Ổ' => 'o', 'Ỗ' => 'o',
+    'Ơ' => 'o', 'Ờ' => 'o', 'Ớ' => 'o', 'Ợ' => 'o', 'Ở' => 'o', 'Ỡ' => 'o',
+    'ù' => 'u', 'ú' => 'u', 'ụ' => 'u', 'ủ' => 'u', 'ũ' => 'u',
+    'ư' => 'u', 'ừ' => 'u', 'ứ' => 'u', 'ự' => 'u', 'ử' => 'u', 'ữ' => 'u',
+    'Ù' => 'u', 'Ú' => 'u', 'Ụ' => 'u', 'Ủ' => 'u', 'Ũ' => 'u',
+    'Ư' => 'u', 'Ừ' => 'u', 'Ứ' => 'u', 'Ự' => 'u', 'Ử' => 'u', 'Ữ' => 'u',
+    'ỳ' => 'y', 'ý' => 'y', 'ỵ' => 'y', 'ỷ' => 'y', 'ỹ' => 'y',
+    'Ỳ' => 'y', 'Ý' => 'y', 'Ỵ' => 'y', 'Ỷ' => 'y', 'Ỹ' => 'y',
+    'đ' => 'd', 'Đ' => 'd'
+  };
+
   /**
-   * Uppercase ASCII; strips common Vietnamese diacritics for default beneficiary display.
+   * Chuyển đổi chuỗi thành chữ in hoa không dấu, dùng Map tĩnh.
+   * @param input Chuỗi cần chuyển đổi
+   * @return Chuỗi đã chuyển đổi, hoặc rỗng nếu input null/blank.
    */
   public static String toUpperNoVietnameseAccent(String input) {
     if (String.isBlank(input)) {
       return '';
     }
-    String s = input.trim().toLowerCase();
-    s = s.replace('à', 'a').replace('á', 'a').replace('ạ', 'a').replace('ả', 'a').replace('ã', 'a');
-    s = s.replace('ầ', 'a').replace('ấ', 'a').replace('ậ', 'a').replace('ẩ', 'a').replace('ẫ', 'a');
-    s = s.replace('ằ', 'a').replace('ắ', 'a').replace('ặ', 'a').replace('ẳ', 'a').replace('ẵ', 'a');
-    s = s.replace('è', 'e').replace('é', 'e').replace('ẹ', 'e').replace('ẻ', 'e').replace('ẽ', 'e');
-    s = s.replace('ề', 'e').replace('ế', 'e').replace('ệ', 'e').replace('ể', 'e').replace('ễ', 'e');
-    s = s.replace('ì', 'i').replace('í', 'i').replace('ị', 'i').replace('ỉ', 'i').replace('ĩ', 'i');
-    s = s.replace('ò', 'o').replace('ó', 'o').replace('ọ', 'o').replace('ỏ', 'o').replace('õ', 'o');
-    s = s.replace('ồ', 'o').replace('ố', 'o').replace('ộ', 'o').replace('ổ', 'o').replace('ỗ', 'o');
-    s = s.replace('ờ', 'o').replace('ớ', 'o').replace('ợ', 'o').replace('ở', 'o').replace('ỡ', 'o');
-    s = s.replace('ù', 'u').replace('ú', 'u').replace('ụ', 'u').replace('ủ', 'u').replace('ũ', 'u');
-    s = s.replace('ừ', 'u').replace('ứ', 'u').replace('ự', 'u').replace('ử', 'u').replace('ữ', 'u');
-    s = s.replace('ỳ', 'y').replace('ý', 'y').replace('ỵ', 'y').replace('ỷ', 'y').replace('ỹ', 'y');
-    s = s.replace('đ', 'd');
-    s = s.replace('\u0300', '').replace('\u0301', '').replace('\u0303', '').replace('\u0309', '').replace('\u0323', '');
-    return s.toUpperCase();
+    List<String> parts = new List<String>();
+    for (Integer i = 0; i < input.length(); i++) {
+      String ch = input.substring(i, i + 1);
+      parts.add(UPPER_NO_ACCENT_CHAR_MAP.containsKey(ch) ? UPPER_NO_ACCENT_CHAR_MAP.get(ch) : ch);
+    }
+    String s = String.join(parts, '');
+    s = s.replaceAll('[\\u0300-\\u036F]', '');
+    return s.toUpperCase().trim();
   }
 
   /**
@@ -1323,6 +1350,36 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
+  public static String buildDatetimeForAPI() {
+    Datetime dt = Datetime.now();
+
+    String base = dt.format('yyyy-MM-dd\'T\'HH:mm:ss');
+    String ms = String.valueOf(dt.millisecond()).leftPad(3, '0');
+    String micro = ms + '000';
+    String tz = dt.format('XXX');
+
+    return base + '.' + micro + tz;
+}
+
+  /**
+   * DateTime trên HTTP header Transfer Call / Pega — khớp Postman: yyyyMMddTHHmmss.SSS GMT.
+   */
+  public static String formatTransferCallRequestDateTime(Datetime dt) {
+    Datetime useDt = dt == null ? Datetime.now() : dt;
+    return useDt.formatGMT(FEC_ConstantCommon.TRANSFER_CALL_DATETIME_FORMAT_GMT) +
+      FEC_ConstantCommon.TRANSFER_CALL_DATETIME_SUFFIX_GMT;
+  }
+
+  /** Rút gọn chuỗi cho log (HTTP body, …). */
+  public static String truncateForLog(String text, Integer maxLen, String truncatedSuffix) {
+    if (String.isBlank(text) || maxLen == null || maxLen <= 0 || text.length() <= maxLen) {
+      return text;
+    }
+    String suffix = truncatedSuffix != null ? truncatedSuffix : '';
+    return text.substring(0, maxLen) + suffix;
+  }
+  
+    
   /**
    * Lấy Profile name của current user
    */
