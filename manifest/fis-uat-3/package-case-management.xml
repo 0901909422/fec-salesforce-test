@@ -19,6 +19,8 @@
 		<members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
+		<members>FEC_AssignmentExecuteService</members>
+        <members>FEC_CaseExecuteService</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
@@ -55,6 +57,8 @@
 		<members>FEC_Category__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
+		<members>Case.FEC_Can_Execute__c</members>
+        <members>Case.FEC_Can_Execute_Assignment__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -109,6 +113,8 @@
 		<members>fec_CaseNocUpdatedSection</members>
 		<members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
+		<members>fec_AssignmentExecuteVisibility</members>
+        <members>fec_CaseExecuteVisibility</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -336,6 +342,11 @@
 		<!-- Customer Data Management -->
 		<members>FEC_Permission_Set_Customer_Data_Management</members>
         <name>PermissionSet</name>
+    </types>
+
+	<types>
+        <members>Case.Execute_Assigment</members>
+        <name>QuickAction</name>
     </types>
     
 	<version>66.0</version>
