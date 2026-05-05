@@ -14598,4 +14598,89 @@
         <shortDescription>FEC_Assignment_Id</shortDescription>
         <value>Assignment ID</value>
     </labels>
+    <!-- tungnm37 thêm: UpdateDisbursementStatus API messages -->
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InvalidRequest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Request body is invalid</shortDescription>
+        <value>Request body is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_TransID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - TransID is required</shortDescription>
+        <value>TransID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_RequestorID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - RequestorID is required</shortDescription>
+        <value>RequestorID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is required</shortDescription>
+        <value>DateTime is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is invalid</shortDescription>
+        <value>DateTime is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is required</shortDescription>
+        <value>CRMID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbStatus_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_STATUS is invalid</shortDescription>
+        <value>DISB_STATUS is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_DT is invalid</shortDescription>
+        <value>DISB_DT is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is invalid</shortDescription>
+        <value>CRMID is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InternalError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Internal Server Error</shortDescription>
+        <value>Internal Server Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_AlreadyResolved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Case already Resolved-Completed</shortDescription>
+        <value>Case {0} has status as Resolved-Completed so it cannot be processed.</value>
+    </labels>
 </CustomLabels>

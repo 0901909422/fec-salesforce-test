@@ -37,6 +37,7 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
     // ─── Constants ──────────────────────────────────────────────────────────
 
+    // tungnm37: dùng constants từ FEC_ConstantCommon cho Case status
     private static final String DISB_STATUS_WITHDRAWN          = 'Withdrawn';
     private static final String DISB_STATUS_CANCELLED_CUSTOMER = 'Cancelled_By_Customer';
     private static final String DISB_STATUS_AUTO_CANCELLED     = 'Auto_Cancelled';
@@ -51,7 +52,6 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
     private static final String CODE_BAD_REQUEST      = '400';
     private static final String CODE_CASE_NOT_FOUND   = '105';
     private static final String CODE_BUSINESS_ERROR   = '201';
-
     // ─── Main Handler ────────────────────────────────────────────────────────
 
     @HttpPost
@@ -100,7 +100,7 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             ];
 
             if (cases.isEmpty()) {
-                response = new UpdateDisbursementStatusResponse(CODE_CASE_NOT_FOUND, 'CRMID is invalid');
+                response = new UpdateDisbursementStatusResponse(CODE_CASE_NOT_FOUND, System.Label.FEC_UpdateDisb_Msg_CRMID_Invalid);
                 res.statusCode = 200;
                 res.responseBody = Blob.valueOf(JSON.serialize(response));
                 logRequest(reqBody, requestBodyStr, response);
@@ -110,10 +110,10 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             Case c = cases[0];
 
             // Business rule: Case đã đóng (Resolved-Completed)
-            if ('Resolved-Completed'.equals(c.Status)) {
+            if (FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED.equals(c.Status)) {
                 response = new UpdateDisbursementStatusResponse(
                     CODE_BUSINESS_ERROR,
-                    'Case ' + reqBody.CRMID + ' has status as Resolved-Completed so it cannot be processed.'
+                    String.format(System.Label.FEC_UpdateDisb_Msg_AlreadyResolved, new List<String>{ reqBody.CRMID })
                 );
                 res.statusCode = 200;
                 res.responseBody = Blob.valueOf(JSON.serialize(response));
@@ -134,24 +134,24 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
                 c.FEC_Remarks__c = reqBody.Desc_Field;
             }
 
-            // Update status based on DISB_STATUS
+            // Update status based on DISB_STATUS - tungnm37: dùng FEC_ConstantCommon
             if (DISB_STATUS_WITHDRAWN.equals(reqBody.DISB_STATUS)) {
-                c.Status = 'Resolved-Completed';
+                c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
             } else if (DISB_STATUS_CANCELLED_CUSTOMER.equals(reqBody.DISB_STATUS)) {
-                c.Status = 'Resolved-Cancelled';
+                c.Status = FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED;
             } else if (DISB_STATUS_AUTO_CANCELLED.equals(reqBody.DISB_STATUS)) {
-                c.Status = 'Resolved-AutoCancelled';
+                c.Status = FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED;
             }
 
             Database.update(c, AccessLevel.SYSTEM_MODE);
 
-            response = new UpdateDisbursementStatusResponse(CODE_SUCCESS, 'Success');
+            response = new UpdateDisbursementStatusResponse(CODE_SUCCESS, System.Label.FEC_UpdateDisb_Msg_Success);
             res.statusCode = 200;
             res.responseBody = Blob.valueOf(JSON.serialize(response));
 
         } catch (Exception e) {
             System.debug('FEC_DEBUG UpdateDisbursementStatus error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
-            response = new UpdateDisbursementStatusResponse('500', 'Internal Server Error');
+            response = new UpdateDisbursementStatusResponse('500', System.Label.FEC_UpdateDisb_Msg_InternalError);
             res.statusCode = 500;
             res.responseBody = Blob.valueOf(JSON.serialize(response));
         } finally {
@@ -163,39 +163,39 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
     private static UpdateDisbursementStatusResponse validate(UpdateDisbursementStatusRequest req) {
         if (req == null || req.Sys == null) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'Request body is invalid');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_InvalidRequest);
         }
         // REQ-001
         if (String.isBlank(req.Sys.TransID)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'TransID is required');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_TransID_Required);
         }
         // REQ-002
         if (String.isBlank(req.Sys.RequestorID)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'RequestorID is required');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_RequestorID_Required);
         }
         // REQ-003
         if (String.isBlank(req.Sys.RequestDateTime)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'DateTime is required');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DateTime_Required);
         }
         try {
             Datetime.valueOfGmt(req.Sys.RequestDateTime.replace('T', ' ').replace('Z', ''));
         } catch (Exception e) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'DateTime is invalid');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DateTime_Invalid);
         }
         // REQ-004
         if (String.isBlank(req.CRMID)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'CRMID is required');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_CRMID_Required);
         }
         // REQ-005
         if (String.isBlank(req.DISB_STATUS) || !VALID_DISB_STATUSES.contains(req.DISB_STATUS)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'DISB_STATUS is invalid');
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbStatus_Invalid);
         }
         // REQ-006
         if (String.isNotBlank(req.DISB_DT)) {
             try {
                 Date.valueOf(req.DISB_DT);
             } catch (Exception e) {
-                return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, 'DISB_DT is invalid');
+                return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
             }
         }
         return null;
@@ -212,9 +212,9 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             FEC_CommonUltils.logException(
                 'tungnm37',
                 'FEC_UpdateDisbursementStatusRestService',
-                'CRMID=' + (reqBody?.CRMID ?? '') +
-                ' DISB_STATUS=' + (reqBody?.DISB_STATUS ?? '') +
-                ' Response=' + (response != null ? JSON.serialize(response) : ''),
+                FEC_ConstantCommon.DISB_LOG_CRMID + (reqBody?.CRMID ?? FEC_ConstantCommon.STR_EMPTY) +
+                FEC_ConstantCommon.DISB_LOG_STATUS + (reqBody?.DISB_STATUS ?? FEC_ConstantCommon.STR_EMPTY) +
+                FEC_ConstantCommon.DISB_LOG_RESPONSE + (response != null ? JSON.serialize(response) : FEC_ConstantCommon.STR_EMPTY),
                 requestBodyStr
             );
         } catch (Exception e) {
