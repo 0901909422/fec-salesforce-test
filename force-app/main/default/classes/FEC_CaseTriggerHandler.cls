@@ -8,6 +8,9 @@ public without sharing class FEC_CaseTriggerHandler {
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
     public static Boolean isSystemUpdate = false;
+    private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
+    private static Boolean tatBhLookupDone = false;
+    private static Id tatBusinessHoursId;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -59,6 +62,7 @@ public without sharing class FEC_CaseTriggerHandler {
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         assignEntitlement(newCases);
+        applyTatFullProcessBeforeSave(newCases);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeInsert(newCases);
@@ -77,6 +81,7 @@ public without sharing class FEC_CaseTriggerHandler {
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
+        applyTatFullProcessBeforeSave(newCases);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
@@ -1010,5 +1015,66 @@ public without sharing class FEC_CaseTriggerHandler {
         if (!caseUpdates.isEmpty()) {
             update caseUpdates;
         }
+    }
+
+    private static void applyTatFullProcessBeforeSave(List<Case> records) {
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
+        Id bhId = resolveTatBusinessHoursId();
+        Datetime nowTs = System.now();
+        for (Case c : records) {
+            if (bhId == null) {
+                c.FEC_TAT_Full_Process__c = null;
+                continue;
+            }
+
+            Datetime caseCreatedOn = c.FEC_Case_Created_On__c;
+            if (caseCreatedOn == null) {
+                c.FEC_TAT_Full_Process__c = null;
+                continue;
+            }
+
+            String caseStatus = String.isNotBlank(c.FEC_Case_Status__c) ? c.FEC_Case_Status__c : c.Status;
+            Datetime endTime;
+            if (String.isNotBlank(caseStatus) && caseStatus.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED)) {
+                endTime = c.FEC_Last_Updated_On__c;
+            } else if (String.isNotBlank(caseStatus) && caseStatus.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX)) {
+                endTime = nowTs;
+            } else {
+                c.FEC_TAT_Full_Process__c = null;
+                continue;
+            }
+
+            if (endTime == null) {
+                c.FEC_TAT_Full_Process__c = null;
+                continue;
+            }
+
+            Long millis = BusinessHours.diff(bhId, caseCreatedOn, endTime);
+            if (millis == null || millis < 0) {
+                c.FEC_TAT_Full_Process__c = null;
+                continue;
+            }
+
+            c.FEC_TAT_Full_Process__c = Decimal.valueOf(millis)
+                .divide(3600000, 12, System.RoundingMode.HALF_UP)
+                .setScale(2, System.RoundingMode.HALF_UP);
+        }
+    }
+
+    private static Id resolveTatBusinessHoursId() {
+        if (!tatBhLookupDone) {
+            tatBhLookupDone = true;
+            List<BusinessHours> rows = [
+                SELECT Id
+                FROM BusinessHours
+                WHERE Name = :FEC_BUSINESS_HOURS_NAME AND IsActive = TRUE
+                LIMIT 1
+            ];
+            tatBusinessHoursId = rows.isEmpty() ? null : rows[0].Id;
+        }
+        return tatBusinessHoursId;
     }
 }
