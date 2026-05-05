@@ -55,6 +55,7 @@ public with sharing class FEC_RepaySchedPayHistController {
     public class SectionDataResult {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public String errorMessage;
+        @AuraEnabled public Boolean repaymentScheduleError;
         @AuraEnabled public RepaymentScheduleTotalsDTO repaymentScheduleTotals;
         @AuraEnabled public List<RepaymentScheduleRowDTO> repaymentScheduleTable;
         @AuraEnabled public PaymentHistoryTotalsDTO paymentHistoryTotals;
@@ -364,6 +365,7 @@ public with sharing class FEC_RepaySchedPayHistController {
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_RePayment_Schedule__c.SObjectType));
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_Payment_History__c.SObjectType));
         result.errorMessage = null;
+        result.repaymentScheduleError = false;
         result.repaymentScheduleTotals = new RepaymentScheduleTotalsDTO();
         result.repaymentScheduleTable = new List<RepaymentScheduleRowDTO>();
         result.paymentHistoryTotals = new PaymentHistoryTotalsDTO();
@@ -390,9 +392,21 @@ public with sharing class FEC_RepaySchedPayHistController {
         FEC_GetLoanSecInfo.ResponseWrapper secRes = null;
         FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
 
-        try {
-            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
-        } catch (Exception e) { }
+        // Kiểm tra Case có FEC_Is_Test_API__c = true để giả lập GetLoanBasicInfo thất bại
+        List<Case> caseForTest = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+        Boolean isTestApi = !caseForTest.isEmpty() && caseForTest[0].FEC_Is_Test_API__c == true;
+
+        Boolean basicApiFailed = isTestApi;
+        if (!basicApiFailed) {
+            try {
+                basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
+            } catch (Exception e) {
+                basicApiFailed = true;
+            }
+        }
+        if (basicApiFailed) {
+            result.repaymentScheduleError = true;
+        }
 
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(transId, requestorId, dateTimeStr, contractNumber);
