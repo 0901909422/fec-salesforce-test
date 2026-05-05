@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
         <editable>true</editable>
@@ -1546,6 +1546,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment__c.FEC_Manual__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Assignment__c.FEC_Date_Time__c</field>
         <readable>true</readable>
@@ -1983,6 +1988,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Sensitive_Data__c.FEC_Case_ID__c</field>
         <readable>true</readable>
@@ -2055,6 +2065,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Team_Queue__c.FEC_Team__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team_Queue__c.FEC_Select_Team__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

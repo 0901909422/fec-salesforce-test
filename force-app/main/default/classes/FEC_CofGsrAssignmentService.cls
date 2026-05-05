@@ -24,14 +24,14 @@ public without sharing class FEC_CofGsrAssignmentService {
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getTeamQueueOptions() {
         List<FEC_Team_Queue__c> records = [
-            SELECT FEC_Name__c, FEC_Queue_Name__c
+            SELECT FEC_Select_Team__r.Name, FEC_Queue_Name__c
             FROM FEC_Team_Queue__c
-            ORDER BY FEC_Name__c, FEC_Queue_Name__c
+            ORDER BY FEC_Select_Team__r.Name, FEC_Queue_Name__c
         ];
         List<Map<String, String>> result = new List<Map<String, String>>();
         for (FEC_Team_Queue__c r : records) {
             result.add(new Map<String, String>{
-                'teamName' => r.FEC_Name__c,
+                'teamName' => r.FEC_Select_Team__r?.Name,
                 'queueName' => r.FEC_Queue_Name__c
             });
         }
@@ -182,7 +182,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = ra.FEC_Team__c,
                     FEC_Assignment_Remark__c = remarkContent,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = false
                 ));
             }
             insert assignments;
@@ -221,7 +222,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = queueId,
-                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                    FEC_Submitted_On__c = DateTime.now()
                 ));
             }
             if (!histories.isEmpty()) {
@@ -276,7 +278,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
             }
@@ -316,7 +319,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = a.FEC_OwnerID__c,
-                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                    FEC_Submitted_On__c = DateTime.now()
                 ));
             }
             if (!histories.isEmpty()) {
@@ -446,7 +450,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                        FEC_Submitted_On__c = DateTime.now()
                     ));
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
