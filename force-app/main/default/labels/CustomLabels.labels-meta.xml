@@ -3559,8 +3559,8 @@
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Account Status T-1</shortDescription>
-        <value>Lí do: Account Status (account level, T-1) = {0}</value>
+        <shortDescription>Lí do chặn địa chỉ — Account Status</shortDescription>
+        <value>Lí do: Account Status = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code</fullName>
@@ -3568,7 +3568,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code</shortDescription>
-        <value>Lí do: Block Code (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_1</fullName>
@@ -3576,7 +3576,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code 1</shortDescription>
-        <value>Lí do: Block Code 1 (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code 1 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_2</fullName>
@@ -3584,7 +3584,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code 2</shortDescription>
-        <value>Lí do: Block Code 2 (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code 2 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Generic</fullName>
@@ -11066,6 +11066,14 @@
         <protected>false</protected>
         <shortDescription>Update Address — province combobox search placeholder</shortDescription>
         <value>Nhập để tìm tỉnh/thành...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Ward_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — ward/district combobox search placeholder</shortDescription>
+        <value>Nhập để tìm phường/xã...</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_UpdateAddress_Original_Information</fullName>

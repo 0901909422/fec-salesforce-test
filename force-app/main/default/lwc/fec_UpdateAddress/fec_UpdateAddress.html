@@ -103,6 +103,7 @@
                             <h3 class="case-info__column-title slds-m-bottom_small">
                                 {labels.updatedInformation}
                             </h3>
+                            <template if:true={showPermanentUpdatedRow}>
                             <div
                                 class="case-info__row case-info__row--editable slds-border_bottom"
                             >
@@ -181,7 +182,6 @@
                                                         <lightning-input
                                                             label={labels.building}
                                                             value={mailingBuilding}
-                                                            required
                                                             onchange={handleMailingBuildingChange}
                                                         ></lightning-input>
                                                     </div>
@@ -191,7 +191,6 @@
                                                         <lightning-input
                                                             label={labels.number}
                                                             value={mailingNumber}
-                                                            required
                                                             onchange={handleMailingNumberChange}
                                                         ></lightning-input>
                                                     </div>
@@ -220,14 +219,15 @@
                                                     <div
                                                         class="slds-form-element slds-m-bottom_small"
                                                     >
-                                                        <lightning-combobox
+                                                        <c-fec_searchable-combobox
                                                             label={labels.ward}
-                                                            value={mailingWard}
-                                                            options={wardOptions}
+                                                            value={mailingDistrict}
+                                                            options={districtOptions}
+                                                            placeholder={labels.wardSearchPlaceholder}
                                                             required
-                                                            disabled={wardComboboxDisabled}
-                                                            onchange={handleMailingWardChange}
-                                                        ></lightning-combobox>
+                                                            disabled={districtComboboxDisabled}
+                                                            onchange={handleMailingDistrictChange}
+                                                        ></c-fec_searchable-combobox>
                                                     </div>
                                                     <div
                                                         class="slds-grid slds-grid_align-end slds-m-top_small case-info__form-actions"
@@ -271,7 +271,9 @@
                                     </template>
                                 </template>
                             </div>
+                            </template>
 
+                            <template if:true={showOfficeUpdatedRow}>
                             <div
                                 class="case-info__row case-info__row--editable slds-border_bottom"
                             >
@@ -350,7 +352,6 @@
                                                         <lightning-input
                                                             label={labels.building}
                                                             value={mailingBuilding}
-                                                            required
                                                             onchange={handleMailingBuildingChange}
                                                         ></lightning-input>
                                                     </div>
@@ -360,7 +361,6 @@
                                                         <lightning-input
                                                             label={labels.number}
                                                             value={mailingNumber}
-                                                            required
                                                             onchange={handleMailingNumberChange}
                                                         ></lightning-input>
                                                     </div>
@@ -389,14 +389,15 @@
                                                     <div
                                                         class="slds-form-element slds-m-bottom_small"
                                                     >
-                                                        <lightning-combobox
+                                                        <c-fec_searchable-combobox
                                                             label={labels.ward}
-                                                            value={mailingWard}
-                                                            options={wardOptions}
+                                                            value={mailingDistrict}
+                                                            options={districtOptions}
+                                                            placeholder={labels.wardSearchPlaceholder}
                                                             required
-                                                            disabled={wardComboboxDisabled}
-                                                            onchange={handleMailingWardChange}
-                                                        ></lightning-combobox>
+                                                            disabled={districtComboboxDisabled}
+                                                            onchange={handleMailingDistrictChange}
+                                                        ></c-fec_searchable-combobox>
                                                     </div>
                                                     <div
                                                         class="slds-grid slds-grid_align-end slds-m-top_small case-info__form-actions"
@@ -440,7 +441,9 @@
                                     </template>
                                 </template>
                             </div>
+                            </template>
 
+                            <template if:true={showCurrentUpdatedRow}>
                             <div
                                 class="case-info__row case-info__row--editable slds-border_bottom"
                             >
@@ -519,7 +522,6 @@
                                                         <lightning-input
                                                             label={labels.building}
                                                             value={mailingBuilding}
-                                                            required
                                                             onchange={handleMailingBuildingChange}
                                                         ></lightning-input>
                                                     </div>
@@ -529,7 +531,6 @@
                                                         <lightning-input
                                                             label={labels.number}
                                                             value={mailingNumber}
-                                                            required
                                                             onchange={handleMailingNumberChange}
                                                         ></lightning-input>
                                                     </div>
@@ -558,14 +559,15 @@
                                                     <div
                                                         class="slds-form-element slds-m-bottom_small"
                                                     >
-                                                        <lightning-combobox
+                                                        <c-fec_searchable-combobox
                                                             label={labels.ward}
-                                                            value={mailingWard}
-                                                            options={wardOptions}
+                                                            value={mailingDistrict}
+                                                            options={districtOptions}
+                                                            placeholder={labels.wardSearchPlaceholder}
                                                             required
-                                                            disabled={wardComboboxDisabled}
-                                                            onchange={handleMailingWardChange}
-                                                        ></lightning-combobox>
+                                                            disabled={districtComboboxDisabled}
+                                                            onchange={handleMailingDistrictChange}
+                                                        ></c-fec_searchable-combobox>
                                                     </div>
                                                     <div
                                                         class="slds-grid slds-grid_align-end slds-m-top_small case-info__form-actions"
@@ -609,6 +611,7 @@
                                     </template>
                                 </template>
                             </div>
+                            </template>
                         </div>
                     </div>
                     </template>
@@ -668,7 +671,6 @@
                                         <lightning-input
                                             label={labels.building}
                                             value={newAddrBuilding}
-                                            required
                                             onchange={handleNewAddrBuildingChange}
                                         ></lightning-input>
                                     </div>
@@ -678,10 +680,21 @@
                                         <c-fec_searchable-combobox
                                             label={labels.provinceCity}
                                             value={newAddrCity}
-                                            options={provinceOptions}
+                                            options={newAddrProvinceOptions}
                                             placeholder={labels.provinceSearchPlaceholder}
                                             required
                                             onchange={handleNewAddrProvinceChange}
+                                        ></c-fec_searchable-combobox>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <c-fec_searchable-combobox
+                                            label={labels.ward}
+                                            value={newAddrDistrict}
+                                            options={newAddrDistrictOptions}
+                                            placeholder={labels.wardSearchPlaceholder}
+                                            required
+                                            disabled={newAddrDistrictComboboxDisabled}
+                                            onchange={handleNewAddrDistrictChange}
                                         ></c-fec_searchable-combobox>
                                     </div>
                                     <div
@@ -690,21 +703,8 @@
                                         <lightning-input
                                             label={labels.number}
                                             value={newAddrNumber}
-                                            required
                                             onchange={handleNewAddrNumberChange}
                                         ></lightning-input>
-                                    </div>
-                                    <div
-                                        class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
-                                    >
-                                        <lightning-combobox
-                                            label={labels.ward}
-                                            value={newAddrWard}
-                                            options={newAddrWardOptions}
-                                            required
-                                            disabled={newAddrWardComboboxDisabled}
-                                            onchange={handleNewAddrWardChange}
-                                        ></lightning-combobox>
                                     </div>
                                     <div
                                         class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2"
@@ -754,5 +754,4 @@
                 </section>
             </div>
         </template>
-</template> 
-
+</template>
