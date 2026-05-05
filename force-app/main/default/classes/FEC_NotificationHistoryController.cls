@@ -61,7 +61,7 @@ public with sharing class FEC_NotificationHistoryController {
             NotificationHistoryRow row = new NotificationHistoryRow();
             row.id = String.valueOf(r.Id);
             row.sentDateTime = r.FEC_Send_Date_Time__c != null
-                ? r.FEC_Send_Date_Time__c.format(FEC_ConstantCommon.DATETIME_FORMAT_DDMMYYYY_HHMM, tz)
+                ? r.FEC_Send_Date_Time__c.format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT, tz)
                 : FEC_ConstantCommon.STR_EMPTY;
             row.sentType = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_Type__c);
             row.notificationType = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Template__c);
