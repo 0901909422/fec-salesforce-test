@@ -182,10 +182,23 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = ra.FEC_Team__c,
                     FEC_Assignment_Remark__c = remarkContent,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = false
                 ));
             }
             insert assignments;
+
+            Datetime assignmentSubmitTs = System.now();
+            List<FEC_Assignment__c> submitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                submitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = assignmentSubmitTs
+                ));
+            }
+            if (!submitStamp.isEmpty()) {
+                update submitStamp;
+            }
 
             List<FEC_Case_Remarks__c> remarksToInsert = new List<FEC_Case_Remarks__c>();
             for (FEC_Assignment__c a : assignments) {
@@ -276,11 +289,24 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
             }
             insert assignments;
+
+            Datetime manualSubmitTs = System.now();
+            List<FEC_Assignment__c> manualSubmitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                manualSubmitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = manualSubmitTs
+                ));
+            }
+            if (!manualSubmitStamp.isEmpty()) {
+                update manualSubmitStamp;
+            }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
             for (Integer i = 0; i < assignments.size(); i++) {

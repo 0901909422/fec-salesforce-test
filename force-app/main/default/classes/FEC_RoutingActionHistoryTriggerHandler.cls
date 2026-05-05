@@ -49,6 +49,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     try {
       handleUpdateCaseTeamsOnInsert(newRecords);
       FEC_CaseManagerListService.applyAfterRoutingHistoryInsert(newRecords);
+      FEC_RoutingHistAssignedOnSvc.chainCaseLevelSubmittedOnAfterInsert(newRecords);
       sendNotificationEmails(newRecords);
     } catch (Exception e) {
       throw new RoutingActionHistoryException('Error processing Routing Action History after insert: ' + e.getMessage());
@@ -266,6 +267,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     List<FEC_Routing_Action_History__c> newRecords,
     Map<Id, FEC_Routing_Action_History__c> oldMap
   ) {
+    if (FEC_RoutingHistAssignedOnSvc.suppressAfterUpdateForChain) {
+      return;
+    }
     // Tránh recursive trigger
     if (isExecuting) {
       return;
