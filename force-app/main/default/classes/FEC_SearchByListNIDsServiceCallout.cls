@@ -87,10 +87,10 @@ public with sharing class FEC_SearchByListNIDsServiceCallout {
             
         }
         NIDsResponse err = new NIDsResponse();
-        err.sys2 = new Sys2();
-        err.sys2.code2 = String.valueOf(resp.getStatusCode());
-        err.sys2.description2 = 'HTTP Error: ' + resp.getStatus();
-        err.sys2.transID2 = transactionId;
+        err.sys = new Sys();
+        err.sys.code = resp.getStatusCode();
+        err.sys.description = 'HTTP Error: ' + resp.getStatus();
+        err.sys.transID = transactionId;
         return err;
     }
 }
