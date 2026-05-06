@@ -237,7 +237,7 @@ public without sharing class FEC_IPPClosureController {
 
     private static Id getCustomerHistoryIdFromCase(Id caseId) {
         List<Case> cases = [
-            SELECT Id, FEC_Account_Number__c
+            SELECT Id, FEC_Account_Number__c, FEC_Account_or_Contract__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -258,6 +258,9 @@ public without sharing class FEC_IPPClosureController {
             if (!histories.isEmpty()) {
                 return histories[0].Id;
             }
+        }
+        if (c.FEC_Account_or_Contract__c != null) {
+            return c.FEC_Account_or_Contract__c;
         }
         return null;
     }
