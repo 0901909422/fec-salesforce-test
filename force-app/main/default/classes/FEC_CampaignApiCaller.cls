@@ -22,6 +22,7 @@ public with sharing class FEC_CampaignApiCaller {
 
     /**
      * Executes a POST request with auth headers from FEC_API_Config__mdt.
+     * Auth header logic is delegated to FEC_EndpointResolver for consistency.
      */
     private static HttpResponse doPost(String endpoint, String configName, String body) {
         if (Test.isRunningTest()) {
@@ -30,9 +31,12 @@ public with sharing class FEC_CampaignApiCaller {
         Map<String, String> headers = new Map<String, String>{
             'Content-Type' => FEC_Constants.HTTP_CONTENT_TYPE_JSON
         };
-        FEC_API_Config__mdt cfg = FEC_API_Config__mdt.getInstance(configName);
-        if (cfg != null && !cfg.FEC_Use_Named_Credential__c && String.isNotBlank(cfg.FEC_API_Key__c)) {
-            headers.put('X-API-KEY', cfg.FEC_API_Key__c);
+        // Use a temporary HttpRequest to leverage resolver's consistent auth logic
+        HttpRequest tempReq = new HttpRequest();
+        FEC_EndpointResolver.applyAuthHeaders(tempReq, configName);
+        String apiKeyHeader = tempReq.getHeader('X-API-KEY');
+        if (String.isNotBlank(apiKeyHeader)) {
+            headers.put('X-API-KEY', apiKeyHeader);
         }
         return FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_Constants.HTTP_METHOD_POST, headers, body);
     }
