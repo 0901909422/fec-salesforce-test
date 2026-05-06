@@ -15,7 +15,7 @@ import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts
 import searchByListNIDs from "@salesforce/apex/FEC_SearchByListNIDsServiceCallout.searchByListNIDs";
 import getCash24Contracts from "@salesforce/apex/FEC_SearchController.getCash24Contracts";
 import getCustomerList from "@salesforce/apex/FEC_GetCustomerList.getCustomerList";
-
+import searchByListPhones from "@salesforce/apex/FEC_SearchByListPhonesServiceCallout.searchByListPhones";
 
 import FEC_National_ID_Passport_ID_Label  from '@salesforce/label/c.FEC_National_ID_Passport_ID_Label';
 import FEC_Toast_Search_Validation from '@salesforce/label/c.FEC_Toast_Search_Validation';
@@ -55,7 +55,7 @@ import SEARCH_ACCOUNT_FIELD from "@salesforce/schema/Case.FEC_Search_Account_Num
 import SEARCH_EMAIL_FIELD from "@salesforce/schema/Case.FEC_Search_Email_Address__c";
 import SEARCH_CUSTOMER_NUM_FIELD from "@salesforce/schema/Case.FEC_Search_Customer_Number__c";
 import { CurrentPageReference } from 'lightning/navigation';
-import { formatDateTimeVNShort } from 'c/fec_CommonUtils';
+import { formatDateTimeVNShort, normalizePhone } from 'c/fec_CommonUtils';
 
 const FIELDS_TO_CHECK = [
     'FEC_Search_National_ID__c',
@@ -320,6 +320,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         sortable: false,
       },
       { label: "Customer Name", fieldName: "FullName", sortable: true },
+      { label: "Date of Birth", 
+        fieldName: "DateOfBirth", 
+        type: "date", 
+        typeAttributes:{
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        },
+        sortable: true },
       {
         label: "Buyer NID",
         fieldName: "BuyerNID",
@@ -330,20 +339,15 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
               fieldLabel: "Buyer NID"
             },
       },
-      { label: "Date of Birth", 
-        fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
-        sortable: true },
       { label: "Product Name", fieldName: "ProductName", sortable: true },
       {
         label: "Premium Fee",
         fieldName: "PremiumFee",
-        type: "currency",
+        type: "number",
+        typeAttributes: {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        },
         sortable: true,
       },
       { label: "Payment ID", fieldName: "PaymentId", sortable: true },
@@ -782,8 +786,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.isLoaded = false;
     this.isNoCustomerFound = false;
 
-
-    // Optional: clear old results before new search
+    // reset data
     this.cardData = [];
     this.loanData = [];
     this.loanContractData = [];
@@ -795,100 +798,118 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     try {
       const params = this.buildSearchParams();
 
-      // Guard (extra safety). handleSearch() already checks this.
       if (!this.hasAnySearchCriteria(params)) {
-        this.showToast(FEC_Toast_Validation_Title, FEC_Toast_Search_Validation, "warning");
+        this.showToast(
+          FEC_Toast_Validation_Title,
+          FEC_Toast_Search_Validation,
+          "warning"
+        );
         return;
       }
+
+      const promises = [];
+
+      // 1. Loan APIs
       if (this.contractNumber) {
-        const [b2Result, cash24Result] = await Promise.all([
-          getB2Contracts({ contractNumber: this.contractNumber }),
-          getCash24Contracts({ contractNumber: this.contractNumber })
-        ]);
-
-        // 3. Process B2 Data
-        this.loanB2Data = b2Result ? b2Result.map(record => ({
-          id: record.Id || record.Name,
-          ContractNumber: record.Name,
-          FullName: record.FEC_Full_Name__c,
-          NationalID1: record.FEC_ID_Card__c,
-          Code: record.FEC_Code__c,
-          ProductCode: record.FEC_Product_Code__c,
-          Installment: record.FEC_Installment__c,
-          Principal: record.FEC_Principal__c,
-          MonthlyFee: record.FEC_Monthly_Fee__c,
-          Term: record.FEC_Term__c,
-          City: record.FEC_City__c
-        })) : [];
-
-        // 4. Process Cash24 Data
-        this.loanCash24Data = cash24Result ? cash24Result.map(record => ({
-          id: record.Id || record.Name,
-          ContractNumber: record.Name,
-          SoldDate: record.FEC_Sold_Date__c,
-          BalanceAmount: record.FEC_Balance_Amount__c,
-          ProductCode: record.FEC_Product__c,
-          ContractStatus: record.FEC_Contract_Status__c,
-          Note: record.FEC_Note__c
-        })) : [];
-      }
-      const result = await getCustomerList(params);
-      console.log("getCustomerList params:", params);
-      console.log("getCustomerList result:", result);
-
-      const customers = result?.Customers || [];
-      this._customers = customers;
-      this.errorCalloutIsurance = false;
-      if (this.loanB2Data.length > 0 || this.loanCash24Data.length > 0 || customers.length > 0) {
-        this.isNoCustomerFound = false;
-        if (customers.length > 0) {
-            if (this.nationalId) {
-              const response = await searchByListNIDs({nationalIDs: [this.nationalId]});
-              let items = [];
-              if (response.sys2.code2 != '200') {
-                this.insuranceData = []; // not found insurance data
-                this.errorCalloutIsurance = response.sys2.code2 != '400';
-              } else if (response.sys2.code2 === '200') {
-                  response.result.forEach(element => {
-                    items.push({
-                      id: element.userID,
-                      UserId: element.userID,
-                      FullName: element.buyerName,
-                      BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
-                      ProductName: element.productNameEn,
-                      PremiumFee: element.collectedPremiumFee,
-                      PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
-                      Status:  element.StatusDisplay,
-                      PolicyNumber: element.policyNumber
-                    })
-                  });
-                this.insuranceData = items;
-              }
-          }
-          this.processCustomerResults(customers);
-          this.fetchPlasticIds();
-          // Gọi Banca Insurance API với danh sách NID từ kết quả (unique, tối đa 20)
-          const nidSet = new Set(
-            customers
-              .map(c => c.NationalID)
-              .filter(n => n && n.trim())
-          );
-          const nids = Array.from(nidSet).slice(0, 20);
-          console.log('NIDs for Banca:', nids, 'length:', nids.length);
-          if (nids.length > 0) {
-            this.fetchBancaInsurance(nids);
-          }
-        }
+        promises.push(
+          Promise.all([
+            getB2Contracts({ contractNumber: this.contractNumber }),
+            getCash24Contracts({ contractNumber: this.contractNumber })
+          ])
+        );
       } else {
-        this.isNoCustomerFound = true;
+        promises.push(Promise.resolve([[], []]));
       }
+
+      // 2. Customer API (API 20)
+      promises.push(getCustomerList(params));
+
+      // [CHANGE][Author : LongNH76] Insurance gọi song song API 88/90 để không bỏ sót kết quả khi user nhập cả NID + Phone.
+      // UAT: phone -> API 20 + 90; NID -> API 20 + 88; both -> 20 + 88 + 90.
+      // Old behavior (kept for reference):
+      // - Chỉ gọi 1 API insurance theo nhánh if/else (NID hoặc Phone), không gọi song song.
+      // if (this.nationalId) {
+      //   promises.push(this.fetchBancaInsurance([this.nationalId]));
+      // } else if (this.phoneNumber) {
+      //   promises.push(this.fetchBancaInsuranceByPhone([this.phoneNumber]));
+      // } else {
+      //   promises.push(Promise.resolve([]));
+      // }
+      const insurancePromises = [];
+      if (this.nationalId) {
+        insurancePromises.push(this.fetchBancaInsurance([this.nationalId]));
+      }
+      if (this.phoneNumber) {
+        const normalizedPhone = normalizePhone(this.phoneNumber);
+        insurancePromises.push(this.fetchBancaInsuranceByPhone([normalizedPhone]));
+      }
+      if (insurancePromises.length === 0) {
+        insurancePromises.push(Promise.resolve([]));
+      }
+      promises.push(Promise.all(insurancePromises));
+
+      const [
+        [b2Result, cash24Result],
+        customerResult,
+        insuranceResults
+      ] = await Promise.all(promises);
+
+      // =========================
+      // MAP LOAN DATA
+      // =========================
+      this.loanB2Data = (b2Result || []).map(r => ({
+        id: r.Id || r.Name,
+        ContractNumber: r.Name,
+        FullName: r.FEC_Full_Name__c,
+        NationalID1: r.FEC_ID_Card__c,
+        Code: r.FEC_Code__c,
+        ProductCode: r.FEC_Product_Code__c,
+        Installment: r.FEC_Installment__c,
+        Principal: r.FEC_Principal__c,
+        MonthlyFee: r.FEC_Monthly_Fee__c,
+        Term: r.FEC_Term__c,
+        City: r.FEC_City__c
+      }));
+
+      this.loanCash24Data = (cash24Result || []).map(r => ({
+        id: r.Id || r.Name,
+        ContractNumber: r.Name,
+        SoldDate: r.FEC_Sold_Date__c,
+        BalanceAmount: r.FEC_Balance_Amount__c,
+        ProductCode: r.FEC_Product__c,
+        ContractStatus: r.FEC_Contract_Status__c,
+        Note: r.FEC_Note__c
+      }));
+
+      const customers = customerResult?.Customers || [];
+      this._customers = customers;
+
+      if (customers.length > 0) {
+        this.processCustomerResults(customers);
+      }
+
+      // [CHANGE][Author : LongNH76] Merge + dedupe kết quả insurance từ nhiều API.
+      // Old behavior (kept for reference):
+      // this.insuranceData = insuranceResult || [];
+      const mergedInsurance = (insuranceResults || []).flat();
+      this.insuranceData = this.mergeInsuranceRows(mergedInsurance);
+
+      // =========================
+      const hasAnyData =
+        this.cardData.length > 0 ||
+        this.loanContractData.length > 0 ||
+        this.loanB2Data.length > 0 ||
+        this.loanCash24Data.length > 0 ||
+        this.insuranceData.length > 0;
+
+      this.isNoCustomerFound = !hasAnyData;
+
     } catch (e) {
-      console.error("Error fetching customer list:", e);
+      console.error("Error fetching data:", e);
+
       this.showToast(
         FEC_Toast_Error,
-        FEC_Toast_Error_Generic + ' ' + (e?.body?.message || e?.message || ""),
+        FEC_Toast_Error_Generic + " " + (e?.body?.message || e?.message || ""),
         "error"
       );
     } finally {
@@ -915,31 +936,111 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     }
 }
 
-async fetchBancaInsurance(nids) {
-    console.log('fetchBancaInsurance called with nids:', nids);
-    try {
-        const results = await searchByListNIDs({ nationalIds: nids });
-        console.log('fetchBancaInsurance results:', results);
-        if (!results || results.length === 0) return;
-        this.insuranceData = results.map(r => ({
-            id: r.paymentID || r.policyNumber,
-            UserId: r.userId,
-            FullName: r.buyerName,
-            DateOfBirth: r.buyerDOB,
-            BuyerNID: r.buyerNID,
-            MarkedBuyerNID: r.markedBuyerNID,
-            ProductName: r.productNameEn,
-            PremiumFee: r.collectedPremiumFee,
-            PaymentId: r.paymentID,
-            EffectiveDate: r.effectiveDate,
-            Status: r.statusDisplay,
-            PolicyNumber: r.policyNumber,
-            InsurerCompany: r.insurerCompany
-        }));
-    } catch (e) {
-        console.error('fetchBancaInsurance error:', e);
+async fetchBancaInsurance(ids) {
+  try {
+
+    const result = await searchByListNIDs({ nationalIDs: ids });
+    if (!result?.sys || result.sys.code !== 1) {
+      this.insuranceData = [];
+      return [];
     }
+
+    const items = (result.result || []).map(el => ({
+      id: el.userID,
+      UserId: el.userID,
+      FullName: el.buyerName,
+      BuyerNID: el.buyerNID,
+      DateOfBirth: el.buyerDOB,
+      ProductName: el.productNameEn,
+      PremiumFee: Number(el.collectedPremiumFee),
+      PaymentId: el.paymentID,
+      EffectiveDate: el.effectiveDate,
+      Status: el.StatusDisplay,
+      PolicyNumber: el.policyNumber,
+      Phone: el.buyerPhone
+    }));
+
+    this.insuranceData = items;
+    return items;
+
+  } catch (e) {
+    this.insuranceData = [];
+    return [];
+  }
 }
+
+async fetchBancaInsuranceByPhone(phones) {
+  try {
+
+    const result = await searchByListPhones({ phones });
+
+    // [CHANGE][Author : LongNH76] Align theo source user cung cấp:
+    // ưu tiên đọc payload result trực tiếp thay vì chặn cứng theo sys2.code2.
+    // Old behavior (kept for reference):
+    // if (!result?.sys2 || result.sys2.code2 !== '200') {
+    //   return [];
+    // }
+    if (!result?.result || result.result.length === 0) {
+      return [];
+    }
+
+    const items = (result.result || []).map(el => ({
+      id: el.userID,
+      UserId: el.userID,
+      FullName: el.buyerName,
+      BuyerNID: el.buyerNID,
+      DateOfBirth: el.buyerDOB,
+      ProductName: el.productNameEn,
+      PremiumFee: Number(el.collectedPremiumFee),
+      PaymentId: el.paymentID,
+      EffectiveDate: el.effectiveDate,
+      Status: el.statusDisplay,
+      PolicyNumber: el.policyNumber,
+      Phone: el.buyerPhone
+    }));
+
+    this.insuranceData = items;
+    return items;
+
+  } catch (e) {
+    return [];
+  }
+}
+
+  /**
+   * [CHANGE][Author : LongNH76] Dedupe insurance rows theo PolicyNumber/UserId.
+   * Nếu cùng key từ API 88 và 90, ưu tiên bản có buyerPhone để không mất nguồn phone khi tạo History/Case.
+   * Old behavior (kept for reference):
+   * - Không có bước merge/dedupe riêng, lấy trực tiếp insuranceResult từ 1 API branch.
+   */
+  mergeInsuranceRows(rows) {
+    const map = new Map();
+    (rows || []).forEach((item) => {
+      const key = item.PolicyNumber || item.UserId;
+      if (!key) {
+        return;
+      }
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, item);
+        return;
+      }
+      map.set(key, this.preferInsuranceRow(existing, item));
+    });
+    return Array.from(map.values());
+  }
+
+  preferInsuranceRow(a, b) {
+    const phoneA = a?.Phone && String(a.Phone).trim();
+    const phoneB = b?.Phone && String(b.Phone).trim();
+    if (phoneB && !phoneA) {
+      return b;
+    }
+    if (phoneA && !phoneB) {
+      return a;
+    }
+    return a;
+  }
 
 /**
  * Build Apex params from UI inputs (NO hard-coding).
@@ -1461,6 +1562,7 @@ hasAnySearchCriteria(params) {
         }
 
         // 3. Check Insurance data
+        
         if (this.insuranceData && this.insuranceData.length > 0) {
           categories.push("Insurance");
         }
@@ -1471,11 +1573,35 @@ hasAnySearchCriteria(params) {
         let customerName = row?.FullName;
         let isListView = !this.recordId;
         if (action.label.fieldName === 'UserId') {
-          const customerIndex = this._customers.findIndex(x => x.NationalID === row?.BuyerNID);
-          cifNumber =   this._customers[customerIndex] ? this._customers[customerIndex].CIFNumber : '';
-          customerName =  this._customers[customerIndex] ?  this._customers[customerIndex].FullName : '';
-          isListView = window.location.href.includes('/FEC_Customer_Search') ? false : !this.recordId;
+          if (categories.includes("Card") || categories.includes("Loan")) {
+            this.isLoaded = true;
+            return;
+          }
+          const customerIndex = this._customers.findIndex(
+            (x) => x.NationalID === row?.BuyerNID
+          );
+          cifNumber = this._customers[customerIndex]
+            ? this._customers[customerIndex].CIFNumber
+            : "";
+          if (
+            this._customers[customerIndex] &&
+            this._customers[customerIndex].FullName
+          ) {
+            customerName = this._customers[customerIndex].FullName;
+          }
+          isListView = window.location.href.includes("/FEC_Customer_Search")
+            ? false
+            : !this.recordId;
         }
+
+        // [CHANGE][Author : LongNH76] Ưu tiên phone từ dòng kết quả; fallback phone user nhập để tránh trống FEC_Search_Phone_Number__c.
+        // Old behavior (kept for reference):
+        // phone: row?.Phone
+        const resolvedPhone =
+          (row?.Phone && String(row.Phone).trim()) ||
+          (this.phoneNumber && String(this.phoneNumber).trim()) ||
+          null;
+
         createHistory({
           value: id,
           fieldName: action.label.fieldName,
@@ -1483,7 +1609,7 @@ hasAnySearchCriteria(params) {
           searchProducts: searchProducts,
           selectedType: action.type,
           cifNumber: cifNumber,
-          phone: row?.Phone,
+          phone: resolvedPhone,
           customerName: customerName,
           applicationId: row?.ApplicationID,
           isListView: isListView,
