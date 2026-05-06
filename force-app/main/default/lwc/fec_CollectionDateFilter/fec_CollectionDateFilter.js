@@ -39,6 +39,11 @@ export default class Fec_CollectionDateFilter extends LightningElement {
         toDate: FEC_CollectionDateFilter_ToDate
     };
 
+    /** YYYY-MM-DD — hôm nay (local); max-date cho fromDate & toDate, không chọn ngày tương lai */
+    get todayIsoForPicker() {
+        return this._toInputDateStr(new Date());
+    }
+
     connectedCallback() {
         // Default: From = 90 ngày trước, To = hôm nay
         if (!this.fromDate) {
@@ -52,13 +57,39 @@ export default class Fec_CollectionDateFilter extends LightningElement {
         }
     }
 
+    handleFromPickerOpen() {
+        this._closeOtherDatePicker(0); // giữ From (0), đóng To (1)
+    }
+
+    handleToPickerOpen() {
+        this._closeOtherDatePicker(1); // giữ To (1), đóng From (0)
+    }
+
+    /** indexToKeepOpen: 0 = from, 1 = to — đóng picker còn lại */
+    _closeOtherDatePicker(indexToKeepOpen) {
+        const pickers = this.template.querySelectorAll('c-fec_-date-picker');
+        if (pickers.length < 2) return;
+        const closeIdx = indexToKeepOpen === 0 ? 1 : 0;
+        pickers[closeIdx].closeCalendar();
+    }
+
     handleFromDateChange(e) {
-        this.fromDate = e.detail.value;
+        let v = e.detail.value;
+        const todayStr = this.todayIsoForPicker;
+        if (v && v > todayStr) {
+            v = todayStr;
+        }
+        this.fromDate = v;
         this.errorMessage = '';
     }
 
     handleToDateChange(e) {
-        this.toDate = e.detail.value;
+        let v = e.detail.value;
+        const todayStr = this.todayIsoForPicker;
+        if (v && v > todayStr) {
+            v = todayStr;
+        }
+        this.toDate = v;
         this.errorMessage = '';
     }
 
@@ -71,8 +102,20 @@ export default class Fec_CollectionDateFilter extends LightningElement {
             return;
         }
 
-        const from = new Date(this.fromDate);
-        const to = new Date(this.toDate);
+        const todayStr = this.todayIsoForPicker;
+        let fromStr = this.fromDate;
+        if (fromStr > todayStr) {
+            fromStr = todayStr;
+            this.fromDate = fromStr;
+        }
+        const from = new Date(fromStr);
+
+        let toStr = this.toDate;
+        if (toStr > todayStr) {
+            toStr = todayStr;
+            this.toDate = toStr;
+        }
+        const to = new Date(toStr);
 
         if (from > to) {
             this.errorMessage = FEC_CollectionDateFilter_ErrorFromGtTo;
