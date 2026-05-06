@@ -4,7 +4,7 @@
     <externalId>false</externalId>
     <formula>FEC_Related_To__r.FEC_Link_ID__c</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Relevant Ticket ID</label>
+    <label>ID</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>
