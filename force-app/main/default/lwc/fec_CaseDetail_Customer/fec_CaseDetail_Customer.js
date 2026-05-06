@@ -137,7 +137,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseRemarks ~ loadRemarks ~ err:", err);
       })
-      .finally(() => { });
+      .finally(() => {});
   }
 
   async connectedCallback() {
@@ -176,7 +176,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
-    this.modeEditCase = message.isModeEdit === true;
+    // Author: Toannd61
+    const prevModeEdit = this.modeEditCase === true;
+    const nextModeEdit = message.isModeEdit === true;
+
+    // Bỏ qua nếu mode không thực sự thay đổi (tránh reload NOC khi nhận broadcast từ tab khác)
+    if (prevModeEdit === nextModeEdit) return;
+
+    this.modeEditCase = nextModeEdit;
 
     resetViewMode({
       recordId: this.recordId,
@@ -203,14 +210,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     );
 
     if (caseBusinessEle) {
-      // Luôn gọi getData khi đổi mode: review → load lại từ server (NOC, Account Info vừa lưu)
+      // Chỉ gọi getData khi mode thực sự đổi: tránh reset NOC do broadcast từ tab khác
       caseBusinessEle.getData();
     }
   }
 
   handleNOCMsg(message) {
     if (message == null) return;
-    if (message.caseId != null && message.caseId !== this.recordId) {
+    if (message.caseId !== this.recordId) {
       return;
     }
     if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
