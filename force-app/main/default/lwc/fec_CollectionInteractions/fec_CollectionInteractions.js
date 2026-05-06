@@ -27,16 +27,13 @@ const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
 
 const SECTION_LABEL = 'Collection Interactions';
 
-/** Apex → LWC có thể camelCase; API gốc có key InteractionHistory (map trong Apex sang CollectionInteractions). */
+/** Apex → LWC có thể camelCase; dữ liệu interaction đọc từ InteractionHistory. */
 function interactionsListFromResponse(response) {
     if (!response || typeof response !== 'object') {
         return [];
     }
-    const raw =
-        response.CollectionInteractions ??
-        response.collectionInteractions ??
-        response.InteractionHistory ??
-        response.interactionHistory;
+    const raw = response.InteractionHistory ?? response.interactionHistory;
+    console.log('test test test');
     return Array.isArray(raw) ? raw : [];
 }
 
