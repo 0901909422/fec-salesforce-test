@@ -73,6 +73,11 @@
 .nav-btn:hover {
     background: #f3f3f3;
 }
+.nav-btn:disabled {
+    color: #c9c9c9;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 .month-year-label {
     font-weight: 600;
     font-size: 13px;
@@ -113,6 +118,16 @@
 }
 .day-cell.empty {
     cursor: default;
+}
+.day-cell.disabled {
+    color: #c9c9c9;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: transparent;
+}
+.day-cell.disabled:hover {
+    background: transparent;
+    color: #c9c9c9;
 }
 .day-cell.today {
     font-weight: 700;
