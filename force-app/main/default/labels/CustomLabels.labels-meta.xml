@@ -14604,7 +14604,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Status</shortDescription>
-        <value>Status</value>
+        <value>Assignment Status</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Owner</fullName>
@@ -14612,7 +14612,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Owner</shortDescription>
-        <value>Owner</value>
+        <value>Assignment Owner</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Id</fullName>

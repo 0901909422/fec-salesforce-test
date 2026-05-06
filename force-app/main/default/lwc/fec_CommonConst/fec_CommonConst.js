@@ -151,6 +151,10 @@ const COMPLAINT_TYPE_TEXT = {
   VIP: "Cấp quản lý cao",
   EA: "Quan hệ đối ngoại"
 };
+
+const OPEN_STATUS = 'Open';
+const NEW_STATUS = 'New';
+const QUEUE_ID_START = '00G';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -248,5 +252,8 @@ export {
     PAGE_SIZE_OPTIONS,
     CATEGORY,
     COMPLAINT_TYPE_TEXT,
-    COMPLAINT_SOURCE_LABEL
+    COMPLAINT_SOURCE_LABEL,
+    OPEN_STATUS,
+    NEW_STATUS,
+    QUEUE_ID_START
 };

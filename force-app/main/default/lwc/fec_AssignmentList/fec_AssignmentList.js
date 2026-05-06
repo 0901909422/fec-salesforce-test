@@ -39,8 +39,11 @@ import {
   ACTIONS_REQUIRE_DECISION,
   ACTIONS_REQUIRE_SUBDECISION,
   ACTION,
+  OPEN_STATUS,
+  QUEUE_ID_START,
+  NEW_STATUS
 } from "c/fec_CommonConst";
-
+import { getUsernameBeforeAt } from "c/fec_CommonUtils";
 export default class Fec_AssignmentList extends LightningElement {
   label = {
     FEC_Assignment_List,
@@ -48,7 +51,7 @@ export default class Fec_AssignmentList extends LightningElement {
     FEC_Assignment_Id,
     FEC_Assignment_Status,
     FEC_Assignment_Owner,
-    FEC_Assignment_Remarks_History
+    FEC_Assignment_Remarks_History,
   };
 
   async connectedCallback() {
@@ -172,10 +175,15 @@ export default class Fec_AssignmentList extends LightningElement {
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_Assignment_Owner__r?.Username || "",
+        owner: item.FEC_Assignment_Owner__c?.startsWith("00G")
+          ? item.FEC_Assignment_Owner__r?.Name
+          : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "",
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
-        status: item.FEC_Assignment_Status__c,
+        status:
+          item.FEC_Assignment_Status__c === OPEN_STATUS
+            ? NEW_STATUS
+            : item.FEC_Assignment_Status__c,
 
         isOpen: false,
 
