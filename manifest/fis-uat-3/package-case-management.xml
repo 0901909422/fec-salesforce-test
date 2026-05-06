@@ -646,9 +646,7 @@
         <members>FEC_Assignment_Status</members>
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
-        <name>CustomLabel</name>
-    </types>
-    <types>
+        <members>FEC_Assignment_Remarks_History</members>
         <!-- Interaction Case Service Case -->
         <members>FEC_RelevantTicket_Cannot_Delete</members>
 		<name>CustomLabel</name>

@@ -118,9 +118,15 @@
                                                             </lightning-accordion>
                                                         </template>
                                                     </template>
-                                                    <c-fec_-assignment-remark-history-table record-id={recordId}
-                                                        assignment-id={item.id}>
-                                                    </c-fec_-assignment-remark-history-table>
+                                                    <div>
+                                                        <p class="slds-text-heading_small slds-m-bottom_small slds-bold">
+                                                            {label.FEC_Assignment_Remarks_History}
+                                                        </p>
+                                                        <c-fec_-assignment-remark-history-table record-id={recordId}
+                                                            assignment-id={item.id}>
+                                                        </c-fec_-assignment-remark-history-table>
+                                                    </div>
+
                                                 </div>
 
                                             </td>

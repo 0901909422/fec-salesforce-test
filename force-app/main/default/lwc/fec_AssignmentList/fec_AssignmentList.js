@@ -29,6 +29,8 @@ import FEC_Assignment_Id from "@salesforce/label/c.FEC_Assignment_Id";
 import FEC_Assignment_Status from "@salesforce/label/c.FEC_Assignment_Status";
 import FEC_Assignment_Owner from "@salesforce/label/c.FEC_Assignment_Owner";
 
+import FEC_Assignment_Remarks_History from "@salesforce/label/c.FEC_Assignment_Remarks_History";
+
 import {
   PAGE_SIZE_OPTIONS,
   ACTION_OPTIONS_CS_SUPPORT,
@@ -46,6 +48,7 @@ export default class Fec_AssignmentList extends LightningElement {
     FEC_Assignment_Id,
     FEC_Assignment_Status,
     FEC_Assignment_Owner,
+    FEC_Assignment_Remarks_History
   };
 
   async connectedCallback() {

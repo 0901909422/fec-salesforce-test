@@ -15012,4 +15012,12 @@
         <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
         <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
     </labels>
+<labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
+    </labels>
 </CustomLabels>
