@@ -13,7 +13,7 @@ public with sharing class FEC_CaseExecuteService {
         Id userId = UserInfo.getUserId();
         
         // 1. Check mode
-        if (c.FEC_Interaction_View_Mode__c != 'review') return false;
+        if (c.FEC_Interaction_View_Mode__c != FEC_ConstantCommon.INTERACTION_REVIEW_MODE) return false;
         
         // 2. Check closed
         if (c.IsClosed) return false;
@@ -22,7 +22,7 @@ public with sharing class FEC_CaseExecuteService {
         Boolean isQueueMember = false;
         
         // 3. Nếu owner là Queue
-        if (String.valueOf(c.OwnerId).startsWith('00G')) {
+        if (String.valueOf(c.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
             List<GroupMember> gm = [
                 SELECT Id
                 FROM GroupMember
@@ -48,8 +48,8 @@ public with sharing class FEC_CaseExecuteService {
         ];
         
         if (
-            u.Profile.Name == 'CS Support' ||
-            u.Profile.Name == 'CS Customer Care'
+            u.Profile.Name == FEC_ConstantCommon.TEAM_CS_SUPPORT ||
+            u.Profile.Name == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE
         ) {
             return true;
         }

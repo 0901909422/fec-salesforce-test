@@ -23,7 +23,7 @@ public with sharing class FEC_COFFraudRelatedHandler {
     String complaintSourceValue
     ) {
         if (String.isBlank(recordId)) {
-            throw new AuraHandledException('recordId is required');
+            throw new AuraHandledException(System.Label.LBL_CaseIdRequired);
         }
         
         Case cs = new Case(
@@ -35,7 +35,7 @@ public with sharing class FEC_COFFraudRelatedHandler {
         try {
             update cs;
         } catch (Exception e) {
-            throw new AuraHandledException('Update Case failed: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
     }
 }

@@ -17,12 +17,12 @@ public with sharing class FEC_AssignmentExecuteService {
             if (
                 a.FEC_Assignment_Owner__c == userId &&
                 !(
-                a.FEC_Assignment_Status__c == 'Completed' ||
-                a.FEC_Assignment_Status__c == 'Resolved-Completed' ||
-                a.FEC_Assignment_Status__c == 'Resolved-Rejected' ||
-                a.FEC_Assignment_Status__c == 'Resolved-Cancelled' ||
-                a.FEC_Assignment_Status__c == 'AutoRecalled' ||
-                a.FEC_Assignment_Status__c == 'AutoCompleted'
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.STATUS_COMPLETED ||
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED ||
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED ||
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED ||
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.ASSIGNMENT_AUTORECALLED_STATUS ||
+                a.FEC_Assignment_Status__c == FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS
                 )
             ) {
                 return true;
