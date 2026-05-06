@@ -15,6 +15,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
 
     /* ===================== DTO ===================== */
     public class SecondaryAccountDTO {
+        @AuraEnabled public Boolean isTestApi;
         @AuraEnabled public Map<String, String> helpTexts;
 
         /* ===== LIMIT ===== */
@@ -165,7 +166,7 @@ public without sharing class FEC_SecondaryInfoAccountController {
     private static SecondaryAccountDTO loadFromDb(Id caseId) {
 
         Case c = [
-            SELECT FEC_Account_or_Contract__c
+            SELECT FEC_Account_or_Contract__c,FEC_Is_Test_API__c
             FROM Case WHERE Id = :caseId LIMIT 1
         ];
 
@@ -194,7 +195,11 @@ public without sharing class FEC_SecondaryInfoAccountController {
             LIMIT 1
         ];
 
-        return mapToDTO(a);
+        SecondaryAccountDTO dto = mapToDTO(a);
+
+        dto.isTestApi = c.FEC_Is_Test_API__c;
+
+        return dto;
     }
 
     /* ===================== DTO MAPPER (DB ONLY) ===================== */
