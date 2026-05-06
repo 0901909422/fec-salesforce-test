@@ -12,7 +12,7 @@
  */
 public class FEC_ArchiveVerifyHttpService {
 
-    private static final String API_CREDENTIAL = 'callout:FECredit_Service';
+    private static final String API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
     private static final String PATH           = '/archival/dispatcher/api/v1/cases/archive-status';
     private static final Integer TIMEOUT_MS    = 30000;
 

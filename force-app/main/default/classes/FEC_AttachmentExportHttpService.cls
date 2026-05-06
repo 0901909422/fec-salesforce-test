@@ -22,7 +22,7 @@
  */
 public class FEC_AttachmentExportHttpService {
 
-    private static final String API_CREDENTIAL = 'callout:FECredit_Service';
+    private static final String API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
     private static final String UPLOAD_PATH    = '/archival/dispatcher/api/v1/attachments/upload';
     private static final String BATCH_PATH     = '/archival/dispatcher/api/v1/attachments/batch';
     private static final Integer TIMEOUT_MS    = 120000;

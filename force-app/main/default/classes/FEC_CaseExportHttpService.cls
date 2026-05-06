@@ -1,6 +1,6 @@
 public class FEC_CaseExportHttpService {
 
-    private static final String EXTERNAL_API_CREDENTIAL = 'callout:FECredit_Service';
+    private static final String EXTERNAL_API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
     private static final String CASES_PATH               = '/archival/dispatcher/api/v1/cases/ingest_archival';
     private static final Integer TIMEOUT_MS              = 60000;
 
