@@ -2232,11 +2232,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Allocation_History__c.FEC_Customer_History__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Allocation_History__c.FEC_DPD__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2253,11 +2248,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Collection_Interactions__c.FEC_Contacted_Person__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Collection_Interactions__c.FEC_Customer_History__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2328,11 +2318,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Communication_History__c.FEC_Communication_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Communication_History__c.FEC_Customer_History__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2418,11 +2403,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Fast_Cash_Info__c.FEC_Conversion_Fee__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Fast_Cash_Info__c.FEC_Customer_History__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

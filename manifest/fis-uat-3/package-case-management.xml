@@ -738,6 +738,60 @@
         <members>RD_IT_User_Master_Data_Management</members>
         <!-- Customer Data Management -->
         <members>FEC_Permission_Set_Customer_Data_Management</members>
+        <!-- Customer 360 -->
+        <members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Support_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Center_Director_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Manager_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Customer_360</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
+		<members>RD_IT_User_Customer_360</members>
+        <members>FEC_RD_Card_Operations_User_Customer_360</members>
+        <members>FEC_RD_Collections_User_Customer_360</members>
+        <members>FEC_RD_Contract_Processing_User_Customer_360</members>
+		<members>FEC_RD_Credit_Assessment_User_Customer_360</members>
+        <members>FEC_RD_Direct_Sales_User_Customer_360</members>
+        <members>FEC_RD_Internal_Audit_User_Customer_360</members>
+        <members>FEC_RD_Payment_User_Customer_360</members>
+        <members>FEC_RD_Telesales_User_1_Customer_360</members>
+        <members>FEC_RD_Telesales_User_2_Customer_360</members>
         <name>PermissionSet</name>
     </types>
     <version>66.0</version>
