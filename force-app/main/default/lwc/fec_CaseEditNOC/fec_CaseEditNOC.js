@@ -928,6 +928,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     // Publish lên CASE_NOC_Channel với bộ NOC mới (Updated NOC)
     const payload = {
+      caseId: this.recordId,
       productTypeId: this.productTypeSelectedId,
       categoryId: this.updatedCategoryId,
       subCategoryId: this.updatedSubCategoryId,

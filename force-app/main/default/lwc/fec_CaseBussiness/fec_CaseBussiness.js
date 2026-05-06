@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
@@ -1192,6 +1193,9 @@ export default class Fec_CaseBussiness extends LightningElement {
    */
   _handleCaseNOCMessage(message) {
     if (!message) return;
+
+    // Chỉ xử lý message dành cho case này, tránh cross-tab interference
+    if (message.caseId != null && message.caseId !== this.recordId) return;
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
       // Existing behavior: account type change — không xử lý ở đây
