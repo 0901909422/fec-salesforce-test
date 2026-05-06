@@ -25,6 +25,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  // tungnm37 thêm: COF/GSR route string constant
+  public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
   /**
    * Case sẽ có Routing Action History do logic nghiệp vụ (không dùng bản tự động từ trigger khi đổi Owner).
@@ -71,7 +73,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD,
     UNBLOCK_CARD,
     PIN_REISSUE,
-    REPLACE_CARD
+    REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
+    ROUTE_TO_COF_GSR
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -96,7 +100,9 @@ public without sharing class FEC_CaseBusinessService {
     BLOCK_CARD => Method.BLOCK_CARD,
     UNBLOCK_CARD => Method.UNBLOCK_CARD,
     PIN_REISSUE => Method.PIN_REISSUE,
-    REPLACE_CARD => Method.REPLACE_CARD
+    REPLACE_CARD => Method.REPLACE_CARD,
+    // tungnm37 thêm: COF/GSR route - không đổi owner
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
   };
 
   @AuraEnabled
@@ -272,6 +278,17 @@ public without sharing class FEC_CaseBusinessService {
         if (isRevert) {
           revertHistory = historylst.get(0);
         }
+      }
+
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+      result.lockApiLwcsAfterRevertToDefaultStage = false;
+      if (!historylst.isEmpty() && REVERT.equals(historylst.get(0).FEC_Routing_Action__c)) {
+        FEC_Routing_Action_History__c hRevert = historylst.get(0);
+        result.lockApiLwcsAfterRevertToDefaultStage =
+          hRevert.FEC_Next_Stage__c != null &&
+          hRevert.FEC_Next_Stage__c == selectedCase.FEC_Current_Case_Stage__c &&
+          hRevert.FEC_Next_Stage__r != null &&
+          hRevert.FEC_Next_Stage__r.FEC_Default_Stage__c == true;
       }
 
       //thangtv
@@ -801,9 +818,14 @@ public without sharing class FEC_CaseBusinessService {
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
+      // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
+      result.customerType = selectedCase.FEC_Customer_Type__c;
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
+          FEC_CaseTriggerHandler.isSystemUpdate = true;
           update selectedCase;
         } catch (DmlException e) {
           // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
@@ -933,7 +955,8 @@ public without sharing class FEC_CaseBusinessService {
    * Nhãn cho FEC_Original_User_Queue__c / FEC_Updated_User_Queue__c:
    * Owner là User → phần email trước @; Owner là Queue → Name queue.
    */
-  private static String emailLocalPart(String email) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String emailLocalPart(String email) {
     if (String.isBlank(email)) {
       return null;
     }
@@ -941,7 +964,8 @@ public without sharing class FEC_CaseBusinessService {
     return parts.isEmpty() ? email.trim() : parts[0].trim();
   }
 
-  private static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static String resolveRoutingHistoryOwnerLabel(Id ownerId, String fallbackName) {
     if (ownerId == null) {
       return fallbackName;
     }
@@ -1494,7 +1518,8 @@ public without sharing class FEC_CaseBusinessService {
   }
 
 
-  private static void markCaseSubmittedAndClearDrafts(String caseId) {
+  // tungnm37: đổi thành public để FEC_CofGsrAssignmentService gọi được
+  public static void markCaseSubmittedAndClearDrafts(String caseId) {
     if (String.isBlank(caseId))
       return;
     List<Case> caselst = [
@@ -1521,6 +1546,32 @@ public without sharing class FEC_CaseBusinessService {
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
     markCaseSubmittedAndClearDrafts(caseId);
+  }
+//PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  @AuraEnabled
+  public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    markCaseSubmittedAndClearDrafts(caseId);
+    createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+  }
+  //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+  /**
+   * Tạo bản ghi FEC_Case_Flow_History__c khi Case được submit lần đầu (creation stage).
+   * Chỉ tạo khi Case chưa submit (FEC_Is_Submited__c = false trước khi gọi).
+   */
+  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    if (String.isBlank(caseId)) return;
+    try {
+      FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
+        FEC_Case__c = caseId,
+        FEC_Field_List__c = fieldListJson
+      );
+      if (String.isNotBlank(natureOfCaseId)) {
+        history.FEC_Nature_of_Cases__c = natureOfCaseId;
+      }
+      insert history;
+    } catch (Exception e) {
+      System.debug('createCaseFlowHistory error: ' + e.getMessage());
+    }
   }
 
   @AuraEnabled
@@ -1569,12 +1620,26 @@ public without sharing class FEC_CaseBusinessService {
           String queueId = (String) params.get('queueId');
           String natureOfCaseId = (String) params.get('natureOfCaseId');
           String actionId = (String) params.get('actionId');
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          String fieldListJson = (String) params.get('fieldListJson');
           if (String.isBlank(queueId)) {
             throw new AuraHandledException(System.Label.FEC_MSG_Can_Not_Find_Next_Stage);
           }
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          // Kiểm tra creation stage trước khi mark submitted
+          Boolean isCreationStage = !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
           markCaseSubmittedAndClearDrafts(caseId);
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          if (isCreationStage) {
+            createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+          }
           route(caseId, queueId, natureOfCaseId, actionId, finalStatusBeforeSubmit);
           return null;
+        }
+        // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
+        when ROUTE_TO_COF_GSR {
+          // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
+          return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
         when REVERT {
           String revertActionId = (String) params.get('actionId');
@@ -1989,6 +2054,17 @@ public without sharing class FEC_CaseBusinessService {
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
       );
+
+      // tungnm37 thêm: tạo Assignment + Case Remarks khi Route to
+      // Bỏ qua khi nextTeam = CC hoặc SP (luồng Manual, user tự thêm qua nút Add Item)
+      String nextTeamForAssignment = selectedChange != null
+        ? [SELECT FEC_Team_User_Group__c FROM FEC_Stage_Change__c WHERE Id = :selectedChange.Id LIMIT 1]?.FEC_Team_User_Group__c
+        : null;
+      Boolean isManualTeam = ('CC'.equals(nextTeamForAssignment) || 'SP'.equals(nextTeamForAssignment));
+      if (!isManualTeam) {
+        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+        FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
+      }
 
       registerSkipOwnerChangeRoutingHistory(updatedCase.Id);
       // Trigger sau insert history đã cập nhật FEC_Team__c / Status — merge để không ghi đè
@@ -3218,13 +3294,26 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String lastUser;
-    
+
     @AuraEnabled
     //thangtv
     public String lastUserForRouteToLabel;
 
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+    /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
+    @AuraEnabled
+    public Boolean lockApiLwcsAfterRevertToDefaultStage;
+
     @AuraEnabled
     public String draftRoutingActionCode;
+
+    // tungnm37 thêm: isSubmited - để LWC biết Case đã Submit chưa (dùng cho showManualAddItem Stage 2)
+    @AuraEnabled
+    public Boolean isSubmited;
+
+    // tungnm37 thêm: customerType - để LWC fec_RoutingAssignment query đúng theo Customer Type
+    @AuraEnabled
+    public String customerType;
 
     @AuraEnabled
     public String code;
@@ -4099,6 +4188,18 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled(cacheable=true)
+  public static List<Map<String, String>> getTeamQueueOptions() {
+    return FEC_CofGsrAssignmentService.getTeamQueueOptions();
+  }
+
+  // tungnm37: delegate sang FEC_CofGsrAssignmentService
+  @AuraEnabled
+  public static List<Map<String, String>> getRoutingAssignments(String natureOfCaseId, String customerType) {
+    return FEC_CofGsrAssignmentService.getRoutingAssignments(natureOfCaseId, customerType);
+  }
+
   @AuraEnabled(cacheable=true)
   public static List<User> getTransferUsers(String caseId) {
     Id currentUserId = UserInfo.getUserId();
@@ -4217,53 +4318,10 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    Set<Id> allAssociatedIds = new Set<Id>{ userId };
+    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
 
-    // BƯỚC 1: Thu thập tất cả ID đại diện cho User (User ID, Role, Public Groups, v.v.)
-    if (roleId != null) {
-        Set<Id> roleIds = new Set<Id>{ roleId };
-        Map<Id, Id> roleToParentMap = new Map<Id, Id>();
-        
-        // Lấy toàn bộ cấu trúc Role để tìm Parent Roles
-        for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole]) {
-            roleToParentMap.put(ur.Id, ur.ParentRoleId);
-        }
-        
-        // Duyệt ngược lên để lấy toàn bộ Parent Roles
-        Id currentRoleId = roleId;
-        while (roleToParentMap.get(currentRoleId) != null) {
-            currentRoleId = roleToParentMap.get(currentRoleId);
-            roleIds.add(currentRoleId);
-        }
-
-        // Gộp query lấy Group của Role và RoleAndSubordinates làm 1
-        for (Group g : [
-            SELECT Id, Type, RelatedId 
-            FROM Group 
-            WHERE RelatedId IN :roleIds AND Type IN ('Role', 'RoleAndSubordinates')
-        ]) {
-            if (g.Type == 'RoleAndSubordinates' || (g.Type == 'Role' && g.RelatedId == roleId)) {
-                allAssociatedIds.add(g.Id);
-            }
-        }
-    }
-
-    // Quét các Public Groups lồng nhau (Nested Public Groups)
-    Integer previousSize;
-    do {
-        previousSize = allAssociatedIds.size();
-        for (GroupMember gm : [
-            SELECT GroupId 
-            FROM GroupMember 
-            WHERE UserOrGroupId IN :allAssociatedIds AND Group.Type = 'Regular'
-        ]) {
-            allAssociatedIds.add(gm.GroupId);
-        }
-    } while (allAssociatedIds.size() > previousSize);
-
-    // BƯỚC 2: Lấy Tên (Name) của các Queue này để map sang Custom Object
-    List<Group> userQueues = [
-        SELECT Name, DeveloperName  
+    return [
+        SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
         AND Id IN (
@@ -4273,54 +4331,6 @@ public without sharing class FEC_CaseBusinessService {
         )
     ];
 
-    Set<String> currentQueueNames = new Set<String>();
-    for (Group g : userQueues) {
-        currentQueueNames.add(g.DeveloperName);
-    }
-
-    if (currentQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
-    List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT FEC_Name__c 
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Queue_Name__c IN :currentQueueNames
-    ];
-
-    Set<String> teamNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.FEC_Name__c);
-    }
-
-    if (teamNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 4: Lấy danh sách Tên Queue (FEC_Queue_Name__c) thuộc các Team Name tìm được
-    List<FEC_Team_Queue__c> allQueuesInTeam = [
-        SELECT FEC_Queue_Name__c
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Name__c IN :teamNames
-    ];
-
-    Set<String> targetQueueNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : allQueuesInTeam) {
-        targetQueueNames.add(tq.FEC_Queue_Name__c);
-    }
-
-    if (targetQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 5: Query bảng Group để trả về Id và Name thật của Queue
-    return [
-        SELECT Id, Name, DeveloperName
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
-        ORDER BY Name ASC
-    ];
 }
 
   private static Section buildAccountInfor(Case c) {

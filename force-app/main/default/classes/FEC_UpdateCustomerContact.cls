@@ -343,46 +343,63 @@ public with sharing class FEC_UpdateCustomerContact {
     }
 
     Case selectedCase = caselst.get(0);
-    CustomerContactRequest req = new CustomerContactRequest();
-    if (selectedCase.FEC_Account_or_Contract__r != null) {
-      req.CIFNumber = selectedCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c;
-    } else {
-      throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Customer History'}));
-    }
-
-    List<FEC_Contact_List__c> contactlst = getMatchingContactList(
-      selectedCase,
-      method
-    );
-
-    if (!contactlst.isEmpty()) {
-      FEC_Contact_List__c matched = contactlst.get(0);
-      req.ContactId = matched.FEC_Contact_ID__c;
-      req.Channel = selectedCase.FEC_Channel__c;
-      req.CommunicationType = PHONE_UPDATE.equals(method)
-        ? FEC_ConstantCommon.PHONE
-        : FEC_ConstantCommon.EMAIL;
-      req.ContactString = matched.FEC_Contact_String__c;
-    } else {
-      throw new FEC_APIServiceException(
-        String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Matching FEC_Contact_List__c'})
-      );
-    }
-
     UpdateContactResult result;
     try {
-      result = updateCustomerContact(req);
-    } finally {
-      logApiResponse();
-    }
+      CustomerContactRequest req = new CustomerContactRequest();
+      if (selectedCase.FEC_Account_or_Contract__r != null) {
+        req.CIFNumber = selectedCase.FEC_Account_or_Contract__r.FEC_CIF_Number__c;
+      } else {
+        throw new FEC_APIServiceException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Customer History'}));
+      }
 
-    if (result.success) {
-      selectedCase.FEC_Process_Action_Count__c = -1;
-    } else {
+      List<FEC_Contact_List__c> contactlst = getMatchingContactList(
+        selectedCase,
+        method
+      );
+
+      if (!contactlst.isEmpty()) {
+        FEC_Contact_List__c matched = contactlst.get(0);
+        req.ContactId = matched.FEC_Contact_ID__c;
+        req.Channel = selectedCase.FEC_Channel__c;
+        req.CommunicationType = PHONE_UPDATE.equals(method)
+          ? FEC_ConstantCommon.PHONE
+          : FEC_ConstantCommon.EMAIL;
+        req.ContactString = matched.FEC_Contact_String__c;
+      } else {
+        throw new FEC_APIServiceException(
+          String.format(System.Label.FEC_MSG_Not_Found, new List<String>{'Matching FEC_Contact_List__c'})
+        );
+      }
+
+      try {
+        result = updateCustomerContact(req);
+      } finally {
+        logApiResponse();
+      }
+
+      if (result.success) {
+        selectedCase.FEC_Process_Action_Count__c = -1;
+      } else {
+        if (selectedCase.FEC_Process_Action_Count__c == null) {
+          selectedCase.FEC_Process_Action_Count__c = 0;
+        }
+        selectedCase.FEC_Process_Action_Count__c += 1;
+      }
+    } catch (Exception ex) {
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;
       }
       selectedCase.FEC_Process_Action_Count__c += 1;
+      update selectedCase;
+      FEC_CommonUltils.createProcessActionHistory(
+        method,
+        selectedCase,
+        false
+      );
+      if (ex instanceof FEC_APIServiceException) {
+        throw (FEC_APIServiceException) ex;
+      }
+      throw ex;
     }
 
     update selectedCase;

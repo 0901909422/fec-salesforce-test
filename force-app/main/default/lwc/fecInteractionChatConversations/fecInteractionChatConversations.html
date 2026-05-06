@@ -1,0 +1,23 @@
+<template>
+  <div class="slds-tabs_card">
+    <lightning-accordion class="fec-chat-conversations" allow-multiple-sections-open
+      active-section-name={activeSections}>
+      <lightning-accordion-section name="conversations" label={labels.conversations}>
+        <div class="slds-var-p-horizontal_medium slds-var-p-vertical_small">
+          <div class="fec-conv-field">
+            <label class="fec-conv-label">{labels.chatHistory}</label>
+            <textarea class="fec-conv-textarea"
+              onchange={handleChange}
+              disabled={isReview}></textarea>
+          </div>
+          <template if:false={isReview}>
+            <div class="slds-var-m-top_small">
+              <lightning-button label={labels.save} variant="brand"
+                onclick={handleSave}></lightning-button>
+            </div>
+          </template>
+        </div>
+      </lightning-accordion-section>
+    </lightning-accordion>
+  </div>
+</template>

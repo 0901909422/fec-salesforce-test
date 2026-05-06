@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_UW_Complaint_Issue_3__c</fullName>
+    <description>Vấn đề khiếu nại UW (3)</description>
+    <label>UW Complaint Issue 3</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Các loại phí, lãi phát sinh</fullName>
+                <default>false</default>
+                <label>Các loại phí, lãi phát sinh</label>
+            </value>
+            <value>
+                <fullName>Chương trình khuyến mãi</fullName>
+                <default>false</default>
+                <label>Chương trình khuyến mãi</label>
+            </value>
+            <value>
+                <fullName>Dư nợ thẻ</fullName>
+                <default>false</default>
+                <label>Dư nợ thẻ</label>
+            </value>
+            <value>
+                <fullName>Hình thức thanh toán</fullName>
+                <default>false</default>
+                <label>Hình thức thanh toán</label>
+            </value>
+            <value>
+                <fullName>Kết quả xử lý yêu cầu/ khiếu nại</fullName>
+                <default>false</default>
+                <label>Kết quả xử lý yêu cầu/ khiếu nại</label>
+            </value>
+            <value>
+                <fullName>Số tiền kỳ góp</fullName>
+                <default>false</default>
+                <label>Số tiền kỳ góp</label>
+            </value>
+            <value>
+                <fullName>Số tiền sao kê</fullName>
+                <default>false</default>
+                <label>Số tiền sao kê</label>
+            </value>
+            <value>
+                <fullName>Số tiền tất toán</fullName>
+                <default>false</default>
+                <label>Số tiền tất toán</label>
+            </value>
+            <value>
+                <fullName>Thời hạn thanh toán</fullName>
+                <default>false</default>
+                <label>Thời hạn thanh toán</label>
+            </value>
+            <value>
+                <fullName>Thông tin về TMN</fullName>
+                <default>false</default>
+                <label>Thông tin về TMN</label>
+            </value>
+            <value>
+                <fullName>Thủ tục giấy tờ</fullName>
+                <default>false</default>
+                <label>Thủ tục giấy tờ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
