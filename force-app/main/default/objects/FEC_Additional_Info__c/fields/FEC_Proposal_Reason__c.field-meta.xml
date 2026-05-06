@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Proposal_Reason__c</fullName>
+    <description>Lý do đề xuất</description>
+    <label>Proposal Reason</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Lỗi nhân viên</fullName>
+                <default>false</default>
+                <label>Lỗi nhân viên</label>
+            </value>
+            <value>
+                <fullName>Lỗi hệ thống</fullName>
+                <default>false</default>
+                <label>Lỗi hệ thống</label>
+            </value>
+            <value>
+                <fullName>Lỗi khách hàng</fullName>
+                <default>false</default>
+                <label>Lỗi khách hàng</label>
+            </value>
+            <value>
+                <fullName>Gian lận</fullName>
+                <default>false</default>
+                <label>Gian lận</label>
+            </value>
+            <value>
+                <fullName>EMI chênh lệch</fullName>
+                <default>false</default>
+                <label>EMI chênh lệch</label>
+            </value>
+            <value>
+                <fullName>High risk/ Phê duyệt xử lý</fullName>
+                <default>false</default>
+                <label>High risk/ Phê duyệt xử lý</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

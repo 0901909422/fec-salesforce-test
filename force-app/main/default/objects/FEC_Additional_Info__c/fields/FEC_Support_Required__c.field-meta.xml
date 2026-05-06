@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Support_Required__c</fullName>
+    <description>Hỗ trợ cần thiết từ phía xử lý</description>
+    <label>Support Required</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Số tiền thanh toán HĐ (TLHĐ/ NQH...)</fullName>
+                <default>false</default>
+                <label>Số tiền thanh toán HĐ (TLHĐ/ NQH...)</label>
+            </value>
+            <value>
+                <fullName>Không có thông tin HĐ để thanh toán</fullName>
+                <default>false</default>
+                <label>Không có thông tin HĐ để thanh toán</label>
+            </value>
+            <value>
+                <fullName>HĐ đã đóng chưa thanh toán đủ</fullName>
+                <default>false</default>
+                <label>HĐ đã đóng chưa thanh toán đủ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

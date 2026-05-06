@@ -247,6 +247,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
 
+    // tungnm37 thêm: UpdateDisbursementStatus log constants
+    public static final String DISB_LOG_CRMID    = 'CRMID=';
+    public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
+    public static final String DISB_LOG_RESPONSE = ' Response=';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
