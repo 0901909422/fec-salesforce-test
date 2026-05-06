@@ -21,7 +21,7 @@ import {
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
 
 import FEC_Assignment_List from "@salesforce/label/c.FEC_Assignment_List";
 import FEC_Assignment_Routing_Action from "@salesforce/label/c.FEC_Assignment_Routing_Action";
@@ -100,7 +100,11 @@ export default class Fec_AssignmentList extends LightningElement {
   handleModeMessage(message) {
     console.log("MODE MESSAGE:", message);
 
-    this.modeEditCase = message?.isModeEdit;
+    if (message?.caseId !== this.recordId) {
+      return;
+    }
+
+    this.modeEditCase = message?.isEditMode;
 
     // 👇 force UI update nếu cần
     this.refreshReadonlyState();
@@ -454,7 +458,8 @@ export default class Fec_AssignmentList extends LightningElement {
   async handlePublishMode(isEdit) {
     if (this.messageContext == null) return;
     const payload = {
-      isModeEdit: Boolean(isEdit),
+      caseId: this.recordId,
+      isEditMode: Boolean(isEdit),
     };
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }

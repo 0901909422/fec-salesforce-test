@@ -468,6 +468,7 @@
 		<members>fec_AssignmentExecuteVisibility</members>
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_COFFraudRelatedView</members>
+        <members>fec_AssignmentExecuteAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -767,7 +768,7 @@
     </types>
 
 	<types>
-        <members>Case.Execute_Assigment</members>
+        <members>Case.FEC_Execute_Assigment</members>
         <name>QuickAction</name>
     </types>
     
