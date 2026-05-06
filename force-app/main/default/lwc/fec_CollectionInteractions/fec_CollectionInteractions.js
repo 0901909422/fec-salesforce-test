@@ -27,6 +27,19 @@ const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
 
 const SECTION_LABEL = 'Collection Interactions';
 
+/** Apex → LWC có thể camelCase; API gốc có key InteractionHistory (map trong Apex sang CollectionInteractions). */
+function interactionsListFromResponse(response) {
+    if (!response || typeof response !== 'object') {
+        return [];
+    }
+    const raw =
+        response.CollectionInteractions ??
+        response.collectionInteractions ??
+        response.InteractionHistory ??
+        response.interactionHistory;
+    return Array.isArray(raw) ? raw : [];
+}
+
 /** Mẫu để test UI (bật Preview trên App Builder) */
 const PREVIEW_INTERACTIONS = [
     {
@@ -92,7 +105,6 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (this.previewSampleData) {
             this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
             this.isLoading = false;
-            this.isExpanded = true;
             return;
         }
         this._subscription = subscribe(
@@ -118,7 +130,6 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (this.previewSampleData) {
             this.interactions = PREVIEW_INTERACTIONS.map((r) => ({ ...r }));
             this.isLoading = false;
-            this.isExpanded = true;
             return;
         }
         if (data) {
@@ -147,7 +158,6 @@ export default class Fec_CollectionInteractions extends LightningElement {
                 this.interactions = null;
                 return;
             }
-
             const response = this._startDate && this._endDate
                 ? await fetchCollectionDataWithDates({
                     contractNumber: this._contractNumber,
@@ -163,22 +173,19 @@ export default class Fec_CollectionInteractions extends LightningElement {
             if (!response || response.Success === false) {
                 this.interactions = null;
             } else {
-                const list = response.CollectionInteractions;
                 // Nếu Success = true, luôn set array (rỗng nếu không có data)
-                this.interactions = Array.isArray(list) ? list : [];
+                this.interactions = interactionsListFromResponse(response);
             }
         } catch (e) {
             this.interactions = null;
         } finally {
             this.isLoading = false;
-            if (this._hasApplied) {
-                this.isExpanded = Array.isArray(this.interactions);
-            }
+            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions) && this.interactions.length > 0;
         }
     }
 
     get showCollapsed() {
-        return !this.isLoading && !this._hasApplied && !this.previewSampleData;
+        return !this.isLoading && !this._hasApplied;
     }
 
     get showErrorBanner() {
@@ -186,11 +193,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
     }
 
     get showDataSection() {
-        return (
-            !this.isLoading &&
-            Array.isArray(this.interactions) &&
-            (this._hasApplied || this.previewSampleData)
-        );
+        return !this.isLoading && this._hasApplied && Array.isArray(this.interactions);
     }
 
     /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
@@ -217,7 +220,7 @@ export default class Fec_CollectionInteractions extends LightningElement {
     }
 
     get sectionClass() {
-        return `slds-accordion__section${this.isExpanded ? ' slds-is-open' : ''}`;
+        return this.isExpanded ? 'slds-accordion__section slds-is-open' : 'slds-accordion__section';
     }
 
     get iconName() {
