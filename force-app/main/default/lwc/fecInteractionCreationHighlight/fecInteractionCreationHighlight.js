@@ -133,6 +133,10 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get isNotRelevantDepts() {
+    return this._userProfile !== PROFILE_RELEVANT_DEPTS;
+  }
+
   // ===============================
   // GETTERS
   // ===============================
@@ -145,11 +149,11 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   }
 
   get updatedBy() {
-    return this.record?.FEC_Last_Updated_By__c || "";
+    return this.record?.FEC_Last_Updated_By_View__c || "";
   }
 
   get lastUpdated() {
-    const value = this.record?.FEC_Last_Updated_On__c;
+    const value = this.record?.FEC_Last_Updated_On_View__c;
     if (!value) return "";
 
     return formatDateTime(value);

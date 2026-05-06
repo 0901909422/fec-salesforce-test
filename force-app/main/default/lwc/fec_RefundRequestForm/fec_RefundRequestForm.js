@@ -18,6 +18,7 @@ import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payme
 import FEC_MSG_Refund_Request_Refund_Amount_Positive from '@salesforce/label/c.FEC_MSG_Refund_Request_Refund_Amount_Positive';
 import FEC_MSG_Refund_Request_Receipt_Amount_Positive from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Amount_Positive';
 import FEC_MSG_Refund_Request_Receipt_Date_Future from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Date_Future';
+import FEC_MSG_Refund_Request_Receipt_Lines_Required from '@salesforce/label/c.FEC_MSG_Refund_Request_Receipt_Lines_Required';
 import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Save_Success from '@salesforce/label/c.FEC_Toast_Save_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
@@ -415,9 +416,12 @@ export default class Fec_RefundRequestForm extends LightningElement {
         });
 
         if (!ok && showToastOnFail) {
+            const toastMsg = !this.hasReceiptRows
+                ? FEC_MSG_Refund_Request_Receipt_Lines_Required
+                : FEC_Complete_This_Field;
             this.dispatchEvent(new ShowToastEvent({
                 title: FEC_Toast_Validation_Title,
-                message: FEC_Complete_This_Field,
+                message: toastMsg,
                 variant: CONST.VARIANT_WARNING
             }));
         }
@@ -427,9 +431,6 @@ export default class Fec_RefundRequestForm extends LightningElement {
     @api
     validateForSubmit() {
         if (this.isReadOnly) {
-            return true;
-        }
-        if (!this._shouldRunRefundSave(false)) {
             return true;
         }
         return this._performClientSaveValidation(true);

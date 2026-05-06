@@ -5,6 +5,8 @@ public without sharing class FEC_ContractClosureController {
     public static final String MSG_NOTI_03 = System.Label.FEC_Interaction_Email_Invalid_Msg;
     public static final String MSG_NOTI_16 = System.Label.FEC_MSG_ContractClosure_Phone_Invalid;
     public static final String MSG_ADDRESS_REQUIRED = System.Label.FEC_MSG_ContractClosure_Address_Required;
+    public static final String MSG_TEMP_EMAIL_REQUIRED = System.Label.FEC_Complete_This_Field;
+    public static final String MSG_ADDRESS_ROW_EMPTY = System.Label.FEC_MSG_ContractClosure_Address_Row_Empty;
 
     private static final String OBJ_CASE = 'Case';
     private static final String OBJ_ADDRESS = 'FEC_Address_Info__c';
@@ -29,7 +31,10 @@ public without sharing class FEC_ContractClosureController {
         'FEC_Cash24_Contract_Text__c'
     };
 
-    private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_Ward__c', 'FEC_Province__c' };
+    private static final Set<String> ADMIN_UNIT_OBJECTS = new Set<String>{ 'FEC_District__c', 'FEC_Province__c' };
+    private static final String COUNTRY_CODE_VN = '2';
+    private static Id countryIdVnCache;
+    private static String caseSelectedAddressFieldApiCache;
 
     private static final Pattern EMAIL_PAT = Pattern.compile(FEC_ConstantCommon.PATTERN_EMAIL);
 
@@ -47,6 +52,13 @@ public without sharing class FEC_ContractClosureController {
         @AuraEnabled public String addressType;
         @AuraEnabled public String address;
         @AuraEnabled public String mailingAddressLabel;
+        @AuraEnabled public String building;
+        @AuraEnabled public String streetNumber;
+        @AuraEnabled public String street;
+        @AuraEnabled public String wardRecordId;
+        @AuraEnabled public String provinceRecordId;
+        @AuraEnabled public String wardLabel;
+        @AuraEnabled public String provinceLabel;
     }
 
     public class InitDataDTO {
@@ -62,6 +74,7 @@ public without sharing class FEC_ContractClosureController {
         @AuraEnabled public String savedDeliveryOption;
         @AuraEnabled public String savedRecipientName;
         @AuraEnabled public String savedRecipientPhone;
+        @AuraEnabled public String savedSelectedAddressId;
         @AuraEnabled public String savedTemporaryEmail;
         @AuraEnabled public Id additionalInfoId;
         @AuraEnabled public String savedVerifyInformation;
@@ -132,62 +145,75 @@ public without sharing class FEC_ContractClosureController {
         }
         try {
             Map<String, Schema.SObjectField> caseFields = Schema.SObjectType.Case.fields.getMap();
-            List<String> selectParts = new List<String>{
-                'Id',
-                'FEC_Account_or_Contract__c',
-                'FEC_Account_or_Contract__r.FEC_Email__c',
-                'FEC_Account_or_Contract__r.FEC_Customer_Name__c',
-                'FEC_Account_or_Contract__r.FEC_Primary_Phone__c'
-            };
-            if (caseFields.containsKey(flc(FLD_DELIVERY))) {
-                selectParts.add(FLD_DELIVERY);
-            }
-            if (caseFields.containsKey(flc(FLD_RECIPIENT_NAME))) {
-                selectParts.add(FLD_RECIPIENT_NAME);
-            }
-            if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
-                selectParts.add(FLD_RECIPIENT_PHONE);
-            }
-            if (caseFields.containsKey(flc(FLD_CASE_CHANNEL))) {
-                selectParts.add(FLD_CASE_CHANNEL);
-            }
-            String soql =
-                'SELECT ' +
-                String.join(selectParts, ',') +
-                ' FROM Case WHERE Id = :caseId LIMIT 1';
-            List<SObject> rows = Database.query(soql);
+            List<Case> rows = [
+                SELECT Id,
+                    FEC_Account_or_Contract__c,
+                    FEC_Account_or_Contract__r.Id,
+                    FEC_Account_or_Contract__r.FEC_Email__c,
+                    FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+                    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
+                    FEC_Delivery_Option_2__c,
+                    FEC_Recipient_Name__c,
+                    FEC_Recipient_Phone_Number__c,
+                    FEC_Channel__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
             if (rows.isEmpty()) {
                 out.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
                 return out;
             }
-            SObject c = rows[0];
-            Id histId = (Id) c.get('FEC_Account_or_Contract__c');
-            SObject hist = c.getSObject('FEC_Account_or_Contract__r');
+            Case c = rows[0];
+            Id histId = c.FEC_Account_or_Contract__c;
+            FEC_Customer_History__c hist = c.FEC_Account_or_Contract__r;
             if (hist != null) {
-                out.demographicEmail = (String) hist.get('FEC_Email__c');
-                out.demographicCustomerName = (String) hist.get('FEC_Customer_Name__c');
-                out.demographicPrimaryPhone = (String) hist.get('FEC_Primary_Phone__c');
+                out.demographicEmail = hist.FEC_Email__c;
+                out.demographicCustomerName = hist.FEC_Customer_Name__c;
+                out.demographicPrimaryPhone = hist.FEC_Primary_Phone__c;
             }
             if (histId != null) {
                 if (
                     Schema.sObjectType.FEC_Address_Info__c.isAccessible() &&
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address_Type__c.isAccessible() &&
-                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Address__c.isAccessible() &&
+                    Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Full_Address__c.isAccessible() &&
                     Schema.SObjectType.FEC_Address_Info__c.fields.FEC_Mailing_Address__c.isAccessible()
                 ) {
                     for (FEC_Address_Info__c a : [
-                        SELECT Id, FEC_Address_Type__c, FEC_Address__c, FEC_Mailing_Address__c
+                        SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c, FEC_Case__c,
+                            FEC_Building__c, FEC_Number__c, FEC_Street__c,
+                            FEC_Ward__c, FEC_Ward__r.FEC_Name_VN__c, FEC_Ward_Text__c,
+                            FEC_Province__c, FEC_Province__r.FEC_Name_VN__c, FEC_Province_Text__c
                         FROM FEC_Address_Info__c
                         WHERE FEC_Customer_History__c = :histId
                         ORDER BY FEC_Address_Type__c
                     ]) {
+                        if (
+                            a.FEC_Address_Type__c == FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY &&
+                            a.FEC_Case__c != caseId
+                        ) {
+                            continue;
+                        }
                         AddressRowDTO row = new AddressRowDTO();
                         row.id = a.Id;
                         row.addressType = a.FEC_Address_Type__c;
-                        row.address = a.FEC_Address__c;
+                        String wardLabel = String.isNotBlank(a.FEC_Ward_Text__c)
+                            ? a.FEC_Ward_Text__c
+                            : (a.FEC_Ward__r == null ? null : a.FEC_Ward__r.FEC_Name_VN__c);
+                        String provinceLabel = String.isNotBlank(a.FEC_Province_Text__c)
+                            ? a.FEC_Province_Text__c
+                            : (a.FEC_Province__r == null ? null : a.FEC_Province__r.FEC_Name_VN__c);
+                        row.address = a.FEC_Full_Address__c;
                         row.mailingAddressLabel = a.FEC_Mailing_Address__c == null
                             ? FEC_ConstantCommon.STR_EMPTY
                             : String.valueOf(a.FEC_Mailing_Address__c);
+                        row.building = a.FEC_Building__c;
+                        row.streetNumber = a.FEC_Number__c;
+                        row.street = a.FEC_Street__c;
+                        row.wardRecordId = a.FEC_Ward__c == null ? null : String.valueOf(a.FEC_Ward__c);
+                        row.provinceRecordId = a.FEC_Province__c == null ? null : String.valueOf(a.FEC_Province__c);
+                        row.wardLabel = wardLabel;
+                        row.provinceLabel = provinceLabel;
                         out.addresses.add(row);
                     }
                 }
@@ -210,7 +236,17 @@ public without sharing class FEC_ContractClosureController {
             if (caseFields.containsKey(flc(FLD_RECIPIENT_PHONE))) {
                 out.savedRecipientPhone = (String) c.get(FLD_RECIPIENT_PHONE);
             }
-            out.savedTemporaryEmail = loadTemporaryEmailFromContactList((Case) c);
+            String selectedAddressApi = resolveCaseSelectedAddressFieldApi();
+            if (String.isNotBlank(selectedAddressApi) && caseFields.containsKey(flc(selectedAddressApi))) {
+                List<SObject> selectedRows = Database.query(
+                    'SELECT ' + selectedAddressApi + ' FROM Case WHERE Id = :caseId LIMIT 1'
+                );
+                if (!selectedRows.isEmpty()) {
+                    Object selectedAddressVal = selectedRows[0].get(selectedAddressApi);
+                    out.savedSelectedAddressId = selectedAddressVal == null ? null : String.valueOf(selectedAddressVal);
+                }
+            }
+            out.savedTemporaryEmail = loadTemporaryEmailFromContactList(c);
             out.verifyInformationOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_VERIFY);
             out.callbackOptions = describePicklist(OBJ_ADDITIONAL_INFO, FLD_AI_CALLBACK);
             if (Schema.sObjectType.FEC_Additional_Info__c.isAccessible()) {
@@ -249,7 +285,7 @@ public without sharing class FEC_ContractClosureController {
     public static ValidationResultDTO validateForComplete(Id caseId, String payloadJson) {
         InitDataDTO init = getInitData(caseId);
         SavePayloadDTO p = parsePayload(payloadJson);
-        return runValidation(init, p, true);
+        return runValidation(init, p, true, true);
     }
 
     @AuraEnabled
@@ -261,36 +297,31 @@ public without sharing class FEC_ContractClosureController {
             return vr;
         }
         SavePayloadDTO p = parsePayload(payloadJson);
-        vr = runValidation(init, p, false);
+        vr = runValidation(init, p, false, true);
         if (!vr.valid) {
             return vr;
         }
-        try {
-            SObject caseRec = buildCaseUpdate(caseId, p);
-            if (caseRec != null && hasNonIdField(caseRec)) {
-                SObjectAccessDecision dec = Security.stripInaccessible(
-                    AccessType.UPDATABLE,
-                    new List<SObject>{ caseRec }
-                );
-                List<SObject> safe = dec.getRecords();
-                if (!safe.isEmpty() && hasNonIdField(safe[0])) {
-                    update as user safe;
-                }
-            }
-            persistAdditionalInfoRow(caseId, init.additionalInfoId, p.verifyInformation, p.callback);
-            if (p.deliveryEmailSelected == true) {
-                persistTemporaryEmailToContactList(caseId, p);
-            }
-            vr.valid = true;
-        } catch (Exception ex) {
-            vr.valid = false;
-            vr.messages.add(ex.getMessage());
+        return persistClosureForm(caseId, init, p);
+    }
+
+    @AuraEnabled
+    public static ValidationResultDTO saveFormDraft(Id caseId, String payloadJson) {
+        ValidationResultDTO vr = new ValidationResultDTO();
+        InitDataDTO init = getInitData(caseId);
+        if (!init.success) {
+            vr.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
+            return vr;
         }
-        return vr;
+        SavePayloadDTO p = parsePayload(payloadJson);
+        vr = runValidation(init, p, false, false);
+        if (!vr.valid) {
+            return vr;
+        }
+        return persistClosureForm(caseId, init, p);
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<PicklistEntryDTO> searchAdministrativeUnits(String objectApiName, String searchKey) {
+    public static List<PicklistEntryDTO> searchAdministrativeUnits(String objectApiName, String searchKey, Id provinceId) {
         List<PicklistEntryDTO> opts = new List<PicklistEntryDTO>();
         if (String.isBlank(objectApiName) || !ADMIN_UNIT_OBJECTS.contains(objectApiName)) {
             return opts;
@@ -299,13 +330,64 @@ public without sharing class FEC_ContractClosureController {
         if (!gd.containsKey(objectApiName) || !gd.get(objectApiName).getDescribe().isAccessible()) {
             return opts;
         }
-        String term = '%' + (searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey) + '%';
-        String q =
-            'SELECT Id, Name FROM ' +
-            objectApiName +
-            ' WHERE Name LIKE :term ORDER BY Name LIMIT 200';
-        for (SObject row : Database.query(q)) {
-            opts.add(new PicklistEntryDTO((String) row.get('Name'), (String) row.get('Id')));
+        String term = searchKey == null ? FEC_ConstantCommon.STR_EMPTY : searchKey.trim();
+        String likeTerm = '%' + term + '%';
+        Boolean hasSearchTerm = String.isNotBlank(term);
+        Id countryId = resolveCountryIdByCode(COUNTRY_CODE_VN);
+        if (countryId == null) {
+            return opts;
+        }
+        if (objectApiName == 'FEC_Province__c') {
+            if (hasSearchTerm) {
+                for (FEC_Province__c row : [
+                    SELECT Id, FEC_Name_VN__c
+                    FROM FEC_Province__c
+                    WHERE FEC_Country__c = :countryId
+                    AND FEC_Name_VN__c != null
+                    AND FEC_Name_VN__c LIKE :likeTerm
+                    ORDER BY FEC_Name_VN__c
+                ]) {
+                    opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+                }
+            } else {
+                for (FEC_Province__c row : [
+                    SELECT Id, FEC_Name_VN__c
+                    FROM FEC_Province__c
+                    WHERE FEC_Country__c = :countryId
+                    AND FEC_Name_VN__c != null
+                    ORDER BY FEC_Name_VN__c
+                ]) {
+                    opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+                }
+            }
+            return opts;
+        }
+        if (provinceId == null) {
+            return opts;
+        }
+        if (hasSearchTerm) {
+            for (FEC_District__c row : [
+                SELECT Id, FEC_Name_VN__c
+                FROM FEC_District__c
+                WHERE FEC_Province__c = :provinceId
+                AND FEC_Country__c = :countryId
+                AND FEC_Name_VN__c != null
+                AND FEC_Name_VN__c LIKE :likeTerm
+                ORDER BY FEC_Name_VN__c
+            ]) {
+                opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+            }
+        } else {
+            for (FEC_District__c row : [
+                SELECT Id, FEC_Name_VN__c
+                FROM FEC_District__c
+                WHERE FEC_Province__c = :provinceId
+                AND FEC_Country__c = :countryId
+                AND FEC_Name_VN__c != null
+                ORDER BY FEC_Name_VN__c
+            ]) {
+                opts.add(new PicklistEntryDTO(row.FEC_Name_VN__c, (String) row.Id));
+            }
         }
         return opts;
     }
@@ -332,7 +414,11 @@ public without sharing class FEC_ContractClosureController {
         Id histId = resolveCustomerHistoryId(caseId);
         String line = buildTemporaryAddressLine(t);
         if (String.isNotBlank(p.tempAddressRecordId)) {
-            return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, histId, line, t);
+            return updateExistingTemporaryAddress((Id) p.tempAddressRecordId, caseId, histId, line, t);
+        }
+        Id existingTempId = findTemporaryAddressIdByCase(caseId, histId);
+        if (existingTempId != null) {
+            return updateExistingTemporaryAddress(existingTempId, caseId, histId, line, t);
         }
         if (!Schema.sObjectType.FEC_Address_Info__c.isCreateable()) {
             throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
@@ -340,6 +426,8 @@ public without sharing class FEC_ContractClosureController {
         SObject addr = Schema.getGlobalDescribe().get(OBJ_ADDRESS).newSObject(null);
         addr.put('FEC_Customer_History__c', histId);
         putIfCreateable(addr, 'Name', 'Temporary-' + String.valueOf(Crypto.getRandomInteger()));
+        putIfCreateable(addr, 'FEC_Case__c', caseId);
+        putIfCreateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, true);
         SObjectAccessDecision dec = Security.stripInaccessible(
             AccessType.CREATABLE,
@@ -351,6 +439,18 @@ public without sharing class FEC_ContractClosureController {
         }
         insert as user toIns;
         return toIns[0].Id;
+    }
+
+    private static Id findTemporaryAddressIdByCase(Id caseId, Id histId) {
+        List<FEC_Address_Info__c> rows = [
+            SELECT Id
+            FROM FEC_Address_Info__c
+            WHERE FEC_Customer_History__c = :histId
+                AND FEC_Case__c = :caseId
+                AND FEC_Address_Type__c = :FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0].Id;
     }
 
     private static void validateTempAddressParts(TempAddressPartsDTO t) {
@@ -367,7 +467,10 @@ public without sharing class FEC_ContractClosureController {
 
     private static Id resolveCustomerHistoryId(Id caseId) {
         List<SObject> caseRows = Database.query(
-            'SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1'
+            'SELECT Id, FEC_Account_or_Contract__c, ' +
+            'FEC_Account_or_Contract__r.FEC_CIF_Number__c, ' +
+            'FEC_Channel__c ' +
+            'FROM Case WHERE Id = :caseId LIMIT 1'
         );
         if (caseRows.isEmpty()) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' }));
@@ -392,12 +495,12 @@ public without sharing class FEC_ContractClosureController {
         );
     }
 
-    private static Id updateExistingTemporaryAddress(Id rowId, Id histId, String line, TempAddressPartsDTO t) {
+    private static Id updateExistingTemporaryAddress(Id rowId, Id caseId, Id histId, String line, TempAddressPartsDTO t) {
         if (!Schema.sObjectType.FEC_Address_Info__c.isUpdateable()) {
             throw new AuraHandledException(System.Label.FEC_Error_No_Update_Permission);
         }
         FEC_Address_Info__c row = [
-            SELECT Id, FEC_Customer_History__c
+            SELECT Id, FEC_Customer_History__c, FEC_Case__c, FEC_Address_Type__c
             FROM FEC_Address_Info__c
             WHERE Id = :rowId
             LIMIT 1
@@ -405,7 +508,15 @@ public without sharing class FEC_ContractClosureController {
         if (row.FEC_Customer_History__c != histId) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
         }
+        if (
+            row.FEC_Address_Type__c != FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY ||
+            row.FEC_Case__c != caseId
+        ) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Invalid, new List<String>{'Address'}));
+        }
         SObject addr = row;
+        putIfUpdateable(addr, 'FEC_Case__c', caseId);
+        putIfUpdateable(addr, 'FEC_Country__c', resolveCountryIdByCode(COUNTRY_CODE_VN));
         applyAddressLineAndComponents(addr, line, t, false);
         SObjectAccessDecision dec = Security.stripInaccessible(
             AccessType.UPDATABLE,
@@ -425,33 +536,22 @@ public without sharing class FEC_ContractClosureController {
             putIfUpdateable(addr, 'FEC_Address_Type__c', FEC_ConstantCommon.CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY);
         }
         if (forInsert) {
-            putIfCreateable(addr, 'FEC_Address__c', line);
             putIfCreateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfCreateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfCreateable(addr, 'FEC_Number__c', t.streetNumber.trim());
             putIfCreateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfCreateable(addr, 'FEC_Temporary_Address__c', line);
             putIfCreateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfCreateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         } else {
-            putIfUpdateable(addr, 'FEC_Address__c', line);
             putIfUpdateable(addr, 'FEC_Building__c', t.building.trim());
-            putIfUpdateable(addr, 'FEC_Building_Number__c', t.streetNumber.trim());
             putIfUpdateable(addr, 'FEC_Number__c', t.streetNumber.trim());
             putIfUpdateable(addr, 'FEC_Street__c', t.street.trim());
-            putIfUpdateable(addr, 'FEC_Temporary_Address__c', line);
             putIfUpdateable(addr, 'FEC_Ward_Text__c', t.wardLabel.trim());
             putIfUpdateable(addr, 'FEC_Province_Text__c', t.provinceLabel.trim());
         }
-        if (String.isNotBlank(t.wardRecordId)) {
-            try {
-                if (forInsert) {
-                    putIfCreateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
-                } else {
-                    putIfUpdateable(addr, 'FEC_Ward__c', (Id) t.wardRecordId);
-                }
-            } catch (Exception ignore) {
-            }
+        if (forInsert) {
+            putIfCreateable(addr, 'FEC_District__c', null);
+        } else {
+            putIfUpdateable(addr, 'FEC_District__c', null);
         }
         if (String.isNotBlank(t.provinceRecordId)) {
             try {
@@ -484,7 +584,33 @@ public without sharing class FEC_ContractClosureController {
         return (SavePayloadDTO) JSON.deserialize(payloadJson, SavePayloadDTO.class);
     }
 
-    private static ValidationResultDTO runValidation(InitDataDTO init, SavePayloadDTO p, Boolean forComplete) {
+    private static ValidationResultDTO persistClosureForm(Id caseId, InitDataDTO init, SavePayloadDTO p) {
+        ValidationResultDTO vr = new ValidationResultDTO();
+        try {
+            SObject caseRec = buildCaseUpdate(caseId, p);
+            if (caseRec != null && hasNonIdField(caseRec)) {
+                SObjectAccessDecision dec = Security.stripInaccessible(
+                    AccessType.UPDATABLE,
+                    new List<SObject>{ caseRec }
+                );
+                List<SObject> safe = dec.getRecords();
+                if (!safe.isEmpty() && hasNonIdField(safe[0])) {
+                    update as user safe;
+                }
+            }
+            persistAdditionalInfoRow(caseId, init.additionalInfoId, p.verifyInformation, p.callback);
+            if (p.deliveryEmailSelected == true) {
+                persistTemporaryEmailToContactList(caseId, p);
+            }
+            vr.valid = true;
+        } catch (Exception ex) {
+            vr.valid = false;
+            vr.messages.add(ex.getMessage());
+        }
+        return vr;
+    }
+
+    private static ValidationResultDTO runValidation(InitDataDTO init, SavePayloadDTO p, Boolean forComplete, Boolean requireDelivery) {
         ValidationResultDTO r = new ValidationResultDTO();
         if (!init.success) {
             r.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
@@ -504,7 +630,9 @@ public without sharing class FEC_ContractClosureController {
             cnt++;
         }
         if (cnt == 0) {
-            r.addFail(MSG_NOTI_02);
+            if (forComplete || requireDelivery) {
+                r.addFail(MSG_NOTI_02);
+            }
         }
         if (hasAddr && hasOffice) {
             r.addFail(MSG_NOTI_02);
@@ -522,11 +650,11 @@ public without sharing class FEC_ContractClosureController {
             if (hasTemp && !EMAIL_PAT.matcher(tempMail).matches()) {
                 r.addFail(MSG_NOTI_03);
             }
-            if (forComplete) {
+            if (forComplete || requireDelivery) {
                 Boolean hasDemo = String.isNotBlank(init.demographicEmail);
                 if (!hasDemo) {
-                    if (!hasTemp || !EMAIL_PAT.matcher(tempMail).matches()) {
-                        r.addFail(MSG_NOTI_02);
+                    if (!hasTemp) {
+                        r.addFail(MSG_TEMP_EMAIL_REQUIRED);
                     }
                 } else {
                     if (
@@ -535,14 +663,14 @@ public without sharing class FEC_ContractClosureController {
                     ) {
                         r.addFail(MSG_NOTI_02);
                     } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY && !hasTemp) {
-                        r.addFail(MSG_NOTI_02);
+                        r.addFail(MSG_TEMP_EMAIL_REQUIRED);
                     } else if (channel == FEC_ConstantCommon.CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 && hasTemp) {
                         r.addFail(MSG_NOTI_02);
                     }
                 }
             }
         }
-        if (hasAddr || (hasEmail && hasOffice)) {
+        if (hasAddr) {
             String rn = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
             String rp = p.recipientPhone != null ? FEC_CommonUltils.normalizePhone(p.recipientPhone) : FEC_ConstantCommon.STR_EMPTY;
             if (forComplete && String.isBlank(rn)) {
@@ -554,13 +682,29 @@ public without sharing class FEC_ContractClosureController {
             if (String.isNotBlank(rp) && !FEC_CommonUltils.isPhone(rp)) {
                 r.addFail(MSG_NOTI_16);
             }
-            if (forComplete) {
+            if (forComplete || requireDelivery) {
                 Boolean hasRow = String.isNotBlank(p.selectedAddressId);
                 Boolean hasTempLine = String.isNotBlank(
                     p.temporaryAddressDisplay != null ? p.temporaryAddressDisplay.trim() : FEC_ConstantCommon.STR_EMPTY
                 );
                 if (!hasRow && !hasTempLine) {
                     r.addFail(MSG_ADDRESS_REQUIRED);
+                }
+                if (hasRow) {
+                    Boolean rowLineOk = false;
+                    if (init.addresses != null) {
+                        for (AddressRowDTO row : init.addresses) {
+                            if (row != null && row.id == p.selectedAddressId) {
+                                rowLineOk = String.isNotBlank(
+                                    row.address != null ? row.address.trim() : FEC_ConstantCommon.STR_EMPTY
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    if (!rowLineOk) {
+                        r.addFail(MSG_ADDRESS_ROW_EMPTY);
+                    }
                 }
             }
         }
@@ -587,8 +731,104 @@ public without sharing class FEC_ContractClosureController {
         if (fRp != null && fRp.getDescribe().isUpdateable()) {
             c.put(FLD_RECIPIENT_PHONE, FEC_CommonUltils.normalizePhone(p.recipientPhone));
         }
+        if (String.isNotBlank(p.selectedAddressId)) {
+            putCaseSelectedAddress(c, p.selectedAddressId);
+        }
         putCaseCash24OnRecord(c, p.cash24ContractText);
         return c;
+    }
+
+    private static void putCaseSelectedAddress(SObject caseRec, String selectedAddressId) {
+        String selectedAddressApi = resolveCaseSelectedAddressFieldApi();
+        if (String.isBlank(selectedAddressApi)) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        Schema.SObjectField sf = fm.get(flc(selectedAddressApi));
+        if (sf == null) {
+            return;
+        }
+        Schema.DisplayType t = sf.getDescribe().getType();
+        if (t == DisplayType.REFERENCE) {
+            caseRec.put(selectedAddressApi, (Id) selectedAddressId);
+            return;
+        }
+        caseRec.put(selectedAddressApi, selectedAddressId);
+    }
+
+    private static Id resolveCountryIdByCode(String countryCode) {
+        if (countryCode == COUNTRY_CODE_VN && countryIdVnCache != null) {
+            return countryIdVnCache;
+        }
+        if (String.isBlank(countryCode)) {
+            return null;
+        }
+        if (!Schema.sObjectType.FEC_Country__c.isAccessible()) {
+            return null;
+        }
+        List<FEC_Country__c> rows = [
+            SELECT Id, FEC_Code__c
+            FROM FEC_Country__c
+            WHERE FEC_Code__c = :countryCode
+            LIMIT 1
+        ];
+        if (!rows.isEmpty()) {
+            if (countryCode == COUNTRY_CODE_VN) {
+                countryIdVnCache = rows[0].Id;
+            }
+            return rows[0].Id;
+        }
+        return null;
+    }
+
+    private static String resolveCaseSelectedAddressFieldApi() {
+        if (String.isNotBlank(caseSelectedAddressFieldApiCache)) {
+            return caseSelectedAddressFieldApiCache;
+        }
+        Map<String, Schema.SObjectField> fm = Case.SObjectType.getDescribe().fields.getMap();
+        String fallbackApi;
+        for (String api : new List<String>{ 'FEC_Selected_Address__c', 'FEC_Selected_Address_Info__c', 'FEC_Selected_Address_Id__c' }) {
+            Schema.SObjectField fieldRef = fm.get(flc(api));
+            if (fieldRef != null && fieldRef.getDescribe().isUpdateable()) {
+                caseSelectedAddressFieldApiCache = fieldRef.getDescribe().getName();
+                return caseSelectedAddressFieldApiCache;
+            }
+        }
+        for (String apiLower : fm.keySet()) {
+            Schema.DescribeFieldResult d = fm.get(apiLower).getDescribe();
+            if (!d.isUpdateable()) {
+                continue;
+            }
+            Boolean isAddressInfoRef = false;
+            if (d.getType() == DisplayType.REFERENCE) {
+                for (Schema.SObjectType refType : d.getReferenceTo()) {
+                    if (refType.getDescribe().getName() == 'FEC_Address_Info__c') {
+                        isAddressInfoRef = true;
+                        break;
+                    }
+                }
+            }
+            String nameLower = d.getName().toLowerCase();
+            String labelLower = d.getLabel().toLowerCase();
+            Boolean isSelectedAddressName =
+                (nameLower.contains('selected') && nameLower.contains('address')) ||
+                (labelLower.contains('selected') && labelLower.contains('address'));
+            if (!isAddressInfoRef && !isSelectedAddressName) {
+                continue;
+            }
+            if (fallbackApi == null) {
+                fallbackApi = d.getName();
+            }
+            if (
+                (nameLower.contains('selected') && nameLower.contains('address')) ||
+                (labelLower.contains('selected') && labelLower.contains('address'))
+            ) {
+                caseSelectedAddressFieldApiCache = d.getName();
+                return caseSelectedAddressFieldApiCache;
+            }
+        }
+        caseSelectedAddressFieldApiCache = fallbackApi;
+        return caseSelectedAddressFieldApiCache;
     }
 
     private static void putCaseCash24OnRecord(SObject caseRec, String raw) {

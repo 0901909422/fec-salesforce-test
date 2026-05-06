@@ -13,6 +13,8 @@ import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
 //Thangtv update logic for Jira KH-1043: disable các NOC value after call api reissue pin
 import PIN_REISSUE_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_PinReissue__c";
+// PhuongNT disable NOC after process action call api success
+import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_ProcessAction__c";
 // import getProductTypeIds from "@salesforce/apex/FEC_CaseEditNOCController.getProductTypeIds";
 // import getCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getCategoryIds";
 // import getSubCategoryIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategoryIds";
@@ -24,6 +26,8 @@ import getProductTypelst from "@salesforce/apex/FEC_CaseEditNOCController.getPro
 import getCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getCategorylst";
 import getSubCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategorylst";
 import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodelst";
+//HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
+import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
@@ -49,6 +53,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _isInternalRequest = false;
   _internalProductTypeId = null;
   _internalApplied = false;
+  
+  //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
+  isDisableNOC = false;
+
 
   get isEdit() {
     
@@ -156,10 +164,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+
+         // 👉 FIX: đặt ở đây
+        if (this.isDisableNOC) {
+          this.handleDisableResetPinSuccess("category");
+          this.handleDisableResetPinSuccess("sub-category");
+          this.handleDisableResetPinSuccess("sub-code");
+        }
+
 
         getByCase({
           caseId: this.recordId,
@@ -248,10 +265,20 @@ export default class Fec_CaseEditNOC extends LightningElement {
       (message) => this.handleMessageResetPin(message),
       { scope: APPLICATION_SCOPE },
     );
+    // PhuongNT disable NOC after process action call api success
+    this.subscriptionPinReissue = subscribe(
+      this.messageContext,
+      PROCESS_ACTION_MESSAGE_CHANNEL,
+      (message) => this.handleMessageResetPin(message),
+      { scope: APPLICATION_SCOPE },
+    );
   }
 
   handleCaseNOCMessage(message) {
     if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
 
     const accountType = message.accountType;
     const isInternalType = accountType === INTERNAL_REQUEST || accountType === INTERNAL_UBANK;
@@ -321,15 +348,28 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
   handleMessageResetPin(message) {
-    if (message.status === "SUCCESS") {
-      this.handleDisableResetPinSuccess("category");
-      this.handleDisableResetPinSuccess("sub-category");
-      this.handleDisableResetPinSuccess("sub-code");
-    }
+    this.handleDisableResetPinSuccess("category");
+    this.handleDisableResetPinSuccess("sub-category");
+    this.handleDisableResetPinSuccess("sub-code");
+
+    saveNOC({
+        recordId: this.recordId,
+        productTypeId: this.productTypeSelectedId,
+        categoryId: this.categorySelectedId,
+        subCategoryId: this.subCategorySelectedId,
+        subCodeId: this.subCodeSelectedId
+    })
+    .then(() => {
+        console.log('Save NOC success');
+    })
+    .catch(error => {
+        console.error('Save NOC failed:', error);
+    });
   }
 
   async handlePublishMessageChanel() {
     const payload = {
+      caseId: this.recordId,
       productTypeId: this.productTypeSelectedId,
       categoryId: this.categorySelectedId,
       subCategoryId: this.subCategorySelectedId,

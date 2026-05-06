@@ -72,6 +72,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
         public String  DT_LST_ADDR_CHNG;
         public String  CURR_CARD_FROM_DT;
         public Integer PIN_SUPPR;
+        public String CURR_FST_USG_FLG;
     }
 
     public class RCData {
@@ -95,6 +96,25 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
     ) {
         validateRequest(transID, requestorId, dateTimeStr, vmxVersion, context, signOnName, org, cardNbr, name);
 
+        // ================= CONFIG =================
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
+
+        // =====================================================
+        // ENV OVERRIDE 
+        // =====================================================
+        String cardNbrParam;
+
+        if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+            && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+
+            cardNbrParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+
+        } else {
+            cardNbrParam = cardNbr;
+        }
+            
+
         String soapBody = buildSoapRequest(
             transID,
             requestorId,
@@ -103,12 +123,9 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
             context,
             signOnName,
             org,
-            cardNbr,
+            cardNbrParam,
             name
         );
-
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MCMSCARDTOCARDINQEMEA');
 
         String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');
@@ -315,6 +332,7 @@ public with sharing class FEC_MCMSCARDTOCARDINQEMEA {
                     d.DT_LST_ADDR_CHNG   = FEC_CommonUltils.getValueSafe(node, 'DT_LST_ADDR_CHNG');
                     d.CURR_CARD_FROM_DT  = FEC_CommonUltils.getValueSafe(node, 'CURR_CARD_FROM_DT');
                     d.PIN_SUPPR          = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(node, 'PIN_SUPPR'));
+                    d.CURR_FST_USG_FLG   = FEC_CommonUltils.getValueSafe(node, 'CURR_FST_USG_FLG');
                     area.OUTPUT_DATA.add(d);
                 }
             }

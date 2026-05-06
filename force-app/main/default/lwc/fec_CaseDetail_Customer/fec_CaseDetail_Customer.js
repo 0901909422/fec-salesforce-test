@@ -21,9 +21,11 @@ import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
 import FEC_MSG_Submit from "@salesforce/label/c.FEC_MSG_Submit";
 import FEC_Case_Remark_Label from "@salesforce/label/c.FEC_Case_Remark_Label";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT";
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
+import { updateRecord } from "lightning/uiRecordApi";
 
 import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst";
 
@@ -37,6 +39,8 @@ import {
   VIEW_MODE_REVIEW,
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
+
+const PROCESS_CARD_REPLACEMENT = "Card Replacement";
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -189,6 +193,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleNOCMsg(message) {
     if (message == null) return;
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
     if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
@@ -294,6 +301,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (caseBusinessEle && !caseBusinessEle.getNatureOfCaseId() && this.lastNatureOfCaseIdFromNOC) {
       caseBusinessEle.setNatureOfCaseId(this.lastNatureOfCaseIdFromNOC);
     }
+    let addressInfoId;
     if (caseBusinessEle) {
       const validateResult = caseBusinessEle.validate();
       const validateNatureResult = caseBusinessEle.validateNatureOfCase();
@@ -306,6 +314,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         // if (accountContractErr) {
         //   this.errlst.push(REQUIRED_MSG.replace("{0}", accountContractErr));
         // }
+      }
+      // PhuongNT add validate card replacement select address
+      if (caseBusinessEle.handleGetCurrentProcessAction() == PROCESS_CARD_REPLACEMENT) {
+        addressInfoId = caseBusinessEle.handleValidateAddressSelected();
+        if (!addressInfoId) {
+          isAllValid = false;
+          this.errlst.push(FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT);
+        }
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
@@ -338,11 +354,30 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       if (submitted === false) {
         return;
       }
+      // PhuongNT add reset msg process action after submit success
+      caseBusinessEle.resetMsgProcessAction();
 
       // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
       await caseRemarksEle.createRemark(stageName);
       await caseRemarksEle.submitRemark(stageName);
       this.loadRemarkHistory();
+
+      if (
+        caseBusinessEle &&
+        typeof caseBusinessEle.refreshFileUploadCards === "function"
+      ) {
+        caseBusinessEle.refreshFileUploadCards();
+      }
+
+      // PhuongNT add update select address for Case
+      if (addressInfoId) {
+        let fields = {
+          'Id': this.recordId,
+          'FEC_Selected_Address__c': addressInfoId,
+        };
+        let recordInput = { fields };
+        updateRecord(recordInput);
+      }
 
       // Chuyển sang Case Review (chế độ xem), không đóng tab
       setTimeout(() => {

@@ -246,7 +246,8 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_Account_Number__c,
                 FEC_Account_or_Contract__c,
                 FEC_SubCode__r.FEC_Code__c,
-                FEC_Card_Block_Service_Attempts__c
+                FEC_Card_Block_Service_Attempts__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -313,6 +314,30 @@ public without sharing class FEC_CardClosureRefundController {
             return dto;
         }
 
+        if (funcCode == FUNC_BLOCK && c.FEC_Is_Test_API__c == true) {
+            Boolean getDisbSuccess = false;
+            try {
+                FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
+                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumber, null);
+                FEC_GetDisbInfoByAcctCallout.logApiResponse();
+                FEC_GetDisbInfoByAcctCallout.ResultWrapper disbResult =
+                    FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
+                getDisbSuccess = disbResult != null && disbResult.isSuccess == true;
+            } catch (Exception ex) {
+                getDisbSuccess = false;
+            }
+            if (!getDisbSuccess) {
+                Integer after = incrementCaseBlockServiceAttempts(caseId);
+                dto.success = false;
+                dto.code = '0';
+                dto.description = 'GetDisbInfoByAcct failed';
+                dto.errorMessage = null;
+                dto.cardBlockServiceAttemptsAfter = after;
+                dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
+                return dto;
+            }
+        }
+
         try {
             FEC_CardLockUnLockCallout.LockUnlockResponse response = FEC_CardLockUnLockCallout.callLockUnlockCard(
                 transId,
@@ -320,14 +345,15 @@ public without sharing class FEC_CardClosureRefundController {
                 BLOCK_CODE_CARD,
                 funcCode,
                 last4Digit,
-                accountNumber
+                accountNumber,
+                c.FEC_Is_Test_API__c
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 
             dto.transId = transId;
             dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
-            dto.code = response != null && response.Sys2 != null ? response.Sys2.Code : null;
-            dto.description = response != null && response.Sys2 != null ? response.Sys2.Description : null;
+            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
+            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
 
             if (dto.success && funcCode == FUNC_BLOCK) {

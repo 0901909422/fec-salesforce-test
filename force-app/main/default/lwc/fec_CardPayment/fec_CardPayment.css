@@ -155,9 +155,18 @@ span.slds-text-color_error,
 /* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
 .error-text {
     color: #ea001e !important;
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .card-payment-empty {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     color: #706e6b;
+}
+
+.card-payment-empty p {
+    margin: 0;
 }

@@ -7,6 +7,7 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
+    public static Boolean isSystemUpdate = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -84,6 +85,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterInsert(List<Case> newCases) {
         isExecuting = true;
+        updateLastModified(newCases, null);
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -106,6 +108,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
         if (!FEC_GetNextWorkController.isGetNextWork) {
@@ -508,9 +511,22 @@ public without sharing class FEC_CaseTriggerHandler {
                 if (relatedEmail != null) {
                     c.FEC_Send_To__c = relatedEmail.ToAddress;
                 }
+            } else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                // Ép cứng địa chỉ cho FE Credit
+                c.FEC_Send_To__c = FEC_ConstantCommon.EMAIL_READONLY_FROM_FECREDIT;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                casesForRouting.add(c);
             } else {
-                // Ép cứng địa chỉ Routing bằng giá trị lấy từ Custom Setting (sendToValue)
-                c.FEC_Send_To__c = sendToValue;
+                // Với Ubank: Tuyệt đối chỉ lấy từ Custom Setting
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK) {
+                    c.FEC_Send_To__c = sendToValue;
+                } 
+                // Các trường hợp khác: Lấy ToAddress thực tế của mail làm fallback
+                else if (relatedEmail != null) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                }
+
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
@@ -969,6 +985,30 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
+
+    private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> caseUpdates = new List<Case>();
+        for (Case c : newCases) {
+            if (isSystemUpdate) {
+                continue;
+            }
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                if (c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                    continue;
+                }
+            }
+            Case caseUpdate = new Case(
+                Id = c.Id,
+                FEC_Last_Updated_By_View__c = c.FEC_Last_Updated_By__c,
+                FEC_Last_Updated_On_View__c = c.FEC_Last_Updated_On__c
+            );
+            caseUpdates.add(caseUpdate);
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
         }
     }
 }

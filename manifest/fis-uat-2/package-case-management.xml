@@ -228,10 +228,10 @@
 		<members>Create_Case</members>
 		<name>CustomTab</name>
 	</types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
         <members>Channel</members>
         <name>GlobalValueSet</name>

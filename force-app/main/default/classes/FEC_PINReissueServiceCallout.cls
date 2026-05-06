@@ -67,23 +67,35 @@ public without sharing class FEC_PINReissueServiceCallout {
     public static PINResponse callPINReissue(
         String nationalID,
     String transId,
-    String mobile
+    String mobile,
+    Boolean isTestApi
     ){
         PINResponse response = new PINResponse();
         try{
             String nationalIdParam = '';
             String mobileParam = '';
-            FEC_System_Config__c systemConfig = FEC_System_Config__c.getOrgDefaults();
-            if (String.isNotBlank(systemConfig?.FEC_Enviroment__c) && systemConfig.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
-                nationalIdParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_NID;
-                mobileParam = FEC_ConstantCommon.RESET_PIN_DEFAULT_PHONE;
-            }else{
-                nationalIdParam = nationalID;
-                mobileParam = mobile;
-            }
             
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_PINReissueService');
+            
+            // if (String.isNotBlank(apiSetting?.FEC_Enviroment__c) && apiSetting.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+                //     nationalIdParam = apiConfig?.FEC_National_Id_Hard_Code__c;
+                //     mobileParam = apiConfig?.FEC_Mobile_Hard_Code__c;
+            // }else{
+                //     nationalIdParam = nationalID;
+                //     mobileParam = mobile;
+            // }
+            //HieuTT75: Update ngày 23/4/2026 - Thêm biến isTestAPI để test call api (ThắngTV)
+            Boolean useRealData = isTestAPI ||
+                apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+            
+            if (useRealData) {
+                nationalIdParam = nationalID;
+                mobileParam = mobile;
+            } else {
+                nationalIdParam = apiConfig?.FEC_National_Id_Hard_Code__c;
+                mobileParam = apiConfig?.FEC_Mobile_Hard_Code__c;
+            }
             
             String endpoint = (String.isNotBlank(apiSetting?.FEC_Endpoint__c) ? apiSetting.FEC_Endpoint__c : '')
                 + (String.isNotBlank(apiConfig?.FEC_Endpoint__c) ? apiConfig.FEC_Endpoint__c : '');

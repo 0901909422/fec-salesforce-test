@@ -29,8 +29,10 @@ import FEC_Repay_Booking_Date_Label from '@salesforce/label/c.FEC_Repay_Booking_
 import FEC_Repay_Payment_Amount_Label from '@salesforce/label/c.FEC_Repay_Payment_Amount_Label';
 import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particulars_Label';
 import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
-import FEC_Repay_No_Data_Label from '@salesforce/label/c.FEC_Repay_No_Data_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
+import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
+
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
 const SECTION4_TYPE_PAYMENT = 'Payment History';
@@ -38,6 +40,15 @@ const SECTION4_TYPE_PAYMENT = 'Payment History';
 /** Ô trống / placeholder từ API (giống HYPHEN Apex). */
 const isRepayEmptyCell = (value) =>
     value == null || String(value).trim() === '' || String(value).trim() === SECTION4_EMPTY_CELL;
+
+/** Chuỗi số từ Apex (vd. 477,000) → hiển thị en-US 2 thập phân (477,000.00). */
+const formatPaymentHistoryAmount = (value) => {
+    if (isRepayEmptyCell(value)) return SECTION4_EMPTY_CELL;
+    const num =
+        typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
+    if (Number.isNaN(num)) return String(value);
+    return formatCurrency2(num);
+};
 
 /**
  * Bỏ dòng Payment History do max(basicPh, secPh, payments) tạo thêm: chỉ còn paymentNo.
@@ -52,8 +63,6 @@ const isPaymentHistoryMeaningfulRow = (row) => {
         isRepayEmptyCell(row.paymentChannel)
     );
 };
-
-import { toSortDateStr } from 'c/fec_CommonUtils';
 
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
@@ -86,7 +95,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         totalPrincipal: FEC_Repay_Total_Principal_Label,
         totalInterest: FEC_Repay_Total_Interest_Label,
         totalPaymentAmount: FEC_Repay_Total_Payment_Amount_Label,
-        noData: FEC_Repay_No_Data_Label,
+        noData: FEC_Common_No_Results_Label,
         refreshButton: FEC_Repay_Refresh_Button_Label,
     };
 
@@ -105,17 +114,17 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get repaymentScheduleTotalInstallment() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalInstallmentAmount != null && t.totalInstallmentAmount !== '' ? t.totalInstallmentAmount : '-';
+        return formatCurrency0(t.totalInstallmentAmount);
     }
 
     get repaymentScheduleTotalPrincipal() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalPrincipal != null && t.totalPrincipal !== '' ? t.totalPrincipal : '-';
+        return formatCurrency0(t.totalPrincipal);
     }
 
     get repaymentScheduleTotalInterest() {
         const t = this.sectionData.repaymentScheduleTotals || {};
-        return t.totalInterest != null && t.totalInterest !== '' ? t.totalInterest : '-';
+        return formatCurrency0(t.totalInterest);
     }
 
     /* Repayment Schedule bảng – 12 dòng/trang, sort theo Installment Due Date (cũ → mới). */
@@ -168,7 +177,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     /* Payment History: Total Payment Amount (màu đỏ) + bảng 6 cột */
     get paymentHistoryTotalAmount() {
         const totals = this.sectionData.paymentHistoryTotals || {};
-        return totals.totalPaymentAmount != null && totals.totalPaymentAmount !== '' ? totals.totalPaymentAmount : '-';
+        return formatCurrency2(totals.totalPaymentAmount);
     }
 
     /* Payment History bảng – related-list-addresses-paging */
@@ -212,7 +221,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             if (ta == null && tb != null) return 1;
             if (ta != null && tb == null) return -1;
             if (ta == null && tb == null) return 0;
-            return ta - tb;
+            return tb - ta;
         });
 
         return sorted.map((row, i) => {
@@ -220,6 +229,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 Id: 'ph-' + i,
                 ...row,
                 paymentNo: i + 1,
+                paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
             };
         });
     }
@@ -249,9 +259,32 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get realTimePaymentPagingRecords() {
         const data = Array.isArray(this.sectionData.realTimePaymentTable) ? this.sectionData.realTimePaymentTable : [];
-        return data.map((row, i) => ({
+        const toTime = (value) => {
+            if (!value || value === '-') return null;
+            const s = String(value).trim();
+            const parts = s.split('/');
+            if (parts.length === 3) {
+                const d = Number(parts[0]);
+                const m = Number(parts[1]);
+                const y = Number(parts[2]);
+                const t = new Date(y, m - 1, d).getTime();
+                return Number.isNaN(t) ? null : t;
+            }
+            const t = Date.parse(s);
+            return Number.isNaN(t) ? null : t;
+        };
+        const sorted = [...data].sort((a, b) => {
+            const ta = toTime(a?.paymentDate);
+            const tb = toTime(b?.paymentDate);
+            if (ta == null && tb != null) return 1;
+            if (ta != null && tb == null) return -1;
+            if (ta == null && tb == null) return 0;
+            return tb - ta;
+        });
+        return sorted.map((row, i) => ({
             Id: 'rt-' + (row.rowIndex != null ? row.rowIndex : i + 1),
             ...row,
+            paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
         }));
     }
 
@@ -345,7 +378,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 paymentNo: (p.paymentNo != null && p.paymentNo !== '') ? String(p.paymentNo) : e,
                 paymentDate: paymentDateVal,
                 bookingDate: (p.bookingDate != null && p.bookingDate !== '') ? p.bookingDate : e,
-                paymentAmount: (p.paymentAmount != null && p.paymentAmount !== '') ? p.paymentAmount : e,
+                paymentAmount:
+                    p.paymentAmount != null && p.paymentAmount !== ''
+                        ? formatPaymentHistoryAmount(p.paymentAmount)
+                        : e,
                 particulars: (p.particulars != null && p.particulars !== '') ? p.particulars : e,
                 paymentChannel: (p.paymentChannel != null && p.paymentChannel !== '') ? p.paymentChannel : e,
             });

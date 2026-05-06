@@ -114,17 +114,8 @@ span.slds-text-color_error {
 /* Error text styling - highlight phần "Tải dữ liệu không thành công" màu đỏ */
 .error-text {
     color: #ea001e !important;
-    font-weight: 600;
+    font-weight: 400;
 }
-
-/* Khối lỗi khi dùng RelatedListAddressesPaging (hasError = true) */
-.no-data.error {
-    color: #ea001e;
-    font-weight: 600;
-    padding: 1rem;
-    text-align: center;
-}
-
 
 :host(.fec-ipp-details) .custom-table tbody tr td:nth-child(6),
 :host(.fec-ipp-details) .custom-table tbody tr td:nth-child(7),
@@ -149,8 +140,4 @@ span.slds-text-color_error {
 /* Đường ngăn cách cột cho bảng IPP Details - truyền biến CSS vào component con */
 .ipp-details-table-wrapper {
     --fec-ipp-table-border-right: 1px solid #d8dde6;
-}
-
-.ipp-details-empty {
-    color: #706e6b;
 }

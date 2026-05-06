@@ -108,6 +108,26 @@
 		<members>FEC_NotificationHistoryService</members>
 		<members>FEC_SendNotificationEmailsQueueable</members>
 		<members>FEC_CardReplacementAddressController</members>
+		<members>FEC_EmeaAccountInqService</members>
+		<members>FEC_SyncCaseStatusBatch</members>
+		<members>FEC_SyncCaseStatusScheduler</members>
+		<members>FEC_CardInfoController</members>
+		<members>FEC_GetCardSecInfo</members>
+		<members>FEC_IPPController</members>
+		<members>FEC_CaseLinkedFilesController</members>
+		<members>FEC_ContentDocumentLinkService</members>
+		<members>FEC_ContentDocumentLinkTriggerHandler</members>
+		<members>FEC_ContentDocumentTriggerHandler</members>
+		<members>FEC_GetUnbilledTransactions</members>
+		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_BlockCodeRoutingService</members>
+		<members>FEC_TerminationLoanController</members>
+		<members>FEC_MainInfoLoanAccountController</members>
+		<members>FEC_GetInteractionCases</members>
+		<members>FEC_InteractionHighlightController</members>
+		<members>FEC_RepaySchedPayHistController</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_RDPaymentContractAssessmentService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -183,6 +203,14 @@
 		<members>fec_Modal</members>
 		<members>fec_CardReplacementAddress</members>
 		<members>fecInteractionCreationHighlight</members>
+		<members>fec_CardInfo</members>
+		<members>fec_IPPDetails</members>
+		<members>fec_FileUploadCard</members>
+		<members>fec_ClosedServiceCases</members>
+		<members>fec_InteractionCases</members>
+        <members>fec_PendingServiceCases</members>
+        <members>fec_IPPDetailPage</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -199,6 +227,7 @@
 		<members>Master_Data_Setting_Record_Page</members>
 		<members>Stage_Change_Record_Page</members>
 		<members>Stage_Screen_Record_Page</members>
+		<members>Nature_of_Cases_Record_Page</members>
 		<name>FlexiPage</name>
 	</types>
 	<types>
@@ -207,6 +236,7 @@
 		<members>FEC_Notification__c-Notifications Layout</members>
 		<members>ServiceResourceSkill-Service Resource Skill Layout</members>
 		<members>FEC_Clear_Session__c-Clear Session Layout</members>
+		<members>FEC_API_Config__mdt-FEC API Config Layout</members>
 		<name>Layout</name>
 	</types>
 	<types>
@@ -450,6 +480,39 @@
         <members>FEC_MSG_CARD_REPLACEMENT_CS_D2C</members>
         <members>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</members>
         <members>FEC_No_Permission_Msg</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</members>
+        <members>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</members>
+		<members>FEC_MSG_IncorrectPayment_Date_Not_After_Today</members>
+        <members>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</members>
+        <members>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</members>
+        <members>FEC_MSG_ContractClosure_Address_Row_Empty</members>
+        <members>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</members>
+        <members>FEC_Email_Error_File_Too_Large_Title</members>
+        <members>FEC_Email_Error_File_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Image_Too_Large_Title</members>
+        <members>FEC_Email_Error_Image_Too_Large_Msg</members>
+        <members>FEC_Email_Error_Subject_Required</members>
+        <members>FEC_Email_Error_Body_Required</members>
+        <members>FEC_Email_Error_We_Hit_A_Snag</members>
+        <members>FEC_Email_Error_Invalid_Format_Title</members>
+        <members>FEC_Email_Success_Title</members>
+        <members>FEC_Email_Success_Sent_Msg</members>
+        <members>FEC_CS_Support_Queue_Name</members>
+        <members>FEC_Other_Card_Label</members>
+		<members>FEC_Email_Discard_Title</members>
+        <members>FEC_Email_Discard_Msg</members>
+        <members>FEC_Email_Btn_Discard</members>
+        <members>FEC_Email_Btn_Cancel</members>
+        <members>FEC_MSG_CARD_BLOCK_CS_D2C</members>
+        <members>FEC_MSG_CARD_BLOCK_CANCEL</members>
+        <members>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</members>
+		<members>FEC_Termination_Fee_Charge_Type_Label</members>
+        <members>FEC_Common_No_Results_Label</members>
+        <members>FEC_MSG_No_Pending_Disbursement</members>
+        <members>FEC_LBL_Select_Contract_Number</members>
+        <members>FEC_LBL_Selected_Contract_Number</members>
+        <members>FEC_LBL_UpdateAddress_Ward_Search_Placeholder</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
@@ -631,6 +694,7 @@
     </types>
 	<types>
         <members>Case.Internal_Case_Compact_Layout</members>
+		<members>Case.Customer_Case_Compact</members>
         <name>CompactLayout</name>
     </types>
     <types>
@@ -656,6 +720,9 @@
 		<members>FEC_Log__c</members>
 		<members>FEC_Customer_History__c</members>
 		<members>FEC_Outbound_Email_Config__c</members>
+		<members>FEC_Block_Code_Matrix__c</members>
+		<members>FEC_API_Config__mdt</members>
+		<members>FEC_API_Setting__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
@@ -715,8 +782,12 @@
 		<members>FEC_Content_History_Tracking__c.FEC_Merge_Fields_Used__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Changed_Status__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Current_Status__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_IsReverted__c</members>
 		<members>FEC_Additional_Info__c.FEC_Replace_Card__c</members>
 		<members>FEC_Additional_Info__c.FEC_IPP_Plan__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_01__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_02__c</members>
+		<members>FEC_Additional_Info__c.FEC_Test_Field_03__c</members>
 		<members>Case.FEC_Incorrect_Payment_Adj_Rows__c</members>
 		<members>Case.FEC_Current_Card_Status__c</members>
 		<members>Case.FEC_Bank_Branch_Name_Noaccent__c</members>
@@ -726,6 +797,7 @@
 		<members>Case.FEC_Province_City__c</members>
 		<members>Case.FEC_Interaction_Subchannel__c</members>
 		<members>FEC_Stage_Change__c.FEC_Condition_Requirement__c</members>
+		<members>FEC_Stage_Change__c.FEC_IsReverted__c</members>
 		<members>Case.FEC_Case_Created_By__c</members>
 		<members>FEC_Notification__c.FEC_Customer_Type__c</members>
 		<members>Case.FEC_Created_by__c</members>
@@ -766,9 +838,24 @@
 		<members>Case.FEC_Transfer_Data_to_Collections__c</members>
 		<members>Case.FEC_Transfer_Status__c</members>
 		<members>Case.FEC_Transfer_Time__c</members>
+		<members>Case.FEC_Updated_Info_Permanent_Address__c</members>
+		<members>Case.FEC_Updated_Info_Office_Address__c</members>
+		<members>Case.FEC_Updated_Info_Current_Address__c</members>
+		<members>Case.FEC_CS_Customer_Care_Assessment_Type__c</members>
+		<members>Case.FEC_Confirm_CS_CC_Assessment__c</members>
+		<members>Case.FEC_Confirm_RD_CO_Assessment__c</members>
+		<members>Case.FEC_Confirm_RD_PM_Assessment__c</members>
+		<members>Case.FEC_RD_Card_Ops_Assessment_Type__c</members>
+		<members>Case.FEC_RD_Payment_Assessment_Type__c</members>
+		<members>Case.FEC_RD_Payment_Contract_Assessment__c</members>
+		<members>Case.FEC_Input_Correct_Contract_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_Posted_Date__c</members>
 		<members>FEC_Customer_History__c.FEC_Postal_Code__c</members>
 		<members>FEC_Customer_History__c.FEC_Received_Date__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Interest_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Provided_Number__c</members>
 		<members>FEC_Customer_History__c.FEC_MRC_Zone__c</members>
@@ -779,17 +866,16 @@
 		<members>FEC_Customer_History__c.FEC_Overdue_Penalty__c</members>
 		<members>FEC_Customer_History__c.FEC_Status_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Original_MRC_Receiver__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Outstanding_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Collected_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Waived_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Outstanding_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Penalty_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_Repayment_Fee_Overdue__c</members>
 		<members>FEC_Customer_History__c.FEC_ID__c</members>
 		<members>FEC_Customer_History__c.FEC_Installments_Overdue__c</members>
-		<members>FEC_Customer_History__c.FEC_Interest_Assessed_Amount__c</members>
+		<members>FEC_Customer_History__c.FEC_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Pending_Penal_Interest__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Remark__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Assessed_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Notarized_MRC_Receiver__c</members>
 		<members>FEC_Customer_History__c.FEC_Current_Balance_Principal__c</members>
 		<members>FEC_Customer_History__c.FEC_Area__c</members>
@@ -802,12 +888,23 @@
 		<members>FEC_Customer_History__c.FEC_Total_Overdue_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Interest_On_Termination__c</members>
 		<members>FEC_Customer_History__c.FEC_Modified_Date__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Waived_Amount__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Outstanding_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Total_Installment_Paid__c</members>
 		<members>FEC_Customer_History__c.FEC_Pre_Payment_Penalty__c</members>
-		<members>FEC_Customer_History__c.FEC_Repayment_Collected_Amount__c</members>
 		<members>FEC_Customer_History__c.FEC_Type__c</members>
+		<members>FEC_IPP__c.FEC_IPP_Closure_Case__c</members>
+		<members>FEC_Contact_List__c.FEC_Temporary_Email__c</members>
+		<members>FEC_Routing_Action_History__c.FEC_Custom_Action_Button_Label__c</members>
+		<members>FEC_Stage_Screen__c.FEC_Custom_Action_Button_Label__c</members>
+		<members>Case.FEC_Is_Test_API__c</members>
+		<members>Case.FEC_Selected_Address__c</members>
+		<members>FEC_Address_Info__c.FEC_Case__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
+		<members>Case.FEC_Last_Updated_By_View__c</members>
+		<members>Case.FEC_Last_Updated_On_View__c</members>
+		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
+		<members>Case.FEC_Is_Call_API_Success__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
@@ -827,21 +924,24 @@
         <members>FEC_API_Config.FEC_Update_Customer_Address</members>
 		<members>FEC_API_Config.FEC_GetDisb_Info_By_Acct</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Get_Unbilled_Transaction</members>
+		<members>FEC_API_Config.FEC_Get_Card_Financial_Transaction</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
 		<members>ServiceResourceSkill-en_US</members>
 		<members>FEC_Additional_Info__c-en_US</members>
+		<members>Case-en_US</members>
 		<name>CustomObjectTranslation</name>
 	</types>
 	<types>
         <members>FEC_Clear_Session__c</members>
         <name>CustomTab</name>
     </types>
-	<types>
+	<!--<types>
 		<members>Case</members>
 		<name>Settings</name>
-	</types>
+	</types>-->
 	<types>
 		<!--<members>FEC_New_Interaction_Record_For_E2C</members>-->
 		<members>FEC_ServiceResource_Set_ServiceType_Agent</members>
@@ -893,6 +993,9 @@
 	<types>
 		<members>FEC_PinReset</members>
 		<members>FEC_PinReissue</members>
+		<members>FEC_Case_Notification</members>
+		<members>FEC_ProcessAction</members>
+		<members>FEC_Case_NOC</members>
 		<name>LightningMessageChannel</name>
 	</types>
     <version>65.0</version>
