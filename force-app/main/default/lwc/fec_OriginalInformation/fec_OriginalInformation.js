@@ -1,6 +1,6 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRelatedListRecords } from 'lightning/uiRelatedListApi';
-import FEC_ERROR_LOADING_ORIGINAL_INFORMATION from '@salesforce/label/c.FEC_ERROR_LOADING_ORIGINAL_INFORMATION';
+import {FEC_ERROR_LOADING_ORIGINAL_INFORMATION } from "c/fec_CommonConst";
 export default class Fec_OriginalInformation extends LightningElement {
     // Standard properties passed by fec_CaseBussiness dynamic loader
     @api recordId;
