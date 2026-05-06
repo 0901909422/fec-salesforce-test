@@ -82,7 +82,7 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
     private void sendChunk(List<FEC_DataCampaign> chunk) {
         String payload = JSON.serialize(chunk);
         System.debug('>>> [ScheduledPushCampaign] sendChunk — records: ' + chunk.size() + ' | payload size: ' + payload.length() + ' bytes');
-        System.debug('>>> [ScheduledPushCampaign] payload: ' + payload.abbreviate(5000));
+        logFullPayload(payload);
         HttpResponse response = FEC_CampaignApiCaller.sendCampaignData(payload);
         Integer statusCode = response != null ? response.getStatusCode() : null;
         System.debug('>>> [ScheduledPushCampaign] response status: ' + statusCode);
@@ -102,5 +102,24 @@ public with sharing class FEC_ScheduledPushCampaignDataBatch implements Database
             rec.FEC_IsPushed__c = true;
         }
         update records;
+    }
+
+    /**
+     * Logs the full payload in chunks to avoid Salesforce debug log truncation.
+     * Each System.debug entry is capped around 256KB; chunking at CHUNK_SIZE keeps
+     * each line well under the limit and also readable in the log viewer.
+     */
+    private void logFullPayload(String payload) {
+        if (String.isBlank(payload)) {
+            return;
+        }
+        final Integer CHUNK_SIZE = 10000;
+        Integer total = payload.length();
+        Integer parts = (Integer) Math.ceil((Decimal) total / CHUNK_SIZE);
+        for (Integer i = 0; i < parts; i++) {
+            Integer startIdx = i * CHUNK_SIZE;
+            Integer endIdx = Math.min(startIdx + CHUNK_SIZE, total);
+            System.debug('>>> [ScheduledPushCampaign] payload part ' + (i + 1) + '/' + parts + ': ' + payload.substring(startIdx, endIdx));
+        }
     }
 }

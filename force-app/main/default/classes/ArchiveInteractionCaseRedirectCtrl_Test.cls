@@ -9,70 +9,6 @@ History
 @isTest
 private class ArchiveInteractionCaseRedirectCtrl_Test {
     
-    // @isTest
-    // static void testFetchAndRedirect_Success() {
-    //     // Create test Case
-    //     Case testCase = new Case(
-    //         Subject = 'Test Case',
-    //         FEC_Interaction_External_ID__c = 'TEST-EXT-001',
-    //         ArchiveExternalId__c = 'CASE-001'
-    //     );
-    //     insert testCase;
-        
-    //     // Mock external object
-    //     AthenaCases__x mockExternal = new AthenaCases__x(
-    //         ExternalId = 'TEST-EXT-001'
-    //     );
-    //     ArchiveCaseController.mockExternalRecords = new List<AthenaCases__x>{ mockExternal };
-        
-    //     // Setup page parameters
-    //     PageReference pageRef = Page.FetchInteraction;
-    //     pageRef.getParameters().put('id', testCase.Id);
-    //     Test.setCurrentPage(pageRef);
-        
-    //     Test.startTest();
-    //     FetchInteractionController controller = new FetchInteractionController();
-    //     PageReference result = controller.fetchAndRedirect();
-    //     Test.stopTest();
-        
-    //     // Verify redirect occurred (result will be null in test context due to callout)
-    //     System.assertNotEquals(null, controller.caseId);
-    // }
-    
-    // @isTest
-    // static void testFetchAndRedirect_NoCaseId() {
-    //     PageReference pageRef = Page.FetchInteraction;
-    //     Test.setCurrentPage(pageRef);
-        
-    //     Test.startTest();
-    //     FetchInteractionController controller = new FetchInteractionController();
-    //     PageReference result = controller.fetchAndRedirect();
-    //     Test.stopTest();
-        
-    //     System.assertEquals(true, controller.hasError);
-    //     System.assert(controller.errorMessage.contains('Case ID'));
-    // }
-    
-    // @isTest
-    // static void testFetchAndRedirect_NoExternalId() {
-    //     Case testCase = new Case(
-    //         Subject = 'Test Case'
-    //     );
-    //     insert testCase;
-        
-    //     PageReference pageRef = Page.FetchInteraction;
-    //     pageRef.getParameters().put('id', testCase.Id);
-    //     Test.setCurrentPage(pageRef);
-        
-    //     Test.startTest();
-    //     FetchInteractionController controller = new FetchInteractionController();
-    //     PageReference result = controller.fetchAndRedirect();
-    //     Test.stopTest();
-        
-    //     System.assertEquals(true, controller.hasError);
-    //     System.assert(controller.errorMessage.contains('External ID'));
-    // }
-
     @isTest
     static void testFetchAndRedirect_ExistingInteraction() {
         // 1. Setup Data: Create a Case that already has a matching Interaction Case in Salesforce
@@ -99,7 +35,10 @@ private class ArchiveInteractionCaseRedirectCtrl_Test {
 
         // 2. Mock the External Object record (AthenaCases__x)
         // Note: We use the @TestVisible variable from your controller
-        AthenaCases__x mockExt = new AthenaCases__x(ExternalId = 'EXT-999');
+        AthenaCases__x mockExt = new AthenaCases__x(ExternalId = 'EXT-999', 
+                                                    case_id__c = 'EXT-999', 
+                                                    s3_path__c = 'test', 
+                                                    migration_source__c = 'test');
         ArchiveInteractionCaseController.mockExternalRecords = new List<AthenaCases__x>{ mockExt };
 
         Test.startTest();
