@@ -1387,6 +1387,7 @@
 		<members>FEC_GetCustomerList</members>
 		<members>FEC_InteractionHighlightController</members>
 		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_RDPaymentContractAssessmentService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1652,6 +1653,7 @@
 		<members>fec_FileUploadCard</members>
 		<members>fecInteractionInfo</members>
 		<members>fec_IPPDetailPage</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <name>LightningComponentBundle</name>
     </types>
 	<types>
