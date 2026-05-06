@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
@@ -777,6 +778,16 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api remarkContent = '';
   handleManualItemsChange(event) {
     this._manualItems = event.detail?.items || [];
+  }
+
+  // tungnm37 thêm: hiển thị lỗi khi chọn Queue trùng
+  handleDuplicateQueue(event) {
+    const msg = event.detail?.message || 'Queue đã được chọn. Vui lòng chọn Queue khác.';
+    this.dispatchEvent(new ShowToastEvent({
+      title: 'Lỗi',
+      message: msg,
+      variant: 'error'
+    }));
   }
 
   // tungnm37 thêm: xử lý nút Add Item (Manual Assignment cho CC/SP)
