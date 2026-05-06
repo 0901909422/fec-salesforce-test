@@ -9,7 +9,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             this.value = value;
         }
     }
-
     public class RepaymentScheduleTotalsDTO {
         @AuraEnabled public String totalInstallmentAmount;
         @AuraEnabled public String totalPrincipal;
@@ -51,7 +50,6 @@ public with sharing class FEC_RepaySchedPayHistController {
         @AuraEnabled public String paymentAmount;
         @AuraEnabled public String paymentChannel;
     }
-
     public class SectionDataResult {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public String errorMessage;
@@ -88,6 +86,16 @@ public with sharing class FEC_RepaySchedPayHistController {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static Case getCaseInfo(Id caseId) {
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Is_Test_API__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        return cases.isEmpty() ? null : cases[0];
     }
 
     private static String getContractNumber(Id caseId) {
@@ -319,7 +327,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             result.realTimePaymentTable.add(row);
         }
     }
-
     private static void fillRepaymentSchedulePaymentHistory(SectionDataResult result) {
         result.repaymentSchedulePaymentHistory = new List<FieldItemDTO>();
 
@@ -378,6 +385,9 @@ public with sharing class FEC_RepaySchedPayHistController {
             return result;
         }
 
+        Case caseInfo = getCaseInfo(caseId);
+        Boolean isTestApi = caseInfo?.FEC_Is_Test_API__c == true;
+
         String contractNumber = getContractNumber(caseId);
         if (String.isBlank(contractNumber)) {
             result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
@@ -392,21 +402,13 @@ public with sharing class FEC_RepaySchedPayHistController {
         FEC_GetLoanSecInfo.ResponseWrapper secRes = null;
         FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
 
-        // Kiểm tra Case có FEC_Is_Test_API__c = true để giả lập GetLoanBasicInfo thất bại
-        List<Case> caseForTest = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
-        Boolean isTestApi = !caseForTest.isEmpty() && caseForTest[0].FEC_Is_Test_API__c == true;
-
-        Boolean basicApiFailed = isTestApi;
-        if (!basicApiFailed) {
-            try {
-                basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
-            } catch (Exception e) {
-                basicApiFailed = true;
-            }
-        }
-        if (basicApiFailed) {
+        try {
+            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber, isTestApi);
+        } catch (Exception e) {
             result.repaymentScheduleError = true;
         }
+        
+        
 
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(transId, requestorId, dateTimeStr, contractNumber);
