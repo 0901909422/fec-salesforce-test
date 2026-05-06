@@ -5,8 +5,6 @@
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
-    private static final String TEST_FAIL_ACCOUNT_NUMBER = '0001500080000131727';
-
     private static List<ResponseLog> responseLogs = new List<ResponseLog>();
 
     public class ResponseLog {
@@ -278,10 +276,11 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         result.endpoint = resolveDisbInfoEndpoint();
         String accountNumberParam = accountNumber;
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
         Boolean useFailTestData = isTestAPI == true
             && apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
-        if (useFailTestData) {
-            accountNumberParam = TEST_FAIL_ACCOUNT_NUMBER;
+        if (useFailTestData && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+            accountNumberParam = apiConfig.FEC_Account_Number_Hard_Code__c;
         }
         ValidationResult reqVal = validateRequest(accountNumberParam);
         if (!reqVal.isValid) {
