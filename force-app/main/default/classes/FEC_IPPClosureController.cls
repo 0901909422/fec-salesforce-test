@@ -64,7 +64,10 @@ public without sharing class FEC_IPPClosureController {
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
                   AND FEC_Customer_History__c = :customerHistoryId
-                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_PENDING
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending-%'
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %')
                 LIMIT 1
             ];
         } else {
@@ -77,7 +80,10 @@ public without sharing class FEC_IPPClosureController {
                 WHERE FEC_Customer_History__c = :customerHistoryId
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
-                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_PENDING
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending-%'
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %')
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
         }
@@ -160,13 +166,43 @@ public without sharing class FEC_IPPClosureController {
         if (ippRec.FEC_Customer_History__c != customerHistoryId) {
             return false;
         }
+        List<Case> extraCaseClears = new List<Case>();
         if (ippRec.FEC_IPP_Closure_Case__c != null && ippRec.FEC_IPP_Closure_Case__c != caseId) {
-            return false;
+            List<Case> holders = [
+                SELECT Id, Status, FEC_IPP_To_Close__c
+                FROM Case
+                WHERE Id = :ippRec.FEC_IPP_Closure_Case__c
+                LIMIT 1
+            ];
+            if (holders.isEmpty()) {
+                return false;
+            }
+            if (isCaseStatusBlockingIppReuse(holders[0].Status)) {
+                return false;
+            }
+            if (holders[0].FEC_IPP_To_Close__c == ippId) {
+                extraCaseClears.add(new Case(Id = holders[0].Id, FEC_IPP_To_Close__c = null));
+            }
         }
         Set<Id> checkBlocked = new Set<Id>();
         checkBlocked.add(ippId);
         if (!getIppIdsReferencedByOtherCases(caseId, checkBlocked).isEmpty()) {
             return false;
+        }
+        Set<Id> extraClearIds = new Set<Id>();
+        for (Case ec : extraCaseClears) {
+            extraClearIds.add(ec.Id);
+        }
+        for (Case oc : [
+            SELECT Id, Status
+            FROM Case
+            WHERE FEC_IPP_To_Close__c = :ippId
+              AND Id != :caseId
+        ]) {
+            if (!isCaseStatusBlockingIppReuse(oc.Status) && !extraClearIds.contains(oc.Id)) {
+                extraCaseClears.add(new Case(Id = oc.Id, FEC_IPP_To_Close__c = null));
+                extraClearIds.add(oc.Id);
+            }
         }
         if (ippRec.FEC_IPP_Current_Balance__c == null || ippRec.FEC_IPP_Current_Balance__c == 0) {
             return false;
@@ -184,6 +220,9 @@ public without sharing class FEC_IPPClosureController {
         ippToUpdate.add(new FEC_IPP__c(Id = ippId, FEC_IPP_Closure_Case__c = caseId));
         c.FEC_IPP_To_Close__c = ippId;
         try {
+            if (!extraCaseClears.isEmpty()) {
+                update extraCaseClears;
+            }
             update ippToUpdate;
             update c;
             return true;
@@ -194,7 +233,7 @@ public without sharing class FEC_IPPClosureController {
 
     private static Id getCustomerHistoryIdFromCase(Id caseId) {
         List<Case> cases = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c
+            SELECT Id, FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -203,9 +242,6 @@ public without sharing class FEC_IPPClosureController {
             return null;
         }
         Case c = cases[0];
-        if (c.FEC_Account_or_Contract__c != null) {
-            return c.FEC_Account_or_Contract__c;
-        }
         if (String.isNotBlank(c.FEC_Account_Number__c)) {
             if (!Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
                 return null;
@@ -247,8 +283,18 @@ public without sharing class FEC_IPPClosureController {
         if (String.isBlank(status)) {
             return true;
         }
-        return status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
-            && status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
+        if (status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
+                || status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED) {
+            return false;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_PENDING
+                || status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX)) {
+            return false;
+        }
+        if (status.startsWith('Pending ')) {
+            return false;
+        }
+        return true;
     }
 
 }
