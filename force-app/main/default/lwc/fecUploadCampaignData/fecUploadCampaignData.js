@@ -122,7 +122,7 @@ export default class FecUploadCampaignData extends LightningElement {
         const selectedRecord = this.rawMappingData.find(item => item.Id === selectedId);
 
         if (selectedRecord && !selectedRecord.FEC_IsActive__c) {
-            this.showToast(WARNING_TITLE, `Campaign "${selectedRecord.Name + inactiveItemMsg}"`, 'warning');
+            this.showToast(WARNING_TITLE, `Campaign "${selectedRecord.Name}" ${inactiveItemMsg}`, 'warning');
             
             this.inProgressCount = 0;
             this.inProgressData = null;

@@ -4,11 +4,11 @@
     <protected>false</protected>
     <values>
         <field>FEC_Endpoint__c</field>
-        <value xsi:type="xsd:string">https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/ingest_campaign</value>
+        <value xsi:type="xsd:string">/api/v1/cases/ingest_campaign</value>
     </values>
     <values>
         <field>FEC_Use_Named_Credential__c</field>
-        <value xsi:type="xsd:boolean">false</value>
+        <value xsi:type="xsd:boolean">true</value>
     </values>
     <values>
         <field>FEC_API_Key__c</field>
