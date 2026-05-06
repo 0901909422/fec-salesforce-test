@@ -67,7 +67,9 @@ public without sharing class FEC_IPPClosureController {
                   AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
                        OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_PENDING
                        OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending-%'
-                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %')
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %'
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED)
                 LIMIT 1
             ];
         } else {
@@ -83,7 +85,9 @@ public without sharing class FEC_IPPClosureController {
                   AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
                        OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_PENDING
                        OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending-%'
-                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %')
+                       OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending %'
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
+                       OR FEC_IPP_Closure_Case__r.Status = :FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED)
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
         }
