@@ -1180,13 +1180,13 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this.mailingBuilding = pendingData.building || '';
                     this.mailingNumber = pendingData.number_x || '';
                     this.mailingStreet = pendingData.street || '';
-                    this.mailingCity = cityCode;
-                    this.mailingDistrict = pendingData.district || '';
 
-                    this.provinceOptions = dedupeProvincePicklistOptions(
-                        this.ensurePicklistValue(this.provinceOptions, this.mailingCity),
-                        this.mailingCity
+                    const cityInOptsPending = cityCode !== '' && this.provinceOptions.some(
+                        (o) => String(o.value != null ? o.value : '').trim() === cityCode
                     );
+                    this.mailingCity = cityInOptsPending ? cityCode : '';
+                    this.mailingDistrict = cityInOptsPending ? (pendingData.district || '') : '';
+                    this.provinceOptions = dedupeProvincePicklistOptions(this.provinceOptions);
 
                     if (this.mailingCity && Array.isArray(districts) && districts.length > 0) {
                         const dOpts = districts.map((d) => ({
@@ -1295,16 +1295,14 @@ export default class Fec_UpdateAddress extends LightningElement {
                     this.mailingBuilding = ctx.building || '';
                     this.mailingNumber = ctx.number_x || '';
                     this.mailingStreet = ctx.street || '';
-                    this.mailingCity = ctx.city || '';
-                    this.mailingDistrict = ctx.district || '';
 
-                    this.provinceOptions = dedupeProvincePicklistOptions(
-                        this.ensurePicklistValue(
-                            this.provinceOptions,
-                            this.mailingCity
-                        ),
-                        this.mailingCity
+                    const rawCity = ctx.city || '';
+                    const cityInOptsFirst = rawCity !== '' && this.provinceOptions.some(
+                        (o) => String(o.value != null ? o.value : '').trim() === rawCity
                     );
+                    this.mailingCity = cityInOptsFirst ? rawCity : '';
+                    this.mailingDistrict = cityInOptsFirst ? (ctx.district || '') : '';
+                    this.provinceOptions = dedupeProvincePicklistOptions(this.provinceOptions);
 
                     if (this.mailingCity) {
                         return getDistrictOptionsForProvinceCode({

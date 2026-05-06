@@ -93,6 +93,7 @@ export default class Fec_allocationHistory extends LightningElement {
         if (this.previewSampleData) {
             this.allocationHistories = PREVIEW_ALLOCATION_HISTORY.map((r) => ({ ...r }));
             this.isLoading = false;
+            this.isExpanded = true;
             return;
         }
         this._subscription = subscribe(
@@ -118,6 +119,7 @@ export default class Fec_allocationHistory extends LightningElement {
         if (this.previewSampleData) {
             this.allocationHistories = PREVIEW_ALLOCATION_HISTORY.map((r) => ({ ...r }));
             this.isLoading = false;
+            this.isExpanded = true;
             return;
         }
         if (data) {
@@ -171,12 +173,14 @@ export default class Fec_allocationHistory extends LightningElement {
             this.allocationHistories = null;
         } finally {
             this.isLoading = false;
-            if (this._hasApplied) this.isExpanded = Array.isArray(this.allocationHistories) && this.allocationHistories.length > 0;
+            if (this._hasApplied) {
+                this.isExpanded = Array.isArray(this.allocationHistories);
+            }
         }
     }
 
     get showCollapsed() {
-        return !this.isLoading && !this._hasApplied;
+        return !this.isLoading && !this._hasApplied && !this.previewSampleData;
     }
 
     get showErrorBanner() {
@@ -184,7 +188,11 @@ export default class Fec_allocationHistory extends LightningElement {
     }
 
     get showDataSection() {
-        return !this.isLoading && this._hasApplied && Array.isArray(this.allocationHistories);
+        return (
+            !this.isLoading &&
+            Array.isArray(this.allocationHistories) &&
+            (this._hasApplied || this.previewSampleData)
+        );
     }
 
     /** Bản ghi cho fec_RelatedListPaging — cần Id ổn định */
