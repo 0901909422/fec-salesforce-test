@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : FEC_IPPClosureController.cls
- * Description  : Controller for IPP Closure. Eligible IPPs exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
+ * Description  : Controller for IPP Closure. Eligible IPPs exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review. Pending / Pending-{team} Case Status: IPP closure is not recorded on the Case.
  ****************************************************************************************/
 
 public without sharing class FEC_IPPClosureController {
@@ -37,6 +37,13 @@ public without sharing class FEC_IPPClosureController {
             return wrapper;
         }
         if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_IPP__c.isAccessible()) {
+            return wrapper;
+        }
+        List<Case> ippCaseForStatus = [
+            SELECT Status FROM Case WHERE Id = :caseId LIMIT 1
+        ];
+        if (ippCaseForStatus.isEmpty() || isCaseStatusBlockingIppClosureRecording(ippCaseForStatus[0].Status)) {
+            wrapper.showNoEligibleWarning = true;
             return wrapper;
         }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
@@ -136,6 +143,12 @@ public without sharing class FEC_IPPClosureController {
             return false;
         }
         if (!Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isAccessible() || !Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isUpdateable()) {
+            return false;
+        }
+        List<Case> ippClosureCaseForStatus = [
+            SELECT Status FROM Case WHERE Id = :caseId LIMIT 1
+        ];
+        if (ippClosureCaseForStatus.isEmpty() || isCaseStatusBlockingIppClosureRecording(ippClosureCaseForStatus[0].Status)) {
             return false;
         }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
@@ -249,6 +262,17 @@ public without sharing class FEC_IPPClosureController {
         }
         return status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
             && status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
+    }
+
+    /** True when Case Status is Pending or Pending-{team} (no IPP closure recording). */
+    private static Boolean isCaseStatusBlockingIppClosureRecording(String status) {
+        if (String.isBlank(status)) {
+            return false;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+            return true;
+        }
+        return status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX);
     }
 
 }
