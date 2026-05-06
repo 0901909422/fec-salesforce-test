@@ -3,7 +3,7 @@
  * Description  : Controller for IPP Closure. Eligible IPPs exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
  ****************************************************************************************/
 
- public without sharing class FEC_IPPClosureController {
+public without sharing class FEC_IPPClosureController {
 
     public class IPPClosureDTO {
         @AuraEnabled public String Id;
