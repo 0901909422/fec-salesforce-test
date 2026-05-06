@@ -94,26 +94,28 @@ public with sharing class ArchiveCaseAttachmentController {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
 
-        String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP;
-        if (apiConfig != null) {
-            endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c + '/' + EncodingUtil.urlEncode(s3Key, 'UTF-8'));
+        // String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP;
+        // if (apiConfig != null) {
+        //     endpoint = apiSetting?.FEC_Call_Mock__c
+        //         ? FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
+        //         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c + '/' + EncodingUtil.urlEncode(s3Key, 'UTF-8'));
+
+        String endpoint = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/attachments/download?s3Key=' 
+                        + s3Key;
         
             Map<String, String> headers = new Map<String, String>{
                 'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
             };
 
             HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, headers, null);
-            String resBody = resp.getBody();
             statusCode = resp.getStatusCode();
             String resStatusCode = String.valueOf(statusCode);
             // Log
-            FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', s3Key, 
-                                                            resBody, resStatusCode, '', '');
+            FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', endpoint, 
+                                                            '', resStatusCode, '', '');
 
             if (statusCode == 200) return resp.getBodyAsBlob();
-        }
+        //}
 
         System.debug('downloadFromS3 failed: status=' + statusCode + ' s3Key=' + s3Key);
         return null;

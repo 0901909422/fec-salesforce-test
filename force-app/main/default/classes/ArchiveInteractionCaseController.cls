@@ -58,19 +58,15 @@ public with sharing class ArchiveInteractionCaseController {
                 if (!interractionCases.isEmpty()) {
                     interactionCaseId = interractionCases[0].Id;
 
-                    if (String.isBlank(caseIns.FEC_Interaction__c)) {
-                        // Update current Case with the Interaction reference
-                        caseIns.FEC_Interaction__c = interactionCaseId;
-                        update caseIns;
-                    }
                 } else {
                     List<AthenaCases__x> archiveCases;
                     if (Test.isRunningTest() && mockExternalRecords != null) {
                         archiveCases = mockExternalRecords;
                     } else {
-                        archiveCases = [SELECT Id, ExternalId 
+                        archiveCases = [SELECT Id, ExternalId, s3_path__c, 
+                                        migration_source__c, case_id__c 
                                         FROM AthenaCases__x 
-                                        WHERE ExternalId = :archiveExternalInter];
+                                        WHERE case_id__c = :archiveExternalInter];
 
                         if (archiveCases.isEmpty()) {
                             hasError = true;
@@ -82,10 +78,25 @@ public with sharing class ArchiveInteractionCaseController {
                     }
                 }
 
-                // Redirect to the Interaction Case
-                PageReference pageRef = new PageReference('/' + interactionCaseId);
-                pageRef.setRedirect(true);
-                return pageRef;
+                if (interactionCaseId != null) {
+                    // Id Current Case and interactionCaseId are the same Id
+                    // It means it is the Interaction Case >> No need to update this field
+                    if (caseIns.Id != interactionCaseId 
+                        && String.isBlank(caseIns.FEC_Interaction__c)) {
+                        // Update current Case with the Interaction reference
+                        caseIns.FEC_Interaction__c = interactionCaseId;
+                        update caseIns;
+                    }
+
+                    // Redirect to the Interaction Case
+                    PageReference pageRef = new PageReference('/' + interactionCaseId);
+                    pageRef.setRedirect(true);
+                    return pageRef;
+                } else {
+                    hasError = true;
+                    errorMessage = label.FEC_Toast_Error_Generic;
+                    return null;
+                }
             } else {
                 hasError = true;
                 errorMessage = label.FEC_Toast_Error_Generic;
