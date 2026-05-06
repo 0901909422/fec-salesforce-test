@@ -9,6 +9,8 @@ public without sharing class FEC_CaseTriggerHandler {
     public static Boolean isExecuting = false;
     public static Boolean isSystemUpdate = false;
     private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
+    private static final Integer CASE_STATUS_HISTORY_MAX = 255;
+    private static final String CASE_STATUS_HISTORY_SEPARATOR = ' ';
     private static Boolean tatBhLookupDone = false;
     private static Id tatBusinessHoursId;
     
@@ -57,7 +59,8 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
-        setEmail2CaseChannelBeforeInsert(newCases);
+        applyCaseStatusHistoryOnInsert(newCases);
+        setEmail2CaseChannelBeforeInsert(newCases);  
         syncChannelFromInteractionForCustomerCase(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
@@ -79,6 +82,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/02 Toannd61
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        applyCaseStatusHistoryOnUpdate(newCases, oldMap);
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
         applyTatFullProcessBeforeSave(newCases);
@@ -1076,5 +1080,79 @@ public without sharing class FEC_CaseTriggerHandler {
             tatBusinessHoursId = rows.isEmpty() ? null : rows[0].Id;
         }
         return tatBusinessHoursId;
+    }
+
+    @TestVisible
+    private static void applyCaseStatusHistoryOnInsert(List<Case> records) {
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+        for (Case c : records) {
+            String statusVal = resolveCaseStatusValue(c);
+            if (String.isBlank(statusVal)) {
+                continue;
+            }
+            c.FEC_Case_Status_History__c = appendCaseStatusHistory(null, statusVal);
+        }
+    }
+
+    @TestVisible
+    private static void applyCaseStatusHistoryOnUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
+        if (newCases == null || newCases.isEmpty() || oldMap == null || oldMap.isEmpty()) {
+            return;
+        }
+        for (Case c : newCases) {
+            Case oldCase = oldMap.get(c.Id);
+            if (oldCase == null) {
+                continue;
+            }
+            String oldStatus = resolveCaseStatusValue(oldCase);
+            String newStatus = resolveCaseStatusValue(c);
+            if (String.isBlank(newStatus) || newStatus == oldStatus) {
+                continue;
+            }
+            String baseHistory = c.FEC_Case_Status_History__c;
+            if (baseHistory == null) {
+                baseHistory = oldCase.FEC_Case_Status_History__c;
+            }
+            c.FEC_Case_Status_History__c = appendCaseStatusHistory(baseHistory, newStatus);
+        }
+    }
+
+    @TestVisible
+    private static String resolveCaseStatusValue(Case c) {
+        if (c == null) {
+            return null;
+        }
+        return String.isNotBlank(c.FEC_Case_Status__c) ? c.FEC_Case_Status__c : c.Status;
+    }
+
+    @TestVisible
+    private static String appendCaseStatusHistory(String existingHistory, String newStatus) {
+        if (String.isBlank(newStatus)) {
+            return existingHistory;
+        }
+        Integer nextIndex = countCaseStatusHistoryEntries(existingHistory) + 1;
+        String normalizedStatus = newStatus.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ');
+        String nextSegment = '#' + String.valueOf(nextIndex) + ': ' + normalizedStatus;
+        String combined = String.isBlank(existingHistory)
+            ? nextSegment
+            : existingHistory + CASE_STATUS_HISTORY_SEPARATOR + nextSegment;
+        if (combined.length() > CASE_STATUS_HISTORY_MAX) {
+            return combined.substring(0, CASE_STATUS_HISTORY_MAX);
+        }
+        return combined;
+    }
+
+    private static Integer countCaseStatusHistoryEntries(String historyValue) {
+        if (String.isBlank(historyValue)) {
+            return 0;
+        }
+        Integer count = 0;
+        Matcher matcher = Pattern.compile('#\\d+\\s*:').matcher(historyValue);
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
     }
 }

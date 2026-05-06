@@ -13,7 +13,8 @@ public class FEC_CaseRemarksTriggerHandler {
         FEC_Case_Remarks__c oldRow = (FEC_Case_Remarks__c) Trigger.oldMap.get(r.Id);
         if (
           r.FEC_Case_Remarks__c != oldRow.FEC_Case_Remarks__c ||
-          r.FEC_Case__c != oldRow.FEC_Case__c
+          r.FEC_Case__c != oldRow.FEC_Case__c ||
+          r.FEC_User_Role__c != oldRow.FEC_User_Role__c
         ) {
           if (r.FEC_Case__c != null) {
             caseIds.add(r.FEC_Case__c);

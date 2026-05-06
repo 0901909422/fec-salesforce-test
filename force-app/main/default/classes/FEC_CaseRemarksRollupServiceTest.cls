@@ -35,7 +35,13 @@ private class FEC_CaseRemarksRollupServiceTest {
     insert rows;
 
     Case updated = [
-      SELECT FEC_Case_Remarks_1__c, FEC_Case_Remarks_2__c, FEC_Case_Remarks_3__c
+      SELECT
+        FEC_Case_Remarks_1__c,
+        FEC_Case_Remarks_2__c,
+        FEC_Case_Remarks_3__c,
+        FEC_Case_Remarks_Entered_By__c,
+        FEC_Case_Remarks_Entered_By_Role__c,
+        FEC_Case_Remarks_Entered_On__c
       FROM Case
       WHERE Id = :c.Id
     ];
@@ -45,6 +51,18 @@ private class FEC_CaseRemarksRollupServiceTest {
         updated.FEC_Case_Remarks_1__c.contains('#2:') &&
         updated.FEC_Case_Remarks_1__c.contains('#3:'),
       'Ba remark đầu phải nằm ở FEC_Case_Remarks_1__c'
+    );
+    String myEmail = UserInfo.getUserEmail();
+    System.assert(
+      String.isNotBlank(updated.FEC_Case_Remarks_Entered_By__c) &&
+        updated.FEC_Case_Remarks_Entered_By__c.contains('#1:') &&
+        updated.FEC_Case_Remarks_Entered_By__c.contains('#2:') &&
+        updated.FEC_Case_Remarks_Entered_By__c.contains(myEmail),
+      'Entered By phải có đánh số và email người tạo remark'
+    );
+    System.assert(
+      updated.FEC_Case_Remarks_Entered_By__c.contains(' #2:'),
+      'Các cụm #n: phải nối bằng khoảng trắng'
     );
     System.assert(
       updated.FEC_Case_Remarks_1__c != null &&
@@ -80,7 +98,13 @@ private class FEC_CaseRemarksRollupServiceTest {
     delete r2;
 
     Case updated = [
-      SELECT FEC_Case_Remarks_1__c, FEC_Case_Remarks_2__c, FEC_Case_Remarks_3__c
+      SELECT
+        FEC_Case_Remarks_1__c,
+        FEC_Case_Remarks_2__c,
+        FEC_Case_Remarks_3__c,
+        FEC_Case_Remarks_Entered_By__c,
+        FEC_Case_Remarks_Entered_By_Role__c,
+        FEC_Case_Remarks_Entered_On__c
       FROM Case
       WHERE Id = :c.Id
     ];
@@ -90,6 +114,41 @@ private class FEC_CaseRemarksRollupServiceTest {
     );
     System.assertEquals(null, updated.FEC_Case_Remarks_2__c);
     System.assertEquals(null, updated.FEC_Case_Remarks_3__c);
+    System.assert(
+      updated.FEC_Case_Remarks_Entered_By__c != null &&
+        updated.FEC_Case_Remarks_Entered_By__c.startsWith('#1:') &&
+        !updated.FEC_Case_Remarks_Entered_By__c.contains('#2:'),
+      'Meta Entered By chỉ còn #1 sau khi xóa remark 2'
+    );
+  }
+
+  @isTest
+  static void metaRollup_includesRoleAndTimestamp() {
+    Case c = new Case(Subject = 'Meta role ts');
+    insert c;
+    String roleVal = 'Test Role';
+    insert new FEC_Case_Remarks__c(
+      FEC_Case__c = c.Id,
+      FEC_Case_Remarks__c = 'X',
+      FEC_User_Role__c = roleVal
+    );
+
+    Case upd = [
+      SELECT FEC_Case_Remarks_Entered_By_Role__c, FEC_Case_Remarks_Entered_On__c
+      FROM Case
+      WHERE Id = :c.Id
+    ];
+    System.assert(
+      upd.FEC_Case_Remarks_Entered_By_Role__c != null &&
+        upd.FEC_Case_Remarks_Entered_By_Role__c.contains('#1:') &&
+        upd.FEC_Case_Remarks_Entered_By_Role__c.contains(roleVal),
+      'Role rollup phải có #1: và FEC_User_Role__c'
+    );
+    System.assert(
+      upd.FEC_Case_Remarks_Entered_On__c != null &&
+        upd.FEC_Case_Remarks_Entered_On__c.startsWith('#1:'),
+      'Entered On phải có #1: và CreatedDate đã format'
+    );
   }
 
 }
