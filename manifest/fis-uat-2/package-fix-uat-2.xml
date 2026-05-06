@@ -126,6 +126,8 @@
 		<members>FEC_GetInteractionCases</members>
 		<members>FEC_InteractionHighlightController</members>
 		<members>FEC_RepaySchedPayHistController</members>
+		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_RDPaymentContractAssessmentService</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -208,6 +210,7 @@
 		<members>fec_InteractionCases</members>
         <members>fec_PendingServiceCases</members>
         <members>fec_IPPDetailPage</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
@@ -901,6 +904,7 @@
 		<members>Case.FEC_Last_Updated_By_View__c</members>
 		<members>Case.FEC_Last_Updated_On_View__c</members>
 		<members>FEC_Payment_History__c.FEC_Payment_Amount__c</members>
+		<members>Case.FEC_Is_Call_API_Success__c</members>
 		<name>CustomField</name>
 	</types>
 	<types>
