@@ -1,19 +1,28 @@
 public with sharing class FEC_AssignmentExecuteService {
     
+    public class ExecuteVisibilityResult {
+        @AuraEnabled public Boolean value;
+        @AuraEnabled public Boolean shouldUpdate;
+    }
     
-    @AuraEnabled(cacheable=true)
-    public static Boolean canExecuteAssignment(Id caseId) {
+    @AuraEnabled
+    public static ExecuteVisibilityResult canExecuteAssignment(Id caseId) {
+        
         Id userId = UserInfo.getUserId();
         
         List<FEC_Assignment__c> assignments = [
-            SELECT Id, FEC_Assignment_Owner__c , FEC_Assignment_Status__c 
+            SELECT
+                Id,
+                FEC_Assignment_Owner__c,
+                FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
         ];
         
-        if (assignments.isEmpty()) return false;
+        Boolean canExecute = false;
         
         for (FEC_Assignment__c a : assignments) {
+            
             if (
                 a.FEC_Assignment_Owner__c == userId &&
                 !(
@@ -25,11 +34,45 @@ public with sharing class FEC_AssignmentExecuteService {
                 a.FEC_Assignment_Status__c == FEC_ConstantCommon.ASSIGNMENT_AUTOCOMPLETE_STATUS
                 )
             ) {
-                return true;
+                canExecute = true;
+                break;
             }
         }
         
-        return false;
+        Case caseRecord = [
+            SELECT
+                Id,
+                FEC_Can_Execute_Assignment__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
+        ExecuteVisibilityResult result = new ExecuteVisibilityResult();
+        
+        result.value = canExecute;
+        
+        result.shouldUpdate =
+            caseRecord.FEC_Can_Execute_Assignment__c != canExecute;
+        
+        if (result.shouldUpdate) {
+            
+            try {
+                
+                FEC_CaseTriggerHandler.isSystemUpdate = true;
+                
+                update new Case(
+                    Id = caseId,
+                FEC_Can_Execute_Assignment__c = canExecute
+                    );
+                
+            } finally {
+                
+                FEC_CaseTriggerHandler.isSystemUpdate = false;
+                
+            }
+        }
+        
+        return result;
     }
-    
 }
