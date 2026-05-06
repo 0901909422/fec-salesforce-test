@@ -12,7 +12,10 @@ global with sharing class ArchiveCaseController_Test {
 
     @isTest
     static void testGetOrCreateCaseWithExistedCase() {
-        AthenaCases__x fakeRecord = new AthenaCases__x(ExternalId = 'EXAMPLE-999');
+        AthenaCases__x fakeRecord = new AthenaCases__x(ExternalId = 'EXAMPLE-999', 
+                                                    case_id__c = 'EXAMPLE-999', 
+                                                    s3_path__c = 'test', 
+                                                    migration_source__c = 'test');
         ArchiveCaseController.mockExternalRecords = new List<AthenaCases__x>{ fakeRecord };
         Case localCase = new Case(ArchiveExternalId__c = 'EXAMPLE-999');
         insert localCase;
@@ -451,7 +454,10 @@ global with sharing class ArchiveCaseController_Test {
     @isTest
     static void testGetOrCreateCase_CreateNewCaseSuccess() {
         Test.setMock(HttpCalloutMock.class, new CaseDetailMock());
-        AthenaCases__x fakeExternalRecord = new AthenaCases__x(ExternalId = 'EXAMPLE-999');
+        AthenaCases__x fakeExternalRecord = new AthenaCases__x(ExternalId = 'EXAMPLE-999', 
+                                                    case_id__c = 'EXAMPLE-999', 
+                                                    s3_path__c = 'test', 
+                                                    migration_source__c = 'test');
         ArchiveCaseController.mockExternalRecords = new List<AthenaCases__x>{ fakeExternalRecord };
         
         Test.startTest();
