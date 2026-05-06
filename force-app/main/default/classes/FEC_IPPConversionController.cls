@@ -286,7 +286,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
@@ -369,7 +369,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
@@ -451,7 +451,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = planForApi;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {

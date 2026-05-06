@@ -114,10 +114,21 @@ public with sharing class FEC_AddIPP {
   }
 
   public static AddIPPResult addIPP(IPPRequest request) {
+    return addIPP(request, true);
+  }
+
+  public static AddIPPResult addIPP(IPPRequest request, Boolean isTestApi) {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
     String transId = FEC_CommonUltils.generateTransactionId();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
+    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+    Boolean useRealData = isTestApi == true
+      || apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+    if (!useRealData && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+      request.accountNumber = apiConfig.FEC_Account_Number_Hard_Code__c;
+    }
 
     Dom.Document doc = buildRequestDocument(request, transId, timestamp);
 
@@ -125,9 +136,7 @@ public with sharing class FEC_AddIPP {
       HttpResponse res = sendRequest(doc);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
-      
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+
       String endpoint = apiSetting?.FEC_Call_Mock__c
         ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
