@@ -5,6 +5,7 @@
 public with sharing class FEC_GetDisbInfoByAcctCallout {
 
     private static final String API_CONFIG_NAME = 'FEC_GetDisb_Info_By_Acct';
+    private static final String TEST_FAIL_ACCOUNT_NUMBER = '0001500080000131727';
 
     private static List<ResponseLog> responseLogs = new List<ResponseLog>();
 
@@ -243,16 +244,25 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
     }
 
     public static GetDisbInfoByAcctResponse getDisbInfoByAcct(String accountNumber, Integer ageOfRecords) {
-        return getDisbInfoByAcctExecutionResult(accountNumber, ageOfRecords).response;
+        return getDisbInfoByAcctExecutionResult(accountNumber, ageOfRecords, false).response;
+    }
+
+    public static GetDisbInfoByAcctResponse getDisbInfoByAcct(String accountNumber, Integer ageOfRecords, Boolean isTestAPI) {
+        return getDisbInfoByAcctExecutionResult(accountNumber, ageOfRecords, isTestAPI).response;
     }
 
     public static GetDisbInfoByAcctExecutionResult getDisbInfoByAcctExecutionResult(String accountNumber, Integer ageOfRecords) {
+        return getDisbInfoByAcctExecutionResult(accountNumber, ageOfRecords, false);
+    }
+
+    public static GetDisbInfoByAcctExecutionResult getDisbInfoByAcctExecutionResult(String accountNumber, Integer ageOfRecords, Boolean isTestAPI) {
         return getDisbInfoByAcctExecutionResult(
             accountNumber,
             ageOfRecords,
             String.valueOf(UUID.randomUUID()),
             Datetime.now().format(FEC_ConstantCommon.STR_DATETIME_FORMAT_XXX),
-            FEC_ConstantCommon.REQUESTOR_PEGA_CSM
+            FEC_ConstantCommon.REQUESTOR_PEGA_CSM,
+            isTestAPI
         );
     }
 
@@ -261,11 +271,19 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
         Integer ageOfRecords,
         String transId,
         String dateTimeHeader,
-        String requestorId
+        String requestorId,
+        Boolean isTestAPI
     ) {
         GetDisbInfoByAcctExecutionResult result = new GetDisbInfoByAcctExecutionResult();
         result.endpoint = resolveDisbInfoEndpoint();
-        ValidationResult reqVal = validateRequest(accountNumber);
+        String accountNumberParam = accountNumber;
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        Boolean useFailTestData = isTestAPI == true
+            && apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+        if (useFailTestData) {
+            accountNumberParam = TEST_FAIL_ACCOUNT_NUMBER;
+        }
+        ValidationResult reqVal = validateRequest(accountNumberParam);
         if (!reqVal.isValid) {
             HttpResponse synVal = new HttpResponse();
             synVal.setStatusCode(400);
@@ -293,7 +311,7 @@ public with sharing class FEC_GetDisbInfoByAcctCallout {
             stashDisbApiLog(result);
             return result;
         }
-        String payload = buildRequestPayload(transId, dateTimeHeader, requestorId, accountNumber, ageOfRecords);
+        String payload = buildRequestPayload(transId, dateTimeHeader, requestorId, accountNumberParam, ageOfRecords);
         result.requestPayload = payload;
         HttpResponse resp;
         String callExMsg = null;
