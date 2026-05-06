@@ -941,9 +941,9 @@ public with sharing class FEC_CommonUltils {
     HttpResponse response,
     String errorMessage
   ){
-    Boolean isSuccess = (response.getStatusCode() == 200);
-    String statusCode =  String.valueOf(response.getStatusCode());
-    String responseBody = response.getBody();
+    Boolean isSuccess = (response != null && response.getStatusCode() == 200);
+    String statusCode = response == null ? '' : String.valueOf(response.getStatusCode());
+    String responseBody = response == null ? '' : response.getBody();
     try {
       FEC_API_Log__c log = new FEC_API_Log__c();
 
