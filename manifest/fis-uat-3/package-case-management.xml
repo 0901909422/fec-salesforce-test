@@ -829,6 +829,20 @@
         <members>Case.FEC_Execute_Assigment</members>
         <name>QuickAction</name>
     </types>
+
+    <types>
+        <members>Case Time TAT</members>
+        <name>MilestoneType</name>
+    </types>
+
+    <types>
+        <members>case sla main</members>
+        <name>EntitlementProcess</name>
+    </types>
+    <types>
+        <members>Case</members>
+        <name>EntitlementProcess</name>
+    </types>
     
 	<version>66.0</version>
 </Package>
