@@ -33,7 +33,7 @@ function interactionsListFromResponse(response) {
         return [];
     }
     const raw = response.InteractionHistory ?? response.interactionHistory;
-    console.log('test test test');
+
     return Array.isArray(raw) ? raw : [];
 }
 
