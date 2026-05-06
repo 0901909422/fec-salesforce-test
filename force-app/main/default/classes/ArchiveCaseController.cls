@@ -81,7 +81,8 @@ public with sharing class ArchiveCaseController {
             if (Test.isRunningTest() && mockExternalRecords != null) {
                 archiveCases = mockExternalRecords;
             } else {
-                archiveCases = [SELECT Id, ExternalId 
+                archiveCases = [SELECT Id, ExternalId, s3_path__c, 
+                                migration_source__c, case_id__c 
                                 FROM AthenaCases__x 
                                 WHERE Id = :sfIdForExternalRec];
             }
@@ -94,14 +95,19 @@ public with sharing class ArchiveCaseController {
 
             AthenaCases__x archiveCaseIns = archiveCases[0];
             List<Case> cases = [SELECT Id, RecordTypeId FROM Case 
-                                WHERE ArchiveExternalId__c = :archiveCaseIns.ExternalId];
+                                WHERE ArchiveExternalId__c = :archiveCaseIns.case_id__c];
             if (!cases.isEmpty()) caseId = cases[0].Id;
             else caseId = getCaseDetailAndCreateCaseTemp(archiveCaseIns);
 
-            PageReference pageRef = new PageReference('/' + caseId);
-            pageRef.setRedirect(true);
-            return pageRef;
-            
+            if (caseId != null) {
+                PageReference pageRef = new PageReference('/' + caseId);
+                pageRef.setRedirect(true);
+                return pageRef;
+            } else {
+                hasError = true;
+                errorMessage = label.FEC_Toast_Error_Generic;
+                return null;
+            }
         } catch (Exception ex) {
             hasError = true;
             errorMessage = 'Error: ' + ex.getMessage();
@@ -127,7 +133,7 @@ public with sharing class ArchiveCaseController {
         String methodOfApi = FEC_ConstantCommon.API_METHOD_GET;
         String recTypeName = label.TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE;
         String strRelationship = '__r';
-        String archieveExternalId = archiveCaseIns.ExternalId;
+        String archieveExternalId = archiveCaseIns.case_id__c;
         //String archieveExternalId = archiveExternalId;
         List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
         String attachmentStr = '';
@@ -147,7 +153,10 @@ public with sharing class ArchiveCaseController {
         //         ? FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
         //         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
         // }
-        String endpoint = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/case-archive?s3Key=salesforce/archive/2026/04/01/case_salesforce.json&source=SALESFORCE';
+        
+        String endpoint = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/case-archive?s3Key=';
+        endpoint += archiveCaseIns.s3_path__c.substringAfter('fec-integration-s3/') 
+                    + '&source=' + archiveCaseIns.migration_source__c;
 
         Map<String,String> headers = new Map<String,String>{
             'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
@@ -159,7 +168,7 @@ public with sharing class ArchiveCaseController {
         System.debug('ArchiveCase.getBody() ' + resBody);
 
         FEC_IntegrationFraudCaseUtil.logIntegrationService('Get Archive Case', '', '', '', 
-                                                            '', resBody, resStatusCode, '', '');
+                                                            endpoint, resBody, resStatusCode, '', '');
 
         // Collect __r relationship objects separately for lookup resolution
         Map<String, Map<String, Object>> mapRelationshipObjects = new Map<String, Map<String, Object>>();
@@ -675,8 +684,10 @@ public with sharing class ArchiveCaseController {
                     // set default value for Lookup fields
                     // If the Id does not exist or cannot access, we need to set null value
                     String idStr = (String) rawValue;
-                    if (mapIdCanAccess.containsKey(idStr) 
-                        && !mapIdCanAccess.get(idStr).HasReadAccess) {
+                    Boolean noReading = mapIdCanAccess.containsKey(idStr) 
+                                        && !mapIdCanAccess.get(idStr).HasReadAccess ? true : false;
+
+                    if (!mapIdCanAccess.containsKey(idStr) || noReading) {
 
                         if (devFieldTmp.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
                         else caseIns.put(devFieldTmp, null);
@@ -684,10 +695,50 @@ public with sharing class ArchiveCaseController {
                         caseIns.put(devFieldTmp, rawValue);
                     }
                 }
+                else if (fieldType == Schema.DisplayType.PICKLIST 
+                        || fieldType == Schema.DisplayType.MULTIPICKLIST) {
+                    setPicklistValue(caseIns, devFieldTmp, rawValue, fieldDetail, fieldType);
+                } 
                 else {
                     caseIns.put(devFieldTmp, rawValue);
                 }
             }
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Validate and set picklist/multipicklist value for a Case field.
+                   If the value from JSON does not exist in the field's valid picklist entries,
+                   set null to avoid DML exceptions. For multipicklist, only valid values are kept.
+    Returns:       void
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/06      Thanh Van           Init
+    ------------------------------------------------------------*/
+    private static void setPicklistValue(Case caseIns, String fieldName, Object rawValue,
+                                         Schema.DescribeFieldResult fieldDetail, 
+                                         Schema.DisplayType fieldType) {
+        String strValue = String.valueOf(rawValue);
+        if (String.isBlank(strValue)) return;
+
+        Set<String> validValues = new Set<String>();
+        for (Schema.PicklistEntry ple : fieldDetail.getPicklistValues()) {
+            validValues.add(ple.getValue());
+        }
+
+        if (fieldType == Schema.DisplayType.MULTIPICKLIST) {
+            List<String> validSelected = new List<String>();
+            for (String val : strValue.split(';')) {
+                String trimmed = val.trim();
+                if (validValues.contains(trimmed)) {
+                    validSelected.add(trimmed);
+                }
+            }
+            caseIns.put(fieldName, validSelected.isEmpty() ? null : String.join(validSelected, ';'));
+        } else {
+            caseIns.put(fieldName, validValues.contains(strValue) ? strValue : null);
         }
     }
 
@@ -704,13 +755,32 @@ public with sharing class ArchiveCaseController {
         Id caseId;
         Boolean isSuccess = false;
         Integer timeRetry = 0;
-        while (!isSuccess && timeRetry < 149) {
+        while (!isSuccess && timeRetry < 140) {
             timeRetry ++;
             System.debug('try-InsertcaseIns ' + caseIns);
             insert caseIns;
             caseId = caseIns.Id;
             isSuccess = true;
         }
+
+        // while (!isSuccess && timeRetry < 140) {
+        //     try {
+        //         timeRetry ++;
+        //         System.debug('try-InsertcaseIns ' + caseIns);
+        //         insert caseIns;
+        //         caseId = caseIns.Id;
+        //         isSuccess = true;
+        //     } catch (DmlException dmlEx) {
+        //         for (Integer i = 0; i < dmlEx.getNumDml(); i++) {
+        //             List<Schema.SObjectField> fields = dmlEx.getDmlFields(i);
+        //             if (fields != null && !fields.isEmpty()) {
+        //                 for (Schema.SObjectField keyOfField : fields) {
+        //                     caseIns.put(keyOfField, null);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
         return caseId;
     }
@@ -746,10 +816,16 @@ public with sharing class ArchiveCaseController {
     ------------------------------------------------------------*/
     public static void processSpecialValueForCase(Case caseIns) {
         String interactionId = caseIns.ArchiveInteractionId__c;
+        Id interactionRtId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+
         if (String.isNotBlank(interactionId)) {
             if (interactionId.contains('</a>')) interactionId = interactionId.substringBetween('>', '</a>');
             caseIns.ArchiveInteractionId__c = interactionId;
         }
+
+        // case is not Interaction >> FEC_External_Interaction_ID__c should be null
+        // If it is the same value with the Interaction case record >> error (External ID) (Unique Case Sensitive)
+        if (interactionRtId != caseIns.RecordTypeId) caseIns.FEC_External_Interaction_ID__c = null;
     }
 
     /*------------------------------------------------------------

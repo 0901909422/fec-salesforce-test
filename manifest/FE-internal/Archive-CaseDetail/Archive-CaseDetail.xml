@@ -79,5 +79,10 @@
         <name>PermissionSet</name>
     </types>
 
+    <types>
+        <members>FEC_Customer_Case_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+
     <version>65.0</version>
 </Package>
