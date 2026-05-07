@@ -7,6 +7,7 @@ import { formatDate } from 'c/fec_CommonUtils';
 import FEC_Card_Delivery_Label from '@salesforce/label/c.FEC_Card_Delivery_Label';
 import FEC_Other_Card_Label from '@salesforce/label/c.FEC_Other_Card_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Gender_Label from '@salesforce/label/c.FEC_Gender_Label';
 
 export default class Fec_CardInfo extends LightningElement {
@@ -14,6 +15,8 @@ export default class Fec_CardInfo extends LightningElement {
     
     // Custom labels từ CustomLabels.labels-meta.xml (Account Info / Common)
     ERROR_MESSAGE = FEC_MSG_Error_API_Label;
+    /** Card Delivery & Other Cards: bảng rỗng (cùng RelatedListPaging / label chung). */
+    emptyStateMessage = FEC_Common_No_Results_Label;
 
     cardDeliveryData = [];
     otherCardData = [];

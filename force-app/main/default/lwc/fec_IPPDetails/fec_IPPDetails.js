@@ -121,7 +121,7 @@ export default class Fec_IPPDetails extends NavigationMixin(LightningElement) {
         return !this.hasError && this.ippData && this.ippData.length > 0;
     }
 
-    /** Lỗi chỉ hiển thị trên tiêu đề section; body dùng bảng (RelatedListPaging) với "No data" khi không có dòng. */
+    /** Lỗi chỉ hiển thị trên tiêu đề section; body dùng bảng (RelatedListPaging) khi không có dòng. */
     get showErrorInHeader() {
         return !this.isLoading && this.hasError && (!this.ippData || this.ippData.length === 0);
     }

@@ -248,6 +248,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
 
+    // tungnm37 thêm: UpdateDisbursementStatus log constants
+    public static final String DISB_LOG_CRMID    = 'CRMID=';
+    public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
+    public static final String DISB_LOG_RESPONSE = ' Response=';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
@@ -370,6 +375,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CODE_FAILURE      = '3';
     public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
+    public static final String ERROR_CODE_VALIDATION = 'VALIDATION_ERROR';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
@@ -446,6 +452,23 @@ public with sharing class FEC_ConstantCommon {
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+    // Notification history channels and send-type aliases
+    public static final String NOTIFICATION_HISTORY_CHANNEL_EMAIL = 'EMAIL';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_ZNS = 'ZNS';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_MOBILE_APP = 'MOBILE_APP';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_EMAIL_LOWER = 'email';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_TITLE = 'Zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_LOWER = 'zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS = 'Zalo ZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO = 'Zalo';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS_COMPACT = 'ZaloZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP = 'Mobile App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_COMPACT = 'MobileApp';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_LOWER = 'mobile app';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_APP = 'App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH = 'Push';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH_NOTIFICATION = 'Push Notification';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APPLICATION = 'Mobile Application';
 
 
     //internalSendToSet
@@ -522,6 +545,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
     public static final String NO_MATCH = 'No match';
     public static final String SKIP_ITEM = 'Skip item (null/blank)';
+    
+    /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
+    public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
+    public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
     
     //HieuTT74 - Update ngày 25/4/2026 - Assigment Routing Action
     // ================= ACTION =================
