@@ -31,6 +31,7 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -481,6 +482,7 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+        <members>fec_RdPaymentRoutingUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -880,5 +882,10 @@
         <members>Case.Update_Case_96h_Warning</members>
         <name>WorkflowFieldUpdate</name>
     </types>
+	<types>
+	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Internal_Case</members>
+		<name>RecordType</name>
+	</types>
 	<version>66.0</version>
 </Package>
