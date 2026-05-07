@@ -181,7 +181,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
                     FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
-                    FEC_OwnerID__c = queueId,
+                    FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
                     FEC_Assignment_Remark__c = remarkContent,
@@ -194,8 +194,10 @@ public without sharing class FEC_CofGsrAssignmentService {
 
             // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c để list view dùng
             List<String> queueIdList = new List<String>();
-            for (FEC_Assignment__c a : assignments) {
-                if (String.isNotBlank(a.FEC_OwnerID__c)) queueIdList.add(a.FEC_OwnerID__c);
+            for (FEC_Routing_Assignment__c ra : routingAssignments) {
+                if (queueNameToId.containsKey(ra.FEC_Queue__c)) {
+                    queueIdList.add(String.valueOf(queueNameToId.get(ra.FEC_Queue__c)));
+                }
             }
             if (!queueIdList.isEmpty()) {
                 try {
@@ -295,7 +297,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
                     FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
-                    FEC_OwnerID__c = queueId,
+                    FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
@@ -310,8 +312,10 @@ public without sharing class FEC_CofGsrAssignmentService {
 
             // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c
             List<String> queueIdListM = new List<String>();
-            for (FEC_Assignment__c a : assignments) {
-                if (String.isNotBlank(a.FEC_OwnerID__c)) queueIdListM.add(a.FEC_OwnerID__c);
+            for (String qn : queueNames) {
+                if (queueNameToId.containsKey(qn)) {
+                    queueIdListM.add(String.valueOf(queueNameToId.get(qn)));
+                }
             }
             if (!queueIdListM.isEmpty()) {
                 try {
