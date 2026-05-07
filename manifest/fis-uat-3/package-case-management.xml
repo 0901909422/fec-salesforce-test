@@ -26,6 +26,8 @@
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_HoldCaseController</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_SearchController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -449,6 +451,7 @@
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
         <members>fec_OriginalInformation</members>
+		<members>fec_Search</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
