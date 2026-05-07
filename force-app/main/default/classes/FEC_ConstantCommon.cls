@@ -683,4 +683,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String DNB_STATUS_ACTIVE = 'Active';
     public static final String DNB_STATUS_INACTIVE = 'Inactive';
     public static final String BOOLEAN_TRUE = 'true';
+
+    public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
+    public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    public static final String QUEUE_ID_START = '00G';
+
 }
