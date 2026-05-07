@@ -13378,6 +13378,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Không tìm thấy NFU Config cho Sub Code</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -15195,6 +15203,13 @@
         <protected>false</protected>
         <shortDescription>Accordion section ZNS</shortDescription>
         <value>ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
     </labels>
 <labels>
         <fullName>FEC_Assignment_Remarks_History</fullName>

@@ -27,6 +27,9 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_HoldCaseController</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
         <name>ApexClass</name>
     </types>
@@ -471,6 +474,8 @@
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
+        <members>fec_OriginalInformation</members>
+		<members>fec_Search</members>
 		<members>fec_AssignmentExecuteVisibility</members>
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_COFFraudRelatedView</members>
@@ -655,6 +660,8 @@
         <members>FEC_Assignment_Remarks_History</members>
         <!-- Interaction Case Service Case -->
         <members>FEC_RelevantTicket_Cannot_Delete</members>
+		<members>FEC_Reason_Error</members>
+		<members>FEC_Duplicate_Queue_Error</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -824,25 +831,17 @@
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
         <name>PermissionSet</name>
     </types>
-
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
         <name>QuickAction</name>
     </types>
-
     <types>
         <members>Case Time TAT</members>
         <name>MilestoneType</name>
     </types>
-
     <types>
         <members>case sla main</members>
         <name>EntitlementProcess</name>
     </types>
-    <types>
-        <members>Case</members>
-        <name>EntitlementProcess</name>
-    </types>
-    
 	<version>66.0</version>
 </Package>
