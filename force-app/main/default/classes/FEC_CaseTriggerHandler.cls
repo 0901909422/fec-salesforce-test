@@ -25,24 +25,32 @@ public without sharing class FEC_CaseTriggerHandler {
 
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onBeforeInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeInsert(listCase);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onBeforeUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeUpdate(listCase, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onAfterInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterInsert(listCase);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onAfterUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterUpdate(listCase, oldMap);
         }
     }
 
@@ -991,6 +999,22 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Filter Case
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/04/07      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void filterCase(List<Case> listCase, List<Case> newCases){
+        for (Case caseIns : newCases) {
+            if (String.isBlank(caseIns.ArchiveExternalId__c)) {
+                listCase.add(caseIns);
+            }
         }
     }
 

@@ -13918,6 +13918,69 @@
         <shortDescription>FEC_Assignment_Id</shortDescription>
         <value>Assignment ID</value>
     </labels>
+	<labels>
+        <fullName>TECH_LIST_ATT_IGNORED</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_ATT_IGNORED</shortDescription>
+        <value>attributes,Id,CaseNumber,CreatedById,LastModifiedById,RecordTypeId</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE</shortDescription>
+        <value>Customer Case</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_INTERACTION</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_INTERACTION</shortDescription>
+        <value>Interaction</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_SEARCH_INTERACTION</shortDescription>
+        <value>Search Interaction</value>
+    </labels>
+    <labels>
+        <fullName>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_CASE_RECORDTYPE_NAME_INTERNAL_CASE</shortDescription>
+        <value>Internal Case</value>
+    </labels>
+    <labels>
+        <fullName>TECH_API_GET_ARCHIVE_DETAIL_CASE</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_API_GET_ARCHIVE_DETAIL_CASE</shortDescription>
+        <value>FEC_Get_Archive_Detail_Case</value>
+    </labels>
+    <labels>
+        <fullName>TECH_ARCHIEVE_MAPPING_DEV_FIELD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_ARCHIEVE_MAPPING_DEV_FIELD</shortDescription>
+        <value>{
+  &quot;createddate&quot;: &quot;ArchiveCreatedDate__c&quot;,
+  &quot;LastModifiedDate&quot;: &quot;ArchiveLastModifiedDate__c&quot;,
+  &quot;FEC_Interaction_ID__c&quot;: &quot;ArchiveInteractionId__c&quot;,
+  &quot;FEC_Service_Case_Owner__c&quot;: &quot;ArchiveServiceCaseOwner__c&quot;,
+  &quot;FEC_Case_Created_By__c&quot;: &quot;ArchiveCaseCreatedBy__c&quot;,
+  &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;
+}</value>
+    </labels>
+    <labels>
+        <fullName>TECH_API_GET_ARCHIVE_ATTACHMENT</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_API_GET_ARCHIVE_ATTACHMENT</shortDescription>
+        <value>FEC_Get_Archive_Attachment</value>
+    </labels>
     <!-- tungnm37 thêm: UpdateDisbursementStatus API messages -->
     <labels>
         <fullName>FEC_UpdateDisb_Msg_InvalidRequest</fullName>

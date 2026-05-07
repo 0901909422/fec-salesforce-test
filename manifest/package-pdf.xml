@@ -3,13 +3,9 @@
     <!-- Apex Classes -->
     <types>
         <members>FEC_ClientPDFService</members>
+        <members>FEC_ClientPDFServiceTest</members>
+        <members>FEC_PDFTemplateSelector</members>
         <name>ApexClass</name>
-    </types>
-
-    <!-- Visualforce Pages -->
-    <types>
-        <members>FEC_PDFRenderer</members>
-        <name>ApexPage</name>
     </types>
 
     <!-- Custom Metadata Type Object -->
