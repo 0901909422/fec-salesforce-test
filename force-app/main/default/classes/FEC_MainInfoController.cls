@@ -47,6 +47,8 @@ public without sharing class FEC_MainInfoController {
         @AuraEnabled public String addressType;
         @AuraEnabled public String address;
         @AuraEnabled public String mailingAddress;
+        /** Tên quận/huyện từ FEC_District__r — hiển thị với nhãn "Ward" trên UI. */
+        @AuraEnabled public String ward;
     }
 
     public class PicklistOptionDTO {
@@ -318,16 +320,45 @@ public without sharing class FEC_MainInfoController {
         if (String.isBlank(provinceCode)) {
             return opts;
         }
+        String code = provinceCode.trim();
         List<FEC_Province__c> provs = [
-            SELECT Id
+            SELECT Id, Name, FEC_Name_VN__c, FEC_Country__r.FEC_Code__c
             FROM FEC_Province__c
-            WHERE FEC_Code__c = :provinceCode
+            WHERE FEC_Code__c = :code
+            ORDER BY FEC_Country__r.FEC_Code__c NULLS LAST
             LIMIT 1
         ];
         if (provs.isEmpty()) {
             return opts;
         }
-        Id provinceId = provs[0].Id;
+        FEC_Province__c prov = provs[0];
+        Id provinceId = prov.Id;
+
+        /*
+         * District được lưu dưới province bộ legacy (country 1).
+         * Khi UI truyền vào mã province bộ CIF (country 2) — sau khi remap từ 1→2 —
+         * cần tra ngược về province cùng tên trong country 1 để lấy đúng danh sách district.
+         */
+        String countryCode = prov.FEC_Country__r?.FEC_Code__c;
+        // '2' = bộ CIF (API set); '1' = bộ legacy — district thực tế lưu dưới bộ 1.
+        if ('2'.equals(countryCode)) {
+            String matchName = String.isNotBlank(prov.FEC_Name_VN__c)
+                ? prov.FEC_Name_VN__c.trim()
+                : (prov.Name != null ? prov.Name.trim() : null);
+            if (String.isNotBlank(matchName)) {
+                List<FEC_Province__c> legacyProvs = [
+                    SELECT Id
+                    FROM FEC_Province__c
+                    WHERE FEC_Country__r.FEC_Code__c = '1'
+                      AND (FEC_Name_VN__c = :matchName OR Name = :matchName)
+                    LIMIT 1
+                ];
+                if (!legacyProvs.isEmpty()) {
+                    provinceId = legacyProvs[0].Id;
+                }
+            }
+        }
+
         for (FEC_District__c d : [
             SELECT Name, FEC_Code__c, FEC_Name_VN__c
             FROM FEC_District__c
@@ -339,10 +370,12 @@ public without sharing class FEC_MainInfoController {
             }
             PicklistOptionDTO o = new PicklistOptionDTO();
             o.value = d.FEC_Code__c;
-            o.label = FEC_CommonUltils.picklistLabelFromFecNameVn(d.FEC_Name_VN__c);
-            if (String.isBlank(o.label)) {
-                continue;
+            // Fallback: FEC_Name_VN__c → Name → FEC_Code__c (không skip record có label rỗng)
+            String lbl = FEC_CommonUltils.picklistLabelFromFecNameVn(d.FEC_Name_VN__c);
+            if (String.isBlank(lbl)) {
+                lbl = String.isNotBlank(d.Name) ? d.Name : d.FEC_Code__c;
             }
+            o.label = lbl;
             opts.add(o);
         }
         return opts;
@@ -354,10 +387,12 @@ public without sharing class FEC_MainInfoController {
         if (String.isBlank(provinceCode)) {
             return opts;
         }
+        String code = provinceCode.trim();
         List<FEC_Province__c> provs = [
             SELECT Id
             FROM FEC_Province__c
-            WHERE FEC_Code__c = :provinceCode
+            WHERE FEC_Code__c = :code
+            ORDER BY FEC_Country__r.FEC_Code__c NULLS LAST
             LIMIT 1
         ];
         if (provs.isEmpty()) {
@@ -1126,23 +1161,18 @@ public without sharing class FEC_MainInfoController {
 
             /*
              * DISTRICT (Ward trên UI — FEC_District__c):
-             * Tỉnh đã resolve thuộc country FEC_Code__c = 1 hoặc 2 → không gán từ API; để null để LWC load quận/huyện theo tỉnh.
-             * Ngược lại → map mã District từ API như cũ.
+             * Luôn map mã District từ API → FEC_District__c để hiển thị tên Ward trong review mode.
+             * Nếu không tìm thấy trong master → lưu vào FEC_District_Text__c (text fallback).
              */
-            Boolean wardLeaveForUserPick =
-                pr.provinceId != null
-                && String.isNotBlank(pr.countryFecCode)
-                && (FEC_COUNTRY_MASTER_LEGACY.equals(pr.countryFecCode)
-                    || FEC_COUNTRY_MASTER_API.equals(pr.countryFecCode));
-            if (wardLeaveForUserPick) {
-                addr.FEC_District__c = null;
-                addr.FEC_District_Text__c = null;
-            } else if (String.isNotBlank(ai.District) && districtMap.containsKey(ai.District)) {
+            if (String.isNotBlank(ai.District) && districtMap.containsKey(ai.District)) {
                 addr.FEC_District__c = districtMap.get(ai.District);
                 addr.FEC_District_Text__c = null;
-            } else {
+            } else if (String.isNotBlank(ai.District)) {
                 addr.FEC_District__c = null;
                 addr.FEC_District_Text__c = ai.District;
+            } else {
+                addr.FEC_District__c = null;
+                addr.FEC_District_Text__c = null;
             }
 
             /* ===== COUNTRY: resolve từ API + remap 1 → 2 (cùng tên) cho FEC_Address_Info__c ===== */
@@ -1174,17 +1204,38 @@ public without sharing class FEC_MainInfoController {
     private static List<AddressDTO> buildAddressDTOListFromHistory(Id customerHistoryId) {
         List<AddressDTO> outList = new List<AddressDTO>();
         for (FEC_Address_Info__c addr : [
-            SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c
+            SELECT Id, FEC_Address_Type__c, FEC_Full_Address__c, FEC_Mailing_Address__c,
+                   FEC_District__r.FEC_Name_VN__c, FEC_District__r.Name,
+                   FEC_District_Text__c
             FROM FEC_Address_Info__c
             WHERE FEC_Customer_History__c = :customerHistoryId
               AND FEC_Case__c = null
         ]) {
             AddressDTO dto = new AddressDTO();
             dto.addressType = addr.FEC_Address_Type__c;
-            dto.address = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
+            String fullAddress = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
             dto.mailingAddress = addr.FEC_Mailing_Address__c == true
                 ? FEC_ConstantCommon.TEXT_YES
                 : null;
+            // Ward = tên quận/huyện từ lookup, fallback sang text nếu không có trong master
+            if (addr.FEC_District__c != null) {
+                String vn = addr.FEC_District__r?.FEC_Name_VN__c;
+                dto.ward = String.isNotBlank(vn) ? vn : addr.FEC_District__r?.Name;
+            } else if (String.isNotBlank(addr.FEC_District_Text__c)) {
+                dto.ward = addr.FEC_District_Text__c;
+            }
+            if (String.isNotBlank(dto.ward)) {
+                String normalizedAddress = String.isNotBlank(fullAddress)
+                    ? fullAddress.toLowerCase()
+                    : '';
+                String normalizedWard = dto.ward.toLowerCase();
+                if (String.isBlank(fullAddress)) {
+                    fullAddress = dto.ward;
+                } else if (!normalizedAddress.contains(normalizedWard)) {
+                    fullAddress = fullAddress + ', ' + dto.ward;
+                }
+            }
+            dto.address = fullAddress;
             outList.add(dto);
         }
         return outList;
