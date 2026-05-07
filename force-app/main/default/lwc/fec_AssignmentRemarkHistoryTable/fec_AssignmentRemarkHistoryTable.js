@@ -1,6 +1,7 @@
 import { LightningElement, api, track } from "lwc";
 import getAssignmentRemarks from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentRemarks";
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
+import {getUsernameBeforeAt}  from 'c/fec_CommonUtils';
 export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
   @api recordId;
   @api assignmentId;
@@ -14,11 +15,11 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
 
   columns = [
     {
-      label: "Remark",
+      label: "Assignment Remark",
       fieldName: "remark",
     },
     {
-      label: "Stage",
+      label: "Stage Name",
       fieldName: "stage",
     },
     {
@@ -58,7 +59,7 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
         id: item.Id,
         remark: item.FEC_Case_Remarks__c,
         stage: item.FEC_Stage_Name__c,
-        user: item.FEC_User__c,
+        user: getUsernameBeforeAt(item.FEC_User__c),
         userRole: item.FEC_User_Role__c,
         createdDate: item.CreatedDate,
       }));

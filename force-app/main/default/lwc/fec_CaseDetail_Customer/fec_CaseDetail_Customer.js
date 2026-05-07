@@ -8,6 +8,8 @@ import {
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
+//HieuTT74: [UPDATE - 5/5/2026]: Tạo message channel cho button save/submit
+import CASE_ACTION from "@salesforce/messageChannel/FEC_CaseAction__c";
 import {
   getFocusedTabInfo,
   closeTab,
@@ -248,6 +250,19 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
+  async handlePublishCaseAction(action) {
+    if (this.messageContext == null) return;
+
+    const payload = {
+      action: action, // SAVE | SUBMIT
+      ...(this.recordId ? { recordId: this.recordId } : {}),
+    };
+
+    console.log("📤 CASE_ACTION:", payload);
+
+    publish(this.messageContext, CASE_ACTION_CHANNEL, payload);
+  }
+
   /**
    * Save & Close: Lưu toàn bộ thông tin (Nature of Case, Account Info, Case Info,
    * Process Action, Routing Action, Case Remarks) nhưng KHÔNG chuyển sang Stage tiếp theo.
@@ -287,6 +302,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then(() => {
         setTimeout(async () => {
           this.handlePublishMode(false);
+
+          this.handlePublishCaseAction("SAVE");
+
+          await new Promise((r) => setTimeout(r, 50));
+
           await this.closeCurrentTab();
         }, 0);
       })
@@ -430,9 +450,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
 
       // Chuyển sang Case Review (chế độ xem), không đóng tab
-      setTimeout(() => {
+      setTimeout(async () => {
         this.modeEditCase = false;
         this.handlePublishMode(false);
+
+        this.handlePublishCaseAction("SUBMIT");
+
+        // optional: đảm bảo message dispatch ổn định
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }, 0);
     } catch (error) {
       console.error("Submit failed:", error);

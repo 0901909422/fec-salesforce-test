@@ -14612,7 +14612,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Status</shortDescription>
-        <value>Status</value>
+        <value>Assignment Status</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Owner</fullName>
@@ -14620,7 +14620,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Owner</shortDescription>
-        <value>Owner</value>
+        <value>Assignment Owner</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Id</fullName>
@@ -15210,5 +15210,13 @@
         <protected>false</protected>
         <shortDescription>Duplicate Queue Error</shortDescription>
         <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
     </labels>
 </CustomLabels>
