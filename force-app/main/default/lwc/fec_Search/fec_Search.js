@@ -183,12 +183,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -251,12 +246,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        }, 
+        type: "text", 
         sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -291,13 +281,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
       { label: "Sold Date", fieldName: "SoldDate", sortable: true,
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            dateStyle: "short"
-        },
+        type: "text", 
        },
       { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
@@ -322,12 +306,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       {
         label: "Buyer NID",
@@ -354,12 +333,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       {
         label: "Effective Date",
         fieldName: "EffectiveDate",
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true,
       },
       { label: "Status", fieldName: "Status", sortable: true },
@@ -381,7 +355,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         type: "maskedToggle",
         sortable: true,
       },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Date of Birth", fieldName: "DateOfBirth", type: "text", sortable: true },
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
       {
         label: "Account Number",
@@ -950,11 +924,11 @@ async fetchBancaInsurance(ids) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: this.formatDate(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: this.formatDate(el.effectiveDate),
       Status: el.StatusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -989,11 +963,11 @@ async fetchBancaInsuranceByPhone(phones) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: this.formatDate(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: this.formatDate(el.effectiveDate),
       Status: el.statusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1028,6 +1002,20 @@ async fetchBancaInsuranceByPhone(phones) {
       map.set(key, this.preferInsuranceRow(existing, item));
     });
     return Array.from(map.values());
+  }
+
+  formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateStr;
+    }
   }
 
   preferInsuranceRow(a, b) {
@@ -1148,7 +1136,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: this.formatDate(cust.DateOfBirth),
                             ContractNumber: contractNum,
                             ProductCode: app.Product,
                             ContractStatus: app.Status,
@@ -1597,10 +1585,7 @@ hasAnySearchCriteria(params) {
         // [CHANGE][Author : LongNH76] Ưu tiên phone từ dòng kết quả; fallback phone user nhập để tránh trống FEC_Search_Phone_Number__c.
         // Old behavior (kept for reference):
         // phone: row?.Phone
-        const resolvedPhone =
-          (row?.Phone && String(row.Phone).trim()) ||
-          (this.phoneNumber && String(this.phoneNumber).trim()) ||
-          null;
+        const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
 
         createHistory({
           value: id,
@@ -1614,7 +1599,7 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListView,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: row?.BuyerNID || '', // Only for Insurance
+          buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
         })
           .then(async (res) => {
             // const payload = {
