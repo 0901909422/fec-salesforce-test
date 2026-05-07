@@ -761,6 +761,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
+    //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+    //lưu bộ có subcode chứ không phải bộ không subcode định submit
+    syncSubCodeComboValue() {
+    const el = this.template.querySelector(`c-fec_-combo-box[data-id="sub-code"]`);
+    if (el) {
+      el.value = undefined;
+    }
+  }
+
   handleRemoveProdType() {
     let element = this.template.querySelector(
       `c-fec_-combo-box[data-id="prod-type"]`
