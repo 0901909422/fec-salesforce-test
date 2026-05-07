@@ -1,29 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>FEC_Termination__c.FEC_Assessed_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Case__c</members>
-        <members>FEC_Termination__c.FEC_Collected_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Current_Balance_Principal__c</members>
-        <members>FEC_Termination__c.FEC_Excess_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Installments_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Interest_On_Termination__c</members>
-        <members>FEC_Termination__c.FEC_Interest_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Interest_on_Overdue_Interest__c</members>
-        <members>FEC_Termination__c.FEC_LPI_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Outstanding_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Overdue_Penalty__c</members>
-        <members>FEC_Termination__c.FEC_Penalty_Fee_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Pending_Penal_Interest__c</members>
-        <members>FEC_Termination__c.FEC_Pre_Payment_Penalty__c</members>
-        <members>FEC_Termination__c.FEC_Principal_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Repayment_Fee_Overdue__c</members>
-        <members>FEC_Termination__c.FEC_Termination_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Total_Installment_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Total_Interest_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Total_Overdue_Amount__c</members>
-        <members>FEC_Termination__c.FEC_Total_Principal_Paid__c</members>
-        <members>FEC_Termination__c.FEC_Waived_Amount__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Case__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_Closing_Principal__c</members>
         <members>FEC_RePayment_Schedule__c.FEC_EMI__c</members>
@@ -53,12 +30,10 @@
         <name>CustomField</name>
     </types>
     <types>
-        <members>FEC_Termination__c</members>
         <members>FEC_RePayment_Schedule__c</members>
         <name>CustomObject</name>
     </types>
     <types>
-        <members>FEC_Termination__c.All</members>
         <members>FEC_RePayment_Schedule__c.All</members>
         <name>ListView</name>
     </types>
@@ -95,8 +70,6 @@
         <members>FEC_Early_Termination_Label</members>
         <members>FEC_Overdue_Label</members>
         <members>FEC_Fee_Charge_Label</members>
-        <members>FEC_Termination_No_Fee_Charge_Data</members>
-        <members>FEC_Termination_No_Data</members>
         <members>FEC_Termination_Type_Label</members>
         <members>FEC_Termination_Assessed_Amount_Label</members>
         <members>FEC_Termination_Collected_Amount_Label</members>
@@ -177,7 +150,6 @@
         <members>FEC_Repay_Payment_Amount_Label</members>
         <members>FEC_Repay_Particulars_Label</members>
         <members>FEC_Repay_Payment_Channel_Label</members>
-        <members>FEC_Repay_No_Data_Label</members>
         <members>FEC_Repay_Refresh_Button_Label</members>
         <name>CustomLabel</name>
     </types>

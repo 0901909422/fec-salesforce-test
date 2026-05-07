@@ -56,7 +56,8 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_SubCode__r.FEC_Code__c,
                 FEC_Card_Block_Service_Attempts__c,
                 FEC_Account_or_Contract__c,
-                FEC_Account_Number__c
+                FEC_Account_Number__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -97,7 +98,7 @@ public without sharing class FEC_CardClosureRefundController {
         if (!String.isBlank(accountNumberForDisb)) {
             try {
                 FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
-                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null);
+                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null, c.FEC_Is_Test_API__c);
                 FEC_GetDisbInfoByAcctCallout.logApiResponse();
                 FEC_GetDisbInfoByAcctCallout.ResultWrapper rw =
                     FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);

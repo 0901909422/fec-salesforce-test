@@ -17,6 +17,9 @@ public with sharing class FEC_UpdateCustomerAddress {
   private static final String DEFAULT_PATH = '/CIF_CustomerInfoUpdate';
   private static final String SOAP_BODY_NS = 'http://schemas.xmlsoap.org/soap/envelope/';
   private static final String API_NAME = 'FEC_UpdateCustomerAddress';
+  /** Bộ master tỉnh/TP theo quốc gia (FEC_Country__c.FEC_Code__c): API CIF dùng bộ 2. */
+  private static final String FEC_COUNTRY_CODE_PROVINCE_SET_LEGACY = '1';
+  private static final String FEC_COUNTRY_CODE_PROVINCE_SET_API = '2';
 
   public class CustomerAddressInfo {
     @AuraEnabled public String cifNumber;
@@ -25,7 +28,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     @AuraEnabled public String number_x;
     @AuraEnabled public String building;
     @AuraEnabled public String street;
-    @AuraEnabled public String ward;
+    @AuraEnabled public String district;
     @AuraEnabled public String city;
     @AuraEnabled public String propertyStatus;
     @AuraEnabled public String years;
@@ -51,6 +54,9 @@ public with sharing class FEC_UpdateCustomerAddress {
   public static UpdateResult updateCustomerAddress(CustomerAddressInfo info) {
     try {
       validateInput(info);
+      if (info != null) {
+        info.city = remapProvinceCityCodeForCountryTwo(info.city);
+      }
       String transId = UUID.randomUUID().toString();
       String timestampStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
       Dom.Document doc = buildSoapDocument(info, transId, timestampStr);
@@ -139,7 +145,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     String number_x,
     String building,
     String street,
-    String ward,
+    String district,
     String city,
     String propertyStatus,
     String years,
@@ -185,7 +191,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     info.number_x = number_x;
     info.building = building;
     info.street = street;
-    info.ward = ward;
+    info.district = district;
     info.city = city;
     info.propertyStatus = propertyStatus;
     info.years = years;
@@ -208,10 +214,7 @@ public with sharing class FEC_UpdateCustomerAddress {
       );
     }
     List<Case> caselst = [
-      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name,
-             FEC_Updated_Info_Permanent_Address__c,
-             FEC_Updated_Info_Office_Address__c,
-             FEC_Updated_Info_Current_Address__c
+      SELECT Id, FEC_Process_Action_Count__c, FEC_Current_Case_Stage__r.Name
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -223,11 +226,8 @@ public with sharing class FEC_UpdateCustomerAddress {
     }
 
     Case selectedCase = caselst[0];
-    Map<String, String> pendingFieldBySfType = new Map<String, String>{
-      'Permanent Address' => selectedCase.FEC_Updated_Info_Permanent_Address__c,
-      'Office Address'    => selectedCase.FEC_Updated_Info_Office_Address__c,
-      'Current Address'   => selectedCase.FEC_Updated_Info_Current_Address__c
-    };
+    Map<String, String> pendingFieldBySfType =
+      FEC_MainInfoController.loadCasePendingAddressJsonMap(selectedCase.Id);
 
     UpdateResult result;
     for (String sfType : new List<String>{ 'Permanent Address', 'Office Address', 'Current Address' }) {
@@ -246,7 +246,7 @@ public with sharing class FEC_UpdateCustomerAddress {
           (String) data.get('number_x'),
           (String) data.get('building'),
           (String) data.get('street'),
-          (String) data.get('ward'),
+          (String) data.get('district'),
           (String) data.get('city'),
           (String) data.get('propertyStatus'),
           (String) data.get('years'),
@@ -270,7 +270,11 @@ public with sharing class FEC_UpdateCustomerAddress {
       // Sync FEC_Mailing_Address__c trong FEC_Address_Info__c dựa trên isMailingAddress trong pending JSON
       // vì API GetAddressesList không trả cờ mailing, nên phải sync trước khi xóa pending fields
       String selectedMailingSfType = null;
-      for (String sfType : pendingFieldBySfType.keySet()) {
+      for (String sfType : new List<String>{
+        'Permanent Address',
+        'Office Address',
+        'Current Address'
+      }) {
         String pendingJson = pendingFieldBySfType.get(sfType);
         if (String.isBlank(pendingJson)) continue;
         try {
@@ -285,9 +289,7 @@ public with sharing class FEC_UpdateCustomerAddress {
       }
       FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);
 
-      selectedCase.FEC_Updated_Info_Permanent_Address__c = null;
-      selectedCase.FEC_Updated_Info_Office_Address__c    = null;
-      selectedCase.FEC_Updated_Info_Current_Address__c   = null;
+      FEC_MainInfoController.clearCasePendingAddressRows(selectedCase.Id);
     } else {
       if (selectedCase.FEC_Process_Action_Count__c == null) {
         selectedCase.FEC_Process_Action_Count__c = 0;
@@ -370,6 +372,51 @@ public with sharing class FEC_UpdateCustomerAddress {
     return result;
   }
 
+  /**
+   * Province/City (mã FEC_Province__c.FEC_Code__c) trước khi gửi API / hiển thị combobox (bộ 2):
+   * - TH1: Thuộc FEC_Country__r.FEC_Code__c = 1 → đổi sang mã tỉnh/TP tương ứng bộ FEC_Code__c = 2
+   *   (khớp FEC_Name_VN__c hoặc Name). Không map được hoặc trùng nhiều bản ghi → giữ mã gốc.
+   * - TH2: Thuộc FEC_Country__r.FEC_Code__c = 2 (hoặc khác 1) → giữ nguyên mã.
+   */
+  public static String remapProvinceCityCodeForCountryTwo(String cityCode) {
+    if (String.isBlank(cityCode)) {
+      return cityCode;
+    }
+    String codeTrim = cityCode.trim();
+    List<FEC_Province__c> srcRows = [
+      SELECT Id, Name, FEC_Name_VN__c, FEC_Country__r.FEC_Code__c
+      FROM FEC_Province__c
+      WHERE FEC_Code__c = :codeTrim
+      LIMIT 1
+    ];
+    if (srcRows.isEmpty()) {
+      return cityCode;
+    }
+    FEC_Province__c src = srcRows[0];
+    String countryCode = (src.FEC_Country__r != null) ? src.FEC_Country__r.FEC_Code__c : null;
+    // TH2 (+ mọi trường hợp khác TH1): không thuộc bộ 1 → giữ nguyên city (gồm bộ 2)
+    if (String.isBlank(countryCode) || !FEC_COUNTRY_CODE_PROVINCE_SET_LEGACY.equals(countryCode.trim())) {
+      return cityCode;
+    }
+    String matchName = String.isNotBlank(src.FEC_Name_VN__c) ? src.FEC_Name_VN__c.trim() : null;
+    if (String.isBlank(matchName)) {
+      matchName = (src.Name != null) ? src.Name.trim() : null;
+    }
+    if (String.isBlank(matchName)) {
+      return cityCode;
+    }
+    List<FEC_Province__c> targetRows = [
+      SELECT FEC_Code__c
+      FROM FEC_Province__c
+      WHERE FEC_Country__r.FEC_Code__c = :FEC_COUNTRY_CODE_PROVINCE_SET_API
+        AND (FEC_Name_VN__c = :matchName OR Name = :matchName)
+    ];
+    if (targetRows.size() != 1 || String.isBlank(targetRows[0].FEC_Code__c)) {
+      return cityCode;
+    }
+    return targetRows[0].FEC_Code__c.trim();
+  }
+
   private static void validateInput(CustomerAddressInfo info) {
     if (info == null) {
       throw new FEC_APIServiceException(
@@ -391,8 +438,8 @@ public with sharing class FEC_UpdateCustomerAddress {
     if (String.isNotBlank(info.street)) {
       FEC_CommonUltils.checkLength('Street', info.street, 255);
     }
-    if (String.isNotBlank(info.ward)) {
-      FEC_CommonUltils.checkLength('Ward', info.ward, 255);
+    if (String.isNotBlank(info.district)) {
+      FEC_CommonUltils.checkLength('District', info.district, 255);
     }
     if (String.isNotBlank(info.city)) {
       FEC_CommonUltils.checkLength('City', info.city, 255);
@@ -432,7 +479,7 @@ public with sharing class FEC_UpdateCustomerAddress {
     addIfPresent(addrNode, 'Number', info.number_x);
     addIfPresent(addrNode, 'Building', info.building);
     addIfPresent(addrNode, 'Street', info.street);
-    addIfPresent(addrNode, 'Ward', info.ward);
+    addIfPresent(addrNode, 'District', info.district);
     addIfPresent(addrNode, 'City', info.city);
     addIfPresent(addrNode, 'PropertyStatus', info.propertyStatus);
     addIfPresent(addrNode, 'Years', info.years);

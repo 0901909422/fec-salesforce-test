@@ -193,6 +193,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleNOCMsg(message) {
     if (message == null) return;
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
     if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
