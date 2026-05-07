@@ -172,23 +172,16 @@ export default class Fec_AssignmentList extends LightningElement {
       });
       console.log("getAssignments result:", JSON.stringify(result));
 
-      // tungnm37: resolve queue names cho assignments có FEC_OwnerID__c
-      const queueIds = [...new Set(result.filter(a => a.FEC_OwnerID__c).map(a => a.FEC_OwnerID__c))];
-      let queueNameMap = {};
-      if (queueIds.length > 0) {
-        queueNameMap = await getQueueNames({ queueIds });
-      }
-
+      // tungnm37: FEC_OwnerID__c giờ lưu Queue Name trực tiếp
       this.assignments = result.map((item) => ({
         id: item.Id,
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_OwnerID__c && queueNameMap[item.FEC_OwnerID__c]
-          ? queueNameMap[item.FEC_OwnerID__c] // tungnm37: hiện queue name
-          : (item.FEC_Assignment_Owner__c?.startsWith("00G")
+        owner: item.FEC_OwnerID__c // tungnm37: hiện Queue Name từ FEC_OwnerID__c
+          || (item.FEC_Assignment_Owner__c?.startsWith("00G")
               ? item.FEC_Assignment_Owner__r?.Name
-              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")), // tungnm37: fallback user email prefix
+              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")),
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
