@@ -595,7 +595,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -622,7 +622,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -1404,5 +1404,31 @@ public with sharing class FEC_CommonUltils {
         System.debug('Invalid decimal for tag Amount: [' + val + ']');
         return null;
     }
-}
+  }
+
+  /**
+   * Parse an Object value to Decimal.
+   * Handles both Decimal and String (varchar from OData/PostgreSQL).
+   */
+  public static Decimal parseDecimal(Object val) {
+    if (val == null) return null;
+    if (val instanceof Decimal) return (Decimal) val;
+    String s = String.valueOf(val).trim();
+    return String.isBlank(s) ? null : Decimal.valueOf(s);
+  }
+
+  /**
+   * Parse an Object value to DateTime.
+   * Handles DateTime, epoch millis as String (varchar from OData/PostgreSQL).
+   */
+  public static DateTime parseDateTime(Object val) {
+    if (val == null) return null;
+    if (val instanceof DateTime) return (DateTime) val;
+    String s = String.valueOf(val).trim();
+    if (String.isBlank(s)) return null;
+    if (s.isNumeric()) {
+      return DateTime.newInstance(Long.valueOf(s));
+    }
+    return null;
+  }
 }

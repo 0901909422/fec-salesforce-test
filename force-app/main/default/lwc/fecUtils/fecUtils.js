@@ -16,6 +16,9 @@ export const DELETED_DATA_SUCCESSFULLY_MSG = Constants.DELETED_DATA_SUCCESSFULLY
 export const SUCCESS_TITLE = Constants.SUCCESS_TITLE;
 export const FAIL_TITLE = Constants.FAIL_TITLE;
 export const WARNING_TITLE = Constants.WARNING_TITLE;
+export const CAMPAIGN_EXCEL_HEADERS = Constants.CAMPAIGN_EXCEL_HEADERS;
+export const CAMPAIGN_INPROGRESS_EXPORT_HEADERS = Constants.CAMPAIGN_INPROGRESS_EXPORT_HEADERS;
+export const CAMPAIGN_STRING_COLUMNS = Constants.CAMPAIGN_STRING_COLUMNS;
 
 // Export Status Constants
 export const STATUS_UPLOADED = Constants.STATUS_UPLOADED;
@@ -37,3 +40,4 @@ export const sortData = Helpers.sortData;
 export const formatDateDDMMYYYY = Helpers.formatDateDDMMYYYY;
 export const formatString = Helpers.formatString;
 export const getTomorrowDate = Helpers.getTomorrowDate;
+export const convertExcelToTimestamp = Helpers.convertExcelToTimestamp;
