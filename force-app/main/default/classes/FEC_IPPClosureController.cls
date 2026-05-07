@@ -247,8 +247,12 @@ public without sharing class FEC_IPPClosureController {
         if (String.isBlank(status)) {
             return true;
         }
-        return status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
-            && status != FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED;
+        if (status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
+            || status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED
+            || status == FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED) {
+            return false;
+        }
+        return true;
     }
 
 }
