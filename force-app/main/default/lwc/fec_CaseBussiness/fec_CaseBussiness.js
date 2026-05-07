@@ -930,6 +930,114 @@ export default class Fec_CaseBussiness extends LightningElement {
     return maskValue(String(raw).replace(/\D/g, STR_EMPTY), false);
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // [NOC-HANDLING-STAGE-UPDATE]:
+  // Xử lý NOC update từ fec_CaseEditNOC (Handling Stage)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Handler cho CASE_NOC channel.
+   * Phân biệt 2 loại message:
+   *   - Có 'accountType' → existing behavior (không thay đổi)
+   *   - Có 'subCodeId'   → NOC update từ Updated Information section → reload business
+   */
+  _handleCaseNOCMessage(message) {
+    if (!message) return;
+
+    // Chỉ xử lý message dành cho case này, tránh cross-tab interference
+    if (message.caseId != null && message.caseId !== this.recordId) return;
+
+    if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
+      // Existing behavior: account type change — không xử lý ở đây
+      // (fec_CaseEditNOC đã tự xử lý)
+      return;
+    }
+      //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+      //lưu bộ có subcode chứ không phải bộ không subcode định submit 
+    const hasNocSelectionPayload =
+      Object.prototype.hasOwnProperty.call(message, 'productTypeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'categoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCategoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCodeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'natureOfCaseId');
+
+    if (hasNocSelectionPayload) {
+      // NOC update từ Updated Information section.
+      // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
+      this._handleNOCUpdate(message);
+    }
+  }
+
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  _handleNOCUpdate(message) {
+    //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+    getPropertyFieldsFromFlowHistory({ caseId: this.recordId })
+      .then((fieldListJson) => {
+        // Parse JSON → map { apiName → value } để merge sau khi getData xong
+        let snapshot = {};
+        if (fieldListJson) {
+          try {
+            const fieldList = JSON.parse(fieldListJson);
+            if (Array.isArray(fieldList)) {
+              fieldList.forEach((item) => {
+                if (item?.apiName) {
+                  snapshot[item.apiName] = item.value ?? null;
+                }
+              });
+            }
+          } catch (e) {
+            console.error('[NOC-UPDATE] Parse fieldListJson error:', e);
+          }
+        }
+
+        // Lưu snapshot để _mergePropertyFieldSnapshot dùng sau khi getData hoàn thành
+        this._pendingPropertySnapshot = snapshot;
+
+        // Reload business với NOC mới
+        this.getData(
+          message.productTypeId,
+          message.categoryId,
+          message.subCategoryId,
+          message.subCodeId,
+          message.natureOfCaseId
+        );
+      })
+      .catch((err) => {
+        console.error('[NOC-UPDATE] getPropertyFieldsFromFlowHistory error:', err);
+        // Fallback: reload business mà không merge (không block flow)
+        this._pendingPropertySnapshot = null;
+        this.getData(
+          message.productTypeId,
+          message.categoryId,
+          message.subCategoryId,
+          message.subCodeId,
+          message.natureOfCaseId
+        );
+      });
+  }
+
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  // Merge field values từ FEC_Field_List__c JSON vào business data sau khi reload NOC mới.
+  // Field có apiName trùng → restore value; field không có → giữ nguyên trống từ getData.
+  _mergePropertyFieldSnapshot(snapshot) {
+    if (!snapshot || !this.business?.sectionlst) return;
+    this.business.sectionlst.forEach(section => {
+      section.subSectionlst?.forEach(sub => {
+        sub.objlst?.forEach(obj => {
+          obj.fieldlst?.forEach(field => {
+            if (field?.apiName && Object.prototype.hasOwnProperty.call(snapshot, field.apiName)) {
+              field.value = snapshot[field.apiName];
+              field.original = field.value;
+            }
+          });
+        });
+      });
+    });
+    this.business = { ...this.business };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   handleToggleMask(e) {
     let filter = {
       section: e.target.dataset.section,
@@ -991,7 +1099,18 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (!res) return;
 
         let sectionlst = [];
-        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        // NOC payload can carry 3 states for natureOfCaseId: undefined/null/id.
+        // Only override when payload explicitly provides this field.
+        const hasNocSelectionPayload =
+          productTypeId !== null ||
+          categoryId !== null ||
+          subCategoryId !== null ||
+          subCodeId !== null;
+        const hasExplicitNatureFallback = natureOfCaseIdFallback !== undefined;
+        const natureOfCase =
+          hasNocSelectionPayload && hasExplicitNatureFallback
+            ? natureOfCaseIdFallback
+            : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
