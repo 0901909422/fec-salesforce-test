@@ -61,7 +61,6 @@ public without sharing class FEC_IPPClosureController {
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
                   AND FEC_Customer_History__c = :customerHistoryId
-                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                 LIMIT 1
             ];
         } else {
