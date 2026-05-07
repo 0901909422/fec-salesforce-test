@@ -475,12 +475,6 @@
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
-<<<<<<< manifest/fis-uat-3/package-case-management.xml
-		<members>fec_PointsRedemptionCaseForm</members>
-		<name>LightningComponentBundle</name>
-    </types>
-    <types>
-=======
         <members>fec_OriginalInformation</members>
 		<members>fec_Search</members>
 		<members>fec_AssignmentExecuteVisibility</members>
@@ -488,8 +482,9 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+		<members>fec_PointsRedemptionCaseForm</members>
 		<name>LightningComponentBundle</name>
-	</types>
+    </types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
@@ -666,7 +661,6 @@
         <members>FEC_Assignment_Status</members>
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
-<<<<<<< manifest/fis-uat-3/package-case-management.xml
         <members>FEC_RelevantTicket_Cannot_Delete</members>
         <members>FEC_Points_Redeem_Button_Label</members>
 		<members>FEC_Points_Redeem_Fail_After_Max</members>
