@@ -79,7 +79,8 @@ public with sharing class FEC_AddIPP {
 
     try {
       Case c = [
-        SELECT FEC_Account_Contract_Number_Text__c
+        SELECT FEC_Account_Contract_Number_Text__c,
+          FEC_Is_Test_API__c
         FROM Case
         WHERE Id = :caseId
         WITH SECURITY_ENFORCED
@@ -107,14 +108,11 @@ public with sharing class FEC_AddIPP {
       request.referenceNumber = t.FEC_Transaction_Code__c;
       request.postingDate = t.FEC_Post_Date__c;
 
-      return addIPP(request);
+      return addIPP(request,
+        c != null ? c.FEC_Is_Test_API__c : false);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
-  }
-
-  public static AddIPPResult addIPP(IPPRequest request) {
-    return addIPP(request, true);
   }
 
   public static AddIPPResult addIPP(IPPRequest request, Boolean isTestApi) {
@@ -124,11 +122,15 @@ public with sharing class FEC_AddIPP {
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
     FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
     FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-    Boolean useRealData = isTestApi == true
-      || apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
-    if (!useRealData && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
-      request.accountNumber = apiConfig.FEC_Account_Number_Hard_Code__c;
+    String accountNumberParam = FEC_ConstantCommon.STR_EMPTY;
+    Boolean useRealData = isTestApi ||
+      apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+    if (useRealData) {
+      accountNumberParam = request.accountNumber;
+    } else {
+      accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
     }
+    request.accountNumber = accountNumberParam;
 
     Dom.Document doc = buildRequestDocument(request, transId, timestamp);
 
