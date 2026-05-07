@@ -235,11 +235,12 @@ public with sharing class FEC_GetUnbilledTransactions {
         if (txnRecords != null) {
             for (Dom.XmlNode txn : txnRecords.getChildElements()) {
                 TransactionRecord tr = new TransactionRecord();
+                String rawAmount = FEC_CommonUltils.getValueSafe(txn, 'Amount');
 
                 tr.TransactionDate = FEC_CommonUltils.getValueSafe(txn, 'TransactionDate');
                 tr.PostingDate = FEC_CommonUltils.getValueSafe(txn, 'PostingDate');
                 tr.Description = FEC_CommonUltils.getValueSafe(txn, 'Description');
-                tr.Amount = FEC_CommonUltils.xmlValToDecimal(txn, 'Amount');
+                tr.Amount = FEC_CommonUltils.parseAmountSafe(rawAmount);
                 tr.CurrencyCode = FEC_CommonUltils.getValueSafe(txn, 'CurrencyCode');
                 tr.ReferenceNumber = FEC_CommonUltils.getValueSafe(txn, 'ReferenceNumber');
                 tr.TransactionType = FEC_CommonUltils.getValueSafe(txn, 'TransactionType');
