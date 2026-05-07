@@ -867,11 +867,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Team_Queue__c.FEC_Select_Team__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Case.ArchiveExternalId__c</field>
         <readable>true</readable>
     </fieldPermissions>
