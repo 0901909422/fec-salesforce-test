@@ -1,0 +1,617 @@
+<template>
+  <div class="fec-root">
+    <template if:true={isLoading}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+
+    <div class="fec-wrapper">
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeFilterSections}
+          onsectiontoggle={handleFilterSectionToggle}
+          class="fec-session-accordion"
+        >
+        <lightning-accordion-section
+          name="filters"
+          label="Filter Properties"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body fec-session-body--filters">
+            <p class="fec-filter-help">
+              Các dòng bộ lọc kết hợp AND. Customer Type nhiều giá trị: nhập cách nhau bằng dấu phẩy.
+            </p>
+            <template if:true={filterResetHint}>
+              <p class="fec-filter-help fec-filter-help--hint">Chưa thêm bộ lọc.</p>
+            </template>
+            <div class="fec-filter-toolbar">
+              <lightning-button
+                label="Add filter row"
+                onclick={handleAddFilterLine}
+              ></lightning-button>
+              <lightning-button
+                label="Filter Data"
+                variant="brand"
+                onclick={handleFilterData}
+                disabled={filterDataDisabled}
+              ></lightning-button>
+              <lightning-button
+                label="Reset"
+                onclick={handleResetFilters}
+                disabled={caseSearchLoading}
+              ></lightning-button>
+            </div>
+            <template for:each={filterLinesView} for:item="fline">
+              <div key={fline.rowId} class="fec-filter-row">
+                <lightning-combobox
+                  data-rowid={fline.rowId}
+                  label="Filter property"
+                  variant="label-hidden"
+                  value={fline.propertyKey}
+                  options={propertyOptionsForFilter}
+                  placeholder="Property"
+                  onchange={handleFilterPropertyChange}
+                ></lightning-combobox>
+                <lightning-combobox
+                  data-rowid={fline.rowId}
+                  label="Operator"
+                  variant="label-hidden"
+                  value={fline.operatorKey}
+                  options={fline.operatorOptions}
+                  placeholder="Operator"
+                  onchange={handleFilterOperatorChange}
+                ></lightning-combobox>
+                <template if:true={fline.showAttachCombo}>
+                  <lightning-combobox
+                    data-rowid={fline.rowId}
+                    label="Value"
+                    variant="label-hidden"
+                    value={fline.valueText}
+                    options={attachmentPicklistOptions}
+                    placeholder="Value"
+                    onchange={handleFilterValueChange}
+                  ></lightning-combobox>
+                </template>
+                <template if:true={fline.showValueBox}>
+                  <lightning-input
+                    data-rowid={fline.rowId}
+                    label="Value"
+                    variant="label-hidden"
+                    type={fline.valueTypeAttr}
+                    value={fline.valueText}
+                    placeholder="Value"
+                    onchange={handleFilterValueChange}
+                  ></lightning-input>
+                </template>
+                <lightning-button-icon
+                  icon-name="utility:delete"
+                  alternative-text="Remove row"
+                  title="Remove row"
+                  data-rowid={fline.rowId}
+                  onclick={handleRemoveFilterLine}
+                ></lightning-button-icon>
+              </div>
+            </template>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeCaseTableSections}
+          onsectiontoggle={handleCaseTableSectionToggle}
+          class="fec-session-accordion"
+        >
+        <lightning-accordion-section
+          name="cases"
+          label="Filtered Cases"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body fec-session-body--cases">
+            <div class="fec-table-wrap fec-case-table-wrap">
+              <table class="fec-table fec-case-table">
+                <thead>
+                  <tr>
+                    <th class="fec-th-check">
+                      <lightning-input
+                        type="checkbox"
+                        variant="label-hidden"
+                        label="Select all"
+                        checked={allCaseRowsSelected}
+                        onchange={handleCaseSelectAll}
+                      ></lightning-input>
+                    </th>
+                    <th><a href="javascript:void(0);" data-key="customerType" onclick={handleCaseSort}>Customer Type</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseIdSearch" onclick={handleCaseSort}>Case ID</a></th>
+                    <th><a href="javascript:void(0);" data-key="categoryCode" onclick={handleCaseSort}>Category</a></th>
+                    <th><a href="javascript:void(0);" data-key="subCategoryCode" onclick={handleCaseSort}>Sub Category</a></th>
+                    <th><a href="javascript:void(0);" data-key="subCodeCode" onclick={handleCaseSort}>Sub Code</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseStatus" onclick={handleCaseSort}>Case Status</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseCreatedOn" onclick={handleCaseSort}>Case Created On</a></th>
+                    <th><a href="javascript:void(0);" data-key="lastUpdatedOn" onclick={handleCaseSort}>Last Updated On</a></th>
+                    <th><a href="javascript:void(0);" data-key="hasAttachment" onclick={handleCaseSort}>Attachments</a></th>
+                    <th>Attachment Downloaded</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template if:true={hasCaseRows}>
+                    <template for:each={caseRows} for:item="crow">
+                      <tr key={crow.rowKey}>
+                        <td>
+                          <lightning-input
+                            type="checkbox"
+                            variant="label-hidden"
+                            data-caseid={crow.caseId}
+                            checked={crow.selected}
+                            onchange={handleCaseRowSelect}
+                          ></lightning-input>
+                        </td>
+                        <td>{crow.customerType}</td>
+                        <td>
+                          <template if:true={crow.caseReviewUrl}>
+                            <a
+                              href="javascript:void(0);"
+                              data-url={crow.caseReviewUrl}
+                              onclick={handleCaseReviewClick}
+                            >{crow.caseIdSearch}</a>
+                          </template>
+                          <template if:false={crow.caseReviewUrl}>
+                            {crow.caseIdSearch}
+                          </template>
+                        </td>
+                        <td>{crow.categoryCode}</td>
+                        <td>{crow.subCategoryCode}</td>
+                        <td>{crow.subCodeCode}</td>
+                        <td>{crow.caseStatus}</td>
+                        <td>{crow.caseCreatedOnLabel}</td>
+                        <td>{crow.lastUpdatedOnLabel}</td>
+                        <td>
+                          <template if:true={crow.hasAttachment}>
+                            <a
+                              href="javascript:void(0);"
+                              data-caseid={crow.caseId}
+                              onclick={handleCaseAttachmentClick}
+                            >{crow.hasAttachmentLabel}</a>
+                          </template>
+                        </td>
+                        <td>
+                          <lightning-input
+                            type="checkbox"
+                            variant="label-hidden"
+                            checked={crow.attachmentDownloaded}
+                            disabled
+                          ></lightning-input>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                  <template if:false={hasCaseRows}>
+                    <tr>
+                      <td colspan="11" class="fec-empty">{emptyCasesMessage}</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="fec-footer fec-case-footer">
+              <div class="fec-footer__left">
+                <span class="fec-footer__label">Page size</span>
+                <lightning-combobox
+                  variant="label-hidden"
+                  value={casePageSize}
+                  options={pageSizeOptions}
+                  onchange={handleCasePageSizeChange}
+                ></lightning-combobox>
+                <span class="fec-case-total-label">Total: {caseTotalCount}</span>
+              </div>
+              <div class="fec-footer__center">
+                <lightning-button-icon
+                  icon-name="utility:chevronleft"
+                  alternative-text="Previous"
+                  onclick={handleCasePreviousPage}
+                  disabled={casePreviousDisabled}
+                ></lightning-button-icon>
+                <span class="fec-footer__page">{caseSearchPage}</span>
+                <span class="fec-footer__label">/ {caseTotalPages}</span>
+                <lightning-button-icon
+                  icon-name="utility:chevronright"
+                  alternative-text="Next"
+                  onclick={handleCaseNextPage}
+                  disabled={caseNextDisabled}
+                ></lightning-button-icon>
+              </div>
+            </div>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeActionSections}
+          onsectiontoggle={handleActionSectionToggle}
+          class="fec-session-accordion"
+        >
+        <lightning-accordion-section
+          name="action"
+          label="Action"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body fec-session-body--action">
+            <div class="fec-case-actions fec-case-actions--stacked">
+              <lightning-combobox
+                label="Select Actions"
+                value={selectedAction}
+                options={actionOptions}
+                onchange={handleActionChange}
+              ></lightning-combobox>
+              <template if:true={isDownloadAction}>
+                <lightning-combobox
+                  label="Case Set"
+                  value={selectedCaseSet}
+                  options={caseSetOptions}
+                  onchange={handleCaseSetChange}
+                ></lightning-combobox>
+              </template>
+              <template if:true={isImportAction}>
+                <div class="fec-import-upload">
+                  <lightning-button
+                    label="Upload Files"
+                    icon-name="utility:upload"
+                    variant="neutral"
+                    onclick={triggerImportFilePicker}
+                    disabled={isImportSubmitting}
+                  ></lightning-button>
+                  <input
+                    type="file"
+                    accept=".xlsx"
+                    class="fec-import-file-input slds-hide"
+                    onchange={handleImportFileChange}
+                  />
+                  <template if:true={hasSelectedImportFile}>
+                    <span class="fec-import-chip">
+                      <span class="fec-import-chip__name" title={selectedImportFileName}>{selectedImportFileName}</span>
+                      <lightning-button-icon
+                        icon-name="utility:close"
+                        size="small"
+                        alternative-text="Remove file"
+                        onclick={handleClearImportFile}
+                        class="fec-import-chip__remove"
+                      ></lightning-button-icon>
+                    </span>
+                  </template>
+                </div>
+              </template>
+              <lightning-button
+                class="fec-case-actions__submit"
+                label="Submit"
+                variant="brand"
+                onclick={handleActionSubmit}
+                disabled={isImportSubmitting}
+              ></lightning-button>
+              <span class="fec-selected-count">Đã chọn: {selectedCaseCount}</span>
+            </div>
+            <template if:true={actionRequiredError}>
+              <p class="fec-template-error" role="alert">Vui lòng chọn action.</p>
+            </template>
+            <template if:true={caseSetRequiredError}>
+              <p class="fec-template-error" role="alert">Vui lòng chọn Case Set.</p>
+            </template>
+            <template if:true={attachDataRequiredError}>
+              <p class="fec-template-error" role="alert">Vui lòng đính kèm tệp dữ liệu</p>
+            </template>
+            <template if:true={exportSuccessMessage}>
+              <p class="fec-export-success" role="status">{exportSuccessMessage}</p>
+            </template>
+            <template if:true={exportErrorMessage}>
+              <p class="fec-export-error" role="alert">{exportErrorMessage}</p>
+            </template>
+            <template if:true={importSuccessMessage}>
+              <p class="fec-export-success" role="status">{importSuccessMessage}</p>
+            </template>
+            <template if:true={importErrorMessage}>
+              <p class="fec-export-error" role="alert">{importErrorMessage}</p>
+            </template>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+
+      <div class="fec-session-shell">
+        <lightning-accordion
+          allow-multiple-sections-open
+          active-section-name={activeProcessedSections}
+          onsectiontoggle={handleProcessedSectionToggle}
+          class="fec-session-accordion"
+        >
+        <lightning-accordion-section
+          name="processed"
+          label="My Bulk Actions"
+          class="slds-accordion__section"
+        >
+          <div class="fec-session-body">
+            <div class="fec-section2-toolbar">
+              <span class="fec-section2-toolbar__spacer"></span>
+              <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh"
+                title="Refresh"
+                onclick={handleRefresh}
+              ></lightning-button-icon>
+            </div>
+            <div class="fec-table-wrap">
+              <table class="fec-table">
+                <thead>
+                  <tr>
+                    <th>
+                      <span class="fec-th-inner">
+                        File Name
+                        <lightning-icon
+                          icon-name="utility:arrowup"
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        Uploaded On
+                        <lightning-icon
+                          icon-name="utility:arrowup"
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </span>
+                    </th>
+                    <th>Uploaded By</th>
+                    <th>Total Records Count</th>
+                    <th>Total Success Records</th>
+                    <th>Total Failed Records</th>
+                    <th>Status</th>
+                    <th>Failure Reason</th>
+                    <th>Result</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template if:true={hasRows}>
+                    <template for:each={pagedRows} for:item="row">
+                      <tr key={row.id}>
+                        <td>
+                          <template if:true={row.fileDownloadUrl}>
+                            <a
+                              href="javascript:void(0);"
+                              data-url={row.fileDownloadUrl}
+                              onclick={handleFileNameClick}
+                            >
+                              {row.fileName}
+                            </a>
+                          </template>
+                          <template if:false={row.fileDownloadUrl}>
+                            {row.fileName}
+                          </template>
+                        </td>
+                        <td>{row.uploadedOnLabel}</td>
+                        <td>{row.uploadedBy}</td>
+                        <td>{row.totalRecordsCount}</td>
+                        <td>{row.totalSuccessRecords}</td>
+                        <td>{row.totalFailedRecords}</td>
+                        <td>{row.status}</td>
+                        <td>{row.failureReason}</td>
+                        <td>
+                          <template if:true={row.resultDownloadUrl}>
+                            <a
+                              href="javascript:void(0);"
+                              data-url={row.resultDownloadUrl}
+                              onclick={handleResultClick}
+                            >
+                              {row.result}
+                            </a>
+                          </template>
+                          <template if:false={row.resultDownloadUrl}>
+                            {row.result}
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </template>
+                  <template if:false={hasRows}>
+                    <tr>
+                      <td colspan="9" class="fec-empty">No records found.</td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="fec-footer">
+              <div class="fec-footer__left">
+                <span class="fec-footer__label">Page size</span>
+                <lightning-combobox
+                  variant="label-hidden"
+                  value={pageSize}
+                  placeholder="20"
+                  options={pageSizeOptions}
+                  onchange={handlePageSizeChange}
+                ></lightning-combobox>
+              </div>
+              <div class="fec-footer__center">
+                <lightning-button-icon
+                  icon-name="utility:chevronleft"
+                  alternative-text="Previous"
+                  onclick={handlePreviousPage}
+                  disabled={previousDisabled}
+                ></lightning-button-icon>
+                <span class="fec-footer__page">{currentPage}</span>
+                <lightning-button-icon
+                  icon-name="utility:chevronright"
+                  alternative-text="Next"
+                  onclick={handleNextPage}
+                  disabled={nextDisabled}
+                ></lightning-button-icon>
+              </div>
+              <div class="fec-footer__goto">
+                <span class="fec-footer__label">Go to page</span>
+                <lightning-input
+                  variant="label-hidden"
+                  value={goToPageInput}
+                  type="number"
+                  min="1"
+                  class="fec-footer__goto-input"
+                  onchange={handleGoToPageInput}
+                ></lightning-input>
+                <lightning-button
+                  label="Go"
+                  onclick={handleGoToPage}
+                ></lightning-button>
+              </div>
+            </div>
+          </div>
+        </lightning-accordion-section>
+        </lightning-accordion>
+      </div>
+    </div>
+  </div>
+  <template if:true={showBpModal}>
+    <section
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="fec-bp-modal-title"
+      class="slds-modal slds-fade-in-open fec-bp-modal"
+    >
+      <div class="slds-modal__container fec-bp-modal__container">
+        <header class="slds-modal__header fec-bp-modal__header">
+          <h2 id="fec-bp-modal-title" class="slds-text-heading_medium fec-bp-modal__title">
+            Bulk Service Case Selection
+          </h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium fec-bp-modal__content">
+          <p class="fec-bp-modal__items-label">{bpItemsLabel}</p>
+          <div class="fec-table-wrap">
+            <table class="fec-table fec-bp-table">
+              <thead>
+                <tr>
+                  <th class="fec-th-num"></th>
+                  <th class="fec-th-check">
+                    <lightning-input
+                      type="checkbox"
+                      variant="label-hidden"
+                      label="Select all"
+                      checked={allBpRowsSelected}
+                      onchange={handleBpSelectAll}
+                    ></lightning-input>
+                  </th>
+                  <th class="fec-th-bp">
+                    <a
+                      href="javascript:void(0);"
+                      class="fec-bp-sort-link"
+                      onclick={handleBpSort}
+                    >
+                      Business Process Name
+                      <lightning-icon
+                        icon-name={bpSortIcon}
+                        size="xx-small"
+                        alternative-text="Sort"
+                        class="fec-sort-icon"
+                      ></lightning-icon>
+                    </a>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <template if:true={hasBpRows}>
+                  <template for:each={bpPagedRows} for:item="bp">
+                    <tr key={bp.rowKey}>
+                      <td class="fec-td-num">{bp.rowIndex}</td>
+                      <td>
+                        <lightning-input
+                          type="checkbox"
+                          variant="label-hidden"
+                          label="Select"
+                          data-code={bp.businessProcessCode}
+                          checked={bp.selected}
+                          onchange={handleBpRowSelect}
+                        ></lightning-input>
+                      </td>
+                      <td>{bp.businessProcessCode}</td>
+                    </tr>
+                  </template>
+                </template>
+                <template if:false={hasBpRows}>
+                  <tr>
+                    <td colspan="3" class="fec-empty">Không tìm thấy Business Process phù hợp.</td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="fec-footer fec-bp-modal__footer-row">
+            <div class="fec-footer__left">
+              <span class="fec-footer__label">Page size</span>
+              <lightning-combobox
+                variant="label-hidden"
+                value={bpPageSize}
+                options={pageSizeOptions}
+                onchange={handleBpPageSizeChange}
+              ></lightning-combobox>
+            </div>
+            <div class="fec-footer__center">
+              <lightning-button-icon
+                icon-name="utility:chevronleft"
+                alternative-text="Previous"
+                onclick={handleBpPreviousPage}
+                disabled={bpPreviousDisabled}
+              ></lightning-button-icon>
+              <span class="fec-footer__page">{bpCurrentPage}</span>
+              <lightning-button-icon
+                icon-name="utility:chevronright"
+                alternative-text="Next"
+                onclick={handleBpNextPage}
+                disabled={bpNextDisabled}
+              ></lightning-button-icon>
+            </div>
+            <div class="fec-footer__goto">
+              <span class="fec-footer__label">Go to page</span>
+              <lightning-input
+                variant="label-hidden"
+                value={bpGoToPageInput}
+                type="number"
+                min="1"
+                class="fec-footer__goto-input"
+                onchange={handleBpGoToPageInput}
+              ></lightning-input>
+              <span class="fec-footer__label">of {bpTotalPages}</span>
+              <lightning-button label="Go" onclick={handleBpGoToPage}></lightning-button>
+            </div>
+          </div>
+          <div class="fec-bp-modal__props">
+            <lightning-radio-group
+              name="exportProperties"
+              label="Export with all Properties"
+              options={exportPropertyOptions}
+              value={includeAllProperties}
+              onchange={handleExportPropertiesChange}
+              type="radio"
+              required
+            ></lightning-radio-group>
+          </div>
+        </div>
+        <footer class="slds-modal__footer fec-bp-modal__footer">
+          <lightning-button label="Cancel" onclick={closeBpModal}></lightning-button>
+          <lightning-button
+            class="slds-m-left_x-small"
+            variant="brand"
+            label="Submit"
+            onclick={handleBpSubmit}
+            disabled={bpSubmitLoading}
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>
