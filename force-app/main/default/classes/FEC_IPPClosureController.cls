@@ -91,15 +91,24 @@ public without sharing class FEC_IPPClosureController {
             accessibleIpps.add((FEC_IPP__c) so);
         }
         if (caseIppToClose == null && !accessibleIpps.isEmpty()) {
-            List<FEC_IPP__c> filteredByClosureCaseStatus = new List<FEC_IPP__c>();
+            Set<Id> linkedCaseIds = new Set<Id>();
             for (FEC_IPP__c r : accessibleIpps) {
-                if (r.FEC_IPP_Closure_Case__c == null || r.FEC_IPP_Closure_Case__c == caseId) {
-                    filteredByClosureCaseStatus.add(r);
-                } else if (!isPendingCaseStatusValue(r.FEC_IPP_Closure_Case__r != null ? r.FEC_IPP_Closure_Case__r.FEC_Case_Status__c : null)) {
-                    filteredByClosureCaseStatus.add(r);
+                if (r.FEC_IPP_Closure_Case__c != null && r.FEC_IPP_Closure_Case__c != caseId) {
+                    linkedCaseIds.add(r.FEC_IPP_Closure_Case__c);
                 }
             }
-            accessibleIpps = filteredByClosureCaseStatus;
+            Set<Id> pendingLinkedCaseIds = getPendingCaseIds(linkedCaseIds);
+            if (!pendingLinkedCaseIds.isEmpty()) {
+                List<FEC_IPP__c> filteredByClosureCaseStatus = new List<FEC_IPP__c>();
+                for (FEC_IPP__c r : accessibleIpps) {
+                    if (r.FEC_IPP_Closure_Case__c == null
+                        || r.FEC_IPP_Closure_Case__c == caseId
+                        || !pendingLinkedCaseIds.contains(r.FEC_IPP_Closure_Case__c)) {
+                        filteredByClosureCaseStatus.add(r);
+                    }
+                }
+                accessibleIpps = filteredByClosureCaseStatus;
+            }
         }
         if (caseIppToClose == null && !accessibleIpps.isEmpty()) {
             Set<Id> ippIdSet = new Set<Id>();
@@ -260,8 +269,20 @@ public without sharing class FEC_IPPClosureController {
         return !pendingCases.isEmpty();
     }
 
-    private static Boolean isPendingCaseStatusValue(String caseStatusValue) {
-        return String.isNotBlank(caseStatusValue) && caseStatusValue.startsWith('Pending-');
+    private static Set<Id> getPendingCaseIds(Set<Id> caseIds) {
+        Set<Id> pendingCaseIds = new Set<Id>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return pendingCaseIds;
+        }
+        for (Case c : [
+            SELECT Id
+            FROM Case
+            WHERE Id IN :caseIds
+              AND FEC_Case_Status__c LIKE 'Pending-%'
+        ]) {
+            pendingCaseIds.add(c.Id);
+        }
+        return pendingCaseIds;
     }
 
 }
