@@ -15211,7 +15211,7 @@
         <shortDescription>Duplicate Queue Error</shortDescription>
         <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_Assignment_Remarks_History</fullName>
         <categories>Assignment List</categories>
         <language>en_US</language>
