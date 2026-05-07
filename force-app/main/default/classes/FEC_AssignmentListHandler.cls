@@ -40,7 +40,8 @@ public with sharing class FEC_AssignmentListHandler {
                 FEC_Assignment_Owner__r.Email,
                 FEC_Assignment_Status__c,
                 FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
-                FEC_Assignment_Type__c // tungnm37 thêm: để phân biệt COF/GSR vs thường
+                FEC_Assignment_Type__c, // tungnm37 thêm: để phân biệt COF/GSR vs thường
+                FEC_Assignment_Owner_Text__c // tungnm37 thêm: formula field hiện đúng owner/queue/Unassigned
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
         ];

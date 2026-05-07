@@ -178,7 +178,8 @@ export default class Fec_AssignmentList extends LightningElement {
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_OwnerID__c // tungnm37: hiện Queue Name từ FEC_OwnerID__c
+        owner: // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
+          item.FEC_Assignment_Owner_Text__c
           || (item.FEC_Assignment_Owner__c?.startsWith("00G")
               ? item.FEC_Assignment_Owner__r?.Name
               : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")),
