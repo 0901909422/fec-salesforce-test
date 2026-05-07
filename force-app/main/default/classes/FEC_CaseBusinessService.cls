@@ -1565,8 +1565,25 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Case__c = caseId,
         FEC_Field_List__c = fieldListJson
       );
+      //PhongBT: Chỉ gán NOC lên history khi BP code chứa COF hoặc GSR (lookup trỏ FEC_Nature_of_Case__c).
       if (String.isNotBlank(natureOfCaseId)) {
+        List<FEC_Nature_of_Case__c> nocRows = [
+          SELECT Id, FEC_Business_Process__r.FEC_Code__c
+          FROM FEC_Nature_of_Case__c
+          WHERE Id = :natureOfCaseId
+          LIMIT 1
+        ];
+        if (!nocRows.isEmpty()) {
+          String bpCode = nocRows[0].FEC_Business_Process__r == null
+            ? null
+            : nocRows[0].FEC_Business_Process__r.FEC_Code__c;
+          if (String.isNotBlank(bpCode)) {
+            String u = bpCode.toUpperCase();
+            if (u.contains('GSR') || u.contains('COF')) {
         history.FEC_Nature_of_Cases__c = natureOfCaseId;
+            }
+          }
+        }
       }
       insert history;
     } catch (Exception e) {
@@ -1595,6 +1612,7 @@ public without sharing class FEC_CaseBusinessService {
             FEC_Current_Case_Stage__c,
             FEC_Stage_Name__c,
             FEC_Final_Status__c,
+            FEC_Actual_Nature_of_Case__c,
             FEC_Customer_Type__c,
             FEC_Account_Contract_Number_PL__c
           FROM Case
@@ -1638,6 +1656,45 @@ public without sharing class FEC_CaseBusinessService {
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
         when ROUTE_TO_COF_GSR {
+          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
+          // Giống ROUTE_TO: tạo FEC_Case_Flow_History__c khi submit lần đầu (creation stage)
+          String natureOfCaseIdCof = (String) params.get('natureOfCaseId');
+          String fieldListJsonCof = (String) params.get('fieldListJson');
+          //PhongBT: cloneMasterDataSetting và cloneActualNatureOfCase cho cof-gsr
+          if (String.isNotBlank(natureOfCaseIdCof)) {
+            List<Case> caseRows = [
+              SELECT Id, FEC_Actual_Nature_of_Case__c
+              FROM Case
+              WHERE Id = :caseId
+              LIMIT 1
+            ];
+            if (!caseRows.isEmpty() && caseRows[0].FEC_Actual_Nature_of_Case__c == null) {
+              Id nocId;
+              try {
+                nocId = (Id) natureOfCaseIdCof;
+              } catch (Exception e) {
+                nocId = null;
+              }
+              if (nocId != null && nocId.getSObjectType() == FEC_Nature_of_Case__c.SObjectType) {
+                FEC_Actual_Nature_of_Case__c tgt = cloneActualNatureOfCase(natureOfCaseIdCof);
+                cloneMasterDataSetting(tgt.Id, natureOfCaseIdCof);
+                update new Case(
+                  Id = caseId,
+                  FEC_Actual_Nature_of_Case__c = tgt.Id,
+                  FEC_Product_Type__c = tgt.FEC_Product_Type__c,
+                  FEC_Category__c = tgt.FEC_Category__c,
+                  FEC_SubCategory__c = tgt.FEC_Sub_Category__c,
+                  FEC_SubCode__c = tgt.FEC_Sub_Code__c
+                );
+                params.put('natureOfCaseId', String.valueOf(tgt.Id));
+              }
+            }
+          }
+          Boolean isCreationStageCof =
+            !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
+          if (isCreationStageCof) {
+            createCaseFlowHistory(caseId, natureOfCaseIdCof, fieldListJsonCof);
+          }
           // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
           return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
