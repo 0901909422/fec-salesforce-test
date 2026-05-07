@@ -11109,7 +11109,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Block Card Failed Max</shortDescription>
-        <value>Khoá thẻ thất bại.</value>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại.</value>
     </labels>
     <labels>
         <fullName>FEC_Block_Card_Confirmation_Msg</fullName>
