@@ -8,13 +8,15 @@
         active-section-name="addressList"
       >
         <lightning-accordion-section name="addressList" label="Address List">
-          <div class="slds-p-top_x-small">
+          <div class="slds-p-top_x-small" lwc:if={addressInfos}>
             <lightning-datatable
-              key-field="id"
+              key-field="Id"
               data={addressInfos}
               columns={columns}
               max-row-selection="1"
-              hide-checkbox-column={isDisable}
+              disabled-rows={disabledRows}
+              selected-rows={selectedRows}
+              onrowselection={handleRowSelect}
             >
             </lightning-datatable>
           </div>
@@ -31,12 +33,14 @@
               name="radioGroup"
               label={customLabel.newTempAddress}
               options={newTempAddressOptions}
-              value={newAddressInfoId}
+              value={addressInfoValue}
               type="radio"
               disabled
             ></lightning-radio-group>
-            <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
-            <lightning-button-icon icon-name="utility:close" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
+            <template lwc:if={isEdit}>
+              <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleEditTempAddress}></lightning-button-icon>
+              <lightning-button-icon icon-name="utility:close" class="slds-m-left_xx-small slds-p-top_x-small" onclick={handleDeleteTempAddress}></lightning-button-icon>
+            </template>
           </div>
         </lightning-accordion-section>
       </lightning-accordion>

@@ -83,6 +83,7 @@
 
         // Warning Codes (list)
         @AuraEnabled public List<String> warnCodes { get; set; }
+        @AuraEnabled public String warnCodeStr { get; set; }
     }
 
     // ==========================================
@@ -284,15 +285,18 @@
 
                         result.warnCodes = new List<String>();
                         Dom.XmlNode warnNode = acctBs.getChildElement('FAS_WARN_CD', null);
+
                         if (warnNode != null) {
                             for (Dom.XmlNode warnCdX : warnNode.getChildElements()) {
                                 String code = FEC_CommonUltils.getXmlValue(warnCdX, 'WARN_CD');
-
-                                if (String.isNotBlank(code)) {
-                                    result.warnCodes.add(code);
-                                }
+                                result.warnCodes.add(String.isNotBlank(code) ? code : '0');
                             }
                         }
+
+                        while (result.warnCodes.size() < 7) {
+                            result.warnCodes.add('0');
+                        }
+                        result.warnCodeStr = String.join(result.warnCodes, ' ');
 
                         // D. Parse NA_DATA_TBL -> NA_DATA 
                         Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);
@@ -365,16 +369,20 @@
                     result.dtBlkCd2 = FEC_CommonUltils.xmlValToDate(acctBs, 'DT_BLK_CD_2');
 
                     result.warnCodes = new List<String>();
-                        Dom.XmlNode warnNode = acctBs.getChildElement('FAS_WARN_CD', null);
-                        if (warnNode != null) {
-                            for (Dom.XmlNode warnCdX : warnNode.getChildElements()) {
-                                String code = FEC_CommonUltils.getXmlValue(warnCdX, 'WARN_CD');
+                    Dom.XmlNode warnNode = acctBs.getChildElement('FAS_WARN_CD', null);
 
-                                if (String.isNotBlank(code)) {
-                                    result.warnCodes.add(code);
-                                }
-                            }
+                    if (warnNode != null) {
+                        for (Dom.XmlNode warnCdX : warnNode.getChildElements()) {
+                            String code = FEC_CommonUltils.getXmlValue(warnCdX, 'WARN_CD');
+                            result.warnCodes.add(String.isNotBlank(code) ? code : '0');
                         }
+                    }
+
+                    while (result.warnCodes.size() < 7) {
+                        result.warnCodes.add('0');
+                    }
+
+                    result.warnCodeStr = String.join(result.warnCodes, ' ');
 
                     // D. Parse NA_DATA_TBL -> NA_DATA 
                     Dom.XmlNode naTbl = acctBs.getChildElement('NA_DATA_TBL', null);

@@ -34,7 +34,7 @@ public with sharing class FEC_SearchController {
 
     @AuraEnabled
     public static Id createHistory(String value, String fieldName, Id caseId, String searchProducts, String selectedType, String cifNumber, String phone, 
-                String customerName, Boolean isListView, String policyNumber, String buyerNID ) {
+                String customerName, String applicationId, Boolean isListView, String policyNumber, String buyerNID ) {
     // 1. Validation
     if (String.isBlank(value) || String.isBlank(fieldName)) {
         throw new AuraHandledException(System.Label.FEC_MSG_Create_Customer_History_Field_Null);
@@ -79,7 +79,13 @@ public with sharing class FEC_SearchController {
         objCase.FEC_Recipient_Name__c = customerName;
 
         if (fieldName == 'UserId') {
-            objCase.FEC_Contract_Number__c = policyNumber;
+            if (caseId == null && isListView == true) {
+                objCase.FEC_Contract_Number__c = policyNumber;
+            } else {
+                objCase.FEC_Contract_Number__c = value;
+            }
+            objCase.FEC_Customer_Type__c = FEC_ConstantCommon.CASE_NON_EXISTING_CUSTOMER;
+            objCase.FEC_CIF_Number__c = null;
         }
         if (fieldName == 'AccountNumber') {
             objCase.FEC_Account_Number__c = value;
@@ -88,7 +94,15 @@ public with sharing class FEC_SearchController {
             objCase.FEC_Contract_Number__c = value;
         }
 
-        // Thực hiện Upsert Case ngay để có Id
+        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case trước khi tạo History
+        // để các luồng Insurance/Card/Loan đều có nguồn dữ liệu thống nhất.
+        if (String.isNotBlank(phone)) {
+            objCase.FEC_Search_Phone_Number__c = phone;
+        }
+        if (String.isNotBlank(buyerNID)) {
+            objCase.FEC_Search_National_ID__c = buyerNID;
+        }
+
         upsert objCase;
 
         FEC_Additional_Info__c newInfo = new FEC_Additional_Info__c(
@@ -96,38 +110,114 @@ public with sharing class FEC_SearchController {
         );
         insert newInfo;
 
-        // 4. Khởi tạo và Insert History (Trường FEC_Case__c bây giờ chắc chắn có giá trị)
+        // [CHANGE][Author : LongNH76] Luôn đọc dữ liệu từ Case vừa upsert/update để tránh phụ thuộc hoàn toàn vào payload từ UI.
+        // Old behavior (kept for reference):
+        // - Chỉ query Case khi fieldName == 'UserId'
+        // - Không resolve dữ liệu chung cho Card/Loan
+        Id queryCaseId = (caseId != null) ? caseId : objCase.Id;
+        List<Case> cases = [
+            SELECT Id,
+                FEC_Customer_Name__c,
+                FEC_National_ID_Passport_ID__c,
+                FEC_Phone_Number__c,
+                FEC_Search_Phone_Number__c,
+                FEC_Search_National_ID__c
+            FROM Case
+            WHERE Id = :queryCaseId
+            LIMIT 1
+        ];
+        Case sourceCase = (cases != null && !cases.isEmpty()) ? cases.get(0) : null;
+
+        // [CHANGE][Author : LongNH76] Resolve dữ liệu theo thứ tự ưu tiên:
+        // Case business field -> Case search field -> dữ liệu truyền từ UI.
+        String resolvedCustomerName =
+            String.isNotBlank(sourceCase != null ? sourceCase.FEC_Customer_Name__c : null)
+            ? sourceCase.FEC_Customer_Name__c
+            : customerName;
+        String resolvedPrimaryPhone =
+            String.isNotBlank(sourceCase != null ? sourceCase.FEC_Phone_Number__c : null)
+            ? sourceCase.FEC_Phone_Number__c
+            : (
+                String.isNotBlank(sourceCase != null ? sourceCase.FEC_Search_Phone_Number__c : null)
+                ? sourceCase.FEC_Search_Phone_Number__c
+                : phone
+            );
+        String resolvedNationalId =
+            String.isNotBlank(sourceCase != null ? sourceCase.FEC_National_ID_Passport_ID__c : null)
+            ? sourceCase.FEC_National_ID_Passport_ID__c
+            : (
+                String.isNotBlank(sourceCase != null ? sourceCase.FEC_Search_National_ID__c : null)
+                ? sourceCase.FEC_Search_National_ID__c
+                : buyerNID
+            );
+
         FEC_Customer_History__c rec = new FEC_Customer_History__c();
         if (fieldName == 'AccountNumber') {
             rec.FEC_Account_Number__c = value;
         } else if (fieldName == 'ContractNumber') {
             rec.FEC_Contract_Number__c = value;
         } else if (fieldName == 'UserId') {
-            List<Case> cases = [SELECT Id, FEC_Search_Phone_Number__c, FEC_Search_National_ID__c FROM Case WHERE Id = :caseId LIMIT 1];
-            rec.FEC_Primary_Phone__c = cases != null && !cases.isEmpty() ? cases.get(0).FEC_Search_Phone_Number__c : null;
-            rec.FEC_National_ID_Passport_ID__c =cases != null && !cases.isEmpty() ? cases.get(0).FEC_Search_National_ID__c : null;
+            // Old behavior (kept for reference):
+            // List<Case> cases = [
+            //     SELECT Id, FEC_Search_Phone_Number__c, FEC_Search_National_ID__c
+            //     FROM Case
+            //     WHERE Id = :queryCaseId
+            //     LIMIT 1
+            // ];
+            // String searchPhoneFromCase =
+            //     (cases != null && !cases.isEmpty()) ? cases.get(0).FEC_Search_Phone_Number__c : null;
+            // String searchNidFromCase =
+            //     (cases != null && !cases.isEmpty()) ? cases.get(0).FEC_Search_National_ID__c : null;
+            // rec.FEC_Primary_Phone__c =
+            //     String.isNotBlank(searchPhoneFromCase) ? searchPhoneFromCase : phone;
+            // rec.FEC_National_ID_Passport_ID__c =
+            //     String.isNotBlank(searchNidFromCase) ? searchNidFromCase : buyerNID;
             rec.FEC_Buyer_NID__c = buyerNID;
-            rec.FEC_Contract_Number__c = policyNumber;
-            System.debug('>>>>FEC_Primary_Phone__c: ' + rec.FEC_Primary_Phone__c);
-            System.debug('>>>>FEC_National_ID_Passport_ID__c: ' + rec.FEC_National_ID_Passport_ID__c);
-            System.debug('>>>>FEC_Contract_Number__c: ' + policyNumber);
-            
+
+            if (caseId == null && isListView == true) {
+                rec.FEC_Contract_Number__c = policyNumber;
+            } else {
+                rec.FEC_Contract_Number__c = value;
+            }
         }
+        rec.FEC_Application_ID__c = applicationId;
         rec.Name = value;
-        rec.FEC_CIF_Number__c = cifNumber;
-        rec.FEC_Work_Phone__c = phone;
-        rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER;
-        //HieuTT7: Sửa gán thêm product type cho history để tiện tracking (ngày 10/04/2026)
-        rec.FEC_Product_Code__c   = selectedType;
-        rec.FEC_Case__c = objCase.Id; // Gán ID vừa tạo/update vào trường bắt buộc
- System.debug('>>>>rec: ' + json.serializePretty(rec));
+        // [CHANGE][Author : LongNH76] Gán lại các field trọng yếu của History từ biến resolved để dùng chung cho Card/Loan/Insurance.
+        // Old behavior (kept for reference):
+        // rec.FEC_Work_Phone__c = phone;
+        // rec.FEC_Customer_Name__c = customerName;
+        rec.FEC_Work_Phone__c = resolvedPrimaryPhone;
+        rec.FEC_Primary_Phone__c = resolvedPrimaryPhone;
+        rec.FEC_National_ID_Passport_ID__c = resolvedNationalId;
+        rec.FEC_Customer_Name__c = resolvedCustomerName;
+        // Old behavior (kept for reference):
+        // - rec.FEC_Primary_Phone__c, rec.FEC_National_ID_Passport_ID__c chỉ được set trong nhánh UserId.
+        // - Card/Loan không được đồng bộ 2 field này từ Case.
+
+        if (fieldName == 'UserId') {
+            rec.FEC_CIF_Number__c = null;
+            rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_NON_EXISTING_CUSTOMER;
+        } else {
+            rec.FEC_CIF_Number__c = cifNumber;
+            rec.FEC_Customer_Type__c = FEC_ConstantCommon.CUSTOMER_HISTORY_EXISTING_CUSTOMER;
+        }
+        rec.FEC_Product_Code__c = selectedType;
+        rec.FEC_Case__c = objCase.Id;
         insert rec;
 
-        // 5. Cập nhật lại Case để liên kết ngược với History record vừa tạo
         objCase.FEC_Account_or_Contract__c = rec.Id;
-        // 15/04/2026 PhuongNT add
-        objCase.FEC_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
-        objCase.FEC_Recipient_Phone_Number__c = rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
+        objCase.FEC_Phone_Number__c =
+            rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
+        objCase.FEC_Recipient_Phone_Number__c =
+            rec.FEC_Primary_Phone__c != null ? rec.FEC_Primary_Phone__c : phone;
+
+        if (String.isNotBlank(phone)) {
+            objCase.FEC_Search_Phone_Number__c = phone;
+        }
+        if (String.isNotBlank(buyerNID)) {
+            objCase.FEC_Search_National_ID__c = buyerNID;
+        }
+
         update objCase;
 
         // ===== CALL API Demographic  =====
@@ -359,13 +449,21 @@ public with sharing class FEC_SearchController {
                     FEC_Gender__c,
                     FEC_Date_of_Birth__c,
                     FEC_Primary_Phone__c,
-                    FEC_Email__c
+                    FEC_Email__c,
+                    FEC_Plastic_ID__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :historyId
                 LIMIT 1
             ];
 
-          Boolean isReady = hist != null && hist.Id != null;
+          Boolean isReady = 
+                    String.isNotBlank(hist.FEC_Customer_Name__c)
+                    || String.isNotBlank(hist.FEC_Primary_Phone__c)
+                    || hist.FEC_Date_of_Birth__c != null
+                    || String.isNotBlank(hist.FEC_Gender__c)
+                    || hist.FEC_National_ID_Passport_ID__c != null
+                    || String.isNotBlank(hist.FEC_Email__c)
+                    || String.isNotBlank(hist.FEC_Plastic_ID__c);
             return new Map<String, Object>{
                 'isReady'      => isReady,
                 'customerName' => hist.FEC_Customer_Name__c,
@@ -373,7 +471,8 @@ public with sharing class FEC_SearchController {
                 'gender'       => hist.FEC_Gender__c,
                 'dateOfBirth'  => hist.FEC_Date_of_Birth__c,
                 'primaryPhone' => hist.FEC_Primary_Phone__c,
-                'email'        => hist.FEC_Email__c
+                'email'        => hist.FEC_Email__c,
+                'plasticID'    => hist.FEC_Plastic_ID__c
             };
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());

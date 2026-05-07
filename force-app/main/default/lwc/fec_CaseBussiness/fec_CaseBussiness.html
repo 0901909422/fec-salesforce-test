@@ -227,24 +227,21 @@
         </template>
 
         <template if:true={section.isLastSection}>
-          <div
+           <div
             if:true={isProcessActionFailed}
             class="process-action-result process-action-result--error"
           >
             <p>{processActionMsg}</p>
           </div>
 
-          <div
+           <div
             if:true={isProcessActionSuccessed}
             class="process-action-result process-action-result--success"
           >
             <p>{processActionMsg}</p>
           </div>
 
-          <div
-            if:true={isProcessActionInfo}
-            class="process-action-result process-action-result--info"
-          >
+          <div if:true={isProcessActionInfo} class="process-action-result process-action-result--info">
             <p>{processActionMsg}</p>
           </div>
         </template>
@@ -271,25 +268,33 @@
           ></lightning-select>
         </div>
 
-        <div
-          if:true={showRouteTo}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+        <!-- tungnm37 sửa: ẩn Team/Queue cũ khi COF/GSR, thay bằng fec_RoutingAssignment -->
+        <div if:true={showRouteTo} class={routingAssignmentContainerClass}>
+          <template if:false={isRoutingAssignmentMode}>
+            <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.teamLabel}</p>
             <p class="value">{business.nextTeam}</p>
           </div>
-
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+            <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.queueLabel}</p>
-            <p class="value">{business.nextQueue.label}</p>
-          </div>
+            <p class="value">{routeToQueueDisplayLabel}</p>
+            </div>
+                </template>
+          <!-- tungnm37 thêm: Routing Assignment LWC nằm bên phải, cùng cột 6-of-12 với Team/Queue cũ -->
+          <template if:true={isRoutingAssignmentMode}>
+            <c-fec_-routing-assignment
+              nature-of-case-id={business.natureOfCase}
+              business-code={business.code}
+              customer-type={business.customerType}
+              is-submited={business.isSubmited}
+              user-group={userGroup}
+              onassignmentsloaded={handleAssignmentsLoaded}
+              onadditem={handleAddItem}
+              onmanualitemschange={handleManualItemsChange}
+              onduplicatequeue={handleDuplicateQueue}>
+            </c-fec_-routing-assignment>
+          </template>
         </div>
-
         <div
           if:true={showRevert}
           class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
@@ -298,10 +303,10 @@
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
             <p class="label">{customLabel.decisionLabel}</p>
-            <p class="value">{business.lastUser}</p>
+            <p class="value">{revertDecisionDisplayLabel}</p>
           </div>
         </div>
-        <div
+         <div
           if:true={showTransfer}
           class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
         >
@@ -325,8 +330,10 @@
             class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
           >
             <template if:true={isSubDecisionOptionsDisplay}>
-              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder={customLabel.chooseSubDecisionLabel}
+               <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder=
+{customLabel.chooseSubDecisionLabel}
                 value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
+                options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
             <!-- <template if:false={isSubDecisionOptionsDisplay}>
@@ -335,7 +342,7 @@
             
           </div>
         </div>
-        <div
+         <div
           if:true={showUpdate}
           class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
         >
@@ -357,7 +364,11 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-
+  <!--Hieutt74: Update ngày 21/4/2026-->
+  <!--Assigment Routing Action-->
+  <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
+  </c-fec_-assignment-list>
+  <!--END: Hieutt74: Update ngày 21/4/2026-->
   <c-fec_-modal
     header={header}
     onclose={handleCloseModal}

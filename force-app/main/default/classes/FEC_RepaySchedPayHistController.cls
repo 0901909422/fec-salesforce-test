@@ -9,7 +9,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             this.value = value;
         }
     }
-
     public class RepaymentScheduleTotalsDTO {
         @AuraEnabled public String totalInstallmentAmount;
         @AuraEnabled public String totalPrincipal;
@@ -51,10 +50,10 @@ public with sharing class FEC_RepaySchedPayHistController {
         @AuraEnabled public String paymentAmount;
         @AuraEnabled public String paymentChannel;
     }
-
     public class SectionDataResult {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public String errorMessage;
+        @AuraEnabled public Boolean repaymentScheduleError;
         @AuraEnabled public RepaymentScheduleTotalsDTO repaymentScheduleTotals;
         @AuraEnabled public List<RepaymentScheduleRowDTO> repaymentScheduleTable;
         @AuraEnabled public PaymentHistoryTotalsDTO paymentHistoryTotals;
@@ -89,6 +88,16 @@ public with sharing class FEC_RepaySchedPayHistController {
         }
     }
 
+    private static Case getCaseInfo(Id caseId) {
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Is_Test_API__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        return cases.isEmpty() ? null : cases[0];
+    }
+
     private static String getContractNumber(Id caseId) {
         List<Case> cases = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1];
         if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) return null;
@@ -120,13 +129,9 @@ public with sharing class FEC_RepaySchedPayHistController {
 
         if (basicRes == null || basicRes.LoanBasicInfo == null) return;
 
-        FEC_GetLoanBasicInfo.Loan loan = basicRes.LoanBasicInfo.Loan;
-        if (loan != null && loan.TotalInstallmentAmount != null) {
-            result.repaymentScheduleTotals.totalInstallmentAmount = String.valueOf(loan.TotalInstallmentAmount);
-        }
-
         List<FEC_GetLoanBasicInfo.RepaymentSchedule> schedules = basicRes.LoanBasicInfo.RepaymentSchedules;
         if (schedules != null && !schedules.isEmpty()) {
+            Decimal sumInstallmentAmount = 0;
             Decimal sumPrincipal = 0;
             Decimal sumInterest = 0;
             Integer idx = 0;
@@ -144,9 +149,11 @@ public with sharing class FEC_RepaySchedPayHistController {
                 row.interest = FEC_CommonUltils.decimalToString(rs.Interest);
                 row.closingPrincipal = FEC_CommonUltils.decimalToString(rs.ClosingPrincipal);
                 result.repaymentScheduleTable.add(row);
+                if (rs.InstallmentAmount != null) sumInstallmentAmount += rs.InstallmentAmount;
                 if (rs.Principal != null) sumPrincipal += rs.Principal;
                 if (rs.Interest != null) sumInterest += rs.Interest;
             }
+            result.repaymentScheduleTotals.totalInstallmentAmount = sumInstallmentAmount != 0 ? String.valueOf(sumInstallmentAmount) : HYPHEN;
             result.repaymentScheduleTotals.totalPrincipal = sumPrincipal != 0 ? String.valueOf(sumPrincipal) : HYPHEN;
             result.repaymentScheduleTotals.totalInterest = sumInterest != 0 ? String.valueOf(sumInterest) : HYPHEN;
         }
@@ -167,14 +174,11 @@ public with sharing class FEC_RepaySchedPayHistController {
             || basicRes.LoanBasicInfo.RepaymentSchedules.isEmpty()) {
             return;
         }
-        Decimal totalInstallmentAmount = null;
-        FEC_GetLoanBasicInfo.Loan loan = basicRes.LoanBasicInfo.Loan;
-        if (loan != null && loan.TotalInstallmentAmount != null) {
-            totalInstallmentAmount = loan.TotalInstallmentAmount;
-        }
+        Decimal totalInstallmentAmount = 0;
         Decimal sumPrincipal = 0;
         Decimal sumInterest = 0;
         for (FEC_GetLoanBasicInfo.RepaymentSchedule rs : basicRes.LoanBasicInfo.RepaymentSchedules) {
+            if (rs.InstallmentAmount != null) totalInstallmentAmount += rs.InstallmentAmount;
             if (rs.Principal != null) sumPrincipal += rs.Principal;
             if (rs.Interest != null) sumInterest += rs.Interest;
         }
@@ -323,7 +327,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             result.realTimePaymentTable.add(row);
         }
     }
-
     private static void fillRepaymentSchedulePaymentHistory(SectionDataResult result) {
         result.repaymentSchedulePaymentHistory = new List<FieldItemDTO>();
 
@@ -369,6 +372,7 @@ public with sharing class FEC_RepaySchedPayHistController {
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_RePayment_Schedule__c.SObjectType));
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_Payment_History__c.SObjectType));
         result.errorMessage = null;
+        result.repaymentScheduleError = false;
         result.repaymentScheduleTotals = new RepaymentScheduleTotalsDTO();
         result.repaymentScheduleTable = new List<RepaymentScheduleRowDTO>();
         result.paymentHistoryTotals = new PaymentHistoryTotalsDTO();
@@ -380,6 +384,9 @@ public with sharing class FEC_RepaySchedPayHistController {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
         }
+
+        Case caseInfo = getCaseInfo(caseId);
+        Boolean isTestApi = caseInfo?.FEC_Is_Test_API__c == true;
 
         String contractNumber = getContractNumber(caseId);
         if (String.isBlank(contractNumber)) {
@@ -396,8 +403,12 @@ public with sharing class FEC_RepaySchedPayHistController {
         FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
 
         try {
-            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
-        } catch (Exception e) { }
+            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber, isTestApi);
+        } catch (Exception e) {
+            result.repaymentScheduleError = true;
+        }
+        
+        
 
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(transId, requestorId, dateTimeStr, contractNumber);

@@ -10,6 +10,15 @@ public with sharing class FEC_HoldCaseController {
         @AuraEnabled public Integer holdDuration;
     }
 
+    public class NfuInfoResult {
+        @AuraEnabled public String nfuStatus;
+        @AuraEnabled public String nfuCode;
+        @AuraEnabled public String nfuStartedDate;
+        @AuraEnabled public String nfuExpiryDate;
+        @AuraEnabled public String nfuReason;
+        @AuraEnabled public Boolean isSuccess;
+    }
+
     // ─────────────────────────────────────────────────────
     // DTO: ResponseModel
     // ─────────────────────────────────────────────────────
@@ -130,6 +139,113 @@ public with sharing class FEC_HoldCaseController {
 
         } catch (Exception e) {
             throw new AuraHandledException('Error: ' + e.getMessage());
+        }
+    }
+
+    /**
+     * Gọi API Mark NFU (FEC_MarkNFU) rồi trả về NFU info từ Case.
+     * Non-cacheable vì có HTTP callout.
+     * Dùng khi Routing Action = "Resolve" | "Route to".
+     */
+    @AuraEnabled
+    public static NfuInfoResult callMarkNFUAndGetInfo(String caseId) {
+        if (String.isBlank(caseId)) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'caseId'})
+            );
+        }
+
+        try {
+            // 1. Query Case lấy ContractNumber
+            Case c = [
+                SELECT Id,
+                    FEC_Account_Contract_Number_Text__c,
+                    FEC_SubCode__c,
+                    FEC_NFU_Status__c,
+                    FEC_NFU_Started_Date__c,
+                    FEC_NFU_Expiry_Date__c,
+                    FEC_NFU_Reason__c
+                FROM Case
+                WHERE Id = :caseId
+                WITH SECURITY_ENFORCED
+                LIMIT 1
+            ];
+            System.debug('[callMarkNFUAndGetInfo] Case: ' + JSON.serialize(c));
+            // 2. Lấy NFU Code từ Config theo subCode
+            List<FEC_Hold_Case_Config__c> configs = [
+                SELECT FEC_NFU_Code__c
+                FROM FEC_Hold_Case_Config__c
+                WHERE FEC_Sub_Code__c = :c.FEC_SubCode__c
+                AND   FEC_Active__c   = true
+                WITH SECURITY_ENFORCED
+                LIMIT 1
+            ];
+             System.debug('[callMarkNFUAndGetInfo] configs: ' + JSON.serialize(configs));
+            if (configs.isEmpty() || String.isBlank(configs[0].FEC_NFU_Code__c)) {
+                NfuInfoResult failed = new NfuInfoResult();
+                failed.isSuccess = false;
+                failed.nfuReason = System.Label.FEC_Reason_Error;
+                return failed;
+            }
+
+            String nfuCode = configs[0].FEC_NFU_Code__c.split(',')[0].trim();
+
+             System.debug('[callMarkNFUAndGetInfo] nfuCode to send: ' + nfuCode);
+
+            // 2. Gọi API Mark NFU
+            String userEmail = [
+                SELECT Email FROM User
+                WHERE Id = :UserInfo.getUserId()
+                LIMIT 1
+            ].Email;
+           
+            FEC_MarkNFU.MarkNFURequest req = new FEC_MarkNFU.MarkNFURequest();
+            req.ContractNumber = c.FEC_Account_Contract_Number_Text__c;
+            req.NFUReasonCode  = nfuCode;
+            req.NFUUpdatedBy   = userEmail;
+            System.debug('[callMarkNFUAndGetInfo] MarkNFURequest: ' + JSON.serialize(req));
+
+            FEC_MarkNFU.MarkNFUResult markResult = FEC_MarkNFU.markNFU(req);
+            System.debug('[callMarkNFUAndGetInfo] MarkNFUResult: ' + JSON.serialize(markResult));
+            NfuInfoResult result = new NfuInfoResult();
+
+            if (!markResult.success) {
+                result.isSuccess = false;
+                result.nfuReason = markResult.errorMessage;
+                return result;
+            }
+
+            Case refreshed = [
+                SELECT FEC_NFU_Status__c,
+                    FEC_NFU_Code__c,
+                    FEC_NFU_Started_Date__c,
+                    FEC_NFU_Expiry_Date__c,
+                    FEC_NFU_Reason__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+        
+            if (String.isBlank(refreshed.FEC_NFU_Status__c)) {
+                result.isSuccess = false;
+                return result;
+            }
+
+            result.isSuccess      = true;
+            result.nfuStatus      = refreshed.FEC_NFU_Status__c;
+            result.nfuCode        = refreshed.FEC_NFU_Code__c;
+            result.nfuStartedDate = refreshed.FEC_NFU_Started_Date__c != null
+                ? refreshed.FEC_NFU_Started_Date__c.format()
+                : '';
+            result.nfuExpiryDate  = refreshed.FEC_NFU_Expiry_Date__c != null
+                ? refreshed.FEC_NFU_Expiry_Date__c.format()
+                : '';
+            result.nfuReason      = refreshed.FEC_NFU_Reason__c;
+
+            return result;
+
+        } catch (Exception e) {
+            throw new AuraHandledException('callMarkNFUAndGetInfo error: ' + e.getMessage());
         }
     }
 

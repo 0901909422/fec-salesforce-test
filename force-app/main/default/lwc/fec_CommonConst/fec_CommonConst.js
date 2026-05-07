@@ -133,7 +133,29 @@ const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sendi
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
 const FEC_SENT_SUCCESS = 'Notification sent successfully';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const FEC_ERROR_LOADING_ORIGINAL_INFORMATION = 'Error loading Original Information';
 
+const CATEGORY = {
+  COMPLAINT: "Complaint"
+};
+
+const COMPLAINT_TYPE_TEXT = {
+  HIGH_RISK: "High risk",
+  URGENT: "Urgent"
+};
+ const COMPLAINT_SOURCE_LABEL = {
+  SBV: "Ngân hàng Nhà nước Việt Nam",
+  CIC: "Trung tâm Thông tin Tín dụng",
+  VCCA: "Cục Cạnh tranh và Bảo vệ người tiêu dùng",
+  "PR/MKT": "Trung tâm Truyền thông",
+  VIP: "Cấp quản lý cao",
+  EA: "Quan hệ đối ngoại"
+};
+
+const OPEN_STATUS = 'Open';
+const NEW_STATUS = 'New';
+const QUEUE_ID_START = '00G';
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -221,11 +243,19 @@ export {
     FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+    ERROR_TILE_SHOWTOAST,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
-    ERROR_TILE_SHOWTOAST,
     MSG_ENTER_EMAIL_CORRECTLY,
     NOTIFICATION_CHANNEL_SF_APP,
     FEC_SENT_SUCCESS,
-    PROFILE_RELEVANT_DEPTS
+    PROFILE_RELEVANT_DEPTS,
+    PAGE_SIZE_OPTIONS,
+    FEC_ERROR_LOADING_ORIGINAL_INFORMATION,
+    CATEGORY,
+    COMPLAINT_TYPE_TEXT,
+    COMPLAINT_SOURCE_LABEL,
+    OPEN_STATUS,
+    NEW_STATUS,
+    QUEUE_ID_START
 };

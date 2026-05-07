@@ -432,7 +432,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     }
   }
 
-  private static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
+  public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {
     Map<Id, String> resultMap = new Map<Id, String>();
     if (targetIds == null || targetIds.isEmpty()) {
       return resultMap;

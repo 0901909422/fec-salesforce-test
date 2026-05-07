@@ -83,7 +83,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -116,6 +116,52 @@
                                 </criteria>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Is_Owner__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.FEC_Execute_Assigment</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Rejected</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-CannotContactCustomer</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-AutoCancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Cancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Completed</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute_Assignment__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
@@ -157,6 +203,18 @@
                 <identifier>force_highlightsPanel</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_CaseExecuteVisibility</componentName>
+                <identifier>c_fec_CaseExecuteVisibility</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AssignmentExecuteVisibility</componentName>
+                <identifier>c_fec_AssignmentExecuteVisibility</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>header</name>
         <type>Region</type>
     </flexiPageRegions>
@@ -177,6 +235,12 @@
                 <identifier>c_fec_CaseDetail_Customer</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_DoNotBotherHandling</componentName>
+                <identifier>c_fec_DoNotBotherHandling</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -195,8 +259,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -217,8 +281,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b2ccf4d4-e823-4b23-b25a-cd1f5ebe8401</name>
@@ -627,11 +691,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>New</value>
-                        </valueListItems>
-                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -665,13 +724,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>
@@ -753,13 +812,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>

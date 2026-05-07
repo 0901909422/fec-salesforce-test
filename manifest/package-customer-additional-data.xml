@@ -6,11 +6,16 @@
         <members>FEC_ProcessCustomerDataBatch</members>
         <members>FEC_CustomerAdditionalHistoryHandler</members>
         <members>FEC_InsertCustomerDataQueueable</members>
+        <members>FEC_BixIngestService</members>
+        <members>FEC_BixIngestCallout</members>
+        <members>FEC_BixIngestQueueable</members>
         <members>FEC_ConstantCommon</members>
 
         <members>FEC_CustAddInfoListCtrlTest</members>
         <members>FEC_CustAddHistHandlerTest</members>
         <members>FEC_ProcessCustDataBatchTest</members>
+        <members>FEC_BixIngestTest</members>
+        <members>FEC_BixIngestMock</members>
 
         <name>ApexClass</name>
     </types>
@@ -41,6 +46,7 @@
         <members>FEC_CustomerAdditionalInfoConfig__c</members>
         <members>FEC_CustomerAdditionalInfo__c</members>
         <members>FEC_CustomerDataConfigHistory__c</members>
+        <members>FEC_API_Config__mdt</members>
         <name>CustomObject</name>
     </types>
 
@@ -53,6 +59,11 @@
     <types>
         <members>*</members>
         <name>CustomLabel</name>
+    </types>
+
+    <types>
+        <members>FEC_API_Config.FEC_BIX_Ingest</members>
+        <name>CustomMetadata</name>
     </types>
 
     <version>65.0</version>

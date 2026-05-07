@@ -227,7 +227,8 @@ public with sharing class FEC_CaseEditNOCController {
           FEC_SubCategory__c,
           FEC_SubCode__c, FEC_Is_Submited__c,
           FEC_Interaction_View_Mode__c,
-          RecordType.DeveloperName
+          RecordType.DeveloperName,
+          FEC_Is_Call_API_Success__c
         FROM Case
         WHERE Id = :recordId
       ];
@@ -385,6 +386,84 @@ public with sharing class FEC_CaseEditNOCController {
     }
   }
 
+  // [NOC-HANDLING-STAGE-UPDATE] Task 1.1: Kiểm tra Case có Auto-Routing Assignment không
+  // Query FEC_Assignment__c với FEC_Case__c = caseId AND FEC_Assignment_Type__c = 'Routing'
+  // Nếu có ít nhất 1 record → return true → ẩn Updated Information section
+  @AuraEnabled
+  public static Boolean hasAutoRoutingAssignment(String caseId) {
+    try {
+      List<FEC_Assignment__c> assignments = [
+        SELECT Id
+        FROM FEC_Assignment__c
+        WHERE FEC_Case__c = :caseId
+          AND FEC_Assignment_Type__c = 'Routing'
+        LIMIT 1
+      ];
+      return !assignments.isEmpty();
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  //PhongBT: query FEC_Case_Flow_History__c sau khi đổi bộ noc khác để lấy lại giá trị đã nhập lên
+  @AuraEnabled
+  public static String getPropertyFieldsFromFlowHistory(String caseId) {
+    try {
+      // FEC_Field_List__c là Long Text Area — không filter được trong WHERE, lấy nhiều rồi tìm record có giá trị
+      List<FEC_Case_Flow_History__c> historyList = [
+        SELECT Id, FEC_Field_List__c
+        FROM FEC_Case_Flow_History__c
+        WHERE FEC_Case__c = :caseId
+        ORDER BY CreatedDate DESC
+        LIMIT 10
+      ];
+      for (FEC_Case_Flow_History__c h : historyList) {
+        if (String.isNotBlank(h.FEC_Field_List__c)) {
+          return h.FEC_Field_List__c;
+        }
+      }
+      return null;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  /**
+   * PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
+   */
+  @AuraEnabled
+  public static Map<String, String> getOriginalNOCFromFlowHistory(String caseId) {
+    try {
+      List<FEC_Case_Flow_History__c> historyList = [
+        SELECT
+          Id,
+          FEC_Nature_of_Cases__c,
+          FEC_Nature_of_Cases__r.FEC_Product_Type__r.Name,
+          FEC_Nature_of_Cases__r.FEC_Category__r.Name,
+          FEC_Nature_of_Cases__r.FEC_Sub_Category__r.Name,
+          FEC_Nature_of_Cases__r.FEC_Sub_Code__r.Name
+        FROM FEC_Case_Flow_History__c
+        WHERE FEC_Case__c = :caseId
+        ORDER BY CreatedDate ASC
+        LIMIT 1
+      ];
+      if (historyList.isEmpty()) {
+        return null;
+      }
+      FEC_Case_Flow_History__c history = historyList[0];
+      Map<String, String> result = new Map<String, String>();
+      if (history.FEC_Nature_of_Cases__c != null) {
+        result.put('productType', history.FEC_Nature_of_Cases__r?.FEC_Product_Type__r?.Name);
+        result.put('category',    history.FEC_Nature_of_Cases__r?.FEC_Category__r?.Name);
+        result.put('subCategory', history.FEC_Nature_of_Cases__r?.FEC_Sub_Category__r?.Name);
+        result.put('subCode',     history.FEC_Nature_of_Cases__r?.FEC_Sub_Code__r?.Name);
+      }
+      return result;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   @AuraEnabled
   public static List<FEC_CommonUltils.PicklistOption> getSubCodelst(
     String recordId,
@@ -435,4 +514,30 @@ public with sharing class FEC_CaseEditNOCController {
       throw new AuraHandledException(e.getMessage());
     }
   }
+  
+  //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,....
+  @AuraEnabled
+  public static void saveNOC(
+    String recordId,
+    String productTypeId,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId
+  ){
+    Case cs = new Case(
+      Id = recordId,
+      FEC_Product_Type__c = productTypeId,
+      FEC_Category__c = categoryId,
+      FEC_SubCategory__c = subCategoryId,
+      FEC_SubCode__c = subCodeId,
+      FEC_Is_Call_API_Success__c = true
+    );
+    
+    try {
+      update cs;
+    } catch (Exception e) {
+      throw new AuraHandledException('Update failed: ' + e.getMessage());
+    }
+  }
+  
 }

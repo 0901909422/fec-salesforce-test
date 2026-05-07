@@ -27,19 +27,8 @@
                 component.set('v.recordId', recordId);
             }
         }
-
-        if (recordId) {
-            var action = component.get('c.getCaseById');
-            action.setParams({ caseId: recordId });
-            action.setCallback(this, function(res) {
-                if (res.getState() === 'SUCCESS' && res.getReturnValue()) {
-                    var data = res.getReturnValue();
-                    component.set('v.selectedId', data.id);
-                    component.set('v.selectedLabel', data.label);
-                }
-            });
-            $A.enqueueAction(action);
-        }
+        // tungnm37 sửa: không pre-fill case hiện tại vào ô search
+        // selectedId/selectedLabel để trống để user tự tìm case cần link
     },
 
     handleInput: function(component, event, helper) {
