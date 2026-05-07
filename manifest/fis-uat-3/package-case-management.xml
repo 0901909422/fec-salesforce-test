@@ -663,7 +663,10 @@
         <members>FEC_Assignment_Status</members>
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
+        <members>FEC_Assignment_Remarks_History</members>
         <members>FEC_RelevantTicket_Cannot_Delete</members>
+		<members>FEC_Reason_Error</members>
+		<members>FEC_Duplicate_Queue_Error</members>
         <members>FEC_Points_Redeem_Button_Label</members>
 		<members>FEC_Points_Redeem_Fail_After_Max</members>
 		<members>FEC_Points_Redeem_Fail_Prefix</members>
@@ -672,11 +675,6 @@
 		<members>FEC_Points_Redemption_CMS_Phone_Label</members>
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
-        <members>FEC_Assignment_Remarks_History</members>
-        <!-- Interaction Case Service Case -->
-        <members>FEC_RelevantTicket_Cannot_Delete</members>
-		<members>FEC_Reason_Error</members>
-		<members>FEC_Duplicate_Queue_Error</members>
         <name>CustomLabel</name>
     </types>
 	<types>
