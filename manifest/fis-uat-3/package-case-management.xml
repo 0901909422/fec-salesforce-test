@@ -447,6 +447,7 @@
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
+        <members>fec_OriginalInformation</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

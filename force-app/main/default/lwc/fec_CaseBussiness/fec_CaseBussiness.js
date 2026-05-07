@@ -327,7 +327,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
   fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
   // DungLT — đăng ký LWC upload file động (master data)
-  fec_FileUploadCard: () => import('c/fec_FileUploadCard')
+  fec_FileUploadCard: () => import('c/fec_FileUploadCard'),
+  fec_OriginalInformation: () => import('c/fec_OriginalInformation')
 };
 
 /**
