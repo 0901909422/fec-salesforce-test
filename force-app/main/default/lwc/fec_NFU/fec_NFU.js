@@ -121,8 +121,15 @@ export default class Fec_NFU extends LightningElement {
                     recordType: Fetch_Collection_Data_Record_Type_NFU
                 });
 
-            if (!response || response.Success === false || !response.NFUDetailsList || response.NFUDetailsList.length === 0) {
+            const apiFailed =
+                !response ||
+                response.Success === false ||
+                String(response.Success).toLowerCase() === 'false';
+            if (apiFailed) {
                 this.nfuData = null;
+            } else if (!response.NFUDetailsList || response.NFUDetailsList.length === 0) {
+                // Success nhưng không có bản ghi NFU: giữ layout đủ trường, giá trị EMPTY trong nfuFields
+                this.nfuData = {};
             } else {
                 this.nfuData = response.NFUDetailsList[0];
             }

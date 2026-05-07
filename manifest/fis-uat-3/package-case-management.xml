@@ -27,11 +27,13 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_PointsRedemptionCaseController</members>
         <members>FEC_HoldCaseController</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_BancaController</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -485,8 +487,10 @@
         <members>fec_CommonUtils</members>
         <members>fec_Banca</members>
 		<members>fec_BancaTabView</members>
+        <members>fec_RdPaymentRoutingUtils</members>
+		<members>fec_PointsRedemptionCaseForm</members>
 		<name>LightningComponentBundle</name>
-	</types>
+    </types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
@@ -664,7 +668,6 @@
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
         <members>FEC_Assignment_Remarks_History</members>
-        <!-- Interaction Case Service Case -->
         <members>FEC_RelevantTicket_Cannot_Delete</members>
 		<members>FEC_Reason_Error</members>
 		<members>FEC_Duplicate_Queue_Error</members>
@@ -683,6 +686,14 @@
 		<members>FEC_Cancel_Date</members>
 		<members>FEC_Effective_Date</members>
 		<members>FEC_Premium_Free</members>s
+        <members>FEC_Points_Redeem_Button_Label</members>
+		<members>FEC_Points_Redeem_Fail_After_Max</members>
+		<members>FEC_Points_Redeem_Fail_Prefix</members>
+		<members>FEC_Points_Redeem_Success_Message</members>
+		<members>FEC_Points_Redeemed_Points_Label</members>
+		<members>FEC_Points_Redemption_CMS_Phone_Label</members>
+		<members>FEC_Points_Redemption_Confirm_Message</members>
+		<members>FEC_Points_Redemption_Confirm_Title</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -899,5 +910,10 @@
         <members>Case.Update_Case_96h_Warning</members>
         <name>WorkflowFieldUpdate</name>
     </types>
+	<types>
+	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Internal_Case</members>
+		<name>RecordType</name>
+	</types>
 	<version>66.0</version>
 </Package>

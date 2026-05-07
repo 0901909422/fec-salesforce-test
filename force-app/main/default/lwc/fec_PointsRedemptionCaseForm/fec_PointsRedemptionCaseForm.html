@@ -1,0 +1,44 @@
+<template>
+  <lightning-layout multiple-rows>
+    <template if:true={loading}>
+      <lightning-layout-item size="12" padding="around-small">
+        <lightning-spinner alternative-text={loadingLabel} size="small"></lightning-spinner>
+      </lightning-layout-item>
+    </template>
+    <template if:false={loading}>
+      <template if:true={notEligibleMessage}>
+        <lightning-layout-item size="12" padding="around-small">
+          <p class="fec-pr-not-eligible">{notEligibleMessage}</p>
+        </lightning-layout-item>
+      </template>
+      <template if:true={showPanel}>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-combobox
+            name="redeemedPoints"
+            label={labelRedeemedPoints}
+            value={selectedTierJson}
+            options={tierOptionsUi}
+            onchange={handleTierChange}
+            disabled={isReadOnly}
+            required
+          >
+          </lightning-combobox>
+        </lightning-layout-item>
+        <lightning-layout-item size="6" padding="around-small">
+          <lightning-input type="tel" label={labelCmsPhone} value={cmsPhone} disabled></lightning-input>
+        </lightning-layout-item>
+        <lightning-layout-item size="12" padding="around-small">
+          <template if:false={isReadOnly}>
+            <lightning-button
+              variant="brand"
+              label={labelRedeemPoints}
+              onclick={handleRedeemClick}
+              disabled={redeemDisabled}
+            >
+            </lightning-button>
+          </template>
+        </lightning-layout-item>
+      </template>
+    </template>
+  </lightning-layout>
+</template>
