@@ -15204,4 +15204,11 @@
         <shortDescription>Accordion section ZNS</shortDescription>
         <value>ZNS</value>
     </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+    </labels>
 </CustomLabels>
