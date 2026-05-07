@@ -69,12 +69,20 @@ public without sharing class FEC_IPPClosureController {
                 SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
-                       FEC_IPP_Current_Term__c, FEC_Customer_History__c
+                       FEC_IPP_Current_Term__c, FEC_Customer_History__c, FEC_IPP_Closure_Case__c,
+                       FEC_IPP_Closure_Case__r.FEC_Case_Status__c
                 FROM FEC_IPP__c
                 WHERE FEC_Customer_History__c = :customerHistoryId
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
                   AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND Id NOT IN (
+                      SELECT FEC_IPP_To_Close__c
+                      FROM Case
+                      WHERE FEC_IPP_To_Close__c != null
+                        AND Id != :caseId
+                        AND FEC_Case_Status__c LIKE 'Pending-%'
+                  )
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
         }
@@ -82,6 +90,17 @@ public without sharing class FEC_IPPClosureController {
         List<FEC_IPP__c> accessibleIpps = new List<FEC_IPP__c>();
         for (SObject so : decision.getRecords()) {
             accessibleIpps.add((FEC_IPP__c) so);
+        }
+        if (caseIppToClose == null && !accessibleIpps.isEmpty()) {
+            List<FEC_IPP__c> filteredByClosureCaseStatus = new List<FEC_IPP__c>();
+            for (FEC_IPP__c r : accessibleIpps) {
+                if (r.FEC_IPP_Closure_Case__c == null || r.FEC_IPP_Closure_Case__c == caseId) {
+                    filteredByClosureCaseStatus.add(r);
+                } else if (!isPendingCaseStatusValue(r.FEC_IPP_Closure_Case__r != null ? r.FEC_IPP_Closure_Case__r.FEC_Case_Status__c : null)) {
+                    filteredByClosureCaseStatus.add(r);
+                }
+            }
+            accessibleIpps = filteredByClosureCaseStatus;
         }
         if (caseIppToClose == null && !accessibleIpps.isEmpty()) {
             Set<Id> ippIdSet = new Set<Id>();
@@ -148,7 +167,9 @@ public without sharing class FEC_IPPClosureController {
         if (ippRec.FEC_Customer_History__c != customerHistoryId) {
             return false;
         }
-        if (ippRec.FEC_IPP_Closure_Case__c != null && ippRec.FEC_IPP_Closure_Case__c != caseId) {
+        if (ippRec.FEC_IPP_Closure_Case__c != null
+            && ippRec.FEC_IPP_Closure_Case__c != caseId
+            && isPendingCaseStatus(ippRec.FEC_IPP_Closure_Case__c)) {
             return false;
         }
         Set<Id> checkBlocked = new Set<Id>();
@@ -213,28 +234,35 @@ public without sharing class FEC_IPPClosureController {
             return blocked;
         }
         for (Case c : [
-            SELECT FEC_IPP_To_Close__c, Status
+            SELECT FEC_IPP_To_Close__c
             FROM Case
             WHERE FEC_IPP_To_Close__c IN :ippIds
               AND Id != :currentCaseId
+              AND FEC_Case_Status__c LIKE 'Pending-%'
         ]) {
-            if (c.FEC_IPP_To_Close__c != null && isCaseStatusBlockingIppReuse(c.Status)) {
+            if (c.FEC_IPP_To_Close__c != null) {
                 blocked.add(c.FEC_IPP_To_Close__c);
             }
         }
         return blocked;
     }
 
-    private static Boolean isCaseStatusBlockingIppReuse(String status) {
-        if (String.isBlank(status)) {
-            return true;
-        }
-        if (status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED
-            || status == FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED
-            || status == FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED) {
+    private static Boolean isPendingCaseStatus(Id linkedCaseId) {
+        if (linkedCaseId == null) {
             return false;
         }
-        return true;
+        List<Case> pendingCases = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :linkedCaseId
+              AND FEC_Case_Status__c LIKE 'Pending-%'
+            LIMIT 1
+        ];
+        return !pendingCases.isEmpty();
+    }
+
+    private static Boolean isPendingCaseStatusValue(String caseStatusValue) {
+        return String.isNotBlank(caseStatusValue) && caseStatusValue.startsWith('Pending-');
     }
 
 }
