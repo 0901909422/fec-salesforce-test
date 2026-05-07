@@ -267,16 +267,6 @@ public without sharing class FEC_IPPConversionController {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
-        if (c != null && c.FEC_Is_Test_API__c == true) {
-            result.success = false;
-            result.errorMessage = System.Label.FEC_MSG_IPP_AddIpp_Default_Failed;
-            try {
-                updateCaseActionCountForConvertResult(c, false);
-            } catch (Exception e) {
-            }
-            result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
-            return result;
-        }
         Date effectiveDate = tx.FEC_Effective_Date__c != null ? tx.FEC_Effective_Date__c : Date.today();
         Date postingDate = tx.FEC_Post_Date__c != null ? tx.FEC_Post_Date__c : effectiveDate;
         String refNo = String.isNotBlank(tx.FEC_Transaction_Code__c) ? tx.FEC_Transaction_Code__c : tx.FEC_Authorization_Code__c;
@@ -296,7 +286,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
@@ -346,16 +336,6 @@ public without sharing class FEC_IPPConversionController {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
-        if (c != null && c.FEC_Is_Test_API__c == true) {
-            result.success = false;
-            result.errorMessage = System.Label.FEC_MSG_IPP_AddIpp_Default_Failed;
-            try {
-                updateCaseActionCountForConvertResult(c, false);
-            } catch (Exception e) {
-            }
-            result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
-            return result;
-        }
         Date effDate = Date.today();
         if (String.isNotBlank(transactionDateStr)) {
             try {
@@ -389,7 +369,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
@@ -439,16 +419,6 @@ public without sharing class FEC_IPPConversionController {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return result;
         }
-        if (c != null && c.FEC_Is_Test_API__c == true) {
-            result.success = false;
-            result.errorMessage = System.Label.FEC_MSG_IPP_AddIpp_Default_Failed;
-            try {
-                updateCaseActionCountForConvertResult(c, false);
-            } catch (Exception e) {
-            }
-            result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
-            return result;
-        }
         Date effDate = Date.today();
         if (String.isNotBlank(effectiveDateStr)) {
             try {
@@ -481,7 +451,7 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = planForApi;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
             updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {

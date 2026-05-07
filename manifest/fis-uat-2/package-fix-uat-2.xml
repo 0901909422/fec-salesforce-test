@@ -127,6 +127,8 @@
 		<members>FEC_InteractionHighlightController</members>
 		<members>FEC_RepaySchedPayHistController</members>
 		<members>FEC_UpdateCustomerBasicInfo</members>
+		<members>FEC_RDPaymentContractAssessmentService</members>
+		<members>FEC_AddIPP</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -209,6 +211,7 @@
 		<members>fec_InteractionCases</members>
         <members>fec_PendingServiceCases</members>
         <members>fec_IPPDetailPage</members>
+        <members>fec_RdPaymentRoutingUtils</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
