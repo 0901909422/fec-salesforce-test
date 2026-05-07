@@ -6,7 +6,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
-import getQueuesByDeveloperNames from "@salesforce/apex/FEC_RDPaymentContractAssessmentService.getQueuesByDeveloperNames"; // Toannd61
+import getRoutingConfig from "@salesforce/apex/FEC_RDPaymentContractAssessmentService.getRoutingConfig"; // Toannd61
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
 import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory";
@@ -292,7 +292,6 @@ const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
 import {
   CASE_RD_PAYMENT_CONTRACT_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
-  RD_PAYMENT_QUEUE_DEV_NAMES,
   isRdPaymentSubCode,
   resolveRdPaymentRouting,
 } from "c/fec_RdPaymentRoutingUtils";
@@ -700,11 +699,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.showProcessAction = TYPE_QUALIFIED === assessmentVal;
   }
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — pre-fetch 2 queue cố định cho RD Payment assessment routing
+  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — fetch routing config (routingMap + queueMap) từ Apex
   _fetchRdPaymentQueues() {
-    return getQueuesByDeveloperNames({ developerNames: RD_PAYMENT_QUEUE_DEV_NAMES })
+    return getRoutingConfig()
       .then((result) => {
-        this._rdPaymentQueueMap = result || {};
+        this._rdPaymentQueueMap   = result?.queueMap   || {};
+        this._rdPaymentRoutingMap = result?.routingMap || {};
       })
       .catch((err) => {
         console.error("_fetchRdPaymentQueues error:", JSON.stringify(err));
@@ -716,11 +716,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (!this._isRdPaymentSubCode || !this.isEdit) return;
     const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
-      this._isRdPaymentAssessmentLocked = false;
       return;
     }
-    // Nếu queue map chưa load xong (race condition), fetch lại từ cache rồi mới apply
-    if (Object.keys(this._rdPaymentQueueMap).length === 0) {
+    // Nếu routing config chưa load xong (race condition), fetch lại rồi mới apply
+    if (Object.keys(this._rdPaymentRoutingMap).length === 0) {
       this._fetchRdPaymentQueues().then(() => {
         this._applyRdPaymentRoutingByAssessment(assessmentVal);
       });
@@ -730,19 +729,21 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
-   * Hard-code Team và Queue theo giá trị FEC_RD_Payment_Contract_Assessment__c.
-   * - "Hợp đồng không thể đóng"          → Team SP, Queue FEC_DQ_CS_Support
-   * - "Hợp đồng có thể đóng với tờ trình" → Team CC, Queue FEC_DQ_CS_Customer_Care
-   * User không thể thay đổi Team, Queue và Routing Action sau khi giá trị được chọn.
+   * Tự động set Team và Queue theo giá trị FEC_RD_Payment_Contract_Assessment__c.
+   * Mapping được lấy từ Apex (không hardcode trong LWC).
    */
   _applyRdPaymentRoutingByAssessment(assessmentVal) {
-    const { locked, nextTeam, nextQueue } = resolveRdPaymentRouting(assessmentVal, this._rdPaymentQueueMap);
+    const picklistOptions = this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
+    const { locked, nextTeam, nextQueue } = resolveRdPaymentRouting(
+      assessmentVal,
+      this._rdPaymentQueueMap,
+      this._rdPaymentRoutingMap,
+      picklistOptions,
+    );
     if (!locked) {
-      this._isRdPaymentAssessmentLocked = false;
       return;
     }
     this.business = { ...this.business, nextTeam, nextQueue };
-    this._isRdPaymentAssessmentLocked = true;
     this._setActionValueByCode(ACTION_ROUTE_TO);
     this.business = { ...this.business };
   }
@@ -779,16 +780,16 @@ export default class Fec_CaseBussiness extends LightningElement {
   header;
   content;
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — queue cache và trạng thái khóa routing
-  _rdPaymentQueueMap = {};
-  _isRdPaymentAssessmentLocked = false;
+  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — config từ Apex (không hardcode trong LWC)
+  _rdPaymentQueueMap   = {};
+  _rdPaymentRoutingMap = {};
 
   get _isRdPaymentSubCode() {
     return isRdPaymentSubCode(this.business?.subCodeCode);
   }
 
   get isRoutingActionDisabled() {
-    return !this._isEdit || this._isRdPaymentAssessmentLocked;
+    return !this._isEdit;
   }
 
   get showRouteTo() {
@@ -1348,8 +1349,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   ) {
     this.businessLoaded = false;
     this._ippClosureHasEligibleRows = false;
-    this._isRdPaymentAssessmentLocked = false;
-
     this._fetchRdPaymentQueues(); // Toannd61
 
     getByCase({
