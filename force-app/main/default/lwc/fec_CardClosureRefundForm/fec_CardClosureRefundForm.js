@@ -113,7 +113,7 @@ export default class Fec_CardClosureRefundForm extends NavigationMixin(Lightning
             ? SUB_CODE_RC16_01 === parentCode
             : ctx.hideBlockCardBySubCode === true;
         const cardBlocked = ctx.cardBlocked === true;
-        return this.hasPendingDisbursementData && !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked;
+        return !hideBySubCode && ctx.attemptsExhausted !== true && !cardBlocked;
     }
 
     get blockCardLocked() {
