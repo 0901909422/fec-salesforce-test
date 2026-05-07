@@ -2,6 +2,10 @@
     display: block;
 }
 
+.fec-nfu-accordion-panel {
+    background-color: #f3f3f3;
+}
+
 .fec-nfu-spinner {
     display: flex;
     justify-content: center;
@@ -12,6 +16,10 @@
 .fec-nfu-sync-fail {
     color: #c23934;
     font-weight: 400;
+}
+
+.fec-accordion-section-label {
+    color: var(--lwc-colorTextLabel, #3e3e3c);
 }
 
 /* Grid label/value (thay fec_CommonRecordDetailFields) */

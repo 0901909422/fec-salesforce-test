@@ -364,8 +364,11 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <c-fec_-assignment-list record-id={recordId}>
+  <!--Hieutt74: Update ngày 21/4/2026-->
+  <!--Assigment Routing Action-->
+  <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
   </c-fec_-assignment-list>
+  <!--END: Hieutt74: Update ngày 21/4/2026-->
   <c-fec_-modal
     header={header}
     onclose={handleCloseModal}

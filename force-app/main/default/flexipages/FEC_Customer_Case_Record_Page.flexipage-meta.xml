@@ -83,7 +83,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -116,6 +116,52 @@
                                 </criteria>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Is_Owner__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.FEC_Execute_Assigment</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Rejected</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-CannotContactCustomer</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-AutoCancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Cancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Completed</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute_Assignment__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
@@ -155,6 +201,18 @@
                 </componentInstanceProperties>
                 <componentName>force:highlightsPanel</componentName>
                 <identifier>force_highlightsPanel</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_CaseExecuteVisibility</componentName>
+                <identifier>c_fec_CaseExecuteVisibility</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AssignmentExecuteVisibility</componentName>
+                <identifier>c_fec_AssignmentExecuteVisibility</identifier>
             </componentInstance>
         </itemInstances>
         <name>header</name>

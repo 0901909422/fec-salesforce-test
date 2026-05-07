@@ -141,6 +141,16 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Can_Execute_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Can_Execute__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Card_Block_Reason__c</field>
         <readable>true</readable>
@@ -553,6 +563,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_Submited__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_Call_API_Success__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
