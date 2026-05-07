@@ -1,21 +1,26 @@
-import { LightningElement, api, wire } from "lwc";
+import { LightningElement, api } from "lwc";
 import canExecute from "@salesforce/apex/FEC_CaseExecuteService.canExecute";
 
 export default class Fec_CaseExecuteVisibility extends LightningElement {
+  @api recordId;
 
-    @api recordId;
+  canExecute;
 
-    canExecute;
+  renderedCallback() {
+    console.log("recordId=", this.recordId);
 
-    @wire(canExecute, { caseId: "$recordId" })
-    wiredResult({ data, error }) {
+    if (this.recordId && !this.loaded) {
+      this.loaded = true;
 
-        if (data) {
-            this.canExecute = data.value;
-        }
+      canExecute({ caseId: this.recordId })
+        .then((result) => {
+          console.log("RESULT=", result);
 
-        if (error) {
-            console.error(error);
-        }
+          this.canExecute = result.value;
+        })
+        .catch((error) => {
+          console.error("ERROR=", error);
+        });
     }
+  }
 }
