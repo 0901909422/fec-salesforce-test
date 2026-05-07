@@ -56,7 +56,8 @@ public without sharing class FEC_CardClosureRefundController {
                 FEC_SubCode__r.FEC_Code__c,
                 FEC_Card_Block_Service_Attempts__c,
                 FEC_Account_or_Contract__c,
-                FEC_Account_Number__c
+                FEC_Account_Number__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -97,7 +98,7 @@ public without sharing class FEC_CardClosureRefundController {
         if (!String.isBlank(accountNumberForDisb)) {
             try {
                 FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
-                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null);
+                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null, c.FEC_Is_Test_API__c);
                 FEC_GetDisbInfoByAcctCallout.logApiResponse();
                 FEC_GetDisbInfoByAcctCallout.ResultWrapper rw =
                     FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
@@ -312,30 +313,6 @@ public without sharing class FEC_CardClosureRefundController {
         if (validation == null || !validation.isValid) {
             dto.errorMessage = validation != null ? validation.errorMessage : System.Label.FEC_MSG_Card_LockUnlock_Validation_Failed;
             return dto;
-        }
-
-        if (funcCode == FUNC_BLOCK && c.FEC_Is_Test_API__c == true) {
-            Boolean getDisbSuccess = false;
-            try {
-                FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
-                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumber, null);
-                FEC_GetDisbInfoByAcctCallout.logApiResponse();
-                FEC_GetDisbInfoByAcctCallout.ResultWrapper disbResult =
-                    FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
-                getDisbSuccess = disbResult != null && disbResult.isSuccess == true;
-            } catch (Exception ex) {
-                getDisbSuccess = false;
-            }
-            if (!getDisbSuccess) {
-                Integer after = incrementCaseBlockServiceAttempts(caseId);
-                dto.success = false;
-                dto.code = '0';
-                dto.description = 'GetDisbInfoByAcct failed';
-                dto.errorMessage = null;
-                dto.cardBlockServiceAttemptsAfter = after;
-                dto.hideBlockCardAfterAction = after >= MAX_BLOCK_SERVICE_ATTEMPTS;
-                return dto;
-            }
         }
 
         try {
