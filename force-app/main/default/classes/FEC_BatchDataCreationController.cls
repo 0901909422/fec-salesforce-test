@@ -559,6 +559,11 @@ public with sharing class FEC_BatchDataCreationController {
         }
 
         Map<String, Id> serviceResourceByKey = resolveServiceResourceIds(rawValues);
+
+        // Tải trước các Absence đã tồn tại trong DB cho các Service Resource sẽ import.
+        // Build set key 'srId|startMs|endMs' để check trùng nhanh trong vòng validate.
+        Set<String> dbExistingKeys = loadExistingAbsenceKeys(serviceResourceByKey.values());
+
         List<FEC_Service_Resource_Absence__c> absencesByIndex = new List<FEC_Service_Resource_Absence__c>();
         for (Integer i = 0; i < output.size(); i += 1) {
             absencesByIndex.add(null);
@@ -581,16 +586,22 @@ public with sharing class FEC_BatchDataCreationController {
             if (String.isNotBlank(rr.note) && rr.note.length() > 255) {
                 errs.add('Note vượt quá số ký tự cho phép (255 ký tự).');
             }
-            if (String.isNotBlank(rr.serviceResource) && rr.serviceResource.contains('@') && !Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', rr.serviceResource)) {
+
+            Boolean isEmailFormat = String.isNotBlank(rr.serviceResource)
+                && Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', rr.serviceResource);
+            if (String.isNotBlank(rr.serviceResource) && !isEmailFormat) {
                 errs.add('Service Resource không đúng định dạng (thiếu @ hoặc .).');
             }
 
-            Id srId = serviceResourceByKey.get(rr.serviceResource.toLowerCase());
-            if (srId == null) {
-                srId = serviceResourceByKey.get(rr.serviceResource);
-            }
-            if (String.isNotBlank(rr.serviceResource) && srId == null) {
-                errs.add('Service Resource không tồn tại.');
+            Id srId = null;
+            if (isEmailFormat) {
+                srId = serviceResourceByKey.get(rr.serviceResource.toLowerCase());
+                if (srId == null) {
+                    srId = serviceResourceByKey.get(rr.serviceResource);
+                }
+                if (srId == null) {
+                    errs.add('Service Resource không tồn tại.');
+                }
             }
 
             Datetime startDt;
@@ -622,7 +633,9 @@ public with sharing class FEC_BatchDataCreationController {
             }
             if (srId != null && startDt != null && endDt != null) {
                 String uniqueKey = String.valueOf(srId) + '|' + String.valueOf(startDt.getTime()) + '|' + String.valueOf(endDt.getTime());
-                if (uniqueKeys.contains(uniqueKey)) {
+                if (dbExistingKeys.contains(uniqueKey)) {
+                    errs.add('Service Resource đã có Absence trùng giá trị trong hệ thống.');
+                } else if (uniqueKeys.contains(uniqueKey)) {
                     errs.add('Trùng giá trị Service Resource và Start Date và End Date.');
                 } else {
                     uniqueKeys.add(uniqueKey);
@@ -646,6 +659,33 @@ public with sharing class FEC_BatchDataCreationController {
         vo.rowResults = output;
         vo.absencesByIndex = absencesByIndex;
         return vo;
+    }
+
+    /**
+     * Trả về set key 'srId|startMs|endMs' của các Absence ĐÃ tồn tại trong DB
+     * cho danh sách Service Resource Id truyền vào — phục vụ check trùng với obj.
+     */
+    private static Set<String> loadExistingAbsenceKeys(List<Id> serviceResourceIds) {
+        Set<String> keys = new Set<String>();
+        if (serviceResourceIds == null || serviceResourceIds.isEmpty()) {
+            return keys;
+        }
+        Set<Id> uniqueSrIds = new Set<Id>(serviceResourceIds);
+        for (FEC_Service_Resource_Absence__c a : [
+            SELECT FEC_Service_Resource__c, FEC_Start_Date__c, FEC_End_Date__c
+            FROM FEC_Service_Resource_Absence__c
+            WHERE FEC_Service_Resource__c IN :uniqueSrIds
+        ]) {
+            if (a.FEC_Service_Resource__c == null || a.FEC_Start_Date__c == null || a.FEC_End_Date__c == null) {
+                continue;
+            }
+            keys.add(
+                String.valueOf(a.FEC_Service_Resource__c)
+                + '|' + String.valueOf(a.FEC_Start_Date__c.getTime())
+                + '|' + String.valueOf(a.FEC_End_Date__c.getTime())
+            );
+        }
+        return keys;
     }
 
     private static Map<String, Id> resolveServiceResourceIds(Set<String> rawValues) {
