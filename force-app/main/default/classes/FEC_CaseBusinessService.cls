@@ -1,6 +1,5 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
-  public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
   /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
@@ -506,10 +505,6 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
-      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
-        selectedCase.Id,
-        selectedStage.Id
-      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -597,12 +592,6 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
-              if (
-                forceReadonlyIncorrectPaymentOnLatestRevert &&
-                LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
-              ) {
-                lwcSlot.fecMasterDataSettingIsEdit = false;
-              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -4348,53 +4337,10 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    Set<Id> allAssociatedIds = new Set<Id>{ userId };
+    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
 
-    // BƯỚC 1: Thu thập tất cả ID đại diện cho User (User ID, Role, Public Groups, v.v.)
-    if (roleId != null) {
-        Set<Id> roleIds = new Set<Id>{ roleId };
-        Map<Id, Id> roleToParentMap = new Map<Id, Id>();
-        
-        // Lấy toàn bộ cấu trúc Role để tìm Parent Roles
-        for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole]) {
-            roleToParentMap.put(ur.Id, ur.ParentRoleId);
-        }
-        
-        // Duyệt ngược lên để lấy toàn bộ Parent Roles
-        Id currentRoleId = roleId;
-        while (roleToParentMap.get(currentRoleId) != null) {
-            currentRoleId = roleToParentMap.get(currentRoleId);
-            roleIds.add(currentRoleId);
-        }
-
-        // Gộp query lấy Group của Role và RoleAndSubordinates làm 1
-        for (Group g : [
-            SELECT Id, Type, RelatedId 
-            FROM Group 
-            WHERE RelatedId IN :roleIds AND Type IN ('Role', 'RoleAndSubordinates')
-        ]) {
-            if (g.Type == 'RoleAndSubordinates' || (g.Type == 'Role' && g.RelatedId == roleId)) {
-                allAssociatedIds.add(g.Id);
-            }
-        }
-    }
-
-    // Quét các Public Groups lồng nhau (Nested Public Groups)
-    Integer previousSize;
-    do {
-        previousSize = allAssociatedIds.size();
-        for (GroupMember gm : [
-            SELECT GroupId 
-            FROM GroupMember 
-            WHERE UserOrGroupId IN :allAssociatedIds AND Group.Type = 'Regular'
-        ]) {
-            allAssociatedIds.add(gm.GroupId);
-        }
-    } while (allAssociatedIds.size() > previousSize);
-
-    // BƯỚC 2: Lấy Tên (Name) của các Queue này để map sang Custom Object
-    List<Group> userQueues = [
-        SELECT Name, DeveloperName  
+    return [
+        SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
         AND Id IN (
