@@ -63,7 +63,8 @@ public without sharing class FEC_SecondaryInfoAccountController {
     private static void syncFromApi(Id caseId) {
 
         Case c = [
-            SELECT FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Product_Type__r.Name
+            SELECT FEC_Account_or_Contract__c, FEC_Account_Number__c, FEC_Product_Type__r.Name,
+            FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -99,7 +100,8 @@ public without sharing class FEC_SecondaryInfoAccountController {
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    accountNumber
+                    accountNumber,
+                    c.FEC_Is_Test_API__c
                 );
 
             if (res != null && res.CardSecInfo != null) {

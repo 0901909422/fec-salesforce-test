@@ -57,7 +57,6 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
     @track dto;
 
     isLoading = false;
-    isTestApi = false;
     error;
 
     activeSections = [
@@ -118,7 +117,6 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
         loadSecondaryAccount({ caseId: this.recordId })
             .then(dto => {
                 this.dto = dto;
-                this.isTestApi = dto?.isTestApi === true;
                 this.mapLimitSection(dto, 'NONE');
                 this.mapMainCardSection(dto, 'NONE');
                 this.mapCollectionsInfoSection(dto, 'NONE');
@@ -137,7 +135,9 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
             });
     }
     get hasData() {
-        if (this.isTestApi) return false;
+        if (this.dto?.isTestApi) {
+            return false;
+        }
         return this.dto && Object.keys(this.dto).length > 0;
     }
 
