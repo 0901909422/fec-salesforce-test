@@ -37,11 +37,11 @@ import {
   ACTION_OPTIONS_OTHER,
   DECISION_OPTIONS_MAP,
   ACTIONS_REQUIRE_DECISION,
-  ACTIONS_REQUIRE_SUBDECISION,
+  ACTIONS_REQUIRE_SUBDECISION_MAP,
   ACTION,
   OPEN_STATUS,
   QUEUE_ID_START,
-  NEW_STATUS
+  NEW_STATUS,
 } from "c/fec_CommonConst";
 import { getUsernameBeforeAt } from "c/fec_CommonUtils";
 export default class Fec_AssignmentList extends LightningElement {
@@ -55,12 +55,19 @@ export default class Fec_AssignmentList extends LightningElement {
   };
 
   async connectedCallback() {
-    this.loadStyles();
-    this.userDept = await getUserDepartment();
+    try {
+      this.loadStyles();
 
-    console.log(this.userDept);
-    this.initSubscription();
-    // this.modeEditCase = true;
+      console.log("Before getUserDepartment");
+
+      this.userDept = await getUserDepartment();
+
+      console.log("After getUserDepartment:", JSON.stringify(this.userDept));
+
+      this.initSubscription();
+    } catch (error) {
+      console.error("getUserDepartment error:", JSON.stringify(error));
+    }
   }
 
   loadStyles() {
@@ -230,6 +237,14 @@ export default class Fec_AssignmentList extends LightningElement {
   }
 
   get getActionOptions() {
+    console.log("userDept:", this.userDept);
+    console.log("isCSSupport:", this.isCSSupport);
+    console.log(
+      "ACTION_OPTIONS_CS_SUPPORT:",
+      JSON.stringify(ACTION_OPTIONS_CS_SUPPORT),
+    );
+    console.log("ACTION_OPTIONS_OTHER:", JSON.stringify(ACTION_OPTIONS_OTHER));
+
     return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
   }
 
@@ -268,12 +283,15 @@ export default class Fec_AssignmentList extends LightningElement {
     this.assignments = this.assignments.map((item) => {
       if (item.id !== id) return item;
 
+      const requiredSubDecisionValues =
+        ACTIONS_REQUIRE_SUBDECISION_MAP[item.action] || [];
+
       return {
         ...item,
         decision: value,
         subDecision: null,
 
-        showSubDecision: ACTIONS_REQUIRE_SUBDECISION.includes(item.action),
+        showSubDecision: requiredSubDecisionValues.includes(value),
 
         isUserDecision: value === "USER",
         isQueueDecision: value === "QUEUE",
@@ -282,9 +300,16 @@ export default class Fec_AssignmentList extends LightningElement {
         showQueueByTeam: false,
       };
     });
+
     this.updatePagedData();
-    if (value === "USER") this.loadUsers();
-    if (value === "QUEUE") this.loadQueues();
+
+    if (value === "USER") {
+      this.loadUsers();
+    }
+
+    if (value === "QUEUE") {
+      this.loadQueues();
+    }
 
     if (value === "TEAM") {
       this.loadTeams();
