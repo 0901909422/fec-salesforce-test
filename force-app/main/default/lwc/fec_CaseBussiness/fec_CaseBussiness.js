@@ -865,22 +865,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.dispatchEvent(new CustomEvent('additem', { detail: { caseId: this.recordId } }));
   }
   //Toannd61: resolve method theo Action.code (FEC_Code__c), không theo value custom label — khớp run() REVERT/ROUTE_TO
-
-  //Thangtv
-  // Hiển thị Queue ổn định cho Route To (hỗ trợ cả string và object {label,value})
-  get routeToQueueDisplayLabel() {
-    const queue = this.business?.nextQueue;
-    if (!queue) {
-      return this.business?.nextQueueLabel || STR_EMPTY;
-    }
-    if (typeof queue === "string") {
-      return queue;
-    }
-    if (typeof queue === "object") {
-      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
-    }
-    return STR_EMPTY;
-  }
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
     const KNOWN_ROUTING_METHODS = [
