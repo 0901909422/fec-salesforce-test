@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
   /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
@@ -505,6 +506,10 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
+      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
+        selectedCase.Id,
+        selectedStage.Id
+      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -592,6 +597,12 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
+              if (
+                forceReadonlyIncorrectPaymentOnLatestRevert &&
+                LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
+              ) {
+                lwcSlot.fecMasterDataSettingIsEdit = false;
+              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -1810,7 +1821,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCategory__r.Name,
           FEC_SubCategory__r.FEC_Code__c,
           FEC_SubCode__r.Name,
-          FEC_SubCode__r.FEC_Code__c
+          FEC_SubCode__r.FEC_Code__c,
+          FEC_RD_Payment_Contract_Assessment__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -1963,10 +1975,19 @@ public without sharing class FEC_CaseBusinessService {
         cloneMasterDataSetting(tgt.Id, natureOfCaseId);
       }
 
+      // Toannd61 — RL16.02/RL16.03: nếu RD Payment Assessment đã được chọn,
+      // dùng queueId từ LWC (đã resolve theo assessment) thay vì override từ Stage Change.
+      Boolean isRdPaymentAssessmentDriven =
+        String.isNotBlank(updatedCase.FEC_RD_Payment_Contract_Assessment__c) &&
+        (
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_1.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c) ||
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_2.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c)
+        );
+
       //thangtv
       if (routeByLatestRevertHistory && String.isNotBlank(latestHistForRoute.get(0).FEC_Perform_User__c)) {
         queueId = String.valueOf(latestHistForRoute.get(0).FEC_Perform_User__c);
-      } else if (selectedChange.FEC_Next_Queue__c != null) {
+      } else if (!isRdPaymentAssessmentDriven && selectedChange.FEC_Next_Queue__c != null) {
         queueId = resolveQueueOwnerIdFromStageChangeValue(
           String.valueOf(selectedChange.FEC_Next_Queue__c)
         );
@@ -3114,6 +3135,24 @@ public without sharing class FEC_CaseBusinessService {
         out
     );
     return out;
+  }
+
+  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+    if (caseId == null || currentStageId == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertHist = [
+      SELECT Id
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Next_Stage__c = :currentStageId
+        AND FEC_Next_Stage__c != NULL
+        AND FEC_IsReverted__c = true
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    return !latestRevertHist.isEmpty();
   }
 
   private static Field transform(

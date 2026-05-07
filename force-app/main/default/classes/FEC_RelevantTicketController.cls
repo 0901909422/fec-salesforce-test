@@ -44,11 +44,12 @@ public with sharing class FEC_RelevantTicketController {
         ];
         if (tickets.isEmpty()) return;
         FEC_Relevant_Ticket__c ticket = tickets[0];
-        if (String.isNotBlank(ticket.FEC_Stage_Name__c) && String.isNotBlank(ticket.FEC_Interaction__c)) {
+        if (String.isNotBlank(ticket.FEC_Interaction__c)) {
             List<Case> cases = [SELECT FEC_Current_Case_Stage__r.FEC_Code__c FROM Case WHERE Id = :ticket.FEC_Interaction__c LIMIT 1];
             if (!cases.isEmpty()) {
                 String currentStageCode = cases[0].FEC_Current_Case_Stage__r?.FEC_Code__c;
-                if (ticket.FEC_Stage_Name__c != currentStageCode) {
+                // tungnm37 sửa: null stage_name (ticket cũ) hoặc khác stage hiện tại → chặn
+                if (String.isBlank(ticket.FEC_Stage_Name__c) || ticket.FEC_Stage_Name__c != currentStageCode) {
                     throw new AuraHandledException(System.Label.FEC_RelevantTicket_Cannot_Delete);
                 }
             }

@@ -1,4 +1,5 @@
 public with sharing class FEC_CaseExecuteService {
+    
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
         @AuraEnabled public Boolean shouldUpdate;
@@ -22,69 +23,153 @@ public with sharing class FEC_CaseExecuteService {
         
         Id userId = UserInfo.getUserId();
         
-        Boolean canExecute = false;
+        System.debug('=== FEC_CaseExecuteService START ===');
+        System.debug('Case Id: ' + caseId);
+        System.debug('User Id: ' + userId);
         
-        // 1. Check mode
-        if (c.FEC_Interaction_View_Mode__c == FEC_ConstantCommon.INTERACTION_REVIEW_MODE) {
+        Boolean currentValue =
+            c.FEC_Can_Execute__c == true;
+        
+        /*
+         * Nếu đã TRUE rồi
+         * và owner hiện tại vẫn là user
+         * thì không recompute nữa
+         */
+        if (
+            currentValue &&
+            c.OwnerId == userId
+        ) {
             
-            // 2. Check closed
-            if (!c.IsClosed) {
-                
-                Boolean isOwnerUser = (c.OwnerId == userId);
-                Boolean isQueueMember = false;
-                
-                // 3. Nếu owner là Queue
-                if (String.valueOf(c.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
-                    
-                    List<GroupMember> gm = [
-                        SELECT Id
-                        FROM GroupMember
-                        WHERE GroupId = :c.OwnerId
-                        AND UserOrGroupId = :userId
-                        LIMIT 1
-                    ];
-                    
-                    isQueueMember = !gm.isEmpty();
-                }
-                
-                if (isOwnerUser || isQueueMember) {
-                    
-                    Integer count =
-                        c.FEC_Assignment_Count__c == null
-                        ? 0
-                        : Integer.valueOf(c.FEC_Assignment_Count__c);
-                    
-                    // 4. Assignment logic
-                    if (count == 0) {
-                        
-                        canExecute = true;
-                        
-                    } else {
-                        
-                        // 5. Profile check
-                        User u = [
-                            SELECT Profile.Name
-                            FROM User
-                            WHERE Id = :userId
-                        ];
-                        
-                        if (
-                            u.Profile.Name == FEC_ConstantCommon.TEAM_CS_SUPPORT ||
-                            u.Profile.Name == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE
-                        ) {
-                            canExecute = true;
-                        }
-                    }
-                }
-            }
+            System.debug('SKIP: already TRUE and same owner');
+            
+            ExecuteVisibilityResult result =
+                new ExecuteVisibilityResult();
+            
+            result.value = true;
+            result.shouldUpdate = false;
+            
+            return result;
         }
         
-        ExecuteVisibilityResult result = new ExecuteVisibilityResult();
+        Boolean canExecute = false;
+        
+        // 1. View mode check
+        if (
+            c.FEC_Interaction_View_Mode__c !=
+            FEC_ConstantCommon.INTERACTION_REVIEW_MODE
+        ) {
+            
+            System.debug('FAILED: Invalid interaction mode');
+            
+            return buildResult(c, false);
+        }
+        
+        // 2. Closed check
+        if (c.IsClosed) {
+            
+            System.debug('FAILED: Case is closed');
+            
+            return buildResult(c, false);
+        }
+        
+        Boolean isOwnerUser =
+            c.OwnerId == userId;
+        
+        Boolean isQueueMember = false;
+        
+        // 3. Queue member check
+        if (
+            c.OwnerId != null &&
+            String.valueOf(c.OwnerId)
+                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+        ) {
+            
+            isQueueMember = [
+                SELECT COUNT()
+                FROM GroupMember
+                WHERE
+                    GroupId = :c.OwnerId
+                    AND UserOrGroupId = :userId
+            ] > 0;
+        }
+        
+        System.debug('isOwnerUser=' + isOwnerUser);
+        System.debug('isQueueMember=' + isQueueMember);
+        
+        if (!(isOwnerUser || isQueueMember)) {
+            
+            System.debug(
+                'FAILED: User is not owner or queue member'
+            );
+            
+            return buildResult(c, false);
+        }
+        
+        Integer assignmentCount =
+            c.FEC_Assignment_Count__c == null
+            ? 0
+            : Integer.valueOf(c.FEC_Assignment_Count__c);
+        
+        System.debug(
+            'assignmentCount=' + assignmentCount
+        );
+        
+        // 4. No assignment
+        if (assignmentCount == 0) {
+            
+            canExecute = true;
+            
+        } else {
+            
+            // 5. Profile check
+            String profileName = [
+                SELECT Profile.Name
+                FROM User
+                WHERE Id = :userId
+            ].Profile.Name;
+            
+            System.debug(
+                'profileName=' + profileName
+            );
+            
+            canExecute =
+                profileName ==
+                    FEC_ConstantCommon.TEAM_CS_SUPPORT
+                ||
+                profileName ==
+                    FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
+        }
+        
+        System.debug(
+            'FINAL canExecute=' + canExecute
+        );
+        
+        return buildResult(c, canExecute);
+    }
+    
+    private static ExecuteVisibilityResult buildResult(
+        Case c,
+        Boolean canExecute
+    ) {
+        
+        ExecuteVisibilityResult result =
+            new ExecuteVisibilityResult();
         
         result.value = canExecute;
         
+        Boolean currentValue =
+            c.FEC_Can_Execute__c == true;
+        
         result.shouldUpdate =
-            c.FEC_Can_Execute__c != canExecute;
+            currentValue != canExecute;
+        
+        System.debug(
+            'currentValue=' + currentValue
+        );
+        
+        System.debug(
+            'shouldUpdate=' + result.shouldUpdate
+        );
         
         if (result.shouldUpdate) {
             
@@ -93,14 +178,25 @@ public with sharing class FEC_CaseExecuteService {
                 FEC_CaseTriggerHandler.isSystemUpdate = true;
                 
                 update new Case(
-                    Id = caseId,
-                FEC_Can_Execute__c = canExecute
-                    );
+                    Id = c.Id,
+                    FEC_Can_Execute__c = canExecute
+                );
+                
+                System.debug(
+                    'Case updated successfully'
+                );
+                
+            } catch (Exception e) {
+                
+                System.debug(
+                    'UPDATE ERROR: ' + e.getMessage()
+                );
+                
+                throw e;
                 
             } finally {
                 
                 FEC_CaseTriggerHandler.isSystemUpdate = false;
-                
             }
         }
         
