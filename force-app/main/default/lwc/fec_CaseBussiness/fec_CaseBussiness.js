@@ -328,7 +328,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
   // DungLT — đăng ký LWC upload file động (master data)
   fec_FileUploadCard: () => import('c/fec_FileUploadCard'),
-  fec_OriginalInformation: () => import('c/fec_OriginalInformation')
+  fec_OriginalInformation: () => import('c/fec_OriginalInformation'),
+  fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm')
 };
 
 /**
@@ -2259,6 +2260,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const pointsRedemptionEl = this._getPointsRedemptionCaseFormEl();
+    if (
+      pointsRedemptionEl &&
+      typeof pointsRedemptionEl.validateForSubmit === "function"
+    ) {
+      if (!pointsRedemptionEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -2325,6 +2336,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
+  _getPointsRedemptionCaseFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_PointsRedemptionCaseForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
   _saveContractClosureDraftIfApplicable() {
     const el = this._getContractClosureFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2351,6 +2377,14 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   _saveIncorrectPaymentDraftIfApplicable() {
     const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _savePointsRedemptionDraftIfApplicable() {
+    const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
@@ -2621,6 +2655,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveCardClosureRefundDraftIfApplicable(),
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
+        this._savePointsRedemptionDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2707,6 +2742,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveCardClosureRefundForSubmitIfApplicable(),
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
+      this._savePointsRedemptionDraftIfApplicable(),
     ]);
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
