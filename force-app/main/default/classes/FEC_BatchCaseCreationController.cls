@@ -298,46 +298,20 @@ public with sharing class FEC_BatchCaseCreationController {
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
             Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
             List<CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
-
-            Integer failedCount = countFailedRows(rowResults);
             Integer totalCount = rowResults.size();
 
-            if (failedCount > 0) {
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, totalCount);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, 'Dữ liệu file import không hợp lệ.');
-                update batchRow;
-
-                out.success = true;
-                out.message = 'Import request has been submitted.';
-                out.batchRecordId = (Id) batchRow.get('Id');
-                out.contentDocumentId = insertedCv.ContentDocumentId;
-                out.status = 'Failure';
-                out.resultRowsJson = JSON.serialize(rowResults);
-                return out;
+            // Row-by-row: dòng pass validation thì insert, dòng fail giữ nguyên status='Failed' và errors,
+            // KHÔNG còn rollback toàn bộ vì có dòng lỗi như trước.
+            if (isWelcomeFlow) {
+                insertWelcomeCallCases(parsed, rowResults);
+            } else {
+                insertStandardCasesWithInteraction(parsed, rowResults);
             }
 
             Set<Id> insertedCaseIds = new Set<Id>();
-            Integer successCount = 0;
-
-            if (isWelcomeFlow) {
-                insertWelcomeCallCases(parsed, rowResults);
-                for (CaseRowResult rr : rowResults) {
-                    if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
-                        insertedCaseIds.add(Id.valueOf(rr.recordId));
-                        successCount += 1;
-                    }
-                }
-            } else {
-                insertStandardCasesWithInteraction(parsed, rowResults);
-                for (CaseRowResult rr : rowResults) {
-                    if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
-                        insertedCaseIds.add(Id.valueOf(rr.recordId));
-                        successCount += 1;
-                    }
+            for (CaseRowResult rr : rowResults) {
+                if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
+                    insertedCaseIds.add(Id.valueOf(rr.recordId));
                 }
             }
 
@@ -358,7 +332,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 ]);
             }
             for (CaseRowResult rr : rowResults) {
-                if (String.isNotBlank(rr.recordId)) {
+                if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
                     Case c = finalById.get((Id) rr.recordId);
                     rr.finalStatus = c == null ? '' : c.Status;
                     rr.interactionId = '';
@@ -382,31 +356,27 @@ public with sharing class FEC_BatchCaseCreationController {
                 }
             }
 
-            Integer dmlFailed = totalCount - successCount;
-            if (dmlFailed > 0) {
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, dmlFailed);
-                putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, 'Một hoặc nhiều Case không tạo được.');
-                update batchRow;
-
-                out.success = true;
-                out.message = 'Import request has been submitted.';
-                out.batchRecordId = (Id) batchRow.get('Id');
-                out.contentDocumentId = insertedCv.ContentDocumentId;
-                out.status = 'Failure';
-                out.resultRowsJson = JSON.serialize(rowResults);
-                return out;
+            Integer successCount = 0;
+            Integer failedCount = 0;
+            for (CaseRowResult rr : rowResults) {
+                if ('Succeeded'.equals(rr.status)) {
+                    successCount += 1;
+                } else if ('Failed'.equals(rr.status)) {
+                    failedCount += 1;
+                }
             }
 
             putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
             putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
+            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
+            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+            putIfFieldExists(
+                batchFieldMap,
+                batchRow,
+                new List<String>{ 'FEC_Failure_Reason__c' },
+                failedCount > 0 ? 'Có ' + failedCount + ' dòng dữ liệu không hợp lệ.' : ''
+            );
             update batchRow;
 
             out.success = true;
@@ -558,15 +528,6 @@ public with sharing class FEC_BatchCaseCreationController {
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
             rr.errors = errs.isEmpty() ? '' : String.join(errs, ' ');
             rowResults.add(rr);
-        }
-
-        if (countFailedRows(rowResults) > 0) {
-            for (CaseRowResult rr : rowResults) {
-                if ('Succeeded'.equals(rr.status)) {
-                    rr.status = 'Failed';
-                    rr.errors = 'Không tạo Case do có dòng lỗi trong file.';
-                }
-            }
         }
 
         return rowResults;
@@ -738,8 +699,14 @@ public with sharing class FEC_BatchCaseCreationController {
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
         Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
 
+        // Chỉ build & insert những dòng pass validation; dòng Failed bỏ qua, không insert.
         List<Case> interactionCases = new List<Case>();
-        for (ParsedCaseRow r : parsed) {
+        List<Integer> interactionOrigRowIndex = new List<Integer>();
+        for (Integer i = 0; i < parsed.size(); i++) {
+            if (!'Succeeded'.equals(rowResults[i].status)) {
+                continue;
+            }
+            ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
             applyWelcomeInteractionDefaults(ic);
@@ -747,44 +714,39 @@ public with sharing class FEC_BatchCaseCreationController {
             applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
             applyWelcomeChannelDefaults(ic, channelDfr, subChannelDfr);
             interactionCases.add(ic);
+            interactionOrigRowIndex.add(i);
         }
 
-        Database.SaveResult[] srInt;
-        Database.SaveResult[] srCust = null;
-        List<Integer> customerOrigRowIndex = new List<Integer>();
+        if (interactionCases.isEmpty()) {
+            return;
+        }
 
-        srInt = Database.insert(interactionCases, false);
+        Database.SaveResult[] srInt = Database.insert(interactionCases, false);
 
         List<Case> customerCases = new List<Case>();
-        for (Integer i = 0; i < srInt.size(); i++) {
-            if (!srInt[i].isSuccess()) {
+        List<Integer> customerOrigRowIndex = new List<Integer>();
+        for (Integer k = 0; k < srInt.size(); k++) {
+            Integer origIdx = interactionOrigRowIndex[k];
+            if (!srInt[k].isSuccess()) {
+                CaseRowResult rr = rowResults[origIdx];
+                rr.status = 'Failed';
+                rr.recordId = '';
+                rr.errors = formatSaveResultErrors(srInt[k]);
                 continue;
             }
-            ParsedCaseRow r = parsed[i];
+            ParsedCaseRow r = parsed[origIdx];
             Case cc = new Case();
             cc.RecordTypeId = custRt;
-            cc.FEC_Interaction__c = srInt[i].getId();
+            cc.FEC_Interaction__c = srInt[k].getId();
             applyWelcomeCustomerDefaults(cc);
             cc.Subject = truncateWelcomeSubject('Welcome Call Case - ', r.contractNumber);
             applyNatureFields(cc, r, maps, channelDfr, subChannelDfr);
             applyWelcomeChannelDefaults(cc, channelDfr, subChannelDfr);
             customerCases.add(cc);
-            customerOrigRowIndex.add(i);
+            customerOrigRowIndex.add(origIdx);
         }
 
-        if (!customerCases.isEmpty()) {
-            srCust = Database.insert(customerCases, false);
-        }
-
-        for (Integer i = 0; i < srInt.size(); i++) {
-            if (!srInt[i].isSuccess()) {
-                CaseRowResult rr = rowResults[i];
-                rr.status = 'Failed';
-                rr.recordId = '';
-                rr.errors = formatSaveResultErrors(srInt[i]);
-            }
-        }
-
+        Database.SaveResult[] srCust = customerCases.isEmpty() ? null : Database.insert(customerCases, false);
         if (srCust != null) {
             for (Integer k = 0; k < srCust.size(); k++) {
                 Integer origIdx = customerOrigRowIndex[k];
@@ -819,45 +781,50 @@ public with sharing class FEC_BatchCaseCreationController {
         Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
 
         List<Case> interactionCases = new List<Case>();
-        for (ParsedCaseRow r : parsed) {
+        List<Integer> interactionOrigRowIndex = new List<Integer>();
+        for (Integer i = 0; i < parsed.size(); i++) {
+            if (!'Succeeded'.equals(rowResults[i].status)) {
+                continue;
+            }
+            ParsedCaseRow r = parsed[i];
             Case ic = new Case();
             ic.RecordTypeId = intRt;
             ic.Subject = truncateWelcomeSubject('Batch Interaction - ', r.contractNumber);
             applyNatureFields(ic, r, maps, channelDfr, subChannelDfr);
             interactionCases.add(ic);
+            interactionOrigRowIndex.add(i);
+        }
+
+        if (interactionCases.isEmpty()) {
+            return;
         }
 
         Database.SaveResult[] srInt = Database.insert(interactionCases, false);
         List<Case> customerCases = new List<Case>();
         List<Integer> customerOrigRowIndex = new List<Integer>();
 
-        for (Integer i = 0; i < srInt.size(); i++) {
-            if (!srInt[i].isSuccess()) {
+        for (Integer k = 0; k < srInt.size(); k++) {
+            Integer origIdx = interactionOrigRowIndex[k];
+            if (!srInt[k].isSuccess()) {
+                CaseRowResult rr = rowResults[origIdx];
+                rr.status = 'Failed';
+                rr.recordId = '';
+                rr.errors = formatSaveResultErrors(srInt[k]);
                 continue;
             }
-            ParsedCaseRow r = parsed[i];
+            ParsedCaseRow r = parsed[origIdx];
             String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
-            cc.FEC_Interaction__c = srInt[i].getId();
+            cc.FEC_Interaction__c = srInt[k].getId();
             cc.Subject = buildSubject(r.contractNumber);
             cc.Status = statusApi;
             applyNatureFields(cc, r, maps, channelDfr, subChannelDfr);
             customerCases.add(cc);
-            customerOrigRowIndex.add(i);
+            customerOrigRowIndex.add(origIdx);
         }
 
         Database.SaveResult[] srCust = customerCases.isEmpty() ? null : Database.insert(customerCases, false);
-
-        for (Integer i = 0; i < srInt.size(); i++) {
-            if (!srInt[i].isSuccess()) {
-                CaseRowResult rr = rowResults[i];
-                rr.status = 'Failed';
-                rr.recordId = '';
-                rr.errors = formatSaveResultErrors(srInt[i]);
-            }
-        }
-
         if (srCust != null) {
             for (Integer k = 0; k < srCust.size(); k++) {
                 Integer origIdx = customerOrigRowIndex[k];
@@ -1090,16 +1057,6 @@ public with sharing class FEC_BatchCaseCreationController {
             LIMIT 1
         ];
         return rts.isEmpty() ? null : rts[0].Id;
-    }
-
-    private static Integer countFailedRows(List<CaseRowResult> rowResults) {
-        Integer n = 0;
-        for (CaseRowResult rr : rowResults) {
-            if (rr != null && 'Failed'.equals(rr.status)) {
-                n += 1;
-            }
-        }
-        return n;
     }
 
     private static void linkFileToBatch(Id batchId, Id contentDocumentId) {

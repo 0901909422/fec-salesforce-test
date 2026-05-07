@@ -39,6 +39,12 @@ public with sharing class FEC_BatchDataCreationController {
         @AuraEnabled public String errors;
     }
 
+    /** Kết quả validate kèm danh sách record chuẩn bị insert (parallel với rowResults — null cho dòng fail). */
+    private class ValidationOutput {
+        public List<RowResult> rowResults;
+        public List<FEC_Service_Resource_Absence__c> absencesByIndex;
+    }
+
     public class TemplateOption {
         @AuraEnabled public String label;
         @AuraEnabled public String value;
@@ -149,27 +155,53 @@ public with sharing class FEC_BatchDataCreationController {
         Map<Id, String> resultUrlByBatchId = new Map<Id, String>();
         Map<Id, String> sourceUrlByBatchId = new Map<Id, String>();
         Set<Id> batchIds = new Set<Id>();
+        Map<Id, Id> sourceDocIdByBatchId = new Map<Id, Id>();
         for (SObject row : rows) {
-            batchIds.add((Id) row.get('Id'));
+            Id batchId = (Id) row.get('Id');
+            batchIds.add(batchId);
+            if (String.isNotBlank(fileContentDocumentIdField)) {
+                String docIdStr = asString(row.get(fileContentDocumentIdField));
+                if (String.isNotBlank(docIdStr)) {
+                    try {
+                        sourceDocIdByBatchId.put(batchId, (Id) docIdStr);
+                    } catch (Exception ignore) {
+                        // bỏ qua giá trị không phải Id
+                    }
+                }
+            }
         }
         if (!batchIds.isEmpty()) {
+            // Source được link TRƯỚC result trong importBatchData → ASC theo thời gian
+            // ContentDocument.CreatedDate là thời điểm upload thật, đáng tin cậy hơn SystemModstamp của link.
             for (ContentDocumentLink link : [
-                SELECT LinkedEntityId, ContentDocument.Title, ContentDocument.LatestPublishedVersionId
+                SELECT LinkedEntityId, ContentDocumentId, ContentDocument.Title, ContentDocument.LatestPublishedVersionId, ContentDocument.CreatedDate
                 FROM ContentDocumentLink
                 WHERE LinkedEntityId IN :batchIds
-                ORDER BY LinkedEntityId, SystemModstamp DESC
+                ORDER BY LinkedEntityId, ContentDocument.CreatedDate ASC
             ]) {
                 String title = link.ContentDocument == null ? null : link.ContentDocument.Title;
                 String versionId = String.valueOf(link.ContentDocument.LatestPublishedVersionId);
                 if (String.isBlank(versionId) || String.isBlank(title)) {
                     continue;
                 }
-                if (title.endsWith('_Result')) {
-                    if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                        resultUrlByBatchId.put(link.LinkedEntityId, '/sfc/servlet.shepherd/version/download/' + versionId);
+                Id sourceDocId = sourceDocIdByBatchId.get(link.LinkedEntityId);
+                String url = '/sfc/servlet.shepherd/version/download/' + versionId;
+                if (sourceDocId != null) {
+                    // Có FEC_File_Content_Document_Id__c → match đúng id mới là source.
+                    if (link.ContentDocumentId == sourceDocId) {
+                        if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
+                            sourceUrlByBatchId.put(link.LinkedEntityId, url);
+                        }
+                    } else if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
+                        resultUrlByBatchId.put(link.LinkedEntityId, url);
                     }
-                } else if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                    sourceUrlByBatchId.put(link.LinkedEntityId, '/sfc/servlet.shepherd/version/download/' + versionId);
+                } else {
+                    // Không có field id → file đầu tiên (theo CreatedDate ASC) là source, các file sau là result.
+                    if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
+                        sourceUrlByBatchId.put(link.LinkedEntityId, url);
+                    } else if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
+                        resultUrlByBatchId.put(link.LinkedEntityId, url);
+                    }
                 }
             }
         }
@@ -181,9 +213,11 @@ public with sharing class FEC_BatchDataCreationController {
             String sourceDocumentId = String.isBlank(fileContentDocumentIdField)
                 ? null
                 : asString(row.get(fileContentDocumentIdField));
-            dto.fileDownloadUrl = sourceUrlByBatchId.get(dto.id);
-            if (String.isBlank(dto.fileDownloadUrl) && String.isNotBlank(sourceDocumentId)) {
+            // Luôn ưu tiên ContentDocumentId đã lưu trên batch = file gốc import (ổn định hơn heuristic theo Title).
+            if (String.isNotBlank(sourceDocumentId)) {
                 dto.fileDownloadUrl = '/sfc/servlet.shepherd/document/download/' + sourceDocumentId;
+            } else {
+                dto.fileDownloadUrl = sourceUrlByBatchId.get(dto.id);
             }
             dto.uploadedOn = asDatetime(row.get(uploadedOnField));
             SObject createdBy = row.getSObject('CreatedBy');
@@ -230,7 +264,7 @@ public with sharing class FEC_BatchDataCreationController {
         Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
         if (sObjType == null) {
             out.message = OBJECT_API_NAME + ' is not available in this org.';
-            upsertFailedBatch(fileName, templateName, out.message);
+            upsertSystemFailureBatch(fileName, templateName, out.message);
             return out;
         }
 
@@ -239,8 +273,50 @@ public with sharing class FEC_BatchDataCreationController {
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
-                out.message = 'Vui lòng đính kèm tệp dữ liệu';
-                upsertFailedBatch(fileName, templateName, out.message);
+                ContentVersion cvEmpty = new ContentVersion();
+                cvEmpty.Title = removeFileExtension(fileName);
+                cvEmpty.PathOnClient = '/' + fileName;
+                cvEmpty.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
+                insert cvEmpty;
+
+                ContentVersion insertedCvEmpty = [
+                    SELECT ContentDocumentId
+                    FROM ContentVersion
+                    WHERE Id = :cvEmpty.Id
+                    LIMIT 1
+                ];
+
+                batchRow = sObjType.newSObject();
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+                putIfFieldExists(
+                    fieldMap,
+                    batchRow,
+                    new List<String>{ 'FEC_File_Content_Document_Id__c' },
+                    String.valueOf(insertedCvEmpty.ContentDocumentId)
+                );
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+                putIfFieldExists(
+                    fieldMap,
+                    batchRow,
+                    new List<String>{ 'FEC_Failure_Reason__c' },
+                    'Vui lòng đính kèm tệp dữ liệu'
+                );
+                insert batchRow;
+                linkFileToBatch((Id) batchRow.get('Id'), insertedCvEmpty.ContentDocumentId);
+
+                out.success = true;
+                out.message = 'Import request has been submitted.';
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCvEmpty.ContentDocumentId;
+                out.status = 'Processed';
+                out.resultRowsJson = '[]';
                 return out;
             }
             System.debug(((Map<String, Object>) inputRows[0]).get('note'));
@@ -275,39 +351,81 @@ public with sharing class FEC_BatchDataCreationController {
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
             update batchRow;
 
-            List<RowResult> rowResults = validateRows(inputRows);
-            Integer failedCount = countFailedRows(rowResults);
+            ValidationOutput vo = validateAndBuildAbsences(inputRows);
+            List<RowResult> rowResults = vo.rowResults;
             Integer totalCount = rowResults.size();
-            if (failedCount > 0) {
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, totalCount);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, 'Dữ liệu file import không hợp lệ.');
-                update batchRow;
 
-                out.success = true;
-                out.message = 'Import request has been submitted.';
-                out.batchRecordId = (Id) batchRow.get('Id');
-                out.contentDocumentId = insertedCv.ContentDocumentId;
-                out.status = 'Failure';
-                out.resultRowsJson = JSON.serialize(rowResults);
-                return out;
+            // Tách các record sẵn sàng insert + ghi nhớ index gốc để map ngược recordId.
+            List<FEC_Service_Resource_Absence__c> toInsert = new List<FEC_Service_Resource_Absence__c>();
+            List<Integer> originalIdxByInsertIdx = new List<Integer>();
+            for (Integer i = 0; i < vo.absencesByIndex.size(); i += 1) {
+                FEC_Service_Resource_Absence__c rec = vo.absencesByIndex[i];
+                if (rec != null) {
+                    toInsert.add(rec);
+                    originalIdxByInsertIdx.add(i);
+                }
             }
 
-            List<FEC_Service_Resource_Absence__c> absences = mapRowsToAbsences(inputRows);
-            insert absences;
-            for (Integer i = 0; i < rowResults.size(); i += 1) {
-                rowResults[i].recordId = String.valueOf(absences[i].Id);
+            Set<Id> insertedIds = new Set<Id>();
+            if (!toInsert.isEmpty()) {
+                Database.SaveResult[] saveResults = Database.insert(toInsert, false);
+                for (Integer k = 0; k < saveResults.size(); k += 1) {
+                    Database.SaveResult srRes = saveResults[k];
+                    Integer originalIdx = originalIdxByInsertIdx[k];
+                    if (srRes.isSuccess()) {
+                        insertedIds.add(srRes.getId());
+                    } else {
+                        // DML lỗi → đánh dấu Failed cho dòng đó (giữ các dòng khác đã insert thành công).
+                        List<String> dmlErrs = new List<String>();
+                        for (Database.Error err : srRes.getErrors()) {
+                            dmlErrs.add(err.getMessage());
+                        }
+                        rowResults[originalIdx].status = 'Failed';
+                        rowResults[originalIdx].errors = String.join(dmlErrs, ' ');
+                        rowResults[originalIdx].recordId = '';
+                    }
+                }
+
+                // Query Name (Auto Number) cho các record vừa insert.
+                Map<Id, FEC_Service_Resource_Absence__c> nameById = insertedIds.isEmpty()
+                    ? new Map<Id, FEC_Service_Resource_Absence__c>()
+                    : new Map<Id, FEC_Service_Resource_Absence__c>([
+                        SELECT Id, Name FROM FEC_Service_Resource_Absence__c WHERE Id IN :insertedIds
+                    ]);
+                for (Integer k = 0; k < saveResults.size(); k += 1) {
+                    Database.SaveResult srRes = saveResults[k];
+                    if (!srRes.isSuccess()) {
+                        continue;
+                    }
+                    Integer originalIdx = originalIdxByInsertIdx[k];
+                    FEC_Service_Resource_Absence__c queried = nameById.get(srRes.getId());
+                    rowResults[originalIdx].recordId = queried != null && String.isNotBlank(queried.Name)
+                        ? queried.Name
+                        : String.valueOf(srRes.getId());
+                }
+            }
+
+            Integer successCount = 0;
+            Integer failedCount = 0;
+            for (RowResult rr : rowResults) {
+                if (rr.status == 'Succeeded') {
+                    successCount += 1;
+                } else if (rr.status == 'Failed') {
+                    failedCount += 1;
+                }
             }
 
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
+            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
+            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+            putIfFieldExists(
+                fieldMap,
+                batchRow,
+                new List<String>{ 'FEC_Failure_Reason__c' },
+                failedCount > 0 ? 'Có ' + failedCount + ' dòng dữ liệu không hợp lệ.' : ''
+            );
             update batchRow;
 
             out.success = true;
@@ -325,10 +443,10 @@ public with sharing class FEC_BatchDataCreationController {
                     putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, ex.getMessage());
                     update batchRow;
                 } catch (Exception e) {
-                    upsertFailedBatch(fileName, templateName, ex.getMessage());
+                    upsertSystemFailureBatch(fileName, templateName, ex.getMessage());
                 }
             } else {
-                upsertFailedBatch(fileName, templateName, ex.getMessage());
+                upsertSystemFailureBatch(fileName, templateName, ex.getMessage());
             }
             out.message = ex.getMessage();
             return out;
@@ -338,6 +456,69 @@ public with sharing class FEC_BatchDataCreationController {
     @AuraEnabled
     public static void logFailedImport(String fileName, String templateName, String reason) {
         upsertFailedBatch(fileName, templateName, reason);
+    }
+
+    /**
+     * Lưu batch + file gốc khi validate client fail; status Processed (đã xử lý yêu cầu import).
+     */
+    @AuraEnabled
+    public static Id logFailedImportWithFile(
+        String fileName,
+        String fileBodyBase64,
+        String templateName,
+        String reason
+    ) {
+        try {
+            Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
+            if (sObjType == null) {
+                return null;
+            }
+            Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+
+            Id contentDocumentId = null;
+            if (String.isNotBlank(fileBodyBase64) && String.isNotBlank(fileName)) {
+                ContentVersion cv = new ContentVersion();
+                cv.Title = removeFileExtension(fileName);
+                cv.PathOnClient = '/' + fileName;
+                cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
+                insert cv;
+                ContentVersion insertedCv = [
+                    SELECT ContentDocumentId
+                    FROM ContentVersion
+                    WHERE Id = :cv.Id
+                    LIMIT 1
+                ];
+                contentDocumentId = insertedCv.ContentDocumentId;
+            }
+
+            SObject failedRow = sObjType.newSObject();
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            if (contentDocumentId != null) {
+                putIfFieldExists(
+                    fieldMap,
+                    failedRow,
+                    new List<String>{ 'FEC_File_Content_Document_Id__c' },
+                    String.valueOf(contentDocumentId)
+                );
+            }
+            insert failedRow;
+
+            if (contentDocumentId != null) {
+                linkFileToBatch((Id) failedRow.get('Id'), contentDocumentId);
+            }
+            return (Id) failedRow.get('Id');
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     @AuraEnabled
@@ -353,7 +534,12 @@ public with sharing class FEC_BatchDataCreationController {
         insert cv;
     }
 
-    private static List<RowResult> validateRows(List<Object> inputRows) {
+    /**
+     * Validate từng dòng VÀ build sẵn record chuẩn bị insert cho các dòng hợp lệ.
+     * Các dòng fail vẫn xuất hiện trong rowResults với status='Failed' và errors,
+     * absencesByIndex tại vị trí đó = null.
+     */
+    private static ValidationOutput validateAndBuildAbsences(List<Object> inputRows) {
         Set<String> rawValues = new Set<String>();
         List<RowResult> output = new List<RowResult>();
         for (Object rowObj : inputRows) {
@@ -373,6 +559,10 @@ public with sharing class FEC_BatchDataCreationController {
         }
 
         Map<String, Id> serviceResourceByKey = resolveServiceResourceIds(rawValues);
+        List<FEC_Service_Resource_Absence__c> absencesByIndex = new List<FEC_Service_Resource_Absence__c>();
+        for (Integer i = 0; i < output.size(); i += 1) {
+            absencesByIndex.add(null);
+        }
         Set<String> uniqueKeys = new Set<String>();
         for (Integer idx = 0; idx < output.size(); idx += 1) {
             Integer rowNumber = idx + 2;
@@ -442,82 +632,20 @@ public with sharing class FEC_BatchDataCreationController {
             if (!errs.isEmpty()) {
                 rr.status = 'Failed';
                 rr.errors = String.join(errs, ' ');
+            } else {
+                FEC_Service_Resource_Absence__c rec = new FEC_Service_Resource_Absence__c();
+                rec.FEC_Service_Resource__c = srId;
+                rec.FEC_Start_Date__c = startDt;
+                rec.FEC_End_Date__c = endDt;
+                rec.FEC_Note__c = rr.note;
+                absencesByIndex[idx] = rec;
             }
         }
 
-        if (countFailedRows(output) > 0) {
-            for (RowResult rr : output) {
-                if (rr.status == 'Succeeded') {
-                    rr.status = 'Failed';
-                    rr.errors = 'Không insert do có dòng lỗi trong file.';
-                }
-            }
-        }
-        return output;
-    }
-
-    private static Integer countFailedRows(List<RowResult> rowResults) {
-        Integer countFailed = 0;
-        for (RowResult rr : rowResults) {
-            if (rr != null && rr.status == 'Failed') {
-                countFailed += 1;
-            }
-        }
-        return countFailed;
-    }
-
-    private static List<FEC_Service_Resource_Absence__c> mapRowsToAbsences(List<Object> inputRows) {
-        Schema.SObjectType absenceType = Schema.getGlobalDescribe().get(ABSENCE_OBJECT_API_NAME);
-        if (absenceType == null) {
-            throw new AuraHandledException(ABSENCE_OBJECT_API_NAME + ' is not available in this org.');
-        }
-
-        Set<String> rawValues = new Set<String>();
-        for (Object rowObj : inputRows) {
-            Map<String, Object> row = (Map<String, Object>) rowObj;
-            String sr = normalizeText(row.get('serviceResource'));
-            if (String.isNotBlank(sr)) {
-                rawValues.add(sr);
-            }
-        }
-        Map<String, Id> serviceResourceByKey = resolveServiceResourceIds(rawValues);
-
-        List<FEC_Service_Resource_Absence__c> output = new List<FEC_Service_Resource_Absence__c>();
-        Integer rowNumber = 1;
-        for (Object rowObj : inputRows) {
-            rowNumber += 1;
-            Map<String, Object> row = (Map<String, Object>) rowObj;
-            String srRaw = normalizeText(row.get('serviceResource'));
-            String startRaw = normalizeText(row.get('startDate'));
-            String endRaw = normalizeText(row.get('endDate'));
-            String noteRaw = normalizeText(row.get('note'));
-
-            if (String.isBlank(srRaw) || String.isBlank(startRaw) || String.isBlank(endRaw)) {
-                throw new AuraHandledException('Dòng ' + rowNumber + ': phải nhập đủ Service Resource, Start Date, End Date.');
-            }
-
-            Id serviceResourceId = serviceResourceByKey.get(srRaw.toLowerCase());
-            if (serviceResourceId == null) {
-                serviceResourceId = serviceResourceByKey.get(srRaw);
-            }
-            if (serviceResourceId == null) {
-                throw new AuraHandledException('Dòng ' + rowNumber + ': không tìm thấy Service Resource "' + srRaw + '".');
-            }
-
-            Datetime startDt = parseDateTimeStrict(startRaw, rowNumber, 'Start Date');
-            Datetime endDt = parseDateTimeStrict(endRaw, rowNumber, 'End Date');
-            if (endDt < startDt) {
-                throw new AuraHandledException('Dòng ' + rowNumber + ': End Date phải lớn hơn hoặc bằng Start Date.');
-            }
-
-            FEC_Service_Resource_Absence__c rec = new FEC_Service_Resource_Absence__c();
-            rec.FEC_Service_Resource__c = serviceResourceId;
-            rec.FEC_Start_Date__c = startDt;
-            rec.FEC_End_Date__c = endDt;
-            rec.FEC_Note__c = noteRaw;
-            output.add(rec);
-        }
-        return output;
+        ValidationOutput vo = new ValidationOutput();
+        vo.rowResults = output;
+        vo.absencesByIndex = absencesByIndex;
+        return vo;
     }
 
     private static Map<String, Id> resolveServiceResourceIds(Set<String> rawValues) {
@@ -628,7 +756,17 @@ public with sharing class FEC_BatchDataCreationController {
         return String.valueOf(value).trim();
     }
 
+    /** Ghi log khi không có file đính kèm / không parse được — trạng thái Processed (đã tiếp nhận yêu cầu). */
     private static void upsertFailedBatch(String fileName, String templateName, String reason) {
+        insertFailureRow(fileName, templateName, reason, 'Processed');
+    }
+
+    /** Lỗi cấu hình / exception khi xử lý — Failure. */
+    private static void upsertSystemFailureBatch(String fileName, String templateName, String reason) {
+        insertFailureRow(fileName, templateName, reason, 'Failure');
+    }
+
+    private static void insertFailureRow(String fileName, String templateName, String reason, String statusValue) {
         try {
             Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
             if (sObjType == null) {
@@ -639,10 +777,13 @@ public with sharing class FEC_BatchDataCreationController {
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, statusValue);
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
             insert failedRow;
         } catch (Exception ex) {
             // avoid masking original error

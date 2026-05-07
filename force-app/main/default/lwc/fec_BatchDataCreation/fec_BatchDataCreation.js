@@ -5,6 +5,7 @@ import getRecentRows from "@salesforce/apex/FEC_BatchDataCreationController.getR
 import importBatchData from "@salesforce/apex/FEC_BatchDataCreationController.importBatchData";
 import saveResultFile from "@salesforce/apex/FEC_BatchDataCreationController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchDataCreationController.logFailedImport";
+import logFailedImportWithFile from "@salesforce/apex/FEC_BatchDataCreationController.logFailedImportWithFile";
 import getTemplateOptions from "@salesforce/apex/FEC_BatchDataCreationController.getTemplateOptions";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 const PAGE_SIZE_OPTIONS = [
@@ -67,6 +68,16 @@ function removeFileExtensionSafe(fileName) {
     return name;
   }
   return name.substring(0, dotIdx);
+}
+
+/** Tránh ..._Result_Result.xlsx khi file gốc đã có hậu tố _Result. */
+function buildResultXlsxFileName(sourceFileName) {
+  let base = removeFileExtensionSafe(sourceFileName);
+  const lower = base.toLowerCase();
+  if (lower.endsWith("_result")) {
+    base = base.slice(0, -7);
+  }
+  return `${base}_Result.xlsx`;
 }
 
 export default class Fec_BatchDataCreation extends LightningElement {
@@ -364,9 +375,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
 
     const fileToUpload = this.selectedFile;
     if (!fileToUpload) {
+      // Chưa chọn file: chỉ hiển thị cảnh báo inline, KHÔNG ghi history.
       this.fileRequiredError = false;
       this.attachDataRequiredError = true;
-      await this.logFailedImportAttempt("", key, "Vui lòng đính kèm tệp dữ liệu");
       return;
     }
     this.fileRequiredError = false;
@@ -378,7 +389,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
-        this.importValidationError
+        this.importValidationError,
+        fileToUpload,
+        []
       );
       return;
     }
@@ -387,26 +400,35 @@ export default class Fec_BatchDataCreation extends LightningElement {
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
-        this.importValidationError
+        this.importValidationError,
+        fileToUpload,
+        []
       );
       return;
     }
     try {
       const check = await this.validateBulkOffCreationExcel(fileToUpload);
       if (!check.ok) {
+        const parsedRows = Array.isArray(check.rows) ? check.rows : [];
         if (check.noData) {
-          this.attachDataRequiredError = true;
+          // File đã đính kèm nhưng rỗng → dùng importValidationError, không phải attachDataRequiredError.
+          this.attachDataRequiredError = false;
+          this.importValidationError = "File không có dữ liệu, vui lòng kiểm tra lại.";
           await this.logFailedImportAttempt(
             fileToUpload.name,
             key,
-            "Vui lòng đính kèm tệp dữ liệu"
+            this.importValidationError,
+            fileToUpload,
+            parsedRows
           );
         } else {
           this.importValidationError = check.message || "";
           await this.logFailedImportAttempt(
             fileToUpload.name,
             key,
-            this.importValidationError || "Dữ liệu file import không hợp lệ."
+            this.importValidationError || "Dữ liệu file import không hợp lệ.",
+            fileToUpload,
+            parsedRows
           );
         }
         return;
@@ -420,7 +442,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
-        this.importValidationError
+        this.importValidationError,
+        fileToUpload,
+        []
       );
       return;
     }
@@ -488,7 +512,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
   normalizeRow(row) {
     const status = row.status || "";
     const resultLabel =
-      status === "Processed" || status === "Failure" ? "Result" : "";
+      status === "Processed" || status === "Failure" || row.resultDownloadUrl
+        ? "Result"
+        : "";
     return {
       ...row,
       fileDownloadUrl: row.fileDownloadUrl || "",
@@ -526,7 +552,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
       bookType: "xlsx"
     });
     const resultBase64 = arrayBufferToBase64Safe(wbout);
-    const resultFileName = `${removeFileExtensionSafe(sourceFileName)}_Result.xlsx`;
+    const resultFileName = buildResultXlsxFileName(sourceFileName);
     await saveResultFile({
       batchRecordId,
       resultFileName,
@@ -626,17 +652,81 @@ export default class Fec_BatchDataCreation extends LightningElement {
     });
   }
 
-  async logFailedImportAttempt(fileName, templateName, reason) {
+  async logFailedImportAttempt(fileName, templateName, reason, fileObject, parsedRows) {
     try {
-      await logFailedImport({
-        fileName: fileName || "Unknown_File.xlsx",
-        templateName: templateName || "",
-        reason: reason || "Import failed."
-      });
+      const safeFileName = fileName || "Unknown_File.xlsx";
+      const safeReason = reason || "Import failed.";
+      let batchRecordId = null;
+
+      if (fileObject) {
+        try {
+          const base64 = await this.readFileAsBase64(fileObject);
+          batchRecordId = await logFailedImportWithFile({
+            fileName: safeFileName,
+            fileBodyBase64: base64,
+            templateName: templateName || "",
+            reason: safeReason
+          });
+        } catch (uploadError) {
+          batchRecordId = null;
+        }
+      }
+
+      if (batchRecordId) {
+        try {
+          await this.saveResultWorkbookForFailure(
+            batchRecordId,
+            safeFileName,
+            parsedRows,
+            safeReason
+          );
+        } catch (resultError) {
+          // Failed to save result file should not block flow.
+        }
+      } else {
+        await logFailedImport({
+          fileName: safeFileName,
+          templateName: templateName || "",
+          reason: safeReason
+        });
+      }
       await this.refreshRows();
     } catch (e) {
       // Do not block UI flow if fail-log cannot be saved.
     }
+  }
+
+  async saveResultWorkbookForFailure(batchRecordId, sourceFileName, parsedRows, reason) {
+    await this.ensureSheetJsLoaded();
+    const baseRows = Array.isArray(parsedRows) && parsedRows.length > 0
+      ? parsedRows
+      : [{ serviceResource: "", startDate: "", endDate: "", note: "" }];
+    const exportRows = baseRows.map((r) => [
+      String(r?.serviceResource || ""),
+      String(r?.startDate || ""),
+      String(r?.endDate || ""),
+      String(r?.note || ""),
+      "",
+      "Failed",
+      String(reason || "")
+    ]);
+    const worksheet = window.XLSX.utils.aoa_to_sheet([
+      RESULT_FILE_HEADERS,
+      ...exportRows
+    ]);
+    const workbook = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(workbook, worksheet, "Result");
+    const wbout = window.XLSX.write(workbook, {
+      type: "array",
+      bookType: "xlsx"
+    });
+    const resultBase64 = arrayBufferToBase64Safe(wbout);
+    const resultFileName = buildResultXlsxFileName(sourceFileName);
+    await saveResultFile({
+      batchRecordId,
+      resultFileName,
+      fileBodyBase64: resultBase64
+    });
   }
 
   extractError(error) {
