@@ -36,9 +36,6 @@ public without sharing class FEC_IPPClosureController {
         if (caseId == null) {
             return wrapper;
         }
-        if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.FEC_IPP__c.isAccessible()) {
-            return wrapper;
-        }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
         if (customerHistoryId == null) {
             return wrapper;
@@ -129,15 +126,6 @@ public without sharing class FEC_IPPClosureController {
         if (caseId == null || ippId == null) {
             return false;
         }
-        if (!Schema.sObjectType.Case.isAccessible() || !Schema.sObjectType.Case.isUpdateable()) {
-            return false;
-        }
-        if (!Schema.sObjectType.FEC_IPP__c.isAccessible() || !Schema.sObjectType.FEC_IPP__c.isUpdateable()) {
-            return false;
-        }
-        if (!Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isAccessible() || !Schema.sObjectType.FEC_IPP__c.fields.FEC_IPP_Closure_Case__c.isUpdateable()) {
-            return false;
-        }
         Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
         if (customerHistoryId == null) {
             return false;
@@ -207,9 +195,6 @@ public without sharing class FEC_IPPClosureController {
             return c.FEC_Account_or_Contract__c;
         }
         if (String.isNotBlank(c.FEC_Account_Number__c)) {
-            if (!Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
-                return null;
-            }
             List<FEC_Customer_History__c> histories = [
                 SELECT Id FROM FEC_Customer_History__c
                 WHERE FEC_Account_Number__c = :c.FEC_Account_Number__c
@@ -225,9 +210,6 @@ public without sharing class FEC_IPPClosureController {
     private static Set<Id> getIppIdsReferencedByOtherCases(Id currentCaseId, Set<Id> ippIds) {
         Set<Id> blocked = new Set<Id>();
         if (currentCaseId == null || ippIds == null || ippIds.isEmpty()) {
-            return blocked;
-        }
-        if (!Schema.sObjectType.Case.isAccessible()) {
             return blocked;
         }
         for (Case c : [
