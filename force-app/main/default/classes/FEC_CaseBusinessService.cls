@@ -1969,8 +1969,8 @@ public without sharing class FEC_CaseBusinessService {
       Boolean isRdPaymentAssessmentDriven =
         String.isNotBlank(updatedCase.FEC_RD_Payment_Contract_Assessment__c) &&
         (
-          'RL16.02'.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c) ||
-          'RL16.03'.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c)
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_1.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c) ||
+          FEC_ConstantCommon.SUB_CODE_RD_PAYMENT_ASSESSMENT_2.equals(updatedCase.FEC_SubCode__r?.FEC_Code__c)
         );
 
       //thangtv

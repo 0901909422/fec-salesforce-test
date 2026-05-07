@@ -3,25 +3,25 @@ public with sharing class FEC_RDPaymentContractAssessmentService {
 
     // Tên Queue cần fetch để build routingConfig
     private static final List<String> QUEUE_DEV_NAMES = new List<String>{
-        'FEC_DQ_CS_Support',
-        'FEC_DQ_CS_Customer_Care'
+        FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME,
+        FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
     };
 
     // Mapping: API value của FEC_RD_Payment_Contract_Assessment__c → {team, queueDevName}
     // Cập nhật khi picklist API value thay đổi (phải deploy cùng field metadata)
     private static final Map<String, Map<String, String>> ROUTING_MAP =
         new Map<String, Map<String, String>>{
-            'Cannot close contract' => new Map<String, String>{
-                'team'         => 'SP',
-                'queueDevName' => 'FEC_DQ_CS_Support'
+            FEC_ConstantCommon.RD_ASSESSMENT_CANNOT_CLOSE => new Map<String, String>{
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_TEAM  => FEC_ConstantCommon.RD_ASSESSMENT_TEAM_SP,
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_QUEUE => FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
             },
-            'Contract can be closed with statement' => new Map<String, String>{
-                'team'         => 'CC',
-                'queueDevName' => 'FEC_DQ_CS_Customer_Care'
+            FEC_ConstantCommon.RD_ASSESSMENT_CLOSE_WITH_STATEMENT => new Map<String, String>{
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_TEAM  => FEC_ConstantCommon.RD_ASSESSMENT_TEAM_CC,
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_QUEUE => FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
             },
-            'Contract can be closed without statement' => new Map<String, String>{
-                'team'         => 'SP',
-                'queueDevName' => 'FEC_DQ_CS_Support'
+            FEC_ConstantCommon.RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT => new Map<String, String>{
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_TEAM  => FEC_ConstantCommon.RD_ASSESSMENT_TEAM_SP,
+                FEC_ConstantCommon.RD_ASSESSMENT_ROUTING_KEY_QUEUE => FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
             }
         };
 
