@@ -1,0 +1,69 @@
+<template>
+    <lightning-card>
+        <div class="slds-p-around_medium">
+
+            <!-- VIEW MODE -->
+            <template if:false={isEditMode}>
+                <table style="width:100%;border-collapse:collapse;">
+                    <tbody>
+                        <tr style="border-bottom:1px solid #e0e0e0;">
+                            <td style="padding:8px 0;font-size:0.875rem;color:#3e3e3c;width:200px;">{labelGetNatureOfCase}</td>
+                            <td style="padding:8px 0;">
+                                <input type="checkbox" disabled checked={getNatureOfCase} />
+                            </td>
+                            <td style="padding:8px 0;text-align:right;">
+                                <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" title="Edit" onclick={handleEdit} data-field="FEC_Get_Nature_Of_Case__c"></lightning-button-icon>
+                            </td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #e0e0e0;">
+                            <td style="padding:8px 0;font-size:0.875rem;color:#3e3e3c;">{labelCancelCase}</td>
+                            <td style="padding:8px 0;">
+                                <input type="checkbox" disabled checked={cancelCase} />
+                            </td>
+                            <td style="padding:8px 0;text-align:right;">
+                                <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" title="Edit" onclick={handleEdit} data-field="FEC_Cancel_Case__c"></lightning-button-icon>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px 0;font-size:0.875rem;color:#3e3e3c;">{labelUpdateCaseStatus}</td>
+                            <td style="padding:8px 0;">
+                                <input type="checkbox" disabled checked={updateCaseStatus} />
+                            </td>
+                            <td style="padding:8px 0;text-align:right;">
+                                <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" title="Edit" onclick={handleEdit} data-field="FEC_Update_Case_Status__c"></lightning-button-icon>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </template>
+
+            <!-- EDIT MODE -->
+            <template if:true={isEditMode}>
+                <lightning-record-edit-form
+                    record-id={recordId}
+                    object-api-name="FEC_Channel__c"
+                    onsubmit={handleSubmit}
+                    onsuccess={handleSuccess}
+                    onerror={handleError}
+                >
+                    <div class="slds-grid slds-gutters slds-wrap">
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input-field field-name="FEC_Get_Nature_Of_Case__c"></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input-field field-name="FEC_Cancel_Case__c"></lightning-input-field>
+                        </div>
+                        <div class="slds-col slds-size_1-of-1">
+                            <lightning-input-field field-name="FEC_Update_Case_Status__c"></lightning-input-field>
+                        </div>
+                    </div>
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button label={labelCancel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                        <lightning-button variant="brand" type="submit" label={labelSave} disabled={isSaving}></lightning-button>
+                    </div>
+                </lightning-record-edit-form>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

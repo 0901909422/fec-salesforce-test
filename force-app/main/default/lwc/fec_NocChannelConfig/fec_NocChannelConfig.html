@@ -1,0 +1,115 @@
+<template>
+    <lightning-card>
+        <div class="slds-p-around_medium">
+            <div class="slds-form-element">
+                <label class="slds-form-element__label slds-m-right_small" style="font-weight:600;">Channel</label>
+
+                <!-- VIEW MODE -->
+                <template if:false={isEditMode}>
+                    <span style="display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                        <template if:true={hasSelected}>
+                            <template for:each={selectedChannels} for:item="ch">
+                                <span key={ch.id} class="slds-badge slds-m-right_x-small">{ch.name}</span>
+                            </template>
+                        </template>
+                        <template if:false={hasSelected}>
+                            <span class="slds-text-color_weak">--</span>
+                        </template>
+                        <lightning-button-icon
+                            icon-name="utility:edit"
+                            variant="bare"
+                            size="small"
+                            title="Edit"
+                            onclick={handleEdit}
+                            class="slds-m-left_x-small"
+                        ></lightning-button-icon>
+                    </span>
+                </template>
+
+                <!-- EDIT MODE -->
+                <template if:true={isEditMode}>
+                    <div style="width:50%;">
+                        <!-- Search input -->
+                        <div style="position:relative;">
+                            <div class="slds-input-has-icon slds-input-has-icon_right">
+                                <lightning-icon icon-name="utility:search" size="x-small"
+                                    class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default">
+                                </lightning-icon>
+                                <input
+                                    type="text"
+                                    class="slds-input"
+                                    placeholder={searchChannelPlaceholder}
+                                    value={searchTerm}
+                                    oninput={handleInput}
+                                    onfocus={handleFocus}
+                                    onblur={handleBlur}
+                                    autocomplete="off"
+                                />
+                            </div>
+                            <template if:true={isOpen}>
+                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" style="z-index:9999;">
+                                    <ul class="slds-listbox slds-listbox_vertical" role="listbox">
+                                        <template if:true={isLoading}>
+                                            <li class="slds-listbox__item slds-p-around_small">
+                                                <lightning-spinner size="x-small"></lightning-spinner>
+                                            </li>
+                                        </template>
+                                        <template if:false={isLoading}>
+                                            <template for:each={searchResults} for:item="ch">
+                                                <li key={ch.Id}
+                                                    class="slds-listbox__item"
+                                                    onmousedown={handleSelect}
+                                                    data-id={ch.Id}
+                                                    data-name={ch.FEC_Channel_Vietnamese_name__c}
+                                                    style="cursor:pointer;padding:8px 12px;">
+                                                    <span>{ch.FEC_Channel_Vietnamese_name__c}</span>
+                                                    <template if:true={ch.FEC_Channel_ID__c}>
+                                                        <span class="slds-text-color_weak slds-m-left_x-small">({ch.FEC_Channel_ID__c})</span>
+                                                    </template>
+                                                </li>
+                                            </template>
+                                            <template if:true={noResults}>
+                                                <li class="slds-listbox__item slds-p-around_small slds-text-color_weak">
+                                                    {noResultsLabel}
+                                                </li>
+                                            </template>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Selected pills (bên dưới search) -->
+                        <template if:true={hasSelected}>
+                            <div class="slds-m-top_x-small" style="display:flex;flex-wrap:wrap;gap:4px;">
+                                <template for:each={selectedChannels} for:item="ch">
+                                    <lightning-pill
+                                        key={ch.id}
+                                        label={ch.name}
+                                        onremove={handleRemove}
+                                        data-id={ch.id}
+                                    ></lightning-pill>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Buttons -->
+                        <div class="slds-m-top_medium">
+                            <lightning-button
+                                label={cancelLabel}
+                                onclick={handleCancel}
+                                class="slds-m-right_small"
+                            ></lightning-button>
+                            <lightning-button
+                                variant="brand"
+                                label={saveLabel}
+                                onclick={handleSave}
+                                disabled={isSaving}
+                            ></lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>
