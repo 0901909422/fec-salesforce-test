@@ -73,6 +73,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     @track errorMessage;
     @track sectionData = {};
+
     /** Chỉ dùng cho section 4; được cập nhật khi bấm Refresh (cùng section 3). Section 1 & 2 giữ sectionData. */
     @track section4Data = { repaymentScheduleTable: [], paymentHistoryTable: [] };
     @track helpTextMap = {};
@@ -99,17 +100,31 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         refreshButton: FEC_Repay_Refresh_Button_Label,
     };
 
-    get activeSections() {
-        return [
-            FEC_Repayment_Schedule_Label,
-            FEC_Payment_History_Label,
-            FEC_Real_Time_Payment_Label,
-            FEC_Repayment_Schedule_Payment_History_Label,
-        ];
-    }
+    activeSections = [
+        FEC_Repayment_Schedule_Label,
+        FEC_Payment_History_Label,
+        FEC_Real_Time_Payment_Label,
+        FEC_Repayment_Schedule_Payment_History_Label,
+    ];
 
     get repaymentScheduleSectionName() {
         return FEC_Repayment_Schedule_Label;
+    }
+
+    @track isRepayScheduleOpen = true;
+
+    get repayScheduleErrorSectionClass() {
+        return this.isRepayScheduleOpen
+            ? 'slds-accordion__section slds-is-open repay-error-section'
+            : 'slds-accordion__section repay-error-section';
+    }
+
+    get repayScheduleChevronIcon() {
+        return this.isRepayScheduleOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleRepayScheduleErrorToggle() {
+        this.isRepayScheduleOpen = !this.isRepayScheduleOpen;
     }
 
     get repaymentScheduleTotalInstallment() {
