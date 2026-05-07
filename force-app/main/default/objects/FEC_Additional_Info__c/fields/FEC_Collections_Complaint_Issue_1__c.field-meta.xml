@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Collections_Complaint_Issue_1__c</fullName>
+    <description>Vấn đề khiếu nại liên quan thu hồi nợ (1)</description>
+    <label>Collections Complaint Issue 1</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Tiền góp</fullName>
+                <default>false</default>
+                <label>Tiền góp</label>
+            </value>
+            <value>
+                <fullName>Tiền thanh lý</fullName>
+                <default>false</default>
+                <label>Tiền thanh lý</label>
+            </value>
+            <value>
+                <fullName>Các loại phí, lãi phát sinh</fullName>
+                <default>false</default>
+                <label>Các loại phí, lãi phát sinh</label>
+            </value>
+            <value>
+                <fullName>Thời hạn thanh toán</fullName>
+                <default>false</default>
+                <label>Thời hạn thanh toán</label>
+            </value>
+            <value>
+                <fullName>Chương trình miễn giảm tiền</fullName>
+                <default>false</default>
+                <label>Chương trình miễn giảm tiền</label>
+            </value>
+            <value>
+                <fullName>Nợ quá hạn</fullName>
+                <default>false</default>
+                <label>Nợ quá hạn</label>
+            </value>
+            <value>
+                <fullName>Nhóm nợ</fullName>
+                <default>false</default>
+                <label>Nhóm nợ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

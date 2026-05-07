@@ -79,7 +79,8 @@ public with sharing class FEC_AddIPP {
 
     try {
       Case c = [
-        SELECT FEC_Account_Contract_Number_Text__c
+        SELECT FEC_Account_Contract_Number_Text__c,
+          FEC_Is_Test_API__c
         FROM Case
         WHERE Id = :caseId
         WITH SECURITY_ENFORCED
@@ -107,17 +108,29 @@ public with sharing class FEC_AddIPP {
       request.referenceNumber = t.FEC_Transaction_Code__c;
       request.postingDate = t.FEC_Post_Date__c;
 
-      return addIPP(request);
+      return addIPP(request,
+        c != null ? c.FEC_Is_Test_API__c : false);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
   }
 
-  public static AddIPPResult addIPP(IPPRequest request) {
+  public static AddIPPResult addIPP(IPPRequest request, Boolean isTestApi) {
     validate(request);
     AddIPPResult finalResult = new AddIPPResult();
     String transId = FEC_CommonUltils.generateTransactionId();
     String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
+    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+    String accountNumberParam = FEC_ConstantCommon.STR_EMPTY;
+    Boolean useRealData = isTestApi ||
+      apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+    if (useRealData) {
+      accountNumberParam = request.accountNumber;
+    } else {
+      accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+    }
+    request.accountNumber = accountNumberParam;
 
     Dom.Document doc = buildRequestDocument(request, transId, timestamp);
 
@@ -125,9 +138,7 @@ public with sharing class FEC_AddIPP {
       HttpResponse res = sendRequest(doc);
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
-      
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
+
       String endpoint = apiSetting?.FEC_Call_Mock__c
         ? FEC_MockupEndpoint.ADD_IPP_ENDPOINT_MOCKUP
         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);

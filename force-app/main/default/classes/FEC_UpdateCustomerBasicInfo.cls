@@ -339,7 +339,8 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
         FEC_Updated_Info_Gender__c,
         FEC_Account_or_Contract__r.FEC_CIF_Number__c,
         FEC_Process_Action_Count__c,
-        FEC_Current_Case_Stage__r.Name
+        FEC_Current_Case_Stage__r.Name,
+        FEC_Is_Test_API__c 
       FROM Case
       WHERE Id = :caseId
     ];
@@ -384,27 +385,35 @@ public with sharing class FEC_UpdateCustomerBasicInfo {
     }
 
     UpdateResult result = updateCustomerBasicInfo(info);
-
-    if (result.success) {
-      selectedCase.FEC_Process_Action_Count__c = -1;
-    } else {
-      if (selectedCase.FEC_Process_Action_Count__c == null) {
-        selectedCase.FEC_Process_Action_Count__c = 0;
-      }
-
+    
+    // init nếu null
+    if (selectedCase.FEC_Process_Action_Count__c == null) {
+      selectedCase.FEC_Process_Action_Count__c = 0;
+    }
+    
+    if (selectedCase.FEC_Is_Test_API__c) {
       selectedCase.FEC_Process_Action_Count__c += 1;
+    } else {
+      if (result.success) {
+        selectedCase.FEC_Process_Action_Count__c = -1;
+      } else {
+        selectedCase.FEC_Process_Action_Count__c += 1;
+      }
+      
     }
 
     update selectedCase;
 
     result.actionCount = selectedCase.FEC_Process_Action_Count__c;
-
-    FEC_CommonUltils.createProcessActionHistory(
-      method,
-      selectedCase,
-      result.success
-    );
-
+    
+    if (!selectedCase.FEC_Is_Test_API__c) {
+      FEC_CommonUltils.createProcessActionHistory(
+        method,
+        selectedCase,
+        result.success
+      );
+    }
+    
     return result;
   }
 }

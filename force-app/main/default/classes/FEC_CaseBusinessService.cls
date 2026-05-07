@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
   /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
@@ -280,6 +281,17 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+      result.lockApiLwcsAfterRevertToDefaultStage = false;
+      if (!historylst.isEmpty() && REVERT.equals(historylst.get(0).FEC_Routing_Action__c)) {
+        FEC_Routing_Action_History__c hRevert = historylst.get(0);
+        result.lockApiLwcsAfterRevertToDefaultStage =
+          hRevert.FEC_Next_Stage__c != null &&
+          hRevert.FEC_Next_Stage__c == selectedCase.FEC_Current_Case_Stage__c &&
+          hRevert.FEC_Next_Stage__r != null &&
+          hRevert.FEC_Next_Stage__r.FEC_Default_Stage__c == true;
+      }
+
       //thangtv
       result.lastUser = resolveLastUserForRevertDecisionDisplay(
         selectedCase.Id,
@@ -494,6 +506,10 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
+      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
+        selectedCase.Id,
+        selectedStage.Id
+      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -581,6 +597,12 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
+              if (
+                forceReadonlyIncorrectPaymentOnLatestRevert &&
+                LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
+              ) {
+                lwcSlot.fecMasterDataSettingIsEdit = false;
+              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -814,6 +836,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
+          FEC_CaseTriggerHandler.isSystemUpdate = true;
           update selectedCase;
         } catch (DmlException e) {
           // User có thể không có quyền sửa Case (vd: Case đã assign Queue). Vẫn trả result để hiển thị section.
@@ -3104,6 +3127,24 @@ public without sharing class FEC_CaseBusinessService {
     return out;
   }
 
+  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+    if (caseId == null || currentStageId == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertHist = [
+      SELECT Id
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Next_Stage__c = :currentStageId
+        AND FEC_Next_Stage__c != NULL
+        AND FEC_IsReverted__c = true
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    return !latestRevertHist.isEmpty();
+  }
+
   private static Field transform(
     Sobject masterDataItem,
     SObject objTemp,
@@ -3286,6 +3327,11 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     //thangtv
     public String lastUserForRouteToLabel;
+
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-1162
+    /** LWC fec_CaseBussiness: khóa fec_IPPConversionRetailForm / fec_CardClosureRefundForm sau Revert về default stage. */
+    @AuraEnabled
+    public Boolean lockApiLwcsAfterRevertToDefaultStage;
 
     @AuraEnabled
     public String draftRoutingActionCode;
@@ -4301,53 +4347,10 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    Set<Id> allAssociatedIds = new Set<Id>{ userId };
+    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
 
-    // BƯỚC 1: Thu thập tất cả ID đại diện cho User (User ID, Role, Public Groups, v.v.)
-    if (roleId != null) {
-        Set<Id> roleIds = new Set<Id>{ roleId };
-        Map<Id, Id> roleToParentMap = new Map<Id, Id>();
-        
-        // Lấy toàn bộ cấu trúc Role để tìm Parent Roles
-        for (UserRole ur : [SELECT Id, ParentRoleId FROM UserRole]) {
-            roleToParentMap.put(ur.Id, ur.ParentRoleId);
-        }
-        
-        // Duyệt ngược lên để lấy toàn bộ Parent Roles
-        Id currentRoleId = roleId;
-        while (roleToParentMap.get(currentRoleId) != null) {
-            currentRoleId = roleToParentMap.get(currentRoleId);
-            roleIds.add(currentRoleId);
-        }
-
-        // Gộp query lấy Group của Role và RoleAndSubordinates làm 1
-        for (Group g : [
-            SELECT Id, Type, RelatedId 
-            FROM Group 
-            WHERE RelatedId IN :roleIds AND Type IN ('Role', 'RoleAndSubordinates')
-        ]) {
-            if (g.Type == 'RoleAndSubordinates' || (g.Type == 'Role' && g.RelatedId == roleId)) {
-                allAssociatedIds.add(g.Id);
-            }
-        }
-    }
-
-    // Quét các Public Groups lồng nhau (Nested Public Groups)
-    Integer previousSize;
-    do {
-        previousSize = allAssociatedIds.size();
-        for (GroupMember gm : [
-            SELECT GroupId 
-            FROM GroupMember 
-            WHERE UserOrGroupId IN :allAssociatedIds AND Group.Type = 'Regular'
-        ]) {
-            allAssociatedIds.add(gm.GroupId);
-        }
-    } while (allAssociatedIds.size() > previousSize);
-
-    // BƯỚC 2: Lấy Tên (Name) của các Queue này để map sang Custom Object
-    List<Group> userQueues = [
-        SELECT Name, DeveloperName  
+    return [
+        SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
         AND Id IN (
@@ -4357,54 +4360,6 @@ public without sharing class FEC_CaseBusinessService {
         )
     ];
 
-    Set<String> currentQueueNames = new Set<String>();
-    for (Group g : userQueues) {
-        currentQueueNames.add(g.DeveloperName);
-    }
-
-    if (currentQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
-    List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT FEC_Name__c 
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Queue_Name__c IN :currentQueueNames
-    ];
-
-    Set<String> teamNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.FEC_Name__c);
-    }
-
-    if (teamNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 4: Lấy danh sách Tên Queue (FEC_Queue_Name__c) thuộc các Team Name tìm được
-    List<FEC_Team_Queue__c> allQueuesInTeam = [
-        SELECT FEC_Queue_Name__c
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Name__c IN :teamNames
-    ];
-
-    Set<String> targetQueueNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : allQueuesInTeam) {
-        targetQueueNames.add(tq.FEC_Queue_Name__c);
-    }
-
-    if (targetQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 5: Query bảng Group để trả về Id và Name thật của Queue
-    return [
-        SELECT Id, Name, DeveloperName
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
-        ORDER BY Name ASC
-    ];
 }
 
   private static Section buildAccountInfor(Case c) {

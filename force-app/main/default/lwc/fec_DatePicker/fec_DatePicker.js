@@ -16,15 +16,23 @@ export default class Fec_DatePicker extends LightningElement {
     /** Label hiển thị trên input (aria) */
     @api label = '';
 
+    /** Ngày tối đa được chọn (YYYY-MM-DD). Rỗng = không giới hạn. */
+    @api maxDate;
+
     /** Giá trị hiện tại dạng YYYY-MM-DD */
     @api
     get value() {
         return this._value;
     }
     set value(v) {
-        this._value = v || '';
-        if (v) {
-            const d = new Date(v + 'T00:00:00');
+        let val = v || '';
+        const max = this._maxDateStr;
+        if (val && max && val > max) {
+            val = max;
+        }
+        this._value = val;
+        if (val) {
+            const d = new Date(val + 'T00:00:00');
             this.viewYear  = d.getFullYear();
             this.viewMonth = d.getMonth();
         }
@@ -36,6 +44,13 @@ export default class Fec_DatePicker extends LightningElement {
     @track viewMonth = new Date().getMonth();
 
     _value = '';
+
+    /** Đóng popup — gọi từ parent khi mở picker khác */
+    @api
+    closeCalendar() {
+        this.isOpen = false;
+        this.showYearMonthPicker = false;
+    }
 
     /* ── Computed ─────────────────────────────────────────── */
 
@@ -65,6 +80,28 @@ export default class Fec_DatePicker extends LightningElement {
         }));
     }
 
+    get _maxDateStr() {
+        const m = this.maxDate;
+        return m != null && String(m).trim() !== '' ? String(m).trim() : null;
+    }
+
+    /** Không cho next tháng nếu cả tháng sau đều sau maxDate */
+    get disableNextMonth() {
+        const max = this._maxDateStr;
+        if (!max) return false;
+        const firstNextMonth = new Date(this.viewYear, this.viewMonth + 1, 1);
+        const maxD = new Date(`${max}T00:00:00`);
+        return firstNextMonth > maxD;
+    }
+
+    /** Không cho next năm trong year picker nếu năm sau hoàn toàn sau maxDate */
+    get disableNextYear() {
+        const max = this._maxDateStr;
+        if (!max) return false;
+        const firstJanNextYear = new Date(this.viewYear + 1, 0, 1);
+        return firstJanNextYear > new Date(`${max}T00:00:00`);
+    }
+
     get calendarDays() {
         const year  = this.viewYear;
         const month = this.viewMonth;
@@ -74,6 +111,7 @@ export default class Fec_DatePicker extends LightningElement {
 
         const today = this._toIso(new Date());
         const selected = this._value;
+        const maxStr = this._maxDateStr;
 
         const cells = [];
 
@@ -85,6 +123,7 @@ export default class Fec_DatePicker extends LightningElement {
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             let cls = 'day-cell';
+            if (maxStr && dateStr > maxStr) cls += ' disabled';
             if (dateStr === selected) cls += ' selected';
             if (dateStr === today)    cls += ' today';
             const ariaLabel = `${String(d).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
@@ -98,7 +137,15 @@ export default class Fec_DatePicker extends LightningElement {
 
     toggleCalendar() {
         this.isOpen = !this.isOpen;
-        if (this.isOpen) this.showYearMonthPicker = false;
+        if (this.isOpen) {
+            this.showYearMonthPicker = false;
+            this.dispatchEvent(
+                new CustomEvent('pickeropen', {
+                    bubbles: true,
+                    composed: true
+                })
+            );
+        }
     }
 
     toggleYearMonthPicker() {
@@ -111,12 +158,16 @@ export default class Fec_DatePicker extends LightningElement {
     }
 
     nextMonth() {
+        if (this.disableNextMonth) return;
         if (this.viewMonth === 11) { this.viewMonth = 0; this.viewYear++; }
         else this.viewMonth++;
     }
 
     prevYear() { this.viewYear--; }
-    nextYear()  { this.viewYear++; }
+    nextYear() {
+        if (this.disableNextYear) return;
+        this.viewYear++;
+    }
 
     selectMonth(e) {
         this.viewMonth = parseInt(e.currentTarget.dataset.month, 10);
@@ -124,15 +175,18 @@ export default class Fec_DatePicker extends LightningElement {
     }
 
     selectDay(e) {
+        if (e.currentTarget.classList.contains('disabled')) return;
         const dateStr = e.currentTarget.dataset.date;
         if (!dateStr) return;
+        const maxStr = this._maxDateStr;
+        if (maxStr && dateStr > maxStr) return;
         this._value = dateStr;
-        this.isOpen = false;
+        this.closeCalendar();
         this._fireChange(dateStr);
     }
 
     handleKeyDown(e) {
-        if (e.key === 'Escape') this.isOpen = false;
+        if (e.key === 'Escape') this.closeCalendar();
     }
 
     /* ── Utils ────────────────────────────────────────────── */

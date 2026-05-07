@@ -1217,6 +1217,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Routing_Action__c.FEC_Routing_Action_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1240,7 +1245,6 @@
         <field>FEC_Routing_Assignment__c.FEC_Customer_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Routing_Assignment__c.FEC_Queue__c</field>
@@ -1947,7 +1951,6 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>

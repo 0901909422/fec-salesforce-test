@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Collections_Complaint_Issue_4__c</fullName>
+    <description>Vấn đề khiếu nại liên quan thu hồi nợ (4)</description>
+    <label>Collections Complaint Issue 4</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Các loại phí, lãi phát sinh</fullName>
+                <default>false</default>
+                <label>Các loại phí, lãi phát sinh</label>
+            </value>
+            <value>
+                <fullName>Chương trình khuyến mãi</fullName>
+                <default>false</default>
+                <label>Chương trình khuyến mãi</label>
+            </value>
+            <value>
+                <fullName>Hình thức thanh toán</fullName>
+                <default>false</default>
+                <label>Hình thức thanh toán</label>
+            </value>
+            <value>
+                <fullName>Khoản thanh toán đến hạn</fullName>
+                <default>false</default>
+                <label>Khoản thanh toán đến hạn</label>
+            </value>
+            <value>
+                <fullName>Khoản thanh toán tối thiểu</fullName>
+                <default>false</default>
+                <label>Khoản thanh toán tối thiểu</label>
+            </value>
+            <value>
+                <fullName>Số tiền kỳ góp</fullName>
+                <default>false</default>
+                <label>Số tiền kỳ góp</label>
+            </value>
+            <value>
+                <fullName>Số tiền thanh lý thẻ</fullName>
+                <default>false</default>
+                <label>Số tiền thanh lý thẻ</label>
+            </value>
+            <value>
+                <fullName>Thời hạn thanh toán</fullName>
+                <default>false</default>
+                <label>Thời hạn thanh toán</label>
+            </value>
+            <value>
+                <fullName>Thông tin thẻ RS</fullName>
+                <default>false</default>
+                <label>Thông tin thẻ RS</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

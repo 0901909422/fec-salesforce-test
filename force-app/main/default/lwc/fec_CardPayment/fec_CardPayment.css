@@ -159,5 +159,14 @@ span.slds-text-color_error,
 }
 
 .card-payment-empty {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     color: #706e6b;
+}
+
+.card-payment-empty p {
+    margin: 0;
 }

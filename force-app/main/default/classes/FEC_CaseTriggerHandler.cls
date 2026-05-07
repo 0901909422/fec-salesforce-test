@@ -7,6 +7,7 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
+    public static Boolean isSystemUpdate = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -98,6 +99,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterInsert(List<Case> newCases) {
         isExecuting = true;
+        updateLastModified(newCases, null);
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -120,6 +122,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
         if (!FEC_GetNextWorkController.isGetNextWork) {
@@ -1012,6 +1015,30 @@ public without sharing class FEC_CaseTriggerHandler {
             if (String.isBlank(caseIns.ArchiveExternalId__c)) {
                 listCase.add(caseIns);
             }
+        }
+    }
+
+    private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> caseUpdates = new List<Case>();
+        for (Case c : newCases) {
+            if (isSystemUpdate) {
+                continue;
+            }
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                if (c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                    continue;
+                }
+            }
+            Case caseUpdate = new Case(
+                Id = c.Id,
+                FEC_Last_Updated_By_View__c = c.FEC_Last_Updated_By__c,
+                FEC_Last_Updated_On_View__c = c.FEC_Last_Updated_On__c
+            );
+            caseUpdates.add(caseUpdate);
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
         }
     }
 }
