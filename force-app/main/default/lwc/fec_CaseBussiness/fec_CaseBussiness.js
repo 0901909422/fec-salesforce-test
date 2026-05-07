@@ -1213,9 +1213,18 @@ export default class Fec_CaseBussiness extends LightningElement {
       // (fec_CaseEditNOC đã tự xử lý)
       return;
     }
+      //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+      //lưu bộ có subcode chứ không phải bộ không subcode định submit
+    const hasNocSelectionPayload =
+      Object.prototype.hasOwnProperty.call(message, 'productTypeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'categoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCategoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCodeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'natureOfCaseId');
 
-    if (message.subCodeId) {
-      // NOC update từ Updated Information section
+    if (hasNocSelectionPayload) {
+      // NOC update từ Updated Information section.
+      // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
       this._handleNOCUpdate(message);
     }
   }
@@ -1354,7 +1363,18 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (!res) return;
 
         let sectionlst = [];
-        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        // NOC payload can carry 3 states for natureOfCaseId: undefined/null/id.
+        // Only override when payload explicitly provides this field.
+        const hasNocSelectionPayload =
+          productTypeId !== null ||
+          categoryId !== null ||
+          subCategoryId !== null ||
+          subCodeId !== null;
+        const hasExplicitNatureFallback = natureOfCaseIdFallback !== undefined;
+        const natureOfCase =
+          hasNocSelectionPayload && hasExplicitNatureFallback
+            ? natureOfCaseIdFallback
+            : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
@@ -3100,7 +3120,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               this.publishPinReissueResult("ERROR",msgError);
           }
           // PhuongNT send message process action Card to NOC
-          if (this.processActionMethod == ACTION_BLOCK_CARD 
+          if (this.processActionMethod == ACTION_BLOCK_CARD
             || this.processActionMethod == ACTION_UNBLOCK_CARD
             || this.processActionMethod == ACTION_REPLACE_CARD
           ) {
