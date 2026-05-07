@@ -15209,7 +15209,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Duplicate Queue Error</shortDescription>
-        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+        <value>Không thể tạo trùng Assignment cho cùng 1 rổ công việc của đơn vị.</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Remarks_History</fullName>
@@ -15221,11 +15221,11 @@
     </labels>
     <!-- tungnm37 thêm: Channel Config labels -->
     <labels>
-        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <fullName>FEC_Confirm_Before_Submit</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Duplicate Queue Error</shortDescription>
-        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+        <shortDescription>Confirm Before Submit</shortDescription>
+        <value>Vui lòng Confirm Team/Queue trước khi Submit.</value>
     </labels>
     <labels>
         <fullName>FEC_Channel_Config_Save_Success</fullName>

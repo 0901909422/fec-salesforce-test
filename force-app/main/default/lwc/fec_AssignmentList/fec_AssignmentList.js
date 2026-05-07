@@ -3,6 +3,7 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -170,20 +171,33 @@ export default class Fec_AssignmentList extends LightningElement {
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
+
+      // tungnm37: resolve queue names cho assignments có FEC_OwnerID__c
+      const queueIds = [...new Set(result.filter(a => a.FEC_OwnerID__c).map(a => a.FEC_OwnerID__c))];
+      let queueNameMap = {};
+      if (queueIds.length > 0) {
+        queueNameMap = await getQueueNames({ queueIds });
+      }
+
       this.assignments = result.map((item) => ({
         id: item.Id,
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_Assignment_Owner__c?.startsWith("00G")
-          ? item.FEC_Assignment_Owner__r?.Name
-          : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "",
+        owner: item.FEC_OwnerID__c && queueNameMap[item.FEC_OwnerID__c]
+          ? queueNameMap[item.FEC_OwnerID__c] // tungnm37: hiện queue name
+          : (item.FEC_Assignment_Owner__c?.startsWith("00G")
+              ? item.FEC_Assignment_Owner__r?.Name
+              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")), // tungnm37: fallback user email prefix
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
-          item.FEC_Assignment_Status__c === OPEN_STATUS
-            ? NEW_STATUS
-            : item.FEC_Assignment_Status__c,
+          // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
+          item.FEC_Assignment_Type__c === 'Routing' && item.FEC_Assignment_Status__c === OPEN_STATUS
+            ? OPEN_STATUS
+            : item.FEC_Assignment_Status__c === OPEN_STATUS
+              ? NEW_STATUS
+              : item.FEC_Assignment_Status__c,
 
         isOpen: false,
 

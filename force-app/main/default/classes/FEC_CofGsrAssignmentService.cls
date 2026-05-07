@@ -182,7 +182,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
                     FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
                     FEC_OwnerID__c = queueId,
-                    FEC_Assignment_Owner__c = currentUser.Id,
+                    FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
                     FEC_Assignment_Remark__c = remarkContent,
                     FEC_User_Role__c = userRoleName,
@@ -192,13 +192,26 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             insert assignments;
 
+            // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c để list view dùng
+            List<String> queueIdList = new List<String>();
+            for (FEC_Assignment__c a : assignments) {
+                if (String.isNotBlank(a.FEC_OwnerID__c)) queueIdList.add(a.FEC_OwnerID__c);
+            }
+            if (!queueIdList.isEmpty()) {
+                try {
+                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(queueIdList, ',')), AccessLevel.SYSTEM_MODE);
+                } catch (Exception eu) {
+                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c error: ' + eu.getMessage());
+                }
+            }
+
             List<FEC_Case_Remarks__c> remarksToInsert = new List<FEC_Case_Remarks__c>();
             for (FEC_Assignment__c a : assignments) {
                 remarksToInsert.add(new FEC_Case_Remarks__c(
                     FEC_Case__c = caseId,
                     FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkContent,
-                    FEC_User__c = remarkUserEmail,
+                    FEC_User__c = emailLocalPart(remarkUserEmail), // tungnm37 sửa: lấy phần trước @
                     FEC_Assignment__c = a.Id,
                     FEC_Stage_Name__c = stageName
                 ));
@@ -255,8 +268,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                 if (String.isNotBlank(qn)) queueNames.add(qn);
             }
             Map<String, Id> queueNameToId = new Map<String, Id>();
-            for (Group g : [SELECT Id, Name FROM Group WHERE Name IN :queueNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
-                queueNameToId.put(g.Name, g.Id);
+            Map<String, String> queueDevNameToDisplayName = new Map<String, String>(); // tungnm37: DeveloperName → display name
+            for (Group g : [SELECT Id, Name, DeveloperName FROM Group WHERE DeveloperName IN :queueNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+                queueNameToId.put(g.DeveloperName, g.Id);
+                queueDevNameToDisplayName.put(g.DeveloperName, g.Name); // tungnm37: map DeveloperName → display name
             }
 
             String userRoleName = currentUser.UserRole?.Name;
@@ -281,7 +296,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
                     FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
                     FEC_OwnerID__c = queueId,
-                    FEC_Assignment_Owner__c = currentUser.Id,
+                    FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
                     FEC_User_Role__c = userRoleName,
@@ -289,9 +304,22 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
-                queueNameList.add(queueName);
+                queueNameList.add(queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName); // tungnm37: lưu display name cho history
             }
             insert assignments;
+
+            // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c
+            List<String> queueIdListM = new List<String>();
+            for (FEC_Assignment__c a : assignments) {
+                if (String.isNotBlank(a.FEC_OwnerID__c)) queueIdListM.add(a.FEC_OwnerID__c);
+            }
+            if (!queueIdListM.isEmpty()) {
+                try {
+                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(queueIdListM, ',')), AccessLevel.SYSTEM_MODE);
+                } catch (Exception eu) {
+                    System.debug('FEC_DEBUG update FEC_Assignment_Users__c (manual) error: ' + eu.getMessage());
+                }
+            }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
             for (Integer i = 0; i < assignments.size(); i++) {
@@ -299,7 +327,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkList[i],
-                    FEC_User__c = currentUser.Email,
+                    FEC_User__c = emailLocalPart(currentUser.Email), // tungnm37 sửa: lấy phần trước @
                     FEC_Assignment__c = assignments[i].Id,
                     FEC_Stage_Name__c = stageName
                 ));

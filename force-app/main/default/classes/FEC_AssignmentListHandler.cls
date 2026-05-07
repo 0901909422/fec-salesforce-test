@@ -38,7 +38,9 @@ public with sharing class FEC_AssignmentListHandler {
                 FEC_Assignment_Owner__c,
                 FEC_Assignment_Owner__r.Name,
                 FEC_Assignment_Owner__r.Email,
-                FEC_Assignment_Status__c
+                FEC_Assignment_Status__c,
+                FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
+                FEC_Assignment_Type__c // tungnm37 thêm: để phân biệt COF/GSR vs thường
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
         ];
@@ -159,6 +161,21 @@ public with sharing class FEC_AssignmentListHandler {
             result.add(new SelectOptionWrapper(g.Id, g.Name));
         }
         
+        return result;
+    }
+
+    // tungnm37 thêm: lấy queue name từ danh sách Queue Ids
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getQueueNames(List<String> queueIds) {
+        Map<String, String> result = new Map<String, String>();
+        if (queueIds == null || queueIds.isEmpty()) return result;
+        Set<Id> ids = new Set<Id>();
+        for (String qid : queueIds) {
+            try { ids.add(Id.valueOf(qid)); } catch(Exception e) {}
+        }
+        for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :ids AND Type = 'Queue']) {
+            result.put(String.valueOf(g.Id), g.Name);
+        }
         return result;
     }
 }
