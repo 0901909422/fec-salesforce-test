@@ -25,6 +25,7 @@
         <members>FEC_AssignmentRoutingActionHandler</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_HoldCaseController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -626,6 +627,7 @@
         <members>FEC_Assignment_Id</members>
         <!-- Interaction Case Service Case -->
         <members>FEC_RelevantTicket_Cannot_Delete</members>
+		<members>FEC_Reason_Error</members>
         <name>CustomLabel</name>
     </types>
 	<types>
