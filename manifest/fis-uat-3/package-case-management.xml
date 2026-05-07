@@ -480,11 +480,13 @@
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
+        <members>fec_CommonUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
-        <members>FEC_Case_Action__c</members>
+        <members>FEC_Assignment_Mode</members>
+        <members>FEC_CaseAction</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -842,6 +844,41 @@
     <types>
         <members>case sla main</members>
         <name>EntitlementProcess</name>
+    </types>
+    <types>
+        <members>Case</members>
+        <name>Workflow</name>
+    </types>
+    <types>
+        <members>Case.Case24h</members>
+        <members>Case.ChangePriorityToHigh</members>
+        <members>Case.Update_Case_1104h_Violating</members>
+        <members>Case.Update_Case_1104h_Warning</members>
+        <members>Case.Update_Case_1872h_Violating</members>
+        <members>Case.Update_Case_1872h_Warning</members>
+        <members>Case.Update_Case_24h</members>
+        <members>Case.Update_Case_24h_SLA_Violating</members>
+        <members>Case.Update_Case_24h_SLA_Warning</members>
+        <members>Case.Update_Case_24h_Violating</members>
+        <members>Case.Update_Case_24h_Warning</members>
+        <members>Case.Update_Case_336h_Violating</members>
+        <members>Case.Update_Case_336h_Warning</members>
+        <members>Case.Update_Case_360h_Violating</members>
+        <members>Case.Update_Case_360h_Warning</members>
+        <members>Case.Update_Case_48h_1</members>
+        <members>Case.Update_Case_48h_1_SLA_Violating</members>
+        <members>Case.Update_Case_48h_1_SLA_Warning</members>
+        <members>Case.Update_Case_48h_1_SLA_Warning_1</members>
+        <members>Case.Update_Case_48h_1_Violating</members>
+        <members>Case.Update_Case_48h_2_SLA_Violating_1</members>
+        <members>Case.Update_Case_48h_2_Violating</members>
+        <members>Case.Update_Case_48h_2_Violating_1</members>
+        <members>Case.Update_Case_48h_2_Warning</members>
+        <members>Case.Update_Case_72h_Violating</members>
+        <members>Case.Update_Case_72h_Warning</members>
+        <members>Case.Update_Case_96h_Violating</members>
+        <members>Case.Update_Case_96h_Warning</members>
+        <name>WorkflowFieldUpdate</name>
     </types>
 	<version>66.0</version>
 </Package>
