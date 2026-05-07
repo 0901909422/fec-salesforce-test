@@ -382,6 +382,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleMessage(message) {
     if (!message || typeof message.isModeEdit === "undefined") return;
+
+    // 🚫 API success rồi thì không cho edit nữa
+    if (this.isDisableNOC) {
+      return;
+    }
+
     const nextModeEdit = message.isModeEdit === true;
     const prevModeEdit = this.modeEditCase === true;
     this.modeEditCase = nextModeEdit;

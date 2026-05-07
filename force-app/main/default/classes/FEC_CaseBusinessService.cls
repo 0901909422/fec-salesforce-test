@@ -1,5 +1,6 @@
 public without sharing class FEC_CaseBusinessService {
   public static final String TYPE_LWC = 'LWC';
+  public static final String LWC_INCORRECT_PAYMENT_FORM = 'fec_IncorrectPaymentForm';
 
   public static final String ROUTE_TO = 'Route to';
   /** Routing Action History khi đổi Owner (UI/API), không phải luồng Route to nghiệp vụ. */
@@ -499,6 +500,10 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
+      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
+        selectedCase.Id,
+        selectedStage.Id
+      );
 
       // ============================= GET MASTET DATA SETTING ===========================
       if (err.errorlst.isEmpty()) {
@@ -586,6 +591,12 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
+              if (
+                forceReadonlyIncorrectPaymentOnLatestRevert &&
+                LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
+              ) {
+                lwcSlot.fecMasterDataSettingIsEdit = false;
+              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -3050,6 +3061,24 @@ public without sharing class FEC_CaseBusinessService {
         out
     );
     return out;
+  }
+
+  private static Boolean isLatestRevertToCurrentStage(Id caseId, Id currentStageId) {
+    if (caseId == null || currentStageId == null) {
+      return false;
+    }
+    List<FEC_Routing_Action_History__c> latestRevertHist = [
+      SELECT Id
+      FROM FEC_Routing_Action_History__c
+      WHERE
+        FEC_Case__c = :caseId
+        AND FEC_Next_Stage__c = :currentStageId
+        AND FEC_Next_Stage__c != NULL
+        AND FEC_IsReverted__c = true
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    return !latestRevertHist.isEmpty();
   }
 
   private static Field transform(
