@@ -1719,11 +1719,9 @@ export default class Fec_CaseBussiness extends LightningElement {
         (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-293
     if (obj && obj.name === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER && field) {
-      const trimmed =
-        value == null || value === STR_EMPTY ? STR_EMPTY : String(value).trim();
-      field.customError =
-        trimmed === STR_EMPTY ? null : /^\d+$/.test(trimmed) ? null : FEC_MSG_Param_Must_Number.replace("{0}", field.label || FIELD_FEC_REF_NUMBER);
+      field.customError = null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);
