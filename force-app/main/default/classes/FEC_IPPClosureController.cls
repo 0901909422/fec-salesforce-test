@@ -75,7 +75,6 @@ public without sharing class FEC_IPPClosureController {
                 WHERE FEC_Customer_History__c = :customerHistoryId
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
-                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                   AND Id NOT IN (
                       SELECT FEC_IPP_To_Close__c
                       FROM Case
