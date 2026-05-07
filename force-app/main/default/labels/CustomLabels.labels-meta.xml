@@ -15219,4 +15219,123 @@
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
     </labels>
+    <labels>
+        <fullName>FEC_Agent_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Code</shortDescription>
+        <value>Agent Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_DOB</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer DOB</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_NID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer NID</shortDescription>
+        <value>Buyer NID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer Name</shortDescription>
+        <value>Buyer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Date</shortDescription>
+        <value>Cancel Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Effective_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Expiry_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Expiry Date</shortDescription>
+        <value>Expiry Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Company</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Company</shortDescription>
+        <value>Insurance Company</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment ID</shortDescription>
+        <value>Payment ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Policy_Number</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Policy Number</shortDescription>
+        <value>Policy Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Premium_Free</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Premium Free</shortDescription>
+        <value>Premium Free</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Name</shortDescription>
+        <value>Product Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sales_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Channel</shortDescription>
+        <value>Sales Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Id</shortDescription>
+        <value>User ID</value>
+    </labels>
 </CustomLabels>
