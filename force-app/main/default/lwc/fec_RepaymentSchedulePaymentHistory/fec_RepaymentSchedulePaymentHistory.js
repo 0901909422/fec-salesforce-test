@@ -174,6 +174,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         return !this.errorMessage;
     }
 
+    get repaymentScheduleError() {
+        return this.sectionData.repaymentScheduleError === true;
+    }
+
     /* Payment History: Total Payment Amount (màu đỏ) + bảng 6 cột */
     get paymentHistoryTotalAmount() {
         const totals = this.sectionData.paymentHistoryTotals || {};
@@ -452,6 +456,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                     paymentHistoryTable: data.paymentHistoryTable || [],
                     realTimePaymentTable: realTime,
                     repaymentSchedulePaymentHistory: data.repaymentSchedulePaymentHistory || [],
+                    repaymentScheduleError: data.repaymentScheduleError === true,
                 };
                 this.section4Data = {
                     repaymentScheduleTable: data.repaymentScheduleTable || [],
