@@ -31,6 +31,8 @@ import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particula
 import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
+import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
+
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
 const SECTION4_TYPE_PAYMENT = 'Payment History';
@@ -38,6 +40,15 @@ const SECTION4_TYPE_PAYMENT = 'Payment History';
 /** Ô trống / placeholder từ API (giống HYPHEN Apex). */
 const isRepayEmptyCell = (value) =>
     value == null || String(value).trim() === '' || String(value).trim() === SECTION4_EMPTY_CELL;
+
+/** Chuỗi số từ Apex (vd. 477,000) → hiển thị en-US 2 thập phân (477,000.00). */
+const formatPaymentHistoryAmount = (value) => {
+    if (isRepayEmptyCell(value)) return SECTION4_EMPTY_CELL;
+    const num =
+        typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
+    if (Number.isNaN(num)) return String(value);
+    return formatCurrency2(num);
+};
 
 /**
  * Bỏ dòng Payment History do max(basicPh, secPh, payments) tạo thêm: chỉ còn paymentNo.
@@ -52,8 +63,6 @@ const isPaymentHistoryMeaningfulRow = (row) => {
         isRepayEmptyCell(row.paymentChannel)
     );
 };
-
-import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
 
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
@@ -165,6 +174,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         return !this.errorMessage;
     }
 
+    get repaymentScheduleError() {
+        return this.sectionData.repaymentScheduleError === true;
+    }
+
     /* Payment History: Total Payment Amount (màu đỏ) + bảng 6 cột */
     get paymentHistoryTotalAmount() {
         const totals = this.sectionData.paymentHistoryTotals || {};
@@ -220,6 +233,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 Id: 'ph-' + i,
                 ...row,
                 paymentNo: i + 1,
+                paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
             };
         });
     }
@@ -274,6 +288,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         return sorted.map((row, i) => ({
             Id: 'rt-' + (row.rowIndex != null ? row.rowIndex : i + 1),
             ...row,
+            paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
         }));
     }
 
@@ -367,7 +382,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 paymentNo: (p.paymentNo != null && p.paymentNo !== '') ? String(p.paymentNo) : e,
                 paymentDate: paymentDateVal,
                 bookingDate: (p.bookingDate != null && p.bookingDate !== '') ? p.bookingDate : e,
-                paymentAmount: (p.paymentAmount != null && p.paymentAmount !== '') ? p.paymentAmount : e,
+                paymentAmount:
+                    p.paymentAmount != null && p.paymentAmount !== ''
+                        ? formatPaymentHistoryAmount(p.paymentAmount)
+                        : e,
                 particulars: (p.particulars != null && p.particulars !== '') ? p.particulars : e,
                 paymentChannel: (p.paymentChannel != null && p.paymentChannel !== '') ? p.paymentChannel : e,
             });
@@ -438,6 +456,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                     paymentHistoryTable: data.paymentHistoryTable || [],
                     realTimePaymentTable: realTime,
                     repaymentSchedulePaymentHistory: data.repaymentSchedulePaymentHistory || [],
+                    repaymentScheduleError: data.repaymentScheduleError === true,
                 };
                 this.section4Data = {
                     repaymentScheduleTable: data.repaymentScheduleTable || [],

@@ -30,6 +30,8 @@ import getProductTypelst from "@salesforce/apex/FEC_CaseEditNOCController.getPro
 import getCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getCategorylst";
 import getSubCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCategorylst";
 import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodelst";
+//HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
+import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
@@ -55,6 +57,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   _isInternalRequest = false;
   _internalProductTypeId = null;
   _internalApplied = false;
+  
+  //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
+  isDisableNOC = false;
+
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
@@ -210,10 +216,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
+
+         // 👉 FIX: đặt ở đây
+        if (this.isDisableNOC) {
+          this.handleDisableResetPinSuccess("category");
+          this.handleDisableResetPinSuccess("sub-category");
+          this.handleDisableResetPinSuccess("sub-code");
+        }
+
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
         // [NOC-HANDLING-STAGE-UPDATE]: Khi đã submit, kiểm tra Auto-Routing Assignment
         // và pre-populate Updated section với giá trị hiện tại của Case
@@ -415,9 +430,23 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
   handleMessageResetPin(message) {
-      this.handleDisableResetPinSuccess("category");
-      this.handleDisableResetPinSuccess("sub-category");
-      this.handleDisableResetPinSuccess("sub-code");
+    this.handleDisableResetPinSuccess("category");
+    this.handleDisableResetPinSuccess("sub-category");
+    this.handleDisableResetPinSuccess("sub-code");
+
+    saveNOC({
+        recordId: this.recordId,
+        productTypeId: this.productTypeSelectedId,
+        categoryId: this.categorySelectedId,
+        subCategoryId: this.subCategorySelectedId,
+        subCodeId: this.subCodeSelectedId
+    })
+    .then(() => {
+        console.log('Save NOC success');
+    })
+    .catch(error => {
+        console.error('Save NOC failed:', error);
+    });
   }
 
   async handlePublishMessageChanel() {
@@ -435,6 +464,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleMessage(message) {
     if (!message || typeof message.isModeEdit === "undefined") return;
+
+    // 🚫 API success rồi thì không cho edit nữa
+    if (this.isDisableNOC) {
+      return;
+    }
+
     const nextModeEdit = message.isModeEdit === true;
     const prevModeEdit = this.modeEditCase === true;
     this.modeEditCase = nextModeEdit;

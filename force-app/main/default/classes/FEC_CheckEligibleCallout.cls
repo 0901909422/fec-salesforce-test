@@ -7,6 +7,8 @@
 * Ver      Date           Author              Modification
 * ===============================================================
    1.0      2026-03-23     LongNH76             Create
+   1.1      2026-05-04     LongNH76             Change Mess Valid
+* ===============================================================
  
 ****************************************************************************************/
 
@@ -195,10 +197,12 @@ public without sharing class FEC_CheckEligibleCallout {
      * Validates input parameters before making the callout.
      */
     private static void validateRequest(String idCardNumber) {
-
-        if (String.isNotBlank(idCardNumber) &&
-            !Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
+        if (String.isBlank(idCardNumber)) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CardNumber'}));
+        }
+
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
+            throw new CalloutException(System.Label.FEC_MSG_National_ID_Invalid);
         }
     }
 

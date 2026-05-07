@@ -10,6 +10,7 @@ import getEligibleTransactions from '@salesforce/apex/FEC_IPPConversionControlle
 import checkIPPDetails from '@salesforce/apex/FEC_IPPConversionController.checkIPPDetails';
 import convertIPP from '@salesforce/apex/FEC_IPPConversionController.convertIPP';
 import convertIPPManualRetail from '@salesforce/apex/FEC_IPPConversionController.convertIPPManualRetail';
+import getConvertActionStatus from '@salesforce/apex/FEC_IPPConversionController.getConvertActionStatus';
 import FEC_MSG_IPP_Conversion_Success from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Success';
 import FEC_MSG_IPP_Conversion_Fail_Retry from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Fail_Retry';
 import FEC_MSG_IPP_Conversion_Fail_Disable from '@salesforce/label/c.FEC_MSG_IPP_Conversion_Fail_Disable';
@@ -147,6 +148,23 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     connectedCallback() {
         this.loadEligibleTransactions();
+        this.loadConvertActionStatus();
+    }
+
+    loadConvertActionStatus() {
+        if (!this.recordId) {
+            return;
+        }
+        getConvertActionStatus({ caseId: this.recordId })
+            .then((res) => {
+                const actionCount = res?.actionCount;
+                if (actionCount != null) {
+                    this.retryCount = Number(actionCount);
+                }
+                this.convertDisabled = !(res?.canConvert !== false);
+            })
+            .catch(() => {
+            });
     }
 
     loadEligibleTransactions() {
@@ -251,7 +269,8 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                     this.showToast(FEC_Success_Title, FEC_MSG_IPP_Conversion_Success, CONST.VARIANT_SUCCESS);
                     this.navigateToCase();
                 } else {
-                    this.retryCount += 1;
+                    const actionCount = res?.actionCount;
+                    this.retryCount = actionCount != null ? Number(actionCount) : (this.retryCount + 1);
                     if (this.retryCount >= CONST.MAX_RETRY) {
                         this.convertDisabled = true;
                         this.showToast(FEC_Toast_Error, FEC_MSG_IPP_Conversion_Fail_Disable, CONST.VARIANT_ERROR);
