@@ -1,0 +1,4 @@
+.fec-addl-body {
+    border-bottom: 1px solid var(--lwc-colorBorder, #dddbda);
+    padding-bottom: var(--lwc-spacingXSmall, 0.5rem);
+}

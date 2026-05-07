@@ -1392,4 +1392,17 @@ public with sharing class FEC_CommonUltils {
       return null;
     }
   }
+
+  public static Decimal parseAmountSafe(String val) {
+    if (String.isBlank(val)) return null;
+
+    val = val.replace(',', '').trim();
+
+    try {
+        return Decimal.valueOf(val);
+    } catch (Exception e) {
+        System.debug('Invalid decimal for tag Amount: [' + val + ']');
+        return null;
+    }
+}
 }

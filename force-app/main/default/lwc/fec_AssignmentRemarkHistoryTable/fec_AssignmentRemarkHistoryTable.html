@@ -1,0 +1,53 @@
+<template>
+
+    <template if:true={isHasData}><lightning-datatable data={pagedData} key-field="id" hide-checkbox-column
+            columns={columns}>
+        </lightning-datatable>
+        <template if:true={showPagination}>
+            <div class="slds-m-top_medium slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+
+                <!-- LEFT: Page size -->
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <span class="slds-m-right_small">Page size</span>
+
+                    <lightning-combobox value={pageSizeStr} options={pageSizeOptions} onchange={handlePageSizeChange}
+                        variant="label-hidden" class="page-size-combobox">
+                    </lightning-combobox>
+                </div>
+
+                <!-- CENTER: Pagination -->
+                <div class="slds-grid slds-grid_vertical-align-center">
+
+                    <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous"
+                        onclick={handlePrevPage} disabled={isFirstPage}>
+                    </lightning-button-icon>
+
+                    <span class="slds-m-horizontal_small">{currentPage}</span>
+
+                    <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next"
+                        onclick={handleNextPage} disabled={isLastPage}>
+                    </lightning-button-icon>
+
+                </div>
+
+                <!-- RIGHT: Go to -->
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <span class="slds-m-right_small">Go to</span>
+
+                    <input type="number" value={gotoPageInputValue} class="slds-input slds-m-right_small"
+                        style="width: 80px;" oninput={handleGoToPageInput} onkeydown={handleGotoKeydown} />
+
+                    <lightning-button label="Go" variant="brand" onclick={handleGoToPage}>
+                    </lightning-button>
+                </div>
+
+            </div>
+        </template>
+    </template>
+    <template if:false={isHasData}>
+        <div class="slds-p-around_medium slds-text-align_center">
+            <p class="slds-text-color_weak">No assignment remarks found.</p>
+        </div>
+    </template>
+
+</template>

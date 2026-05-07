@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Data_Sync_Error__c</fullName>
+    <description>Lỗi đồng bộ dữ liệu</description>
+    <label>Data Sync Error</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Không đồng bộ CCCD qua NFC</fullName>
+                <default>false</default>
+                <label>Không đồng bộ CCCD qua NFC</label>
+            </value>
+            <value>
+                <fullName>Không xác thực qua NFC</fullName>
+                <default>false</default>
+                <label>Không xác thực qua NFC</label>
+            </value>
+            <value>
+                <fullName>Không đồng bộ được thông tin mới</fullName>
+                <default>false</default>
+                <label>Không đồng bộ được thông tin mới</label>
+            </value>
+            <value>
+                <fullName>Không thể cập nhật thông tin mới</fullName>
+                <default>false</default>
+                <label>Không thể cập nhật thông tin mới</label>
+            </value>
+            <value>
+                <fullName>Khác</fullName>
+                <default>false</default>
+                <label>Khác</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

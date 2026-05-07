@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Sales_Consulted__c</fullName>
+    <description>Tình trạng tư vấn Sales</description>
+    <label>Sales Consulted</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>KH liên hệ lần đầu</fullName>
+                <default>false</default>
+                <label>KH liên hệ lần đầu</label>
+            </value>
+            <value>
+                <fullName>Kết nối chỉ nghe tiếng ồn/ cười nói/ không tư vấn/ không gọi lại.</fullName>
+                <default>false</default>
+                <label>Kết nối chỉ nghe tiếng ồn/ cười nói/ không tư vấn/ không gọi lại.</label>
+            </value>
+            <value>
+                <fullName>Kết nối nhưng không ai nghe máy/ không gọi lại</fullName>
+                <default>false</default>
+                <label>Kết nối nhưng không ai nghe máy/ không gọi lại</label>
+            </value>
+            <value>
+                <fullName>Được tư vấn nhưng hồ sơ không được duyệt</fullName>
+                <default>false</default>
+                <label>Được tư vấn nhưng hồ sơ không được duyệt</label>
+            </value>
+            <value>
+                <fullName>Khác (ghi chú chi tiết)</fullName>
+                <default>false</default>
+                <label>Khác (ghi chú chi tiết)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

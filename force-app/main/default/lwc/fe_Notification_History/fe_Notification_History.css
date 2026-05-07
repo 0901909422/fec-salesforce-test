@@ -1,0 +1,75 @@
+.notification-history-root {
+    padding: 0.25rem 0;
+}
+
+.section-block--empty-state {
+    padding: 0.25rem 0.5rem 0.75rem;
+}
+
+.section-block--with-paging {
+    padding: 0;
+    min-width: 0;
+}
+
+.section-block--with-paging c-fec_-related-list-paging {
+    display: block;
+    width: 100%;
+}
+
+.channel-banner {
+    font-size: 0.8125rem;
+    color: #706e6b;
+    margin-top: 0.35rem;
+}
+
+.channel-phone-hint {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-bottom: 0.35rem;
+}
+
+.channel-spinner-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 4px;
+}
+
+.nh-empty-state-msg--neutral {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    color: #706e6b;
+    font-size: 13px;
+    padding: 0.75rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    vertical-align: middle;
+}
+
+.nh-empty-state-msg--error {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    color: #a30018;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0.75rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.5rem;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .nh-empty-state-msg--neutral,
+    .nh-empty-state-msg--error {
+        padding: 0.5rem;
+    }
+}

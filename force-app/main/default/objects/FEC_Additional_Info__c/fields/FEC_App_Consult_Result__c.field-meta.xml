@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_App_Consult_Result__c</fullName>
+    <description>Kết quả tư vấn ứng dụng</description>
+    <label>App Consult Result</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Hướng dẫn thao tác thành công</fullName>
+                <default>false</default>
+                <label>Hướng dẫn thao tác thành công</label>
+            </value>
+            <value>
+                <fullName>Chưa có cơ hội hướng dẫn</fullName>
+                <default>false</default>
+                <label>Chưa có cơ hội hướng dẫn</label>
+            </value>
+            <value>
+                <fullName>Đã tra cứu nhưng cần giải thích thêm</fullName>
+                <default>false</default>
+                <label>Đã tra cứu nhưng cần giải thích thêm</label>
+            </value>
+            <value>
+                <fullName>Không biết cách tra cứu</fullName>
+                <default>false</default>
+                <label>Không biết cách tra cứu</label>
+            </value>
+            <value>
+                <fullName>Đăng ký tài khoản chưa thành công</fullName>
+                <default>false</default>
+                <label>Đăng ký tài khoản chưa thành công</label>
+            </value>
+            <value>
+                <fullName>Chưa đồng bộ thông tin HĐ/ thẻ</fullName>
+                <default>false</default>
+                <label>Chưa đồng bộ thông tin HĐ/ thẻ</label>
+            </value>
+            <value>
+                <fullName>Ứng dụng lỗi</fullName>
+                <default>false</default>
+                <label>Ứng dụng lỗi</label>
+            </value>
+            <value>
+                <fullName>Chưa tải ứng dụng</fullName>
+                <default>false</default>
+                <label>Chưa tải ứng dụng</label>
+            </value>
+            <value>
+                <fullName>Đã xóa ứng dụng</fullName>
+                <default>false</default>
+                <label>Đã xóa ứng dụng</label>
+            </value>
+            <value>
+                <fullName>Không có smart phone</fullName>
+                <default>false</default>
+                <label>Không có smart phone</label>
+            </value>
+            <value>
+                <fullName>Khác (ghi chú chi tiết)</fullName>
+                <default>false</default>
+                <label>Khác (ghi chú chi tiết)</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
