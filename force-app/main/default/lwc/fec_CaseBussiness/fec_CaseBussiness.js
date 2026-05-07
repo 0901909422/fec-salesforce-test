@@ -846,6 +846,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     this._manualItems = event.detail?.items || [];
   }
 
+  // tungnm37 thêm: hiển thị lỗi khi chọn Queue trùng
+  handleDuplicateQueue(event) {
+    const msg = event.detail?.message || 'Queue đã được chọn. Vui lòng chọn Queue khác.';
+    this.dispatchEvent(new ShowToastEvent({
+      title: 'Lỗi',
+      message: msg,
+      variant: 'error'
+    }));
+  }
+
   // tungnm37 thêm: xử lý nút Add Item (Manual Assignment cho CC/SP)
   handleAddItem() {
     // TODO: mở modal hoặc form để user nhập Assignment thủ công
