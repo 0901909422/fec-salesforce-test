@@ -42,16 +42,6 @@ export default class Fec_ChannelConfig extends LightningElement {
         return this.record?.data?.fields?.FEC_Update_Case_Status__c?.value;
     }
 
-    get getNatureOfCaseIcon() {
-        return this.getNatureOfCase ? 'utility:check' : 'utility:close';
-    }
-    get cancelCaseIcon() {
-        return this.cancelCase ? 'utility:check' : 'utility:close';
-    }
-    get updateCaseStatusIcon() {
-        return this.updateCaseStatus ? 'utility:check' : 'utility:close';
-    }
-
     handleEdit() {
         this.isEditMode = true;
     }

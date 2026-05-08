@@ -192,16 +192,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             insert assignments;
 
-            // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c để list view dùng
-            List<String> queueIdList = new List<String>();
-            for (FEC_Routing_Assignment__c ra : routingAssignments) {
-                if (queueNameToId.containsKey(ra.FEC_Queue__c)) {
-                    queueIdList.add(String.valueOf(queueNameToId.get(ra.FEC_Queue__c)));
-                }
-            }
-            if (!queueIdList.isEmpty()) {
+            // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
+            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
+            if (!assignmentUsers.isEmpty()) {
                 try {
-                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(queueIdList, ',')), AccessLevel.SYSTEM_MODE);
+                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(assignmentUsers, ',')), AccessLevel.SYSTEM_MODE);
                 } catch (Exception eu) {
                     System.debug('FEC_DEBUG update FEC_Assignment_Users__c error: ' + eu.getMessage());
                 }
@@ -310,16 +305,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             insert assignments;
 
-            // tungnm37: lưu Queue Ids vào Case.FEC_Assignment_Users__c
-            List<String> queueIdListM = new List<String>();
-            for (String qn : queueNames) {
-                if (queueNameToId.containsKey(qn)) {
-                    queueIdListM.add(String.valueOf(queueNameToId.get(qn)));
-                }
-            }
-            if (!queueIdListM.isEmpty()) {
+            // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
+            List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
+            if (!assignmentUsers.isEmpty()) {
                 try {
-                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(queueIdListM, ',')), AccessLevel.SYSTEM_MODE);
+                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(assignmentUsers, ',')), AccessLevel.SYSTEM_MODE);
                 } catch (Exception eu) {
                     System.debug('FEC_DEBUG update FEC_Assignment_Users__c (manual) error: ' + eu.getMessage());
                 }
@@ -365,6 +355,21 @@ public without sharing class FEC_CofGsrAssignmentService {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
             FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
+    }
+
+    private static List<String> resolveAssignmentUsers(List<FEC_Assignment__c> assignments, Map<String, Id> queueNameToId) {
+        List<String> assignmentUsers = new List<String>();
+        for (FEC_Assignment__c assignmentItem : assignments) {
+            if (assignmentItem.FEC_Assignment_Owner__c != null) {
+                assignmentUsers.add(String.valueOf(assignmentItem.FEC_Assignment_Owner__c));
+                continue;
+            }
+
+            if (String.isNotBlank(assignmentItem.FEC_OwnerID__c) && queueNameToId.containsKey(assignmentItem.FEC_OwnerID__c)) {
+                assignmentUsers.add(String.valueOf(queueNameToId.get(assignmentItem.FEC_OwnerID__c)));
+            }
+        }
+        return assignmentUsers;
     }
 
     public static Set<Id> resolveToNocIds(String inputId) {

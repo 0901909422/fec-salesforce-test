@@ -2,11 +2,11 @@
     <lightning-card>
         <div class="slds-p-around_medium">
             <div class="slds-form-element">
-                <label class="slds-form-element__label slds-m-right_small" style="font-weight:600;">Channel</label>
+                <label class="slds-form-element__label slds-m-right_small noc-channel-config-label">Channel</label>
 
                 <!-- VIEW MODE -->
                 <template if:false={isEditMode}>
-                    <span style="display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                    <span class="noc-channel-config-selected-list">
                         <template if:true={hasSelected}>
                             <template for:each={selectedChannels} for:item="ch">
                                 <span key={ch.id} class="slds-badge slds-m-right_x-small">{ch.name}</span>
@@ -28,9 +28,9 @@
 
                 <!-- EDIT MODE -->
                 <template if:true={isEditMode}>
-                    <div style="width:50%;">
+                    <div class="noc-channel-config-editor">
                         <!-- Search input -->
-                        <div style="position:relative;">
+                        <div class="noc-channel-config-search">
                             <div class="slds-input-has-icon slds-input-has-icon_right">
                                 <lightning-icon icon-name="utility:search" size="x-small"
                                     class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default">
@@ -47,7 +47,7 @@
                                 />
                             </div>
                             <template if:true={isOpen}>
-                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" style="z-index:9999;">
+                                <div class="slds-dropdown slds-dropdown_length-5 noc-channel-config-dropdown">
                                     <ul class="slds-listbox slds-listbox_vertical" role="listbox">
                                         <template if:true={isLoading}>
                                             <li class="slds-listbox__item slds-p-around_small">
@@ -57,11 +57,11 @@
                                         <template if:false={isLoading}>
                                             <template for:each={searchResults} for:item="ch">
                                                 <li key={ch.Id}
-                                                    class="slds-listbox__item"
+                                                    class="slds-listbox__item noc-channel-config-option"
                                                     onmousedown={handleSelect}
                                                     data-id={ch.Id}
                                                     data-name={ch.FEC_Channel_Vietnamese_name__c}
-                                                    style="cursor:pointer;padding:8px 12px;">
+                                                >
                                                     <span>{ch.FEC_Channel_Vietnamese_name__c}</span>
                                                     <template if:true={ch.FEC_Channel_ID__c}>
                                                         <span class="slds-text-color_weak slds-m-left_x-small">({ch.FEC_Channel_ID__c})</span>
@@ -81,7 +81,7 @@
 
                         <!-- Selected pills (bên dưới search) -->
                         <template if:true={hasSelected}>
-                            <div class="slds-m-top_x-small" style="display:flex;flex-wrap:wrap;gap:4px;">
+                            <div class="slds-m-top_x-small noc-channel-config-pills">
                                 <template for:each={selectedChannels} for:item="ch">
                                     <lightning-pill
                                         key={ch.id}

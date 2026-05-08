@@ -1,5 +1,5 @@
 // tungnm37: Handler kế thừa FEC_Channel__c từ NOC cha xuống NOC con theo hierarchy
-public without sharing class FEC_NocChannelInheritanceHandler {
+public without sharing class FEC_NatureOfCaseTriggerHandler {
 
     public static void handleAfterInsertUpdate(
         List<FEC_Nature_of_Case__c> newList,
