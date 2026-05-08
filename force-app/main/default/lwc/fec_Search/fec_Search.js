@@ -1499,23 +1499,28 @@ hasAnySearchCriteria(params) {
     if (!action || !action.name) {
       return;
     }
-    let id = row;
-    console.log('Row JSON yy1:', JSON.stringify(row, null, 2));
-    if (action.name == "create_history") {
-      switch (action.label.fieldName) {
-        case "AccountNumber":
-          row = this.cardData.find(r => r.AccountNumber == row);
-          break;
-        case "ContractNumber":
-          row = this.loanContractData.find(r => r.ContractNumber == row);
-          break;
-        case "UserId":
-          row = this.insuranceData.find(r => r.UserId == row);
-          break;
+
+    let id;
+    // Resolve full row object and identifier string
+    if (typeof row === 'string') {
+      id = row;
+      const type = action.type;
+      let foundRow;
+      if (type === 'Card') {
+        foundRow = this.cardData.find(r => r.AccountNumber === id);
+      } else if (type === 'Loan') {
+        foundRow = this.loanContractData.find(r => r.ContractNumber === id) || 
+                   this.loanB2Data.find(r => r.ContractNumber === id) || 
+                   this.loanCash24Data.find(r => r.ContractNumber === id);
+      } else if (type === 'Insurance') {
+        foundRow = this.insuranceData.find(r => r.UserId === id);
       }
-    } 
+      if (foundRow) row = foundRow;
+    } else {
+      id = row?.AccountNumber || row?.ContractNumber || row?.UserId || row?.id;
+    }
+
     let cifNumber = row?.CIFNumber ?? '';
-    console.log('cifNumber ', cifNumber );
     
     switch (action.name) {
       case "create_history": {
@@ -1524,15 +1529,15 @@ hasAnySearchCriteria(params) {
             new CustomEvent("rowselected", {
               detail: {
                 fullName: row?.FullName || "",
-                nationalId: row?.AccountNumber || row?.ContractNumber || "",
+                nationalId: id || "",
                 cifNumber: cifNumber
               },
               bubbles: true,
               composed: true,
             }),
           );
-
         }
+
         let categories = [];
 
         // 1. Check Card data
@@ -1577,14 +1582,10 @@ hasAnySearchCriteria(params) {
           ) {
             customerName = this._customers[customerIndex].FullName;
           }
-          isListView = window.location.href.includes("/FEC_Customer_Search")
-            ? false
-            : !this.recordId;
+          // Align isListView for Insurance search tab to ensure Internal Case and navigation
+          isListView = !this.recordId;
         }
 
-        // [CHANGE][Author : LongNH76] Ưu tiên phone từ dòng kết quả; fallback phone user nhập để tránh trống FEC_Search_Phone_Number__c.
-        // Old behavior (kept for reference):
-        // phone: row?.Phone
         const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
 
         createHistory({
@@ -1602,27 +1603,17 @@ hasAnySearchCriteria(params) {
           buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
         })
           .then(async (res) => {
-            // const payload = {
-            //     isModeEdit: true
-            // };
-            this.showToast(
-              "Success",
-              "History created successfully",
-              "success",
-            );
-            await this._pollHistoryReady(res);
+            this.showToast("Success", "History created successfully", "success");
+            
             if (this.recordId) {
-                //publish(this.messageContext, IS_MODE_EDIT, payload);
                 this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-                // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
+                // Navigate immediately
                 this.dispatchEvent(
                   new CustomEvent('closerequest', {
-                    detail: {
-                      recordId: res
-                    }
+                    detail: { recordId: res }
                   })
                 );
             }
