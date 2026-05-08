@@ -400,21 +400,6 @@
         <members>FEC_Routing_Assignment__c</members>
         <name>CustomTab</name>
     </types>
-    <types>
-        <members>FEC_Assignment__c</members>
-        <members>FEC_CustomerAdditionalInfoConfig__c</members>
-        <members>FEC_CustomerAdditionalInfo__c</members>
-        <members>FEC_Routing_Assignment__c</members>
-        <members>FEC_Relevant_Ticket__c</members>
-        <members>FEC_Case_Remarks__c</members>
-        <members>FEC_Case_Flow_History__c</members>
-        <members>FEC_Do_Not_Bother__c</members>
-        <name>CustomObject</name>
-    </types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
-	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
@@ -431,10 +416,6 @@
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
 		<name>CustomObject</name>
-	</types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
