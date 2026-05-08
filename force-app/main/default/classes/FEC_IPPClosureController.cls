@@ -62,6 +62,7 @@ public without sharing class FEC_IPPClosureController {
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
                   AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                 LIMIT 1
             ];
         } else {
@@ -70,10 +71,10 @@ public without sharing class FEC_IPPClosureController {
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
                        FEC_IPP_Current_Term__c, FEC_Customer_History__c,
-                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c,
-                       FEC_IPP_Closure_Case__r.FEC_Case_Status__c
+                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c
                 FROM FEC_IPP__c
                 WHERE (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
                   AND Id NOT IN (
