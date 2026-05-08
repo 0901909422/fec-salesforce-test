@@ -11,6 +11,7 @@ import FEC_Choose_Team_Placeholder from '@salesforce/label/c.FEC_Choose_Team_Pla
 import FEC_Choose_Queue_Placeholder from '@salesforce/label/c.FEC_Choose_Queue_Placeholder';
 import FEC_Enter_Remark_Placeholder from '@salesforce/label/c.FEC_Enter_Remark_Placeholder';
 import FEC_Remark_Label from '@salesforce/label/c.FEC_Remark_Label';
+import FEC_Duplicate_Queue_Error from '@salesforce/label/c.FEC_Duplicate_Queue_Error';
 
 const ROUTING_ASSIGNMENT_PREFIXES = ['COF', 'GSR'];
 
@@ -160,6 +161,14 @@ export default class Fec_RoutingAssignment extends LightningElement {
   handleConfirm() {
     if (!this.formTeam || !this.formQueue || !this.formRemark) {
       // validate
+      return;
+    }
+    // tungnm37: check duplicate queue
+    const isDuplicateQueue = this.manualItems.some(i => i.queueName === this.formQueue);
+    if (isDuplicateQueue) {
+      this.dispatchEvent(new CustomEvent('duplicatequeue', {
+        detail: { message: FEC_Duplicate_Queue_Error }
+      }));
       return;
     }
     const newItem = {
