@@ -3,11 +3,15 @@
 	<types>
 	    <members>FEC_IPPClosureController</members>
 	    <members>FEC_AssignmentListHandler</members>
+	    <members>FEC_CaseBusinessService</members>
+	    <members>FEC_CaseEditNOCController</members>
+	    <members>FEC_CofGsrRoutePrepareService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
+	    <members>fec_CaseEditNOC</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
