@@ -74,8 +74,7 @@ public with sharing class FEC_CustomerAdditionalDataController {
             cfgById.putAll(cfgRows);
         }
 
-        FEC_CustomerAdditionalInfo__c bestRow;
-        FEC_CustomerAdditionalInfoConfig__c bestCfg;
+        List<RowDTO> rows = new List<RowDTO>();
         for (FEC_CustomerAdditionalInfo__c row : raw) {
             if (row.FEC_Config__c == null) {
                 continue;
@@ -96,22 +95,16 @@ public with sharing class FEC_CustomerAdditionalDataController {
             if (allowed == null || !allowed.contains(kv)) {
                 continue;
             }
-            if (bestRow == null || row.CreatedDate > bestRow.CreatedDate
-                    || (row.CreatedDate == bestRow.CreatedDate && row.Id > bestRow.Id)) {
-                bestRow = row;
-                bestCfg = cfgRow;
-            }
-        }
-        if (bestRow != null && bestCfg != null) {
             RowDTO dto = new RowDTO();
-            dto.recordName = bestRow.Name;
-            dto.fieldLabel = String.isNotBlank(bestCfg.FEC_FieldName__c)
-                ? bestCfg.FEC_FieldName__c
-                : bestRow.FEC_FieldID__c;
-            dto.fieldValue = bestRow.FEC_FieldValue__c;
-            dto.sourceFileName = bestRow.FEC_LinkedFilename__c;
-            result.add(dto);
+            dto.recordName = row.Name;
+            dto.fieldLabel = String.isNotBlank(cfgRow.FEC_FieldName__c)
+                ? cfgRow.FEC_FieldName__c
+                : row.FEC_FieldID__c;
+            dto.fieldValue = row.FEC_FieldValue__c;
+            dto.sourceFileName = row.FEC_LinkedFilename__c;
+            rows.add(dto);
         }
+        result.addAll(rows);
         return result;
     }
 
