@@ -1,18 +1,32 @@
 public with sharing class FEC_AssignmentListHandler {
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getUserDepartment() {
+        
         User u = [
-        SELECT UserRole.Name, Profile.Name
+        SELECT UserRole.Name, Profile.Name, FEC_User_Group__c
         FROM User
         WHERE Id = :UserInfo.getUserId()
+        LIMIT 1
     ];
         
-        if (u.UserRole.Name.contains('Support') ||
-        u.UserRole.Name.contains('Customer Care')) {
+        System.debug('=== USER === ' + u);
+        System.debug('=== FEC_User_Group__c === ' + u.FEC_User_Group__c);
+        
+        if (String.isBlank(u.FEC_User_Group__c)) {
+            System.debug('=== RETURN OTHER: group is blank ===');
+            return 'OTHER';
+        }
+        
+        if (
+            u.FEC_User_Group__c.contains('SP') ||
+            u.FEC_User_Group__c.contains('CC')
+        ) {
+            System.debug('=== RETURN CS ===');
             return 'CS';
         }
         
+        System.debug('=== RETURN OTHER ===');
         return 'OTHER';
     }
     
@@ -38,7 +52,10 @@ public with sharing class FEC_AssignmentListHandler {
                 FEC_Assignment_Owner__c,
                 FEC_Assignment_Owner__r.Name,
                 FEC_Assignment_Owner__r.Email,
-                FEC_Assignment_Status__c
+                FEC_Assignment_Status__c,
+                FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
+                FEC_Assignment_Type__c, // tungnm37 thêm: để phân biệt COF/GSR vs thường
+                FEC_Assignment_Owner_Text__c // tungnm37 thêm: formula field hiện đúng owner/queue/Unassigned
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
         ];
@@ -159,6 +176,21 @@ public with sharing class FEC_AssignmentListHandler {
             result.add(new SelectOptionWrapper(g.Id, g.Name));
         }
         
+        return result;
+    }
+
+    // tungnm37 thêm: lấy queue name từ danh sách Queue Ids
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getQueueNames(List<String> queueIds) {
+        Map<String, String> result = new Map<String, String>();
+        if (queueIds == null || queueIds.isEmpty()) return result;
+        Set<Id> ids = new Set<Id>();
+        for (String qid : queueIds) {
+            try { ids.add(Id.valueOf(qid)); } catch(Exception e) {}
+        }
+        for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :ids AND Type = 'Queue']) {
+            result.put(String.valueOf(g.Id), g.Name);
+        }
         return result;
     }
 }
