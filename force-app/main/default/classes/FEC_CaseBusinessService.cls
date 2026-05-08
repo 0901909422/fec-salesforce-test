@@ -4360,7 +4360,7 @@ public without sharing class FEC_CaseBusinessService {
     Id roleId = UserInfo.getUserRoleId(); 
     Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
 
-    return [
+    List<Group> userQueues = [
         SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
@@ -4420,7 +4420,6 @@ public without sharing class FEC_CaseBusinessService {
         ORDER BY Name ASC
     ];
 }
-  }
 
   private static Section buildAccountInfor(Case c) {
     // MAIN SECTION
