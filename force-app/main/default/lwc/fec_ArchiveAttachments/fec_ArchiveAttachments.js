@@ -3,6 +3,11 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getAttachments from '@salesforce/apex/ArchiveCaseAttachmentController.getAttachments';
 import downloadFile from '@salesforce/apex/ArchiveCaseAttachmentController.downloadFile';
 
+import titleAtt from '@salesforce/label/c.CS_TITLE_NAME_OF_ATTACHMENT';
+import typeAtt from '@salesforce/label/c.CS_TYPE_OF_ATTACHMENT';
+import downloadAtt from '@salesforce/label/c.CS_DOWNLOAD_ATTACHMENT';
+import noAttachment from '@salesforce/label/c.CS_NO_ARCHIVE_ATTACHMENT';
+
 const ICON_MAP = {
     pdf: 'doctype:pdf',
     png: 'doctype:image',
@@ -29,6 +34,8 @@ export default class Fec_ArchiveAttachments extends LightningElement {
     files = [];
     isLoading = true;
 
+    customLabel = {titleAtt, typeAtt, downloadAtt, noAttachment};
+
     @wire(getAttachments, { caseId: '$recordId' })
     wiredAttachments({ error, data }) {
         this.isLoading = false;
@@ -36,9 +43,9 @@ export default class Fec_ArchiveAttachments extends LightningElement {
             this.files = data.map(f => ({
                 ...f,
                 isDownloading: false,
+                downloadLinkClass: '',
                 extension: this.getExtension(f.filename),
-                iconName: this.getIcon(f.filename),
-                formattedSize: this.formatSize(f.fileSize)
+                iconName: this.getIcon(f.filename)
             }));
         } else if (error) {
             console.error('getAttachments error', error);
@@ -80,14 +87,15 @@ export default class Fec_ArchiveAttachments extends LightningElement {
 
         // Set downloading state
         this.files = this.files.map(f =>
-            f.s3Key === s3Key ? { ...f, isDownloading: true } : f
+            f.s3Key === s3Key ? { ...f, isDownloading: true, downloadLinkClass: 'slds-is-disabled' } : f
         );
 
         try {
             const result = await downloadFile({
                 s3Key: file.s3Key,
                 filename: file.filename,
-                contentType: file.contentType
+                contentType: file.contentType,
+                caseId: this.recordId
             });
 
             if (result.success) {
@@ -99,7 +107,7 @@ export default class Fec_ArchiveAttachments extends LightningElement {
             this.showToast('Error', err.body?.message || 'Download failed', 'error');
         } finally {
             this.files = this.files.map(f =>
-                f.s3Key === s3Key ? { ...f, isDownloading: false } : f
+                f.s3Key === s3Key ? { ...f, isDownloading: false, downloadLinkClass: '' } : f
             );
         }
     }

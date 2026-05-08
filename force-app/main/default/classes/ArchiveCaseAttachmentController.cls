@@ -24,21 +24,28 @@ public with sharing class ArchiveCaseAttachmentController {
         List<AttachmentInfo> result = new List<AttachmentInfo>();
         if (caseId == null) return result;
 
-        Case c = [SELECT ArchiveAttachment__c FROM Case WHERE Id = :caseId LIMIT 1];
-        if (String.isBlank(c.ArchiveAttachment__c)) return result;
+        List<Case> cases = [SELECT ArchiveAttachment__c FROM Case WHERE Id = :caseId LIMIT 1];
+        if (cases.size() > 0) {
+            Case caseIns = cases[0];
+            if (String.isBlank(caseIns.ArchiveAttachment__c)) return result;
 
-        List<Object> rawList = (List<Object>) JSON.deserializeUntyped(c.ArchiveAttachment__c);
-        for (Object item : rawList) {
-            Map<String, Object> mapItem = (Map<String, Object>) item;
-            AttachmentInfo info = new AttachmentInfo();
-            info.s3Key       = (String) mapItem.get('s3Key');
-            info.filename    = (String) mapItem.get('filename');
-            info.contentType = (String) mapItem.get('contentType');
-            info.fileSize    = mapItem.get('fileSize') != null ? Long.valueOf(String.valueOf(mapItem.get('fileSize'))) : 0;
-            info.uploadedAt  = (String) mapItem.get('uploadedAt');
-            info.uploadedBy  = (String) mapItem.get('uploadedBy');
-            result.add(info);
+            // [{"filename":"Screenshot 2026-05-06 at 11.06.33.png",
+            // "contentType":"image/png",
+            // "s3Path":"case-files/S-79587/7df289ce95651df0_Screenshot_2026-05-06_at_11.06.33.png",
+            // "uploadedAt":"2026-05-06T14:41:00.823164Z"}]
+            List<Object> rawList = (List<Object>) JSON.deserializeUntyped(caseIns.ArchiveAttachment__c);
+            for (Object item : rawList) {
+                Map<String, Object> mapItem = (Map<String, Object>) item;
+                AttachmentInfo info = new AttachmentInfo();
+                info.s3Key       = (String) mapItem.get('s3Path');
+                info.filename    = (String) mapItem.get('filename');
+                info.contentType = (String) mapItem.get('contentType');
+                info.uploadedAt  = (String) mapItem.get('uploadedAt');
+                info.uploadedBy  = (String) mapItem.get('uploadedBy');
+                result.add(info);
+            }
         }
+
         return result;
     }
 
@@ -51,7 +58,8 @@ public with sharing class ArchiveCaseAttachmentController {
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
     @AuraEnabled
-    public static DownloadResult downloadFile(String s3Key, String filename, String contentType) {
+    public static DownloadResult downloadFile(String s3Key, String filename, 
+                                                String contentType, String caseId) {
         DownloadResult res = new DownloadResult();
         res.success = false;
 
@@ -60,17 +68,24 @@ public with sharing class ArchiveCaseAttachmentController {
             return res;
         }
 
+        System.debug('caseId ' + caseId);
         try {
-            Blob fileBody = downloadFromS3(s3Key);
-            if (fileBody == null) {
-                res.errorMessage = 'Failed to download file from archive';
-                return res;
-            }
+            List<Case> cases = [SELECT Id, ArchiveMigrationSource__c 
+                                FROM Case WHERE Id = :caseId LIMIT 1];
+            if (cases.size() > 0) {
+                Case caseIns = cases[0];
 
-            res.success     = true;
-            res.base64Data  = EncodingUtil.base64Encode(fileBody);
-            res.filename    = filename;
-            res.contentType = String.isNotBlank(contentType) ? contentType : 'application/octet-stream';
+                Blob fileBody = downloadFromS3(s3Key, caseIns);
+                if (fileBody == null) {
+                    res.errorMessage = 'Failed to download file from archive';
+                    return res;
+                }
+
+                res.success     = true;
+                res.base64Data  = EncodingUtil.base64Encode(fileBody);
+                res.filename    = filename;
+                res.contentType = String.isNotBlank(contentType) ? contentType : 'application/octet-stream';
+            }
         } catch (Exception ex) {
             res.errorMessage = ex.getMessage();
             System.debug('ArchiveCaseAttachmentController.downloadFile error: ' + ex.getMessage());
@@ -88,34 +103,33 @@ public with sharing class ArchiveCaseAttachmentController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    public static Blob downloadFromS3(String s3Key) {
+    public static Blob downloadFromS3(String s3Key, Case caseIns) {
         Integer statusCode;
         String serviceName = label.TECH_API_GET_ARCHIVE_ATTACHMENT;
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
+        String migrationSource = caseIns.ArchiveMigrationSource__c;
 
-        // String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP;
-        // if (apiConfig != null) {
-        //     endpoint = apiSetting?.FEC_Call_Mock__c
-        //         ? FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
-        //         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c + '/' + EncodingUtil.urlEncode(s3Key, 'UTF-8'));
+        String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ATTACHMENT_ENDPOINT_MOCKUP 
+                            + s3Key + '&source=' + migrationSource;
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
+            endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
+                        : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
+                            + s3Key + '&source=' + migrationSource;
+        }
 
-        String endpoint = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/attachments/download?s3Key=' 
-                        + s3Key;
-        
-            Map<String, String> headers = new Map<String, String>{
-                'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
-            };
+        Map<String, String> headers = new Map<String, String>{
+            'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
+        };
 
-            HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, headers, null);
-            statusCode = resp.getStatusCode();
-            String resStatusCode = String.valueOf(statusCode);
-            // Log
-            FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', endpoint, 
+        HttpResponse resp = FEC_CommonUltils.calloutApiWithHeaders(endpoint, FEC_ConstantCommon.API_METHOD_GET, headers, null);
+        statusCode = resp.getStatusCode();
+        String resStatusCode = String.valueOf(statusCode);
+        // Log
+        FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', endpoint, 
                                                             '', resStatusCode, '', '');
 
-            if (statusCode == 200) return resp.getBodyAsBlob();
-        //}
+        if (statusCode == 200) return resp.getBodyAsBlob();
 
         System.debug('downloadFromS3 failed: status=' + statusCode + ' s3Key=' + s3Key);
         return null;
@@ -125,7 +139,6 @@ public with sharing class ArchiveCaseAttachmentController {
         @AuraEnabled public String s3Key;
         @AuraEnabled public String filename;
         @AuraEnabled public String contentType;
-        @AuraEnabled public Long fileSize;
         @AuraEnabled public String uploadedAt;
         @AuraEnabled public String uploadedBy;
     }

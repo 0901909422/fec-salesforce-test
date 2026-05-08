@@ -16,6 +16,7 @@
         <members>Case.FEC_Case_Created_By__c</members>
         <members>Case.ArchiveLastUpdatedBy__c</members>
         <members>Case.FEC_Last_Updated_By__c</members>
+        <members>Case.ArchiveMigrationSource__c</members>
         <members>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</members>
         <members>FEC_Customer_History__c.IsArchiveTemp__c</members>
         <members>FEC_Product_Type__c.IsArchiveTemp__c</members>
@@ -60,6 +61,10 @@
         <members>TECH_API_GET_ARCHIVE_DETAIL_CASE</members>
         <members>TECH_ARCHIEVE_MAPPING_DEV_FIELD</members>
         <members>TECH_API_GET_ARCHIVE_ATTACHMENT</members>
+        <members>CS_TITLE_NAME_OF_ATTACHMENT</members>
+        <members>CS_TYPE_OF_ATTACHMENT</members>
+        <members>CS_DOWNLOAD_ATTACHMENT</members>
+        <members>CS_NO_ARCHIVE_ATTACHMENT</members>
         <name>CustomLabel</name>
     </types>
 
