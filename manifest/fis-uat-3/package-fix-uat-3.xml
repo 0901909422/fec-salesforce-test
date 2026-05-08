@@ -7,6 +7,7 @@
 	</types>
     <types>
 	    <members>fec_CaseBussiness</members>
+	    <members>fec_CaseDetail_Customer</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
