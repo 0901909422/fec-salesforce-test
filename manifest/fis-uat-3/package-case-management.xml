@@ -31,6 +31,7 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_SubProcessService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -484,6 +485,7 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+        <members>fec_SubProcessContainer</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
