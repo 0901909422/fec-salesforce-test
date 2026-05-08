@@ -14,11 +14,25 @@ public without sharing class FEC_CofGsrRoutePrepareService {
     String caseId,
     Map<String, String> params
   ) {
-    //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
-    // Giống ROUTE_TO: tạo FEC_Case_Flow_History__c khi submit lần đầu (creation stage)
+    String originalNatureOfCaseId = (String) params.get('natureOfCaseId');
+    String fieldListJson = (String) params.get('fieldListJson');
+    // cloneActualNatureAndMasterData(caseId, params);
+    createCaseFlowHistoryIfCreationStage(
+      caseId,
+      originalNatureOfCaseId,
+      fieldListJson
+    );
+  }
+
+  /**
+   * Clone Actual Nature of Case + Actual Master Data Setting cho COF/GSR nếu Case chưa có Actual NOC.
+   * Có thể cập nhật lại params.natureOfCaseId sang Id bản actual vừa clone.
+   */
+  public static void cloneActualNatureAndMasterData(
+    String caseId,
+    Map<String, String> params
+  ) {
     String natureOfCaseIdCof = (String) params.get('natureOfCaseId');
-    String fieldListJsonCof = (String) params.get('fieldListJson');
-    //PhongBT: cloneMasterDataSetting và cloneActualNatureOfCase cho cof-gsr
     if (String.isNotBlank(natureOfCaseIdCof)) {
       List<Case> caseRows = [
         SELECT Id, FEC_Actual_Nature_of_Case__c
@@ -50,13 +64,23 @@ public without sharing class FEC_CofGsrRoutePrepareService {
         }
       }
     }
+  }
+
+  /**
+   * Tạo FEC_Case_Flow_History__c khi Case đang ở creation stage.
+   */
+  public static void createCaseFlowHistoryIfCreationStage(
+    String caseId,
+    String natureOfCaseId,
+    String fieldListJson
+  ) {
     Boolean isCreationStageCof =
       !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
     if (isCreationStageCof) {
       FEC_CaseBusinessService.createCaseFlowHistory(
         caseId,
-        natureOfCaseIdCof,
-        fieldListJsonCof
+        natureOfCaseId,
+        fieldListJson
       );
     }
   }
