@@ -6,6 +6,7 @@
 	    <members>FEC_CaseBusinessService</members>
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_CheckEligibilityIPPCallout</members>
 		<name>Apexclass</name>
 	</types>
     <types>
