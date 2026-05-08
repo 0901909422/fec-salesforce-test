@@ -23,6 +23,7 @@ import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_Proce
 // import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
 
 import getNatureOfCase from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCase";
+import getNatureOfCaseWithoutSubCode from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCaseWithoutSubCode";
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
 import hasAutoRoutingAssignment from "@salesforce/apex/FEC_CaseEditNOCController.hasAutoRoutingAssignment";
 
@@ -68,6 +69,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
+  originalNOCBusinessProcessCode;
 
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   get originalNOCFields() {
@@ -94,7 +96,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get showUpdatedSection() {
-    return this.isSubmittedState && !this.hasAutoRoutingAssignment;
+    const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
+    const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
+    return this.isSubmittedState && !this.hasAutoRoutingAssignment && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -256,10 +260,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error:", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
 
@@ -520,10 +526,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error (reloadData):", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
       })
