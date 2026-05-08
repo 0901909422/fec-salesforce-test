@@ -438,6 +438,7 @@ public with sharing class FEC_CaseEditNOCController {
         SELECT
           Id,
           FEC_Nature_of_Cases__c,
+          FEC_Nature_of_Cases__r.FEC_Business_Process__r.FEC_Code__c,
           FEC_Nature_of_Cases__r.FEC_Product_Type__r.Name,
           FEC_Nature_of_Cases__r.FEC_Category__r.Name,
           FEC_Nature_of_Cases__r.FEC_Sub_Category__r.Name,
