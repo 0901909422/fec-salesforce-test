@@ -4,29 +4,33 @@
         <div class="slds-grid slds-gutters form-row">
 
             <!-- Complaint Type -->
-            <template if:true={isComplaintCategory}>
-            <div class="slds-col slds-size_3-of-12">
-                <lightning-combobox label="Complaint Type" value={complaintTypeValue} options={complaintTypeOptions}
-                    onchange={handleComplaintTypeChange} required class="custom-combobox">
-                </lightning-combobox>
-            </div>
-            </template>
+            <!-- <template if:true={isComplaintCategory}> -->
+                <div class="slds-col slds-size_3-of-12">
+                    <lightning-combobox label="Complaint Type" value={complaintTypeValue} options={complaintTypeOptions}
+                        onchange={handleComplaintTypeChange} required class="custom-combobox">
+                    </lightning-combobox>
+                </div>
+            <!-- </template> -->
 
             <!-- Complaint Source -->
             <template if:true={showComplaintSource}>
                 <div class="slds-col slds-size_3-of-12">
-                    <div class="field-wrapper">
-                        <lightning-combobox label="Complaint Source" value={complaintSourceValue}
-                            options={complaintSourceOptions} onchange={handleComplaintSourceChange} required
-                            class="custom-combobox">
-                        </lightning-combobox>
 
-                        <!-- icon -->
+                    <label class="slds-form-element__label">
+                        <abbr class="slds-required" title="required">*</abbr>
+                        Complaint Source
+
                         <template if:true={complaintSourceValue}>
-                            <lightning-helptext content={helpText} class="help-icon">
+                            <lightning-helptext content={helpText}>
                             </lightning-helptext>
                         </template>
-                    </div>
+                    </label>
+
+                    <lightning-combobox variant="label-hidden" value={complaintSourceValue}
+                        options={complaintSourceOptions} onchange={handleComplaintSourceChange} required
+                        class="custom-combobox">
+                    </lightning-combobox>
+
                 </div>
             </template>
 
