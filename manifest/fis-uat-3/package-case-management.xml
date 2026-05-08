@@ -700,6 +700,7 @@
 		<members>FEC_Label_Cancel_Case</members>
 		<members>FEC_Label_Update_Case_Status</members>
 		<members>FEC_Insurance_Info_Error</members>
+        <members>FEC_MSG_Service_Error_Label</members>
         <name>CustomLabel</name>
     </types>
 	<types>

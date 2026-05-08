@@ -7,6 +7,8 @@
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_CheckEligibilityIPPCallout</members>
+	    <members>FEC_CustomerAdditionalDataController</members>
+	    <members>FEC_SearchController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -18,10 +20,13 @@
 	    <members>fec_AssignmentList</members>
 	    <members>fec_COFFraudRelatedView</members>
 	    <members>fec_CommonConst</members>
+	    <members>fec_Search</members>
+	    <members>fec_customerAdditionalData</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
+        <members>FEC_MSG_Service_Error_Label</members>
 		<name>CustomLabel</name>
 	</types>
 	<version>66.0</version>
