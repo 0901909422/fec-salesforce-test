@@ -3,6 +3,7 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -177,20 +178,27 @@ export default class Fec_AssignmentList extends LightningElement {
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
+
+      // tungnm37: FEC_OwnerID__c giờ lưu Queue Name trực tiếp
       this.assignments = result.map((item) => ({
         id: item.Id,
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_Assignment_Owner__c?.startsWith("00G")
-          ? item.FEC_Assignment_Owner__r?.Name
-          : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "",
+        owner: // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
+          item.FEC_Assignment_Owner_Text__c
+          || (item.FEC_Assignment_Owner__c?.startsWith("00G")
+              ? item.FEC_Assignment_Owner__r?.Name
+              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")),
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
-          item.FEC_Assignment_Status__c === OPEN_STATUS
-            ? NEW_STATUS
-            : item.FEC_Assignment_Status__c,
+          // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
+          item.FEC_Assignment_Type__c === 'Routing' && item.FEC_Assignment_Status__c === OPEN_STATUS
+            ? OPEN_STATUS
+            : item.FEC_Assignment_Status__c === OPEN_STATUS
+              ? NEW_STATUS
+              : item.FEC_Assignment_Status__c,
 
         isOpen: false,
 
