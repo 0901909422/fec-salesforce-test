@@ -456,7 +456,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (String.isNotBlank(selectedCaseStageId)) {
         caseStageQuery =
-          'SELECT Id, Name ' +
+          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
           'AND FEC_Active__c = TRUE '; 
@@ -468,7 +468,7 @@ public without sharing class FEC_CaseBusinessService {
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
         caseStageQuery =
-          'SELECT Id, Name ' +
+          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
@@ -506,7 +506,7 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
-      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
+      Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
         selectedCase.Id,
         selectedStage.Id
       );
@@ -584,21 +584,23 @@ public without sharing class FEC_CaseBusinessService {
 
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
-            if (String.isNotBlank(lwcName)) {
+            Boolean isCOFStage1NotRevert = !isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
+            Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
+            if (String.isNotBlank(lwcName) && !isCOFStage1NotRevert) {
               DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
               lwcSlot.componentName = lwcName;
               lwcSlot.order = subSectionOrderTemp;
               lwcSlot.fieldLayout = (Decimal) item.get(
                 'FEC_Sub_Section_Field_Layout__c'
               );
-              lwcSlot.subSectionName = subSectionNameTemp;
+              lwcSlot.subSectionName = isCOFStage1Revert ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
               lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
                 item,
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
               if (
-                forceReadonlyIncorrectPaymentOnLatestRevert &&
+                isLatestRevertToCurrentStage &&
                 LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
               ) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
