@@ -29,11 +29,27 @@ public without sharing class FEC_CofGsrAssignmentService {
             FROM FEC_Team_Queue__c
             ORDER BY FEC_Select_Team__r.Name, FEC_Queue_Name__c
         ];
+        
+        Set<String> queueDevNames = new Set<String>();
+        for (FEC_Team_Queue__c r : records) {
+            if (String.isNotBlank(r.FEC_Queue_Name__c)) {
+                queueDevNames.add(r.FEC_Queue_Name__c);
+            }
+        }
+        
+        Map<String, String> devNameToLabel = new Map<String, String>();
+        for (Group g : [SELECT Name, DeveloperName FROM Group WHERE DeveloperName IN :queueDevNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+            devNameToLabel.put(g.DeveloperName, g.Name);
+        }
+        
         List<Map<String, String>> result = new List<Map<String, String>>();
         for (FEC_Team_Queue__c r : records) {
+            String queueLabel = devNameToLabel.containsKey(r.FEC_Queue_Name__c) 
+                ? devNameToLabel.get(r.FEC_Queue_Name__c) 
+                : r.FEC_Queue_Name__c;
             result.add(new Map<String, String>{
                 'teamName' => r.FEC_Select_Team__r?.Name,
-                'queueName' => r.FEC_Queue_Name__c
+                'queueName' => queueLabel
             });
         }
         return result;
