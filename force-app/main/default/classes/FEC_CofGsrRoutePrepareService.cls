@@ -40,7 +40,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
         WHERE Id = :caseId
         LIMIT 1
       ];
-      if (!caseRows.isEmpty() && caseRows[0].FEC_Actual_Nature_of_Case__c == null) {
+      // if (!caseRows.isEmpty() && caseRows[0].FEC_Actual_Nature_of_Case__c == null) {
         Id nocId;
         try {
           nocId = (Id) natureOfCaseIdCof;
@@ -62,7 +62,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
           );
           params.put('natureOfCaseId', String.valueOf(tgt.Id));
         }
-      }
+      // }
     }
   }
 
