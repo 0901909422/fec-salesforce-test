@@ -9,6 +9,10 @@
                         </div>
                     </template>
                     <template if:false={isLoading}>
+                    <template if:true={repaymentScheduleError}>
+                        <div class="repay-no-data sync-fail-text">{customLabel.msgErrorAPI}</div>
+                    </template>
+                    <template if:false={repaymentScheduleError}>
                     <!-- 3 cột tổng: format giống Termination / MainInfo / IPP Detail -->
                     <div class="repay-schedule-summary slds-m-bottom_medium">
                         <div class="repay-schedule-summary-item">
@@ -65,6 +69,7 @@
                     </template>
                     <template if:false={hasRepaymentScheduleTableData}>
                         <div class="repay-no-data">{customLabel.noData}</div>
+                    </template>
                     </template>
                     </template>
                 </div>

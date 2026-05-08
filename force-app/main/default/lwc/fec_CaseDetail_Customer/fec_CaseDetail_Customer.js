@@ -8,6 +8,8 @@ import {
 } from "lightning/messageService";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
+//HieuTT74: [UPDATE - 5/5/2026]: Tạo message channel cho button save/submit
+import CASE_ACTION from "@salesforce/messageChannel/FEC_CaseAction__c";
 import {
   getFocusedTabInfo,
   closeTab,
@@ -137,7 +139,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseRemarks ~ loadRemarks ~ err:", err);
       })
-      .finally(() => { });
+      .finally(() => {});
   }
 
   async connectedCallback() {
@@ -176,7 +178,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
-    this.modeEditCase = message.isModeEdit === true;
+    // Author: Toannd61
+    const prevModeEdit = this.modeEditCase === true;
+    const nextModeEdit = message.isModeEdit === true;
+
+    // Bỏ qua nếu mode không thực sự thay đổi (tránh reload NOC khi nhận broadcast từ tab khác)
+    if (prevModeEdit === nextModeEdit) return;
+
+    this.modeEditCase = nextModeEdit;
 
     resetViewMode({
       recordId: this.recordId,
@@ -203,14 +212,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     );
 
     if (caseBusinessEle) {
-      // Luôn gọi getData khi đổi mode: review → load lại từ server (NOC, Account Info vừa lưu)
+      // Chỉ gọi getData khi mode thực sự đổi: tránh reset NOC do broadcast từ tab khác
       caseBusinessEle.getData();
     }
   }
 
   handleNOCMsg(message) {
     if (message == null) return;
-    if (message.caseId != null && message.caseId !== this.recordId) {
+    if (message.caseId !== this.recordId) {
       return;
     }
     if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
@@ -239,6 +248,19 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       isModeEdit: Boolean(isEdit),
     };
     publish(this.messageContext, IS_MODE_EDIT, payload);
+  }
+
+  async handlePublishCaseAction(action) {
+    if (this.messageContext == null) return;
+
+    const payload = {
+      action: action, // SAVE | SUBMIT
+      ...(this.recordId ? { recordId: this.recordId } : {}),
+    };
+
+    console.log("📤 CASE_ACTION:", payload);
+
+    publish(this.messageContext, CASE_ACTION, payload);
   }
 
   /**
@@ -280,6 +302,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then(() => {
         setTimeout(async () => {
           this.handlePublishMode(false);
+
+          this.handlePublishCaseAction("SAVE");
+
+          await new Promise((r) => setTimeout(r, 50));
+
           await this.closeCurrentTab();
         }, 0);
       })
@@ -422,10 +449,16 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         updateRecord(recordInput);
       }
 
-      // Chuyển sang Case Review (chế độ xem), không đóng tab
-      setTimeout(() => {
-        this.modeEditCase = false;
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+      // Chuyển sang Case Review (chế độ xem), không đóng tab — publish mode trước để handleMessage nhận
+      // đổi từ edit → review (không gán modeEditCase=false trước, nếu không prev===next và bỏ qua resetViewMode/getData).
+      setTimeout(async () => {
         this.handlePublishMode(false);
+
+        this.handlePublishCaseAction("SUBMIT");
+
+        // optional: đảm bảo message dispatch ổn định
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }, 0);
     } catch (error) {
       console.error("Submit failed:", error);

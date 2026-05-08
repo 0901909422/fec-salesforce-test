@@ -151,6 +151,16 @@ public with sharing class FEC_GetLoanBasicInfo {
         String dateTimeStr,
         String contractNumber
     ) {
+        return callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber, false);
+    }
+
+    public static ResponseWrapper callGetLoanBasicInfo(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String contractNumber,
+        Boolean isTestApi
+    ) {
         try {
             validateRequest(transId, requestorId, dateTimeStr, contractNumber);
 
@@ -158,6 +168,12 @@ public with sharing class FEC_GetLoanBasicInfo {
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Loan_Basic_Info');
+
+            if (isTestApi == true) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{ 'GetLoanBasicInfo' })
+                );
+            }
 
             //String endpoint = apiSetting?.FEC_Call_Mock__c
                 //? FEC_MockupEndpoint.GET_LOAN_BASIC_INFO_ENDPOINT_MOCKUP

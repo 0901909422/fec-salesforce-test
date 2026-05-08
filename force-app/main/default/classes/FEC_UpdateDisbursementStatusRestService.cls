@@ -109,8 +109,15 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
             Case c = cases[0];
 
-            // Business rule: Case đã đóng (Resolved-Completed)
-            if (FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED.equals(c.Status)) {
+            // Business rule: Case đã đóng (Resolved-Completed hoặc trạng thái cuối)
+            Set<String> closedStatuses = new Set<String>{
+                FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+                FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+                FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+                FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+                FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
+            };
+            if (closedStatuses.contains(c.Status)) {
                 response = new UpdateDisbursementStatusResponse(
                     CODE_BUSINESS_ERROR,
                     String.format(System.Label.FEC_UpdateDisb_Msg_AlreadyResolved, new List<String>{ reqBody.CRMID })

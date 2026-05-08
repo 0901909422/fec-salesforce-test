@@ -23,15 +23,16 @@ public without sharing class FEC_CofGsrAssignmentService {
 
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getTeamQueueOptions() {
+        // tungnm37 thêm: dùng FEC_Select_Team__r.Name (lookup đến FEC_Team__c)
         List<FEC_Team_Queue__c> records = [
-            SELECT FEC_Name__c, FEC_Queue_Name__c
+            SELECT FEC_Select_Team__r.Name, FEC_Queue_Name__c
             FROM FEC_Team_Queue__c
-            ORDER BY FEC_Name__c, FEC_Queue_Name__c
+            ORDER BY FEC_Select_Team__r.Name, FEC_Queue_Name__c
         ];
         List<Map<String, String>> result = new List<Map<String, String>>();
         for (FEC_Team_Queue__c r : records) {
             result.add(new Map<String, String>{
-                'teamName' => r.FEC_Name__c,
+                'teamName' => r.FEC_Select_Team__r?.Name,
                 'queueName' => r.FEC_Queue_Name__c
             });
         }
@@ -48,6 +49,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             WHERE FEC_Nature_of_Cases__c = :natureOfCaseId
               AND FEC_Team__c != null
               AND FEC_Queue__c != null
+              AND FEC_Active__c = true
             ORDER BY FEC_Team__c ASC
         ];
 
@@ -74,6 +76,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FROM FEC_Routing_Assignment__c
                         WHERE FEC_Nature_of_Cases__c IN :siblingIds
                           AND FEC_Team__c != null AND FEC_Queue__c != null
+                          AND FEC_Active__c = true
                         ORDER BY FEC_Team__c ASC
                     ];
                 }
@@ -133,6 +136,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 FROM FEC_Routing_Assignment__c
                 WHERE FEC_Nature_of_Cases__c IN :nocIds
                   AND FEC_Team__c != null AND FEC_Queue__c != null
+                  AND FEC_Active__c = true
                 ORDER BY FEC_Team__c ASC
             ];
             if (routingAssignments.isEmpty()) return;
@@ -182,7 +186,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = ra.FEC_Team__c,
                     FEC_Assignment_Remark__c = remarkContent,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = false
                 ));
             }
             insert assignments;
@@ -201,14 +206,16 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!remarksToInsert.isEmpty()) insert remarksToInsert;
 
             List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+            // tungnm37: build reverse map Id->Name để tránh lỗi so sánh String vs Id
+            Map<String, String> queueIdToName = new Map<String, String>();
+            for (String qn : queueNameToId.keySet()) {
+                if (queueNameToId.get(qn) != null) {
+                    queueIdToName.put(String.valueOf(queueNameToId.get(qn)), qn);
+                }
+            }
             for (FEC_Assignment__c a : assignments) {
                 String queueId = a.FEC_OwnerID__c;
-                String queueName = null;
-                for (String qn : queueNameToId.keySet()) {
-                    if (queueNameToId.get(qn) != null && String.valueOf(queueNameToId.get(qn)) == queueId) {
-                        queueName = qn; break;
-                    }
-                }
+                String queueName = queueIdToName.get(queueId);
                 histories.add(new FEC_Routing_Action_History__c(
                     FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
@@ -221,7 +228,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = queueId,
-                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                    FEC_Submitted_On__c = DateTime.now()
                 ));
             }
             if (!histories.isEmpty()) {
@@ -259,6 +267,7 @@ public without sharing class FEC_CofGsrAssignmentService {
 
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
+            List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
             for (Object raw : rawItems) {
                 Map<String, Object> item = (Map<String, Object>) raw;
                 String teamName = (String) item.get('teamName');
@@ -276,9 +285,11 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName
+                    FEC_Assignment_Routing_Action__c = stageName,
+                    FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
+                queueNameList.add(queueName);
             }
             insert assignments;
 
@@ -298,12 +309,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
             for (Integer i = 0; i < assignments.size(); i++) {
                 FEC_Assignment__c a = assignments[i];
-                String queueName = null;
-                for (String qn : queueNameToId.keySet()) {
-                    if (queueNameToId.get(qn) != null && String.valueOf(queueNameToId.get(qn)) == a.FEC_OwnerID__c) {
-                        queueName = qn; break;
-                    }
-                }
+                String queueName = queueNameList[i]; // tungnm37: lấy trực tiếp từ list, không reverse lookup
                 histories.add(new FEC_Routing_Action_History__c(
                     FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
@@ -316,7 +322,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = a.FEC_OwnerID__c,
-                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                    FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                    FEC_Submitted_On__c = DateTime.now()
                 ));
             }
             if (!histories.isEmpty()) {
@@ -377,6 +384,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                 FROM FEC_Routing_Assignment__c
                 WHERE FEC_Nature_of_Cases__c IN :allNocIds
                   AND FEC_Team__c != null AND FEC_Queue__c != null
+                  AND FEC_Active__c = true
                 GROUP BY FEC_Nature_of_Cases__c
             ]) {
                 result.add((Id) ar.get('nocId'));
@@ -415,7 +423,7 @@ public without sharing class FEC_CofGsrAssignmentService {
         if (!nocIds.isEmpty()) {
             List<FEC_Routing_Assignment__c> teamCheck = [
                 SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
-                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null LIMIT 1
+                WHERE FEC_Nature_of_Cases__c IN :nocIds AND FEC_Team__c != null AND FEC_Active__c = true LIMIT 1
             ];
             if (!teamCheck.isEmpty()) firstTeam = teamCheck[0].FEC_Team__c;
         }
@@ -446,7 +454,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c
+                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                        FEC_Submitted_On__c = DateTime.now()
                     ));
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());

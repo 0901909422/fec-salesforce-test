@@ -11,7 +11,7 @@
             <template if:false={nfuData}>
                 <div class="slds-accordion">
                     <section class={sectionClass}>
-                        <div class="slds-accordion__summary" onclick={handleToggle}>
+                        <div class="slds-accordion__summary fec-nfu-accordion-panel" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
@@ -20,7 +20,7 @@
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
                                     <span>
-                                        {sectionTitleText}&nbsp;-&nbsp;
+                                        <span class="fec-accordion-section-label">{sectionTitleText}</span>&nbsp;-&nbsp;
                                         <span class="fec-nfu-sync-fail">{labelMsgApiError}</span>
                                     </span>
                                 </span>
@@ -35,7 +35,7 @@
             <template if:true={nfuData}>
                 <div class="slds-accordion">
                     <section class={sectionClass}>
-                        <div class="slds-accordion__summary" onclick={handleToggle}>
+                        <div class="slds-accordion__summary fec-nfu-accordion-panel" onclick={handleToggle}>
                             <h3 class="slds-accordion__summary-heading">
                                 <span class="slds-accordion__summary-content slds-grid">
                                     <lightning-icon
@@ -43,7 +43,7 @@
                                         size="x-small"
                                         class="slds-m-right_x-small">
                                     </lightning-icon>
-                                    <span>{sectionTitleText}</span>
+                                    <span class="fec-accordion-section-label">{sectionTitleText}</span>
                                 </span>
                             </h3>
                         </div>

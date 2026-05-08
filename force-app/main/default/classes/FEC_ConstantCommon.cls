@@ -214,6 +214,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
+    public static final String PRODUCT_TYPE_CASHBACK = 'Cashback';
+    public static final String PRODUCT_TYPE_EVOUCHER = 'EVoucher';
+    public static final String PRODUCT_TYPE_MVOUCHER = 'MVoucher';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
 
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
@@ -535,6 +538,17 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_1 = 'RL16.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
+
+    // RD Payment Contract Assessment — picklist API values & routing keys
+    public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
+    public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
+    public static final String RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT = 'Contract can be closed without statement';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_TEAM        = 'team';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_QUEUE       = 'queueDevName';
+    public static final String RD_ASSESSMENT_TEAM_SP                 = 'SP';
+    public static final String RD_ASSESSMENT_TEAM_CC                 = 'CC';
 
     public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
     public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
@@ -680,4 +694,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String DNB_STATUS_ACTIVE = 'Active';
     public static final String DNB_STATUS_INACTIVE = 'Inactive';
     public static final String BOOLEAN_TRUE = 'true';
+
+    public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
+    public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    public static final String QUEUE_ID_START = '00G';
+
 }

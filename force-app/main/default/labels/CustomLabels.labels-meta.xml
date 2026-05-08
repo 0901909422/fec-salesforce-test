@@ -4367,6 +4367,70 @@
         <value>Please fill in all required fields.</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>Đổi điểm thưởng thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>Đổi điểm thưởng thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>Xác nhận đổi điểm</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -10324,7 +10388,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Retry</shortDescription>
-        <value>Khoá thẻ thất bại</value>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Disable</fullName>
@@ -13378,6 +13442,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Không tìm thấy NFU Config cho Sub Code</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -14604,7 +14676,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Status</shortDescription>
-        <value>Status</value>
+        <value>Assignment Status</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Owner</fullName>
@@ -14612,7 +14684,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Owner</shortDescription>
-        <value>Owner</value>
+        <value>Assignment Owner</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Id</fullName>
@@ -15051,5 +15123,204 @@
         <protected>false</protected>
         <shortDescription>PDF Error Template Not Found</shortDescription>
         <value>Không tìm thấy template: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Case_Read_Error</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case wire failed for SMS tab</shortDescription>
+        <value>Could not read Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Case_Id</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Case ID</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Date Time</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Failure_Reason</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Failure Reason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Content</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Content</shortDescription>
+        <value>Notification Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Type</shortDescription>
+        <value>Notification Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Status</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Status</shortDescription>
+        <value>Sent Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_System</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent System</shortDescription>
+        <value>Sent System</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Type</shortDescription>
+        <value>Sent Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_User</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Email_Need_Record</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email tab: recordId missing</shortDescription>
+        <value>Open this panel on a Case record to load notification history.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Empty_Dash</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder em dash in grid / fallback empty message</shortDescription>
+        <value>—</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Error_Unknown</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error parsing</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Loading</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty state / spinner while SMS log loads</shortDescription>
+        <value>Loading…</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Phone_Prefix</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label before resolved phone on SMS tab</shortDescription>
+        <value>Phone:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Http_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed with HTTP status; replace {0}</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Load_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed without HTTP code</shortDescription>
+        <value>Unable to load SMS log.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_No_Log_Default</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Banner when IT Telco indicates no SMS log (fallback if no sys description)</shortDescription>
+        <value>No SMS log found for this phone number.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Sort_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>fec_RelatedListPaging sorted-by description</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_Email</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Email</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_MobileApp</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Mobile App</shortDescription>
+        <value>Mobile App</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_SMS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section SMS</shortDescription>
+        <value>SMS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_ZNS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section ZNS</shortDescription>
+        <value>ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
     </labels>
 </CustomLabels>

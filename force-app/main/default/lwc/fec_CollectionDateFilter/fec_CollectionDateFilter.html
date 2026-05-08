@@ -10,6 +10,8 @@
                 <c-fec_-date-picker
                     label={label.fromDate}
                     value={fromDate}
+                    max-date={todayIsoForPicker}
+                    onpickeropen={handleFromPickerOpen}
                     ondatechange={handleFromDateChange}
                 ></c-fec_-date-picker>
             </div>
@@ -19,6 +21,8 @@
                 <c-fec_-date-picker
                     label={label.toDate}
                     value={toDate}
+                    max-date={todayIsoForPicker}
+                    onpickeropen={handleToPickerOpen}
                     ondatechange={handleToDateChange}
                 ></c-fec_-date-picker>
             </div>

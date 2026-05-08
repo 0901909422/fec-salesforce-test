@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+	    <members>FEC_IPPClosureController</members>
+	    <members>FEC_AssignmentListHandler</members>
+		<name>Apexclass</name>
+	</types>
+    <types>
+	    <members>fec_CaseBussiness</members>
+	    <members>fec_CaseDetail_Customer</members>
+	    <members>fec_IPPClosureForm</members>
+	    <members>fec_AssignmentExecuteAction</members>
+	    <members>fec_AssignmentList</members>
+	    <members>fec_COFFraudRelatedView</members>
+	    <members>fec_CommonConst</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+        <members>FEC_MSG_Card_Block_Fail_Retry</members>
+		<name>CustomLabel</name>
+	</types>
+	<version>66.0</version>
+</Package>
