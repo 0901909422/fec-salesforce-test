@@ -1,0 +1,73 @@
+<template>
+    <lightning-card>
+        <div class="slds-p-around_medium">
+
+            <!-- Question -->
+            <div class="slds-m-bottom_medium">
+                <template if:true={hasDataAtDNB}>
+                    <p class="slds-text-heading_large slds-text-title_bold custom-question">
+                        {labels.hasDataQuestion}
+                    </p>
+                </template>
+                <template if:false={hasDataAtDNB}>
+                    <p class="slds-text-heading_large slds-text-title_bold custom-question">
+                        {labels.noDataQuestion}
+                    </p>
+                </template>
+
+                <lightning-radio-group name="updateChoice" options={radioOptions} value={selectedOption} type="radio"
+                    variant="label-hidden" class="horizontal-radio" onchange={handleRadioChange}>
+                </lightning-radio-group>
+            </div>
+
+            <template if:true={showTable}>
+                <div class="dnb-container"> <!-- Table -->
+                    <c-fec_-reusable-d-n-b-custom-table key-field="id" data={pagedData} columns={columns}
+                        oncheckboxchange={handleCheckboxChange} onpicklistchange={handlePicklistChange}
+                        ontogglecontact={handleToggleContact}>
+                    </c-fec_-reusable-d-n-b-custom-table>
+                </div>
+                <div class="btn-wrapper">
+                    <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
+                        onclick={openModal} disabled={isUpdateDisabled}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+    <!-- MODAL -->
+    <template if:true={isOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <header class="slds-modal__header custom-header">
+                    <h2 class="slds-text-heading_medium">{labels.modalTitle}</h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium custom-body">
+                    <p>
+                        {labels.modalMessage}
+                    </p>
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer custom-footer">
+
+                    <lightning-button label={labels.noBtn} variant="neutral" onclick={handleCloseModal}>
+                    </lightning-button>
+
+                    <lightning-button label={labels.yesBtn} variant="brand" class="slds-m-left_small"
+                        onclick={handleUpdate}>
+                    </lightning-button>
+
+                </footer>
+
+            </div>
+        </section>
+
+        <!-- BACKDROP -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

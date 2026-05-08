@@ -3,7 +3,6 @@
     <fullName>FEC_Business_Process__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Tên luồng xử lý</description>
-    <externalId>false</externalId>
     <label>Business Process</label>
     <referenceTo>FEC_MDM_Business_Process__c</referenceTo>
     <relationshipName>Case_Stage</relationshipName>

@@ -67,7 +67,7 @@ export default class FecMasterDataContainer extends LightningElement {
             // Chỉ cập nhật Map để báo nút "Save All"
             this.pendingChanges.set(nodeKey, normalizedNode);
             this.pendingChanges = new Map(this.pendingChanges);
-            
+
             // QUAN TRỌNG: Xóa dòng this.displayItem = ... ở đây
             // Không dội data ngược lại Component Con khi đang gõ
         }
@@ -115,8 +115,8 @@ export default class FecMasterDataContainer extends LightningElement {
             ) {
                 hasError = true;
                 this.showToast(
-                    LABEL_TOAST_ERROR, 
-                    `Bản ghi "${node.NameEN || node.Code}" đang chứa dữ liệu rỗng. Vui lòng chọn lại Node đó để sửa.`, 
+                    LABEL_TOAST_ERROR,
+                    `Bản ghi "${node.NameEN || node.Code}" đang chứa dữ liệu rỗng. Vui lòng chọn lại Node đó để sửa.`,
                     VARIANT_ERROR
                 );
                 break;
@@ -144,13 +144,27 @@ export default class FecMasterDataContainer extends LightningElement {
             this.pendingChanges = new Map(); // Reset map
 
             this.dispatchEvent(new CustomEvent(EVENT_REFRESH_ALL, { bubbles: true, composed: true }));
+
             const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
-            if (detailCmp) {
-                detailCmp.refreshData(); // Gọi refreshData để làm mới dữ liệu chi tiết nếu cần
-            }
+            detailCmp.markAsSaved();
+            detailCmp.refreshHistory();
+
+            // Dùng setTimeout ở phía Parent để đợi DOM ổn định (và đợi Tree refresh) 
+            // trước khi ra lệnh cho Child refresh History.
+            // setTimeout(() => {
+            //     const detailCmp = this.template.querySelector('[data-id="detailComponent"]');
+            //     if (detailCmp) {
+            //         detailCmp.markAsSaved();
+            //         detailCmp.refreshHistory();
+            //         console.log('[DEBUG][handleSaveAll] Called detailCmp.refreshHistory() and markAsSaved()');
+            //     } else {
+            //         console.log('[DEBUG][handleSaveAll] detailComponent not found!');
+            //     }
+            // }, 500);
+
         } catch (error) {
+            console.error('[DEBUG][handleSaveAll] ERROR:', error);
             this.showToast(LABEL_TOAST_ERROR, error.body.message, VARIANT_ERROR);
-            console.error('[ERROR][handleSaveAll]', error);
         } finally {
             this.loading = false;
         }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Money_Receive_Method__c</fullName>
+    <description>Hình thức nhận tiền</description>
+    <label>Money Receive Method</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Chuyển khoản</fullName>
+                <default>false</default>
+                <label>Chuyển khoản</label>
+            </value>
+            <value>
+                <fullName>Điện máy xanh</fullName>
+                <default>false</default>
+                <label>Điện máy xanh</label>
+            </value>
+            <value>
+                <fullName>Thế giới di động</fullName>
+                <default>false</default>
+                <label>Thế giới di động</label>
+            </value>
+            <value>
+                <fullName>VNPOST</fullName>
+                <default>false</default>
+                <label>VNPOST</label>
+            </value>
+            <value>
+                <fullName>Viettel</fullName>
+                <default>false</default>
+                <label>Viettel</label>
+            </value>
+            <value>
+                <fullName>Không có</fullName>
+                <default>false</default>
+                <label>Không có</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

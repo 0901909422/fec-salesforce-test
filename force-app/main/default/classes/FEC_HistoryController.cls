@@ -85,9 +85,9 @@ public with sharing class FEC_HistoryController {
                 // THỎA MÃN YÊU CẦU: Tách Action và Field Name
                 if (rawFieldName == 'created') {
                     wrapper.actionText = 'New: ' + recordName;
-                    wrapper.fieldName = 'Khởi tạo';
+                    wrapper.fieldName = System.Label.FEC_Msg_HistoryFieldCreated;
                     wrapper.oldValue = '';
-                    wrapper.newValue = 'Tạo bản ghi mới';
+                    wrapper.newValue = System.Label.FEC_Msg_NewRecordCreated;
                 } else {
                     if (fieldMap.containsKey(rawFieldName)) {
                         displayFieldName = fieldMap.get(rawFieldName).getDescribe().getLabel();
@@ -105,7 +105,7 @@ public with sharing class FEC_HistoryController {
             }
         } catch (Exception ex) {
             System.debug('[getRecordHistory] ERROR: ' + ex.getMessage());
-            throw new AuraHandledException('Không thể tải lịch sử: ' + ex.getMessage());
+            throw new AuraHandledException(System.Label.FEC_Error_Cannot_Load_History + ' ' + ex.getMessage());
         }
         
         System.debug('[getRecordHistory] RETURN: ' + historyList.size() + ' records');
