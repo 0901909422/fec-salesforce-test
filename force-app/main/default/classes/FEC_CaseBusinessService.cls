@@ -1615,7 +1615,7 @@ public without sharing class FEC_CaseBusinessService {
    * Tạo bản ghi FEC_Case_Flow_History__c khi Case được submit lần đầu (creation stage).
    * Chỉ tạo khi Case chưa submit (FEC_Is_Submited__c = false trước khi gọi).
    */
-  private static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+  public static void createCaseFlowHistory(String caseId, String natureOfCaseId, String fieldListJson) {
     if (String.isBlank(caseId)) return;
     try {
       FEC_Case_Flow_History__c history = new FEC_Case_Flow_History__c(
@@ -1713,45 +1713,10 @@ public without sharing class FEC_CaseBusinessService {
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
         when ROUTE_TO_COF_GSR {
-          //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
-          // Giống ROUTE_TO: tạo FEC_Case_Flow_History__c khi submit lần đầu (creation stage)
-          String natureOfCaseIdCof = (String) params.get('natureOfCaseId');
-          String fieldListJsonCof = (String) params.get('fieldListJson');
-          //PhongBT: cloneMasterDataSetting và cloneActualNatureOfCase cho cof-gsr
-          if (String.isNotBlank(natureOfCaseIdCof)) {
-            List<Case> caseRows = [
-              SELECT Id, FEC_Actual_Nature_of_Case__c
-              FROM Case
-              WHERE Id = :caseId
-              LIMIT 1
-            ];
-            if (!caseRows.isEmpty() && caseRows[0].FEC_Actual_Nature_of_Case__c == null) {
-              Id nocId;
-              try {
-                nocId = (Id) natureOfCaseIdCof;
-              } catch (Exception e) {
-                nocId = null;
-              }
-              if (nocId != null && nocId.getSObjectType() == FEC_Nature_of_Case__c.SObjectType) {
-                FEC_Actual_Nature_of_Case__c tgt = cloneActualNatureOfCase(natureOfCaseIdCof);
-                cloneMasterDataSetting(tgt.Id, natureOfCaseIdCof);
-                update new Case(
-                  Id = caseId,
-                  FEC_Actual_Nature_of_Case__c = tgt.Id,
-                  FEC_Product_Type__c = tgt.FEC_Product_Type__c,
-                  FEC_Category__c = tgt.FEC_Category__c,
-                  FEC_SubCategory__c = tgt.FEC_Sub_Category__c,
-                  FEC_SubCode__c = tgt.FEC_Sub_Code__c
-                );
-                params.put('natureOfCaseId', String.valueOf(tgt.Id));
-              }
-            }
-          }
-          Boolean isCreationStageCof =
-            !([SELECT FEC_Is_Submited__c FROM Case WHERE Id = :caseId LIMIT 1].FEC_Is_Submited__c == true);
-          if (isCreationStageCof) {
-            createCaseFlowHistory(caseId, natureOfCaseIdCof, fieldListJsonCof);
-          }
+          FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
+            caseId,
+            params
+          );
           // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
           return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
@@ -2946,7 +2911,7 @@ public without sharing class FEC_CaseBusinessService {
       : selectedStageScreen.FEC_Action_Button__r.Name;
   }
 
-  private static FEC_Actual_Nature_of_Case__c cloneActualNatureOfCase(
+  public static FEC_Actual_Nature_of_Case__c cloneActualNatureOfCase(
     String natureOfCaseId
   ) {
     FEC_Actual_Nature_of_Case__c tgt = new FEC_Actual_Nature_of_Case__c();
@@ -2989,7 +2954,7 @@ public without sharing class FEC_CaseBusinessService {
     return tgt;
   }
 
-  private static void cloneMasterDataSetting(
+  public static void cloneMasterDataSetting(
     String actualNatureOfCaseId,
     String natureOfCaseId
   ) {
