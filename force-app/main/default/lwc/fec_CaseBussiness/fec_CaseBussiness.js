@@ -332,7 +332,6 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_FileUploadCard: () => import('c/fec_FileUploadCard'),
   fec_OriginalInformation: () => import('c/fec_OriginalInformation'),
   fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm'),
-  fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm'),
   fec_COFFraudRelatedView: () => import('c/fec_COFFraudRelatedView')
 };
 
