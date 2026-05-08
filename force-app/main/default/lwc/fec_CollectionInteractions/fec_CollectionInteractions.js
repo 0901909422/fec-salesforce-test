@@ -177,7 +177,8 @@ export default class Fec_CollectionInteractions extends LightningElement {
             this.interactions = null;
         } finally {
             this.isLoading = false;
-            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions) && this.interactions.length > 0;
+            // API OK (mảng có hoặc rỗng): luôn mở section — giống NFU / các khối collection khác
+            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions);
         }
     }
 

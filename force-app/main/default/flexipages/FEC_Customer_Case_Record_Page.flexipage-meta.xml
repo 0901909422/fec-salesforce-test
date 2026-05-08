@@ -127,7 +127,7 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
-                            <value>Case.Execute_Assigment</value>
+                            <value>Case.FEC_Execute_Assigment</value>
                             <visibilityRule>
                                 <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
                                 <criteria>
