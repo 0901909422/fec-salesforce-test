@@ -4347,14 +4347,8 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    
-    // Start with the user's direct ID
-    Set<Id> allAssociatedIds = new Set<Id>{ userId };
-    // 1. Add the Group IDs that correspond to the User's Role
-    Group roleGroup = [SELECT Id FROM Group WHERE RelatedId = :roleId AND Type = 'Role' LIMIT 1];
-    allAssociatedIds.add(roleGroup.Id);
-    System.debug('getTransferQueues allAssociatedIds ' + allAssociatedIds);
-    // 2. Query the Queues where the User, their Role Group, or their Public Groups are members
+    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
+
     return [
         SELECT Id, Name, DeveloperName  
         FROM Group 
@@ -4365,7 +4359,8 @@ public without sharing class FEC_CaseBusinessService {
             WHERE UserOrGroupId IN :allAssociatedIds
         )
     ];
-  }
+
+}
 
   private static Section buildAccountInfor(Case c) {
     // MAIN SECTION
