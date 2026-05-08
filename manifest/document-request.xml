@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>FEC_ClientPDFService</members>
+		<members>FEC_ClientPDFServiceTest</members>
+		<members>FEC_PDFTemplateSelector</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>FEC_PDF_DefaultFileName</members>
+		<members>FEC_PDF_Error_DataEmpty</members>
+		<members>FEC_PDF_Error_NoCreatePermission</members>
+		<members>FEC_PDF_Error_NoLinkPermission</members>
+		<members>FEC_PDF_Error_TemplateNotFound</members>
+		<name>CustomLabel</name>
+	</types>
+	<types>
+		<members>FEC_PDFTemplate.LichSuThanhToan</members>
+		<members>FEC_PDFTemplate.ThongBaoChoVayLichTraNo</members>
+		<members>FEC_PDFTemplate.XacNhanChamDutThe</members>
+		<members>FEC_PDFTemplate.XacNhanThanhLyHDTD</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_PDFTemplate__mdt</members>
+		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>fecPdfGenerator</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+    <members>FEC_pdfmake</members>
+    <members>FEC_pdfmakeVfs</members>
+    <members>FEC_TimesNewRoman</members>
+    <members>FEC_TimesNewRomanBold</members>
+    <members>FEC_TimesNewRomanItalic</members>
+    <members>FEC_TimesNewRomanBoldItalic</members>
+    <name>StaticResource</name>
+</types>
+	<version>66.0</version>
+</Package>

@@ -15011,5 +15011,45 @@
         <protected>false</protected>
         <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
         <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
+        </labels>
+    <labels>
+        <fullName>FEC_PDF_DefaultFileName</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Default File Name</shortDescription>
+        <value>Document</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_DataEmpty</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error Data Empty</shortDescription>
+        <value>Dữ liệu PDF không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_NoCreatePermission</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error No Create Permission</shortDescription>
+        <value>Không có quyền tạo file. Vui lòng liên hệ Admin.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_NoLinkPermission</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error No Link Permission</shortDescription>
+        <value>Không có quyền liên kết file. Vui lòng liên hệ Admin.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_TemplateNotFound</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error Template Not Found</shortDescription>
+        <value>Không tìm thấy template: {0}</value>
     </labels>
 </CustomLabels>
