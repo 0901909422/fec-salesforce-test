@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Lend_Phone_Or_Not_Use__c</fullName>
+    <description>Cho mượn máy hoặc không sử dụng</description>
+    <externalId>false</externalId>
+    <label>Lend Phone Or Not Use</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

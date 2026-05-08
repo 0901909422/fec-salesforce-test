@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Thông Báo Cho Vay Kiêm Lịch Trả Nợ</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Category__c</field>
+        <value xsi:type="xsd:string">Cho Vay</value>
+    </values>
+    <values>
+        <field>FEC_Description__c</field>
+        <value xsi:type="xsd:string">Template thông báo cho vay kiêm lịch trả nợ với bảng chi tiết trả nợ</value>
+    </values>
+    <values>
+        <field>FEC_FileName__c</field>
+        <value xsi:type="xsd:string">ThongBaoChoVay_LichTraNo</value>
+    </values>
+    <values>
+        <field>FEC_HTMLBody__c</field>
+        <value xsi:type="xsd:string">&lt;div style=&quot;margin: 30px; line-height:1.2;&quot;&gt;
+    &lt;div style=&quot;margin-bottom: 5px;font-size: 11px&quot;&gt;{{TODAY}}&lt;/div&gt;
+    &lt;table style=&quot;width: 100%; border-collapse: collapse;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;vertical-align: top; text-align: justify; font-size: 11px; width: 65%;&quot;&gt;
+                THÔNG BÁO CHO VAY KIÊM LỊCH TRẢ NỢ LÀ MỘT&lt;br /&gt;
+                PHẦN KHÔNG TÁCH RỜI CỦA HỢP ĐỒNG TÍN DỤNG&lt;br /&gt;
+                SỐ: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.ContractNumber&quot;&gt;&lt;/pega:reference&gt;
+            &lt;/td&gt;
+            &lt;td style=&quot;vertical-align: top; text-align: right; width: 35%;&quot;&gt;
+                &lt;img src=&quot;/resource/Logo&quot; style=&quot;width: 200px; height: auto; margin-top:20px&quot; /&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+    &lt;p style=&quot;text-align: center; font-size: 13pt; font-weight: bold; margin-top: 20px; margin-bottom: 20px;&quot;&gt;
+        THÔNG BÁO CHO VAY KIÊM LỊCH TRẢ NỢ
+    &lt;/p&gt;
+    &lt;!--     &lt;p style=&quot;text-align: center; margin-bottom: 16px;&quot;&gt;
+        &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.DSACode&quot;&gt;&lt;/pega:reference&gt;
+    &lt;/p&gt; --&gt;
+
+    &lt;div style=&quot;font-size: 11px;&quot;&gt;
+
+        &lt;p style=&quot;margin-bottom:5px;&quot;&gt;
+            I.&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Bên cho vay: Công ty Tài chính TNHH Ngân hàng Việt Nam Thịnh Vượng SMBC (VPB SMBC
+                FC)&lt;/b&gt;&lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;1.&amp;nbsp;&amp;nbsp;Địa chỉ: Tầng 2, Tòa nhà Ree Tower, Số 9 Đoàn Văn Bơ, Phường Xóm Chiếu,
+            TP.HCM&lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;2.&amp;nbsp;&amp;nbsp;Điện thoại: 1900 6535
+        &lt;/p&gt;
+        &lt;br /&gt;
+        &lt;p style=&quot;margin-bottom:10px;&quot;&gt;II.&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Bên vay:&lt;/b&gt;&lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;1.&amp;nbsp;&amp;nbsp;Họ tên: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.CustomerName&quot;&gt;
+            &lt;/pega:reference&gt;&lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;2.&amp;nbsp;&amp;nbsp;Địa chỉ: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.CustomerAddress&quot;&gt;
+            &lt;/pega:reference&gt;&lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;3.&amp;nbsp;&amp;nbsp;Số CMND: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.NationalID&quot;&gt;
+            &lt;/pega:reference&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Ngày cấp: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.DateOfIssue&quot;&gt;
+            &lt;/pega:reference&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Nơi cấp: &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.PlaceOfIssue&quot;&gt;
+            &lt;/pega:reference&gt;
+        &lt;/p&gt;
+        &lt;br /&gt;
+        &lt;p style=&quot;margin-bottom:5px;&quot;&gt;
+            III.&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Thông tin về khoản vay&lt;/b&gt;:
+            &lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;&lt;b&gt;1.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Tổng số Tiền Vay&lt;/b&gt; (bao gồm phí bảo hiểm nếu có):
+            &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.TotalLoanAmount&quot;&gt;&lt;/pega:reference&gt; đồng
+            &lt;br /&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Bằng chữ: &lt;pega:reference
+                name=&quot;pyWorkPage.RepaymentScheduleData.LoanAmountInVNText&quot;&gt;&lt;/pega:reference&gt;
+        &lt;/p&gt;
+        &lt;p style=&quot;margin-left: 6px;&quot;&gt;&lt;b&gt;2.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Lãi suất cho vay&lt;/b&gt;:&lt;/p&gt;
+        &lt;p style=&quot;margin-left: 18px;&quot;&gt;&lt;b&gt;2.1 Lãi suất vay trong hạn&lt;/b&gt;:&lt;/p&gt;
+        &lt;div style=&quot;margin-left: 42x;&quot;&gt;
+            [ v ] Lãi suất thông thường:
+            &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.MonthlyRate&quot;&gt;&lt;/pega:reference&gt;%/tháng (tương ứng với
+            lãi suất quy đổi &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.YearlyRate&quot;&gt;&lt;/pega:reference&gt;%/năm
+            trên cơ sở 01 năm có 365 ngày)
+        &lt;/div&gt;
+        &lt;div style=&quot;margin-left: 42x;&quot;&gt;
+            [&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;] Lãi suất ưu đãi:
+        &lt;/div&gt;
+        &lt;div style=&quot;margin-left: 18px;&quot;&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;......%/tháng trong ...... kỳ kể từ thời điểm giải ngân.Khoảng thời gian duy trì lãi suất ưu đãi có thể thay đổi theo thông báo của VPB
+            SMBC FC và được thể hiện tại lịch trả nợ tại thời điểm thay đổi (tương ứng với lãi suất quy đổi ......%/năm trên cơ sở 01 năm có 365 ngày).
+        &lt;/div&gt;
+        &lt;div style=&quot;margin-left: 18px;&quot;&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;......%/tháng trong thời hạn còn lại
+            của khoản vay (tương ứng với lãi suất quy đổi ......%/năm trên cơ sở 01
+            năm có 365 ngày).
+        &lt;/div&gt;
+        &lt;p style=&quot;margin-left: 18px;&quot;&gt;&lt;b&gt;2.2 Lãi suất quá hạn&lt;/b&gt;:&lt;/p&gt;
+        &lt;div style=&quot;margin-left: 18px;&quot;&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Lãi suất quá hạn đối với nợ gốc bị
+            quá hạn từ thời điểm chuyển nợ quá hạn: 150% Lãi suất trong hạn thông thường. Trường hợp mức lãi suất thông
+            thường trong hạn là 0%, mức lãi suất trong hạn thông thường là cơ sở tính lãi suất quá hạn là 45%/năm
+        &lt;/div&gt;
+        &lt;div style=&quot;margin-left: 18px; margin-bottom:5px;&quot;&gt;
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Lãi suất quá hạn nợ lãi: 10%/năm
+        &lt;/div&gt;
+        &lt;p style=&quot;margin-left: 6px; margin-bottom:5px;&quot;&gt;
+            &lt;b&gt;3.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Thời hạn cho vay&lt;/b&gt; từ ngày tiếp theo ngày giải ngân đến ngày &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.MaturityDate2&quot;&gt;&lt;/pega:reference&gt;
+        &lt;/p&gt;
+        &lt;p style=&quot;margin-left: 6px; margin-bottom:5px;&quot;&gt;
+            &lt;b&gt;4.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&lt;b&gt;Chi tiết trả nợ&lt;/b&gt;:
+        &lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;table style=&quot;width: 100%; border-collapse: separate; border-spacing: 2px; font-size: 11px;&quot;&gt;
+        &lt;tr&gt;
+            &lt;td
+                style=&quot;width: auto; border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Ngày phải trả&lt;/td&gt;
+            &lt;td
+                style=&quot;width: auto; border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Nợ gốc phải trả&lt;/td&gt;
+            &lt;td
+                style=&quot;width: auto; border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Lãi phải trả&lt;/td&gt;
+            &lt;td
+                style=&quot;width: auto; border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Nợ gốc còn lại&lt;/td&gt;
+            &lt;td
+                style=&quot;border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Phí dịch vụ thu hộ phải trả&lt;/td&gt;
+            &lt;td
+                style=&quot;border: 1px solid #dcd1be; text-align: center; padding: 2px; font-weight: bold; font-style: italic;font-size: 11px;&quot;&gt;
+                Tổng số tiền phải trả trong tháng&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;pega:forEach name=&quot;pyWorkPage.RepaymentScheduleData.RepaymentScheduleNew&quot;&gt;
+            &lt;tr&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: center; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference name=&quot;$this.InstallmentDueDate&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: right; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference format=&quot;FormatCurrency&quot; name=&quot;$this.Principal&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: right; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference format=&quot;FormatCurrency&quot; name=&quot;$this.Interest&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: right; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference format=&quot;FormatCurrency&quot; name=&quot;$this.ClosingPrincipal&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: right; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference format=&quot;FormatCurrency&quot; name=&quot;$this.RepaymentFees&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+                &lt;td style=&quot;border: 1px solid #dcd1be; text-align: right; font-size: 11px;&quot;&gt;
+                    &lt;pega:reference format=&quot;FormatCurrency&quot; name=&quot;$this.InstallmentAmount&quot;&gt;&lt;/pega:reference&gt;
+                &lt;/td&gt;
+            &lt;/tr&gt;
+        &lt;/pega:forEach&gt;
+    &lt;/table&gt;
+
+    &lt;div style=&quot;font-size: 11px; margin-top: 15px;&quot;&gt;
+        &lt;p style=&quot;margin: 0 0 10px 0&quot;&gt;&lt;u&gt;Ghi chú&lt;/u&gt;:&lt;/p&gt;
+        &lt;ul style=&quot;margin-left:10px&quot;&gt;
+            &lt;li&gt;Việc chuyển khoản thường mất 3 ngày làm việc. &lt;u&gt;&lt;b&gt;Do đó, Bên Vay nên thực hiện chuyển khoản trước ngày
+                        đến hạn 5 ngày&lt;/b&gt;&lt;/u&gt;.&lt;/li&gt;
+            &lt;li&gt;Nếu ngày cuối cùng của thời hạn cho vay là ngày lễ hoặc ngày nghỉ hàng tuần, thì chuyển sang ngày làm
+                việc tiếp theo.&lt;/li&gt;
+            &lt;li&gt;Khi thanh toán khoản vay cho VPB SMBC FC, Bên vay phải thanh toán cho các Đơn vị cung cấp dịch vụ thu hộ
+                cho VPB SMBC FC phí dịch vụ thu hộ là 12.000 VNĐ (Mười hai nghìn đồng) cho &lt;b&gt;mỗi kỳ&lt;/b&gt; trả nợ. Mức phí
+                này đã bao gồm thuế GTGT. Phí này không phải do VPB SMBC FC thu và không nằm trong Khoản Trả Hàng Tháng
+                của Bên vay.&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+
+&lt;/div&gt;</value>
+    </values>
+    <values>
+        <field>FEC_IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>FEC_TemplateCode__c</field>
+        <value xsi:type="xsd:string">TBCV_LTN</value>
+    </values>
+</CustomMetadata>
