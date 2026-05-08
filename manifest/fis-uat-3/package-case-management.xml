@@ -34,11 +34,17 @@
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_BancaController</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
+	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_AssignmentTriggerHandler</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
         <name>ApexClass</name>
     </types>
 	<types>
 		<members>FEC_RoutingActionHistoryTrigger</members>
 		<members>FEC_RelevantTicketTrigger</members>
+		<members>FEC_AssignmentTrigger</members>
+		<members>FEC_NatureOfCaseTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -395,6 +401,11 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
+		<members>Case.FEC_Assignment_Users__c</members>
+		<members>FEC_Channel__c.FEC_Cancel_Case__c</members>
+		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
+		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -402,21 +413,6 @@
         <members>FEC_BancaTabView</members>
         <name>CustomTab</name>
     </types>
-    <types>
-        <members>FEC_Assignment__c</members>
-        <members>FEC_CustomerAdditionalInfoConfig__c</members>
-        <members>FEC_CustomerAdditionalInfo__c</members>
-        <members>FEC_Routing_Assignment__c</members>
-        <members>FEC_Relevant_Ticket__c</members>
-        <members>FEC_Case_Remarks__c</members>
-        <members>FEC_Case_Flow_History__c</members>
-        <members>FEC_Do_Not_Bother__c</members>
-        <name>CustomObject</name>
-    </types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
-	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
@@ -434,10 +430,6 @@
         <members>FEC_Team__c</members>
 		<name>CustomObject</name>
 	</types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
-	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
@@ -447,6 +439,8 @@
         <members>FEC_Internal_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Assignment_Record_Page</members>
+        <members>Channel_Record_Page</members>
+        <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -489,6 +483,8 @@
 		<members>fec_BancaTabView</members>
         <members>fec_RdPaymentRoutingUtils</members>
 		<members>fec_PointsRedemptionCaseForm</members>
+		<members>fec_ChannelConfig</members>
+		<members>fec_NocChannelConfig</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -694,6 +690,14 @@
 		<members>FEC_Points_Redemption_CMS_Phone_Label</members>
 		<members>FEC_Points_Redemption_Confirm_Message</members>
 		<members>FEC_Points_Redemption_Confirm_Title</members>
+		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Save_Success</members>
+		<members>FEC_Channel_Config_Save_Error</members>
+		<members>FEC_Search_Channel_Placeholder</members>
+		<members>FEC_No_Results</members>
+		<members>FEC_Label_Get_Nature_Of_Case</members>
+		<members>FEC_Label_Cancel_Case</members>
+		<members>FEC_Label_Update_Case_Status</members>
         <name>CustomLabel</name>
     </types>
 	<types>
