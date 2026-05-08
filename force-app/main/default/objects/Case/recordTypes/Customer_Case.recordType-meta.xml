@@ -573,6 +573,21 @@
         </values>
     </picklistValues>
     <picklistValues>
+        <picklist>FEC_RD_Payment_Contract_Assessment__c</picklist>
+        <values>
+            <fullName>Cannot close contract</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed with statement</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed without statement</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>Type</picklist>
         <values>
             <fullName>Feature Request</fullName>

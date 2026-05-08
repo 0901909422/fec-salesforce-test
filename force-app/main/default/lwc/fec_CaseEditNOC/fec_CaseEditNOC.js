@@ -726,6 +726,32 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeOptionlst = res;
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
+        //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+        //lưu bộ có subcode chứ không phải bộ không subcode định submit
+        const triple =
+          this.productTypeSelectedId &&
+          this.categorySelectedId &&
+          this.subCategorySelectedId;
+        const noSubCodeOptions = !res || res.length === 0;
+
+        if (triple && noSubCodeOptions) {
+          this.subCodeSelectedId = null;
+          this.syncSubCodeComboValue();
+          return getNatureOfCaseWithoutSubCode({
+            productTypeId: this.productTypeSelectedId,
+            categoryId: this.categorySelectedId,
+            subCategoryId: this.subCategorySelectedId
+          })
+            .then((noc) => {
+              this.natureOfCase = noc;
+              this.handlePublishMessageChanel();
+            })
+            .catch((e) => {
+              console.log("getNatureOfCaseWithoutSubCode err:", e);
+              this.natureOfCase = null;
+              this.handlePublishMessageChanel();
+            });
+        }
       })
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ err:", err);
@@ -778,10 +804,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleChangeSubCategory(e) {
     this.subCategorySelectedId = e.detail.value;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
 
     this.handleEnable("sub-code");
-
-    if (this.subCategorySelectedId) this.handlePublishMessageChanel();
+    this.handlePublishMessageChanel();
   }
 
   handleChangeSubCode(e) {
@@ -809,6 +836,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
         .catch((error) => {
           console.log("error", error);
         });
+    } else {
+      this.natureOfCase = null;
+      this.handlePublishMessageChanel();
     }
   }
 
@@ -934,6 +964,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
     // Publish lên CASE_NOC_Channel với bộ NOC mới (Updated NOC)
     const payload = {
+      caseId: this.recordId,
       productTypeId: this.productTypeSelectedId,
       categoryId: this.updatedCategoryId,
       subCategoryId: this.updatedSubCategoryId,

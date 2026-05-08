@@ -4405,6 +4405,70 @@
         <value>Please fill in all required fields.</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>Đổi điểm thưởng thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>Đổi điểm thưởng thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>Xác nhận đổi điểm</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -11548,6 +11612,14 @@
         <value>Mở khoá thẻ thất bại.</value>
     </labels>
     <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Không tìm thấy NFU Config cho Sub Code</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
         <categories>Case Business LWC</categories>
         <language>en_US</language>
@@ -13900,7 +13972,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Status</shortDescription>
-        <value>Status</value>
+        <value>Assignment Status</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Owner</fullName>
@@ -13908,7 +13980,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Owner</shortDescription>
-        <value>Owner</value>
+        <value>Assignment Owner</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Id</fullName>
@@ -14554,5 +14626,20 @@
         <protected>false</protected>
         <shortDescription>Accordion section ZNS</shortDescription>
         <value>ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
     </labels>
 </CustomLabels>
