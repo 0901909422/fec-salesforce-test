@@ -15,17 +15,22 @@
                         <valueListItems>
                             <value>Case.Follow_Up</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.RecordType.Name}</leftValue>
                                     <operator>NE</operator>
                                     <rightValue>Interaction</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Unfollow</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.RecordType.Name}</leftValue>
                                     <operator>NE</operator>
@@ -36,12 +41,16 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Reopen</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
                                     <operator>CONTAINS</operator>
@@ -52,12 +61,16 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Recall</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
                                     <operator>CONTAINS</operator>
@@ -68,22 +81,31 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.New_Assignment</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>handling</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -124,12 +146,16 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.FEC_Execute_Assigment</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -165,15 +191,24 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Hold_Case</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>handling</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
