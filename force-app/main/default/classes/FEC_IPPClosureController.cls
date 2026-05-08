@@ -61,7 +61,7 @@ public without sharing class FEC_IPPClosureController {
                        FEC_Customer_History__r.FEC_Account_Number__c
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
-                  AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                 LIMIT 1
             ];
         } else {
@@ -73,7 +73,7 @@ public without sharing class FEC_IPPClosureController {
                        FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c,
                        FEC_IPP_Closure_Case__r.FEC_Case_Status__c
                 FROM FEC_IPP__c
-                WHERE FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
+                WHERE (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
                   AND Id NOT IN (
@@ -81,7 +81,7 @@ public without sharing class FEC_IPPClosureController {
                       FROM Case
                       WHERE FEC_IPP_To_Close__c != null
                         AND Id != :caseId
-                        AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+                        AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
                   )
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
@@ -246,7 +246,7 @@ public without sharing class FEC_IPPClosureController {
             FROM Case
             WHERE FEC_IPP_To_Close__c IN :ippIds
               AND Id != :currentCaseId
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
         ]) {
             if (c.FEC_IPP_To_Close__c != null) {
                 blocked.add(c.FEC_IPP_To_Close__c);
@@ -263,7 +263,7 @@ public without sharing class FEC_IPPClosureController {
             SELECT Id
             FROM Case
             WHERE Id = :linkedCaseId
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
             LIMIT 1
         ];
         return !pendingCases.isEmpty();
@@ -278,7 +278,7 @@ public without sharing class FEC_IPPClosureController {
             SELECT Id
             FROM Case
             WHERE Id IN :caseIds
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
         ]) {
             pendingCaseIds.add(c.Id);
         }
