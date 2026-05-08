@@ -2,9 +2,9 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Relevant_Ticket_ID__c</fullName>
     <externalId>false</externalId>
-    <formula>FEC_Interaction__r.FEC_Link_ID__c</formula>
+    <formula>FEC_Related_To__r.FEC_Link_ID__c</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Relevant Ticket ID</label>
+    <label>ID</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

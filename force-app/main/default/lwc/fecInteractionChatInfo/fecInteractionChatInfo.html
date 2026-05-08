@@ -1,0 +1,110 @@
+<template>
+  <lightning-accordion class="fec-chat-info" allow-multiple-sections-open
+    active-section-name={activeSections}>
+    <lightning-accordion-section name="interactionChatInfo" label={labels.interactionInformation}>
+      <div class="slds-var-p-horizontal_medium slds-var-p-vertical_small">
+        <div class="fec-info-grid">
+
+          <!-- COL LEFT -->
+          <div class="fec-info-col">
+            <!-- Customer Username -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.customerUsername}</span>
+              <span class="fec-info-value">
+                <template if:true={isUsernameReadOnly}>
+                  {customerUsername}
+                </template>
+                <template if:false={isUsernameReadOnly}>
+                  <template if:true={isEditingUsername}>
+                    <lightning-input type="text" value={usernameDraft} onchange={handleUsernameChange}
+                      variant="label-hidden" placeholder={labels.usernamePlaceholder}></lightning-input>
+                    <template if:true={usernameError}>
+                      <span class="fec-error-text">{usernameError}</span>
+                    </template>
+                  </template>
+                  <template if:false={isEditingUsername}>
+                    <span class="fec-empty">--</span>
+                  </template>
+                </template>
+              </span>
+              <span class="fec-info-action">
+                <template if:true={showUsernameEditIcon}>
+                  <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
+                    onclick={handleEditUsername} title="Edit"></lightning-icon>
+                </template>
+                <template if:true={isEditingUsername}>
+                  <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
+                    onclick={handleSaveUsername} title="Save"></lightning-icon>
+                  <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
+                    onclick={handleCancelEditUsername} title="Cancel"></lightning-icon>
+                </template>
+              </span>
+            </div>
+            <!-- Interaction Created On -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.interactionCreatedOn}</span>
+              <span class="fec-info-value">{createdOn}</span>
+              <span class="fec-info-action"></span>
+            </div>
+            <!-- KYC Status -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.kycStatus}</span>
+              <span class="fec-info-value">{kycStatus}</span>
+              <span class="fec-info-action"></span>
+            </div>
+          </div>
+
+          <!-- COL RIGHT -->
+          <div class="fec-info-col">
+            <!-- Interaction Phone -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.interactionPhone}</span>
+              <span class="fec-info-value">
+                <template if:true={isPhoneReadOnly}>
+                  {displayPhone}
+                </template>
+                <template if:false={isPhoneReadOnly}>
+                  <template if:true={isEditingPhone}>
+                    <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
+                      variant="label-hidden" placeholder={labels.phonePlaceholder}></lightning-input>
+                    <template if:true={phoneError}>
+                      <span class="fec-error-text">{phoneError}</span>
+                    </template>
+                  </template>
+                  <template if:false={isEditingPhone}>
+                    <span class="fec-empty">--</span>
+                  </template>
+                </template>
+              </span>
+              <span class="fec-info-action">
+                <template if:true={showPhoneEditIcon}>
+                  <lightning-icon icon-name="utility:edit" size="x-small" class="fec-edit-icon"
+                    onclick={handleEditPhone} title="Edit"></lightning-icon>
+                </template>
+                <template if:true={isEditingPhone}>
+                  <lightning-icon icon-name="utility:check" size="x-small" class="fec-edit-icon fec-save-icon"
+                    onclick={handleSavePhone} title="Save"></lightning-icon>
+                  <lightning-icon icon-name="utility:close" size="x-small" class="fec-edit-icon"
+                    onclick={handleCancelEditPhone} title="Cancel"></lightning-icon>
+                </template>
+              </span>
+            </div>
+            <!-- Interaction Created By -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.interactionCreatedBy}</span>
+              <span class="fec-info-value">{createdBy}</span>
+              <span class="fec-info-action"></span>
+            </div>
+            <!-- External Interaction ID -->
+            <div class="fec-info-row">
+              <span class="fec-info-label">{labels.externalInteractionId}</span>
+              <span class="fec-info-value">{externalInteractionId}</span>
+              <span class="fec-info-action"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </lightning-accordion-section>
+  </lightning-accordion>
+</template>

@@ -1,0 +1,29 @@
+:host {
+    display: block;
+}
+
+.ci-spinner {
+    display: flex;
+    justify-content: center;
+    padding: var(--lwc-spacingSmall, 0.75rem) 0;
+}
+
+.ci-sync-fail {
+    color: #c23934;
+    font-weight: 400;
+}
+
+/* Chỉ màu chữ phần tiêu đề section (Allocation History, …) — format chữ kế thừa từ SLDS */
+.fec-accordion-section-label {
+    color: var(--lwc-colorTextLabel, #3e3e3c);
+}
+
+
+.fec-collection-accordion-panel {
+    background-color: #f3f3f3;
+}
+
+.slds-accordion__summary {
+    cursor: pointer;
+    user-select: none;
+}

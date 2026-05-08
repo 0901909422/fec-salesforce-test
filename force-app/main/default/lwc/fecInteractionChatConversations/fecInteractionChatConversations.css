@@ -1,0 +1,41 @@
+/* Accordion header background — gray like fecInteractionChatInfo */
+.fec-chat-conversations {
+  --slds-c-accordion-summary-color-background: var(--lwc-colorBackground, #f3f2f2);
+}
+
+.fec-conv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fec-conv-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--lwc-colorTextLabel, #3e3e3c);
+}
+
+.fec-conv-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--lwc-colorBorder, #dddbda);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.fec-conv-textarea:focus {
+  outline: none;
+  border-color: var(--lwc-brandAccessible, #0176d3);
+  box-shadow: 0 0 0 1px var(--lwc-brandAccessible, #0176d3);
+}
+
+.fec-conv-textarea:disabled {
+  background: #ffffff;
+  color: var(--lwc-colorTextDefault, #3e3e3c);
+  cursor: default;
+}
