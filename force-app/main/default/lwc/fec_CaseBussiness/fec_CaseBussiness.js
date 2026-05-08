@@ -83,6 +83,8 @@ import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Rema
 import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 // tungnm37 thêm: import label tên queue CS Support và Apex getTeamQueueOptions
 import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_Name";
+import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
+import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -850,9 +852,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // tungnm37 thêm: hiển thị lỗi khi chọn Queue trùng
   handleDuplicateQueue(event) {
-    const msg = event.detail?.message || 'Queue đã được chọn. Vui lòng chọn Queue khác.';
+    const msg = event.detail?.message || FEC_Duplicate_Queue_Error;
     this.dispatchEvent(new ShowToastEvent({
-      title: 'Lỗi',
+      title: FEC_Error_Title,
       message: msg,
       variant: 'error'
     }));
@@ -2733,6 +2735,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       return false;
     }
     console.log('FEC_DEBUG submit before routeToEle check routeToEle=' + !!routeToEle + ' isRoutingAssignmentMode=' + this.isRoutingAssignmentMode + ' natureOfCase=' + this.business?.natureOfCase);
+
+    // tungnm37: validate form Add Item chưa confirm
+    if (this.isRoutingAssignmentMode) {
+      const routingComp = this.template.querySelector('c-fec_-routing-assignment');
+      if (routingComp && routingComp.hasUnconfirmedForm) {
+        this.showToast(FEC_Error_Title, FEC_Confirm_Before_Submit, 'error');
+        return false;
+      }
+    }
+
      if (routeToEle) {
       // tungnm37 thêm: COF/GSR shortcut - không cần tìm selectedAction
       if (this.isRoutingAssignmentMode) {
