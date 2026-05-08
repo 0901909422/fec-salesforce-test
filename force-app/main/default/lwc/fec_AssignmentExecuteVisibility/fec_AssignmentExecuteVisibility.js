@@ -1,21 +1,40 @@
-import { LightningElement, api, wire } from "lwc";
-import canExecute from "@salesforce/apex/FEC_AssignmentExecuteService.canExecuteAssignment";
+import { LightningElement, api } from "lwc";
 
-export default class Fec_AssignmentExecuteVisibility extends LightningElement {
+import canExecute
+    from "@salesforce/apex/FEC_AssignmentExecuteService.canExecuteAssignment";
+
+export default class Fec_AssignmentExecuteVisibility
+    extends LightningElement {
 
     @api recordId;
 
-    canExecute;
+    canExecute = false;
 
-    @wire(canExecute, { caseId: "$recordId" })
-    wiredResult({ data, error }) {
+    isLoaded = false;
 
-        if (data) {
-            this.canExecute = data.value;
+    renderedCallback() {
+
+        if (this.isLoaded || !this.recordId) {
+            return;
         }
 
-        if (error) {
-            console.error(error);
-        }
+        this.isLoaded = true;
+
+        console.log('recordId=', this.recordId);
+
+        canExecute({
+            caseId: this.recordId
+        })
+        .then(result => {
+
+            console.log('RESULT=', result);
+
+            this.canExecute = result.value;
+
+        })
+        .catch(error => {
+
+            console.error('ERROR=', error);
+        });
     }
 }

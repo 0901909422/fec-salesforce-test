@@ -45,6 +45,49 @@ export default class Fec_DatePicker extends LightningElement {
 
     _value = '';
 
+    /** Đóng khi click ra ngoài (mousedown capture). Dùng tọa độ + getBoundingClientRect — tránh Locker/retarget làm sai event.target. */
+    _closeIfClickOutside = (event) => {
+        if (!this.isOpen) return;
+        let x = event.clientX;
+        let y = event.clientY;
+        if (event.type === 'touchstart' && event.touches?.length) {
+            x = event.touches[0].clientX;
+            y = event.touches[0].clientY;
+        }
+        if (typeof x !== 'number' || typeof y !== 'number' || Number.isNaN(x) || Number.isNaN(y)) {
+            return;
+        }
+        if (this._isPointerInsidePicker(x, y)) return;
+        this.closeCalendar();
+    };
+
+    /** Input + popup: popup position:absolute không mở rộng rect của wrapper — phải hợp cả .calendar-popup. */
+    _isPointerInsidePicker(clientX, clientY) {
+        const inRect = (r) =>
+            clientX >= r.left &&
+            clientX <= r.right &&
+            clientY >= r.top &&
+            clientY <= r.bottom;
+
+        const wrapper = this.template.querySelector('.datepicker-wrapper');
+        if (wrapper && inRect(wrapper.getBoundingClientRect())) return true;
+
+        const popup = this.template.querySelector('.calendar-popup');
+        if (popup && inRect(popup.getBoundingClientRect())) return true;
+
+        return false;
+    }
+
+    connectedCallback() {
+        document.addEventListener('mousedown', this._closeIfClickOutside, true);
+        document.addEventListener('touchstart', this._closeIfClickOutside, { capture: true, passive: true });
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('mousedown', this._closeIfClickOutside, true);
+        document.removeEventListener('touchstart', this._closeIfClickOutside, { capture: true, passive: true });
+    }
+
     /** Đóng popup — gọi từ parent khi mở picker khác */
     @api
     closeCalendar() {
