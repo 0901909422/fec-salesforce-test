@@ -5,6 +5,18 @@
 
 public without sharing class FEC_IPPClosureController {
 
+    /** Case.Status mà IPP được coi không còn "khóa" bởi case khác (Customer/Internal Resolved-*, Interaction Closed / Auto-Closed, v.v.). Trùng dùng cho SOQL và isReleasedClosureParentCaseStatus. */
+    private static final Set<String> RELEASED_CLOSURE_PARENT_CASE_STATUSES = new Set<String>{
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+        FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
+        FEC_ConstantCommon.CASE_STATUS_CLOSED,
+        FEC_ConstantCommon.CASE_STATUS_AUTO_CLOSED,
+        FEC_ConstantCommon.CASE_STATUS_CANCELLED
+    };
+
     public class IPPClosureDTO {
         @AuraEnabled public String Id;
         @AuraEnabled public String ippRecordNo;
@@ -61,6 +73,8 @@ public without sharing class FEC_IPPClosureController {
                        FEC_Customer_History__r.FEC_Account_Number__c
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES)
                   AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                 LIMIT 1
             ];
@@ -70,10 +84,11 @@ public without sharing class FEC_IPPClosureController {
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
                        FEC_IPP_Current_Term__c, FEC_Customer_History__c,
-                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c,
-                       FEC_IPP_Closure_Case__r.FEC_Case_Status__c
+                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c
                 FROM FEC_IPP__c
-                WHERE FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
+                WHERE (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES)
+                  AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
                   AND Id NOT IN (
@@ -81,16 +96,12 @@ public without sharing class FEC_IPPClosureController {
                       FROM Case
                       WHERE FEC_IPP_To_Close__c != null
                         AND Id != :caseId
-                        AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+                        AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
                   )
                 ORDER BY FEC_IPP_Record_No__c ASC NULLS LAST
             ];
         }
-        SObjectAccessDecision decision = Security.stripInaccessible(AccessType.READABLE, ipps);
-        List<FEC_IPP__c> accessibleIpps = new List<FEC_IPP__c>();
-        for (SObject so : decision.getRecords()) {
-            accessibleIpps.add((FEC_IPP__c) so);
-        }
+        List<FEC_IPP__c> accessibleIpps = ipps;
         if (caseIppToClose == null && !accessibleIpps.isEmpty()) {
             Set<Id> linkedCaseIds = new Set<Id>();
             for (FEC_IPP__c r : accessibleIpps) {
@@ -168,12 +179,7 @@ public without sharing class FEC_IPPClosureController {
         if (ippRows.isEmpty()) {
             return false;
         }
-        SObjectAccessDecision ippDecision = Security.stripInaccessible(AccessType.READABLE, ippRows);
-        List<SObject> ippReadable = ippDecision.getRecords();
-        if (ippReadable.isEmpty()) {
-            return false;
-        }
-        FEC_IPP__c ippRec = (FEC_IPP__c) ippReadable[0];
+        FEC_IPP__c ippRec = ippRows[0];
         if (ippRec.FEC_Customer_History__r == null
             || String.isBlank(ippRec.FEC_Customer_History__r.FEC_Account_Number__c)
             || ippRec.FEC_Customer_History__r.FEC_Account_Number__c != accountNumber) {
@@ -181,7 +187,8 @@ public without sharing class FEC_IPPClosureController {
         }
         if (ippRec.FEC_IPP_Closure_Case__c != null
             && ippRec.FEC_IPP_Closure_Case__c != caseId
-            && isPendingCaseStatus(ippRec.FEC_IPP_Closure_Case__c)) {
+            && isPendingCaseStatus(ippRec.FEC_IPP_Closure_Case__c)
+            && !isReleasedClosureParentCaseStatus(ippRec.FEC_IPP_Closure_Case__c)) {
             return false;
         }
         Set<Id> checkBlocked = new Set<Id>();
@@ -246,13 +253,27 @@ public without sharing class FEC_IPPClosureController {
             FROM Case
             WHERE FEC_IPP_To_Close__c IN :ippIds
               AND Id != :currentCaseId
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
         ]) {
             if (c.FEC_IPP_To_Close__c != null) {
                 blocked.add(c.FEC_IPP_To_Close__c);
             }
         }
         return blocked;
+    }
+
+    private static Boolean isReleasedClosureParentCaseStatus(Id linkedCaseId) {
+        if (linkedCaseId == null) {
+            return false;
+        }
+        List<Case> released = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :linkedCaseId
+              AND Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES
+            LIMIT 1
+        ];
+        return !released.isEmpty();
     }
 
     private static Boolean isPendingCaseStatus(Id linkedCaseId) {
@@ -263,7 +284,7 @@ public without sharing class FEC_IPPClosureController {
             SELECT Id
             FROM Case
             WHERE Id = :linkedCaseId
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
             LIMIT 1
         ];
         return !pendingCases.isEmpty();
@@ -278,7 +299,7 @@ public without sharing class FEC_IPPClosureController {
             SELECT Id
             FROM Case
             WHERE Id IN :caseIds
-              AND (FEC_Case_Status__c LIKE 'Pending-%' OR Status LIKE 'Pending%')
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
         ]) {
             pendingCaseIds.add(c.Id);
         }
