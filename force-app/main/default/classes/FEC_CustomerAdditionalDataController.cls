@@ -130,18 +130,10 @@ public with sharing class FEC_CustomerAdditionalDataController {
             return m;
         }
         FEC_Customer_History__c ac = c.FEC_Account_or_Contract__r;
-        if (tryPutSingleLookupKey(m, KEY_CIF_NUMBER, ac.FEC_CIF_Number__c)) {
-            return m;
-        }
-        if (tryPutSingleLookupKey(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c)) {
-            return m;
-        }
-        if (tryPutSingleLookupKey(m, KEY_PHONE_NUMBER, ac.FEC_Primary_Phone__c)) {
-            return m;
-        }
-        if (tryPutSingleLookupKey(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c)) {
-            return m;
-        }
+        tryPutSingleLookupKey(m, KEY_CIF_NUMBER, ac.FEC_CIF_Number__c);
+        tryPutSingleLookupKey(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c);
+        tryPutSingleLookupKey(m, KEY_PHONE_NUMBER, ac.FEC_Primary_Phone__c);
+        tryPutSingleLookupKey(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c);
         if (ac.FEC_Account_Number__c != null) {
             String acctTrim = ac.FEC_Account_Number__c.trim();
             if (!String.isBlank(acctTrim)) {
