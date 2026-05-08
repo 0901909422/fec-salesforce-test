@@ -860,7 +860,7 @@
                     <value>Banca</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab20</identifier>
+                <identifier>flexipage_tab29</identifier>
                 <visibilityRule>
                     <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
