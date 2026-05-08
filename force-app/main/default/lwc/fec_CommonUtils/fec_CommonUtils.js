@@ -923,6 +923,13 @@ const formatCurrency2 = (value) => {
   return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+const getUsernameBeforeAt = (email) =>{
+   if (!email) {
+        return "";
+    }
+
+    return email.split("@")[0];
+}
 export {
   formatDate,
   formatDateTime,
@@ -965,5 +972,6 @@ export {
   formatShortDate,
   extensionBadge,
   doctypeIconFromExtension,
-  mapLinkedFileToTableRow
+  mapLinkedFileToTableRow,
+  getUsernameBeforeAt
 };
