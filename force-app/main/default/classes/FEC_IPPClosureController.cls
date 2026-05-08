@@ -1,6 +1,6 @@
 /****************************************************************************************
  * File Name    : FEC_IPPClosureController.cls
- * Description  : Controller for IPP Closure. Eligible IPPs exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
+ * Description  : Controller for IPP Closure. Eligible IPPs are resolved across the system by Account Number and exclude rows linked to another Case (FEC_IPP_Closure_Case__c or FEC_IPP_To_Close__c on other Cases); if Case.FEC_IPP_To_Close__c is set, returns that IPP only for review.
  ****************************************************************************************/
 
 public without sharing class FEC_IPPClosureController {
@@ -26,7 +26,7 @@ public without sharing class FEC_IPPClosureController {
     }
 
     /**
-     * Get IPPs for closure: same Customer History as Case. If Case.FEC_IPP_To_Close__c is set, returns only that IPP. Otherwise returns IPPs with Current Balance != 0 and != null, excluding rows linked to another Case via FEC_IPP_Closure_Case__c, and excluding IPPs already chosen on another Case (FEC_IPP_To_Close__c, Id != this Case).
+     * Get IPPs for closure: same Account Number as Case. If Case.FEC_IPP_To_Close__c is set, returns only that IPP. Otherwise returns IPPs with Current Balance != 0 and != null, excluding rows linked to another Case via FEC_IPP_Closure_Case__c, and excluding IPPs already chosen on another Case (FEC_IPP_To_Close__c, Id != this Case).
      */
     @AuraEnabled(cacheable=false)
     public static IPPClosureResultDTO getEligibleIPPsForClosure(Id caseId) {
@@ -36,8 +36,8 @@ public without sharing class FEC_IPPClosureController {
         if (caseId == null) {
             return wrapper;
         }
-        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
-        if (customerHistoryId == null) {
+        String accountNumber = getAccountNumberFromCase(caseId);
+        if (String.isBlank(accountNumber)) {
             return wrapper;
         }
         Id caseIppToClose = null;
@@ -57,10 +57,11 @@ public without sharing class FEC_IPPClosureController {
                 SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
-                       FEC_IPP_Current_Term__c, FEC_Customer_History__c
+                       FEC_IPP_Current_Term__c, FEC_Customer_History__c,
+                       FEC_Customer_History__r.FEC_Account_Number__c
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
-                  AND FEC_Customer_History__c = :customerHistoryId
+                  AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                 LIMIT 1
             ];
         } else {
@@ -68,10 +69,11 @@ public without sharing class FEC_IPPClosureController {
                 SELECT Id, FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
-                       FEC_IPP_Current_Term__c, FEC_Customer_History__c, FEC_IPP_Closure_Case__c,
+                       FEC_IPP_Current_Term__c, FEC_Customer_History__c,
+                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c,
                        FEC_IPP_Closure_Case__r.FEC_Case_Status__c
                 FROM FEC_IPP__c
-                WHERE FEC_Customer_History__c = :customerHistoryId
+                WHERE FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
                   AND Id NOT IN (
@@ -152,12 +154,13 @@ public without sharing class FEC_IPPClosureController {
         if (caseId == null || ippId == null) {
             return false;
         }
-        Id customerHistoryId = getCustomerHistoryIdFromCase(caseId);
-        if (customerHistoryId == null) {
+        String accountNumber = getAccountNumberFromCase(caseId);
+        if (String.isBlank(accountNumber)) {
             return false;
         }
         List<FEC_IPP__c> ippRows = [
-            SELECT Id, FEC_Customer_History__c, FEC_IPP_Current_Balance__c, FEC_IPP_Closure_Case__c
+            SELECT Id, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Account_Number__c,
+                   FEC_IPP_Current_Balance__c, FEC_IPP_Closure_Case__c
             FROM FEC_IPP__c
             WHERE Id = :ippId
             LIMIT 1
@@ -171,7 +174,9 @@ public without sharing class FEC_IPPClosureController {
             return false;
         }
         FEC_IPP__c ippRec = (FEC_IPP__c) ippReadable[0];
-        if (ippRec.FEC_Customer_History__c != customerHistoryId) {
+        if (ippRec.FEC_Customer_History__r == null
+            || String.isBlank(ippRec.FEC_Customer_History__r.FEC_Account_Number__c)
+            || ippRec.FEC_Customer_History__r.FEC_Account_Number__c != accountNumber) {
             return false;
         }
         if (ippRec.FEC_IPP_Closure_Case__c != null
@@ -208,9 +213,10 @@ public without sharing class FEC_IPPClosureController {
         }
     }
 
-    private static Id getCustomerHistoryIdFromCase(Id caseId) {
+    private static String getAccountNumberFromCase(Id caseId) {
         List<Case> cases = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -219,18 +225,13 @@ public without sharing class FEC_IPPClosureController {
             return null;
         }
         Case c = cases[0];
-        if (c.FEC_Account_or_Contract__c != null) {
-            return c.FEC_Account_or_Contract__c;
+        if (c.FEC_Account_or_Contract__c != null
+            && c.FEC_Account_or_Contract__r != null
+            && String.isNotBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c)) {
+            return c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
         }
         if (String.isNotBlank(c.FEC_Account_Number__c)) {
-            List<FEC_Customer_History__c> histories = [
-                SELECT Id FROM FEC_Customer_History__c
-                WHERE FEC_Account_Number__c = :c.FEC_Account_Number__c
-                LIMIT 1
-            ];
-            if (!histories.isEmpty()) {
-                return histories[0].Id;
-            }
+            return c.FEC_Account_Number__c.trim();
         }
         return null;
     }
