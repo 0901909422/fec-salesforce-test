@@ -15083,6 +15083,7 @@
         <protected>false</protected>
         <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
         <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
+    </labels>
     <labels>
         <fullName>FEC_PDF_DefaultFileName</fullName>
         <categories>PDF</categories>
