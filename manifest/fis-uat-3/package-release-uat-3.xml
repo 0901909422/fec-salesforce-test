@@ -769,6 +769,7 @@
 		<members>FEC_Label_Get_Nature_Of_Case</members>
 		<members>FEC_Label_Cancel_Case</members>
 		<members>FEC_Label_Update_Case_Status</members>
+		<members>FEC_Insurance_Info_Error</members>
         <name>CustomLabel</name>
     </types>
 	<types>

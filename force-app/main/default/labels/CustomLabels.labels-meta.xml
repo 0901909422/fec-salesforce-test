@@ -15459,4 +15459,12 @@
         <shortDescription>User Id</shortDescription>
         <value>User ID</value>
     </labels>
+    <labels>
+        <fullName>FEC_Insurance_Info_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Info Error</shortDescription>
+        <value>Insurance Info</value>
+    </labels>
 </CustomLabels>
