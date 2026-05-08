@@ -12,11 +12,16 @@ public without sharing class FEC_CofGsrRoutePrepareService {
    */
   public static void prepareActualNatureCloneAndCreationHistory(
     String caseId,
-    Map<String, String> params
+    Map<String, String> params,
+    String currentMethod
   ) {
     String originalNatureOfCaseId = (String) params.get('natureOfCaseId');
     String fieldListJson = (String) params.get('fieldListJson');
-    cloneActualNatureAndMasterData(caseId, params);
+    // Với ROUTE_TO, clone sẽ được xử lý trong FEC_CaseBusinessService.route().
+    // Tránh clone lặp 2 lần khi prepare chạy trước switch.
+    if (currentMethod != FEC_CaseBusinessService.ROUTE_TO) {
+      cloneActualNatureAndMasterData(caseId, params);
+    }
     createCaseFlowHistoryIfCreationStage(
       caseId,
       originalNatureOfCaseId,

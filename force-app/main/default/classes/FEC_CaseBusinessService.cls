@@ -1693,7 +1693,8 @@ public without sharing class FEC_CaseBusinessService {
       //PhongBT: Tạo case flow history
       FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
         caseId,
-        params
+        params,
+        method
       );
       switch on selectedMethod {
         when ROUTE_TO {
