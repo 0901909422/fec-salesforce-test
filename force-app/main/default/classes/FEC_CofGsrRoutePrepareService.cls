@@ -16,7 +16,7 @@ public without sharing class FEC_CofGsrRoutePrepareService {
   ) {
     String originalNatureOfCaseId = (String) params.get('natureOfCaseId');
     String fieldListJson = (String) params.get('fieldListJson');
-    // cloneActualNatureAndMasterData(caseId, params);
+    cloneActualNatureAndMasterData(caseId, params);
     createCaseFlowHistoryIfCreationStage(
       caseId,
       originalNatureOfCaseId,

@@ -1690,7 +1690,11 @@ public without sharing class FEC_CaseBusinessService {
       String replacementFee = (String)params.get('replacementFee');
       String last4Digit = (String)params.get('last4Digit');
       //PhongBT: Clone Actual NOC + Actual MDS
-      FEC_CofGsrRoutePrepareService.cloneActualNatureAndMasterData(caseId, params);
+      //PhongBT: Tạo case flow history
+      FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
+        caseId,
+        params
+      );
       switch on selectedMethod {
         when ROUTE_TO {
           String queueId = (String) params.get('queueId');
@@ -1714,11 +1718,6 @@ public without sharing class FEC_CaseBusinessService {
         }
         // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment + Case Remarks + Routing Action History
         when ROUTE_TO_COF_GSR {
-          //PhongBT: Tạo case flow history
-          FEC_CofGsrRoutePrepareService.prepareActualNatureCloneAndCreationHistory(
-            caseId,
-            params
-          );
           // tungnm37: delegate toàn bộ xử lý sang FEC_CofGsrAssignmentService
           return FEC_CofGsrAssignmentService.handleRouteToCofGsr(caseId, params, stageName);
         }
