@@ -20,6 +20,7 @@ public with sharing class FEC_SearchController {
                  FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
                  FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
                  FEC_Search_Phone_Number__c, FEC_Application_ID__c, FEC_Account_Number__c, FEC_Interaction_Email__c,
+                 FEC_Is_Test_API__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
                 WHERE Id = :caseId
