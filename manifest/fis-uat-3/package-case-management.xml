@@ -392,6 +392,9 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
+        <members>FEC_Additional_Info__c.FEC_Application_ID_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
         <name>CustomField</name>
     </types>
     <types>
