@@ -14,6 +14,38 @@ public with sharing class ArchiveCaseController {
     public Boolean hasError { get; set; }
     public AthenaCases__x athenaCaseRecord;
 
+    // Map of child/related object API name → Case lookup field name
+    // Used for both parsing (to distinguish child records from lookup relationships)
+    // and for inserting child records after Case creation
+    private static final Map<String, String> CHILD_OBJECT_CASE_FIELD = new Map<String, String>{
+        // Master-Detail relationships
+        'FEC_Watcher__c' => 'FEC_Case__c',
+        'FEC_Case_Remarks__c' => 'FEC_Case__c',
+        'FEC_Case_Flow_History__c' => 'FEC_Case__c',
+        'FEC_Additional_Info__c' => 'FEC_Case__c',
+        'FEC_Sensitive_Data__c' => 'FEC_Case__c',
+        'FEC_Routing_Action_History__c' => 'FEC_Case__c',
+        'FEC_RePayment_Schedule__c' => 'FEC_Case__c',
+        'FEC_Process_Action_History__c' => 'FEC_Case__c',
+        'FEC_Pending_Disbursement__c' => 'FEC_Case__c',
+        'FEC_Notification_History__c' => 'FEC_Case__c',
+        'FEC_Do_Not_Bother__c' => 'FEC_Case__c',
+        'FEC_ChatHistory__c' => 'FEC_Case__c',
+        'FEC_Case_Refund_Details__c' => 'FEC_Case__c',
+        'FEC_Card_Delivery__c' => 'FEC_Case__c',
+        'FEC_Assignment__c' => 'FEC_Case__c',
+        'FEC_Asset__c' => 'FEC_Case__c',
+        'FEC_Application_History__c' => 'FEC_Case__c',
+        'FEC_KYC_Result__c' => 'FEC_Case__c',
+        // Lookup relationships to Case
+        'FEC_Address_Info__c' => 'FEC_Case__c',
+        'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
+        'FEC_Card_Payment__c' => 'FEC_Case__c',
+        'FEC_Relevant_Ticket__c' => 'FEC_Related_To__c',
+        'FEC_Process_Action__c' => 'FEC_Linked_Case__c',
+        'FEC_Integration_Case__c' => 'FEC_Integrate_Case_ID__c'
+    };
+
     public ArchiveCaseController(ApexPages.StandardController stdController) {
         this.athenaCaseRecord = (AthenaCases__x) stdController.getRecord();
         hasError = false;
@@ -132,31 +164,32 @@ public with sharing class ArchiveCaseController {
         Map<String, Object> mapOfFieldAndValue = new Map<String, Object>();
         String methodOfApi = FEC_ConstantCommon.API_METHOD_GET;
         String recTypeName = label.TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE;
-        String strRelationship = '__r';
         String archieveExternalId = archiveCaseIns.case_id__c;
         //String archieveExternalId = archiveExternalId;
+        String migrationSource = archiveCaseIns.migration_source__c;
         List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
         String attachmentStr = '';
         String resBody = '';
         String resStatusCode = '';
+        String serviceName = label.TECH_API_GET_ARCHIVE_DETAIL_CASE;
+        String attrString = 'attributes';
+        String s3PatchPrefix = 'fec-integration-s3/';
+        String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
+                            ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
+                            : archiveCaseIns.s3_path__c;
 
         //resStatusCode = '201';
         //resBody = jsonOfResponse();
 
-        // TODO: Need to use this setting. For now the endpoint is just for testing
-        // s3://fec-integration-s3/pegacsm/archive/2022/10/27/FC-6016.json
-        // String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP;
-        // FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        // FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(label.TECH_API_GET_ARCHIVE_DETAIL_CASE);
-        // if (apiConfig != null) {
-        //     endpoint = apiSetting?.FEC_Call_Mock__c
-        //         ? FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP
-        //         : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        // }
-        
-        String endpoint = 'https://sf-csm-service-dev.fecredit.cloud/archival/dispatcher/api/v1/cases/case-archive?s3Key=';
-        endpoint += archiveCaseIns.s3_path__c.substringAfter('fec-integration-s3/') 
-                    + '&source=' + archiveCaseIns.migration_source__c;
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(serviceName);
+        String endpoint = FEC_MockupEndpoint.GET_CASE_ARCHIVE_ENDPOINT_MOCKUP 
+                        + s3Patch + '&source=' + migrationSource;
+        if (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) {
+            endpoint = apiSetting?.FEC_Call_Mock__c ? endpoint 
+                        : (apiSetting?.FEC_Endpoint__c + apiConfig.FEC_Endpoint__c) 
+                            + s3Patch + '&source=' + migrationSource;
+        }
 
         Map<String,String> headers = new Map<String,String>{
             'X-API-KEY' => 'RkVDX1NBTEVTRk9SQ0U='
@@ -167,63 +200,102 @@ public with sharing class ArchiveCaseController {
         System.debug('ArchiveCase.getStatusCode() ' + resStatusCode);
         System.debug('ArchiveCase.getBody() ' + resBody);
 
-        FEC_IntegrationFraudCaseUtil.logIntegrationService('Get Archive Case', '', '', '', 
+        FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', 
                                                             endpoint, resBody, resStatusCode, '', '');
 
-        // Collect __r relationship objects separately for lookup resolution
+        // Collect relationship objects separately for lookup resolution
         Map<String, Map<String, Object>> mapRelationshipObjects = new Map<String, Map<String, Object>>();
+        Map<String, List<Map<String, Object>>> mapChildRecords = new Map<String, List<Map<String, Object>>>();
         List<Map<String, Object>> attachmentsList = new List<Map<String, Object>>();
 
         if (resStatusCode.equals('200') || resStatusCode.equals('201')) {
-            Map<String, Object> jsonDetailCase = (Map<String, Object>) JSON.deserializeUntyped(resBody);
+            Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(resBody);
 
-            for (String keyOfAtt : jsonDetailCase.keySet()) {
+            // Case fields are now inside the "Case" key
+            Map<String, Object> jsonDetailCase = jsonResponse.containsKey('Case')
+                ? (Map<String, Object>) jsonResponse.get('Case')
+                : jsonResponse;
+
+            // Iterate over the full response to collect relationship objects, child records, and RecordType
+            for (String keyOfAtt : jsonResponse.keySet()) {
+                if (keyOfAtt == 'Case') continue;
                 if (listOfAttIgnored.contains(keyOfAtt)) continue;
+
+                Object valObj = jsonResponse.get(keyOfAtt);
+                if (valObj == null) continue;
 
                 if (keyOfAtt == 'RecordType') {
                     try {
-                        Map<String, Object> objChild = (Map<String, Object>) jsonDetailCase.get(keyOfAtt);
+                        Map<String, Object> objChild = (Map<String, Object>) valObj;
                         recTypeName = (String) objChild.get('Name');
                     } catch (Exception ex) {
-                        recTypeName = (String) jsonDetailCase.get(keyOfAtt);
+                        recTypeName = String.valueOf(valObj);
                     }
                     continue;
                 }
 
-                if (keyOfAtt == 'Attachments') {
+                if (keyOfAtt == 'FEC_Case_Attachments') {
                     try {
-                        List<Object> rawList = (List<Object>) jsonDetailCase.get('Attachments');
+                        List<Object> rawList = (List<Object>) valObj;
                         if (rawList != null && !rawList.isEmpty()) attachmentStr = JSON.serialize(rawList);
-
-                        // This is for saving the attachment to Case. Using "ArchiveCaseAttachmentQueueable"
-                        // for (Object item : rawList) {
-                        //     attachmentsList.add((Map<String, Object>) item);
-                        // }
                     } catch (Exception ex) {
                         System.debug('Could not parse Attachments array: ' + ex.getMessage());
                     }
                     continue;
                 }
 
-                // Collect __r objects for lookup resolution; skip adding them as direct field values
-                if (keyOfAtt.endsWith(strRelationship)) {
-                    Object relObj = jsonDetailCase.get(keyOfAtt);
-                    if (relObj != null) {
-                        try {
-                            mapRelationshipObjects.put(keyOfAtt, (Map<String, Object>) relObj);
-                        } catch (Exception ex) {
-                            System.debug('Could not cast __r object for key: ' + keyOfAtt);
+                // Child record arrays: value is a List (master-detail children)
+                if (valObj instanceof List<Object>) {
+                    List<Object> rawList = (List<Object>) valObj;
+                    List<Map<String, Object>> childList = new List<Map<String, Object>>();
+                    for (Object item : rawList) {
+                        if (item instanceof Map<String, Object>) {
+                            childList.add((Map<String, Object>) item);
                         }
+                    }
+                    if (!childList.isEmpty()) {
+                        mapChildRecords.put(keyOfAtt, childList);
                     }
                     continue;
                 }
 
+                // Relationship objects or child records: value is a Map (single record)
+                // Distinguish by checking if the key matches a known child object name
+                if (valObj instanceof Map<String, Object>) {
+                    Map<String, Object> relMap = (Map<String, Object>) valObj;
+
+                    // Determine the SObject type: prefer attributes.type if available, fallback to key name
+                    String objType = keyOfAtt;
+                    if (relMap.containsKey(attrString)) {
+                        try {
+                            Map<String, Object> attrMap = (Map<String, Object>) relMap.get(attrString);
+                            String attrType = (String) attrMap.get('type');
+                            if (String.isNotBlank(attrType)) objType = attrType;
+                        } catch (Exception ex) {}
+                    }
+
+                    if (CHILD_OBJECT_CASE_FIELD.containsKey(objType) 
+                        || CHILD_OBJECT_CASE_FIELD.containsKey(keyOfAtt)) {
+                        // Single child record — wrap in list for uniform processing
+                        mapChildRecords.put(keyOfAtt, new List<Map<String, Object>>{ relMap });
+                    } else {
+                        mapRelationshipObjects.put(keyOfAtt, relMap);
+                    }
+                    continue;
+                }
+            }
+
+            // Now iterate Case fields
+            for (String keyOfAtt : jsonDetailCase.keySet()) {
+                if (listOfAttIgnored.contains(keyOfAtt)) continue;
+                if (keyOfAtt == attrString) continue;
                 mapOfFieldAndValue.put(keyOfAtt.toLowerCase(), jsonDetailCase.get(keyOfAtt));
             }
         }
 
         System.debug('mapOfFieldAndValue ' + mapOfFieldAndValue);
         System.debug('mapRelationshipObjects keys ' + mapRelationshipObjects.keySet());
+        System.debug('mapChildRecords keys ' + mapChildRecords.keySet());
 
         if (mapOfFieldAndValue.size() > 0) {
             Map<String, Schema.SObjectField> fieldMap = Case.sObjectType.getDescribe().fields.getMap();
@@ -232,7 +304,7 @@ public with sharing class ArchiveCaseController {
 
             Case caseIns = new Case();
 
-            // Resolve __r lookup objects to real Ids in current org
+            // Resolve lookup objects to real Ids in current org
             resolveRelationshipLookups(mapOfFieldAndValue, mapRelationshipObjects);
             buildSetPotentialIds(setPotentialIds, fieldMap, mapOfFieldAndValue);
             mapIdCanAccess = getRelatedRecordCanAccess(setPotentialIds);
@@ -243,8 +315,14 @@ public with sharing class ArchiveCaseController {
             caseIns.FEC_ID_Search__c = archieveExternalId;
             caseIns.RecordTypeId = getRecordTypeId(recTypeName);
             caseIns.ArchiveAttachment__c = attachmentStr;
+            caseIns.ArchiveMigrationSource__c = migrationSource;
             processSpecialValueForCase(caseIns);
             caseId = saveCaseRecord(caseIns);
+
+            // Insert child records (master-detail) after Case is created
+            if (caseId != null && !mapChildRecords.isEmpty()) {
+                insertChildRecords(caseId, mapChildRecords);
+            }
         }
 
         return caseId;
@@ -253,13 +331,16 @@ public with sharing class ArchiveCaseController {
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Resolve __r relationship objects to real Ids in current org.
-                   IDs from the archive JSON are deleted and cannot be reused.
+    Description:   Resolve relationship objects to real Ids in current org.
+                   In the new JSON format, relationship objects are keyed by their
+                   SObject API name (e.g. 'FEC_Category__c', 'User') instead of __r.
+                   IDs from the archive JSON may not exist in the current org.
                    We match records by their unique code/name fields instead.
     Returns:       void (mutates mapOfFieldAndValue in place)
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
+    2026/05/07      Thanh Van           Updated for new JSON format (no __r keys)
     ------------------------------------------------------------*/
     public static void resolveRelationshipLookups(
         Map<String, Object> mapOfFieldAndValue,
@@ -267,50 +348,62 @@ public with sharing class ArchiveCaseController {
     ) {
         if (mapRelationshipObjects.isEmpty()) return;
 
+        String codeFiled = 'FEC_Code__c';
+        String productTypeAPIName = 'FEC_Product_Type__c';
+        String categoryAPIName = 'FEC_Category__c';
+        String subCategoryAPIName = 'FEC_Sub_Category__c';
+        String subCodeAPIName = 'FEC_Sub_Code__c';
+        String newCategoryAPIName = 'FEC_New_Category__c';
+        String newSubCategoryAPIName = 'FEC_New_SubCategory__c';
+        String newSubCodeAPIName = 'FEC_New_SubCode__c';
+        String businessProcessAPIName = 'FEC_Business_Process__c';
+        String customerHistoryAPIName = 'FEC_Customer_History__c';
+
         // --- Simple code-based lookups ---
+        // Key in mapRelationshipObjects is now the SObject API name (same as field name in new JSON format)
         // FEC_Product_Type__c → FEC_Product_Type__c.FEC_Code__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_Product_Type__r', 'fec_product_type__c',
-            'FEC_Product_Type__c', 'FEC_Code__c');
+            productTypeAPIName, productTypeAPIName.toLowerCase(),
+            productTypeAPIName, codeFiled);
 
         // FEC_Category__c → FEC_Category__c.FEC_Code__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_Category__r', 'fec_category__c',
-            'FEC_Category__c', 'FEC_Code__c');
+            categoryAPIName, categoryAPIName.toLowerCase(),
+            categoryAPIName, codeFiled);
 
         // FEC_SubCategory__c → FEC_Sub_Category__c.FEC_Code__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_SubCategory__r', 'fec_subcategory__c',
-            'FEC_Sub_Category__c', 'FEC_Code__c');
+            subCategoryAPIName, 'fec_subcategory__c',
+            subCategoryAPIName, codeFiled);
 
         // FEC_SubCode__c → FEC_Sub_Code__c.FEC_Code__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_SubCode__r', 'fec_subcode__c',
-            'FEC_Sub_Code__c', 'FEC_Code__c');
+            subCodeAPIName, 'fec_subcode__c',
+            subCodeAPIName, codeFiled);
 
         // FEC_New_Category__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_New_Category__r', 'fec_new_category__c',
-            'FEC_Category__c', 'FEC_Code__c');
+            newCategoryAPIName, newCategoryAPIName.toLowerCase(),
+            categoryAPIName, codeFiled);
 
         // FEC_New_SubCategory__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_New_SubCategory__r', 'fec_new_subcategory__c',
-            'FEC_Sub_Category__c', 'FEC_Code__c');
+            newSubCategoryAPIName, newSubCategoryAPIName.toLowerCase(),
+            subCategoryAPIName, codeFiled);
 
         // FEC_New_SubCode__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_New_SubCode__r', 'fec_new_subcode__c',
-            'FEC_Sub_Code__c', 'FEC_Code__c');
+            newSubCodeAPIName, newSubCodeAPIName.toLowerCase(),
+            subCodeAPIName, codeFiled);
 
         // FEC_Business_Process__c → FEC_Business_Process__c.FEC_Code__c
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
-            'FEC_Business_Process__r', 'fec_business_process__c',
-            'FEC_Business_Process__c', 'FEC_Code__c');
+            businessProcessAPIName, businessProcessAPIName.toLowerCase(),
+            businessProcessAPIName, codeFiled);
 
         // --- FEC_Account_or_Contract__c → FEC_Customer_History__c matched by Name (account number) ---
-        if (mapRelationshipObjects.containsKey('FEC_Account_or_Contract__r')) {
-            Map<String, Object> relObj = mapRelationshipObjects.get('FEC_Account_or_Contract__r');
+        if (mapRelationshipObjects.containsKey(customerHistoryAPIName)) {
+            Map<String, Object> relObj = mapRelationshipObjects.get(customerHistoryAPIName);
             String accountName = (String) relObj.get('Name');
             if (String.isNotBlank(accountName)) {
                 List<FEC_Customer_History__c> matches = [
@@ -320,43 +413,31 @@ public with sharing class ArchiveCaseController {
                 if (!matches.isEmpty()) {
                     mapOfFieldAndValue.put('fec_account_or_contract__c', matches[0].Id);
                 } else {
-                    Id tempId = insertTempRecord('FEC_Customer_History__c', relObj);
+                    Id tempId = insertTempRecord(customerHistoryAPIName, relObj);
                     mapOfFieldAndValue.put('fec_account_or_contract__c', tempId);
                 }
             }
         }
 
         // --- FEC_Interaction__c → Case matched by ArchiveExternalId__c ---
-        // The __r key for this is FEC_Interaction__r (not present in JSON sample but handle defensively)
-        if (mapRelationshipObjects.containsKey('FEC_Interaction__r')) {
-            Map<String, Object> relObj = mapRelationshipObjects.get('FEC_Interaction__r');
-            String extId = (String) relObj.get('ArchiveExternalId__c');
-            if (String.isNotBlank(extId)) {
-                List<Case> matches = [SELECT Id FROM Case WHERE ArchiveExternalId__c = :extId LIMIT 1];
-                if (!matches.isEmpty()) {
-                    mapOfFieldAndValue.put('fec_interaction__c', matches[0].Id);
-                } else {
-                    mapOfFieldAndValue.put('fec_interaction__c', null);
-                }
-            }
-        }
+        // In new JSON format, the key might be "FEC_Interaction__c" as an object
+        // but typically it's just an Id in the Case fields, so skip if not present as object
 
-        // --- FEC_Interaction_Resolved_By__c → User matched by Username ---
-        if (mapRelationshipObjects.containsKey('FEC_Interaction_Resolved_By__r')) {
-            Map<String, Object> relObj = mapRelationshipObjects.get('FEC_Interaction_Resolved_By__r');
-            String username = (String) relObj.get('Username');
-            if (String.isNotBlank(username)) {
-                List<User> matches = [SELECT Id FROM User WHERE Username = :username AND IsActive = true LIMIT 1];
-                if (!matches.isEmpty()) {
-                    mapOfFieldAndValue.put('fec_interaction_resolved_by__c', matches[0].Id);
-                } else {
-                    mapOfFieldAndValue.put('fec_interaction_resolved_by__c', null);
-                }
-            }
-        }
+        // --- Owner/User → User matched by Username ---
+        // if (mapRelationshipObjects.containsKey('User')) {
+        //     Map<String, Object> relObj = mapRelationshipObjects.get('User');
+        //     String username = (String) relObj.get('Username');
+        //     if (String.isNotBlank(username)) {
+        //         List<User> matches = [SELECT Id FROM User WHERE Username = :username AND IsActive = true LIMIT 1];
+        //         if (!matches.isEmpty()) {
+        //             mapOfFieldAndValue.put('ownerid', matches[0].Id);
+        //         } else {
+        //             mapOfFieldAndValue.put('ownerid', UserInfo.getUserId());
+        //         }
+        //     }
+        // }
 
-        // --- FEC_Actual_Nature_of_Case__c → composite match on ProductType + Category + SubCategory + SubCode + BusinessProcess ---
-        // Must be resolved AFTER the individual lookups above so we can use the resolved Ids
+        // --- FEC_Actual_Nature_of_Case__c → composite match ---
         resolveActualNatureOfCase(mapOfFieldAndValue, mapRelationshipObjects);
     }
 
@@ -364,7 +445,8 @@ public with sharing class ArchiveCaseController {
     Author:        Thanh Van
     Company:       Amaris
     Description:   Resolve a simple lookup field by querying the target object using FEC_Code__c
-                   from the corresponding __r relationship object in the JSON.
+                   from the corresponding relationship object in the JSON.
+                   The relKey is now the SObject API name (e.g. 'FEC_Category__c') instead of __r.
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
@@ -372,7 +454,7 @@ public with sharing class ArchiveCaseController {
     private static void resolveByCode(
         Map<String, Object> mapOfFieldAndValue,
         Map<String, Map<String, Object>> mapRelationshipObjects,
-        String relKey,           // e.g. 'FEC_Product_Type__r'
+        String relKey,           // e.g. 'FEC_Product_Type__c' (key in mapRelationshipObjects)
         String fieldKeyLower,    // e.g. 'fec_product_type__c'  (lowercase, as stored in map)
         String sObjectApiName,   // e.g. 'FEC_Product_Type__c'
         String codeField         // e.g. 'FEC_Code__c'
@@ -383,7 +465,8 @@ public with sharing class ArchiveCaseController {
         String codeValue = (String) relObj.get(codeField);
         if (String.isBlank(codeValue)) return;
 
-        String soql = 'SELECT Id FROM ' + sObjectApiName + ' WHERE ' + codeField + ' = :codeValue LIMIT 1';
+        String soql = 'SELECT Id FROM ' + sObjectApiName 
+                        + ' WHERE ' + codeField + ' = :codeValue LIMIT 1';
         List<SObject> matches = Database.query(soql);
         if (!matches.isEmpty()) {
             mapOfFieldAndValue.put(fieldKeyLower, matches[0].Id);
@@ -423,23 +506,8 @@ public with sharing class ArchiveCaseController {
                 Schema.DescribeFieldResult fd = fieldMap.get(keyLower).getDescribe();
                 if (!fd.isCreateable()) continue;
 
-                Schema.DisplayType ft = fd.getType();
-                if (ft == Schema.DisplayType.STRING || ft == Schema.DisplayType.TEXTAREA
-                    || ft == Schema.DisplayType.PICKLIST || ft == Schema.DisplayType.EMAIL
-                    || ft == Schema.DisplayType.PHONE || ft == Schema.DisplayType.URL) {
-                    tempRec.put(key, String.valueOf(val));
-                } else if (ft == Schema.DisplayType.DOUBLE || ft == Schema.DisplayType.CURRENCY) {
-                    tempRec.put(key, Decimal.valueOf(String.valueOf(val)));
-                } else if (ft == Schema.DisplayType.INTEGER) {
-                    tempRec.put(key, Integer.valueOf(String.valueOf(val)));
-                } else if (ft == Schema.DisplayType.BOOLEAN) {
-                    tempRec.put(key, Boolean.valueOf(String.valueOf(val)));
-                } else if (ft == Schema.DisplayType.DATE) {
-                    tempRec.put(key, Date.valueOf(String.valueOf(val)));
-                } else if (ft == Schema.DisplayType.DATETIME) {
-                    tempRec.put(key, Datetime.valueOfGMT(String.valueOf(val).replace('T', ' ')));
-                }
-                // Skip REFERENCE fields — nested __r inside __r are not resolved further
+                // Skip REFERENCE fields — nested lookups inside relationship objects are not resolved
+                castAndSetFieldValue(tempRec, key, val, fd, null);
             }
 
             insert tempRec;
@@ -454,92 +522,86 @@ public with sharing class ArchiveCaseController {
     Author:        Thanh Van
     Company:       Amaris
     Description:   Resolve FEC_Actual_Nature_of_Case__c by matching on the combination of
-                   ProductType + Category + SubCategory + SubCode + BusinessProcess codes
-                   extracted from the nested __r data inside FEC_Actual_Nature_of_Case__r.
+                   ProductType + Category + SubCategory + SubCode + BusinessProcess.
+                   Uses the already-resolved Ids from mapOfFieldAndValue (resolved by resolveByCode).
+                   Falls back to extracting codes from the relationship object if present.
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
+    2026/05/07      Thanh Van           Updated for new JSON format (no __r keys)
     ------------------------------------------------------------*/
     private static void resolveActualNatureOfCase(
         Map<String, Object> mapOfFieldAndValue,
         Map<String, Map<String, Object>> mapRelationshipObjects
     ) {
-        if (!mapRelationshipObjects.containsKey('FEC_Actual_Nature_of_Case__r')) return;
+        // In new JSON format, FEC_Actual_Nature_of_Case__c may be present as an object
+        // or the individual dimension Ids are already resolved in mapOfFieldAndValue
+        Map<String, Object> nocObj = mapRelationshipObjects.containsKey('FEC_Actual_Nature_of_Case__c')
+            ? mapRelationshipObjects.get('FEC_Actual_Nature_of_Case__c')
+            : null;
 
-        Map<String, Object> nocObj = mapRelationshipObjects.get('FEC_Actual_Nature_of_Case__r');
-        if (nocObj == null) return;
+        // Use already-resolved Ids from mapOfFieldAndValue (set by resolveByCode earlier)
+        Id productTypeId = mapOfFieldAndValue.get('fec_product_type__c') instanceof Id
+            ? (Id) mapOfFieldAndValue.get('fec_product_type__c') : null;
+        Id categoryId = mapOfFieldAndValue.get('fec_category__c') instanceof Id
+            ? (Id) mapOfFieldAndValue.get('fec_category__c') : null;
+        Id subCategoryId = mapOfFieldAndValue.get('fec_subcategory__c') instanceof Id
+            ? (Id) mapOfFieldAndValue.get('fec_subcategory__c') : null;
+        Id subCodeId = mapOfFieldAndValue.get('fec_subcode__c') instanceof Id
+            ? (Id) mapOfFieldAndValue.get('fec_subcode__c') : null;
+        Id bizProcessId = mapOfFieldAndValue.get('fec_business_process__c') instanceof Id
+            ? (Id) mapOfFieldAndValue.get('fec_business_process__c') : null;
 
-        // Extract codes from nested __r objects inside FEC_Actual_Nature_of_Case__r
-        String productTypeCode  = extractNestedCode(nocObj, 'FEC_Product_Type__r',  'FEC_Code__c');
-        String categoryCode     = extractNestedCode(nocObj, 'FEC_Category__r',      'FEC_Code__c');
-        String subCategoryCode  = extractNestedCode(nocObj, 'FEC_Sub_Category__r',  'FEC_Code__c');
-        String subCodeCode      = extractNestedCode(nocObj, 'FEC_Sub_Code__r',      'FEC_Code__c');
-        String bizProcessCode   = extractNestedCode(nocObj, 'FEC_Business_Process__r', 'FEC_Code__c');
+        // If nocObj has nested objects with codes, try to extract and resolve from there as fallback
+        if (nocObj != null) {
+            if (productTypeId == null) productTypeId = resolveIdByCode('FEC_Product_Type__c', 'FEC_Code__c', extractNestedCode(nocObj, 'FEC_Product_Type__c', 'FEC_Code__c'));
+            if (categoryId == null)    categoryId    = resolveIdByCode('FEC_Category__c',     'FEC_Code__c', extractNestedCode(nocObj, 'FEC_Category__c',     'FEC_Code__c'));
+            if (subCategoryId == null) subCategoryId = resolveIdByCode('FEC_Sub_Category__c', 'FEC_Code__c', extractNestedCode(nocObj, 'FEC_Sub_Category__c', 'FEC_Code__c'));
+            if (subCodeId == null)     subCodeId     = resolveIdByCode('FEC_Sub_Code__c',     'FEC_Code__c', extractNestedCode(nocObj, 'FEC_Sub_Code__c',     'FEC_Code__c'));
+            if (bizProcessId == null)  bizProcessId  = resolveIdByCode('FEC_Business_Process__c', 'FEC_Code__c', extractNestedCode(nocObj, 'FEC_Business_Process__c', 'FEC_Code__c'));
+        }
 
-        System.debug('resolveActualNatureOfCase codes: ' + productTypeCode + '|' + categoryCode + '|' + subCategoryCode + '|' + subCodeCode + '|' + bizProcessCode);
+        System.debug('resolveActualNatureOfCase Ids: ' + productTypeId + '|' + categoryId + '|' + subCategoryId + '|' + subCodeId + '|' + bizProcessId);
 
-        if (String.isBlank(productTypeCode) && String.isBlank(categoryCode) 
-            && String.isBlank(subCategoryCode) && String.isBlank(subCodeCode)) {
+        if (productTypeId == null && categoryId == null 
+            && subCategoryId == null && subCodeId == null) {
             mapOfFieldAndValue.put('fec_actual_nature_of_case__c', null);
             return;
         }
 
-        // Resolve each dimension to an Id first
-        Id productTypeId  = resolveIdByCode('FEC_Product_Type__c',  'FEC_Code__c', productTypeCode);
-        Id categoryId     = resolveIdByCode('FEC_Category__c',      'FEC_Code__c', categoryCode);
-        Id subCategoryId  = resolveIdByCode('FEC_Sub_Category__c',  'FEC_Code__c', subCategoryCode);
-        Id subCodeId      = resolveIdByCode('FEC_Sub_Code__c',      'FEC_Code__c', subCodeCode);
-        Id bizProcessId   = resolveIdByCode('FEC_Business_Process__c', 'FEC_Code__c', bizProcessCode);
-
-        // Build dynamic SOQL with only non-null conditions to avoid false negatives
-        String soql = 'SELECT Id FROM FEC_Actual_Nature_of_Case__c WHERE ';
-        List<String> conditions = new List<String>();
-
-        if (productTypeId != null)  { conditions.add('FEC_Product_Type__c = \'' + productTypeId + '\''); }
-        if (categoryId != null)     { conditions.add('FEC_Category__c = \'' + categoryId + '\''); }
-        if (subCategoryId != null)  { conditions.add('FEC_Sub_Category__c = \'' + subCategoryId + '\''); }
-        if (subCodeId != null)      { conditions.add('FEC_Sub_Code__c = \'' + subCodeId + '\''); }
-        if (bizProcessId != null)   { conditions.add('FEC_Business_Process__c = \'' + bizProcessId + '\''); }
-
-        if (conditions.isEmpty()) {
-            mapOfFieldAndValue.put('fec_actual_nature_of_case__c', null);
-            return;
-        }
-
-        soql += String.join(conditions, ' AND ') + ' LIMIT 1';
-        System.debug('resolveActualNatureOfCase SOQL: ' + soql);
-
-        List<SObject> matches = Database.query(soql);
-        if (!matches.isEmpty()) {
-            mapOfFieldAndValue.put('fec_actual_nature_of_case__c', matches[0].Id);
-        } else {
-            // Insert a temp FEC_Actual_Nature_of_Case__c with the resolved dimension Ids
-            try {
-                FEC_Actual_Nature_of_Case__c tempNoc = new FEC_Actual_Nature_of_Case__c();
-                tempNoc.IsArchiveTemp__c = true;
-                if (productTypeId != null) tempNoc.FEC_Product_Type__c = productTypeId;
-                if (categoryId != null)    tempNoc.FEC_Category__c = categoryId;
-                if (subCategoryId != null) tempNoc.FEC_Sub_Category__c = subCategoryId;
-                if (subCodeId != null)     tempNoc.FEC_Sub_Code__c = subCodeId;
-                if (bizProcessId != null)  tempNoc.FEC_Business_Process__c = bizProcessId;
-                // Copy scalar fields from nocObj
+        // Always insert new record FEC_Actual_Nature_of_Case__c
+        // The Actual NOC is the parent, when the case is archived >> Actual NOC is deleted
+        // >> Do not need to query
+        try {
+            FEC_Actual_Nature_of_Case__c tempNoc = new FEC_Actual_Nature_of_Case__c();
+            tempNoc.IsArchiveTemp__c = true;
+            if (productTypeId != null) tempNoc.FEC_Product_Type__c = productTypeId;
+            if (categoryId != null)    tempNoc.FEC_Category__c = categoryId;
+            if (subCategoryId != null) tempNoc.FEC_Sub_Category__c = subCategoryId;
+            if (subCodeId != null)     tempNoc.FEC_Sub_Code__c = subCodeId;
+            if (bizProcessId != null)  tempNoc.FEC_Business_Process__c = bizProcessId;
+            if (nocObj != null) {
                 String customerType = (String) nocObj.get('FEC_Customer_Type__c');
                 if (String.isNotBlank(customerType)) tempNoc.FEC_Customer_Type__c = customerType;
+
                 String userGroup = (String) nocObj.get('FEC_User_Group__c');
                 if (String.isNotBlank(userGroup)) tempNoc.FEC_User_Group__c = userGroup;
-                insert tempNoc;
-                mapOfFieldAndValue.put('fec_actual_nature_of_case__c', tempNoc.Id);
-            } catch (Exception ex) {
-                System.debug('insertTempRecord failed for FEC_Actual_Nature_of_Case__c: ' + ex.getMessage());
-                mapOfFieldAndValue.put('fec_actual_nature_of_case__c', null);
             }
+
+            insert tempNoc;
+            mapOfFieldAndValue.put('fec_actual_nature_of_case__c', tempNoc.Id);
+
+        } catch (Exception ex) {
+            System.debug('insertTempRecord failed for FEC_Actual_Nature_of_Case__c: ' + ex.getMessage());
+            mapOfFieldAndValue.put('fec_actual_nature_of_case__c', null);
         }
     }
 
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Extract a code value from a nested __r object within a parent relationship map
+    Description:   Extract a code value from a nested object within a parent relationship map.
+                   Works with both old __r format and new direct SObject key format.
     History
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
@@ -662,46 +724,7 @@ public with sharing class ArchiveCaseController {
                 Schema.DescribeFieldResult fieldDetail = fieldMap.get(devFieldTmp).getDescribe();
                 if (!fieldDetail.isCreateable()) continue;
 
-                Schema.DisplayType fieldType = fieldDetail.getType();
-
-                if (fieldType == Schema.DisplayType.DOUBLE || fieldType == Schema.DisplayType.CURRENCY) {
-                    caseIns.put(devFieldTmp, Decimal.valueOf(String.valueOf(rawValue)));
-                } 
-                else if (fieldType == Schema.DisplayType.INTEGER) {
-                    caseIns.put(devFieldTmp, Integer.valueOf(String.valueOf(rawValue)));
-                } 
-                else if (fieldType == Schema.DisplayType.DATE) {
-                    caseIns.put(devFieldTmp, Date.valueOf(String.valueOf(rawValue)));
-                } 
-                else if (fieldType == Schema.DisplayType.DATETIME) {
-                    String dtStr = String.valueOf(rawValue).replace('T', ' ');
-                    caseIns.put(devFieldTmp, Datetime.valueOfGMT(dtStr));
-                } 
-                else if (fieldType == Schema.DisplayType.BOOLEAN) {
-                    caseIns.put(devFieldTmp, Boolean.valueOf(String.valueOf(rawValue)));
-                } 
-                else if (fieldType == Schema.DisplayType.REFERENCE) {
-                    // set default value for Lookup fields
-                    // If the Id does not exist or cannot access, we need to set null value
-                    String idStr = (String) rawValue;
-                    Boolean noReading = mapIdCanAccess.containsKey(idStr) 
-                                        && !mapIdCanAccess.get(idStr).HasReadAccess ? true : false;
-
-                    if (!mapIdCanAccess.containsKey(idStr) || noReading) {
-
-                        if (devFieldTmp.equalsIgnoreCase('OwnerId')) caseIns.OwnerId = UserInfo.getUserId();
-                        else caseIns.put(devFieldTmp, null);
-                    } else {
-                        caseIns.put(devFieldTmp, rawValue);
-                    }
-                }
-                else if (fieldType == Schema.DisplayType.PICKLIST 
-                        || fieldType == Schema.DisplayType.MULTIPICKLIST) {
-                    setPicklistValue(caseIns, devFieldTmp, rawValue, fieldDetail, fieldType);
-                } 
-                else {
-                    caseIns.put(devFieldTmp, rawValue);
-                }
+                castAndSetFieldValue(caseIns, devFieldTmp, rawValue, fieldDetail, mapIdCanAccess);
             }
         }
     }
@@ -709,15 +732,15 @@ public with sharing class ArchiveCaseController {
     /*------------------------------------------------------------
     Author:        Thanh Van
     Company:       Amaris
-    Description:   Validate and set picklist/multipicklist value for a Case field.
+    Description:   Validate and set picklist/multipicklist value for any SObject field.
                    If the value from JSON does not exist in the field's valid picklist entries,
                    set null to avoid DML exceptions. For multipicklist, only valid values are kept.
     Returns:       void
     History
     <Date>          <Authors Name>      <Brief Description of Change>
-    2026/05/06      Thanh Van           Init
+    2026/05/07      Thanh Van           Extracted generic version from Case-specific method
     ------------------------------------------------------------*/
-    private static void setPicklistValue(Case caseIns, String fieldName, Object rawValue,
+    private static void setPicklistValue(SObject record, String fieldName, Object rawValue,
                                          Schema.DescribeFieldResult fieldDetail, 
                                          Schema.DisplayType fieldType) {
         String strValue = String.valueOf(rawValue);
@@ -736,10 +759,61 @@ public with sharing class ArchiveCaseController {
                     validSelected.add(trimmed);
                 }
             }
-            caseIns.put(fieldName, validSelected.isEmpty() ? null : String.join(validSelected, ';'));
+            record.put(fieldName, validSelected.isEmpty() ? null : String.join(validSelected, ';'));
         } else {
-            caseIns.put(fieldName, validValues.contains(strValue) ? strValue : null);
+            record.put(fieldName, validValues.contains(strValue) ? strValue : null);
         }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Cast a raw JSON value to the appropriate Apex type based on field describe
+                   and set it on the SObject record. Handles all common field types.
+                   For REFERENCE fields:
+                   - If mapIdCanAccess is provided, validates access before setting.
+                     If no access, sets null (or UserInfo.getUserId() for OwnerId).
+                   - If mapIdCanAccess is null and keepReference is true, sets value as-is.
+                   - If mapIdCanAccess is null and keepReference is false, skips (returns false).
+    Returns:       true if the field was set, false if it was skipped
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/07      Thanh Van           Init
+    ------------------------------------------------------------*/
+    private static Boolean castAndSetFieldValue(SObject record, String fieldName, Object rawValue,
+                                                 Schema.DescribeFieldResult fieldDetail, 
+                                                 Map<String, UserRecordAccess> mapIdCanAccess) {
+        Schema.DisplayType ft = fieldDetail.getType();
+
+        if (ft == Schema.DisplayType.DOUBLE || ft == Schema.DisplayType.CURRENCY) {
+            record.put(fieldName, Decimal.valueOf(String.valueOf(rawValue)));
+        } else if (ft == Schema.DisplayType.INTEGER) {
+            record.put(fieldName, Integer.valueOf(String.valueOf(rawValue)));
+        } else if (ft == Schema.DisplayType.DATE) {
+            record.put(fieldName, Date.valueOf(String.valueOf(rawValue)));
+        } else if (ft == Schema.DisplayType.DATETIME) {
+            String dtStr = String.valueOf(rawValue).replace('T', ' ');
+            if (dtStr.contains('+')) dtStr = dtStr.substringBefore('+');
+            record.put(fieldName, Datetime.valueOfGMT(dtStr));
+        } else if (ft == Schema.DisplayType.BOOLEAN) {
+            record.put(fieldName, Boolean.valueOf(String.valueOf(rawValue)));
+        } else if (ft == Schema.DisplayType.PICKLIST || ft == Schema.DisplayType.MULTIPICKLIST) {
+            setPicklistValue(record, fieldName, rawValue, fieldDetail, ft);
+        } else if (ft == Schema.DisplayType.REFERENCE) {
+            String idStr = String.valueOf(rawValue);
+            Boolean noReading = mapIdCanAccess.containsKey(idStr) 
+                                    && !mapIdCanAccess.get(idStr).HasReadAccess;
+            if (!mapIdCanAccess.containsKey(idStr) || noReading) {
+                if (fieldName.equalsIgnoreCase('OwnerId')) record.put(fieldName, UserInfo.getUserId());
+                else record.put(fieldName, null);
+            } else {
+                record.put(fieldName, idStr);
+            }
+        } else {
+            // STRING, TEXTAREA, EMAIL, PHONE, URL, etc.
+            record.put(fieldName, String.valueOf(rawValue));
+        }
+        return true;
     }
 
     /*------------------------------------------------------------
@@ -783,6 +857,114 @@ public with sharing class ArchiveCaseController {
         // }
 
         return caseId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Insert child records (master-detail) related to the Case.
+                   Each child object has a lookup/master-detail field to Case (FEC_Case__c).
+                   Only createable fields are mapped from the JSON data.
+    Returns:       void
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/07      Thanh Van           Init
+    ------------------------------------------------------------*/
+    private static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords) {
+
+        for (String childKey : mapChildRecords.keySet()) {
+            String sObjectApiName = childKey;
+            String caseFieldName = CHILD_OBJECT_CASE_FIELD.get(sObjectApiName);
+            if (String.isBlank(caseFieldName)) {
+                System.debug('insertChildRecords: No case field mapping for ' + sObjectApiName);
+                continue;
+            }
+
+            List<Map<String, Object>> childDataList = mapChildRecords.get(childKey);
+            if (childDataList == null || childDataList.isEmpty()) continue;
+
+            try {
+                List<SObject> recordsToInsert = buildChildSObjects(sObjectApiName, caseFieldName, caseId, childDataList);
+                if (!recordsToInsert.isEmpty()) {
+                    insert recordsToInsert;
+                    System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
+                }
+            } catch (Exception ex) {
+                System.debug('insertChildRecords failed for ' + sObjectApiName + ': ' + ex.getMessage());
+            }
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Build a list of SObject records from JSON child data.
+                   Maps only createable fields and sets the Case lookup field.
+                   Validates REFERENCE fields using the same access-check pattern as Case.
+    Returns:       List<SObject>
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/07      Thanh Van           Init
+    ------------------------------------------------------------*/
+    private static List<SObject> buildChildSObjects(String sObjectApiName, String caseFieldName, 
+                                                     Id caseId, List<Map<String, Object>> childDataList) {
+        List<SObject> records = new List<SObject>();
+        Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(sObjectApiName);
+        if (sObjType == null) {
+            System.debug('buildChildSObjects: SObject type not found: ' + sObjectApiName);
+            return records;
+        }
+
+        Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+
+        // Collect all potential reference Ids across all child records for access check
+        Set<String> setPotentialIds = new Set<String>();
+        for (Map<String, Object> childData : childDataList) {
+            for (String key : childData.keySet()) {
+                if (key == 'attributes' || key == 'Id' || key == caseFieldName) continue;
+                Object val = childData.get(key);
+                if (val == null) continue;
+                String keyLower = key.toLowerCase();
+                if (!fieldMap.containsKey(keyLower)) continue;
+                Schema.DescribeFieldResult fd = fieldMap.get(keyLower).getDescribe();
+                if (fd.isCreateable() && fd.getType() == Schema.DisplayType.REFERENCE) {
+                    setPotentialIds.add(String.valueOf(val));
+                }
+            }
+        }
+        Map<String, UserRecordAccess> mapIdCanAccess = getRelatedRecordCanAccess(setPotentialIds);
+
+        for (Map<String, Object> childData : childDataList) {
+            SObject rec = sObjType.newSObject();
+            rec.put(caseFieldName, caseId);
+
+            for (String key : childData.keySet()) {
+                if (key == 'attributes' || key == 'Id') continue;
+                // Skip the Case lookup field — already set above
+                if (key == caseFieldName) continue;
+
+                Object val = childData.get(key);
+                if (val == null) continue;
+                // Skip nested objects (sub-relationships)
+                if (val instanceof Map<String, Object> || val instanceof List<Object>) continue;
+
+                String keyLower = key.toLowerCase();
+                if (!fieldMap.containsKey(keyLower)) continue;
+
+                Schema.DescribeFieldResult fd = fieldMap.get(keyLower).getDescribe();
+                if (!fd.isCreateable()) continue;
+
+                try {
+                    castAndSetFieldValue(rec, key, val, fd, mapIdCanAccess);
+                } catch (Exception ex) {
+                    System.debug('buildChildSObjects: Could not set field ' + key + ' on ' + sObjectApiName + ': ' + ex.getMessage());
+                }
+            }
+
+            records.add(rec);
+        }
+
+        return records;
     }
 
     /*------------------------------------------------------------

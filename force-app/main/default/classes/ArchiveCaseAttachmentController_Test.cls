@@ -47,9 +47,12 @@ private class ArchiveCaseAttachmentController_Test {
     static void testDownloadFile_Success() {
         // Set the mock callout
         Test.setMock(HttpCalloutMock.class, new MockS3Response(200));
+        List<Case> cases = [SELECT Id FROM Case LIMIT 1];
+        Case caseIns = cases.size() > 0 ? cases[0] : null;
 
         Test.startTest();
-        ArchiveCaseAttachmentController.DownloadResult res = ArchiveCaseAttachmentController.downloadFile('key123', 'test.pdf', 'application/pdf');
+        ArchiveCaseAttachmentController.DownloadResult res = ArchiveCaseAttachmentController.downloadFile('key123', 
+                                                            'test.pdf', 'application/pdf', caseIns?.Id);
         Test.stopTest();
     }
 
@@ -57,9 +60,12 @@ private class ArchiveCaseAttachmentController_Test {
     static void testDownloadFile_Failure() {
         // Set the mock callout to return a 404
         Test.setMock(HttpCalloutMock.class, new MockS3Response(404));
+        List<Case> cases = [SELECT Id FROM Case LIMIT 1];
+        Case caseIns = cases.size() > 0 ? cases[0] : null;
 
         Test.startTest();
-        ArchiveCaseAttachmentController.DownloadResult res = ArchiveCaseAttachmentController.downloadFile('key123', 'test.pdf', 'application/pdf');
+        ArchiveCaseAttachmentController.DownloadResult res = ArchiveCaseAttachmentController.downloadFile('key123', 
+                                                            'test.pdf', 'application/pdf', caseIns?.Id);
         Test.stopTest();
     }
 
