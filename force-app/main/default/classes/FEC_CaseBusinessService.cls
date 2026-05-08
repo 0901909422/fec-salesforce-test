@@ -190,7 +190,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
-          FEC_SubCode__r.Name
+          FEC_SubCode__r.Name,
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -206,6 +207,15 @@ public without sharing class FEC_CaseBusinessService {
 
       result.sectionlst.add(buildAccountInfor(selectedCase));
       // 03/02/2026 adhoc for product type, category, sub category, sub code
+      Boolean hasIncomingNocSelection =
+        String.isNotBlank(productTypeId) ||
+        String.isNotBlank(categoryId) ||
+        String.isNotBlank(subCategoryId) ||
+        subCodeId != null;
+      String incomingProductTypeId = productTypeId;
+      String incomingCategoryId = categoryId;
+      String incomingSubCategoryId = subCategoryId;
+      String incomingSubCodeId = subCodeId;
       if (String.isBlank(productTypeId))
         productTypeId = selectedCase.FEC_Product_Type__c;
       if (String.isBlank(categoryId))
@@ -214,6 +224,20 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId = selectedCase.FEC_SubCategory__c;
       if (String.isBlank(subCodeId))
         subCodeId = selectedCase.FEC_SubCode__c;
+      Boolean isUpdatedNocDifferentFromCurrent =
+        hasIncomingNocSelection &&
+        (
+          incomingProductTypeId != selectedCase.FEC_Product_Type__c ||
+          incomingCategoryId != selectedCase.FEC_Category__c ||
+          incomingSubCategoryId != selectedCase.FEC_SubCategory__c ||
+          incomingSubCodeId != selectedCase.FEC_SubCode__c
+        );
+      String actualBusinessProcessCode = selectedCase.FEC_Actual_Nature_of_Case__r == null
+        ? null
+        : selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r?.FEC_Code__c;
+      Boolean isActualNatureGsr =
+        String.isNotBlank(actualBusinessProcessCode) &&
+        actualBusinessProcessCode.toUpperCase().contains('GSR');
       // 06/04/2026 adhoc for sub code
       result.subCodeCode = FEC_ConstantCommon.STR_EMPTY;
       if (String.isNotBlank(subCodeId)) {
@@ -321,17 +345,23 @@ public without sharing class FEC_CaseBusinessService {
 
       String natureOfCaseQuery;
       String selectedNatureOfCaseId = selectedCase.FEC_Actual_Nature_of_Case__c;
+      Boolean isGsrNocDisplayMode = isActualNatureGsr && hasIncomingNocSelection;
+      Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
+      if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
+        // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
+        useActualNatureAndSettingObj = false;
+      }
 
-      String natureOfCaseObj = String.isNotBlank(selectedNatureOfCaseId)
+      String natureOfCaseObj = useActualNatureAndSettingObj
         ? 'FEC_Actual_Nature_of_Case__c'
         : 'FEC_Nature_of_Case__c';
 
-      String masterDataSettingObj = String.isNotBlank(selectedNatureOfCaseId)
+      String masterDataSettingObj = useActualNatureAndSettingObj
         ? 'FEC_Actual_Master_Data_Setting__c'
         : 'FEC_Master_Data_Setting__c';
 
       // =================================== NATURE OF CASE ==================================
-      if (String.isBlank(selectedNatureOfCaseId)) {
+      if (!useActualNatureAndSettingObj) {
         natureOfCaseQuery =
           'SELECT Id, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c, FEC_Category__r.FEC_Code__c ' +
           'FROM FEC_Nature_of_Case__c ' +
@@ -566,6 +596,22 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+
+          // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
+          if (isGsrNocDisplayMode) {
+            if (isUpdatedNocDifferentFromCurrent) {
+              if (subSectionNameTemp != 'Property Info') {
+                continue;
+              }
+              if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
+                continue;
+              }
+            } else {
+              if ('Property Info'.equals(subSectionNameTemp)) {
+                continue;
+              }
+            }
+          }
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
