@@ -94,6 +94,30 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public String templateDownloadUrl;
     }
 
+    public class BatchRow {
+        @AuraEnabled public Id id;
+        @AuraEnabled public String fileName;
+        @AuraEnabled public String fileDownloadUrl;
+        @AuraEnabled public Datetime uploadedOn;
+        @AuraEnabled public String uploadedBy;
+        @AuraEnabled public Decimal totalRecordsCount;
+        @AuraEnabled public Decimal totalSuccessRecords;
+        @AuraEnabled public Decimal totalFailedRecords;
+        @AuraEnabled public String status;
+        @AuraEnabled public String failureReason;
+        @AuraEnabled public String result;
+        @AuraEnabled public String resultDownloadUrl;
+    }
+
+    public class ImportResult {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public String message;
+        @AuraEnabled public Id batchRecordId;
+        @AuraEnabled public Id contentDocumentId;
+        @AuraEnabled public String status;
+        @AuraEnabled public String resultRowsJson;
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata() {
         List<FilterPropertyMeta> out = new List<FilterPropertyMeta>();
@@ -121,13 +145,8 @@ public without sharing class FEC_BatchCaseHandlingController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<FEC_BatchDataCreationController.BatchRow> getRecentRows() {
-        Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
-        if (sObjType == null) {
-            return new List<FEC_BatchDataCreationController.BatchRow>();
-        }
-
-        Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+    public static List<BatchRow> getRecentRows() {
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
         String fileField = pickField(fieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
         String fileContentDocumentIdField = pickField(fieldMap, new List<String>{ 'FEC_File_Content_Document_Id__c' });
         String uploadedOnField = pickField(fieldMap, new List<String>{ 'FEC_Uploaded_On__c', 'CreatedDate' });
@@ -164,7 +183,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             ' LIMIT ' + MAX_ROWS;
 
         List<SObject> rows = Database.query(queryText);
-        List<FEC_BatchDataCreationController.BatchRow> output = new List<FEC_BatchDataCreationController.BatchRow>();
+        List<BatchRow> output = new List<BatchRow>();
         Map<Id, String> resultUrlByBatchId = new Map<Id, String>();
         Map<Id, String> sourceUrlByBatchId = new Map<Id, String>();
         Set<Id> batchIds = new Set<Id>();
@@ -194,7 +213,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
 
         for (SObject row : rows) {
-            FEC_BatchDataCreationController.BatchRow dto = new FEC_BatchDataCreationController.BatchRow();
+            BatchRow dto = new BatchRow();
             dto.id = (Id) row.get('Id');
             dto.fileName = asString(row.get(fileField));
             String sourceDocumentId = String.isBlank(fileContentDocumentIdField)
@@ -1253,13 +1272,13 @@ public without sharing class FEC_BatchCaseHandlingController {
     }
 
     @AuraEnabled
-    public static FEC_BatchDataCreationController.ImportResult importBatchData(
+    public static ImportResult importBatchData(
         String fileName,
         String fileBodyBase64,
         String templateName,
         String rowsJson
     ) {
-        FEC_BatchDataCreationController.ImportResult out = new FEC_BatchDataCreationController.ImportResult();
+        ImportResult out = new ImportResult();
         out.success = false;
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
@@ -1268,14 +1287,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             return out;
         }
 
-        Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
-        if (sObjType == null) {
-            out.message = OBJECT_API_NAME + ' is not available in this org.';
-            upsertFailedBatchHandling(fileName, templateName, out.message);
-            return out;
-        }
-
-        Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
         SObject batchRow;
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
@@ -1298,7 +1310,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 LIMIT 1
             ];
 
-            batchRow = sObjType.newSObject();
+            batchRow = Schema.getGlobalDescribe().get(OBJECT_API_NAME).newSObject();
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
             putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
@@ -1386,12 +1398,8 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     private static void upsertFailedBatchHandling(String fileName, String templateName, String reason) {
         try {
-            Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
-            if (sObjType == null) {
-                return;
-            }
-            Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
-            SObject failedRow = sObjType.newSObject();
+            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(OBJECT_API_NAME).getDescribe().fields.getMap();
+            SObject failedRow = Schema.getGlobalDescribe().get(OBJECT_API_NAME).newSObject();
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
             putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
