@@ -175,7 +175,6 @@ const NEW_STATUS = "New";
 const QUEUE_ID_START = "00G";
 
 const ACTION_OPTIONS_CS_SUPPORT = [
-  { label: "Recall", value: "Recall" },
   { label: "Reject", value: "Reject" },
   { label: "Resolve", value: "Resolve" },
   { label: "Revert", value: "Revert" },
