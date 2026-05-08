@@ -2889,7 +2889,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             for (const field of obj.fieldlst ?? []) {
               if (field.isHidden) continue;
               const val = field.value;
-              if (val === null || val === undefined || val === '') continue;
+              // if (val === null || val === undefined || val === '') continue;
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
