@@ -24,17 +24,20 @@ public with sharing class FEC_AssignmentListHandler {
         }
         
         try {
-            // Enforce object-level security
+            
             if (!Schema.sObjectType.FEC_Assignment__c.isAccessible()) {
-                   throw new AuraHandledException(System.Label.FEC_MSG_NO_ACCESS_ASSIGNMENT);
+                throw new AuraHandledException(
+                    System.Label.FEC_MSG_NO_ACCESS_ASSIGNMENT
+                    );
             }
             
             List<FEC_Assignment__c> records = [
             SELECT
                 Id,
                 Name,
-                 FEC_Assignment_Owner__c ,
-                FEC_Assignment_Owner__r.Username,
+                FEC_Assignment_Owner__c,
+                FEC_Assignment_Owner__r.Name,
+                FEC_Assignment_Owner__r.Email,
                 FEC_Assignment_Status__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c = :caseId
@@ -43,13 +46,16 @@ public with sharing class FEC_AssignmentListHandler {
             return records;
             
         } catch (Exception e) {
-            // Log properly (optional: use a logging framework)
-            System.debug(LoggingLevel.ERROR, 'getAssignments error: ' + e.getMessage());
             
-             throw new AuraHandledException(System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED);
+            System.debug(
+                LoggingLevel.ERROR,
+            'getAssignments error: ' + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+                );
         }
-        
-        
     }
     
     @AuraEnabled(cacheable=true)
@@ -64,7 +70,7 @@ public with sharing class FEC_AssignmentListHandler {
         try {
             
             if (!Schema.sObjectType.FEC_Case_Remarks__c.isAccessible()) {
-               throw new AuraHandledException(System.Label.FEC_MSG_NO_ACCESS_REMARK);
+                throw new AuraHandledException(System.Label.FEC_MSG_NO_ACCESS_REMARK);
             }
             
             List<FEC_Case_Remarks__c> records = [
