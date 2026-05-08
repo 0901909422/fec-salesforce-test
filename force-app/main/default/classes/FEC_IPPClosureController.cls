@@ -5,6 +5,13 @@
 
 public without sharing class FEC_IPPClosureController {
 
+    /** Case closure trỏ IPP sang case khác chỉ được xem là "khóa" khi case đó chưa kết thúc theo các trạng thái này. */
+    private static final Set<String> RELEASED_CLOSURE_PARENT_CASE_STATUSES = new Set<String>{
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
+        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
+        FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED
+    };
+
     public class IPPClosureDTO {
         @AuraEnabled public String Id;
         @AuraEnabled public String ippRecordNo;
@@ -61,7 +68,8 @@ public without sharing class FEC_IPPClosureController {
                        FEC_Customer_History__r.FEC_Account_Number__c
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
-                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                  AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES)
                   AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                 LIMIT 1
             ];
@@ -73,7 +81,8 @@ public without sharing class FEC_IPPClosureController {
                        FEC_IPP_Current_Term__c, FEC_Customer_History__c,
                        FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c
                 FROM FEC_IPP__c
-                WHERE (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId)
+                WHERE (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
+                       OR FEC_IPP_Closure_Case__r.Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES)
                   AND FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
                   AND FEC_IPP_Current_Balance__c != null
                   AND FEC_IPP_Current_Balance__c != 0
@@ -182,6 +191,7 @@ public without sharing class FEC_IPPClosureController {
         }
         if (ippRec.FEC_IPP_Closure_Case__c != null
             && ippRec.FEC_IPP_Closure_Case__c != caseId
+            && !isRejectedOrCancelledClosureParentCaseStatus(ippRec.FEC_IPP_Closure_Case__c)
             && isPendingCaseStatus(ippRec.FEC_IPP_Closure_Case__c)) {
             return false;
         }
@@ -254,6 +264,20 @@ public without sharing class FEC_IPPClosureController {
             }
         }
         return blocked;
+    }
+
+    private static Boolean isRejectedOrCancelledClosureParentCaseStatus(Id linkedCaseId) {
+        if (linkedCaseId == null) {
+            return false;
+        }
+        List<Case> released = [
+            SELECT Id
+            FROM Case
+            WHERE Id = :linkedCaseId
+              AND Status IN :RELEASED_CLOSURE_PARENT_CASE_STATUSES
+            LIMIT 1
+        ];
+        return !released.isEmpty();
     }
 
     private static Boolean isPendingCaseStatus(Id linkedCaseId) {
