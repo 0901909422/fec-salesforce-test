@@ -206,14 +206,16 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!remarksToInsert.isEmpty()) insert remarksToInsert;
 
             List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
+            // tungnm37: build reverse map Id->Name để tránh lỗi so sánh String vs Id
+            Map<String, String> queueIdToName = new Map<String, String>();
+            for (String qn : queueNameToId.keySet()) {
+                if (queueNameToId.get(qn) != null) {
+                    queueIdToName.put(String.valueOf(queueNameToId.get(qn)), qn);
+                }
+            }
             for (FEC_Assignment__c a : assignments) {
                 String queueId = a.FEC_OwnerID__c;
-                String queueName = null;
-                for (String qn : queueNameToId.keySet()) {
-                    if (queueNameToId.get(qn) != null && String.valueOf(queueNameToId.get(qn)) == queueId) {
-                        queueName = qn; break;
-                    }
-                }
+                String queueName = queueIdToName.get(queueId);
                 histories.add(new FEC_Routing_Action_History__c(
                     FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
@@ -265,6 +267,7 @@ public without sharing class FEC_CofGsrAssignmentService {
 
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
+            List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
             for (Object raw : rawItems) {
                 Map<String, Object> item = (Map<String, Object>) raw;
                 String teamName = (String) item.get('teamName');
@@ -286,6 +289,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Manual__c = true
                 ));
                 remarkList.add(remark);
+                queueNameList.add(queueName);
             }
             insert assignments;
 
@@ -305,12 +309,7 @@ public without sharing class FEC_CofGsrAssignmentService {
             List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
             for (Integer i = 0; i < assignments.size(); i++) {
                 FEC_Assignment__c a = assignments[i];
-                String queueName = null;
-                for (String qn : queueNameToId.keySet()) {
-                    if (queueNameToId.get(qn) != null && String.valueOf(queueNameToId.get(qn)) == a.FEC_OwnerID__c) {
-                        queueName = qn; break;
-                    }
-                }
+                String queueName = queueNameList[i]; // tungnm37: lấy trực tiếp từ list, không reverse lookup
                 histories.add(new FEC_Routing_Action_History__c(
                     FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
