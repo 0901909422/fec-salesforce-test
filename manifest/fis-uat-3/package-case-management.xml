@@ -32,6 +32,7 @@
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_BancaController</members>
         <members>FEC_RDPaymentContractAssessmentService</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
 	    <members>FEC_AssignmentTriggerHandler</members>
@@ -409,6 +410,7 @@
     </types>
     <types>
         <members>FEC_Routing_Assignment__c</members>
+        <members>FEC_BancaTabView</members>
         <name>CustomTab</name>
     </types>
 	<types>
@@ -477,6 +479,8 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+        <members>fec_Banca</members>
+		<members>fec_BancaTabView</members>
         <members>fec_RdPaymentRoutingUtils</members>
 		<members>fec_PointsRedemptionCaseForm</members>
 		<members>fec_ChannelConfig</members>
@@ -663,6 +667,21 @@
         <members>FEC_RelevantTicket_Cannot_Delete</members>
 		<members>FEC_Reason_Error</members>
 		<members>FEC_Duplicate_Queue_Error</members>
+		<members>FEC_User_ID</members>
+		<members>FEC_Buyer_Name</members>
+		<members>FEC_Buyer_DOB</members>
+		<members>FEC_Buyer_NID</members>
+		<members>FEC_Product_Name</members>
+		<members>FEC_Sales_Channel</members>
+		<members>FEC_Insurance_Company</members>
+		<members>FEC_Sub_Channel</members>
+		<members>FEC_Policy_Number</members>
+		<members>FEC_Agent_Code</members>
+		<members>FEC_Expiry_Date</members>
+		<members>FEC_Payment_ID</members>
+		<members>FEC_Cancel_Date</members>
+		<members>FEC_Effective_Date</members>
+		<members>FEC_Premium_Free</members>s
         <members>FEC_Points_Redeem_Button_Label</members>
 		<members>FEC_Points_Redeem_Fail_After_Max</members>
 		<members>FEC_Points_Redeem_Fail_Prefix</members>
