@@ -62,6 +62,14 @@
                                             <p class="case-info__field-value">
                                                 {row.addressDisplay}
                                             </p>
+                                            <template if:true={row.wardDisplay}>
+                                                <p class="case-info__field-label slds-m-top_xx-small">
+                                                    {labels.ward}
+                                                </p>
+                                                <p class="case-info__field-value">
+                                                    {row.wardDisplay}
+                                                </p>
+                                            </template>
                                         </div>
                                         <div
                                             class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 case-info__mailing-toggle-col"
