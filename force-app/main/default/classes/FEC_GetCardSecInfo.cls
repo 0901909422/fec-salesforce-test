@@ -252,6 +252,15 @@ public with sharing class FEC_GetCardSecInfo {
     ) {
   
         validateRequest(transID, requestorId, dateTimeStr, accountNumber, isTestApi);
+
+        if (isTestApi) {
+            throw new CalloutException(
+                String.format(
+                    System.Label.FEC_MSG_API_Error,
+                    new List<String>{ 'API Fail' }
+                )
+            );
+        }
         
         // Build SOAP request using Dom.XmlNode
         Dom.Document doc = new Dom.Document();
@@ -648,15 +657,6 @@ public with sharing class FEC_GetCardSecInfo {
         if (accountNumber.length() > 255) {
             throw new CalloutException(
                 String.format(System.Label.FEC_MSG_Param_Maxlength, new List<String>{'AccountNumber', '255'})
-            );
-        }
-
-        if (!isTestApi && String.isBlank(accountNumber)) {
-            throw new CalloutException(
-                String.format(
-                    System.Label.FEC_MSG_Param_Required,
-                    new List<String>{'AccountNumber'}
-                )
             );
         }
     }

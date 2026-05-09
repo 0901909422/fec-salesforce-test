@@ -68,15 +68,6 @@ public without sharing class FEC_SecondaryInfoAccountController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-
-        if (c.FEC_Is_Test_API__c == true) {
-            throw new AuraHandledException(
-                String.format(
-                    System.Label.FEC_MSG_API_Error,
-                    new List<String>{ 'Call Fail' }
-                )
-            );
-        }
       
         String accountNumber;
         String cifNumber;
