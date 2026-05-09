@@ -67,8 +67,8 @@
                                 </div>
                             </template>
                             <template if:false={isAccountContractSearch}>
-                                <div class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
-                                    Không tìm thấy khách hàng
+                                <div class={noCustomerFoundClass}>
+                                    {noCustomerFoundMessage}
                                 </div>
                             </template>
                             <template if:true={isDisplayCreateCase}>
