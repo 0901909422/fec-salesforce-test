@@ -37,5 +37,9 @@
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<name>CustomMetadata</name>
 	</types>
+    <types>
+        <members>RD_IT_User_System_Management</members>
+		<name>PermissionSet</name>
+	</types>
 	<version>66.0</version>
 </Package>
