@@ -30,7 +30,7 @@ import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
-const IPP_SAVE_FAILED = 'IPP_SAVE_FAILED';
+const IPP_SAVE_FAILED = 'IPP save failed';
 
 export default class Fec_IPPClosureForm extends LightningElement {
 
