@@ -260,7 +260,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     console.log("📤 CASE_ACTION:", payload);
 
-    publish(this.messageContext, CASE_ACTION_CHANNEL, payload);
+    publish(this.messageContext, CASE_ACTION, payload);
   }
 
   /**
@@ -449,9 +449,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         updateRecord(recordInput);
       }
 
-      // Chuyển sang Case Review (chế độ xem), không đóng tab
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+      // Chuyển sang Case Review (chế độ xem), không đóng tab — publish mode trước để handleMessage nhận
+      // đổi từ edit → review (không gán modeEditCase=false trước, nếu không prev===next và bỏ qua resetViewMode/getData).
       setTimeout(async () => {
-        this.modeEditCase = false;
         this.handlePublishMode(false);
 
         this.handlePublishCaseAction("SUBMIT");

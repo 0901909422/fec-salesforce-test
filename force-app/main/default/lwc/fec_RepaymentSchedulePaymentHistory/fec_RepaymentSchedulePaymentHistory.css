@@ -96,7 +96,19 @@
     padding: 1rem;
 }
 
+
 .repay-section4-block .slds-text-title {
     font-weight: 600;
     color: #3e3e3c;
+}
+
+/* Đồng bộ chiều ngang với lightning-accordion-section: stretch full width trong accordion container */
+.repay-error-section {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.repay-error-section .slds-accordion__summary-action {
+    width: 100%;
 }
