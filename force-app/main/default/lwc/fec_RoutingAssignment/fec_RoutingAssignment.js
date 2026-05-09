@@ -35,6 +35,11 @@ export default class Fec_RoutingAssignment extends LightningElement {
   @track manualItems = [];
   @track formTeam = '';
   @track formQueue = '';
+
+  // tungnm37: expose để parent check form đang mở chưa confirm
+  @api get hasUnconfirmedForm() {
+    return this.showAddForm && (this.formTeam || this.formQueue);
+  }
   @track formRemark = '';
 
   teamLabel = FEC_Team_Label;
