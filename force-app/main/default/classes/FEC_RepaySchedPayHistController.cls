@@ -98,18 +98,30 @@ public with sharing class FEC_RepaySchedPayHistController {
         return cases.isEmpty() ? null : cases[0];
     }
 
+    /** Ưu tiên FEC_Contract_Number__c trên Customer History; fallback Case.FEC_Contract_Number__c (tránh callout khác số hợp đồng bạn test trên Case). */
     private static String getContractNumber(Id caseId) {
-        List<Case> cases = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1];
-        if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) return null;
-        List<FEC_Customer_History__c> histories = [
-            SELECT FEC_Contract_Number__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :cases[0].FEC_Account_or_Contract__c
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
             LIMIT 1
         ];
-        return (histories.isEmpty() || String.isBlank(histories[0].FEC_Contract_Number__c))
-            ? null
-            : histories[0].FEC_Contract_Number__c;
+        if (cases.isEmpty()) {
+            return null;
+        }
+        Case c = cases[0];
+        if (c.FEC_Account_or_Contract__c != null) {
+            List<FEC_Customer_History__c> histories = [
+                SELECT FEC_Contract_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            if (!histories.isEmpty() && String.isNotBlank(histories[0].FEC_Contract_Number__c)) {
+                return histories[0].FEC_Contract_Number__c;
+            }
+        }
+        return String.isNotBlank(c.FEC_Contract_Number__c) ? c.FEC_Contract_Number__c : null;
     }
 
     private static Id getCustomerHistoryId(Id caseId) {
@@ -394,7 +406,7 @@ public with sharing class FEC_RepaySchedPayHistController {
             return result;
         }
 
-        String transId = FEC_CommonUltils.generateTransactionId();
+        String transId = FEC_CommonUltils.generateTransactionUUID();
         String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
 
@@ -441,9 +453,33 @@ public with sharing class FEC_RepaySchedPayHistController {
         return result;
     }
 
-    /** Stub: LWC refresh. */
+    /**
+     * Chỉ gọi GetPaymentInfo + map Real-Time (giống pattern fec_PaymentHistoryAcount.syncRealtimePayment).
+     * Lỗi API không nuốt im — LWC hiển thị toast; khác getSectionData đang try/catch GetPaymentInfo.
+     */
     @AuraEnabled
-    public static void refreshRealTimePayment(Id caseId) {
-        if (caseId == null) return;
+    public static List<RealTimePaymentRowDTO> refreshRealTimePayment(Id caseId) {
+        if (caseId == null) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
+            );
+        }
+        String contractNumber = getContractNumber(caseId);
+        if (String.isBlank(contractNumber)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+        String transId = FEC_CommonUltils.generateTransactionUUID();
+        String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
+        String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+
+        FEC_GetPaymentInfo.ResponseWrapper paymentRes = FEC_GetPaymentInfo.callGetPaymentInfo(
+            transId,
+            requestorId,
+            dateTimeStr,
+            contractNumber
+        );
+        SectionDataResult temp = new SectionDataResult();
+        fillRealTimePaymentFromApi(temp, paymentRes);
+        return temp.realTimePaymentTable != null ? temp.realTimePaymentTable : new List<RealTimePaymentRowDTO>();
     }
 }

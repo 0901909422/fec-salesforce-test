@@ -82,6 +82,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Assignment_Users__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1813,6 +1818,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Notification__c.FEC_Customer_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_History__c.FEC_Case_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
