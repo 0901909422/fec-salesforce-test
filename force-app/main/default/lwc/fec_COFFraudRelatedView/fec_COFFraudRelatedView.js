@@ -1,6 +1,6 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
-
+import { getRecord } from "lightning/uiRecordApi";
 import CASE_OBJECT from "@salesforce/schema/Case";
 import COMPLAINT_TYPE from "@salesforce/schema/Case.FEC_Complain_Type__c";
 import COMPLAINT_SOURCE from "@salesforce/schema/Case.FEC_Complaint_Source__c";
@@ -20,14 +20,15 @@ import {
   COMPLAINT_SOURCE_LABEL,
 } from "c/fec_CommonConst";
 
+const FIELDS = ["Case.RecordTypeId"];
 export default class Fec_COFFraudRelatedView extends LightningElement {
   @api recordId;
 
   @track complaintTypeOptions = [];
   @track complaintSourceOptions = [];
 
-  @track complaintTypeValue;
-  @track complaintSourceValue;
+  @track complaintTypeValue = null;
+  @track complaintSourceValue = null;
 
   productTypeId;
   categoryId;
@@ -135,10 +136,20 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   }
 
   // Lấy metadata object
-  @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
-  objectInfo({ data, error }) {
+  // @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
+  // objectInfo({ data, error }) {
+  //   if (data) {
+  //     this.recordTypeId = data.defaultRecordTypeId;
+  //   }
+  // }
+
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: FIELDS,
+  })
+  wiredCase({ data }) {
     if (data) {
-      this.recordTypeId = data.defaultRecordTypeId;
+      this.recordTypeId = data.fields.RecordTypeId.value;
     }
   }
 
@@ -166,10 +177,14 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
   // Handlers
   handleComplaintTypeChange(event) {
-    console.log("Selected Complaint Type:", event.detail.value);
+    console.log("RAW VALUE=", JSON.stringify(event.detail.value));
+
+    console.log("HIGH_RISK=", JSON.stringify(COMPLAINT_TYPE_TEXT.HIGH_RISK));
+
+    console.log("EQUAL=", event.detail.value === COMPLAINT_TYPE_TEXT.HIGH_RISK);
+
     this.complaintTypeValue = event.detail.value;
 
-    // reset source nếu type đổi
     this.complaintSourceValue = null;
   }
 
@@ -183,11 +198,17 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   }
 
   get showComplaintSource() {
+    console.log(
+      "showComplaintSource value=",
+      JSON.stringify(this.complaintTypeValue),
+    );
+
     return (
       this.complaintTypeValue === COMPLAINT_TYPE_TEXT.HIGH_RISK ||
       this.complaintTypeValue === COMPLAINT_TYPE_TEXT.URGENT
     );
   }
+  
   get helpText() {
     return COMPLAINT_SOURCE_LABEL[this.complaintSourceValue] || "";
   }
