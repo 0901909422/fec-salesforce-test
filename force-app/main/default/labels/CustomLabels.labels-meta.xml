@@ -14650,6 +14650,38 @@
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
     </labels>
+    <labels>
+        <fullName>CS_TITLE_NAME_OF_ATTACHMENT</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS_TITLE_NAME_OF_ATTACHMENT</shortDescription>
+        <value>Title</value>
+    </labels>
+    <labels>
+        <fullName>CS_TYPE_OF_ATTACHMENT</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS_TYPE_OF_ATTACHMENT</shortDescription>
+        <value>Type</value>
+    </labels>
+    <labels>
+        <fullName>CS_DOWNLOAD_ATTACHMENT</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS_DOWNLOAD_ATTACHMENT</shortDescription>
+        <value>Download</value>
+    </labels>
+    <labels>
+        <fullName>CS_NO_ARCHIVE_ATTACHMENT</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CS_NO_ARCHIVE_ATTACHMENT</shortDescription>
+        <value>No archive files</value>
+    </labels>
     <!-- tungnm37 thêm: Channel Config labels -->
     <labels>
         <fullName>FEC_Confirm_Before_Submit</fullName>
