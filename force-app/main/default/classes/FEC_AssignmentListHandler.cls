@@ -1,18 +1,32 @@
 public with sharing class FEC_AssignmentListHandler {
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getUserDepartment() {
+        
         User u = [
-        SELECT UserRole.Name, Profile.Name
+        SELECT UserRole.Name, Profile.Name, FEC_User_Group__c
         FROM User
         WHERE Id = :UserInfo.getUserId()
+        LIMIT 1
     ];
         
-        if (u.UserRole.Name.contains('Support') ||
-        u.UserRole.Name.contains('Customer Care')) {
+        System.debug('=== USER === ' + u);
+        System.debug('=== FEC_User_Group__c === ' + u.FEC_User_Group__c);
+        
+        if (String.isBlank(u.FEC_User_Group__c)) {
+            System.debug('=== RETURN OTHER: group is blank ===');
+            return 'OTHER';
+        }
+        
+        if (
+            u.FEC_User_Group__c.contains('SP') ||
+            u.FEC_User_Group__c.contains('CC')
+        ) {
+            System.debug('=== RETURN CS ===');
             return 'CS';
         }
         
+        System.debug('=== RETURN OTHER ===');
         return 'OTHER';
     }
     
