@@ -135,9 +135,6 @@ export default class Fec_SecondaryInfoAccount extends LightningElement {
             });
     }
     get hasData() {
-        if (this.dto?.isTestApi) {
-            return false;
-        }
         return this.dto && Object.keys(this.dto).length > 0;
     }
 

@@ -15,7 +15,6 @@ public without sharing class FEC_SecondaryInfoAccountController {
 
     /* ===================== DTO ===================== */
     public class SecondaryAccountDTO {
-        @AuraEnabled public Boolean isTestApi;
         @AuraEnabled public Map<String, String> helpTexts;
 
         /* ===== LIMIT ===== */
@@ -69,6 +68,15 @@ public without sharing class FEC_SecondaryInfoAccountController {
             WHERE Id = :caseId
             LIMIT 1
         ];
+
+        if (c.FEC_Is_Test_API__c == true) {
+            throw new AuraHandledException(
+                String.format(
+                    System.Label.FEC_MSG_API_Error,
+                    new List<String>{ 'Call Fail' }
+                )
+            );
+        }
       
         String accountNumber;
         String cifNumber;
@@ -197,11 +205,8 @@ public without sharing class FEC_SecondaryInfoAccountController {
             LIMIT 1
         ];
 
-        SecondaryAccountDTO dto = mapToDTO(a);
+        return mapToDTO(a);
 
-        dto.isTestApi = c.FEC_Is_Test_API__c;
-
-        return dto;
     }
 
     /* ===================== DTO MAPPER (DB ONLY) ===================== */
