@@ -11,6 +11,7 @@
 	    <members>FEC_SearchController</members>
 	    <members>FEC_RepaySchedPayHistController</members>
 	    <members>FEC_MainInfoController</members>
+	    <members>FEC_UpdateDisbursementStatusRestService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
