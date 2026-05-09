@@ -187,6 +187,9 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
       this.complaintSourceValue = getFieldValue(data, COMPLAINT_SOURCE);
 
+      if (!this.complaintTypeValue) {
+        this.complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
+      }
       console.log("Complaint Type:", this.complaintTypeValue);
 
       console.log("Complaint Source:", this.complaintSourceValue);

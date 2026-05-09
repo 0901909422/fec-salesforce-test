@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Complain_Type__c</fullName>
-    <label>Complaint Type</label>
+    <fullName>FEC_CS_Check_Final_Product__c</fullName>
+    <description>Sản phẩm cuối cùng liên quan đến case sau khi CS xác định</description>
+    <label>CS Check - Final Product</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
@@ -12,37 +13,29 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Urgent</fullName>
+                <fullName>Card</fullName>
                 <default>false</default>
-                <label>Urgent</label>
+                <label>Card</label>
             </value>
             <value>
-                <fullName>High risk</fullName>
+                <fullName>Loan</fullName>
                 <default>false</default>
-                <label>High risk</label>
+                <label>Loan</label>
             </value>
             <value>
-                <fullName>Normal</fullName>
+                <fullName>Insurance</fullName>
                 <default>false</default>
-                <label>Normal</label>
+                <label>Insurance</label>
             </value>
             <value>
-                <fullName>High</fullName>
+                <fullName>Banca</fullName>
                 <default>false</default>
-                <isActive>false</isActive>
-                <label>High</label>
+                <label>Banca</label>
             </value>
             <value>
-                <fullName>Low</fullName>
+                <fullName>DC3</fullName>
                 <default>false</default>
-                <isActive>false</isActive>
-                <label>Low</label>
-            </value>
-            <value>
-                <fullName>Medium</fullName>
-                <default>false</default>
-                <isActive>false</isActive>
-                <label>Medium</label>
+                <label>DC3</label>
             </value>
         </valueSetDefinition>
     </valueSet>
