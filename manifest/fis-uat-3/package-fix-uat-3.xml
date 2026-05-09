@@ -10,6 +10,7 @@
 	    <members>FEC_CustomerAdditionalDataController</members>
 	    <members>FEC_SearchController</members>
 	    <members>FEC_RepaySchedPayHistController</members>
+	    <members>FEC_MainInfoController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -24,12 +25,17 @@
 	    <members>fec_Search</members>
 	    <members>fec_customerAdditionalData</members>
 	    <members>fec_RepaymentSchedulePaymentHistory</members>
+	    <members>fec_UpdateAddress</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
         <members>FEC_MSG_Service_Error_Label</members>
 		<name>CustomLabel</name>
+	</types>
+    <types>
+        <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<name>CustomMetadata</name>
 	</types>
 	<version>66.0</version>
 </Package>
