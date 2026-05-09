@@ -9,6 +9,7 @@
 	    <members>FEC_CheckEligibilityIPPCallout</members>
 	    <members>FEC_CustomerAdditionalDataController</members>
 	    <members>FEC_SearchController</members>
+	    <members>FEC_RepaySchedPayHistController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -22,6 +23,7 @@
 	    <members>fec_CommonConst</members>
 	    <members>fec_Search</members>
 	    <members>fec_customerAdditionalData</members>
+	    <members>fec_RepaymentSchedulePaymentHistory</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
