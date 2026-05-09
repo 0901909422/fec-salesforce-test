@@ -26,6 +26,7 @@ import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic
 import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Error';
 import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
 import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
+import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -86,6 +87,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api isNoCustomerFound = false;
   showNewCaseModal = false;
   isSkip;
+  isTestApiCase = false;
   wiredCaseResult;
   fieldPermissions;
   errorCalloutIsurance;
@@ -101,7 +103,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
 
   labels = {
-    errorCalloutInsuranceMsg: FEC_Error_Callout_Insurance
+    errorCalloutInsuranceMsg: FEC_Error_Callout_Insurance,
+    errorApiMessage: FEC_MSG_Service_Error_Label
   }
 
   @wire(MessageContext)
@@ -435,6 +438,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
       this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
+      this.isTestApiCase = data?.FEC_Is_Test_API__c === true;
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
         data.FEC_Skip_Search_Internal_Case__c === false;
@@ -465,6 +469,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
+      this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
       this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
       this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
       this.applicationId = this.fieldPermissions['FEC_Search_Application_ID__c'] ? result.FEC_Application_ID__c : null;
@@ -1694,6 +1699,17 @@ hasAnySearchCriteria(params) {
 
   get isDisplayCreateCase() {
     return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
+  }
+
+  get noCustomerFoundMessage() {
+    if (this.recordId && this.isTestApiCase) {
+      return this.labels.errorApiMessage;
+    }
+    return this.labels.errorApiMessage;
+  }
+
+  get noCustomerFoundClass() {
+    return "slds-text-align_center slds-text-body_regular slds-text-color_error slds-m-bottom_medium";
   }
 
   // Sorting helpers if you want per-table sorting in future (optional)

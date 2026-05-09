@@ -417,6 +417,20 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>nocChannelConfigTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Channel Config</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocChannelConfigTab</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>Facet-dafc244f-0a76-499d-80a1-08e18841b329</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -447,6 +461,16 @@
         </itemInstances>
         <name>main</name>
         <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_NocChannelConfig</componentName>
+                <identifier>fec_NocChannelConfig</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocChannelConfigTabContent</name>
+        <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>

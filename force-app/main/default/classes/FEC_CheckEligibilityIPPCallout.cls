@@ -12,7 +12,8 @@
 public with sharing class FEC_CheckEligibilityIPPCallout {
    //sử dụng API /esb/cms/CMS_IPP_BlockWS 
     public static final String API_CONFIG_NAME = 'FEC_CMS_IPP_BlockWS';
-    private static final String SERVICE_NS = 'http://esbservice.fecredit.org/CMS_IPP_BlockWS/';
+    private static final String SERVICE_NS = 'http://fecredit.com.vn/CMS_IPP_BlockWS';
+    private static ResponseLog responseLog;
     
     // =========================================================================
     // RESPONSE WRAPPERS
@@ -30,6 +31,24 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         @AuraEnabled public Integer httpStatus { get; set; }
     }
 
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
+
     // =========================================================================
     // MAIN CALLOUT METHOD
     // =========================================================================
@@ -44,7 +63,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         CheckEligibilityResult result = new CheckEligibilityResult();
         result.success = false;
         String transId = FEC_CommonUltils.generateTransactionId();
-        String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.DATETIME_FORMAT);
+        String timestamp = FEC_CommonUltils.formatTimestamp(Datetime.now(), FEC_ConstantCommon.STR_DATETIME_FORMAT_Z);
         
         try {
             // 1. Validate Input
@@ -56,7 +75,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
 
             // 2. Build SOAP Request
             // Giống Reward Debit: tránh RequestorID quá dài nếu downstream map vào cột ngắn
-            Dom.Document doc = buildSoapRequest(transId, FEC_ConstantCommon.REQUESTOR_CRM, timestamp, accountNumber);
+            Dom.Document doc = buildSoapRequest(transId, FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN, timestamp, accountNumber);
             String soapRequest = doc.toXmlString();
 
             // 3. Resolve Endpoint & Callout
@@ -79,7 +98,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
             );
 
             // 4. Log Interaction
-            FEC_CommonUltils.logApi(
+            responseLog = new ResponseLog(
                 'FEC_CheckEligibilityIPPCallout',
                 endpoint,
                 FEC_ConstantCommon.API_METHOD_POST,
@@ -104,10 +123,29 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         } catch (Exception e) {
             result.success = false;
             result.errorMessage = e.getMessage();
+            if (responseLog != null) {
+                responseLog.errorMessage = e.getMessage();
+            }
             System.debug('### IPP CHECK ERROR: ' + e.getMessage() + '\n' + e.getStackTraceString());
         }
 
         return result;
+    }
+
+    // /**
+    //  * Persists the API log to the database.
+    //  */
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName, 
+                responseLog.endpoint, 
+                responseLog.method, 
+                responseLog.requestBody, 
+                responseLog.response, 
+                responseLog.errorMessage
+            );
+        }
     }
 
     // =========================================================================
@@ -124,7 +162,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         
         Dom.XmlNode action = body.addChildElement('ns1:CheckEligibility', null, null);
         
-        Dom.XmlNode sysRequest = action.addChildElement('SysRequest', null, null);
+        Dom.XmlNode sysRequest = action.addChildElement('Sys', null, null);
         sysRequest.addChildElement('TransID', null, null).addTextNode(transId);
         sysRequest.addChildElement('RequestorID', null, null).addTextNode(requestorId);
         sysRequest.addChildElement('DateTime', null, null).addTextNode(timestamp);
