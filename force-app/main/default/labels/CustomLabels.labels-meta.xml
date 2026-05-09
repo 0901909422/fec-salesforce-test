@@ -3238,6 +3238,14 @@
         <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Service_Error_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Service Error Label</shortDescription>
+        <value>Lỗi dịch vụ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
         <categories>Common</categories>
         <language>en_US</language>
@@ -14632,7 +14640,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Duplicate Queue Error</shortDescription>
-        <value>Queue đã được thêm. Vui lòng chọn Queue khác.</value>
+        <value>Không thể tạo trùng Assignment cho cùng 1 rổ công việc của đơn vị.</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Remarks_History</fullName>
@@ -14641,5 +14649,189 @@
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
+    </labels>
+    <!-- tungnm37 thêm: Channel Config labels -->
+    <labels>
+        <fullName>FEC_Confirm_Before_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Before Submit</shortDescription>
+        <value>Vui lòng Confirm Team/Queue trước khi Submit.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Success</shortDescription>
+        <value>Đã lưu Channel Config.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Error</shortDescription>
+        <value>Lỗi khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Channel_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Channel Placeholder</shortDescription>
+        <value>Search Channel...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Results</shortDescription>
+        <value>Không tìm thấy kết quả</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Get_Nature_Of_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get Nature Of Case Label</shortDescription>
+        <value>Get Nature Of Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Cancel_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Case Label</shortDescription>
+        <value>Cancel Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Update_Case_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Case Status Label</shortDescription>
+        <value>Update Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Code</shortDescription>
+        <value>Agent Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_DOB</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer DOB</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_NID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer NID</shortDescription>
+        <value>Buyer NID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer Name</shortDescription>
+        <value>Buyer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Date</shortDescription>
+        <value>Cancel Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Effective_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Expiry_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Expiry Date</shortDescription>
+        <value>Expiry Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Company</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Company</shortDescription>
+        <value>Insurance Company</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment ID</shortDescription>
+        <value>Payment ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Policy_Number</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Policy Number</shortDescription>
+        <value>Policy Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Premium_Free</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Premium Free</shortDescription>
+        <value>Premium Free</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Name</shortDescription>
+        <value>Product Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sales_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Channel</shortDescription>
+        <value>Sales Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Id</shortDescription>
+        <value>User ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Info_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Info Error</shortDescription>
+        <value>Insurance Info</value>
     </labels>
 </CustomLabels>

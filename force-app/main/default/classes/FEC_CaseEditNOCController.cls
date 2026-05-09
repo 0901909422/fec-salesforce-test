@@ -438,6 +438,7 @@ public with sharing class FEC_CaseEditNOCController {
         SELECT
           Id,
           FEC_Nature_of_Cases__c,
+          FEC_Nature_of_Cases__r.FEC_Business_Process__r.FEC_Code__c,
           FEC_Nature_of_Cases__r.FEC_Product_Type__r.Name,
           FEC_Nature_of_Cases__r.FEC_Category__r.Name,
           FEC_Nature_of_Cases__r.FEC_Sub_Category__r.Name,
@@ -453,6 +454,7 @@ public with sharing class FEC_CaseEditNOCController {
       FEC_Case_Flow_History__c history = historyList[0];
       Map<String, String> result = new Map<String, String>();
       if (history.FEC_Nature_of_Cases__c != null) {
+          result.put('businessProcessCode', history.FEC_Nature_of_Cases__r?.FEC_Business_Process__r?.FEC_Code__c);
         result.put('productType', history.FEC_Nature_of_Cases__r?.FEC_Product_Type__r?.Name);
         result.put('category',    history.FEC_Nature_of_Cases__r?.FEC_Category__r?.Name);
         result.put('subCategory', history.FEC_Nature_of_Cases__r?.FEC_Sub_Category__r?.Name);
