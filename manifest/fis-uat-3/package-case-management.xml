@@ -424,6 +424,8 @@
         <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
         <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
         <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
+        <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -505,6 +507,8 @@
 		<members>fec_ChannelConfig</members>
 		<members>fec_NocChannelConfig</members>
         <members>fec_SubProcessContainer</members>
+        <members>fec_CustomDoNotBotherViewDatatable</members>
+        <members>fec_MaskedContactTemplate</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
