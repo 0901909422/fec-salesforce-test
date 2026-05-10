@@ -692,6 +692,7 @@ export default class Fec_UpdateAddress extends LightningElement {
                 key: `fec-orig-${index}-${a.addressType}`,
                 typeLabel: a.addressType,
                 addressDisplay: this.formatAddress(a),
+                wardDisplay: a.ward != null && String(a.ward).trim() !== '' ? String(a.ward).trim() : '',
                 mailingChecked: this.isMailingFlagYes(a)
             }));
     }
