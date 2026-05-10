@@ -42,6 +42,7 @@
 	</types>
     <types>
         <members>RD_IT_User_System_Management</members>
+        <members>RD_IT_User_Interaction_Case_Service_Case</members>
 		<name>PermissionSet</name>
 	</types>
 	<version>66.0</version>
