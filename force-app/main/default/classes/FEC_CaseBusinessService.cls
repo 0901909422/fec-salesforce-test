@@ -4440,7 +4440,6 @@ public without sharing class FEC_CaseBusinessService {
             WHERE UserOrGroupId IN :allAssociatedIds
         )
     ];
-  }
 
     Set<String> currentQueueNames = new Set<String>();
     for (Group g : userQueues) {
@@ -4490,7 +4489,7 @@ public without sharing class FEC_CaseBusinessService {
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
         ORDER BY Name ASC
     ];
-}
+  }
 
   private static Section buildAccountInfor(Case c) {
     // MAIN SECTION
