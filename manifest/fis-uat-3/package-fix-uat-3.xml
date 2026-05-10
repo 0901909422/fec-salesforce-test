@@ -41,6 +41,7 @@
 		<name>CustomMetadata</name>
 	</types>
     <types>
+		<members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
 		<name>PermissionSet</name>
