@@ -239,6 +239,20 @@
                 <identifier>relatedListsTab</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>channelConfigTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Channel Config</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>channelConfigTab</identifier>
+            </componentInstance>
+        </itemInstances>
         <mode>Replace</mode>
         <name>maintabs</name>
         <type>Facet</type>
@@ -308,6 +322,16 @@
         <mode>Replace</mode>
         <name>sidebar</name>
         <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_ChannelConfig</componentName>
+                <identifier>fec_ChannelConfig</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>channelConfigTabContent</name>
+        <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Channel Record Page</masterLabel>
     <parentFlexiPage>flexipage__default_rec_L</parentFlexiPage>
