@@ -127,7 +127,8 @@ public without sharing class FEC_CaseRemarkController {
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
   @AuraEnabled
-  public static void submitRemark(String caseId, String stageNameFromClient) {    try {
+  public static void submitRemark(String caseId, String stageNameFromClient) {
+    try {
       List<Case> caselst = [
         SELECT Id, FEC_Stage_Name__c, FEC_Draft_Remarks__c
         FROM Case
