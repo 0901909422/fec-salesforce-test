@@ -83,7 +83,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
-    return this.isSubmited === true;
+    return this.isSubmited === true && this.showUpdatedSection;
   }
 
   //PhongBT 07/05/26:  Khi đã submit: Updated section chỉ editable ở Handling hoặc khi bật mode edit (giống Creation NOC).
@@ -98,7 +98,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmittedState && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
