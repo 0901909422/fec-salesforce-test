@@ -71,7 +71,7 @@
                                     {noCustomerFoundMessage}
                                 </div>
                             </template>
-                            <template if:true={isDisplayCreateCase}>
+                            <template if:true={isDisplayCreateCaseForNoResults}>
                                 <div class="slds-grid slds-gutters slds-m-bottom_medium">
                                     <div class="slds-col slds-size_1-of-2">
                                         <lightning-input label="Customer Name" placeholder="Nhập Customer Name" value={custNameForCreate} required onchange={handleCustNameChange}></lightning-input>
