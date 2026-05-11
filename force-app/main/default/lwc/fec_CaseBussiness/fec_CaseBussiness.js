@@ -6,7 +6,7 @@ import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransf
 import getTransferQueues from "@salesforce/apex/FEC_CaseBusinessService.getTransferQueues";
 import run from "@salesforce/apex/FEC_CaseBusinessService.run";
 import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
-import getQueuesByDeveloperNames from "@salesforce/apex/FEC_RDPaymentContractAssessmentService.getQueuesByDeveloperNames"; // Toannd61
+import getRoutingConfig from "@salesforce/apex/FEC_RDPaymentContractAssessmentService.getRoutingConfig"; // Toannd61
 import markCaseSubmittedWithoutRouting from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRouting";
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
 import markCaseSubmittedWithoutRoutingWithHistory from "@salesforce/apex/FEC_CaseBusinessService.markCaseSubmittedWithoutRoutingWithHistory";
@@ -83,6 +83,8 @@ import FEC_Assignment_Remark_Label from "@salesforce/label/c.FEC_Assignment_Rema
 import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 // tungnm37 thêm: import label tên queue CS Support và Apex getTeamQueueOptions
 import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_Name";
+import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
+import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
@@ -292,7 +294,6 @@ const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
 import {
   CASE_RD_PAYMENT_CONTRACT_ASSESSMENT,
   FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT,
-  RD_PAYMENT_QUEUE_DEV_NAMES,
   isRdPaymentSubCode,
   resolveRdPaymentRouting,
 } from "c/fec_RdPaymentRoutingUtils";
@@ -329,7 +330,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_FastCashCaseForm: () => import('c/fec_FastCashCaseForm'),
   // DungLT — đăng ký LWC upload file động (master data)
   fec_FileUploadCard: () => import('c/fec_FileUploadCard'),
-  fec_OriginalInformation: () => import('c/fec_OriginalInformation')
+  fec_OriginalInformation: () => import('c/fec_OriginalInformation'),
+  fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm')
 };
 
 /**
@@ -700,11 +702,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.showProcessAction = TYPE_QUALIFIED === assessmentVal;
   }
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — pre-fetch 2 queue cố định cho RD Payment assessment routing
+  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — fetch routing config (routingMap + queueMap) từ Apex
   _fetchRdPaymentQueues() {
-    return getQueuesByDeveloperNames({ developerNames: RD_PAYMENT_QUEUE_DEV_NAMES })
+    return getRoutingConfig()
       .then((result) => {
-        this._rdPaymentQueueMap = result || {};
+        this._rdPaymentQueueMap   = result?.queueMap   || {};
+        this._rdPaymentRoutingMap = result?.routingMap || {};
       })
       .catch((err) => {
         console.error("_fetchRdPaymentQueues error:", JSON.stringify(err));
@@ -716,11 +719,10 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (!this._isRdPaymentSubCode || !this.isEdit) return;
     const assessmentVal = this._getCaseFieldValue(FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT);
     if (!assessmentVal || assessmentVal === STR_EMPTY) {
-      this._isRdPaymentAssessmentLocked = false;
       return;
     }
-    // Nếu queue map chưa load xong (race condition), fetch lại từ cache rồi mới apply
-    if (Object.keys(this._rdPaymentQueueMap).length === 0) {
+    // Nếu routing config chưa load xong (race condition), fetch lại rồi mới apply
+    if (Object.keys(this._rdPaymentRoutingMap).length === 0) {
       this._fetchRdPaymentQueues().then(() => {
         this._applyRdPaymentRoutingByAssessment(assessmentVal);
       });
@@ -730,19 +732,21 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /**
-   * Hard-code Team và Queue theo giá trị FEC_RD_Payment_Contract_Assessment__c.
-   * - "Hợp đồng không thể đóng"          → Team SP, Queue FEC_DQ_CS_Support
-   * - "Hợp đồng có thể đóng với tờ trình" → Team CC, Queue FEC_DQ_CS_Customer_Care
-   * User không thể thay đổi Team, Queue và Routing Action sau khi giá trị được chọn.
+   * Tự động set Team và Queue theo giá trị FEC_RD_Payment_Contract_Assessment__c.
+   * Mapping được lấy từ Apex (không hardcode trong LWC).
    */
   _applyRdPaymentRoutingByAssessment(assessmentVal) {
-    const { locked, nextTeam, nextQueue } = resolveRdPaymentRouting(assessmentVal, this._rdPaymentQueueMap);
+    const picklistOptions = this.business?.picklistOptionsMap?.Case?.[FIELD_RD_PAYMENT_CONTRACT_ASSESSMENT];
+    const { locked, nextTeam, nextQueue } = resolveRdPaymentRouting(
+      assessmentVal,
+      this._rdPaymentQueueMap,
+      this._rdPaymentRoutingMap,
+      picklistOptions,
+    );
     if (!locked) {
-      this._isRdPaymentAssessmentLocked = false;
       return;
     }
     this.business = { ...this.business, nextTeam, nextQueue };
-    this._isRdPaymentAssessmentLocked = true;
     this._setActionValueByCode(ACTION_ROUTE_TO);
     this.business = { ...this.business };
   }
@@ -779,16 +783,16 @@ export default class Fec_CaseBussiness extends LightningElement {
   header;
   content;
 
-  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — queue cache và trạng thái khóa routing
-  _rdPaymentQueueMap = {};
-  _isRdPaymentAssessmentLocked = false;
+  // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — config từ Apex (không hardcode trong LWC)
+  _rdPaymentQueueMap   = {};
+  _rdPaymentRoutingMap = {};
 
   get _isRdPaymentSubCode() {
     return isRdPaymentSubCode(this.business?.subCodeCode);
   }
 
   get isRoutingActionDisabled() {
-    return !this._isEdit || this._isRdPaymentAssessmentLocked;
+    return !this._isEdit;
   }
 
   get showRouteTo() {
@@ -848,9 +852,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // tungnm37 thêm: hiển thị lỗi khi chọn Queue trùng
   handleDuplicateQueue(event) {
-    const msg = event.detail?.message || 'Queue đã được chọn. Vui lòng chọn Queue khác.';
+    const msg = event.detail?.message || FEC_Duplicate_Queue_Error;
     this.dispatchEvent(new ShowToastEvent({
-      title: 'Lỗi',
+      title: FEC_Error_Title,
       message: msg,
       variant: 'error'
     }));
@@ -863,22 +867,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.dispatchEvent(new CustomEvent('additem', { detail: { caseId: this.recordId } }));
   }
   //Toannd61: resolve method theo Action.code (FEC_Code__c), không theo value custom label — khớp run() REVERT/ROUTE_TO
-
-  //Thangtv
-  // Hiển thị Queue ổn định cho Route To (hỗ trợ cả string và object {label,value})
-  get routeToQueueDisplayLabel() {
-    const queue = this.business?.nextQueue;
-    if (!queue) {
-      return this.business?.nextQueueLabel || STR_EMPTY;
-    }
-    if (typeof queue === "string") {
-      return queue;
-    }
-    if (typeof queue === "object") {
-      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
-    }
-    return STR_EMPTY;
-  }
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
     const KNOWN_ROUTING_METHODS = [
@@ -1213,9 +1201,18 @@ export default class Fec_CaseBussiness extends LightningElement {
       // (fec_CaseEditNOC đã tự xử lý)
       return;
     }
+      //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+      //lưu bộ có subcode chứ không phải bộ không subcode định submit
+    const hasNocSelectionPayload =
+      Object.prototype.hasOwnProperty.call(message, 'productTypeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'categoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCategoryId') ||
+      Object.prototype.hasOwnProperty.call(message, 'subCodeId') ||
+      Object.prototype.hasOwnProperty.call(message, 'natureOfCaseId');
 
-    if (message.subCodeId) {
-      // NOC update từ Updated Information section
+    if (hasNocSelectionPayload) {
+      // NOC update từ Updated Information section.
+      // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
       this._handleNOCUpdate(message);
     }
   }
@@ -1339,8 +1336,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   ) {
     this.businessLoaded = false;
     this._ippClosureHasEligibleRows = false;
-    this._isRdPaymentAssessmentLocked = false;
-
     this._fetchRdPaymentQueues(); // Toannd61
 
     getByCase({
@@ -1354,7 +1349,18 @@ export default class Fec_CaseBussiness extends LightningElement {
         if (!res) return;
 
         let sectionlst = [];
-        const natureOfCase = res.natureOfCase || natureOfCaseIdFallback;
+        // NOC payload can carry 3 states for natureOfCaseId: undefined/null/id.
+        // Only override when payload explicitly provides this field.
+        const hasNocSelectionPayload =
+          productTypeId !== null ||
+          categoryId !== null ||
+          subCategoryId !== null ||
+          subCodeId !== null;
+        const hasExplicitNatureFallback = natureOfCaseIdFallback !== undefined;
+        const natureOfCase =
+          hasNocSelectionPayload && hasExplicitNatureFallback
+            ? natureOfCaseIdFallback
+            : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
 
         this.activeSectionlst = ["routing-action"];
@@ -2240,6 +2246,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
+    const pointsRedemptionEl = this._getPointsRedemptionCaseFormEl();
+    if (
+      pointsRedemptionEl &&
+      typeof pointsRedemptionEl.validateForSubmit === "function"
+    ) {
+      if (!pointsRedemptionEl.validateForSubmit()) {
+        isAllValid = false;
+      }
+    }
+
     // let accountContractField = this.template.querySelector(
     //   'lightning-input-field[data-field="' + FIELD_ACCOUNT_CONTRACT_NUMBER_PL + '"]',
     // );
@@ -2306,6 +2322,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     return null;
   }
 
+  _getPointsRedemptionCaseFormEl() {
+    const wrap = this.template.querySelector(
+      '[data-fec-lwc="fec_PointsRedemptionCaseForm"]',
+    );
+    const host = wrap && wrap.firstElementChild;
+    if (
+      host &&
+      (typeof host.validateForSubmit === "function" ||
+        typeof host.saveDraftIfApplicable === "function")
+    ) {
+      return host;
+    }
+    return null;
+  }
+
   _saveContractClosureDraftIfApplicable() {
     const el = this._getContractClosureFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2332,6 +2363,14 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   _saveIncorrectPaymentDraftIfApplicable() {
     const el = this._getIncorrectPaymentFormEl();
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  _savePointsRedemptionDraftIfApplicable() {
+    const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
@@ -2602,6 +2641,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveCardClosureRefundDraftIfApplicable(),
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
+        this._savePointsRedemptionDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2688,12 +2728,23 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveCardClosureRefundForSubmitIfApplicable(),
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
+      this._savePointsRedemptionDraftIfApplicable(),
     ]);
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
     }
     console.log('FEC_DEBUG submit before routeToEle check routeToEle=' + !!routeToEle + ' isRoutingAssignmentMode=' + this.isRoutingAssignmentMode + ' natureOfCase=' + this.business?.natureOfCase);
+
+    // tungnm37: validate form Add Item chưa confirm
+    if (this.isRoutingAssignmentMode) {
+      const routingComp = this.template.querySelector('c-fec_-routing-assignment');
+      if (routingComp && routingComp.hasUnconfirmedForm) {
+        this.showToast(FEC_Error_Title, FEC_Confirm_Before_Submit, 'error');
+        return false;
+      }
+    }
+
      if (routeToEle) {
       // tungnm37 thêm: COF/GSR shortcut - không cần tìm selectedAction
       if (this.isRoutingAssignmentMode) {
@@ -2850,7 +2901,7 @@ export default class Fec_CaseBussiness extends LightningElement {
             for (const field of obj.fieldlst ?? []) {
               if (field.isHidden) continue;
               const val = field.value;
-              if (val === null || val === undefined || val === '') continue;
+              // if (val === null || val === undefined || val === '') continue;
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
@@ -3100,7 +3151,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               this.publishPinReissueResult("ERROR",msgError);
           }
           // PhuongNT send message process action Card to NOC
-          if (this.processActionMethod == ACTION_BLOCK_CARD 
+          if (this.processActionMethod == ACTION_BLOCK_CARD
             || this.processActionMethod == ACTION_UNBLOCK_CARD
             || this.processActionMethod == ACTION_REPLACE_CARD
           ) {

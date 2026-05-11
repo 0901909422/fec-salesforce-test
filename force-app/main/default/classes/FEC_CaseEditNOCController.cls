@@ -174,6 +174,45 @@ public with sharing class FEC_CaseEditNOCController {
     }
   }
 
+  /**
+   * PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+   * lưu bộ có subcode chứ không phải bộ không subcode định submit
+   * Bộ NOC chỉ tới Sub-Category: không có Sub-Code trong master (getSubCodelst rỗng).
+   * Dùng bản ghi FEC_Nature_of_Case__c có FEC_Sub_Code__c = null cho cùng bộ 3 Id.
+   */
+  @AuraEnabled
+  public static FEC_Nature_of_Case__c getNatureOfCaseWithoutSubCode(
+    String productTypeId,
+    String categoryId,
+    String subCategoryId
+  ) {
+    try {
+      if (
+        String.isBlank(productTypeId) ||
+        String.isBlank(categoryId) ||
+        String.isBlank(subCategoryId)
+      ) {
+        return null;
+      }
+      List<FEC_Nature_of_Case__c> natureOfCases = [
+        SELECT Id, FEC_Business_Process__c
+        FROM FEC_Nature_of_Case__c
+        WHERE
+          FEC_Product_Type__c = :productTypeId
+          AND FEC_Category__c = :categoryId
+          AND FEC_Sub_Category__c = :subCategoryId
+          AND FEC_Sub_Code__c = NULL
+        LIMIT 1
+      ];
+      if (!natureOfCases.isEmpty()) {
+        return natureOfCases.get(0);
+      }
+      return null;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   @AuraEnabled
   public static Case getCase(String recordId) {
     try {
@@ -399,6 +438,7 @@ public with sharing class FEC_CaseEditNOCController {
         SELECT
           Id,
           FEC_Nature_of_Cases__c,
+          FEC_Nature_of_Cases__r.FEC_Business_Process__r.FEC_Code__c,
           FEC_Nature_of_Cases__r.FEC_Product_Type__r.Name,
           FEC_Nature_of_Cases__r.FEC_Category__r.Name,
           FEC_Nature_of_Cases__r.FEC_Sub_Category__r.Name,

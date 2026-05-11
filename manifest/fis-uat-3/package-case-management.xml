@@ -27,15 +27,24 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_PointsRedemptionCaseController</members>
         <members>FEC_HoldCaseController</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
         <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_BancaController</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
+	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_AssignmentTriggerHandler</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
         <name>ApexClass</name>
     </types>
 	<types>
 		<members>FEC_RoutingActionHistoryTrigger</members>
 		<members>FEC_RelevantTicketTrigger</members>
+		<members>FEC_AssignmentTrigger</members>
+		<members>FEC_NatureOfCaseTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -392,27 +401,18 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
+		<members>Case.FEC_Assignment_Users__c</members>
+		<members>FEC_Channel__c.FEC_Cancel_Case__c</members>
+		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
+		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
         <name>CustomField</name>
     </types>
     <types>
         <members>FEC_Routing_Assignment__c</members>
+        <members>FEC_BancaTabView</members>
         <name>CustomTab</name>
     </types>
-    <types>
-        <members>FEC_Assignment__c</members>
-        <members>FEC_CustomerAdditionalInfoConfig__c</members>
-        <members>FEC_CustomerAdditionalInfo__c</members>
-        <members>FEC_Routing_Assignment__c</members>
-        <members>FEC_Relevant_Ticket__c</members>
-        <members>FEC_Case_Remarks__c</members>
-        <members>FEC_Case_Flow_History__c</members>
-        <members>FEC_Do_Not_Bother__c</members>
-        <name>CustomObject</name>
-    </types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
-	</types>
 	<types>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
@@ -428,11 +428,8 @@
 		<members>FEC_Fast_Cash_Info__c</members>
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
+        <members>FEC_Insurance_Info__c</members>
 		<name>CustomObject</name>
-	</types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
@@ -443,6 +440,8 @@
         <members>FEC_Internal_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Assignment_Record_Page</members>
+        <members>Channel_Record_Page</members>
+        <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -481,9 +480,15 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+        <members>fec_Banca</members>
+		<members>fec_BancaTabView</members>
+        <members>fec_RdPaymentRoutingUtils</members>
+		<members>fec_PointsRedemptionCaseForm</members>
+		<members>fec_ChannelConfig</members>
+		<members>fec_NocChannelConfig</members>
         <members>fec_BatchCaseHandling</members>
 		<name>LightningComponentBundle</name>
-	</types>
+    </types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
@@ -661,10 +666,40 @@
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
         <members>FEC_Assignment_Remarks_History</members>
-        <!-- Interaction Case Service Case -->
         <members>FEC_RelevantTicket_Cannot_Delete</members>
 		<members>FEC_Reason_Error</members>
 		<members>FEC_Duplicate_Queue_Error</members>
+		<members>FEC_User_ID</members>
+		<members>FEC_Buyer_Name</members>
+		<members>FEC_Buyer_DOB</members>
+		<members>FEC_Buyer_NID</members>
+		<members>FEC_Product_Name</members>
+		<members>FEC_Sales_Channel</members>
+		<members>FEC_Insurance_Company</members>
+		<members>FEC_Sub_Channel</members>
+		<members>FEC_Policy_Number</members>
+		<members>FEC_Agent_Code</members>
+		<members>FEC_Expiry_Date</members>
+		<members>FEC_Payment_ID</members>
+		<members>FEC_Cancel_Date</members>
+		<members>FEC_Effective_Date</members>
+		<members>FEC_Premium_Free</members>s
+        <members>FEC_Points_Redeem_Button_Label</members>
+		<members>FEC_Points_Redeem_Fail_After_Max</members>
+		<members>FEC_Points_Redeem_Fail_Prefix</members>
+		<members>FEC_Points_Redeem_Success_Message</members>
+		<members>FEC_Points_Redeemed_Points_Label</members>
+		<members>FEC_Points_Redemption_CMS_Phone_Label</members>
+		<members>FEC_Points_Redemption_Confirm_Message</members>
+		<members>FEC_Points_Redemption_Confirm_Title</members>
+		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Save_Success</members>
+		<members>FEC_Channel_Config_Save_Error</members>
+		<members>FEC_Search_Channel_Placeholder</members>
+		<members>FEC_No_Results</members>
+		<members>FEC_Label_Get_Nature_Of_Case</members>
+		<members>FEC_Label_Cancel_Case</members>
+		<members>FEC_Label_Update_Case_Status</members>
         <members>FEC_Batch_Case_Handling_Import_Row_Status_Failed</members>
         <name>CustomLabel</name>
     </types>
@@ -882,5 +917,10 @@
         <members>Case.Update_Case_96h_Warning</members>
         <name>WorkflowFieldUpdate</name>
     </types>
+	<types>
+	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Internal_Case</members>
+		<name>RecordType</name>
+	</types>
 	<version>66.0</version>
 </Package>

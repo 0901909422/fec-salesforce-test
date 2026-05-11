@@ -23,6 +23,7 @@ import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_Proce
 // import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
 
 import getNatureOfCase from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCase";
+import getNatureOfCaseWithoutSubCode from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCaseWithoutSubCode";
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
 import hasAutoRoutingAssignment from "@salesforce/apex/FEC_CaseEditNOCController.hasAutoRoutingAssignment";
 
@@ -68,6 +69,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
+  originalNOCBusinessProcessCode;
 
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   get originalNOCFields() {
@@ -84,14 +86,19 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return this.isSubmited === true;
   }
 
-  // Khi isSubmited=true, Updated section luôn editable
-  // Không phụ thuộc viewMode hay modeEditCase — chỉ cần đã submit là được sửa NOC
+  //PhongBT 07/05/26:  Khi đã submit: Updated section chỉ editable ở Handling hoặc khi bật mode edit (giống Creation NOC).
+  // Review mode → read only.
   get isUpdatedSectionEditable() {
-    return this.isSubmited === true;
+    if (!this.isSubmittedState) {
+      return false;
+    }
+    return this.modeEditCase === true || this.interactionViewMode === VIEW_MODE_HANDLING;
   }
 
   get showUpdatedSection() {
-    return this.isSubmittedState && !this.hasAutoRoutingAssignment;
+    const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
+    const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
+    return this.isSubmittedState && !this.hasAutoRoutingAssignment && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -253,10 +260,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error:", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
 
@@ -464,6 +473,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleMessage(message) {
     if (!message || typeof message.isModeEdit === "undefined") return;
+
+    // 🚫 API success rồi thì không cho edit nữa
+    if (this.isDisableNOC) {
+      return;
+    }
+
     const nextModeEdit = message.isModeEdit === true;
     const prevModeEdit = this.modeEditCase === true;
     this.modeEditCase = nextModeEdit;
@@ -511,10 +526,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error (reloadData):", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
       })
@@ -720,10 +737,45 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeOptionlst = res;
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
+        //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+        //lưu bộ có subcode chứ không phải bộ không subcode định submit
+        const triple =
+          this.productTypeSelectedId &&
+          this.categorySelectedId &&
+          this.subCategorySelectedId;
+        const noSubCodeOptions = !res || res.length === 0;
+
+        if (triple && noSubCodeOptions) {
+          this.subCodeSelectedId = null;
+          this.syncSubCodeComboValue();
+          return getNatureOfCaseWithoutSubCode({
+            productTypeId: this.productTypeSelectedId,
+            categoryId: this.categorySelectedId,
+            subCategoryId: this.subCategorySelectedId
+          })
+            .then((noc) => {
+              this.natureOfCase = noc;
+              this.handlePublishMessageChanel();
+            })
+            .catch((e) => {
+              console.log("getNatureOfCaseWithoutSubCode err:", e);
+              this.natureOfCase = null;
+              this.handlePublishMessageChanel();
+            });
+        }
       })
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ err:", err);
       });
+  }
+
+    //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+    //lưu bộ có subcode chứ không phải bộ không subcode định submit
+    syncSubCodeComboValue() {
+    const el = this.template.querySelector(`c-fec_-combo-box[data-id="sub-code"]`);
+    if (el) {
+      el.value = undefined;
+    }
   }
 
   handleRemoveProdType() {
@@ -772,10 +824,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleChangeSubCategory(e) {
     this.subCategorySelectedId = e.detail.value;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
 
     this.handleEnable("sub-code");
-
-    if (this.subCategorySelectedId) this.handlePublishMessageChanel();
+    this.handlePublishMessageChanel();
   }
 
   handleChangeSubCode(e) {
@@ -803,6 +856,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
         .catch((error) => {
           console.log("error", error);
         });
+    } else {
+      this.natureOfCase = null;
+      this.handlePublishMessageChanel();
     }
   }
 
