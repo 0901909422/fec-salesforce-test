@@ -1,0 +1,92 @@
+:host {
+  display: block;
+}
+
+.assignment-card {
+  border-radius: 12px;
+}
+
+/* HEADER */
+.header-icon {
+  --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #181818;
+}
+
+/* TABLE */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.custom-table {
+  width: 100%;
+  background: #fff;
+}
+
+.custom-table thead th {
+  background: #f3f3f3;
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+}
+
+.custom-table tbody td {
+  font-size: 13px;
+  color: #181818;
+}
+
+/* ROW HOVER */
+.custom-table tbody tr:hover > td {
+  background: #f8f8f8;
+}
+
+/* LINK */
+.custom-table a {
+  color: #0176d3;
+  text-decoration: none;
+}
+
+.custom-table a:hover {
+  text-decoration: underline;
+}
+
+/* INDEX */
+.index-col {
+  width: 48px;
+  text-align: center;
+  color: #706e6b;
+}
+
+/* FOOTER */
+.assignment-footer {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+
+  width: 100%;
+  padding: 10px 0;
+
+  border-top: 1px solid #dddbda;
+  background: #fff;
+}
+
+.assignment-card .slds-card__body,
+.assignment-card .slds-card__body_inner {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.assignment-footer a {
+  color: #0176d3;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.assignment-footer a:hover {
+  text-decoration: underline;
+}

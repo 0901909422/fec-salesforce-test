@@ -207,25 +207,53 @@ export default class Fec_DoNotBotherInformationView extends LightningElement {
     }
   }
 
+  // mapData(data) {
+  //   this.dnbData = data.map((item) => ({
+  //     id: item.id,
+  //     channel: item.channel || "",
+  //     type: item.type,
+  //     // FULL VALUE
+  //     rawContact: item.typeValue || "",
+
+  //     // MASKED VALUE
+  //     maskedContact: this.maskContact(item.typeValue),
+
+  //     // DEFAULT HIDDEN
+  //     isVisible: false,
+  //     status: item.doNotBother,
+  //     expiryDate: item.expectedExcludeTime,
+  //     originalReason: item.reason2,
+  //   }));
+
+  //   this.currentPage = 1; // reset page khi load mới
+  //   this.updatePagedData();
+  // }
+
   mapData(data) {
     this.dnbData = data.map((item) => ({
       id: item.id,
+
       channel: item.channel || "",
-      type: item.type,
-      // FULL VALUE
+
+      type: item.type || "",
+
+      // 🔥 ADD THIS
+      contactDisplay: item.typeValue || "",
+
       rawContact: item.typeValue || "",
 
-      // MASKED VALUE
       maskedContact: this.maskContact(item.typeValue),
 
-      // DEFAULT HIDDEN
       isVisible: false,
-      status: item.doNotBother,
+
+      status: item.doNotBother || "",
+
       expiryDate: item.expectedExcludeTime,
-      originalReason: item.reason2,
+
+      originalReason: item.reason2 || "",
     }));
 
-    this.currentPage = 1; // reset page khi load mới
+    this.currentPage = 1;
     this.updatePagedData();
   }
 
