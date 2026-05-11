@@ -1,0 +1,158 @@
+h3.fec-transfer-call__subtitle {
+    color: var(--slds-g-color-neutral-base-10, #080707);
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+/* Nút brand: chữ luôn trắng (kể cả disabled — nền disabled đậm vừa đủ tương phản). */
+.fec-transfer-call__btn-brand-white {
+    --slds-c-button-text-color: #ffffff;
+    --sds-c-button-text-color: #ffffff;
+    --slds-c-button-text-color-disabled: #ffffff;
+    --sds-c-button-text-color-disabled: #ffffff;
+    --slds-c-button-brand-color-background: var(--slds-g-color-palette-blue-50, #0176d3);
+    --sds-c-button-brand-color-background: var(--slds-g-color-palette-blue-50, #0176d3);
+    --slds-c-button-brand-color-background-disabled: #6b6b6b;
+    --sds-c-button-brand-color-background-disabled: #6b6b6b;
+}
+
+/* Nút bị vô hiệu sau khi thất bại đủ 3 lần: nền xám, chữ trắng. */
+.fec-transfer-call__btn-max-failed {
+    background-color: #6b6b6b;
+    border-color: #6b6b6b;
+    color: #ffffff;
+    cursor: not-allowed;
+}
+.fec-transfer-call__btn-max-failed:disabled {
+    background-color: #6b6b6b;
+    border-color: #6b6b6b;
+    color: #ffffff;
+}
+
+/* Lỗi chuyển Collections — giống mock: dòng 1 đỏ đậm, dòng 2 đỏ thường. */
+.fec-transfer-call__error-summary {
+    color: var(--slds-g-color-error-base-50, #fe1d34);
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.fec-transfer-call__error-reason {
+    color: var(--slds-g-color-error-base-50, #f72d41);
+    font-weight: 400;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Noti-16: thông báo thành công chuyển Collections (xanh lá, in đậm). */
+.fec-transfer-call__success-noti16 {
+    color: var(--slds-g-color-palette-green-50, #2e844a);
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.fec-transfer-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+}
+
+.fec-transfer-modal .slds-modal__container {
+    width: min(92vw, 56rem);
+    max-width: none;
+    border-radius: 0.75rem;
+    border: none;
+    outline: none;
+}
+
+.fec-transfer-modal__header {
+    border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
+    text-align: center;
+    padding: var(--slds-spacing-medium, 1rem);
+}
+
+.fec-transfer-modal__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--slds-g-color-palette-blue-20, #032d60);
+}
+
+.fec-transfer-modal__message {
+    font-weight: 600;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+    line-height: 1.5;
+}
+
+.fec-transfer-modal__textarea {
+    --lwc-formLabelFontWeight: 600;
+}
+
+/* ── Call Transfer Details section ── */
+.fec-transfer-details {
+}
+
+.fec-transfer-details__title {
+    color: var(--slds-g-color-neutral-base-10, #080707);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.fec-transfer-details__grid {
+    margin-top: 0.5rem;
+}
+
+.fec-transfer-details__row {
+    margin-bottom: 0.625rem;
+}
+
+.fec-transfer-details__cell {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5rem;
+    padding: 0.25rem 0 0.375rem 0;
+    min-width: 0;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+/* Chỉnh --fec-line-width để thay đổi chiều dài đường gạch (mặc định 80%) */
+.fec-transfer-details__cell::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: var(--fec-line-width, 90%);
+    height: 1px;
+    background-color: var(--slds-g-color-border-base-1, #e5e5e5);
+}
+
+.fec-td-label {
+    font-size: 0.875rem;
+    color: #000000;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: normal;
+    word-break: break-word;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.fec-td-value {
+    font-size: 0.875rem;
+    color: #000000;
+    font-weight: 400;
+    line-height: 1.5;
+    word-break: break-word;
+    margin: 0;
+}
+
+.fec-td-value--failure {
+    color: var(--slds-g-color-error-base-50, #000000);
+    font-weight: 600;
+}
