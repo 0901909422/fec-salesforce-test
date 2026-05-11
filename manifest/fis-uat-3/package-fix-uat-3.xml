@@ -14,6 +14,9 @@
 	    <members>FEC_UpdateDisbursementStatusRestService</members>
 	    <members>FEC_CofGsrAssignmentService</members>
 	    <members>FEC_ConstantCommon</members>
+	    <members>FEC_CommonUltils</members>
+	    <members>FEC_MainInfoLoanAccountController</members>
+	    <members>FEC_TerminationLoanController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
