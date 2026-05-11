@@ -699,5 +699,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
     public static final String QUEUE_ID_START = '00G';
+    /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
+    public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
 
 }
