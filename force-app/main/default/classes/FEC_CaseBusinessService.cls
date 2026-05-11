@@ -873,6 +873,49 @@ public without sharing class FEC_CaseBusinessService {
         subCodeId
       );
 
+      // [HARDCODE RC27.01/RC27.02 — Display Override]:
+      // Đặt SAU applyToBusinessIfApplicable để tránh bị Block Code ghi đè lại.
+      // Khi Case ở Stage 1 (chưa submit) với sub-code RC27.01/RC27.02,
+      // luôn hiển thị Team=SP, Queue=CS Support bất kể Block Code.
+      // Toannd61
+      if (
+        !selectedCase.FEC_Is_Submited__c &&
+        selectedStage != null &&
+        String.isNotBlank(routeToId) &&
+        (FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FEE.equals(result.subCodeCode) ||
+         FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FREE.equals(result.subCodeCode))
+      ) {
+        List<FEC_Stage_Change__c> rc27DisplayLst = [
+          SELECT FEC_Next_Queue__c, FEC_Team_User_Group__c
+          FROM FEC_Stage_Change__c
+          WHERE FEC_Previous_Stage__c = :selectedStage.Id
+            AND FEC_Active__c = TRUE
+            AND FEC_Team_User_Group__c = 'SP'
+            AND FEC_IsReverted__c = false
+          LIMIT 1
+        ];
+        if (!rc27DisplayLst.isEmpty()) {
+          System.debug('FEC_DEBUG getByCase RC27 display override (final): Stage1→Stage3 (SP), subCode=' + result.subCodeCode);
+          result.nextTeam = rc27DisplayLst[0].FEC_Team_User_Group__c;
+          if (String.isNotBlank(rc27DisplayLst[0].FEC_Next_Queue__c)) {
+            List<Group> spQueues = [
+              SELECT Id, Name
+              FROM Group
+              WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+                AND DeveloperName = :rc27DisplayLst[0].FEC_Next_Queue__c
+              LIMIT 1
+            ];
+            if (!spQueues.isEmpty()) {
+              result.nextQueue = new FEC_CommonUltils.PicklistOption(
+                spQueues[0].Name,
+                (String) spQueues[0].Id,
+                null
+              );
+            }
+          }
+        }
+      }
+
       // Case đã Submit thì không trả draft → màn Execute hiển thị mới, không autofill dữ liệu cũ
       result.draftRoutingActionCode = selectedCase.FEC_Is_Submited__c == true
         ? null
@@ -1915,6 +1958,13 @@ public without sharing class FEC_CaseBusinessService {
 
       List<FEC_Case_Stage__c> stagelst;
 
+      // true nếu stage chưa set (blank) hoặc đang ở Stage 1 (default) — dùng cho hardcode RC27.
+      // Toannd61
+      Boolean isCreationStageRoute =
+        String.isBlank(updatedCase.FEC_Current_Case_Stage__c) ||
+        (updatedCase.FEC_Current_Case_Stage__r != null &&
+         updatedCase.FEC_Current_Case_Stage__r.FEC_Default_Stage__c == true);
+
       if (String.isBlank(updatedCase.FEC_Current_Case_Stage__c)) {
         List<FEC_Nature_of_Case__c> natureOfCaselst = [
           SELECT Id, FEC_Business_Process__c, FEC_User_Group__c
@@ -2023,6 +2073,45 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       FEC_Stage_Change__c selectedChange = changelst.get(0);
+
+      // [HARDCODE RC27.01/RC27.02]: Stage1 → Stage3 (SP), bỏ qua Stage2.
+      // SubCode lấy từ NOC (natureOfCaseId) nếu chưa set trên Case (lần submit đầu).
+      // Toannd61
+      if (isCreationStageRoute) {
+        String rc27SubCode = updatedCase.FEC_SubCode__r?.FEC_Code__c;
+        if (String.isBlank(rc27SubCode) && String.isNotBlank(natureOfCaseId)) {
+          List<FEC_Nature_of_Case__c> nocRc27Lst = [
+            SELECT FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Nature_of_Case__c
+            WHERE Id = :natureOfCaseId
+            LIMIT 1
+          ];
+          if (!nocRc27Lst.isEmpty()) {
+            rc27SubCode = nocRc27Lst[0].FEC_Sub_Code__r?.FEC_Code__c;
+          }
+        }
+        if (FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FEE.equals(rc27SubCode)
+            || FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FREE.equals(rc27SubCode)) {
+          List<FEC_Stage_Change__c> rc27FallbackLst = [
+            SELECT FEC_Next_Stage__c, FEC_Next_Queue__c
+            FROM FEC_Stage_Change__c
+            WHERE FEC_Previous_Stage__c = :updatedCase.FEC_Current_Case_Stage__c
+              AND FEC_Active__c = TRUE
+              AND FEC_Team_User_Group__c = 'SP'
+              AND FEC_IsReverted__c = false
+            LIMIT 1
+          ];
+          if (!rc27FallbackLst.isEmpty()) {
+            FEC_Stage_Change__c rc27SpChange = rc27FallbackLst.get(0);
+            System.debug('FEC_DEBUG route RC27 hardcode: Stage1→Stage3 (SP), subCode=' + rc27SubCode);
+            selectedChange.FEC_Next_Stage__c = rc27SpChange.FEC_Next_Stage__c;
+            if (rc27SpChange.FEC_Next_Queue__c != null) {
+              selectedChange.FEC_Next_Queue__c = rc27SpChange.FEC_Next_Queue__c;
+            }
+          }
+        }
+      }
+
       String customActionButtonLabel = getCustomActionButtonLabel(
         updatedCase.FEC_Current_Case_Stage__c,
         ROUTE_TO,
