@@ -426,6 +426,7 @@
         <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -509,6 +510,7 @@
         <members>fec_SubProcessContainer</members>
         <members>fec_CustomDoNotBotherViewDatatable</members>
         <members>fec_MaskedContactTemplate</members>
+        <members>fec_TransferCall</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
