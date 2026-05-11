@@ -15578,4 +15578,12 @@
         <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
         <value>Vui lòng nhập Remark for Collections.</value>
     </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Import_Row_Status_Failed</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Row_Status_Failed</shortDescription>
+        <value>Failed</value>
+    </labels>
 </CustomLabels>
