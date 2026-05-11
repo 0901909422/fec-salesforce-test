@@ -476,6 +476,7 @@
 		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
 		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>Case.FEC_Service_Case_Owner__c</members>
         <name>CustomField</name>
     </types>
     <types>
