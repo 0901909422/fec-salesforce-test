@@ -220,7 +220,8 @@ public without sharing class FEC_CaseRemarkController {
     }
   }
 
-  private static String remarksToJson(List<FEC_Case_Remarks__c> remarks) {    if (remarks == null || remarks.isEmpty()) {
+  private static String remarksToJson(List<FEC_Case_Remarks__c> remarks) {
+    if (remarks == null || remarks.isEmpty()) {
       return null;
     }
     return JSON.serialize(remarks);
