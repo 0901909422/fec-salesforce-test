@@ -127,8 +127,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
-          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
-          .filter((item) => !this._isCofGsr || item.Remark_Type__c !== 'Assignment')
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -337,6 +335,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   async handleSubmit() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
+    this.isLoaded = false; // tungnm37: disable button ngay lập tức trước mọi xử lý
 
     let isAllValid = true;
     this.errlst = [];
@@ -373,8 +372,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
-      isAllValid = false;
-      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       // tungnm37 thêm: COF/GSR Stage 2 với manual items → không bắt buộc Case Remarks
       const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
@@ -398,7 +395,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
     }
 
-    this.isLoaded = false;
+    this.isLoaded = false; // đã set ở đầu handleSubmit
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
@@ -417,24 +414,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();
       
-      // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
-      await caseRemarksEle.createRemark(stageName);
-      await caseRemarksEle.submitRemark(stageName);
-      this.loadRemarkHistory();
-
       if (
         caseBusinessEle &&
         typeof caseBusinessEle.refreshFileUploadCards === "function"
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
+      // tungnm37: luôn dùng submitRemarkDirect - truyền content trực tiếp, tránh duplicate do draft bị clear
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;
-      if (!(isRoutingModeSubmit && hasManualItemsSubmit && !caseRemarksEle?.validate())) {
-        await caseRemarksEle.createRemark(stageName);
-        await caseRemarksEle.submitRemark(stageName);
-      }
+      await caseRemarksEle.submitRemarkDirect(stageName);
       // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
       this._isCofGsr = isRoutingModeSubmit;
       this.loadRemarkHistory();
