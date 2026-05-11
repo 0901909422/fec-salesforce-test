@@ -420,6 +420,7 @@
 		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
 		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>Case.FEC_Service_Case_Owner__c</members>
         <members>FEC_Additional_Info__c.FEC_Application_ID_List__c</members>
         <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
         <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
@@ -724,6 +725,7 @@
 		<members>FEC_Label_Update_Case_Status</members>
 		<members>FEC_Insurance_Info_Error</members>
         <members>FEC_MSG_Service_Error_Label</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <name>CustomLabel</name>
     </types>
 	<types>
