@@ -301,10 +301,16 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
 
             String userRoleName = currentUser.UserRole?.Name;
-            Case currentCase = [SELECT Id, OwnerId, Owner.Name, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
-            String originalOwnerLabel = resolveRoutingHistoryOwnerLabel(
-                currentCase.OwnerId, currentCase.Owner?.Name
-            );
+            Case currentCase = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
+            // tungnm37 fix: Stage 1 manual → Original = currentUser (người đang submit), không phải Case owner
+            // Stage 2 manual → Original = Case owner hiện tại (queue/user đang giữ case)
+            Boolean isStage1Check = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
+            String originalOwnerLabel = isStage1Check
+                ? emailLocalPart(currentUser.Email)
+                : resolveRoutingHistoryOwnerLabel(currentCase.OwnerId, currentCase.Owner?.Name);
+            String originalOwnerIdStr = isStage1Check
+                ? String.valueOf(currentUser.Id)
+                : (currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null);
 
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
@@ -364,18 +370,15 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
-            // tungnm37 fix: Stage 1 không tạo Assignment Remark, chỉ Stage 2 mới tạo
-            if (!isStage1) {
-                for (Integer i = 0; i < assignments.size(); i++) {
-                    remarks.add(new FEC_Case_Remarks__c(
-                        FEC_Case__c = caseId,
-                        FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
-                        FEC_Case_Remarks__c = remarkList[i],
-                        FEC_User__c = emailLocalPart(currentUser.Email),
-                        FEC_Assignment__c = assignments[i].Id,
-                        FEC_Stage_Name__c = stageName
-                    ));
-                }
+            for (Integer i = 0; i < assignments.size(); i++) {
+                remarks.add(new FEC_Case_Remarks__c(
+                    FEC_Case__c = caseId,
+                    FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
+                    FEC_Case_Remarks__c = remarkList[i],
+                    FEC_User__c = emailLocalPart(currentUser.Email), // tungnm37 sửa: lấy phần trước @
+                    FEC_Assignment__c = assignments[i].Id,
+                    FEC_Stage_Name__c = stageName
+                ));
             }
             if (!remarks.isEmpty()) insert remarks;
 
@@ -392,7 +395,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_User_Role__c = userRoleName,
                     FEC_Stage_Name__c = stageName,
                     FEC_Original_User_Queue__c = originalOwnerLabel,
-                    FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
+                    FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = a.FEC_OwnerID__c,
                     FEC_Current_Status__c = currentCase.FEC_Final_Status__c,

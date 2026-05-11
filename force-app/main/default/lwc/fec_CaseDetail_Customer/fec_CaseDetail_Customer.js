@@ -335,6 +335,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   async handleSubmit() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
+    this.isLoaded = false; // tungnm37: disable button ngay lập tức trước mọi xử lý
 
     let isAllValid = true;
     this.errlst = [];
@@ -394,7 +395,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
     }
 
-    this.isLoaded = false;
+    this.isLoaded = false; // đã set ở đầu handleSubmit
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
@@ -419,15 +420,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37: COF/GSR dùng submitRemarkDirect (truyền content trực tiếp, tránh duplicate)
-      // Các luồng khác dùng createRemark + submitRemark gốc (đọc từ draft)
+      // tungnm37: luôn dùng submitRemarkDirect - truyền content trực tiếp, tránh duplicate do draft bị clear
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      if (isRoutingModeSubmit) {
-        await caseRemarksEle.submitRemarkDirect(stageName);
-      } else {
-        await caseRemarksEle.createRemark(stageName);
-        await caseRemarksEle.submitRemark(stageName);
-      }
+      await caseRemarksEle.submitRemarkDirect(stageName);
       // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
       this._isCofGsr = isRoutingModeSubmit;
       this.loadRemarkHistory();
