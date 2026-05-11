@@ -3,6 +3,7 @@ import getQueueMembers from '@salesforce/apex/DepartmentAdmin.getQueueMembers';
 import searchActiveUsers from '@salesforce/apex/DepartmentAdmin.searchActiveUsers';
 import addUsersToQueue from '@salesforce/apex/DepartmentAdmin.addUsersToQueue';
 import removeUserFromQueue from '@salesforce/apex/DepartmentAdmin.removeUserFromQueue';
+import isMainQueueOfUser from '@salesforce/apex/DepartmentAdmin.isMainQueueOfUser';
 import getQueueValidBaseNameOrId from '@salesforce/apex/DepartmentAdmin.getQueueValidBaseNameOrId';
 import getListTeam from '@salesforce/apex/FEC_TeamQueue.getListTeam';
 import getQueueEditInfo from '@salesforce/apex/FEC_TeamQueue.getQueueEditInfo';
@@ -48,9 +49,10 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     // Selection and pagination
     selectedQueueId;
     selectedQueueName;
-    pageSize = 100; // Number of users to load per page
+    selectedQueueDevName;
+    selectedQueueLabelStatus;
+    pageSize = parseInt(this.customLabels.CS_OrgChart_Table_UserTable_Page_Size) || 100; // Number of users to load per page
     lastUserId = null; // For keyset pagination
-    sortOrder = 'ASC';
     hasMore = false;
 
     // Datatable columns (Full Name, Username, Email, Profile, Role)
@@ -66,6 +68,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track isLoadQueue = false;
     @track isEditQueueModalOpen = false;
     @track editQueueLabel = '';
+    @track editQueueLabelStatus = '';
     @track curentTeamId = null;
     @track currentTeamName = null;
     @track editTeamId = null;
@@ -96,9 +99,12 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (info) {
                 this.editQueueLabel = info.queueLabel || '';
                 this.editTeamId = info.teamId;
+                this.editQueueLabelStatus = info.queueLabelStatus || '';
+                this.selectedQueueLabelStatus = info.queueLabelStatus || '';
             } else {
                 this.editQueueLabel = '';
                 this.editTeamId = '';
+                this.editQueueLabelStatus = '';
             }
         } catch (err) {
             console.error('Failed to load queue edit info', err);
@@ -120,35 +126,66 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.editTeamId = event.detail ? event.detail.value : event.target.value;
     }
 
+    handleEditQueueLabelStatusChange(event) {
+        this.editQueueLabelStatus = event.target.value;
+    }
+    validateInputFields() {
+        const allValid = [
+            ...this.template.querySelectorAll('.validate-input'),
+        ].reduce((validSoFar, inputCmp) => {
+            inputCmp.reportValidity();
+            return validSoFar && inputCmp.checkValidity();
+        }, true);
+        return allValid;
+    }
+
     async handleSaveEditQueue() {
         if (!this.selectedQueueId || !this.editTeamQueueRecordId) return;
         this.editErrorMessage = '';
         this.isSavingEditQueue = true;
         try {
+            const allValid = this.validateInputFields();
+            if (!allValid) {
+                return;
+            }
+            const teamChanged = this.curentTeamId !== this.editTeamId;
+            const labelChanged = this.selectedQueueName !== this.editQueueLabel;
+            const labelStatusChanged = this.selectedQueueLabelStatus !== this.editQueueLabelStatus;
+            if (!teamChanged && !labelChanged && !labelStatusChanged) {
+                this.dispatchEvent(new ShowToastEvent({ 
+                    title: this.customLabels.CS_OrgChart_Text_Save_Waning_Title, 
+                    message: this.customLabels.CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected, 
+                    variant: 'warning'
+                }));
+                return;
+            }
             // Show confirmation dialog
             const confirmed = confirm(this.customLabels.CS_OrgChart_Text_EditQueueModal_Confirm_Save);
             if (confirmed) {
-                const teamChanged = this.curentTeamId !== this.editTeamId;
-                const labelChanged = this.selectedQueueName !== this.editQueueLabel;
                 const queueEdit = {
                     queueId: this.selectedQueueId,
                     newQueueLabel: null,
-                    teamQueueRecordId: null,
-                    newTeamId: null
+                    teamQueueRecordId: this.editTeamQueueRecordId,
+                    newTeamId: null,
+                    newLabelStatus: null
                 };
                 if (teamChanged) {
                     queueEdit.newTeamId = this.editTeamId;
-                    queueEdit.teamQueueRecordId = this.editTeamQueueRecordId;
                 }
                 if (labelChanged) {
                     queueEdit.newQueueLabel = this.editQueueLabel;
                     this.selectedQueueName = this.editQueueLabel;
                 }
+                if (labelStatusChanged) {
+                    queueEdit.newLabelStatus = this.editQueueLabelStatus;
+                    this.selectedQueueLabelStatus = this.editQueueLabelStatus;
+                }
                 await updateQueueEdit(queueEdit);
                 if (teamChanged) {
                     window.location.reload();
-                } else if (labelChanged) {
+                } else if (labelChanged || labelStatusChanged) {
                     this.selectedQueueName = this.editQueueLabel;
+                    this.selectedQueueLabelStatus = this.editQueueLabelStatus;
                     this.refreshTeamQueueTreeChild();
                     this.handleCloseEditQueueModal();
                 }
@@ -156,7 +193,6 @@ export default class Fec_DepartmentAdmin extends LightningElement {
                 // send event to child history log
                 this.refreshHistoryChild();
             }
-            
         } catch (err) {
             const message = err && err.body && err.body.message ? err.body.message : (err.message ? err.message : 'Failed to save queue');
             this.editErrorMessage = message;
@@ -184,15 +220,14 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.curentTeamId = curentTeamId;
         this.selectedQueueId = qid;
         this.isLoadQueue = true;
-        console.log('Selected Queue ID:', qid);
         
         // Get queue name using the new Apex method
         try {
             const queueInfo = await getQueueValidBaseNameOrId({ developerName: null, queueId: qid });
-            console.log('Queue Info:', JSON.stringify(queueInfo));
             this.editTeamQueueRecordId = teamQueueRecordID;
             if (queueInfo && queueInfo.name) {
                 this.selectedQueueName = queueInfo.name;
+                this.selectedQueueDevName = queueInfo.devname;
             } else {
                 this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
             }
@@ -248,6 +283,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     }
 
     async loadUsers() {
+        console.log('Page size for user loading:', this.pageSize);
         if (!this.selectedQueueId) return;
         this.isLoadingUsers = true;
         this.usersError = undefined;
@@ -368,7 +404,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.selectedUsersToAdd = event.detail.selectedRows;
     }
 
-    handleRowAction(event) {
+    async handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
         if (actionName === 'viewUserDetail') {
@@ -386,7 +422,19 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (row && row.id && this.selectedQueueId) {
                 const userName = row.name || row.fullName || 'User';
                 const queueName = this.selectedQueueName || 'Queue';
-                
+                this.selectedQueueDevName = this.selectedQueueDevName || '';
+                const isMainQueue = await isMainQueueOfUser({ 
+                    userId: row.id, 
+                    developerName: this.selectedQueueDevName 
+                });
+                if (isMainQueue) {
+                    this.dispatchEvent(new ShowToastEvent({ 
+                        title: this.customLabels.CS_OrgChart_Text_Save_Waning_Title, 
+                        message: this.customLabels.CS_OrgChart_Text_RemoveUser_MainQueue_Warning, 
+                        variant: 'warning'
+                    }));
+                    return;
+                }
                 // Show confirmation dialog
                 let messConfirmLabel = this.customLabels.CS_OrgChart_Text_RemoveUser_Message_Confirm;
                 let messConfirm = messConfirmLabel.replace("{userName}", userName).replace("{queueName}", queueName);
