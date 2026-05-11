@@ -15,7 +15,7 @@ public class FEC_ArchiveVerifyHttpService {
     private static final String API_CREDENTIAL = 'https://sf-csm-service-dev.fecredit.cloud';
     private static final String PATH           = '/archival/dispatcher/api/v1/cases/archive-status';
     private static final Integer TIMEOUT_MS    = 30000;
-
+    
     /**
      * @param caseIds  List Salesforce Case Id cần check
      * @return Map<CaseId, Status>  — status: "ARCHIVED" | "PENDING" | "FAILED"
@@ -28,8 +28,8 @@ public class FEC_ArchiveVerifyHttpService {
         HttpRequest req = new HttpRequest();
         req.setEndpoint(API_CREDENTIAL + PATH);
         req.setMethod('POST');
-        req.setHeader('Content-Type', 'application/json');
-        req.setHeader('X-API-KEY', 'RkVDX1NBTEVTRk9SQ0U=');
+        req.setHeader('Content-Type', FEC_ConstantCommon.API_CONTENT_TYPE_JSON);
+        req.setHeader('X-API-KEY', FEC_ConstantArchive.X_API_KEY_ARCHIVE);
         req.setBody(JSON.serialize(body));
         req.setTimeout(TIMEOUT_MS);
 
