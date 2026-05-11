@@ -3882,6 +3882,11 @@
     <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
     <readable>true</readable>
 </fieldPermissions>
+<fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_PIN_Reset_Success__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Operations Manager - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
