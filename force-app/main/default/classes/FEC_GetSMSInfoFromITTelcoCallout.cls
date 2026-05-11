@@ -48,6 +48,29 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
     }
 
     // =========================================================================
+    // LOGGING (same pattern as FEC_CheckEligibleCallout.ResponseLog + logApiResponse)
+    // =========================================================================
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
+
+    private static ResponseLog responseLog;
+
+    // =========================================================================
     // MAIN CALLOUT
     // =========================================================================
     /**
@@ -74,21 +97,20 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
             }
 
             String normalizedPhone = phoneNumber.trim();
-
             Dom.Document doc = buildSoapRequest(transId, FEC_ConstantCommon.API_REQUESTOR_ID, timestamp, normalizedPhone);
             String soapRequest = doc.toXmlString();
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
 
-            String endpoint = apiSetting != null && apiSetting.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_SMS_INFO_FROM_IT_TELCO_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+            String baseEndpoint = (apiSetting != null && String.isNotBlank(apiSetting.FEC_Endpoint__c)) ? apiSetting.FEC_Endpoint__c : '';
+            String configEndpoint = (apiConfig != null && String.isNotBlank(apiConfig.FEC_Endpoint__c)) ? apiConfig.FEC_Endpoint__c : '';
+            
+            String endpoint = baseEndpoint + configEndpoint;
 
-            // KH test thành công không set SOAPAction; chỉ gửi header khi CMDT có giá trị (một số gateway khác có thể cần)
-            String soapAction = (apiConfig != null && String.isNotBlank(apiConfig.FEC_SOAP_Action__c))
-                ? apiConfig.FEC_SOAP_Action__c
-                : null;
+            String soapAction = (apiConfig != null && String.isNotBlank(apiConfig.FEC_SOAP_Action__c)) ? apiConfig.FEC_SOAP_Action__c : null;
+
+            responseLog = new ResponseLog(API_CONFIG_NAME, endpoint, FEC_ConstantCommon.API_METHOD_POST, soapRequest, null, null);
 
             HttpResponse res = FEC_CommonUltils.calloutApi(
                 endpoint,
@@ -99,42 +121,46 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
                 soapRequest
             );
 
-            FEC_CommonUltils.logApi(
-                'FEC_GetSMSInfoFromITTelcoCallout',
-                endpoint,
-                FEC_ConstantCommon.API_METHOD_POST,
-                soapRequest,
-                res,
-                null
-            );
+            responseLog.response = res;
 
-            if (res != null && (res.getStatusCode() == 200 || res.getStatusCode() == 201)) {
+            if (res.getStatusCode() == 200 || res.getStatusCode() == 201) {
                 result = parseSoapResponse(res.getBody());
-                result.httpStatus = res.getStatusCode();
-                if (SYS_CODE_ERROR.equals(result.sysCode)) {
-                    result.success = false;
-                    if (String.isBlank(result.errorMessage)) {
-                        result.errorMessage = result.sysDescription;
-                    }
-                } else if (SYS_CODE_DATA_FOUND.equals(result.sysCode) || SYS_CODE_DATA_NOT_FOUND.equals(result.sysCode)) {
-                    result.success = true;
-                } else {
-                    result.success = String.isNotBlank(result.sysCode);
-                    if (!result.success && String.isBlank(result.errorMessage)) {
-                        result.errorMessage = System.Label.FEC_MSG_Unknown_Sys_Code + ': ' + result.sysCode;
-                    }
+                result.success = (SYS_CODE_DATA_FOUND.equals(result.sysCode) || SYS_CODE_DATA_NOT_FOUND.equals(result.sysCode));
+                if (!result.success) {
+                    result.errorMessage = String.isNotBlank(result.sysDescription) ? result.sysDescription : result.errorMessage;
                 }
             } else {
-                result.httpStatus = (res != null) ? res.getStatusCode() : 0;
-                result.errorMessage = (res != null) ? res.getBody() : System.Label.FEC_MSG_No_Response;
+                result.success = false;
+                result.httpStatus = res.getStatusCode();
+                result.errorMessage = 'HTTP Error: ' + res.getStatus();
             }
         } catch (Exception e) {
             result.success = false;
             result.errorMessage = e.getMessage();
+
+            if (responseLog != null) {
+                responseLog.errorMessage = e.getMessage();
+            }
+
             System.debug('### GetSMSInfoFromITTelco ERROR: ' + e.getMessage() + '\n' + e.getStackTraceString());
+        } finally {
+            logApiResponse();
         }
 
         return result;
+    }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage
+            );
+        }
     }
 
     // =========================================================================
@@ -238,27 +264,17 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
             result.dataFound = SYS_CODE_DATA_FOUND.equals(result.sysCode);
             result.dataNotFound = SYS_CODE_DATA_NOT_FOUND.equals(result.sysCode);
 
-            Dom.XmlNode recordsParent = responseNode.getChildElement('Records', null);
-            if (recordsParent == null) {
-                recordsParent = FEC_CommonUltils.findChildByName(responseNode, 'Records');
-            }
+            // XML structure has repeating <Records> nodes directly under responseNode
+            for (Dom.XmlNode child : responseNode.getChildElements()) {
+                if (child == null) continue;
 
-            if (recordsParent != null) {
-                for (Dom.XmlNode child : recordsParent.getChildElements()) {
-                    if (child == null || child.getName() == null) {
-                        continue;
-                    }
-                    String nm = child.getName();
-                    Boolean isRecord = (nm == 'Record' || nm.endsWith(':Record'));
-                    Boolean looksLikeRow = (FEC_CommonUltils.getXmlValue(child, 'Phone') != null
-                        || FEC_CommonUltils.getValueSafe(child, 'Phone') != null);
-
-                    if (!isRecord && !looksLikeRow) {
-                        continue;
-                    }
-
+                String nm = child.getName();
+                // Check if this node is a record (handle both plural and singular tags)
+                if (nm == 'Records' || nm == 'Record' || nm.endsWith(':Records') || nm.endsWith(':Record')) {
+                    
                     SmsLogRecord row = new SmsLogRecord();
                     row.sentDates = new List<String>();
+                    
                     row.phone = firstNonBlank(
                         FEC_CommonUltils.getXmlValue(child, 'Phone'),
                         FEC_CommonUltils.getValueSafe(child, 'Phone')
@@ -272,6 +288,7 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
                         FEC_CommonUltils.getValueSafe(child, 'SMSTemplateContent')
                     );
 
+                    // Parse the list of sent dates within each record
                     Dom.XmlNode sentDatesNode = child.getChildElement('SentDates', null);
                     if (sentDatesNode == null) {
                         sentDatesNode = FEC_CommonUltils.findChildByName(child, 'SentDates');
@@ -286,17 +303,23 @@ public with sharing class FEC_GetSMSInfoFromITTelcoCallout {
                             }
                         }
                     }
+                    
+                    // Fallback for single SentDate field
                     String singleSent = firstNonBlank(
                         FEC_CommonUltils.getXmlValue(child, 'SentDate'),
                         FEC_CommonUltils.getValueSafe(child, 'SentDate')
                     );
-                    if (String.isNotBlank(singleSent) && (row.sentDates == null || row.sentDates.isEmpty())) {
+                    if (String.isNotBlank(singleSent) && row.sentDates.isEmpty()) {
                         row.sentDates.add(singleSent);
                     }
 
                     result.records.add(row);
                 }
             }
+            
+            // Re-evaluate business success flags based on parsed records
+            result.dataFound = !result.records.isEmpty();
+            result.dataNotFound = result.records.isEmpty() && SYS_CODE_DATA_NOT_FOUND.equals(result.sysCode);
         } catch (Exception e) {
             result.errorMessage = 'Parsing Error: ' + e.getMessage();
         }
