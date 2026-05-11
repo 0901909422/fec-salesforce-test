@@ -3854,11 +3854,6 @@
 </fieldPermissions>
 <fieldPermissions>
     <editable>true</editable>
-    <field>FEC_Assignment__c.FEC_Assignment_Status__c</field>
-    <readable>true</readable>
-</fieldPermissions>
-<fieldPermissions>
-    <editable>true</editable>
     <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
     <readable>true</readable>
 </fieldPermissions>

@@ -815,6 +815,11 @@
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+    <editable>false</editable>
+    <field>FEC_Hold_Case_Config__c.Nature_of_Cases__c</field>
+    <readable>true</readable>
+</fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Ecom Specialist - Master Data Management</label>
     <license>Salesforce</license>
