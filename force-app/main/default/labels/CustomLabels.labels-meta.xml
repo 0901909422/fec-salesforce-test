@@ -15818,4 +15818,11 @@
         <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</shortDescription>
         <value>Routing action cần tham số bổ sung (queue / decision / transfer / revert) — không xử lý qua Bulk Import.</value>
     </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
+    </labels>
 </CustomLabels>
