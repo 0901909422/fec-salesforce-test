@@ -1,0 +1,201 @@
+<template>
+    <lightning-accordion allow-multiple-sections-open active-section-name="generalAssignment">
+        <lightning-accordion-section name="generalAssignment" label="General Assignment">
+            <div slot="actions">
+                <lightning-button label={labels.new} onclick={handleNew} variant="brand"></lightning-button>
+            </div>
+            
+            <div class="slds-p-horizontal_medium slds-p-vertical_small">
+                <template if:true={hasRecords}>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={records}
+                        columns={columns}
+                        onrowaction={handleRowAction}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                    <div class="slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div class="slds-col">
+                            <span class="slds-text-body_small">{pageInfo}</span>
+                        </div>
+                        <div class="slds-col slds-no-flex slds-grid slds-grid_vertical-align-center slds-gutters_x-small">
+                            <div class="slds-col">
+                                <span class="slds-text-body_small">Page</span>
+                            </div>
+                            <div class="slds-col">
+                                <input 
+                                    type="number" 
+                                    class="slds-input page-input" 
+                                    value={pageNumber}
+                                    min="1"
+                                    max={totalPages}
+                                    onchange={handlePageInput} />
+                            </div>
+                            <div class="slds-col">
+                                <lightning-button-group>
+                                    <lightning-button 
+                                        label={labels.previous}
+                                        onclick={handlePreviousPage} 
+                                        disabled={isFirstPage}>
+                                    </lightning-button>
+                                    <lightning-button 
+                                        label={labels.next}
+                                        onclick={handleNextPage} 
+                                        disabled={isLastPage}>
+                                    </lightning-button>
+                                </lightning-button-group>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <template if:false={hasRecords}>
+                    <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
+                        No records to display
+                    </div>
+                </template>
+            </div>
+        </lightning-accordion-section>
+    </lightning-accordion>
+
+    <!-- New General Assignment Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">New General Assignment</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-record-edit-form
+                        object-api-name="FEC_General_Assignment__c"
+                        onsuccess={handleSuccess}
+                        onerror={handleError}
+                        onsubmit={handleSubmit}>
+                        <lightning-input-field field-name="FEC_Nature_of_Cases__c" value={recordId} class="slds-hide"></lightning-input-field>
+                        <div class="slds-grid slds-gutters slds-wrap">
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field field-name="FEC_Customer_Type__c" required></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-form-element slds-is-required">
+                                    <label class="slds-form-element__label" for="channel-input">
+                                        <abbr class="slds-required" title="required">* </abbr>Channel
+                                    </label>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-combobox_container">
+                                            <div class={channelComboboxClass}>
+                                                <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                                                    <input
+                                                        type="text"
+                                                        id="channel-input"
+                                                        class="slds-input slds-combobox__input"
+                                                        placeholder="Search Channel"
+                                                        value={channelSearchTerm}
+                                                        oninput={handleChannelSearch}
+                                                        onfocus={handleChannelFocus}
+                                                        onblur={handleChannelBlur}
+                                                        required />
+                                                    <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right">
+                                                        <lightning-icon icon-name="utility:search" size="x-small" alternative-text="Search"></lightning-icon>
+                                                    </span>
+                                                </div>
+                                                <template if:true={showChannelDropdown}>
+                                                    <div id="channel-listbox" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
+                                                        <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                                            <template for:each={filteredChannelOptions} for:item="option">
+                                                                <li key={option.value} role="presentation" class="slds-listbox__item">
+                                                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small" role="option" data-value={option.value} onclick={handleChannelSelect}>
+                                                                        <span class="slds-media__figure">
+                                                                            <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+                                                                        </span>
+                                                                        <span class="slds-media__body">
+                                                                            <span class="slds-truncate" title={option.label}>{option.label}</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </li>
+                                                            </template>
+                                                        </ul>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <template if:true={selectedChannelIds.length}>
+                                            <div class="slds-m-top_x-small">
+                                                <template for:each={selectedChannelIds} for:item="channelId">
+                                                    <lightning-pill key={channelId} label={channelId} onremove={handleChannelRemove} name={channelId}></lightning-pill>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input-field field-name="FEC_Case_Stage__c" required></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-form-element slds-is-required">
+                                    <label class="slds-form-element__label" for="ga-input">
+                                        <abbr class="slds-required" title="required">* </abbr>General Assignment Name
+                                    </label>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-combobox_container">
+                                            <div class={gaComboboxClass}>
+                                                <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                                                    <input
+                                                        type="text"
+                                                        id="ga-input"
+                                                        class="slds-input slds-combobox__input"
+                                                        placeholder="Search General Assignment Name"
+                                                        value={gaSearchTerm}
+                                                        oninput={handleGASearch}
+                                                        onfocus={handleGAFocus}
+                                                        onblur={handleGABlur}
+                                                        required />
+                                                    <span class="slds-icon_container slds-icon-utility-search slds-input__icon slds-input__icon_right">
+                                                        <lightning-icon icon-name="utility:search" size="x-small" alternative-text="Search"></lightning-icon>
+                                                    </span>
+                                                </div>
+                                                <template if:true={showGADropdown}>
+                                                    <div id="ga-listbox" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
+                                                        <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                                            <template for:each={filteredGAOptions} for:item="option">
+                                                                <li key={option.value} role="presentation" class="slds-listbox__item">
+                                                                    <div class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small" role="option" data-value={option.value} data-label={option.label} onclick={handleGASelect}>
+                                                                        <span class="slds-media__figure">
+                                                                            <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+                                                                        </span>
+                                                                        <span class="slds-media__body">
+                                                                            <span class="slds-truncate" title={option.label}>{option.label}</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </li>
+                                                            </template>
+                                                        </ul>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <template if:true={selectedGACodes.length}>
+                                            <div class="slds-m-top_x-small">
+                                                <template for:each={selectedGACodes} for:item="code">
+                                                    <lightning-pill key={code} label={code} onremove={handleGARemove} name={code}></lightning-pill>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <lightning-input-field field-name="FEC_Active__c"></lightning-input-field>
+                            </div>
+                        </div>
+                        <div class="slds-text-align_center slds-m-top_medium">
+                            <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                            <lightning-button variant="brand" type="submit" label="Save"></lightning-button>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

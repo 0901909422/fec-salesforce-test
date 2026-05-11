@@ -1,0 +1,41 @@
+<aura:component implements="flexipage:availableForAllPageTypes,force:hasRecordId,lightning:isUrlAddressable"
+    controller="FEC_GeneralAssignmentController"
+    access="global">
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="recordName" type="String" default="General Assignment" />
+    <aura:attribute name="pageReference" type="Object" />
+    <aura:handler name="init" value="{!this}" action="{!c.init}" />
+
+    <lightning:messageChannel type="FEC_GA_Edit_Mode__c" aura:id="editModeChannel" />
+    <lightning:workspaceAPI aura:id="workspace" />
+
+    <div class="ga-noc-wrapper">
+
+        <!-- Header: white, border-bottom separates from tab bar -->
+        <div class="ga-noc-header-block">
+            <div class="ga-noc-header-left">
+                <lightning:icon iconName="custom:custom70" size="medium" />
+                <div class="ga-noc-header-info">
+                    <span class="ga-noc-label">General Assignment</span>
+                    <span class="ga-noc-name">{!v.recordName}</span>
+                </div>
+            </div>
+            <lightning:button label="Edit" onclick="{!c.handleEdit}" />
+        </div>
+
+        <!-- Detail Information (6 fields) -->
+        <div class="ga-noc-content">
+            <div class="ga-noc-inner">
+                <!-- Tab bar inside white wrapper -->
+                <div class="ga-noc-tab-bar">
+                    <span class="ga-noc-tab-active">Details</span>
+                </div>
+                <c:fec_GeneralAssignmentDetailSimple aura:id="detailComponent" recordId="{!v.recordId}" onsavesuccess="{!c.handleSaveSuccess}" />
+                <div class="ga-noc-history-wrap">
+                    <c:fec_GeneralAssignmentHistory aura:id="historyComponent" recordId="{!v.recordId}" />
+                </div>
+            </div>
+        </div>
+
+    </div>
+</aura:component>

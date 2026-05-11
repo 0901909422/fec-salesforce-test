@@ -1,0 +1,56 @@
+<template>
+    <article class="slds-card">
+        <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:record" size="small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <span>General Assignment History</span>
+                    </h2>
+                </div>
+            </header>
+        </div>
+        <div class="slds-card__body slds-card__body_inner">
+            <template if:false={showEmptyTable}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={histories}
+                    columns={columns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+
+                <!-- Pagination bar -->
+                <div class="pagination-bar">
+                    <!-- Page size -->
+                    <div class="pagination-left">
+                        <span class="pagination-label">Page size</span>
+                        <input type="number" class="pagination-input" value={pageSize} min="1" onchange={handlePageSizeChange} />
+                    </div>
+
+                    <!-- Prev / page buttons / Next -->
+                    <div class="pagination-center">
+                        <button class="pagination-btn" onclick={handlePrev} disabled={isFirstPage}>&#8249;</button>
+                        <span class="pagination-page">{pageNumber}</span>
+                        <button class="pagination-btn" onclick={handleNext} disabled={isLastPage}>&#8250;</button>
+                    </div>
+
+                    <!-- Go to page -->
+                    <div class="pagination-right">
+                        <span class="pagination-label">Go to page</span>
+                        <input type="number" class="pagination-input" value={goToPage} min="1" max={totalPages} onchange={handleGoToPage} />
+                        <span class="pagination-label">of {totalPages}</span>
+                        <button class="pagination-go-btn" onclick={handleGo}>Go</button>
+                    </div>
+                </div>
+            </template>
+
+            <template if:true={showEmptyTable}>
+                <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
+                    No history records to display
+                </div>
+            </template>
+        </div>
+    </article>
+</template>

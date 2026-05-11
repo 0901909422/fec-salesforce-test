@@ -33,11 +33,48 @@ c-fec_-repayment-schedule-payment-history .slds-accordion__summary,
 c-fec_-interaction-info-f2-f_-letter .slds-accordion__summary,
 c-fec_-interaction-my-case-info .slds-accordion__summary,
 c-fec_-k-y-c .slds-accordion__summary,
-c-fec_-card-replacement-address .slds-accordion__summary {
+c-fec_-card-replacement-address .slds-accordion__summary,
+c-fec_-assignment-list .slds-accordion__summary,
+c-fec_-banca .slds-accordion__summary,
+c-fec_-hold-case-configuration .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;
 }
 
+c-fec_-noc-general-assignment .slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px;
+}
+
+
+c-fec_-noc-general-assignment .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 4px 4px 0 0;
+}
+
+c-fec_-general-assignment-history .slds-card {
+  border-radius: 0.5rem;
+  border: 1px solid #dddbda;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+c-fec_-general-assignment-history .slds-card__header {
+  background-color: #ffffff;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+c-fec_-general-assignment-detail-simple .slds-card {
+  border-radius: 0.5rem;
+  border: 1px solid #dddbda;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+c-fec_-general-assignment-detail-simple .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
 /* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
 c-fec-email-section .slds-accordion__summary {
   background-color: #f3f3f3;
@@ -82,4 +119,17 @@ c-lwc-multi-lookup lightning-pill lightning-icon {
 
 c-lwc-multi-lookup lightning-input input {
   padding-left: 8px !important;
+}
+
+/* fec_FileUploadCard: cursor tay trên vùng lightning-file-upload (SLDS trong shadow; CSS LWC scoped không tới được) */
+c-fec_-file-upload-card
+  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
+  .slds-file-selector__dropzone,
+c-fec_-file-upload-card
+  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
+  .slds-file-selector__button,
+c-fec_-file-upload-card
+  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
+  .slds-file-selector__text {
+  cursor: pointer !important;
 }
