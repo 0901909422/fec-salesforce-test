@@ -6,7 +6,23 @@ import importBatchData from "@salesforce/apex/FEC_BatchCaseCreationController.im
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseCreationController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseCreationController.logFailedImport";
 import getTemplateOptions from "@salesforce/apex/FEC_BatchCaseCreationController.getTemplateOptions";
+import FEC_Batch_RequestTimeout from "@salesforce/label/c.FEC_Batch_RequestTimeout";
+import FEC_Batch_FileExcelXlsxOnly from "@salesforce/label/c.FEC_Batch_FileExcelXlsxOnly";
+import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSize150MB";
+import FEC_Batch_TemplateNoAttachment from "@salesforce/label/c.FEC_Batch_TemplateNoAttachment";
+import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_InvalidImportData";
+import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
+import {
+  normalizeHeaderCell,
+  findColumnIndex,
+  normalizeNoteTextSafe,
+  promiseWithTimeoutSafe,
+  arrayBufferToBase64Safe,
+  buildResultXlsxFileName,
+  formatDateTimeEnGb,
+  extractErrorMessage
+} from "c/fec_CommonUtils";
 const PAGE_SIZE_OPTIONS = [
   { label: "10", value: "10" },
   { label: "20", value: "20" },
@@ -16,8 +32,7 @@ const PAGE_SIZE_OPTIONS = [
 ];
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const IMPORT_TIMEOUT_MS = 60 * 1000;
-const IMPORT_TIMEOUT_MESSAGE =
-  "Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.";
+const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
 /** Hai layout: simple (8 cột) và extended (thêm channel / sub channel / email). */
 const HEADER_CONTRACT = [
   "contract number",
@@ -45,62 +60,6 @@ const RESULT_FILE_HEADERS = [
   "__Case ID",
   "__Errors"
 ];
-
-function normalizeHeaderCell(cell) {
-  return String(cell ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
-}
-
-function findColumnIndex(headersNorm, synonyms) {
-  for (let s = 0; s < synonyms.length; s += 1) {
-    const idx = headersNorm.indexOf(synonyms[s]);
-    if (idx >= 0) {
-      return idx;
-    }
-  }
-  return -1;
-}
-
-function normalizeNoteTextSafe(text) {
-  return String(text ?? "").trim();
-}
-
-function promiseWithTimeoutSafe(promise, timeoutMs, timeoutMessage) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-    Promise.resolve(promise)
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
-}
-
-function arrayBufferToBase64Safe(buffer) {
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-}
-
-function removeFileExtensionSafe(fileName) {
-  const name = String(fileName ?? "");
-  const dotIdx = name.lastIndexOf(".");
-  if (dotIdx <= 0) {
-    return name;
-  }
-  return name.substring(0, dotIdx);
-}
 
 export default class Fec_BatchCaseCreation extends LightningElement {
   @track activeSettingSections = ["setting"];
@@ -167,7 +126,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       this.selectedTemplate = "";
       this.showInfo(
         "Thông báo",
-        `Không tải được danh sách mẫu từ cấu hình. ${this.extractError(error)}`
+        `Không tải được danh sách mẫu từ cấu hình. ${extractErrorMessage(error)}`
       );
     }
   }
@@ -234,9 +193,9 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (file) {
       const lowerName = (file.name || "").toLowerCase();
       if (!lowerName.endsWith(".xlsx")) {
-        this.importValidationError = "Chỉ cho phép tải lên file Excel (.xlsx).";
+        this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
       } else if ((file.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
-        this.importValidationError = "Dung lượng file tối đa là 150MB.";
+        this.importValidationError = FEC_Batch_FileMaxSize150MB;
       } else {
         this.selectedFile = file;
         this.selectedFileName = file.name;
@@ -269,7 +228,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     if (!url) {
       this.showError(
         "Thông báo",
-        "Mẫu đã chọn chưa có file đính kèm để tải."
+        FEC_Batch_TemplateNoAttachment
       );
       return;
     }
@@ -458,7 +417,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
 
     const lowerName = (fileToUpload.name || "").toLowerCase();
     if (!lowerName.endsWith(".xlsx")) {
-      this.importValidationError = "Chỉ cho phép tải lên file Excel (.xlsx).";
+      this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -467,7 +426,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       return;
     }
     if ((fileToUpload.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
-      this.importValidationError = "Dung lượng file tối đa là 150MB.";
+      this.importValidationError = FEC_Batch_FileMaxSize150MB;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -490,14 +449,14 @@ export default class Fec_BatchCaseCreation extends LightningElement {
           await this.logFailedImportAttempt(
             fileToUpload.name,
             key,
-            this.importValidationError || "Dữ liệu file import không hợp lệ."
+            this.importValidationError || FEC_Batch_Msg_InvalidImportData
           );
         }
         return;
       }
       this.pendingImportRows = Array.isArray(check.rows) ? check.rows : [];
     } catch {
-      this.importValidationError = "Không đọc được nội dung file Excel.";
+      this.importValidationError = FEC_Batch_Msg_CannotReadExcelContent;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -541,7 +500,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       if (error?.message === IMPORT_TIMEOUT_MESSAGE) {
         this.importValidationError = IMPORT_TIMEOUT_MESSAGE;
       } else {
-        this.showError("Import failed", this.extractError(error));
+        this.showError("Import failed", extractErrorMessage(error));
       }
     } finally {
       this.isLoading = false;
@@ -560,7 +519,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     } catch (error) {
       this.rows = [];
       this.pagedRows = [];
-      this.showError("Load failed", this.extractError(error));
+      this.showError("Load failed", extractErrorMessage(error));
     } finally {
       this.isLoading = false;
     }
@@ -575,7 +534,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     return {
       ...row,
       fileDownloadUrl: row.fileDownloadUrl || "",
-      uploadedOnLabel: row.uploadedOn ? this.formatDateTime(row.uploadedOn) : "",
+      uploadedOnLabel: row.uploadedOn ? formatDateTimeEnGb(row.uploadedOn) : "",
       totalRecordsCount: row.totalRecordsCount ?? 0,
       totalSuccessRecords: row.totalSuccessRecords ?? 0,
       totalFailedRecords: row.totalFailedRecords ?? 0,
@@ -614,7 +573,7 @@ export default class Fec_BatchCaseCreation extends LightningElement {
       bookType: "xlsx"
     });
     const resultBase64 = arrayBufferToBase64Safe(wbout);
-    const resultFileName = `${removeFileExtensionSafe(sourceFileName)}_Result.xlsx`;
+    const resultFileName = buildResultXlsxFileName(sourceFileName);
     await saveResultFile({
       batchRecordId,
       resultFileName,
@@ -633,21 +592,6 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     const url = event.currentTarget?.dataset?.url || "";
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }
-
-  formatDateTime(value) {
-    try {
-      return new Intl.DateTimeFormat("en-GB", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-      }).format(new Date(value));
-    } catch (e) {
-      return value;
     }
   }
 
@@ -725,14 +669,6 @@ export default class Fec_BatchCaseCreation extends LightningElement {
     } catch (e) {
       // Do not block UI flow if fail-log cannot be saved.
     }
-  }
-
-  extractError(error) {
-    return (
-      error?.body?.message ||
-      error?.message ||
-      "Unexpected error"
-    );
   }
 
   showSuccess(title, message) {

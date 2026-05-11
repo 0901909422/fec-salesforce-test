@@ -7,7 +7,21 @@ import saveResultFile from "@salesforce/apex/FEC_BatchDataCreationController.sav
 import logFailedImport from "@salesforce/apex/FEC_BatchDataCreationController.logFailedImport";
 import logFailedImportWithFile from "@salesforce/apex/FEC_BatchDataCreationController.logFailedImportWithFile";
 import getTemplateOptions from "@salesforce/apex/FEC_BatchDataCreationController.getTemplateOptions";
+import FEC_Batch_RequestTimeout from "@salesforce/label/c.FEC_Batch_RequestTimeout";
+import FEC_Batch_FileExcelXlsxOnly from "@salesforce/label/c.FEC_Batch_FileExcelXlsxOnly";
+import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSize150MB";
+import FEC_Batch_TemplateNoAttachment from "@salesforce/label/c.FEC_Batch_TemplateNoAttachment";
+import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_InvalidImportData";
+import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
+import {
+  normalizeNoteTextSafe,
+  promiseWithTimeoutSafe,
+  arrayBufferToBase64Safe,
+  buildResultXlsxFileName,
+  formatDateTimeEnGb,
+  extractErrorMessage
+} from "c/fec_CommonUtils";
 const PAGE_SIZE_OPTIONS = [
   { label: "10", value: "10" },
   { label: "20", value: "20" },
@@ -17,8 +31,7 @@ const PAGE_SIZE_OPTIONS = [
 ];
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const IMPORT_TIMEOUT_MS = 60 * 1000;
-const IMPORT_TIMEOUT_MESSAGE =
-  "Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.";
+const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
 const REQUIRED_HEADERS = ["service resource", "start date", "end date"];
 const NOTE_HEADER = "note";
 const RESULT_FILE_HEADERS = [
@@ -30,55 +43,6 @@ const RESULT_FILE_HEADERS = [
   "Status",
   "Errors"
 ];
-
-function normalizeNoteTextSafe(text) {
-  return String(text ?? "").trim();
-}
-
-function promiseWithTimeoutSafe(promise, timeoutMs, timeoutMessage) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-    Promise.resolve(promise)
-      .then((value) => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-  });
-}
-
-function arrayBufferToBase64Safe(buffer) {
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-}
-
-function removeFileExtensionSafe(fileName) {
-  const name = String(fileName ?? "");
-  const dotIdx = name.lastIndexOf(".");
-  if (dotIdx <= 0) {
-    return name;
-  }
-  return name.substring(0, dotIdx);
-}
-
-/** Tránh ..._Result_Result.xlsx khi file gốc đã có hậu tố _Result. */
-function buildResultXlsxFileName(sourceFileName) {
-  let base = removeFileExtensionSafe(sourceFileName);
-  const lower = base.toLowerCase();
-  if (lower.endsWith("_result")) {
-    base = base.slice(0, -7);
-  }
-  return `${base}_Result.xlsx`;
-}
 
 export default class Fec_BatchDataCreation extends LightningElement {
   /** Mỗi session là một accordion riêng — mặc định mở. */
@@ -153,7 +117,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
       this.selectedTemplate = "";
       this.showInfo(
         "Thông báo",
-        `Không tải được danh sách mẫu từ cấu hình. ${this.extractError(error)}`
+        `Không tải được danh sách mẫu từ cấu hình. ${extractErrorMessage(error)}`
       );
     }
   }
@@ -224,9 +188,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
     if (file) {
       const lowerName = (file.name || "").toLowerCase();
       if (!lowerName.endsWith(".xlsx")) {
-        this.importValidationError = "Chỉ cho phép tải lên file Excel (.xlsx).";
+        this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
       } else if ((file.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
-        this.importValidationError = "Dung lượng file tối đa là 150MB.";
+        this.importValidationError = FEC_Batch_FileMaxSize150MB;
       } else {
         this.selectedFile = file;
         this.selectedFileName = file.name;
@@ -259,7 +223,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
     if (!url) {
       this.showError(
         "Thông báo",
-        "Mẫu đã chọn chưa có file đính kèm để tải."
+        FEC_Batch_TemplateNoAttachment
       );
       return;
     }
@@ -385,7 +349,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
 
     const lowerName = (fileToUpload.name || "").toLowerCase();
     if (!lowerName.endsWith(".xlsx")) {
-      this.importValidationError = "Chỉ cho phép tải lên file Excel (.xlsx).";
+      this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -396,7 +360,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
       return;
     }
     if ((fileToUpload.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
-      this.importValidationError = "Dung lượng file tối đa là 150MB.";
+      this.importValidationError = FEC_Batch_FileMaxSize150MB;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -426,7 +390,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
           await this.logFailedImportAttempt(
             fileToUpload.name,
             key,
-            this.importValidationError || "Dữ liệu file import không hợp lệ.",
+            this.importValidationError || FEC_Batch_Msg_InvalidImportData,
             fileToUpload,
             parsedRows
           );
@@ -438,7 +402,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
       this.importValidationError =
         error?.message ||
         error?.body?.message ||
-        "Không đọc được nội dung file Excel.";
+        FEC_Batch_Msg_CannotReadExcelContent;
       await this.logFailedImportAttempt(
         fileToUpload.name,
         key,
@@ -484,7 +448,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
       if (error?.message === IMPORT_TIMEOUT_MESSAGE) {
         this.importValidationError = IMPORT_TIMEOUT_MESSAGE;
       } else {
-        this.showError("Import failed", this.extractError(error));
+        this.showError("Import failed", extractErrorMessage(error));
       }
     } finally {
       this.isLoading = false;
@@ -503,7 +467,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
     } catch (error) {
       this.rows = [];
       this.pagedRows = [];
-      this.showError("Load failed", this.extractError(error));
+      this.showError("Load failed", extractErrorMessage(error));
     } finally {
       this.isLoading = false;
     }
@@ -518,7 +482,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
     return {
       ...row,
       fileDownloadUrl: row.fileDownloadUrl || "",
-      uploadedOnLabel: row.uploadedOn ? this.formatDateTime(row.uploadedOn) : "",
+      uploadedOnLabel: row.uploadedOn ? formatDateTimeEnGb(row.uploadedOn) : "",
       totalRecordsCount: row.totalRecordsCount ?? 0,
       totalSuccessRecords: row.totalSuccessRecords ?? 0,
       totalFailedRecords: row.totalFailedRecords ?? 0,
@@ -571,21 +535,6 @@ export default class Fec_BatchDataCreation extends LightningElement {
     const url = event.currentTarget?.dataset?.url || "";
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }
-
-  formatDateTime(value) {
-    try {
-      return new Intl.DateTimeFormat("en-GB", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-      }).format(new Date(value));
-    } catch (e) {
-      return value;
     }
   }
 
@@ -727,14 +676,6 @@ export default class Fec_BatchDataCreation extends LightningElement {
       resultFileName,
       fileBodyBase64: resultBase64
     });
-  }
-
-  extractError(error) {
-    return (
-      error?.body?.message ||
-      error?.message ||
-      "Unexpected error"
-    );
   }
 
   showSuccess(title, message) {

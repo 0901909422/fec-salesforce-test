@@ -36,6 +36,8 @@
 	</types>
 	<types>
 		<members>fec_Search</members>
+        <members>fec_BatchCaseCreation</members>
+		<members>fec_BatchDataCreation</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
