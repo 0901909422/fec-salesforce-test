@@ -2445,11 +2445,6 @@
         <field>FEC_Fast_Cash_Info__c.FEC_Tenure__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Notification_History__c.FEC_Case_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Card Risk Monitoring Specialist - Customer 360</label>
     <license>Salesforce</license>

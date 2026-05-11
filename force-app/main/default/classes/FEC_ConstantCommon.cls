@@ -264,6 +264,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 
+    // RC27 — Thay thế thẻ
+    // Toannd61
+    public static final String SUB_CODE_CARD_REPLACEMENT_FEE  = 'RC27.01'; // Có phí
+    public static final String SUB_CODE_CARD_REPLACEMENT_FREE = 'RC27.02'; // Miễn phí
+
     
     public static final String FEC_CATEGORY_REQUEST = 'Request';
     public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
@@ -672,7 +677,10 @@ public with sharing class FEC_ConstantCommon {
         DECISION_DOCUMENT_PREP => QUEUE_CARE_INTERNAL_TASK,
         DECISION_TASK_UNDER_REVIEW => QUEUE_CARE_INTERNAL_TASK
     };
-    
+
+    public static final String COF_GENERAL_FLOW = 'COF - General Flow';
+    public static final String STAGE_ONE = 'Stage 1';
+    public static final String ORIGINAL_INFORMATION = 'Original Information';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';

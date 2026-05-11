@@ -156,6 +156,47 @@
                 <default>false</default>
                 <label>Pending-TaskUnderReview</label>
             </value>
+            <value>
+                <fullName>OtherDeptReview</fullName>
+                <default>false</default>
+                <label>OtherDeptReview</label>
+            </value>
+            <value>
+                <fullName>CSReview</fullName>
+                <default>false</default>
+                <label>CSReview</label>
+            </value>
+            <value>
+                <fullName>CSBackOfficeReview</fullName>
+                <default>false</default>
+                <label>CSBackOfficeReview</label>
+            </value>
+            <value>
+                <fullName>Completed</fullName>
+                <default>false</default>
+                <label>Completed</label>
+            </value>
+            <value>
+                <fullName>AutoCompleted</fullName>
+                <default>false</default>
+                <label>AutoCompleted</label>
+            </value>
+            <value>
+                <fullName>AutoRecalled</fullName>
+                <default>false</default>
+                <label>AutoRecalled</label>
+            </value>
+            <value>
+                <fullName>RevertingCreator</fullName>
+                <default>false</default>
+                <label>RevertingCreator</label>
+            </value>
+            <value>
+                <fullName>New</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>New</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

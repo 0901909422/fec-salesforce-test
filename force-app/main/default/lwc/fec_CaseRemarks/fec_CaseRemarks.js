@@ -3,6 +3,8 @@ import { LightningElement, api, track } from 'lwc';
 import getRemarklst from '@salesforce/apex/FEC_CaseRemarkController.getRemarklst';
 import createRemark from '@salesforce/apex/FEC_CaseRemarkController.createRemark';
 import submitRemark from '@salesforce/apex/FEC_CaseRemarkController.submitRemark';
+// tungnm37: import submitRemarkDirect cho COF/GSR (nhận content trực tiếp, không đọc từ draft)
+import submitRemarkDirect from '@salesforce/apex/FEC_CaseRemarkController.submitRemarkDirect';
 
 import { formatDateTime } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
@@ -61,8 +63,6 @@ export default class Fec_CaseRemarks extends LightningElement {
 
         this.remarklst = res
           .filter((item) => item.Id)
-          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
-          .filter((item) => !this.isCofGsr || item.Remark_Type__c !== 'Assignment')
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -114,6 +114,20 @@ export default class Fec_CaseRemarks extends LightningElement {
       caseId: this.caseId,
       stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
     });
+    // tungnm37: refresh history sau khi submit remark
+    this.loadRemarks();
+  }
+
+  // tungnm37: submitRemarkDirect - dùng cho COF/GSR, truyền content trực tiếp tránh duplicate do draft bị clear
+  @api async submitRemarkDirect(stageNameFromClient) {
+    const textarea = this.template.querySelector('lightning-textarea');
+    const remarkText = (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
+    await submitRemarkDirect({
+      caseId: this.caseId,
+      stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
+      remarkContent: remarkText
+    });
+    this.loadRemarks();
   }
 
   handleRemarkInput(e) {
