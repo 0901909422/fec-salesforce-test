@@ -383,6 +383,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (!isAllValid) {
       this.isSubmitting = false;
+      this.isLoaded = true;
       return;
     }
 
@@ -391,11 +392,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
         this.isSubmitting = false;
+        this.isLoaded = true;
         return;
       }
     }
 
-    this.isLoaded = false; // đã set ở đầu handleSubmit
+    // this.isLoaded = false; // đã set ở đầu handleSubmit
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
