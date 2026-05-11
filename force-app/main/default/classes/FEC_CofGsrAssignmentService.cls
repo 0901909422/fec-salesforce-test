@@ -209,13 +209,29 @@ public without sharing class FEC_CofGsrAssignmentService {
             insert assignments;
 
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
-            // tungnm37: set Case.OwnerId = null khi có assignment
+            // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
+            // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
+            // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
             List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
             if (!assignmentUsers.isEmpty()) {
                 try {
-                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(assignmentUsers, ','), OwnerId = null), AccessLevel.SYSTEM_MODE);
+                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
+                    Database.SaveResult sr = Database.update(new Case(
+                        Id = caseId, 
+                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
+                    ), AccessLevel.SYSTEM_MODE);
+                    if (!sr.isSuccess()) {
+                        for (Database.Error err : sr.getErrors()) {
+                            System.debug('FEC_DEBUG update Case error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
+                        }
+                    } else {
+                        System.debug('FEC_DEBUG update Case success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
+                    }
                 } catch (Exception eu) {
                     System.debug('FEC_DEBUG update FEC_Assignment_Users__c error: ' + eu.getMessage());
+                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
+                } finally {
+                    FEC_CaseTriggerHandler.isSystemUpdate = false;
                 }
             }
 
@@ -324,13 +340,29 @@ public without sharing class FEC_CofGsrAssignmentService {
             insert assignments;
 
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
-            // tungnm37: set Case.OwnerId = null khi có assignment
+            // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
+            // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
+            // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
             List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
             if (!assignmentUsers.isEmpty()) {
                 try {
-                    Database.update(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(assignmentUsers, ','), OwnerId = null), AccessLevel.SYSTEM_MODE);
+                    FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
+                    Database.SaveResult sr = Database.update(new Case(
+                        Id = caseId, 
+                        FEC_Assignment_Users__c = String.join(assignmentUsers, ',')
+                    ), AccessLevel.SYSTEM_MODE);
+                    if (!sr.isSuccess()) {
+                        for (Database.Error err : sr.getErrors()) {
+                            System.debug('FEC_DEBUG update Case (manual) error: ' + err.getStatusCode() + ' - ' + err.getMessage() + ' - Fields: ' + err.getFields());
+                        }
+                    } else {
+                        System.debug('FEC_DEBUG update Case (manual) success: FEC_Assignment_Users__c = ' + String.join(assignmentUsers, ','));
+                    }
                 } catch (Exception eu) {
                     System.debug('FEC_DEBUG update FEC_Assignment_Users__c (manual) error: ' + eu.getMessage());
+                    System.debug('FEC_DEBUG Stack trace: ' + eu.getStackTraceString());
+                } finally {
+                    FEC_CaseTriggerHandler.isSystemUpdate = false;
                 }
             }
 
