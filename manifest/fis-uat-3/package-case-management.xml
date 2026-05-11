@@ -38,6 +38,7 @@
 	    <members>FEC_AssignmentTriggerHandler</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
+        <members>FEC_SubProcessService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -54,6 +55,17 @@
         <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
+        <members>Case.FEC_CS_Check_Classification_by_CS__c</members>
+        <members>Case.FEC_CS_Check_Evaluation_by_CS__c</members>
+        <members>Case.FEC_CS_Check_Final_Product__c</members>
+        <members>Case.FEC_CS_Check_Block_Limit_Date__c</members>
+        <members>Case.FEC_CS_Check_Block_Limit_Amount__c</members>
+        <members>Case.FEC_Sales_Check_Evaluation_by_Sales__c</members>
+        <members>Case.FEC_Sales_Check_Contact_Point__c</members>
+        <members>Case.FEC_Sales_Check_Team_Leader__c</members>
+        <members>Case.FEC_Sales_Check_Supervisor__c</members>
+        <members>Case.FEC_Sales_Check_Discipline_Result__c</members>
+        <members>Case.FEC_Complain_Type__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
@@ -399,6 +411,8 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Max__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Min__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
+        <members>FEC_Customer_History__c.FEC_Sales_Channel__c</members>
+        <members>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
 		<members>Case.FEC_Assignment_Users__c</members>
@@ -406,6 +420,14 @@
 		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
 		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>Case.FEC_Service_Case_Owner__c</members>
+        <members>FEC_Additional_Info__c.FEC_Application_ID_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
+        <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -486,6 +508,10 @@
 		<members>fec_PointsRedemptionCaseForm</members>
 		<members>fec_ChannelConfig</members>
 		<members>fec_NocChannelConfig</members>
+        <members>fec_SubProcessContainer</members>
+        <members>fec_CustomDoNotBotherViewDatatable</members>
+        <members>fec_MaskedContactTemplate</members>
+        <members>fec_TransferCall</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -701,6 +727,19 @@
 		<members>FEC_Label_Update_Case_Status</members>
 		<members>FEC_Insurance_Info_Error</members>
         <members>FEC_MSG_Service_Error_Label</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
+        <members>FEC_Collections_Transfer_Failed_Summary</members>
+		<members>FEC_TransferCall_Btn_Cancel</members>
+		<members>FEC_TransferCall_Section_CaseInfo</members>
+		<members>FEC_TransferCall_Spinner_Loading</members>
+		<members>FEC_TransferCall_Subtitle</members>
+		<members>FEC_TransferCall_Modal_ConfirmMessage</members>
+		<members>FEC_TransferCall_Btn_TransferToCollection</members>
+		<members>FEC_Notification_16_Collections_Transfer_Success</members>
+        <members>FEC_TransferCall_Modal_RemarkLabel</members>
+		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
+		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
+		<members>FEC_TransferCall_Modal_RemarkRequired</members>
         <name>CustomLabel</name>
     </types>
 	<types>

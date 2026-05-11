@@ -15564,4 +15564,107 @@
         <shortDescription>Insurance Info Error</shortDescription>
         <value>Insurance Info</value>
     </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement Date Required Message</shortDescription>
+        <value>DISB_DT is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_Cancel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút Cancel trong modal</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_TransferToCollection</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút/tiêu đề modal Transfer Data to Collection</shortDescription>
+        <value>Transfer Data to Collection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_ConfirmMessage</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nội dung xác nhận trong modal</shortDescription>
+        <value>Bạn sắp chuyển dữ liệu tới Collections trước khi chuyển cuộc gọi. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Section_CaseInfo</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề accordion Case Information</shortDescription>
+        <value>Case Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Spinner_Loading</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: alternative-text spinner Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Subtitle</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề phụ Transfer Call</shortDescription>
+        <value>Transfer Call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_MaxFailed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại sau 3 lần — dòng tóm tắt không còn thử lại</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_ConfirmTransfer</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút xác nhận Transfer Data to Collections</shortDescription>
+        <value>Transfer Data to Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkLabel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn textarea Remark for Collections</shortDescription>
+        <value>Remark for Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkRequired</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
+        <value>Vui lòng nhập Remark for Collections.</value>
+    </labels>
 </CustomLabels>

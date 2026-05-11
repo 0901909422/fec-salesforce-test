@@ -243,7 +243,7 @@ public with sharing class FEC_TerminationLoanController {
         m.put('value', value);
         m.put(
             'valueFormatted',
-            value != null ? FEC_CommonUltils.formatDecimalPlainScale(value, 2) : null
+            value != null ? FEC_CommonUltils.formatCurrencyFixed(value, 2) : null
         );
         m.put('isNegative', isNegative != null && isNegative);
         rows.add(m);
