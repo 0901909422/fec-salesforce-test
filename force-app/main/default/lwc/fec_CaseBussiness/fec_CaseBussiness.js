@@ -425,7 +425,9 @@ function mergeSectionSortedRows(section) {
       isLwc: true,
       sortOrder,
       outerClass: dynCmp.lwcColClassName,
-      showLwcSubHeading: !!dynCmp.subSectionName,
+      showLwcSubHeading:
+        Boolean(dynCmp?.subSectionName) &&
+        dynCmp?.hideSubSectionHeading !== true,
       dynCmp,
     });
   });
@@ -469,6 +471,7 @@ function normalizeMasterDataLwcEntry(entry) {
       typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
+hideSubSectionHeading: o.hideSubSectionHeading === true,
   };
 }
 
@@ -3474,6 +3477,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fecSubSectionOrder,
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
+hideSubSectionHeading: meta.hideSubSectionHeading === true,
               lwcColClassName,
             };
           })
