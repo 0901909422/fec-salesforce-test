@@ -1,0 +1,25 @@
+<template>
+    <!-- Hold Case -->
+    <template if:true={config.showHoldCase}>
+        <c-fec_hold-case-manual record-id={recordId}>
+        </c-fec_hold-case-manual>
+    </template>
+    <!-- Remove Phone -->
+    <template if:true={config.showRemovePhone}>
+        <c-fec_-remove-phone-form record-id={recordId}>
+        </c-fec_-remove-phone-form>
+    </template>
+
+    <!-- DNB -->
+    <template if:true={config.showDNB}>
+        <c-fec_-do-not-bother-handling record-id={recordId}>
+        </c-fec_-do-not-bother-handling>
+    </template>
+
+    <!-- Transfer Call -->
+    <template if:true={config.showTransferCall}>
+        <c-fec_-transfer-call record-id={recordId}>
+        </c-fec_-transfer-call>
+    </template>
+
+</template>
