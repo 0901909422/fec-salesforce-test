@@ -50,6 +50,7 @@ public with sharing class FEC_GetDNBCalloutService {
         @AuraEnabled public String reason;
         @AuraEnabled public String requested_time;
         @AuraEnabled public String source;
+         @AuraEnabled public String source2;
         @AuraEnabled public String type;
         @AuraEnabled public String type_value;
     }

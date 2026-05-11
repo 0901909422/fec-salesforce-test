@@ -32,6 +32,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String doNotBother;
         @AuraEnabled public String expectedExcludeTime;
         @AuraEnabled public String reason2;
+        @AuraEnabled public String channel;
         @AuraEnabled public String type;
         @AuraEnabled public String typeValue;
     }
@@ -336,7 +337,8 @@ public with sharing class FEC_DNBHandler {
                 
                 dnbRecord.FEC_Current_Status__c = isActive ? FEC_ConstantCommon.DNB_STATUS_ACTIVE : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
                 dnbRecord.FEC_Original_Reason__c = item.reason;
-                dnbRecord.FEC_DNB_Channel__c = item.type;
+                dnbRecord.FEC_DNB_Channel__c = item.source2;
+                dnbRecord.FEC_Type__c = item.type;
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
                 
                 if (  String.isNotBlank(item.expected_exclude_time) &&
@@ -379,6 +381,7 @@ public with sharing class FEC_DNBHandler {
                     FEC_Expiry_Date__c,
                     FEC_Original_Reason__c,
                     FEC_DNB_Channel__c,
+                    FEC_Type__c,
                     FEC_Phone_Email__c
                 FROM FEC_Do_Not_Bother__c
                 WHERE FEC_Case__c = :caseId
@@ -390,7 +393,8 @@ public with sharing class FEC_DNBHandler {
                 item.doNotBother = record.FEC_Current_Status__c;
                 item.expectedExcludeTime = record.FEC_Expiry_Date__c != null ? String.valueOf(record.FEC_Expiry_Date__c) : null;
                 item.reason2 = record.FEC_Original_Reason__c;
-                item.type = record.FEC_DNB_Channel__c;
+                item.type = record.FEC_Type__c;
+                item.channel = record.FEC_DNB_Channel__c;
                 item.typeValue = record.FEC_Phone_Email__c;
                 dnbList.add(item);
             }
