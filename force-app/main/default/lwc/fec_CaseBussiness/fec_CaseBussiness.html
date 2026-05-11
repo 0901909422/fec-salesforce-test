@@ -25,7 +25,9 @@
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
               <template if:true={row.isFields}>
-                <p class="sub-section">{row.sub.name}</p>
+                <template if:false={row.sub.hideSubSectionHeading}>
+                  <p class="sub-section">{row.sub.name}</p>
+                </template>
 
                 <template for:each={row.sub.objlst} for:item="obj">
                   <lightning-record-edit-form
