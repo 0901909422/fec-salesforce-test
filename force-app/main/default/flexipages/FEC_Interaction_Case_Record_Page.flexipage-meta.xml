@@ -945,7 +945,7 @@
                 <componentName>fecCheckEligibleLoanSection</componentName>
                 <identifier>c_fecCheckEligibleLoanSection</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR 1</booleanFilter>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -953,7 +953,7 @@
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
-                        <operator>EQUAL</operator>
+                        <operator>CONTAINS</operator>
                         <rightValue>Card</rightValue>
                     </criteria>
                 </visibilityRule>
@@ -968,16 +968,16 @@
                 <componentName>fec_CardEligibilitySection</componentName>
                 <identifier>c_fec_CardEligibilitySection</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Loan</rightValue>
-                    </criteria>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
