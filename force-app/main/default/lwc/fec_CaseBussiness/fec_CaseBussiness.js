@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, CUSTOMER_PHONE_NUMBER } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -1475,7 +1475,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
                   field.apiName === FIELD_CASE_PHONE_NUMBER ||
-                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
+                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER ||
+                  field.apiName === CUSTOMER_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1841,7 +1842,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
       fieldName === FIELD_CASE_PHONE_NUMBER ||
-      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
+      fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
+      fieldName === CUSTOMER_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1923,7 +1925,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
         fieldName === FIELD_CASE_PHONE_NUMBER ||
-        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
+        fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
+        fieldName === CUSTOMER_PHONE_NUMBER
+      ) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
