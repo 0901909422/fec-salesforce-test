@@ -1737,15 +1737,12 @@ hasAnySearchCriteria(params) {
 
   get isDisplayCreateCase() {
     return (
-      this.isCreateCaseTab ||
-      this.tabName === 'FEC_Customer_Search' ||
-      this.tabName === 'FEC_Account_Contract_Search' ||
-      !!this.recordId
+      (this.isCreateCaseTab ||
+        this.tabName === 'FEC_Customer_Search' ||
+        this.tabName === 'FEC_Account_Contract_Search' ||
+        !!this.recordId) &&
+      !this.isSearchServiceError
     );
-  }
-
-  get isDisplayCreateCaseForNoResults() {
-    return this.isDisplayCreateCase && !this.isSearchServiceError;
   }
 
   get noCustomerFoundMessage() {
