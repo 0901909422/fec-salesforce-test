@@ -2720,6 +2720,10 @@ export default class Fec_CaseBussiness extends LightningElement {
             remarkContent: this.remarkContent || null,
           },
         });
+        // tungnm37: clear manual items sau khi submit thành công
+        this._manualItems = [];
+        const routingComp = this.template.querySelector('c-fec_-routing-assignment');
+        if (routingComp) routingComp.clearManualItems();
         return true;
       }
       let method = routeToEle.value;

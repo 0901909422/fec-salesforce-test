@@ -127,8 +127,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
-          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
-          .filter((item) => !this._isCofGsr || item.Remark_Type__c !== 'Assignment')
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -373,8 +371,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
     }
     if (!caseRemarksEle || !caseRemarksEle.validate()) {
-      isAllValid = false;
-      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       // tungnm37 thêm: COF/GSR Stage 2 với manual items → không bắt buộc Case Remarks
       const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
@@ -417,21 +413,18 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();
       
-      // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
-      await caseRemarksEle.createRemark(stageName);
-      await caseRemarksEle.submitRemark(stageName);
-      this.loadRemarkHistory();
-
       if (
         caseBusinessEle &&
         typeof caseBusinessEle.refreshFileUploadCards === "function"
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
+      // tungnm37: COF/GSR dùng submitRemarkDirect (truyền content trực tiếp, tránh duplicate)
+      // Các luồng khác dùng createRemark + submitRemark gốc (đọc từ draft)
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;
-      if (!(isRoutingModeSubmit && hasManualItemsSubmit && !caseRemarksEle?.validate())) {
+      if (isRoutingModeSubmit) {
+        await caseRemarksEle.submitRemarkDirect(stageName);
+      } else {
         await caseRemarksEle.createRemark(stageName);
         await caseRemarksEle.submitRemark(stageName);
       }

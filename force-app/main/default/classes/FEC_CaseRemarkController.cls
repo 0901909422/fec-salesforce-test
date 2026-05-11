@@ -9,7 +9,7 @@ public without sharing class FEC_CaseRemarkController {
       List<FEC_Case_Remarks__c> result = new List<FEC_Case_Remarks__c>();
 
       List<Case> caselst = [
-        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c, 
+        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c, FEC_Stage_Name__c,
                FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
@@ -24,17 +24,24 @@ public without sharing class FEC_CaseRemarkController {
         result.addAll(jsonToRemarks(caselst[0].FEC_Draft_Remarks__c));
       }
 
-      // tungnm37 thêm: COF/GSR chỉ hiện Assignment Remark, ẩn Case Remark (type=Case)
+      // tungnm37: COF/GSR - Stage 1 (chưa submit) ẩn Assignment Remarks, Stage 2 (đã submit) hiện tất cả
       String businessCode = null;
-      if (!caselst.isEmpty() && caselst[0].FEC_Actual_Nature_of_Case__r != null 
-          && caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r != null) {
-        businessCode = caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c;
+      Boolean isSubmited = false;
+      if (!caselst.isEmpty()) {
+        isSubmited = caselst[0].FEC_Is_Submited__c == true;
+        if (caselst[0].FEC_Actual_Nature_of_Case__r != null 
+            && caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r != null) {
+          businessCode = caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c;
+        }
       }
       Boolean isCofGsr = businessCode != null && (businessCode.startsWith('COF') || businessCode.startsWith('GSR'));
 
-      String remarkTypeFilter = isCofGsr ? 'AND Remark_Type__c = \'Assignment\'' : '';
+      // Stage 1 (chưa submit): ẩn tất cả Assignment Remarks
+      // Stage 2 (đã submit): hiện tất cả
+      String remarkTypeFilter = (isCofGsr && !isSubmited) ? 
+        'AND FEC_Remark_Type__c != \'Assignment\'' : '';
 
-      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, CreatedDate ' +
+      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, FEC_Remark_Type__c, CreatedDate ' +
         'FROM FEC_Case_Remarks__c ' +
         'WHERE FEC_Case__c = :caseId ' +
         remarkTypeFilter + ' ' +
@@ -165,6 +172,7 @@ public without sharing class FEC_CaseRemarkController {
           FROM FEC_Case_Remarks__c
           WHERE FEC_Case__c = :caseId
             AND CreatedDate >= :cutoff
+            AND (FEC_Remark_Type__c = null OR FEC_Remark_Type__c != 'Assignment')
           ORDER BY CreatedDate DESC
           LIMIT 1
         ];
@@ -181,6 +189,58 @@ public without sharing class FEC_CaseRemarkController {
         }
       }
 
+      caselst[0].FEC_Draft_Remarks__c = null;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  // tungnm37: submitRemarkDirect - dùng cho COF/GSR, nhận remarkContent trực tiếp thay vì đọc từ draft
+  // Tránh tạo duplicate khi draft bị clear bởi markCaseSubmittedAndClearDrafts trước khi submitRemark chạy
+  @AuraEnabled
+  public static void submitRemarkDirect(String caseId, String stageNameFromClient, String remarkContent) {
+    try {
+      if (String.isBlank(caseId) || String.isBlank(remarkContent)) return;
+
+      List<Case> caselst = [
+        SELECT Id, FEC_Stage_Name__c, FEC_Draft_Remarks__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (caselst.isEmpty()) return;
+
+      List<User> userlst = [SELECT Id, Email, UserRole.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+      String emailId = userlst.isEmpty() ? null : userlst[0].Email?.substringBefore('@');
+      String roleName = userlst.isEmpty() ? null : userlst[0].UserRole?.Name;
+
+      String stageName = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
+
+      // Tránh double-submit: skip nếu nội dung trùng với remark mới nhất trong 30s
+      Datetime cutoff = Datetime.now().addSeconds(-30);
+      List<FEC_Case_Remarks__c> recentForCase = [
+        SELECT Id, FEC_Case_Remarks__c
+        FROM FEC_Case_Remarks__c
+        WHERE FEC_Case__c = :caseId
+          AND CreatedDate >= :cutoff
+          AND (FEC_Remark_Type__c = null OR FEC_Remark_Type__c != 'Assignment')
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+      ];
+      Boolean isDuplicate = !recentForCase.isEmpty()
+        && remarkContent.equals(recentForCase[0].FEC_Case_Remarks__c);
+      if (!isDuplicate) {
+        insert new FEC_Case_Remarks__c(
+          FEC_Case__c = caseId,
+          FEC_Case_Remarks__c = remarkContent,
+          FEC_User__c = emailId,
+          FEC_User_Role__c = roleName,
+          FEC_Stage_Name__c = stageName
+        );
+      }
+
+      // Xóa draft sau khi submit
       caselst[0].FEC_Draft_Remarks__c = null;
       Database.update(caselst, AccessLevel.SYSTEM_MODE);
     } catch (Exception e) {
