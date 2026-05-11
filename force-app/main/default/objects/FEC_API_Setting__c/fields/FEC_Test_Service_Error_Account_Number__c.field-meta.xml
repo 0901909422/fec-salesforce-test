@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Test_Service_Error_Account_Number__c</fullName>
+    <description>Account number to simulate Customer Search service error in UI. For Case Record Type Interaction, Case.FEC_Is_Test_API__c must be true.</description>
+    <externalId>false</externalId>
+    <label>Test Service Error Account Number</label>
+    <length>50</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -32,6 +32,7 @@
 		<members>FEC_API_Config.FEC_CMS_RewardDebitWS</members>
 		<members>FEC_API_Config.FEC_GetSMSInfoFromITTelco</members>
 		<members>FEC_API_Config.FEC_Search_By_List_Phones</members>
+        <members>FEC_API_Setting.FEC_Test_Service_Error_Account_Number</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>

@@ -20,6 +20,7 @@ public with sharing class FEC_SearchController {
                  FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
                  FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
                  FEC_Search_Phone_Number__c, FEC_Application_ID__c, FEC_Account_Number__c, FEC_Interaction_Email__c,
+                 //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
                  FEC_Is_Test_API__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
@@ -31,6 +32,37 @@ public with sharing class FEC_SearchController {
             return null;
         }
         return c;
+    }
+
+    //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+    @AuraEnabled
+    public static Case getCaseSearchFlags(Id caseId) {
+        if (caseId == null) {
+            return null;
+        }
+        try {
+            return [
+                SELECT Id, RecordType.Name, FEC_Is_Test_API__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+    @AuraEnabled(cacheable=true)
+    public static String getTestServiceErrorAccountNumber() {
+        try {
+            FEC_API_Setting__c s = FEC_API_Setting__c.getOrgDefaults();
+            return (s != null && String.isNotBlank(s.FEC_Test_Service_Error_Account_Number__c))
+                ? s.FEC_Test_Service_Error_Account_Number__c.trim()
+                : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @AuraEnabled
