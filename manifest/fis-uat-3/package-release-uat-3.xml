@@ -66,6 +66,27 @@
         <members>FEC_UpdateDisb_Msg_Success</members>
         <members>FEC_UpdateDisb_Msg_InternalError</members>
         <members>FEC_UpdateDisb_Msg_AlreadyResolved</members>
+        <members>FEC_Auto</members>
+		<members>FEC_Changed_Status</members>
+		<members>FEC_Current_Status</members>
+		<members>FEC_Date</members>
+		<members>FEC_Detail_Information</members>
+		<members>FEC_Error_Manual</members>
+		<members>FEC_Error_MessageError_For_Hold_Case</members>
+		<members>FEC_Field</members>
+		<members>FEC_HCC_Name</members>
+		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Save_Success</members>
+		<members>FEC_Hold_Case_Type</members>
+		<members>FEC_List_Of_NFU_Code</members>
+		<members>FEC_Manual</members>
+		<members>FEC_NFU_Modal_Error</members>
+		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_NFU_Reason_VN</members>
+		<members>FEC_New_Hold_Case_Config</members>
+		<members>FEC_New_Value</members>
+		<members>FEC_Original_Value</members>
+		<members>FEC_Parent_Hold_Case_Config</members>
         <name>CustomLabel</name>
     </types>
 
@@ -503,6 +524,7 @@
     <types>
         <members>FEC_Routing_Assignment__c</members>
         <members>FEC_BancaTabView</members>
+        <members>FEC_HoldCaseConfiguration</members>
         <name>CustomTab</name>
     </types>
 	<types>
