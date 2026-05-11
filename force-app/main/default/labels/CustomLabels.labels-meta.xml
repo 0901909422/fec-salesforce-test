@@ -893,21 +893,21 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CaseBusinessService_Msg_004</shortDescription>
-        <value>Không tìm thấy lịch sử Routing Action để thực hiện Recall.</value>
+        <value>Kh├┤ng t├¼m thß║Ñy lß╗ïch sß╗¡ Routing Action ─æß╗â thß╗▒c hiß╗çn Recall.</value>
     </labels>
     <labels>
         <fullName>FEC_CaseBusinessService_Msg_005</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CaseBusinessService_Msg_005</shortDescription>
-        <value>Bạn không phải người thực hiện Routing Action gần nhất.</value>
+        <value>Bß║ín kh├┤ng phß║úi ng╞░ß╗¥i thß╗▒c hiß╗çn Routing Action gß║ºn nhß║Ñt.</value>
     </labels>
     <labels>
         <fullName>FEC_CaseBusinessService_Msg_006</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CaseBusinessService_Msg_006</shortDescription>
-        <value>Không đủ điều kiện cập nhật số điện thoại.</value>
+        <value>Kh├┤ng ─æß╗º ─æiß╗üu kiß╗çn cß║¡p nhß║¡t sß╗æ ─æiß╗çn thoß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_CaseID_Default_Prefix</fullName>
@@ -1973,7 +1973,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error creating interaction case</shortDescription>
-        <value>Lỗi khi tạo Case tương tác: </value>
+        <value>Lß╗ùi khi tß║ío Case t╞░╞íng t├íc: </value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -2994,7 +2994,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR</shortDescription>
-        <value>Cập nhật thông tin khách hàng thất bại. Vui lòng thử lại</value>
+        <value>Cß║¡p nhß║¡t th├┤ng tin kh├ích h├áng thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</fullName>
@@ -3002,7 +3002,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL</shortDescription>
-        <value>Cập nhật thông tin khách hàng thất bại.</value>
+        <value>Cß║¡p nhß║¡t th├┤ng tin kh├ích h├áng thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_PHONE_UPDATE_SUCCESS</fullName>
@@ -3018,7 +3018,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Only Case Owner can perform this routing action</shortDescription>
-        <value>Chỉ Case Owner mới có thể thực hiện thao tác này.</value>
+        <value>Chß╗ë Case Owner mß╗¢i c├│ thß╗â thß╗▒c hiß╗çn thao t├íc n├áy.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_API_Error</fullName>
@@ -3080,7 +3080,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Card Payment Refresh</shortDescription>
-        <value>Vui lòng nhấn &lt;strong&gt;Refresh&lt;/strong&gt; ở mục &lt;strong&gt;Account&lt;/strong&gt; trong tab &lt;strong&gt;Main Info&lt;/strong&gt; để tải dữ liệu mới nhất</value>
+        <value>Vui l├▓ng nhß║Ñn &lt;strong&gt;Refresh&lt;/strong&gt; ß╗ƒ mß╗Ñc &lt;strong&gt;Account&lt;/strong&gt; trong tab &lt;strong&gt;Main Info&lt;/strong&gt; ─æß╗â tß║úi dß╗» liß╗çu mß╗¢i nhß║Ñt</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Case_Id_Invalid</fullName>
@@ -3094,14 +3094,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Close Interaction Complete Case Warning</shortDescription>
-        <value>Vui lòng hoàn tất các yêu cầu trước khi đóng tương tác.</value>
+        <value>Vui l├▓ng ho├án tß║Ñt c├íc y├¬u cß║ºu tr╞░ß╗¢c khi ─æ├│ng t╞░╞íng t├íc.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Close_Interaction_Warning</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Close Interaction Warning</shortDescription>
-        <value>Vui lòng tạo ít nhất 1 yêu cầu trước khi đóng tương tác.</value>
+        <value>Vui l├▓ng tß║ío ├¡t nhß║Ñt 1 y├¬u cß║ºu tr╞░ß╗¢c khi ─æ├│ng t╞░╞íng t├íc.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ContractNumber_Invalid</fullName>
@@ -3165,7 +3165,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Only Case Owner can edit case draft or nature of case</shortDescription>
-        <value>Chỉ Case Owner mới có thể chỉnh sửa thông tin này.</value>
+        <value>Chß╗ë Case Owner mß╗¢i c├│ thß╗â chß╗ënh sß╗¡a th├┤ng tin n├áy.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Eligible</fullName>
@@ -3197,7 +3197,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Error API Label</shortDescription>
-        <value>Tải dữ liệu không thành công</value>
+        <value>Tß║úi dß╗» liß╗çu kh├┤ng th├ánh c├┤ng</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Service_Error_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Service Error Label</shortDescription>
+        <value>Lß╗ùi dß╗ïch vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
@@ -3221,7 +3229,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Only Case Owner can escalate the case</shortDescription>
-        <value>Chỉ Case Owner mới có thể escalate Case.</value>
+        <value>Chß╗ë Case Owner mß╗¢i c├│ thß╗â escalate Case.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Escalation_Failed_Prefix</fullName>
@@ -3244,7 +3252,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-Up User added successfully</shortDescription>
-        <value>Follow-Up User đã được thêm thành công.</value>
+        <value>Follow-Up User ─æ├ú ─æ╞░ß╗úc th├¬m th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Add_User_To_Watcher_Success</fullName>
@@ -3252,7 +3260,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Follow-Up User added to list and Watcher Information</shortDescription>
-        <value>Follow-Up User đã được thêm vào danh sách follow-up và Watcher Information.</value>
+        <value>Follow-Up User ─æ├ú ─æ╞░ß╗úc th├¬m v├áo danh s├ích follow-up v├á Watcher Information.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Not02_User_Already_Watcher</fullName>
@@ -3260,7 +3268,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Noti-02: User already in Case Watcher Information list</shortDescription>
-        <value>Người dùng này đã có trong danh sách theo dõi Case</value>
+        <value>Ng╞░ß╗¥i d├╣ng n├áy ─æ├ú c├│ trong danh s├ích theo d├╡i Case</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Already_Unfollowed</fullName>
@@ -3268,7 +3276,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>User already unfollowed this Case</shortDescription>
-        <value>Bạn đã unfollow Case này rồi.</value>
+        <value>Bß║ín ─æ├ú unfollow Case n├áy rß╗ôi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Case_Follow_Success</fullName>
@@ -3292,7 +3300,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Case Id and User Id required</shortDescription>
-        <value>Case Id và User Id không được để trống.</value>
+        <value>Case Id v├á User Id kh├┤ng ─æ╞░ß╗úc ─æß╗â trß╗æng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Check_Status_Error</fullName>
@@ -3324,7 +3332,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>User has not followed this Case</shortDescription>
-        <value>Bạn chưa follow Case này.</value>
+        <value>Bß║ín ch╞░a follow Case n├áy.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Owner_Only</fullName>
@@ -3332,7 +3340,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Only Case Owner can add Follow-Up User</shortDescription>
-        <value>Chỉ Case Owner mới có thể thêm Follow-Up User.</value>
+        <value>Chß╗ë Case Owner mß╗¢i c├│ thß╗â th├¬m Follow-Up User.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Please_Select_User</fullName>
@@ -3340,7 +3348,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Please select a User</shortDescription>
-        <value>Vui lòng chọn một User.</value>
+        <value>Vui l├▓ng chß╗ìn mß╗Öt User.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_FollowUp_Save_Error</fullName>
@@ -3388,7 +3396,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>User not found or inactive</shortDescription>
-        <value>User không tồn tại hoặc không active.</value>
+        <value>User kh├┤ng tß╗ôn tß║íi hoß║╖c kh├┤ng active.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_From_To_Invalid</fullName>
@@ -3509,7 +3517,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG No Data</shortDescription>
-        <value>Không có dữ liệu</value>
+        <value>Kh├┤ng c├│ dß╗» liß╗çu</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_No_Data_To_Display</fullName>
@@ -3553,48 +3561,48 @@
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Không đủ điều kiện cập nhật địa chỉ</shortDescription>
-        <value>Không đủ điều kiện cập nhật địa chỉ.</value>
+        <shortDescription>Kh├┤ng ─æß╗º ─æiß╗üu kiß╗çn cß║¡p nhß║¡t ─æß╗ïa chß╗ë</shortDescription>
+        <value>Kh├┤ng ─æß╗º ─æiß╗üu kiß╗çn cß║¡p nhß║¡t ─æß╗ïa chß╗ë.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Account_Status</fullName>
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Account Status T-1</shortDescription>
-        <value>Lí do: Account Status (account level, T-1) = {0}</value>
+        <shortDescription>L├¡ do chß║╖n ─æß╗ïa chß╗ë ΓÇö Account Status</shortDescription>
+        <value>L├¡ do: Account Status = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code</fullName>
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Block Code</shortDescription>
-        <value>Lí do: Block Code (account level, T-1) = {0}</value>
+        <shortDescription>L├¡ do chß║╖n ─æß╗ïa chß╗ë ΓÇö Block Code</shortDescription>
+        <value>L├¡ do: Block Code = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_1</fullName>
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Block Code 1</shortDescription>
-        <value>Lí do: Block Code 1 (account level, T-1) = {0}</value>
+        <shortDescription>L├¡ do chß║╖n ─æß╗ïa chß╗ë ΓÇö Block Code 1</shortDescription>
+        <value>L├¡ do: Block Code 1 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_2</fullName>
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Block Code 2</shortDescription>
-        <value>Lí do: Block Code 2 (account level, T-1) = {0}</value>
+        <shortDescription>L├¡ do chß║╖n ─æß╗ïa chß╗ë ΓÇö Block Code 2</shortDescription>
+        <value>L├¡ do: Block Code 2 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Generic</fullName>
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — chi tiết chung</shortDescription>
-        <value>Lí do: {0}</value>
+        <shortDescription>L├¡ do chß║╖n ─æß╗ïa chß╗ë ΓÇö chi tiß║┐t chung</shortDescription>
+        <value>L├¡ do: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Not_Account_Linked</fullName>
@@ -3719,7 +3727,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Recall_Action_Not_Allowed</shortDescription>
-        <value>Không thể thực hiện hành động Recall Action.</value>
+        <value>Kh├┤ng thß╗â thß╗▒c hiß╗çn h├ánh ─æß╗Öng Recall Action.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Record_Id_Invalid</fullName>
@@ -3811,7 +3819,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Only Case Owner can transfer the case</shortDescription>
-        <value>Chỉ Case Owner mới có thể transfer Case.</value>
+        <value>Chß╗ë Case Owner mß╗¢i c├│ thß╗â transfer Case.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_UNFOLLOW_INFO</fullName>
@@ -3834,7 +3842,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>User must be Case Owner or Case Participant to update team</shortDescription>
-        <value>Bạn không có quyền cập nhật Team. Chỉ Owner hoặc Case Participant mới được phép.</value>
+        <value>Bß║ín kh├┤ng c├│ quyß╗ün cß║¡p nhß║¡t Team. Chß╗ë Owner hoß║╖c Case Participant mß╗¢i ─æ╞░ß╗úc ph├⌐p.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_User_Queue_Id_Invalid</fullName>
@@ -3848,21 +3856,21 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Wrap Up Warning</shortDescription>
-        <value>Vui lòng submit trước khi wrap-up.</value>
+        <value>Vui l├▓ng submit tr╞░ß╗¢c khi wrap-up.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_check_case_type_error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG check case type error</shortDescription>
-        <value>Không thể kiểm tra loại bản ghi</value>
+        <value>Kh├┤ng thß╗â kiß╗âm tra loß║íi bß║ún ghi</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_check_related_case_error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG check related case error</shortDescription>
-        <value>Không thể kiểm tra trạng thái yêu cầu liên quan</value>
+        <value>Kh├┤ng thß╗â kiß╗âm tra trß║íng th├íi y├¬u cß║ºu li├¬n quan</value>
     </labels>
     <labels>
         <fullName>FEC_Main_Card_Label</fullName>
@@ -4367,6 +4375,70 @@
         <value>Please fill in all required fields.</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>─Éß╗òi ─æiß╗âm th╞░ß╗ƒng thß║Ñt bß║íi (lß║ºn {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>─Éß╗òi ─æiß╗âm th╞░ß╗ƒng thß║Ñt bß║íi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>─Éß╗òi ─æiß╗âm th╞░ß╗ƒng th├ánh c├┤ng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bß║ín c├│ muß╗æn tiß║┐p tß╗Ñc thß╗▒c hiß╗çn ─æß╗òi ─æiß╗âm th╞░ß╗ƒng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>X├íc nhß║¡n ─æß╗òi ─æiß╗âm</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -4517,7 +4589,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_RemarkMsg</shortDescription>
-        <value>Yêu cầu được tự động chuyển trạng thái Resolved-AutoCancelled theo quy trình tự động kết thúc tương tác cuối ngày</value>
+        <value>Y├¬u cß║ºu ─æ╞░ß╗úc tß╗▒ ─æß╗Öng chuyß╗ân trß║íng th├íi Resolved-AutoCancelled theo quy tr├¼nh tß╗▒ ─æß╗Öng kß║┐t th├║c t╞░╞íng t├íc cuß╗æi ng├áy</value>
     </labels>
     <labels>
         <fullName>FEC_Reset_MDM</fullName>
@@ -4917,7 +4989,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Toast Recall Success</shortDescription>
-        <value>Thực hiện Recall thành công.</value>
+        <value>Thß╗▒c hiß╗çn Recall th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Refresh_Error</fullName>
@@ -4938,7 +5010,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Toast Reopen Success</shortDescription>
-        <value>Thực hiện Reopen thành công.</value>
+        <value>Thß╗▒c hiß╗çn Reopen th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Save_Error</fullName>
@@ -5937,42 +6009,42 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Account Number</shortDescription>
-        <value>Số tài khoản</value>
+        <value>Sß╗æ t├ái khoß║ún</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Account_Owner</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Account owner</shortDescription>
-        <value>Chủ tài khoản</value>
+        <value>Chß╗º t├ái khoß║ún</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Actual_Delivery_Time</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Actual Delivery Time</shortDescription>
-        <value>Thời gian nhận thực tế</value>
+        <value>Thß╗¥i gian nhß║¡n thß╗▒c tß║┐</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Application_ID</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Application ID</shortDescription>
-        <value>Mã hồ sơ</value>
+        <value>M├ú hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Assign_To_Me</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Assign to me</shortDescription>
-        <value>Gán cho tôi</value>
+        <value>G├ín cho t├┤i</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Assigned_To</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Assigned To</shortDescription>
-        <value>Phân công cho</value>
+        <value>Ph├ón c├┤ng cho</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Cancel_Reasons</fullName>
@@ -5986,147 +6058,147 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case ID</shortDescription>
-        <value>Mã hồ sơ</value>
+        <value>M├ú hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Case_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case Status</shortDescription>
-        <value>Trạng thái hồ sơ</value>
+        <value>Trß║íng th├íi hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Case_Type</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case Type</shortDescription>
-        <value>Loại hồ sơ</value>
+        <value>Loß║íi hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Case_Will_Be_Transferred</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case will be transferred to your worklist</shortDescription>
-        <value>Hồ sơ sẽ được chuyển vào danh sách công việc của bạn</value>
+        <value>Hß╗ô s╞í sß║╜ ─æ╞░ß╗úc chuyß╗ân v├áo danh s├ích c├┤ng viß╗çc cß╗ºa bß║ín</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Category</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Category</shortDescription>
-        <value>Danh mục</value>
+        <value>Danh mß╗Ñc</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Contract_Number</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Contract Number</shortDescription>
-        <value>Số hợp đồng</value>
+        <value>Sß╗æ hß╗úp ─æß╗ông</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Create_Time</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Create Time</shortDescription>
-        <value>Thời gian tạo</value>
+        <value>Thß╗¥i gian tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created</shortDescription>
-        <value>Ngày tạo</value>
+        <value>Ng├áy tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_By</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created By</shortDescription>
-        <value>Người tạo</value>
+        <value>Ng╞░ß╗¥i tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_Date</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created Date</shortDescription>
-        <value>Ngày tạo</value>
+        <value>Ng├áy tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_Date_Time</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created Date Time</shortDescription>
-        <value>Thời gian tạo</value>
+        <value>Thß╗¥i gian tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_In_Channel</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created In Channel</shortDescription>
-        <value>Kênh tạo</value>
+        <value>K├¬nh tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_On</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created On</shortDescription>
-        <value>Ngày tạo</value>
+        <value>Ng├áy tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Creator</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Creator</shortDescription>
-        <value>Người tạo</value>
+        <value>Ng╞░ß╗¥i tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Customer_Care</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Customer Care</shortDescription>
-        <value>Chăm sóc khách hàng</value>
+        <value>Ch─âm s├│c kh├ích h├áng</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Customer_Information</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Customer Information</shortDescription>
-        <value>Thông tin khách hàng</value>
+        <value>Th├┤ng tin kh├ích h├áng</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Customer_Name</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Customer Name</shortDescription>
-        <value>Tên khách hàng</value>
+        <value>T├¬n kh├ích h├áng</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Deadline</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Deadline</shortDescription>
-        <value>Hạn xử lý</value>
+        <value>Hß║ín xß╗¡ l├╜</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Deadline_Date</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Deadline date</shortDescription>
-        <value>Hạn chót</value>
+        <value>Hß║ín ch├│t</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Decision</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Decision</shortDescription>
-        <value>Quyết định</value>
+        <value>Quyß║┐t ─æß╗ïnh</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Delivery_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Delivery Status</shortDescription>
-        <value>Trạng thái gửi</value>
+        <value>Trß║íng th├íi gß╗¡i</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Enter_Investigation_Notes</fullName>
@@ -6140,84 +6212,84 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Case ID</shortDescription>
-        <value>Mã hồ sơ gian lận</value>
+        <value>M├ú hß╗ô s╞í gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Case_Information</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Case Information</shortDescription>
-        <value>Thông tin vụ gian lận</value>
+        <value>Th├┤ng tin vß╗Ñ gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Cases</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Cases</shortDescription>
-        <value>Các vụ gian lận</value>
+        <value>C├íc vß╗Ñ gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Category</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Category</shortDescription>
-        <value>Loại gian lận</value>
+        <value>Loß║íi gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Conclusion</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Conclusion</shortDescription>
-        <value>Kết luận từ bộ phận gian lận</value>
+        <value>Kß║┐t luß║¡n tß╗½ bß╗Ö phß║¡n gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Sub_Code</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Sub Code</shortDescription>
-        <value>Mã phụ gian lận</value>
+        <value>M├ú phß╗Ñ gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Subcategory</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Subcategory</shortDescription>
-        <value>Nhóm gian lận</value>
+        <value>Nh├│m gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Fraud_Task</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Fraud Task</shortDescription>
-        <value>Nhiệm vụ gian lận</value>
+        <value>Nhiß╗çm vß╗Ñ gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Goal</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Goal</shortDescription>
-        <value>Mục tiêu</value>
+        <value>Mß╗Ñc ti├¬u</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Last_Update</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Last update</shortDescription>
-        <value>Cập nhật lần cuối</value>
+        <value>Cß║¡p nhß║¡t lß║ºn cuß╗æi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Last_Updated_By</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Last Updated By</shortDescription>
-        <value>Người cập nhật</value>
+        <value>Ng╞░ß╗¥i cß║¡p nhß║¡t</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Loading</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Loading</shortDescription>
-        <value>Đang tải</value>
+        <value>─Éang tß║úi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_National_ID</fullName>
@@ -6231,126 +6303,126 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Notification Channel</shortDescription>
-        <value>Kênh thông báo</value>
+        <value>K├¬nh th├┤ng b├ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Notification_History</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Notification History</shortDescription>
-        <value>Lịch sử thông báo</value>
+        <value>Lß╗ïch sß╗¡ th├┤ng b├ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Notification_Type</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Notification Type</shortDescription>
-        <value>Loại thông báo</value>
+        <value>Loß║íi th├┤ng b├ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Primary_Phone</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Primary Phone</shortDescription>
-        <value>Số điện thoại chính</value>
+        <value>Sß╗æ ─æiß╗çn thoß║íi ch├¡nh</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Processing_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Processing Status</shortDescription>
-        <value>Trạng thái xử lý</value>
+        <value>Trß║íng th├íi xß╗¡ l├╜</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Product_Type</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Product Type</shortDescription>
-        <value>Loại sản phẩm</value>
+        <value>Loß║íi sß║ún phß║⌐m</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Recipient</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Recipient</shortDescription>
-        <value>Người nhận</value>
+        <value>Ng╞░ß╗¥i nhß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Reference_ID</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Reference ID</shortDescription>
-        <value>Mã tham chiếu</value>
+        <value>M├ú tham chiß║┐u</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Related_Service_Cases</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Related Service Cases</shortDescription>
-        <value>Vụ việc liên quan</value>
+        <value>Vß╗Ñ viß╗çc li├¬n quan</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Remarks</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Remarks</shortDescription>
-        <value>Ghi chú</value>
+        <value>Ghi ch├║</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Remarks_History</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Remarks History</shortDescription>
-        <value>Lịch sử ghi chú</value>
+        <value>Lß╗ïch sß╗¡ ghi ch├║</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Resolved_By</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Resolved By</shortDescription>
-        <value>Người xử lý</value>
+        <value>Ng╞░ß╗¥i xß╗¡ l├╜</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Resolved_On</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Resolved On</shortDescription>
-        <value>Ngày xử lý</value>
+        <value>Ng├áy xß╗¡ l├╜</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Sent_Time</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Sent Time</shortDescription>
-        <value>Thời gian gửi</value>
+        <value>Thß╗¥i gian gß╗¡i</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Service_Case_ID</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Service Case ID</shortDescription>
-        <value>Mã hồ sơ dịch vụ</value>
+        <value>M├ú hß╗ô s╞í dß╗ïch vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Status</shortDescription>
-        <value>Trạng thái</value>
+        <value>Trß║íng th├íi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Sub_Category</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Sub Category</shortDescription>
-        <value>Danh mục con</value>
+        <value>Danh mß╗Ñc con</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Sub_Code</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Sub Code</shortDescription>
-        <value>Mã phụ</value>
+        <value>M├ú phß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Submit</fullName>
@@ -6364,56 +6436,56 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Submit by department</shortDescription>
-        <value>Phòng ban gửi</value>
+        <value>Ph├▓ng ban gß╗¡i</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Task_Case_ID</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Task Case ID</shortDescription>
-        <value>Mã hồ sơ tác vụ</value>
+        <value>M├ú hß╗ô s╞í t├íc vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Task_Case_Information</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Task Case Information</shortDescription>
-        <value>Thông tin tác vụ</value>
+        <value>Th├┤ng tin t├íc vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Task_Name</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Task Name</shortDescription>
-        <value>Tên tác vụ</value>
+        <value>T├¬n t├íc vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Task_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Task Status</shortDescription>
-        <value>Trạng thái tác vụ</value>
+        <value>Trß║íng th├íi t├íc vß╗Ñ</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Template_Name</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Template Name</shortDescription>
-        <value>Tên mẫu</value>
+        <value>T├¬n mß║½u</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Toggle_National_ID</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Toggle National ID</shortDescription>
-        <value>Ẩn/Hiện CMND</value>
+        <value>ß║¿n/Hiß╗çn CMND</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Toggle_Phone</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Toggle Phone</shortDescription>
-        <value>Ẩn/Hiện số điện thoại</value>
+        <value>ß║¿n/Hiß╗çn sß╗æ ─æiß╗çn thoß║íi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_UIC</fullName>
@@ -6427,14 +6499,14 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Update Time</shortDescription>
-        <value>Thời gian cập nhật</value>
+        <value>Thß╗¥i gian cß║¡p nhß║¡t</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Urgency</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Urgency</shortDescription>
-        <value>Mức độ khẩn</value>
+        <value>Mß╗⌐c ─æß╗Ö khß║⌐n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Value_Cannot_Be_Blank</fullName>
@@ -6448,7 +6520,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Violation Type</shortDescription>
-        <value>Loại vi phạm</value>
+        <value>Loß║íi vi phß║ím</value>
     </labels>
     <labels>
         <fullName>LBL_SaveFailed</fullName>
@@ -6926,21 +6998,21 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case ID</shortDescription>
-        <value>Mã hồ sơ</value>
+        <value>M├ú hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Status</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Status</shortDescription>
-        <value>Trạng thái</value>
+        <value>Trß║íng th├íi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Account_Owner</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Account owner</shortDescription>
-        <value>Chủ tài khoản</value>
+        <value>Chß╗º t├ái khoß║ún</value>
     </labels>
 
     <labels>
@@ -6948,35 +7020,35 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Urgency</shortDescription>
-        <value>Mức độ khẩn</value>
+        <value>Mß╗⌐c ─æß╗Ö khß║⌐n</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Goal</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Goal</shortDescription>
-        <value>Mục tiêu</value>
+        <value>Mß╗Ñc ti├¬u</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Deadline_Date</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Deadline date</shortDescription>
-        <value>Hạn chót</value>
+        <value>Hß║ín ch├│t</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Last_Update</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Last update</shortDescription>
-        <value>Cập nhật lần cuối</value>
+        <value>Cß║¡p nhß║¡t lß║ºn cuß╗æi</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created</shortDescription>
-        <value>Ngày tạo</value>
+        <value>Ng├áy tß║ío</value>
     </labels>
 
     <labels>
@@ -6984,21 +7056,21 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created By</shortDescription>
-        <value>Người tạo</value>
+        <value>Ng╞░ß╗¥i tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Created_In_Channel</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Created In Channel</shortDescription>
-        <value>Kênh tạo</value>
+        <value>K├¬nh tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Last_Updated_By</fullName>
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Last Updated By</shortDescription>
-        <value>Người cập nhật</value>
+        <value>Ng╞░ß╗¥i cß║¡p nhß║¡t</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Case_Will_Be_Transferred</fullName>
@@ -7012,7 +7084,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Case will be transferred to your worklist</shortDescription>
-        <value>Hồ sơ sẽ được chuyển vào danh sách công việc của bạn</value>
+        <value>Hß╗ô s╞í sß║╜ ─æ╞░ß╗úc chuyß╗ân v├áo danh s├ích c├┤ng viß╗çc cß╗ºa bß║ín</value>
     </labels>
     <labels>
         <fullName>LBL_SFT_Cancel_Reasons</fullName>
@@ -7169,8 +7241,8 @@
     <labels>
         <fullName>LBL_CaseStatus</fullName>
         <language>vi</language>
-        <shortDescription>Trạng thái hồ sơ</shortDescription>
-        <value>Trạng thái hồ sơ</value>
+        <shortDescription>Trß║íng th├íi hß╗ô s╞í</shortDescription>
+        <value>Trß║íng th├íi hß╗ô s╞í</value>
     </labels>
     <labels>
         <fullName>LBL_AppID</fullName>
@@ -7181,8 +7253,8 @@
     <labels>
         <fullName>LBL_AppID</fullName>
         <language>vi</language>
-        <shortDescription>Mã ứng dụng</shortDescription>
-        <value>Mã ứng dụng</value>
+        <shortDescription>M├ú ß╗⌐ng dß╗Ñng</shortDescription>
+        <value>M├ú ß╗⌐ng dß╗Ñng</value>
     </labels>
     <labels>
         <fullName>LBL_ViolationType</fullName>
@@ -7193,8 +7265,8 @@
     <labels>
         <fullName>LBL_ViolationType</fullName>
         <language>vi</language>
-        <shortDescription>Loại vi phạm</shortDescription>
-        <value>Loại vi phạm</value>
+        <shortDescription>Loß║íi vi phß║ím</shortDescription>
+        <value>Loß║íi vi phß║ím</value>
     </labels>
     <labels>
         <fullName>LBL_Creator</fullName>
@@ -7205,8 +7277,8 @@
     <labels>
         <fullName>LBL_Creator</fullName>
         <language>vi</language>
-        <shortDescription>Người tạo</shortDescription>
-        <value>Người tạo</value>
+        <shortDescription>Ng╞░ß╗¥i tß║ío</shortDescription>
+        <value>Ng╞░ß╗¥i tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_TaskList</fullName>
@@ -7217,8 +7289,8 @@
     <labels>
         <fullName>LBL_TaskList</fullName>
         <language>vi</language>
-        <shortDescription>Danh sách công việc</shortDescription>
-        <value>Danh sách công việc</value>
+        <shortDescription>Danh s├ích c├┤ng viß╗çc</shortDescription>
+        <value>Danh s├ích c├┤ng viß╗çc</value>
     </labels>
     <labels>
         <fullName>LBL_UIC</fullName>
@@ -7241,8 +7313,8 @@
     <labels>
         <fullName>LBL_Deadline</fullName>
         <language>vi</language>
-        <shortDescription>Hạn xử lý</shortDescription>
-        <value>Hạn xử lý</value>
+        <shortDescription>Hß║ín xß╗¡ l├╜</shortDescription>
+        <value>Hß║ín xß╗¡ l├╜</value>
     </labels>
     <labels>
         <fullName>LBL_TaskID</fullName>
@@ -7253,8 +7325,8 @@
     <labels>
         <fullName>LBL_TaskID</fullName>
         <language>vi</language>
-        <shortDescription>Mã công việc</shortDescription>
-        <value>Mã công việc</value>
+        <shortDescription>M├ú c├┤ng viß╗çc</shortDescription>
+        <value>M├ú c├┤ng viß╗çc</value>
     </labels>
     <labels>
         <fullName>LBL_Category</fullName>
@@ -7265,8 +7337,8 @@
     <labels>
         <fullName>LBL_Category</fullName>
         <language>vi</language>
-        <shortDescription>Danh mục</shortDescription>
-        <value>Danh mục</value>
+        <shortDescription>Danh mß╗Ñc</shortDescription>
+        <value>Danh mß╗Ñc</value>
     </labels>
     <labels>
         <fullName>LBL_Conclusion</fullName>
@@ -7277,8 +7349,8 @@
     <labels>
         <fullName>LBL_Conclusion</fullName>
         <language>vi</language>
-        <shortDescription>Kết luận</shortDescription>
-        <value>Kết luận từ bộ phận gian lận</value>
+        <shortDescription>Kß║┐t luß║¡n</shortDescription>
+        <value>Kß║┐t luß║¡n tß╗½ bß╗Ö phß║¡n gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_UpdateTimeTask</fullName>
@@ -7289,8 +7361,8 @@
     <labels>
         <fullName>LBL_UpdateTimeTask</fullName>
         <language>vi</language>
-        <shortDescription>Thời gian cập nhật</shortDescription>
-        <value>Thời gian cập nhật</value>
+        <shortDescription>Thß╗¥i gian cß║¡p nhß║¡t</shortDescription>
+        <value>Thß╗¥i gian cß║¡p nhß║¡t</value>
     </labels>
     <labels>
         <fullName>LBL_CreateTime</fullName>
@@ -7301,8 +7373,8 @@
     <labels>
         <fullName>LBL_CreateTime</fullName>
         <language>vi</language>
-        <shortDescription>Thời gian tạo</shortDescription>
-        <value>Thời gian tạo</value>
+        <shortDescription>Thß╗¥i gian tß║ío</shortDescription>
+        <value>Thß╗¥i gian tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_CreateTimeTask</fullName>
@@ -7313,8 +7385,8 @@
     <labels>
         <fullName>LBL_CreateTimeTask</fullName>
         <language>vi</language>
-        <shortDescription>Thời gian tạo</shortDescription>
-        <value>Thời gian tạo</value>
+        <shortDescription>Thß╗¥i gian tß║ío</shortDescription>
+        <value>Thß╗¥i gian tß║ío</value>
     </labels>
     <labels>
         <fullName>LBL_Remarks</fullName>
@@ -7325,8 +7397,8 @@
     <labels>
         <fullName>LBL_Remarks</fullName>
         <language>vi</language>
-        <shortDescription>Ghi chú</shortDescription>
-        <value>Ghi chú từ bộ phận CSKH</value>
+        <shortDescription>Ghi ch├║</shortDescription>
+        <value>Ghi ch├║ tß╗½ bß╗Ö phß║¡n CSKH</value>
     </labels>
     <labels>
         <fullName>LBL_TaskStatus</fullName>
@@ -7337,8 +7409,8 @@
     <labels>
         <fullName>LBL_TaskStatus</fullName>
         <language>vi</language>
-        <shortDescription>Trạng thái công việc</shortDescription>
-        <value>Trạng thái công việc</value>
+        <shortDescription>Trß║íng th├íi c├┤ng viß╗çc</shortDescription>
+        <value>Trß║íng th├íi c├┤ng viß╗çc</value>
     </labels>
     <labels>
         <fullName>LBL_SubCategory</fullName>
@@ -7349,8 +7421,8 @@
     <labels>
         <fullName>LBL_SubCategory</fullName>
         <language>vi</language>
-        <shortDescription>Danh mục con</shortDescription>
-        <value>Danh mục con</value>
+        <shortDescription>Danh mß╗Ñc con</shortDescription>
+        <value>Danh mß╗Ñc con</value>
     </labels>
     <labels>
         <fullName>LBL_SubCode</fullName>
@@ -7361,8 +7433,8 @@
     <labels>
         <fullName>LBL_SubCode</fullName>
         <language>vi</language>
-        <shortDescription>Mã con</shortDescription>
-        <value>Mã con</value>
+        <shortDescription>M├ú con</shortDescription>
+        <value>M├ú con</value>
     </labels>
     <labels>
         <fullName>LBL_TaskName</fullName>
@@ -7373,8 +7445,8 @@
     <labels>
         <fullName>LBL_TaskName</fullName>
         <language>vi</language>
-        <shortDescription>Tên công việc</shortDescription>
-        <value>Tên công việc</value>
+        <shortDescription>T├¬n c├┤ng viß╗çc</shortDescription>
+        <value>T├¬n c├┤ng viß╗çc</value>
     </labels>
     <labels>
         <fullName>LBL_FraudTaskID</fullName>
@@ -7385,8 +7457,8 @@
     <labels>
         <fullName>LBL_FraudTaskID</fullName>
         <language>vi</language>
-        <shortDescription>Mã công việc gian lận</shortDescription>
-        <value>Mã công việc gian lận</value>
+        <shortDescription>M├ú c├┤ng viß╗çc gian lß║¡n</shortDescription>
+        <value>M├ú c├┤ng viß╗çc gian lß║¡n</value>
     </labels>
     <labels>
         <fullName>LBL_UpdateTime</fullName>
@@ -7397,8 +7469,8 @@
     <labels>
         <fullName>LBL_UpdateTime</fullName>
         <language>vi</language>
-        <shortDescription>Thời gian cập nhật</shortDescription>
-        <value>Thời gian cập nhật</value>
+        <shortDescription>Thß╗¥i gian cß║¡p nhß║¡t</shortDescription>
+        <value>Thß╗¥i gian cß║¡p nhß║¡t</value>
     </labels>
     <labels>
         <fullName>LBL_DownloadFile</fullName>
@@ -7409,8 +7481,8 @@
     <labels>
         <fullName>LBL_DownloadFile</fullName>
         <language>vi</language>
-        <shortDescription>Tải tập tin</shortDescription>
-        <value>Tải tập tin</value>
+        <shortDescription>Tß║úi tß║¡p tin</shortDescription>
+        <value>Tß║úi tß║¡p tin</value>
     </labels>
     <labels>
         <fullName>FEC_Deleted_Data_Successfully_Msg</fullName>
@@ -7934,7 +8006,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Recall_Action_Not_Allowed</shortDescription>
-        <value>Không thể thực hiện hành động Recall Action.</value>
+        <value>Kh├┤ng thß╗â thß╗▒c hiß╗çn h├ánh ─æß╗Öng Recall Action.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Record_Id_Invalid</fullName>
@@ -8214,14 +8286,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Toast Recall Success</shortDescription>
-        <value>Thực hiện Recall thành công.</value>
+        <value>Thß╗▒c hiß╗çn Recall th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Reopen_Success</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Toast Reopen Success</shortDescription>
-        <value>Thực hiện Reopen thành công.</value>
+        <value>Thß╗▒c hiß╗çn Reopen th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_Toast_Save_Success_Title</fullName>
@@ -8243,7 +8315,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>List relevant case empty</shortDescription>
-        <value>Không tìm thấy kết quả</value>
+        <value>Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú</value>
     </labels>
     <labels>
         <fullName>FEC_Account_Card_Fetch_Error</fullName>
@@ -8304,7 +8376,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Current status label</shortDescription>
-        <value>Trạng thái hiện tại</value>
+        <value>Trß║íng th├íi hiß╗çn tß║íi</value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8312,7 +8384,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Waiting for data message</shortDescription>
-        <value>Đang chờ dữ liệu từ hệ thống...</value>
+        <value>─Éang chß╗¥ dß╗» liß╗çu tß╗½ hß╗ç thß╗æng...</value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8328,7 +8400,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Select at least one attachment</shortDescription>
-        <value>Vui lòng chọn ít nhất một tệp đính kèm mới.</value>
+        <value>Vui l├▓ng chß╗ìn ├¡t nhß║Ñt mß╗Öt tß╗çp ─æ├¡nh k├¿m mß╗¢i.</value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8336,7 +8408,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Attach files success</shortDescription>
-        <value>Đã gắn tệp đính kèm thành công.</value>
+        <value>─É├ú gß║»n tß╗çp ─æ├¡nh k├¿m th├ánh c├┤ng.</value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8344,7 +8416,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error attaching files</shortDescription>
-        <value>Có lỗi xảy ra khi gắn tệp.</value>
+        <value>C├│ lß╗ùi xß║úy ra khi gß║»n tß╗çp.</value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8352,7 +8424,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>System error prefix</shortDescription>
-        <value>Lỗi hệ thống: </value>
+        <value>Lß╗ùi hß╗ç thß╗æng: </value>
         <categories>FEC_ChatHub</categories>
     </labels>
     <labels>
@@ -8554,7 +8626,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MSG Error API Label</shortDescription>
-        <value>Tải Dữ liệu Không Thành Công</value>
+        <value>Tß║úi Dß╗» liß╗çu Kh├┤ng Th├ánh C├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_Make_Date_Label</fullName>
@@ -8710,32 +8782,32 @@
         <categories>Interaction Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Nhập email</shortDescription>
-        <value>Nhập email</value>
+        <shortDescription>Nhß║¡p email</shortDescription>
+        <value>Nhß║¡p email</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Email_Required_Msg</fullName>
         <categories>Interaction Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Vui lòng nhập email.</shortDescription>
-        <value>Vui lòng nhập email.</value>
+        <shortDescription>Vui l├▓ng nhß║¡p email.</shortDescription>
+        <value>Vui l├▓ng nhß║¡p email.</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Email_Invalid_Msg</fullName>
         <categories>Interaction Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Định dạng email không hợp lệ.</shortDescription>
-        <value>Định dạng email không hợp lệ.</value>
+        <shortDescription>─Éß╗ïnh dß║íng email kh├┤ng hß╗úp lß╗ç.</shortDescription>
+        <value>─Éß╗ïnh dß║íng email kh├┤ng hß╗úp lß╗ç.</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Email_Save_Error</fullName>
         <categories>Interaction Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lưu email thất bại.</shortDescription>
-        <value>Lưu email thất bại.</value>
+        <shortDescription>L╞░u email thß║Ñt bß║íi.</shortDescription>
+        <value>L╞░u email thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_Send_To_Label</fullName>
@@ -8983,22 +9055,6 @@
         <protected>false</protected>
         <shortDescription>Fee Charge section label</shortDescription>
         <value>Fee &amp; Charge</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No fee charge data message</shortDescription>
-        <value>No fee charge data</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Termination_No_Data</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data message</shortDescription>
-        <value>No data</value>
     </labels>
     <labels>
         <fullName>FEC_Termination_Type_Label</fullName>
@@ -9641,14 +9697,6 @@
         <value>Payment Channel</value>
     </labels>
     <labels>
-        <fullName>FEC_Repay_No_Data_Label</fullName>
-        <categories>Account Info</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
-        <value>No data</value>
-    </labels>
-    <labels>
         <fullName>FEC_Repay_Refresh_Button_Label</fullName>
         <categories>Account Info</categories>
         <language>en_US</language>
@@ -9866,7 +9914,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Closure_No_Eligible</shortDescription>
-        <value>Không có khoản IPP phù hợp để tất toán.</value>
+        <value>Kh├┤ng c├│ khoß║ún IPP ph├╣ hß╗úp ─æß╗â tß║Ñt to├ín.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Closure_Select_One</fullName>
@@ -9874,7 +9922,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Closure_Select_One</shortDescription>
-        <value>Vui lòng chọn 01 khoản IPP</value>
+        <value>Vui l├▓ng chß╗ìn 01 khoß║ún IPP</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Back_To_Case</fullName>
@@ -9890,7 +9938,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Closure_Complete</shortDescription>
-        <value>Hoàn tất</value>
+        <value>Ho├án tß║Ñt</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Heading</fullName>
@@ -9898,7 +9946,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Closure_Heading</shortDescription>
-        <value>Danh sách khoản vay IPP</value>
+        <value>Danh s├ích khoß║ún vay IPP</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Col_IppRecordNo</fullName>
@@ -10000,7 +10048,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Option Anh Chi</shortDescription>
-        <value>Anh/ Chị</value>
+        <value>Anh/ Chß╗ï</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh</fullName>
@@ -10014,7 +10062,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Option Chi</shortDescription>
-        <value>Chị</value>
+        <value>Chß╗ï</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Label_Reply_Template</fullName>
@@ -10049,42 +10097,42 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error sending email</shortDescription>
-        <value>Lỗi gửi email: </value>
+        <value>Lß╗ùi gß╗¡i email: </value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_Blocked_Status</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Cannot send email - case blocked status</shortDescription>
-        <value>Không thể gửi email: Case đang ở trạng thái &quot;</value>
+        <value>Kh├┤ng thß╗â gß╗¡i email: Case ─æang ß╗ƒ trß║íng th├íi &quot;</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_Empty</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email field cannot be empty</shortDescription>
-        <value> email không được để trống.</value>
+        <value> email kh├┤ng ─æ╞░ß╗úc ─æß╗â trß╗æng.</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_Invalid</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Invalid email address</shortDescription>
-        <value> email không hợp lệ: &quot;</value>
+        <value> email kh├┤ng hß╗úp lß╗ç: &quot;</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_OrgWide_Not_Configured</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>From address not configured as OrgWide email</shortDescription>
-        <value>Không thể gửi email: địa chỉ &quot;</value>
+        <value>Kh├┤ng thß╗â gß╗¡i email: ─æß╗ïa chß╗ë &quot;</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_OrgWide_Not_Configured_Suffix</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>OrgWide not configured suffix message</shortDescription>
-        <value>&quot; chưa được cấu hình làm Organization-Wide Email Address. Vui lòng liên hệ Admin để verify địa chỉ này trong Setup.</value>
+        <value>&quot; ch╞░a ─æ╞░ß╗úc cß║Ñu h├¼nh l├ám Organization-Wide Email Address. Vui l├▓ng li├¬n hß╗ç Admin ─æß╗â verify ─æß╗ïa chß╗ë n├áy trong Setup.</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Readonly_From_Fecredit</fullName>
@@ -10119,7 +10167,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email compose - To email required error</shortDescription>
-        <value>To email không được để trống.</value>
+        <value>To email kh├┤ng ─æ╞░ß╗úc ─æß╗â trß╗æng.</value>
     </labels>
     <labels>
         <fullName>FEC_Clear_Session_Title</fullName>
@@ -10224,7 +10272,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>No Btn</shortDescription>
-        <value>Không</value>
+        <value>Kh├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_Reset_PIN_Title</fullName>
@@ -10238,14 +10286,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Reset Pin Confirm Msg</shortDescription>
-        <value>Bạn sắp mở khóa PIN cho khách hàng này. Bạn có chắc muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p mß╗ƒ kh├│a PIN cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_Yes_Btn</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Yes Btn</shortDescription>
-        <value>Có</value>
+        <value>C├│</value>
     </labels>
     <labels>
         <fullName>FEC_CIF_Number_Required_MSG</fullName>
@@ -10268,7 +10316,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Confirm_Body</shortDescription>
-        <value>Bạn sắp khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p kho├í thß║╗ cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Pending_Disbursement_Section</fullName>
@@ -10319,12 +10367,20 @@
         <value>CS Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_No_Pending_Disbursement</fullName>
+        <categories>Card LockUnlock LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_No_Pending_Disbursement</shortDescription>
+        <value>Kh├┤ng c├│ khoß║ún chß╗¥ giß║úi ng├ón.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Card_Block_Beneficiary_Required</fullName>
         <categories>Card LockUnlock LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>TH2 refund fields required before Block Card</shortDescription>
-        <value>Vui lòng điền đủ thông tin người thụ hưởng và ngân hàng.</value>
+        <value>Vui l├▓ng ─æiß╗ün ─æß╗º th├┤ng tin ng╞░ß╗¥i thß╗Ñ h╞░ß╗ƒng v├á ng├ón h├áng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Success</fullName>
@@ -10332,7 +10388,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Success</shortDescription>
-        <value>Khoá thẻ thành công</value>
+        <value>Kho├í thß║╗ th├ánh c├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Retry</fullName>
@@ -10340,7 +10396,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Retry</shortDescription>
-        <value>Khoá thẻ thất bại</value>
+        <value>Kho├í thß║╗ thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Disable</fullName>
@@ -10348,7 +10404,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Disable</shortDescription>
-        <value>Khoá thẻ thất bại. Vui lòng xử lý ngoài hệ thống CSM.</value>
+        <value>Kho├í thß║╗ thß║Ñt bß║íi. Vui l├▓ng xß╗¡ l├╜ ngo├ái hß╗ç thß╗æng CSM.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Failed</fullName>
@@ -10509,7 +10565,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Closure_No_Eligible</shortDescription>
-        <value>Không có khoản IPP phù hợp để tất toán.</value>
+        <value>Kh├┤ng c├│ khoß║ún IPP ph├╣ hß╗úp ─æß╗â tß║Ñt to├ín.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Closure_Select_One</fullName>
@@ -10517,7 +10573,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Closure_Select_One</shortDescription>
-        <value>Vui lòng chọn 01 khoản IPP</value>
+        <value>Vui l├▓ng chß╗ìn 01 khoß║ún IPP</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Back_To_Case</fullName>
@@ -10533,7 +10589,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Closure_Complete</shortDescription>
-        <value>Hoàn tất</value>
+        <value>Ho├án tß║Ñt</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Heading</fullName>
@@ -10541,7 +10597,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Closure_Heading</shortDescription>
-        <value>Danh sách khoản vay IPP</value>
+        <value>Danh s├ích khoß║ún vay IPP</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Closure_Col_IppRecordNo</fullName>
@@ -11255,7 +11311,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Verify Information</shortDescription>
-        <value>Xác minh thông tin</value>
+        <value>X├íc minh th├┤ng tin</value>
     </labels>
     <labels>
         <fullName>FEC_Callback</fullName>
@@ -11263,7 +11319,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Callback</shortDescription>
-        <value>Gọi lại</value>
+        <value>Gß╗ìi lß║íi</value>
     </labels>
     <labels>
         <fullName>FEC_Block_Card_Btn</fullName>
@@ -11287,7 +11343,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Block Card Success</shortDescription>
-        <value>Khoá thẻ thành công</value>
+        <value>Kho├í thß║╗ th├ánh c├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_Block_Card_Failed</fullName>
@@ -11295,7 +11351,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Block Card Failed</shortDescription>
-        <value>Khoá thẻ thất bại. Vui lòng thử lại.</value>
+        <value>Kho├í thß║╗ thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_Block_Card_Failed_Max</fullName>
@@ -11303,7 +11359,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Block Card Failed Max</shortDescription>
-        <value>Khoá thẻ thất bại.</value>
+        <value>Kho├í thß║╗ thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_Block_Card_Confirmation_Msg</fullName>
@@ -11311,7 +11367,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Block Card Confirmation Msg</shortDescription>
-        <value>Bạn sắp khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p kho├í thß║╗ cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_On_Hold_Label</fullName>
@@ -11326,8 +11382,8 @@
         <categories>Interaction Info</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Nếu được check, Interaction này sẽ không được tính vào Capacity...</shortDescription>
-        <value>Nếu được check, Interaction này sẽ không được tính vào Capacity hiện tại của user khi thực hiện phân bổ tự động Interaction Email - Ubank.</value>
+        <shortDescription>Nß║┐u ─æ╞░ß╗úc check, Interaction n├áy sß║╜ kh├┤ng ─æ╞░ß╗úc t├¡nh v├áo Capacity...</shortDescription>
+        <value>Nß║┐u ─æ╞░ß╗úc check, Interaction n├áy sß║╜ kh├┤ng ─æ╞░ß╗úc t├¡nh v├áo Capacity hiß╗çn tß║íi cß╗ºa user khi thß╗▒c hiß╗çn ph├ón bß╗ò tß╗▒ ─æß╗Öng Interaction Email - Ubank.</value>
     </labels>
     <labels>
         <fullName>FEC_Interaction_Email_Info_Ubank_Label</fullName>
@@ -11464,6 +11520,14 @@
         <value>Select contract number</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_Selected_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Selected_Contract_Number</shortDescription>
+        <value>Selected contract number</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Select_Payment_Method</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11477,7 +11541,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_Incorrect_Contract_Hint</shortDescription>
-        <value>Có thể để trống trong trường hợp không ghi số HĐ khi thanh toán (tiền treo).</value>
+        <value>C├│ thß╗â ─æß╗â trß╗æng trong tr╞░ß╗¥ng hß╗úp kh├┤ng ghi sß╗æ H─É khi thanh to├ín (tiß╗ün treo).</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Payment_Method</fullName>
@@ -11573,15 +11637,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
-        <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
+        <value>Tß╗òng sß╗æ tiß╗ün ─æiß╗üu chß╗ënh phß║úi bß║▒ng sß╗æ tiß╗ün thanh to├ín.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</shortDescription>
-        <value>Tổng số tiền điều chỉnh phải bằng số tiền dư</value>
+        <value>Tß╗òng sß╗æ tiß╗ün ─æiß╗üu chß╗ënh phß║úi bß║▒ng sß╗æ tiß╗ün d╞░</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IncorrectPayment_LoanInfo_NotRetrieved</fullName>
@@ -11637,7 +11701,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_AddIpp_Default_Failed</shortDescription>
-        <value>Chuyển đổi thất bại.</value>
+        <value>Chuyß╗ân ─æß╗òi thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_AddIpp_Default_Success</fullName>
@@ -11645,7 +11709,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_AddIpp_Default_Success</shortDescription>
-        <value>Thành công.</value>
+        <value>Th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_IPP_Retail_UI</fullName>
@@ -11653,7 +11717,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_IPP_Retail_UI</shortDescription>
-        <value>Unbilled Transaction##Check IPP Details##Convert IPP##IPP Conversion##Bạn sắp chuyển đổi giao dịch này. Bạn có chắc chắn muốn tiếp tục không?##Thành công##Khác##Có##Không##Khách hàng</value>
+        <value>Unbilled Transaction##Check IPP Details##Convert IPP##IPP Conversion##Bß║ín sß║»p chuyß╗ân ─æß╗òi giao dß╗ïch n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?##Th├ánh c├┤ng##Kh├íc##C├│##Kh├┤ng##Kh├ích h├áng</value>
     </labels>
     <labels>
         <fullName>FEC_GET_CASE_STATUS_CONTRACT_OR_ACCOUNT_NUMBER_REQUIRE_MSG</fullName>
@@ -11720,7 +11784,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
-        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+        <value>Dß╗ïch vß╗Ñ lß╗ùi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
@@ -11768,7 +11832,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Fail_Disable</shortDescription>
-        <value>Đã vượt quá số lần thử. Không thể chuyển đổi trả góp.</value>
+        <value>─É├ú v╞░ß╗út qu├í sß╗æ lß║ºn thß╗¡. Kh├┤ng thß╗â chuyß╗ân ─æß╗òi trß║ú g├│p.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Conversion_Fail_Retry</fullName>
@@ -11776,7 +11840,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
-        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+        <value>Chuyß╗ân ─æß╗òi thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
@@ -11784,7 +11848,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
-        <value>Chuyển đổi trả góp thành công.</value>
+        <value>Chuyß╗ân ─æß╗òi trß║ú g├│p th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
@@ -11792,7 +11856,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_No_Eligible_Transactions</shortDescription>
-        <value>Không có giao dịch hợp lệ để chuyển đổi trả góp.</value>
+        <value>Kh├┤ng c├│ giao dß╗ïch hß╗úp lß╗ç ─æß╗â chuyß╗ân ─æß╗òi trß║ú g├│p.</value>
     </labels>
     <labels>
         <fullName>CS_OrgChart_Text_header</fullName>
@@ -12673,7 +12737,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Refund_Request_Receipt_Amount_Positive</shortDescription>
-        <value>Vui lòng nhập số tiền biên lai lớn hơn 0.</value>
+        <value>Vui l├▓ng nhß║¡p sß╗æ tiß╗ün bi├¬n lai lß╗¢n h╞ín 0.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Refund_Request_Receipt_Date_Future</fullName>
@@ -12681,7 +12745,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Refund_Request_Receipt_Date_Future</shortDescription>
-        <value>Ngày biên lai không được lớn hơn ngày hiện tại.</value>
+        <value>Ng├áy bi├¬n lai kh├┤ng ─æ╞░ß╗úc lß╗¢n h╞ín ng├áy hiß╗çn tß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Insufficient_Access</fullName>
@@ -12705,7 +12769,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Refund_Request_Refund_Amount_Positive</shortDescription>
-        <value>Vui lòng nhập số tiền hoàn lớn hơn 0.</value>
+        <value>Vui l├▓ng nhß║¡p sß╗æ tiß╗ün ho├án lß╗¢n h╞ín 0.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Refund_Request_Receipt_Lines_Required</fullName>
@@ -12735,28 +12799,28 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email No Valid Address Found</shortDescription>
-        <value>Không tìm thấy email hợp lệ để gửi.</value>
+        <value>Kh├┤ng t├¼m thß║Ñy email hß╗úp lß╗ç ─æß╗â gß╗¡i.</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Send_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email Send Error</shortDescription>
-        <value>Lỗi gửi mail</value>
+        <value>Lß╗ùi gß╗¡i mail</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Sent_Success</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email Sent Success</shortDescription>
-        <value>Đã gửi email thành công tới khách hàng.</value>
+        <value>─É├ú gß╗¡i email th├ánh c├┤ng tß╗¢i kh├ích h├áng.</value>
     </labels>
     <labels>
         <fullName>FEC_Error_Loading_Template_List</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error Loading Template List</shortDescription>
-        <value>Lỗi tải danh sách template</value>
+        <value>Lß╗ùi tß║úi danh s├ích template</value>
     </labels>
     <labels>
         <fullName>FEC_Send</fullName>
@@ -12791,7 +12855,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Template Not Found</shortDescription>
-        <value>Không tìm thấy template.</value>
+        <value>Kh├┤ng t├¼m thß║Ñy template.</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_ContractClosure_Add_Temp_Address</fullName>
@@ -12918,7 +12982,7 @@
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — Add New Address button/section</shortDescription>
+        <shortDescription>Update Address ΓÇö Add New Address button/section</shortDescription>
         <value>Add New Address</value>
     </labels>
     <labels>
@@ -12926,15 +12990,15 @@
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — edit mailing modal title</shortDescription>
-        <value>Chỉnh sửa địa chỉ giao phát</value>
+        <shortDescription>Update Address ΓÇö edit mailing modal title</shortDescription>
+        <value>Chß╗ënh sß╗¡a ─æß╗ïa chß╗ë giao ph├ít</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_UpdateAddress_New_Address</fullName>
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — new address modal title</shortDescription>
+        <shortDescription>Update Address ΓÇö new address modal title</shortDescription>
         <value>New Address</value>
     </labels>
     <labels>
@@ -12942,15 +13006,23 @@
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — province combobox search placeholder</shortDescription>
-        <value>Nhập để tìm tỉnh/thành...</value>
+        <shortDescription>Update Address ΓÇö province combobox search placeholder</shortDescription>
+        <value>Nhß║¡p ─æß╗â t├¼m tß╗ënh/th├ánh...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LBL_UpdateAddress_Ward_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address ΓÇö ward/district combobox search placeholder</shortDescription>
+        <value>Nhß║¡p ─æß╗â t├¼m ph╞░ß╗¥ng/x├ú...</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_UpdateAddress_Original_Information</fullName>
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — column title Original Information</shortDescription>
+        <shortDescription>Update Address ΓÇö column title Original Information</shortDescription>
         <value>Original Information</value>
     </labels>
     <labels>
@@ -12958,7 +13030,7 @@
         <categories>Update Address LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Update Address — column title Updated Information</shortDescription>
+        <shortDescription>Update Address ΓÇö column title Updated Information</shortDescription>
         <value>Updated Information</value>
     </labels>
     <labels>
@@ -12967,7 +13039,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ContractClosure_No_C360_Email</shortDescription>
-        <value>Không có email C360 — vui lòng thêm email tạm thời.</value>
+        <value>Kh├┤ng c├│ email C360 ΓÇö vui l├▓ng th├¬m email tß║ím thß╗¥i.</value>
     </labels>
     <labels>
         <fullName>FEC_Placeholder_ContractClosure_Select_Delivery</fullName>
@@ -12991,7 +13063,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ContractClosure_Address_Required</shortDescription>
-        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+        <value>Vui l├▓ng chß╗ìn/ nhß║¡p ─æß╗ïa chß╗ë ph├╣ hß╗úp</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ContractClosure_Delivery_Invalid</fullName>
@@ -12999,15 +13071,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ContractClosure_Delivery_Invalid</shortDescription>
-        <value>Vui lòng chọn hình thức giao phát và thông tin giao phát phù hợp.</value>
+        <value>Vui l├▓ng chß╗ìn h├¼nh thß╗⌐c giao ph├ít v├á th├┤ng tin giao ph├ít ph├╣ hß╗úp.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ContractClosure_Address_Row_Empty</fullName>
         <categories>Contract Closure LWC</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Contract closure — đã chọn dòng địa chỉ nhưng cột địa chỉ trống</shortDescription>
-        <value>Dòng địa chỉ đã chọn chưa có nội dung. Vui lòng chọn địa chỉ khác hoặc nhập địa chỉ tạm thời.</value>
+        <shortDescription>Contract closure ΓÇö ─æ├ú chß╗ìn d├▓ng ─æß╗ïa chß╗ë nh╞░ng cß╗Öt ─æß╗ïa chß╗ë trß╗æng</shortDescription>
+        <value>D├▓ng ─æß╗ïa chß╗ë ─æ├ú chß╗ìn ch╞░a c├│ nß╗Öi dung. Vui l├▓ng chß╗ìn ─æß╗ïa chß╗ë kh├íc hoß║╖c nhß║¡p ─æß╗ïa chß╗ë tß║ím thß╗¥i.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ContractClosure_Phone_Invalid</fullName>
@@ -13015,7 +13087,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ContractClosure_Phone_Invalid</shortDescription>
-        <value>Định dạng số điện thoại không hợp lệ.</value>
+        <value>─Éß╗ïnh dß║íng sß╗æ ─æiß╗çn thoß║íi kh├┤ng hß╗úp lß╗ç.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ContractClosure_Required_Fields</fullName>
@@ -13023,7 +13095,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ContractClosure_Required_Fields</shortDescription>
-        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+        <value>Vui l├▓ng nhß║¡p ─æß║ºy ─æß╗º c├íc tr╞░ß╗¥ng bß║»t buß╗Öc.</value>
     </labels>
     <labels>
         <fullName>FEC_Cannot_Delete_Enhanced_Letterhead</fullName>
@@ -13136,7 +13208,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error MessageError Hold Case</shortDescription>
-        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại.</value>
+        <value>Sß╗æ hß╗úp ─æß╗ông/t├ái khoß║ún n├áy ─æ├ú chuyß╗ân ng╞░ng t├íc ─æß╗Öng thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_Error_Message_Maxretris</fullName>
@@ -13144,7 +13216,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Error Message Maxretris</shortDescription>
-        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thất bại. Vui lòng thử lại.</value>
+        <value>Sß╗æ hß╗úp ─æß╗ông/t├ái khoß║ún n├áy ─æ├ú chuyß╗ân ng╞░ng t├íc ─æß╗Öng thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_Hold_Case</fullName>
@@ -13160,7 +13232,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Messenger Success Hold Case</shortDescription>
-        <value>Số hợp đồng/tài khoản này đã chuyển ngưng tác động thành công</value>
+        <value>Sß╗æ hß╗úp ─æß╗ông/t├ái khoß║ún n├áy ─æ├ú chuyß╗ân ng╞░ng t├íc ─æß╗Öng th├ánh c├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_NFU_Code</fullName>
@@ -13192,7 +13264,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Show Action Hold Case</shortDescription>
-        <value>Không tìm thấy bộ Hold Case thủ công tương ứng cho bộ NOC</value>
+        <value>Kh├┤ng t├¼m thß║Ñy bß╗Ö Hold Case thß╗º c├┤ng t╞░╞íng ß╗⌐ng cho bß╗Ö NOC</value>
     </labels>
     <labels>
         <fullName>FEC_Succes_Hold_Case</fullName>
@@ -13200,7 +13272,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Succes Hold Case</shortDescription>
-        <value>Hold Case thành công.</value>
+        <value>Hold Case th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_An_Unexpected_Error</fullName>
@@ -13246,104 +13318,104 @@
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
-        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+        <shortDescription>Noti-16: chuyß╗ân KH tß╗¢i Collections th├ánh c├┤ng</shortDescription>
+        <value>Chuyß╗ân th├┤ng tin kh├ích h├áng tß╗¢i hß╗ç thß╗æng Collections th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_GenesysId_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Genesys ID trống</shortDescription>
-        <value>Genesys ID không có giá trị.</value>
+        <shortDescription>Transfer Collections: Genesys ID trß╗æng</shortDescription>
+        <value>Genesys ID kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_PhoneNumber_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Phone Number trống</shortDescription>
-        <value>Phone Number không có giá trị.</value>
+        <shortDescription>Transfer Collections: Phone Number trß╗æng</shortDescription>
+        <value>Phone Number kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_PhoneNumber_Invalid</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Phone Number không hợp lệ</shortDescription>
-        <value>Phone Number không hợp lệ.</value>
+        <shortDescription>Transfer Collections: Phone Number kh├┤ng hß╗úp lß╗ç</shortDescription>
+        <value>Phone Number kh├┤ng hß╗úp lß╗ç.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_CsCaseId_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Case ID trống</shortDescription>
-        <value>Case ID không có giá trị.</value>
+        <shortDescription>Transfer Collections: Case ID trß╗æng</shortDescription>
+        <value>Case ID kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_ExtAppId_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: App ID trống</shortDescription>
-        <value>App ID không có giá trị.</value>
+        <shortDescription>Transfer Collections: App ID trß╗æng</shortDescription>
+        <value>App ID kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_ProductType_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Product Type trống</shortDescription>
-        <value>Product Type không có giá trị.</value>
+        <shortDescription>Transfer Collections: Product Type trß╗æng</shortDescription>
+        <value>Product Type kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_ProductType_Invalid</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Product Type không hợp lệ</shortDescription>
-        <value>Product Type không hợp lệ.</value>
+        <shortDescription>Transfer Collections: Product Type kh├┤ng hß╗úp lß╗ç</shortDescription>
+        <value>Product Type kh├┤ng hß╗úp lß╗ç.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_Category_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Category trống</shortDescription>
-        <value>Category không có giá trị.</value>
+        <shortDescription>Transfer Collections: Category trß╗æng</shortDescription>
+        <value>Category kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_SubCategory_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Sub Category trống</shortDescription>
-        <value>Sub Category không có giá trị.</value>
+        <shortDescription>Transfer Collections: Sub Category trß╗æng</shortDescription>
+        <value>Sub Category kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_SubCode_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Sub Code trống</shortDescription>
-        <value>Sub Code không có giá trị.</value>
+        <shortDescription>Transfer Collections: Sub Code trß╗æng</shortDescription>
+        <value>Sub Code kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Transfer_Err_Remark_Null</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections: Remark trống</shortDescription>
-        <value>Remarks for Collections không có giá trị.</value>
+        <shortDescription>Transfer Collections: Remark trß╗æng</shortDescription>
+        <value>Remarks for Collections kh├┤ng c├│ gi├í trß╗ï.</value>
     </labels>
     <labels>
         <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
-        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
+        <shortDescription>Transfer Collections thß║Ñt bß║íi ΓÇö d├▓ng t├│m tß║»t (─æß╗Å ─æß║¡m)</shortDescription>
+        <value>Chuyß╗ân th├┤ng tin kh├ích h├áng tß╗¢i hß╗ç thß╗æng Collections thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_UNBLOCK_CARD_HEADER</fullName>
@@ -13359,7 +13431,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD</shortDescription>
-        <value>Bạn sắp mở khoá thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p mß╗ƒ kho├í thß║╗ cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</fullName>
@@ -13367,7 +13439,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_SUCCESS</shortDescription>
-        <value>Mở khoá thẻ thành công.</value>
+        <value>Mß╗ƒ kho├í thß║╗ th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</fullName>
@@ -13375,7 +13447,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
-        <value>Mở khoá thẻ thất bại.</value>
+        <value>Mß╗ƒ kho├í thß║╗ thß║Ñt bß║íi.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Kh├┤ng t├¼m thß║Ñy NFU Config cho Sub Code</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
@@ -13383,7 +13463,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</shortDescription>
-        <value>Mở khoá thẻ thất bại. Vui lòng thử lại.</value>
+        <value>Mß╗ƒ kho├í thß║╗ thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_PIN_REISSUE_HEADER</fullName>
@@ -13399,7 +13479,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE</shortDescription>
-        <value>Bạn sắp thay thế mã PIN cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p thay thß║┐ m├ú PIN cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</fullName>
@@ -13407,7 +13487,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_SUCCESS</shortDescription>
-        <value>Thay thế mã PIN thành công.</value>
+        <value>Thay thß║┐ m├ú PIN th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR</fullName>
@@ -13415,7 +13495,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR</shortDescription>
-        <value>Thay thế mã PIN thất bại.</value>
+        <value>Thay thß║┐ m├ú PIN thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</fullName>
@@ -13423,14 +13503,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_PIN_REISSUE_ERROR_RETRY</shortDescription>
-        <value>Thay thế mã PIN thất bại. Vui lòng thử lại.</value>
+        <value>Thay thß║┐ m├ú PIN thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Data_Application_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Không tìm thấy kết quả (Application History)</shortDescription>
-        <value>Không tìm thấy kết quả</value>
+        <shortDescription>Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú (Application History)</shortDescription>
+        <value>Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú</value>
     </labels>
     <labels>
         <fullName>FEC_BIX_Ingest_Error</fullName>
@@ -13451,21 +13531,21 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_RESET_PIN_ERROR</shortDescription>
-        <value>Mở khóa PIN thất bại. Vui lòng thử lại.</value>
+        <value>Mß╗ƒ kh├│a PIN thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_RESET_PIN_FAILED</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_RESET_PIN_FAILED</shortDescription>
-        <value>Mở khóa PIN thất bại.</value>
+        <value>Mß╗ƒ kh├│a PIN thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_RESET_PIN_SUCCESS</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_RESET_PIN_SUCCESS</shortDescription>
-        <value>Mở khóa PIN thành công.</value>
+        <value>Mß╗ƒ kh├│a PIN th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_ACTION_CARD_REPLACEMENT_HEADER</fullName>
@@ -13481,7 +13561,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT</shortDescription>
-        <value>Bạn sắp thay thế thẻ cho khách hàng này. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p thay thß║┐ thß║╗ cho kh├ích h├áng n├áy. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</fullName>
@@ -13489,7 +13569,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_SUCCESS</shortDescription>
-        <value>Thay thế thẻ thành công.</value>
+        <value>Thay thß║┐ thß║╗ th├ánh c├┤ng.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</fullName>
@@ -13497,7 +13577,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR</shortDescription>
-        <value>Thay thế thẻ thất bại.</value>
+        <value>Thay thß║┐ thß║╗ thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</fullName>
@@ -13505,7 +13585,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_CARD_REPLACEMENT_ERROR_RETRY</shortDescription>
-        <value>Thay thế thẻ thất bại. Vui lòng thử lại.</value>
+        <value>Thay thß║┐ thß║╗ thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_D2C</fullName>
@@ -13513,7 +13593,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_D2C</shortDescription>
-        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS D2C xử lý.</value>
+        <value>Y├¬u cß║ºu thay thß║┐ thß║╗ sß║╜ ─æ╞░ß╗úc chuyß╗ân ─æß║┐n CS D2C xß╗¡ l├╜.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</fullName>
@@ -13521,14 +13601,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_CS_SUPPORT</shortDescription>
-        <value>Yêu cầu thay thế thẻ sẽ được chuyển đến CS Support xử lý.</value>
+        <value>Y├¬u cß║ºu thay thß║┐ thß║╗ sß║╜ ─æ╞░ß╗úc chuyß╗ân ─æß║┐n CS Support xß╗¡ l├╜.</value>
     </labels>
     <labels>
         <fullName>FEC_No_Permission_Msg</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>No permission toast message</shortDescription>
-        <value>Bạn không có quyền thực hiện thao tác này.</value>
+        <value>Bß║ín kh├┤ng c├│ quyß╗ün thß╗▒c hiß╗çn thao t├íc n├áy.</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Error_File_Too_Large_Title</fullName>
@@ -13591,7 +13671,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Email - Send success toast title</shortDescription>
-        <value>Thành công</value>
+        <value>Th├ánh c├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Success_Sent_Msg</fullName>
@@ -13641,7 +13721,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_BLOCK_CS_D2C</shortDescription>
-        <value>Vui lòng tạo yêu cầu mở khóa thẻ để chuyển CS D2C xử lý.</value>
+        <value>Vui l├▓ng tß║ío y├¬u cß║ºu mß╗ƒ kh├│a thß║╗ ─æß╗â chuyß╗ân CS D2C xß╗¡ l├╜.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_CARD_BLOCK_CANCEL</fullName>
@@ -13649,7 +13729,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_BLOCK_CANCEL</shortDescription>
-        <value>Không thể thực hiện khoá thẻ.</value>
+        <value>Kh├┤ng thß╗â thß╗▒c hiß╗çn kho├í thß║╗.</value>
     </labels>
     <labels>
         <fullName>FEC_Invalid_OwnerId</fullName>
@@ -13665,7 +13745,23 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT</shortDescription>
-        <value>Vui lòng chọn/ nhập địa chỉ phù hợp</value>
+        <value>Vui l├▓ng chß╗ìn/ nhß║¡p ─æß╗ïa chß╗ë ph├╣ hß╗úp</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Fee_Charge_Type_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Type column label for fee/charge row on termination</shortDescription>
+        <value>Interest on Overdue Interest</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Common_No_Results_Label</fullName>
+        <categories>Common</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty list / table / section (no rows)</shortDescription>
+        <value>Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú</value>
     </labels>
     <labels>
         <fullName>FEC_Page_Number_Deals</fullName>
@@ -13744,7 +13840,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Error_Callout_Insurance</shortDescription>
-        <value>Đã xảy ra lỗi trong quá trình tìm kiếm, vui lòng thử lại.</value>
+        <value>─É├ú xß║úy ra lß╗ùi trong qu├í tr├¼nh t├¼m kiß║┐m, vui l├▓ng thß╗¡ lß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_RelevantTicket_Title</fullName>
@@ -13810,6 +13906,13 @@
         <value>Relevant Ticket was created successfully.</value>
     </labels>
     <labels>
+        <fullName>FEC_RelevantTicket_Cannot_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket cannot delete</shortDescription>
+        <value>Kh├┤ng thß╗â x├│a Ticket ─æ├ú li├¬n kß║┐t</value>
+    </labels>
+    <labels>
         <fullName>FEC_Chat_Conversations_Label</fullName>
         <categories>FEC_ChatHub</categories>
         <language>en_US</language>
@@ -13833,7 +13936,7 @@
         <shortDescription>Chat - Save failed error message</shortDescription>
         <value>Save failed. Please try again.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_Account_Contract_Number</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -14029,7 +14132,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>CustomerInfo Null Or ChatSession Null</shortDescription>
-        <value>Payload không hợp lệ: thiếu customerInfo hoặc chatSession</value>
+        <value>Payload kh├┤ng hß╗úp lß╗ç: thiß║┐u customerInfo hoß║╖c chatSession</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_No_Response</fullName>
@@ -14137,7 +14240,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_Fast_Cash_Btn_No</shortDescription>
-        <value>Không</value>
+        <value>Kh├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Fast_Cash_Max_Amount</fullName>
@@ -14169,7 +14272,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Modal_Body</shortDescription>
-        <value>Bạn sắp thực hiện đăng ký Fast Cash. Bạn có chắc chắn muốn tiếp tục không?</value>
+        <value>Bß║ín sß║»p thß╗▒c hiß╗çn ─æ─âng k├╜ Fast Cash. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_10</fullName>
@@ -14177,7 +14280,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_10</shortDescription>
-        <value>Đăng ký khoản tiền mặt nhanh thất bại.</value>
+        <value>─É─âng k├╜ khoß║ún tiß╗ün mß║╖t nhanh thß║Ñt bß║íi.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_12</fullName>
@@ -14185,7 +14288,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_12</shortDescription>
-        <value>Số tiền đăng ký ít nhất là 2,000,000 VND và không vượt quá số tiền tối đa.</value>
+        <value>Sß╗æ tiß╗ün ─æ─âng k├╜ ├¡t nhß║Ñt l├á 2,000,000 VND v├á kh├┤ng v╞░ß╗út qu├í sß╗æ tiß╗ün tß╗æi ─æa.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_15</fullName>
@@ -14193,7 +14296,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_15</shortDescription>
-        <value>Không đủ điều kiện đăng ký Fast Cash.</value>
+        <value>Kh├┤ng ─æß╗º ─æiß╗üu kiß╗çn ─æ─âng k├╜ Fast Cash.</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Fast_Cash_Block_Amount</fullName>
@@ -14209,7 +14312,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_LBL_Fast_Cash_Btn_Yes</shortDescription>
-        <value>Có</value>
+        <value>C├│</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Fast_Cash_Error_Code</fullName>
@@ -14233,7 +14336,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_01</shortDescription>
-        <value>Vui lòng nhập đầy đủ các trường bắt buộc.</value>
+        <value>Vui l├▓ng nhß║¡p ─æß║ºy ─æß╗º c├íc tr╞░ß╗¥ng bß║»t buß╗Öc.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_02</fullName>
@@ -14241,7 +14344,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_02</shortDescription>
-        <value>Số tiền đăng ký phải từ 2,000,000 VND đến số tiền tối đa.</value>
+        <value>Sß╗æ tiß╗ün ─æ─âng k├╜ phß║úi tß╗½ 2,000,000 VND ─æß║┐n sß╗æ tiß╗ün tß╗æi ─æa.</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_08</fullName>
@@ -14249,7 +14352,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_08</shortDescription>
-        <value>Đăng ký khoản tiền mặt nhanh thành công</value>
+        <value>─É─âng k├╜ khoß║ún tiß╗ün mß║╖t nhanh th├ánh c├┤ng</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Fast_Cash_Noti_09</fullName>
@@ -14257,7 +14360,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Fast_Cash_Noti_09</shortDescription>
-        <value>Đăng ký khoản tiền mặt nhanh thất bại. Vui lòng thử lại</value>
+        <value>─É─âng k├╜ khoß║ún tiß╗ün mß║╖t nhanh thß║Ñt bß║íi. Vui l├▓ng thß╗¡ lß║íi</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Fast_Cash_Error_Description</fullName>
@@ -14280,28 +14383,28 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
-        <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
+        <value>Khoß║úng thß╗¥i gian kh├┤ng ─æ╞░ß╗úc v╞░ß╗út qu├í {0} ng├áy.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC CollectionDateFilter SuccessMsg</shortDescription>
-        <value>Đã áp dụng bộ lọc ngày từ {0} đến {1}</value>
+        <value>─É├ú ├íp dß╗Ñng bß╗Ö lß╗ìc ng├áy tß╗½ {0} ─æß║┐n {1}</value>
     </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_ErrorFromGtTo</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CollectionDateFilter_ErrorFromGtTo</shortDescription>
-        <value>From Date không được lớn hơn To Date.</value>
+        <value>From Date kh├┤ng ─æ╞░ß╗úc lß╗¢n h╞ín To Date.</value>
     </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_ErrorMissingDate</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CollectionDateFilter_ErrorMissingDate</shortDescription>
-        <value>Vui lòng chọn đầy đủ From Date và To Date.</value>
+        <value>Vui l├▓ng chß╗ìn ─æß║ºy ─æß╗º From Date v├á To Date.</value>
     </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_FromDate</fullName>
@@ -14315,7 +14418,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_CollectionDateFilter_HintText</shortDescription>
-        <value>Vui lòng chọn khoảng thời gian tra cứu tối đa 90 ngày.</value>
+        <value>Vui l├▓ng chß╗ìn khoß║úng thß╗¥i gian tra cß╗⌐u tß╗æi ─æa 90 ng├áy.</value>
     </labels>
     <labels>
         <fullName>FEC_CollectionDateFilter_ToDate</fullName>
@@ -14353,6 +14456,1033 @@
         <value>NFU</value>
     </labels>
     <labels>
+        <fullName>FEC_DNB_Has_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Has_Data_Question</shortDescription>
+        <value>─É├ú c├│ th├┤ng tin kh├ích h├áng tß║íi danh s├ích DNB. Bß║ín c├│ muß╗æn cß║¡p nhß║¡t th├┤ng tin kh├┤ng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Message</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Message</shortDescription>
+        <value>Bß║ín sß║»p c├óp nhß║¡t th├┤ng tin kh├ích h├áng v├áo danh s├ích DNB. Bß║ín c├│ chß║»c chß║»n muß╗æn tiß║┐p tß╗Ñc kh├┤ng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Modal_Title</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Modal_Title</shortDescription>
+        <value>Do Not Bother</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_NID_Placeholder</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_NID_Placeholder</shortDescription>
+        <value>Enter 9 or 12 digits</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_No_Data_Question</fullName>
+        <categories>Do Not Bother</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_No_Data_Question</shortDescription>
+        <value>Ch╞░a c├│ th├┤ng tin kh├ích h├áng tß║íi danh s├ích DNB. Bß║ín c├│ muß╗æn cß║¡p nhß║¡t th├┤ng tin kh├┤ng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DNB_Update_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_DNB_Update_Button</shortDescription>
+        <value>Update to DNB</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CC_Queue_Name</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>CC Queue Name for COF/GSR routing</shortDescription>
+        <value>DQ - CS Customer Care</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Add_Item_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add Item Label</shortDescription>
+        <value>Add Item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Remark Label</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Queue_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Queue combobox</shortDescription>
+        <value>-- Choose Queue --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Choose_Team_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Team combobox</shortDescription>
+        <value>-- Choose Team --</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Confirm_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Label</shortDescription>
+        <value>Confirm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Enter_Remark_Placeholder</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder for Assignment Remark textarea</shortDescription>
+        <value>Enter remark...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Remark_Label</fullName>
+        <categories>Case</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark column label</shortDescription>
+        <value>Remark</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ASSIGNMENT_NOT_FOUND</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment not found</shortDescription>
+        <value>Assignment not found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_DECISION_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision required</shortDescription>
+        <value>Decision is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ESCALATE_NO_MANAGER</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Escalate failed no manager</shortDescription>
+        <value>Escalate failed: Current owner has no manager. Please update user data.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_ESCALATE_NO_OWNER</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Escalate failed no owner</shortDescription>
+        <value>Escalate failed: Assignment has no owner.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_INVALID_INPUT</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Invalid input</shortDescription>
+        <value>Invalid input</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_QUEUE_NOT_FOUND</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue not found</shortDescription>
+        <value>Queue not found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_ERR_TEAM_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team required</shortDescription>
+        <value>Team is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ASSIGNMENT_ID_REQUIRED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Id is required error message</shortDescription>
+        <value>Assignment Id is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_LOAD_ASSIGNMENT_FAILED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed to load assignment list</shortDescription>
+        <value>Failed to load assignments. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_LOAD_REMARK_FAILED</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Failed to load case remarks</shortDescription>
+        <value>Failed to load case remarks. Please try again.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NO_ACCESS_ASSIGNMENT</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No access to Assignment records</shortDescription>
+        <value>You do not have access to Assignment records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_NO_ACCESS_REMARK</fullName>
+        <categories>FEC_Error</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No access to Case Remarks records</shortDescription>
+        <value>You do not have access to Case Remarks records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Routing_Action</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Routing_Action</shortDescription>
+        <value>Assignment Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_List</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_List</shortDescription>
+        <value>Assignment List</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Status</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Status</shortDescription>
+        <value>Assignment Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Owner</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Owner</shortDescription>
+        <value>Assignment Owner</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Id</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Id</shortDescription>
+        <value>Assignment ID</value>
+    </labels>
+    <!-- tungnm37 th├¬m: UpdateDisbursementStatus API messages -->
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InvalidRequest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Request body is invalid</shortDescription>
+        <value>Request body is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_TransID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - TransID is required</shortDescription>
+        <value>TransID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_RequestorID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - RequestorID is required</shortDescription>
+        <value>RequestorID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is required</shortDescription>
+        <value>DateTime is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is invalid</shortDescription>
+        <value>DateTime is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is required</shortDescription>
+        <value>CRMID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbStatus_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_STATUS is invalid</shortDescription>
+        <value>DISB_STATUS is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_DT is invalid</shortDescription>
+        <value>DISB_DT is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is invalid</shortDescription>
+        <value>CRMID is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InternalError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Internal Server Error</shortDescription>
+        <value>Internal Server Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_AlreadyResolved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Case already Resolved-Completed</shortDescription>
+        <value>Case {0} has status as Resolved-Completed so it cannot be processed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response_From_Server</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No HTTP response body from server</shortDescription>
+        <value>No response from server.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Unexpected_Missing_Node</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP body missing expected response element</shortDescription>
+        <value>Unexpected SOAP response (no {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Parsing_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP/XML parse failure message template</shortDescription>
+        <value>Error parsing response: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Response_Status_Detail</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Business status and description from SOAP SysResponse</shortDescription>
+        <value>API status: {0} | {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Code_And_Description</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP/CMS code and description for eligibility errors</shortDescription>
+        <value>Code: {0} | Description: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unrecognized Sys.Code in SOAP response</shortDescription>
+        <value>Unknown system response code: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short eligible status text</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Not_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short not eligible status text</shortDescription>
+        <value>Not Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Loan_Loading_Or_No_Data</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan eligibility section empty state</shortDescription>
+        <value>Loading or no data available.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_Loan_Section</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan section title</shortDescription>
+        <value>Loan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Eligibility</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell eligibility field label</shortDescription>
+        <value>Top-up Xsell Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Min</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell min amount label</shortDescription>
+        <value>Top-up Xsell Min</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Max</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell max amount label</shortDescription>
+        <value>Top-up Xsell Max</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Loading</fullName>
+        <categories>Common LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Spinner alternative text</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Section_Title</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card eligibility section title</shortDescription>
+        <value>Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_TopUp</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up E-voucher eligibility button</shortDescription>
+        <value>Top-up/ E-voucher Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_IPP</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash IPP eligibility button</shortDescription>
+        <value>Fast Cash/ IPP Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Available_Credit_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Available credit limit label</shortDescription>
+        <value>Available Credit Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Reason</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason field label</shortDescription>
+        <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Fast_Cash_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash status label</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_IPP_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP status label</shortDescription>
+        <value>IPP Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Credit limit label</shortDescription>
+        <value>Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Error_Code</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error code label</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Description</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description label</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Tenure</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP tenor table column</shortDescription>
+        <value>Tenure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP rate column</shortDescription>
+        <value>Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Registration_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP registration rate column</shortDescription>
+        <value>Registration Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Monthly_Installment</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP monthly installment column</shortDescription>
+        <value>Monthly Installment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Conversion_Fee</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP conversion fee column</shortDescription>
+        <value>Conversion Fee</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_TopUp_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after top-up eligibility load</shortDescription>
+        <value>Top-up / E-voucher eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after IPP eligibility load</shortDescription>
+        <value>Fast Cash / IPP eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_No_Account_Warning</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warn when account number missing before eligibility</shortDescription>
+        <value>No account number found. Link Account/Contract (FEC_Account_or_Contract__c) with FEC_Account_Number__c on Customer History, or enter account on the Case. Eligibility is saved on that Customer History record.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed with HTTP status placeholder</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http_Unknown</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed when HTTP status unknown</shortDescription>
+        <value>Request failed (HTTP status unknown).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unknown_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error for extractErrorMsg</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unexpected_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected error for extractErrorMsg fallback</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Card_Not_Found</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No card number on Customer History for Check Eligible</shortDescription>
+        <value>kh├┤ng t├¼m thß║Ñy sß╗æ thß║╗</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_No_Matching_History</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
+        <value>Kh├┤ng t├¼m thß║Ñy bß║ún ghi lß╗ïch sß╗¡ kh├ích h├áng ph├╣ hß╗úp vß╗¢i Case/ hß╗úp ─æß╗ông.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Case_Read_Error</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case wire failed for SMS tab</shortDescription>
+        <value>Could not read Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Case_Id</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Case ID</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Date Time</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Failure_Reason</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Failure Reason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Content</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Content</shortDescription>
+        <value>Notification Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Type</shortDescription>
+        <value>Notification Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Status</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Status</shortDescription>
+        <value>Sent Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_System</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent System</shortDescription>
+        <value>Sent System</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Type</shortDescription>
+        <value>Sent Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_User</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Email_Need_Record</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email tab: recordId missing</shortDescription>
+        <value>Open this panel on a Case record to load notification history.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Empty_Dash</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder em dash in grid / fallback empty message</shortDescription>
+        <value>ΓÇö</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Error_Unknown</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error parsing</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Loading</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty state / spinner while SMS log loads</shortDescription>
+        <value>LoadingΓÇª</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Phone_Prefix</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label before resolved phone on SMS tab</shortDescription>
+        <value>Phone:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Http_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed with HTTP status; replace {0}</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Load_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed without HTTP code</shortDescription>
+        <value>Unable to load SMS log.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_No_Log_Default</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Banner when IT Telco indicates no SMS log (fallback if no sys description)</shortDescription>
+        <value>No SMS log found for this phone number.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Sort_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>fec_RelatedListPaging sorted-by description</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_Email</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Email</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_MobileApp</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Mobile App</shortDescription>
+        <value>Mobile App</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_SMS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section SMS</shortDescription>
+        <value>SMS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_ZNS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section ZNS</shortDescription>
+        <value>ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Kh├┤ng thß╗â tß║ío tr├╣ng Assignment cho c├╣ng 1 rß╗ò c├┤ng viß╗çc cß╗ºa ─æ╞ín vß╗ï.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
+    </labels>
+    <!-- tungnm37 th├¬m: Channel Config labels -->
+    <labels>
+        <fullName>FEC_Confirm_Before_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Before Submit</shortDescription>
+        <value>Vui l├▓ng Confirm Team/Queue tr╞░ß╗¢c khi Submit.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Success</shortDescription>
+        <value>─É├ú l╞░u Channel Config.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Error</shortDescription>
+        <value>Lß╗ùi khi l╞░u.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Channel_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Channel Placeholder</shortDescription>
+        <value>Search Channel...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Results</shortDescription>
+        <value>Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Get_Nature_Of_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get Nature Of Case Label</shortDescription>
+        <value>Get Nature Of Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Cancel_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Case Label</shortDescription>
+        <value>Cancel Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Update_Case_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Case Status Label</shortDescription>
+        <value>Update Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Code</shortDescription>
+        <value>Agent Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_DOB</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer DOB</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_NID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer NID</shortDescription>
+        <value>Buyer NID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer Name</shortDescription>
+        <value>Buyer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Date</shortDescription>
+        <value>Cancel Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Effective_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Expiry_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Expiry Date</shortDescription>
+        <value>Expiry Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Company</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Company</shortDescription>
+        <value>Insurance Company</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment ID</shortDescription>
+        <value>Payment ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Policy_Number</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Policy Number</shortDescription>
+        <value>Policy Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Premium_Free</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Premium Free</shortDescription>
+        <value>Premium Free</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Name</shortDescription>
+        <value>Product Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sales_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Channel</shortDescription>
+        <value>Sales Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Id</shortDescription>
+        <value>User ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Info_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Info Error</shortDescription>
+        <value>Insurance Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement Date Required Message</shortDescription>
+        <value>DISB_DT is required</value>
+    </labels>
+<labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>vi</language>
         <protected>false</protected>
@@ -14436,4 +15566,5 @@
         <shortDescription>GA Code Required Field</shortDescription>
         <value>General Assignment Code là bắt buộc.</value>
     </labels>
+
 </CustomLabels>
