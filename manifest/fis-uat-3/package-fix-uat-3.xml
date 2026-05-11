@@ -20,6 +20,10 @@
 	    <members>FEC_CaseRemarkController</members>
 	    <members>FEC_CaseTriggerHandler</members>
 	    <members>FEC_PinResetHandler</members>
+	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
+	    <members>FEC_NotificationHistoryController</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -40,6 +44,10 @@
 	    <members>fec_allocationHistory</members>
 	    <members>fec_RoutingAssignment</members>
 	    <members>fec_PinResetView</members>
+	    <members>fec_MainInfoLoanAccount</members>
+	    <members>fe_Notification_History</members>
+	    <members>fec_NocChannelConfig</members>
+	    <members>fec_OriginalInformation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
