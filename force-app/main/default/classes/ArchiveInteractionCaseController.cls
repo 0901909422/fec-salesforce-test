@@ -59,14 +59,12 @@ public with sharing class ArchiveInteractionCaseController {
                     interactionCaseId = interractionCases[0].Id;
 
                 } else {
+                    // archiveCases >> Interaction Case
                     List<AthenaCases__x> archiveCases;
                     if (Test.isRunningTest() && mockExternalRecords != null) {
                         archiveCases = mockExternalRecords;
                     } else {
-                        archiveCases = [SELECT Id, ExternalId, s3_path__c, 
-                                        migration_source__c, case_id__c 
-                                        FROM AthenaCases__x 
-                                        WHERE case_id__c = :archiveExternalInter];
+                        archiveCases = ArchiveCaseController.queryArchiveCases(null, archiveExternalInter);
 
                         if (archiveCases.isEmpty()) {
                             hasError = true;
@@ -79,14 +77,6 @@ public with sharing class ArchiveInteractionCaseController {
                 }
 
                 if (interactionCaseId != null) {
-                    // Id Current Case and interactionCaseId are the same Id
-                    // It means it is the Interaction Case >> No need to update this field
-                    if (caseIns.Id != interactionCaseId 
-                        && String.isBlank(caseIns.FEC_Interaction__c)) {
-                        // Update current Case with the Interaction reference
-                        caseIns.FEC_Interaction__c = interactionCaseId;
-                        update caseIns;
-                    }
 
                     // Redirect to the Interaction Case
                     PageReference pageRef = new PageReference('/' + interactionCaseId);

@@ -37,6 +37,7 @@ public with sharing class ArchiveCaseController {
         'FEC_Asset__c' => 'FEC_Case__c',
         'FEC_Application_History__c' => 'FEC_Case__c',
         'FEC_KYC_Result__c' => 'FEC_Case__c',
+        'FEC_Customer_History__c' => 'FEC_Case__c',
         // Lookup relationships to Case
         'FEC_Address_Info__c' => 'FEC_Case__c',
         'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
@@ -110,14 +111,8 @@ public with sharing class ArchiveCaseController {
             String sfIdForExternalRec = athenaCaseRecord.Id;
             System.debug('sfIdForExternalRec ' + sfIdForExternalRec);
 
-            if (Test.isRunningTest() && mockExternalRecords != null) {
-                archiveCases = mockExternalRecords;
-            } else {
-                archiveCases = [SELECT Id, ExternalId, s3_path__c, 
-                                migration_source__c, case_id__c 
-                                FROM AthenaCases__x 
-                                WHERE Id = :sfIdForExternalRec];
-            }
+            if (Test.isRunningTest() && mockExternalRecords != null) archiveCases = mockExternalRecords;
+            else archiveCases = queryArchiveCases(sfIdForExternalRec, null);
 
             if (archiveCases.isEmpty()) {
                 hasError = true;
@@ -146,6 +141,29 @@ public with sharing class ArchiveCaseController {
             System.debug('ArchiveCaseController error: ' + ex.getMessage() + '\n' + ex.getStackTraceString());
             return null;
         }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Query Archive Cases
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static List<AthenaCases__x> queryArchiveCases(String sfIdForExternalRec, 
+                                                        String archiveExternalInter) {
+
+        String queryString = 'SELECT Id, ExternalId, s3_path__c,' 
+                                + ' migration_source__c, case_id__c'
+                                + ' FROM AthenaCases__x ' 
+                                + ' WHERE';
+        if (String.isNotBlank(sfIdForExternalRec)) queryString += ' Id = ' + '\''+ sfIdForExternalRec + '\'';
+        else if (String.isNotBlank(archiveExternalInter)) queryString += ' case_id__c = ' + '\''+ archiveExternalInter + '\'';
+
+        List<AthenaCases__x> archiveCases = Database.query(queryString);
+        return archiveCases;
     }
 
     /*------------------------------------------------------------
@@ -311,17 +329,24 @@ public with sharing class ArchiveCaseController {
             System.debug('mapIdCanAccess ' + mapIdCanAccess);
 
             buildCaseFieldsAndValue(fieldMap, mapOfFieldAndValue, caseIns, mapIdCanAccess);
+            Id recTypeIdOfThisRecord = getRecordTypeId(recTypeName);
             caseIns.ArchiveExternalId__c = archieveExternalId;
             caseIns.FEC_ID_Search__c = archieveExternalId;
-            caseIns.RecordTypeId = getRecordTypeId(recTypeName);
+            caseIns.RecordTypeId = recTypeIdOfThisRecord;
             caseIns.ArchiveAttachment__c = attachmentStr;
             caseIns.ArchiveMigrationSource__c = migrationSource;
             processSpecialValueForCase(caseIns);
             caseId = saveCaseRecord(caseIns);
 
             // Insert child records (master-detail) after Case is created
-            if (caseId != null && !mapChildRecords.isEmpty()) {
-                insertChildRecords(caseId, mapChildRecords);
+            if (caseId != null) {
+                Id interactionRtId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
+
+                if (!mapChildRecords.isEmpty()) insertChildRecords(caseId, mapChildRecords, 
+                                                                recTypeIdOfThisRecord, interactionRtId);
+
+                Id interactionCaseId = getInteractionCaseId(archieveExternalId, interactionRtId);
+                updatesSpecialValueForCases(interactionCaseId, interactionRtId);
             }
         }
 
@@ -357,7 +382,6 @@ public with sharing class ArchiveCaseController {
         String newSubCategoryAPIName = 'FEC_New_SubCategory__c';
         String newSubCodeAPIName = 'FEC_New_SubCode__c';
         String businessProcessAPIName = 'FEC_Business_Process__c';
-        String customerHistoryAPIName = 'FEC_Customer_History__c';
 
         // --- Simple code-based lookups ---
         // Key in mapRelationshipObjects is now the SObject API name (same as field name in new JSON format)
@@ -400,24 +424,6 @@ public with sharing class ArchiveCaseController {
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
             businessProcessAPIName, businessProcessAPIName.toLowerCase(),
             businessProcessAPIName, codeFiled);
-
-        // --- FEC_Account_or_Contract__c → FEC_Customer_History__c matched by Name (account number) ---
-        if (mapRelationshipObjects.containsKey(customerHistoryAPIName)) {
-            Map<String, Object> relObj = mapRelationshipObjects.get(customerHistoryAPIName);
-            String accountName = (String) relObj.get('Name');
-            if (String.isNotBlank(accountName)) {
-                List<FEC_Customer_History__c> matches = [
-                    SELECT Id FROM FEC_Customer_History__c
-                    WHERE Name = :accountName LIMIT 1
-                ];
-                if (!matches.isEmpty()) {
-                    mapOfFieldAndValue.put('fec_account_or_contract__c', matches[0].Id);
-                } else {
-                    Id tempId = insertTempRecord(customerHistoryAPIName, relObj);
-                    mapOfFieldAndValue.put('fec_account_or_contract__c', tempId);
-                }
-            }
-        }
 
         // --- FEC_Interaction__c → Case matched by ArchiveExternalId__c ---
         // In new JSON format, the key might be "FEC_Interaction__c" as an object
@@ -606,7 +612,7 @@ public with sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static String extractNestedCode(Map<String, Object> parentObj, String relKey, String codeField) {
+    public static String extractNestedCode(Map<String, Object> parentObj, String relKey, String codeField) {
         Object nested = parentObj.get(relKey);
         if (nested == null) return null;
         try {
@@ -625,7 +631,7 @@ public with sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/04/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static Id resolveIdByCode(String sObjectApiName, String codeField, String codeValue) {
+    public static Id resolveIdByCode(String sObjectApiName, String codeField, String codeValue) {
         if (String.isBlank(codeValue)) return null;
         String soql = 'SELECT Id FROM ' + sObjectApiName + ' WHERE ' + codeField + ' = :codeValue LIMIT 1';
         List<SObject> results = Database.query(soql);
@@ -870,10 +876,14 @@ public with sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
-    private static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords) {
+    private static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords, 
+                                            Id recTypeIdOfThisRecord, Id interactionRtId) {
 
         for (String childKey : mapChildRecords.keySet()) {
             String sObjectApiName = childKey;
+            if (sObjectApiName == 'FEC_Customer_History__c' 
+                && recTypeIdOfThisRecord != interactionRtId) continue;
+
             String caseFieldName = CHILD_OBJECT_CASE_FIELD.get(sObjectApiName);
             if (String.isBlank(caseFieldName)) {
                 System.debug('insertChildRecords: No case field mapping for ' + sObjectApiName);
@@ -1031,6 +1041,73 @@ public with sharing class ArchiveCaseController {
         }
 
         return jsonDevFieldTmp;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Interaction Case Id
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Id getInteractionCaseId(String archieveExternalId, Id interactionRtId) {
+        Id interactionCaseId;
+        List<Case> interractionCases = [SELECT Id FROM Case 
+                                        WHERE ArchiveExternalId__c = :archieveExternalId 
+                                        AND RecordTypeId = :interactionRtId
+                                        LIMIT 1];
+
+        interactionCaseId = !interractionCases.isEmpty() ? interractionCases[0].Id : null;
+        return interactionCaseId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Updates Special Value For Cases
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void updatesSpecialValueForCases(Id interactionCaseId, Id interactionRtId) {
+        List<Case> listCaseUpdated = new List<Case>();
+        List<Case> interactionCase = [SELECT Id, ArchiveInteractionId__c 
+                                        FROM Case 
+                                        WHERE Id = :interactionCaseId 
+                                        AND RecordTypeId = :interactionRtId
+                                        LIMIT 1];
+        if (!interactionCase.isEmpty()) {
+            Case interactionIns = interactionCase[0];
+            String archiveInteractionId = interactionIns.ArchiveInteractionId__c;
+
+            List<FEC_Customer_History__c> newHistoryInserted = [SELECT Id 
+                                                                FROM FEC_Customer_History__c 
+                                                                WHERE FEC_Case__c = :interactionCaseId 
+                                                                LIMIT 1];
+            FEC_Customer_History__c customerHis = !newHistoryInserted.isEmpty() 
+                                                    ? newHistoryInserted[0] : null;
+            System.debug('customerHis ' + customerHis);
+
+            for (Case caseIns : [SELECT Id, FEC_Interaction__c, RecordTypeId, 
+                                FEC_Account_or_Contract__c 
+                                FROM CASE 
+                                WHERE ArchiveInteractionId__c = :archiveInteractionId]) {
+
+                if (caseIns.RecordTypeId != interactionRtId && String.isNotBlank(caseIns.FEC_Interaction__c))
+                    caseIns.FEC_Interaction__c = interactionCaseId;
+
+                if (customerHis != null && String.isNotBlank(caseIns.FEC_Account_or_Contract__c))
+                    caseIns.FEC_Account_or_Contract__c = customerHis.Id;
+                
+                listCaseUpdated.add(caseIns);
+            }
+            
+            System.debug('listCaseUpdated ' + listCaseUpdated);
+            if (!listCaseUpdated.isEmpty()) update listCaseUpdated;
+        }
     }
 
     // public static String jsonOfResponse() {

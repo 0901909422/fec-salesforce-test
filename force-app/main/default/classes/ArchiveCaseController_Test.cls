@@ -197,4 +197,36 @@ global with sharing class ArchiveCaseController_Test {
             PageReference result = controller.fetchAndRedirect();
         Test.stopTest();
     }
+
+    @isTest
+    static void testQueryArchiveCases() {
+        AthenaCases__x fakeRecord = new AthenaCases__x(ExternalId = 'EXAMPLE-999', 
+                                                    case_id__c = 'EXAMPLE-999', 
+                                                    s3_path__c = 'test', 
+                                                    migration_source__c = 'test');
+        Test.startTest();
+            ArchiveCaseController.queryArchiveCases(null, 'EXAMPLE-999');
+        Test.stopTest();
+    }
+
+    @isTest
+    static void testResolveIdByCode() {
+        Test.startTest();
+            ArchiveCaseController.resolveIdByCode('FEC_Product_Type__c', 'FEC_Code__c', 'test');
+        Test.stopTest();
+    }
+
+    @IsTest
+    static void testExtractNestedCode_Success() {
+        Map<String, Object> childMap = new Map<String, Object>{
+            'ProductCode' => 'SKU-123'
+        };
+        Map<String, Object> parentMap = new Map<String, Object>{
+            'ProductDetails' => childMap
+        };
+
+        Test.startTest();
+            String result = ArchiveCaseController.extractNestedCode(parentMap, 'ProductDetails', 'ProductCode');
+        Test.stopTest();
+    }
 }
