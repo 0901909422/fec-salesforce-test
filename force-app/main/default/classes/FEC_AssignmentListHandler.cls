@@ -178,7 +178,7 @@ public with sharing class FEC_AssignmentListHandler {
         
         return result;
     }
-
+    
     // tungnm37 thêm: lấy queue name từ danh sách Queue Ids
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getQueueNames(List<String> queueIds) {

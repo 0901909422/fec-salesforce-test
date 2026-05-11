@@ -70,7 +70,7 @@ public without sharing class FEC_IPPClosureController {
                        FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                        FEC_IPP_Current_Balance__c, FEC_IPP_Interest_Rate__c, FEC_IPP_Term__c,
                        FEC_IPP_Current_Term__c, FEC_Customer_History__c,
-                       FEC_Customer_History__r.FEC_Account_Number__c
+                       FEC_Customer_History__r.FEC_Account_Number__c, FEC_IPP_Closure_Case__c
                 FROM FEC_IPP__c
                 WHERE Id = :caseIppToClose
                   AND (FEC_IPP_Closure_Case__c = null OR FEC_IPP_Closure_Case__c = :caseId
@@ -138,6 +138,7 @@ public without sharing class FEC_IPPClosureController {
                 accessibleIpps = filtered;
             }
         }
+        accessibleIpps = filterBlockedAndDuplicateIpps(caseId, accountNumber, accessibleIpps);
         for (FEC_IPP__c rec : accessibleIpps) {
             IPPClosureDTO dto = new IPPClosureDTO();
             dto.Id = rec.Id;
@@ -171,6 +172,8 @@ public without sharing class FEC_IPPClosureController {
         }
         List<FEC_IPP__c> ippRows = [
             SELECT Id, FEC_Customer_History__c, FEC_Customer_History__r.FEC_Account_Number__c,
+                   FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
+                   FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
                    FEC_IPP_Current_Balance__c, FEC_IPP_Closure_Case__c
             FROM FEC_IPP__c
             WHERE Id = :ippId
@@ -194,6 +197,9 @@ public without sharing class FEC_IPPClosureController {
         Set<Id> checkBlocked = new Set<Id>();
         checkBlocked.add(ippId);
         if (!getIppIdsReferencedByOtherCases(caseId, checkBlocked).isEmpty()) {
+            return false;
+        }
+        if (getIppBusinessKeysReferencedByOtherPendingCases(caseId, accountNumber).contains(getIppBusinessKey(ippRec))) {
             return false;
         }
         if (ippRec.FEC_IPP_Current_Balance__c == null || ippRec.FEC_IPP_Current_Balance__c == 0) {
@@ -260,6 +266,85 @@ public without sharing class FEC_IPPClosureController {
             }
         }
         return blocked;
+    }
+
+    private static List<FEC_IPP__c> filterBlockedAndDuplicateIpps(Id currentCaseId, String accountNumber, List<FEC_IPP__c> ipps) {
+        if (ipps == null || ipps.isEmpty()) {
+            return ipps;
+        }
+        Set<String> blockedBusinessKeys = getIppBusinessKeysReferencedByOtherPendingCases(currentCaseId, accountNumber);
+        Set<String> includedBusinessKeys = new Set<String>();
+        List<FEC_IPP__c> filtered = new List<FEC_IPP__c>();
+        for (FEC_IPP__c r : ipps) {
+            String businessKey = getIppBusinessKey(r);
+            if (blockedBusinessKeys.contains(businessKey) || includedBusinessKeys.contains(businessKey)) {
+                continue;
+            }
+            includedBusinessKeys.add(businessKey);
+            filtered.add(r);
+        }
+        return filtered;
+    }
+
+    private static Set<String> getIppBusinessKeysReferencedByOtherPendingCases(Id currentCaseId, String accountNumber) {
+        Set<String> blockedBusinessKeys = new Set<String>();
+        if (currentCaseId == null || String.isBlank(accountNumber)) {
+            return blockedBusinessKeys;
+        }
+        for (Case c : [
+            SELECT FEC_IPP_To_Close__r.FEC_IPP_Record_No__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_Plan__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_Open_Date__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_First_Due_Date__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_Mature_Date__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_Balance__c,
+                   FEC_IPP_To_Close__r.FEC_IPP_Current_Balance__c
+            FROM Case
+            WHERE FEC_IPP_To_Close__c != null
+              AND Id != :currentCaseId
+              AND FEC_IPP_To_Close__r.FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
+              AND (FEC_Case_Status__c = 'Pending' OR FEC_Case_Status__c LIKE 'Pending -%' OR Status = 'Pending' OR Status LIKE 'Pending%')
+        ]) {
+            blockedBusinessKeys.add(getIppBusinessKey(c.FEC_IPP_To_Close__r));
+        }
+        for (FEC_IPP__c r : [
+            SELECT FEC_IPP_Record_No__c, FEC_IPP_Plan__c, FEC_IPP_Open_Date__c,
+                   FEC_IPP_First_Due_Date__c, FEC_IPP_Mature_Date__c, FEC_IPP_Balance__c,
+                   FEC_IPP_Current_Balance__c
+            FROM FEC_IPP__c
+            WHERE FEC_Customer_History__r.FEC_Account_Number__c = :accountNumber
+              AND FEC_IPP_Closure_Case__c != null
+              AND FEC_IPP_Closure_Case__c != :currentCaseId
+              AND (FEC_IPP_Closure_Case__r.FEC_Case_Status__c = 'Pending'
+                   OR FEC_IPP_Closure_Case__r.FEC_Case_Status__c LIKE 'Pending -%'
+                   OR FEC_IPP_Closure_Case__r.Status = 'Pending'
+                   OR FEC_IPP_Closure_Case__r.Status LIKE 'Pending%')
+        ]) {
+            blockedBusinessKeys.add(getIppBusinessKey(r));
+        }
+        return blockedBusinessKeys;
+    }
+
+    private static String getIppBusinessKey(FEC_IPP__c ippRec) {
+        if (ippRec == null) {
+            return '';
+        }
+        return String.join(new List<String>{
+            normalizeKeyValue(ippRec.FEC_IPP_Record_No__c),
+            normalizeKeyValue(ippRec.FEC_IPP_Plan__c),
+            normalizeKeyValue(ippRec.FEC_IPP_Open_Date__c),
+            normalizeKeyValue(ippRec.FEC_IPP_First_Due_Date__c),
+            normalizeKeyValue(ippRec.FEC_IPP_Mature_Date__c),
+            normalizeKeyValue(ippRec.FEC_IPP_Balance__c),
+            normalizeKeyValue(ippRec.FEC_IPP_Current_Balance__c)
+        }, '|');
+    }
+
+    private static String normalizeKeyValue(Object value) {
+        if (value == null) {
+            return '';
+        }
+        return String.valueOf(value).trim();
     }
 
     private static Boolean isReleasedClosureParentCaseStatus(Id linkedCaseId) {

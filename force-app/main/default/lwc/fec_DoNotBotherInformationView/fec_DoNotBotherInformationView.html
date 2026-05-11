@@ -6,7 +6,8 @@
 
             <div class="slds-accordion__summary">
 
-                <button class="slds-button slds-button_reset slds-accordion__summary-action" onclick={toggleSection} disabled={isDisabled}>
+                <button class="slds-button slds-button_reset slds-accordion__summary-action" onclick={toggleSection}
+                    disabled={isDisabled}>
 
                     <!-- ICON (giống hệt standard) -->
                     <lightning-icon icon-name="utility:chevrondown" size="x-small" class={iconClass}>
@@ -28,7 +29,7 @@
 
             <template if:true={isOpen}>
                 <div class="accordion-body">
-                  
+
                     <!-- NO DATA -->
                     <template if:true={noData}>
                         <div class="slds-text-color_error slds-p-around_small">
@@ -38,10 +39,16 @@
 
                     <!-- TABLE -->
                     <template if:true={showTable}>
-                        <lightning-datatable key-field="id" data={pagedData} columns={columns} hide-checkbox-column
+                        <!-- <lightning-datatable key-field="id" data={pagedData} columns={columns} hide-checkbox-column
                             show-row-number-column sorted-by={sortedBy} sorted-direction={sortDirection}
                             onsort={handleSort}>
-                        </lightning-datatable>
+                        </lightning-datatable> -->
+
+                        <c-fec_-custom-do-not-bother-view-datatable key-field="id" data={pagedData} columns={columns}
+                            ontogglemask={handleToggleMask} hide-checkbox-column show-row-number-column
+                            sorted-by={sortedBy} sorted-direction={sortDirection} onsort={handleSort}>
+                        </c-fec_-custom-do-not-bother-view-datatable>
+
 
                         <!-- PAGINATION -->
                         <template if:true={showPagination}>

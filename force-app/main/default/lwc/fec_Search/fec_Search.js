@@ -27,6 +27,7 @@ import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_C
 import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
 import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
 import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -68,6 +69,8 @@ const FIELDS_TO_CHECK = [
     'FEC_Search_Customer_Number__c'
 ];
 
+const FEC_TEST_API_SERVICE_ERROR_ACCOUNT = "0001500010000005555";
+
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
@@ -88,6 +91,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   showNewCaseModal = false;
   isSkip;
   isTestApiCase = false;
+  isSearchServiceError = false;
   // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   caseRecordTypeName;
   wiredCaseResult;
@@ -103,6 +107,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
   FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
   FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
+  FEC_Common_No_Results_Label = FEC_Common_No_Results_Label;
 
   labels = {
     errorCalloutInsuranceMsg: FEC_Error_Callout_Insurance,
@@ -694,6 +699,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   handleClear() {
     this.isNoCustomerFound = false;
+    this.isSearchServiceError = false;
     this.nationalId = null;
     this.phoneNumber = null;
     this.applicationId = null;
@@ -793,9 +799,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.processSearch() 
   }
 
+  _isSimulatedTestApiServiceErrorSearch() {
+    if (!this.isTestApiCase) {
+      return false;
+    }
+    const acc =
+      this.accountNumber != null && this.accountNumber !== undefined
+        ? String(this.accountNumber).trim()
+        : "";
+    return acc === FEC_TEST_API_SERVICE_ERROR_ACCOUNT;
+  }
+
   async processSearch() {
     this.isLoaded = false;
     this.isNoCustomerFound = false;
+    this.isSearchServiceError = false;
 
     // reset data
     this.cardData = [];
@@ -913,7 +931,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.loanCash24Data.length > 0 ||
         this.insuranceData.length > 0;
 
-      this.isNoCustomerFound = !hasAnyData;
+      if (this._isSimulatedTestApiServiceErrorSearch()) {
+        this.cardData = [];
+        this.loanData = [];
+        this.loanContractData = [];
+        this.loanB2Data = [];
+        this.loanCash24Data = [];
+        this.insuranceData = [];
+        this.ubankData = [];
+        this._customers = [];
+        this.isSearchServiceError = true;
+        this.isNoCustomerFound = true;
+      } else {
+        this.isSearchServiceError = false;
+        this.isNoCustomerFound = !hasAnyData;
+      }
 
     } catch (e) {
       console.error("Error fetching data:", e);
@@ -1554,8 +1586,8 @@ hasAnySearchCriteria(params) {
               composed: true,
             }),
           );
-
         }
+
         let categories = [];
 
         // 1. Check Card data
@@ -1703,13 +1735,21 @@ hasAnySearchCriteria(params) {
     return null;
   } 
 
-  // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
-    return false;
+    return (
+      (this.isCreateCaseTab ||
+        this.tabName === 'FEC_Customer_Search' ||
+        this.tabName === 'FEC_Account_Contract_Search' ||
+        !!this.recordId) &&
+      !this.isSearchServiceError
+    );
   }
 
   get noCustomerFoundMessage() {
-    return this.labels.errorApiMessage;
+    if (this.isSearchServiceError) {
+      return FEC_MSG_Service_Error_Label;
+    }
+    return FEC_Common_No_Results_Label;
   }
 
   get noCustomerFoundClass() {
