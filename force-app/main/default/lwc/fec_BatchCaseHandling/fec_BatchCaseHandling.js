@@ -15,20 +15,183 @@ import saveResultFile from "@salesforce/apex/FEC_BatchCaseHandlingController.sav
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import { STR_EMPTY } from "c/fec_CommonConst";
+import { arrayBufferToBase64 } from "c/fec_CommonUtils";
+import FEC_ACTION_CANCEL from "@salesforce/label/c.FEC_ACTION_CANCEL";
+import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
+import FEC_Go_Button_Label from "@salesforce/label/c.FEC_Go_Button_Label";
+import FEC_Go_to_page_label from "@salesforce/label/c.FEC_Go_to_page_label";
+import FEC_Btn_Previous from "@salesforce/label/c.FEC_Btn_Previous";
+import FEC_Btn_Next from "@salesforce/label/c.FEC_Btn_Next";
+import FEC_Button_Refresh from "@salesforce/label/c.FEC_Button_Refresh";
+import FEC_TransferCall_Spinner_Loading from "@salesforce/label/c.FEC_TransferCall_Spinner_Loading";
+import FEC_BCH_RequestTimeout from "@salesforce/label/c.FEC_BCH_RequestTimeout";
+import FEC_BCH_NoDataExport from "@salesforce/label/c.FEC_BCH_NoDataExport";
+import FEC_BCH_NoDataFound from "@salesforce/label/c.FEC_BCH_NoDataFound";
+import FEC_BCH_ExportSuccess from "@salesforce/label/c.FEC_BCH_ExportSuccess";
+import FEC_BCH_ExportFailed from "@salesforce/label/c.FEC_BCH_ExportFailed";
+import FEC_BCH_ImportSuccess from "@salesforce/label/c.FEC_BCH_ImportSuccess";
+import FEC_BCH_ImportFailed from "@salesforce/label/c.FEC_BCH_ImportFailed";
+import FEC_BCH_RequireFile from "@salesforce/label/c.FEC_BCH_RequireFile";
+import FEC_BCH_InvalidFileFormat from "@salesforce/label/c.FEC_BCH_InvalidFileFormat";
+import FEC_BCH_FileTooLarge from "@salesforce/label/c.FEC_BCH_FileTooLarge";
+import FEC_BCH_FileNoData from "@salesforce/label/c.FEC_BCH_FileNoData";
+import FEC_BCH_HeaderInvalid from "@salesforce/label/c.FEC_BCH_HeaderInvalid";
+import FEC_BCH_BpRequired from "@salesforce/label/c.FEC_BCH_BpRequired";
+import FEC_BCH_NoBpFound from "@salesforce/label/c.FEC_BCH_NoBpFound";
+import FEC_BCH_TooManyRows from "@salesforce/label/c.FEC_BCH_TooManyRows";
+import FEC_BCH_ExportNo from "@salesforce/label/c.FEC_BCH_ExportNo";
+import FEC_BCH_ExportYes from "@salesforce/label/c.FEC_BCH_ExportYes";
+import FEC_BCH_AttachHas from "@salesforce/label/c.FEC_BCH_AttachHas";
+import FEC_BCH_AttachNo from "@salesforce/label/c.FEC_BCH_AttachNo";
+import FEC_BCH_ActionPickPlaceholder from "@salesforce/label/c.FEC_BCH_ActionPickPlaceholder";
+import FEC_BCH_ActionDownload from "@salesforce/label/c.FEC_BCH_ActionDownload";
+import FEC_BCH_ActionExportAll from "@salesforce/label/c.FEC_BCH_ActionExportAll";
+import FEC_BCH_ActionExportSelected from "@salesforce/label/c.FEC_BCH_ActionExportSelected";
+import FEC_BCH_ActionImportUpdate from "@salesforce/label/c.FEC_BCH_ActionImportUpdate";
+import FEC_BCH_ResultHdr_RoutingAction from "@salesforce/label/c.FEC_BCH_ResultHdr_RoutingAction";
+import FEC_BCH_ResultHdr_Remarks from "@salesforce/label/c.FEC_BCH_ResultHdr_Remarks";
+import FEC_BCH_ResultHdr_Status from "@salesforce/label/c.FEC_BCH_ResultHdr_Status";
+import FEC_BCH_ResultHdr_Errors from "@salesforce/label/c.FEC_BCH_ResultHdr_Errors";
+import FEC_BCH_ResultHdr_AssignmentId from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentId";
+import FEC_BCH_ResultHdr_AssignmentRouting from "@salesforce/label/c.FEC_BCH_ResultHdr_AssignmentRouting";
+import FEC_BCH_FilterPickProperty from "@salesforce/label/c.FEC_BCH_FilterPickProperty";
+import FEC_BCH_FilterPickOperator from "@salesforce/label/c.FEC_BCH_FilterPickOperator";
+import FEC_BCH_NoticeTitle from "@salesforce/label/c.FEC_BCH_NoticeTitle";
+import FEC_BCH_FilterMetaLoadFailed from "@salesforce/label/c.FEC_BCH_FilterMetaLoadFailed";
+import FEC_BCH_SearchFailedTitle from "@salesforce/label/c.FEC_BCH_SearchFailedTitle";
+import FEC_BCH_DownloadFailedTitle from "@salesforce/label/c.FEC_BCH_DownloadFailedTitle";
+import FEC_BCH_AttachmentDownloadFailedBody from "@salesforce/label/c.FEC_BCH_AttachmentDownloadFailedBody";
+import FEC_BCH_ExportToastTitle from "@salesforce/label/c.FEC_BCH_ExportToastTitle";
+import FEC_BCH_SelectAtLeastOneCase from "@salesforce/label/c.FEC_BCH_SelectAtLeastOneCase";
+import FEC_BCH_DownloadToastTitle from "@salesforce/label/c.FEC_BCH_DownloadToastTitle";
+import FEC_BCH_CannotCreateExportFile from "@salesforce/label/c.FEC_BCH_CannotCreateExportFile";
+import FEC_BCH_ZipCreatedSuccess from "@salesforce/label/c.FEC_BCH_ZipCreatedSuccess";
+import FEC_BCH_ZipCreateFailedBody from "@salesforce/label/c.FEC_BCH_ZipCreateFailedBody";
+import FEC_BCH_LoadFailedTitle from "@salesforce/label/c.FEC_BCH_LoadFailedTitle";
+import FEC_BCH_InvalidPageTitle from "@salesforce/label/c.FEC_BCH_InvalidPageTitle";
+import FEC_BCH_InvalidPageBody from "@salesforce/label/c.FEC_BCH_InvalidPageBody";
+import FEC_BCH_UnexpectedError from "@salesforce/label/c.FEC_BCH_UnexpectedError";
+import FEC_BCH_ImportUnablePrefix from "@salesforce/label/c.FEC_BCH_ImportUnablePrefix";
+import FEC_BCH_DataFileFallback from "@salesforce/label/c.FEC_BCH_DataFileFallback";
+import FEC_BCH_EmptyCasesHint from "@salesforce/label/c.FEC_BCH_EmptyCasesHint";
+import FEC_BCH_DocumentLinkLabel from "@salesforce/label/c.FEC_BCH_DocumentLinkLabel";
+import FEC_BCH_BpItemSingular from "@salesforce/label/c.FEC_BCH_BpItemSingular";
+import FEC_BCH_BpItemPlural from "@salesforce/label/c.FEC_BCH_BpItemPlural";
+import FEC_BCH_BpItemsSortedSuffix from "@salesforce/label/c.FEC_BCH_BpItemsSortedSuffix";
+import FEC_BCH_Section_FilterProperties from "@salesforce/label/c.FEC_BCH_Section_FilterProperties";
+import FEC_BCH_FilterHelpAnd from "@salesforce/label/c.FEC_BCH_FilterHelpAnd";
+import FEC_BCH_FilterResetHint from "@salesforce/label/c.FEC_BCH_FilterResetHint";
+import FEC_BCH_AddFilterRow from "@salesforce/label/c.FEC_BCH_AddFilterRow";
+import FEC_BCH_FilterData from "@salesforce/label/c.FEC_BCH_FilterData";
+import FEC_BCH_Reset from "@salesforce/label/c.FEC_BCH_Reset";
+import FEC_BCH_FilterPropertyField from "@salesforce/label/c.FEC_BCH_FilterPropertyField";
+import FEC_BCH_PropertyPlaceholder from "@salesforce/label/c.FEC_BCH_PropertyPlaceholder";
+import FEC_BCH_OperatorField from "@salesforce/label/c.FEC_BCH_OperatorField";
+import FEC_BCH_ValueField from "@salesforce/label/c.FEC_BCH_ValueField";
+import FEC_BCH_RemoveRow from "@salesforce/label/c.FEC_BCH_RemoveRow";
+import FEC_BCH_Section_FilteredCases from "@salesforce/label/c.FEC_BCH_Section_FilteredCases";
+import FEC_BCH_SelectAll from "@salesforce/label/c.FEC_BCH_SelectAll";
+import FEC_BCH_Col_CustomerType from "@salesforce/label/c.FEC_BCH_Col_CustomerType";
+import FEC_BCH_Col_CaseId from "@salesforce/label/c.FEC_BCH_Col_CaseId";
+import FEC_BCH_Col_Category from "@salesforce/label/c.FEC_BCH_Col_Category";
+import FEC_BCH_Col_SubCategory from "@salesforce/label/c.FEC_BCH_Col_SubCategory";
+import FEC_BCH_Col_SubCode from "@salesforce/label/c.FEC_BCH_Col_SubCode";
+import FEC_BCH_Col_CaseStatus from "@salesforce/label/c.FEC_BCH_Col_CaseStatus";
+import FEC_BCH_Col_CaseCreatedOn from "@salesforce/label/c.FEC_BCH_Col_CaseCreatedOn";
+import FEC_BCH_Col_LastUpdatedOn from "@salesforce/label/c.FEC_BCH_Col_LastUpdatedOn";
+import FEC_BCH_Col_Attachments from "@salesforce/label/c.FEC_BCH_Col_Attachments";
+import FEC_BCH_Col_AttachmentDownloaded from "@salesforce/label/c.FEC_BCH_Col_AttachmentDownloaded";
+import FEC_BCH_PageSize from "@salesforce/label/c.FEC_BCH_PageSize";
+import FEC_BCH_TotalPrefix from "@salesforce/label/c.FEC_BCH_TotalPrefix";
+import FEC_BCH_Section_Action from "@salesforce/label/c.FEC_BCH_Section_Action";
+import FEC_BCH_SelectActions from "@salesforce/label/c.FEC_BCH_SelectActions";
+import FEC_BCH_CaseSet from "@salesforce/label/c.FEC_BCH_CaseSet";
+import FEC_BCH_UploadFiles from "@salesforce/label/c.FEC_BCH_UploadFiles";
+import FEC_BCH_SelectedCountPrefix from "@salesforce/label/c.FEC_BCH_SelectedCountPrefix";
+import FEC_BCH_Err_SelectAction from "@salesforce/label/c.FEC_BCH_Err_SelectAction";
+import FEC_BCH_Err_SelectCaseSet from "@salesforce/label/c.FEC_BCH_Err_SelectCaseSet";
+import FEC_BCH_Section_MyBulkActions from "@salesforce/label/c.FEC_BCH_Section_MyBulkActions";
+import FEC_BCH_Col_FileName from "@salesforce/label/c.FEC_BCH_Col_FileName";
+import FEC_BCH_Col_UploadedOn from "@salesforce/label/c.FEC_BCH_Col_UploadedOn";
+import FEC_BCH_Col_UploadedBy from "@salesforce/label/c.FEC_BCH_Col_UploadedBy";
+import FEC_BCH_Col_TotalRecords from "@salesforce/label/c.FEC_BCH_Col_TotalRecords";
+import FEC_BCH_Col_TotalSuccess from "@salesforce/label/c.FEC_BCH_Col_TotalSuccess";
+import FEC_BCH_Col_TotalFailed from "@salesforce/label/c.FEC_BCH_Col_TotalFailed";
+import FEC_BCH_Col_Status from "@salesforce/label/c.FEC_BCH_Col_Status";
+import FEC_BCH_Col_FailureReason from "@salesforce/label/c.FEC_BCH_Col_FailureReason";
+import FEC_BCH_Col_Result from "@salesforce/label/c.FEC_BCH_Col_Result";
+import FEC_BCH_NoRecordsFound from "@salesforce/label/c.FEC_BCH_NoRecordsFound";
+import FEC_BCH_RemoveFile from "@salesforce/label/c.FEC_BCH_RemoveFile";
+import FEC_BCH_SortAlt from "@salesforce/label/c.FEC_BCH_SortAlt";
+import FEC_BCH_SelectRow from "@salesforce/label/c.FEC_BCH_SelectRow";
+import FEC_BCH_Modal_BpSelectionTitle from "@salesforce/label/c.FEC_BCH_Modal_BpSelectionTitle";
+import FEC_BCH_Modal_BpColName from "@salesforce/label/c.FEC_BCH_Modal_BpColName";
+import FEC_BCH_ExportWithAllProperties from "@salesforce/label/c.FEC_BCH_ExportWithAllProperties";
+import FEC_BCH_FooterOf from "@salesforce/label/c.FEC_BCH_FooterOf";
 
-function arrayBufferToBase64(buffer) {
-  if (!buffer) {
-    return "";
-  }
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-}
+const BATCH_UI = Object.freeze({
+  loading: FEC_TransferCall_Spinner_Loading,
+  sectionFilterProperties: FEC_BCH_Section_FilterProperties,
+  filterHelpAnd: FEC_BCH_FilterHelpAnd,
+  filterResetHint: FEC_BCH_FilterResetHint,
+  addFilterRow: FEC_BCH_AddFilterRow,
+  filterData: FEC_BCH_FilterData,
+  reset: FEC_BCH_Reset,
+  filterPropertyField: FEC_BCH_FilterPropertyField,
+  propertyPlaceholder: FEC_BCH_PropertyPlaceholder,
+  operatorField: FEC_BCH_OperatorField,
+  operatorPlaceholder: FEC_BCH_OperatorField,
+  valueField: FEC_BCH_ValueField,
+  valuePlaceholder: FEC_BCH_ValueField,
+  removeRow: FEC_BCH_RemoveRow,
+  sectionFilteredCases: FEC_BCH_Section_FilteredCases,
+  selectAll: FEC_BCH_SelectAll,
+  colCustomerType: FEC_BCH_Col_CustomerType,
+  colCaseId: FEC_BCH_Col_CaseId,
+  colCategory: FEC_BCH_Col_Category,
+  colSubCategory: FEC_BCH_Col_SubCategory,
+  colSubCode: FEC_BCH_Col_SubCode,
+  colCaseStatus: FEC_BCH_Col_CaseStatus,
+  colCaseCreatedOn: FEC_BCH_Col_CaseCreatedOn,
+  colLastUpdatedOn: FEC_BCH_Col_LastUpdatedOn,
+  colAttachments: FEC_BCH_Col_Attachments,
+  colAttachmentDownloaded: FEC_BCH_Col_AttachmentDownloaded,
+  pageSize: FEC_BCH_PageSize,
+  totalPrefix: FEC_BCH_TotalPrefix,
+  previous: FEC_Btn_Previous,
+  next: FEC_Btn_Next,
+  sectionAction: FEC_BCH_Section_Action,
+  selectActions: FEC_BCH_SelectActions,
+  caseSet: FEC_BCH_CaseSet,
+  uploadFiles: FEC_BCH_UploadFiles,
+  submit: FEC_Button_Submit,
+  selectedCountPrefix: FEC_BCH_SelectedCountPrefix,
+  errSelectAction: FEC_BCH_Err_SelectAction,
+  errSelectCaseSet: FEC_BCH_Err_SelectCaseSet,
+  errAttachFile: FEC_BCH_RequireFile,
+  sectionMyBulkActions: FEC_BCH_Section_MyBulkActions,
+  refresh: FEC_Button_Refresh,
+  colFileName: FEC_BCH_Col_FileName,
+  colUploadedOn: FEC_BCH_Col_UploadedOn,
+  colUploadedBy: FEC_BCH_Col_UploadedBy,
+  colTotalRecords: FEC_BCH_Col_TotalRecords,
+  colTotalSuccess: FEC_BCH_Col_TotalSuccess,
+  colTotalFailed: FEC_BCH_Col_TotalFailed,
+  colStatus: FEC_BCH_Col_Status,
+  colFailureReason: FEC_BCH_Col_FailureReason,
+  colResult: FEC_BCH_Col_Result,
+  noRecordsFound: FEC_BCH_NoRecordsFound,
+  goToPage: FEC_Go_to_page_label,
+  go: FEC_Go_Button_Label,
+  modalBpTitle: FEC_BCH_Modal_BpSelectionTitle,
+  modalBpColName: FEC_BCH_Modal_BpColName,
+  sort: FEC_BCH_SortAlt,
+  selectRow: FEC_BCH_SelectRow,
+  exportWithAllProperties: FEC_BCH_ExportWithAllProperties,
+  cancel: FEC_ACTION_CANCEL,
+  footerOf: FEC_BCH_FooterOf,
+  noBpFound: FEC_BCH_NoBpFound
+});
 
 const PAGE_SIZE_OPTIONS = [
   { label: "10", value: "10" },
@@ -38,33 +201,26 @@ const PAGE_SIZE_OPTIONS = [
   { label: "50", value: "50" }
 ];
 const ZIP_TIMEOUT_MS = 60 * 1000;
-const ZIP_TIMEOUT_MESSAGE =
-  "Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.";
+const ZIP_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const EXCEL_FILE_TIMEOUT_MS = 30 * 1000;
-const EXCEL_FILE_TIMEOUT_MESSAGE =
-  "Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.";
+const EXCEL_FILE_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const ACTION_DOWNLOAD_ATTACHMENTS = "download_attachments";
 const ACTION_EXPORT_ALL = "export_all";
 const ACTION_EXPORT_SELECTED = "export_selected";
 const ACTION_IMPORT_UPDATE_DATA = "import_update_data";
-const MSG_NO_DATA_EXPORT = "Không có dữ liệu để export.";
-const MSG_NO_DATA_FOUND = "Không tìm thấy dữ liệu.";
-const MSG_EXPORT_SUCCESS = "Xuất dữ liệu thành công";
-const MSG_EXPORT_FAILED = "Xuất dữ liệu thất bại";
-const MSG_IMPORT_SUCCESS = "Import dữ liệu thành công";
-const MSG_IMPORT_FAILED = "Import dữ liệu thất bại";
-const MSG_REQUIRE_FILE = "Vui lòng đính kèm tệp dữ liệu";
-const MSG_INVALID_FILE_FORMAT =
-  "Định dạng tệp không hợp lệ. Chỉ chấp nhận tệp .xlsx";
-const MSG_FILE_TOO_LARGE =
-  "Kích thước tệp vượt quá 150MB. Vui lòng kiểm tra lại.";
-const MSG_FILE_NO_DATA =
-  "Tệp đính kèm không có dữ liệu. Vui lòng kiểm tra lại.";
-const MSG_HEADER_INVALID =
-  "Tệp đính kèm thiếu cột bắt buộc (Case ID, Routing Action, Inputted Remarks).";
+const MSG_NO_DATA_EXPORT = FEC_BCH_NoDataExport;
+const MSG_NO_DATA_FOUND = FEC_BCH_NoDataFound;
+const MSG_EXPORT_SUCCESS = FEC_BCH_ExportSuccess;
+const MSG_EXPORT_FAILED = FEC_BCH_ExportFailed;
+const MSG_IMPORT_SUCCESS = FEC_BCH_ImportSuccess;
+const MSG_IMPORT_FAILED = FEC_BCH_ImportFailed;
+const MSG_REQUIRE_FILE = FEC_BCH_RequireFile;
+const MSG_INVALID_FILE_FORMAT = FEC_BCH_InvalidFileFormat;
+const MSG_FILE_TOO_LARGE = FEC_BCH_FileTooLarge;
+const MSG_FILE_NO_DATA = FEC_BCH_FileNoData;
+const MSG_HEADER_INVALID = FEC_BCH_HeaderInvalid;
 const IMPORT_TIMEOUT_MS = 60 * 1000;
-const IMPORT_TIMEOUT_MESSAGE =
-  "Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.";
+const IMPORT_TIMEOUT_MESSAGE = FEC_BCH_RequestTimeout;
 const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
 const VALID_FILE_EXTENSION = ".xlsx";
 const HEADERS_CASE_ID = ["caseid", "caseidsearch"];
@@ -73,34 +229,33 @@ const HEADERS_REMARKS = ["inputtedremarks", "remark", "remarks"];
 const HEADERS_ASSIGNMENT_ID = ["assignmentid"];
 const HEADERS_ASSIGNMENT_ROUTING_ACTION = ["assignmentroutingaction"];
 const RESULT_HEADERS_BASIC = [
-  "Case ID",
-  "Routing Action",
-  "Inputted Remarks",
-  "__Status",
-  "__Errors"
+  FEC_BCH_Col_CaseId,
+  FEC_BCH_ResultHdr_RoutingAction,
+  FEC_BCH_ResultHdr_Remarks,
+  FEC_BCH_ResultHdr_Status,
+  FEC_BCH_ResultHdr_Errors
 ];
 const RESULT_HEADERS_GSR = [
-  "Case ID",
-  "Routing Action",
-  "Inputted Remarks",
-  "Assignment ID",
-  "Assignment Routing Action",
-  "__Status",
-  "__Errors"
+  FEC_BCH_Col_CaseId,
+  FEC_BCH_ResultHdr_RoutingAction,
+  FEC_BCH_ResultHdr_Remarks,
+  FEC_BCH_ResultHdr_AssignmentId,
+  FEC_BCH_ResultHdr_AssignmentRouting,
+  FEC_BCH_ResultHdr_Status,
+  FEC_BCH_ResultHdr_Errors
 ];
 const TEMPLATE_NAME_GSR = "GSR";
 const TEMPLATE_NAME_OTHER = "Other";
-const MSG_BP_REQUIRED = "Vui lòng chọn ít nhất một Business Process.";
-const MSG_NO_BP_FOUND = "Không tìm thấy Business Process phù hợp.";
-const MSG_TOO_MANY_ROWS =
-  "Tổng số dòng vượt quá 100.000. Vui lòng thu hẹp bộ lọc.";
+const MSG_BP_REQUIRED = FEC_BCH_BpRequired;
+const MSG_NO_BP_FOUND = FEC_BCH_NoBpFound;
+const MSG_TOO_MANY_ROWS = FEC_BCH_TooManyRows;
 const EXPORT_MAX_ROWS = 100000;
 const EXPORT_FETCH_PAGE_SIZE = 1000;
-const EXPORT_PROPERTY_NO = "No";
-const EXPORT_PROPERTY_YES = "Yes";
+const EXPORT_PROPERTY_NO = FEC_BCH_ExportNo;
+const EXPORT_PROPERTY_YES = FEC_BCH_ExportYes;
 const EXPORT_PROPERTY_OPTIONS = [
-  { label: "No", value: EXPORT_PROPERTY_NO },
-  { label: "Yes", value: EXPORT_PROPERTY_YES }
+  { label: FEC_BCH_ExportNo, value: EXPORT_PROPERTY_NO },
+  { label: FEC_BCH_ExportYes, value: EXPORT_PROPERTY_YES }
 ];
 
 const OPERATOR_LABELS = {
@@ -119,30 +274,34 @@ const OPERATOR_LABELS = {
 };
 
 const ATTACHMENT_VALUE_OPTIONS = [
-  { label: "Has attachment", value: "true" },
-  { label: "No attachment", value: "false" }
+  { label: FEC_BCH_AttachHas, value: "true" },
+  { label: FEC_BCH_AttachNo, value: "false" }
 ];
 
 const FILTERED_CASE_EXPORT_HEADERS = [
-  "Customer Type",
-  "Case ID",
-  "Category",
-  "Sub Category",
-  "Sub Code",
-  "Case Status",
-  "Case Created On",
-  "Last Updated On",
-  "Attachments"
+  FEC_BCH_Col_CustomerType,
+  FEC_BCH_Col_CaseId,
+  FEC_BCH_Col_Category,
+  FEC_BCH_Col_SubCategory,
+  FEC_BCH_Col_SubCode,
+  FEC_BCH_Col_CaseStatus,
+  FEC_BCH_Col_CaseCreatedOn,
+  FEC_BCH_Col_LastUpdatedOn,
+  FEC_BCH_Col_Attachments
 ];
 const ACTION_OPTIONS = [
-  { label: "--Chọn action--", value: STR_EMPTY },
-  { label: "Download Attachments", value: ACTION_DOWNLOAD_ATTACHMENTS },
-  { label: "Export All Data", value: ACTION_EXPORT_ALL },
-  { label: "Export Selected Data", value: ACTION_EXPORT_SELECTED },
-  { label: "Import Update Data", value: ACTION_IMPORT_UPDATE_DATA }
+  { label: FEC_BCH_ActionPickPlaceholder, value: STR_EMPTY },
+  { label: FEC_BCH_ActionDownload, value: ACTION_DOWNLOAD_ATTACHMENTS },
+  { label: FEC_BCH_ActionExportAll, value: ACTION_EXPORT_ALL },
+  { label: FEC_BCH_ActionExportSelected, value: ACTION_EXPORT_SELECTED },
+  { label: FEC_BCH_ActionImportUpdate, value: ACTION_IMPORT_UPDATE_DATA }
 ];
 
 export default class Fec_BatchCaseHandling extends LightningElement {
+  get batchUi() {
+    return BATCH_UI;
+  }
+
   @track activeFilterSections = ["filters"];
   @track activeCaseTableSections = ["cases"];
   @track activeActionSections = ["action"];
@@ -201,6 +360,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   exportPropertyOptions = EXPORT_PROPERTY_OPTIONS;
   attachmentDownloadedByCase = {};
   actionOptions = ACTION_OPTIONS;
+  strEmpty = STR_EMPTY;
 
   withTimeout(promise, timeoutMs, timeoutMessage) {
     return new Promise((resolve, reject) => {
@@ -221,7 +381,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   rowBusinessProcessKey(row) {
-    const v = (row?.businessProcessName || row?.businessProcessCode || "")
+    const v = (row?.businessProcessName || row?.businessProcessCode || STR_EMPTY)
       .trim();
     return v;
   }
@@ -277,8 +437,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.filterPropertyMeta = [];
       this.filterMetaByKey = {};
       this.showInfo(
-        "Thông báo",
-        `Không tải được metadata bộ lọc. ${this.extractError(error)}`
+        FEC_BCH_NoticeTitle,
+        `${FEC_BCH_FilterMetaLoadFailed} ${this.extractError(error)}`
       );
     }
   }
@@ -315,7 +475,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get propertyOptionsForFilter() {
-    const base = [{ label: "--Chọn thuộc tính--", value: STR_EMPTY }];
+    const base = [{ label: FEC_BCH_FilterPickProperty, value: STR_EMPTY }];
     const rest = (this.filterPropertyMeta || []).map((m) => ({
       label: m.label || m.propertyKey,
       value: m.propertyKey
@@ -326,7 +486,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   operatorOptionsForLine(line) {
     const meta = line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
     const ops = meta?.operators || [];
-    const opts = [{ label: "--Chọn toán tử--", value: STR_EMPTY }];
+    const opts = [{ label: FEC_BCH_FilterPickOperator, value: STR_EMPTY }];
     ops.forEach((op) => {
       opts.push({
         label: OPERATOR_LABELS[op] || op,
@@ -381,7 +541,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   showValueInput(line) {
-    const op = (line?.operatorKey || "").toLowerCase();
+    const op = (line?.operatorKey || STR_EMPTY).toLowerCase();
     if (op === "is_null" || op === "is_not_null") {
       return false;
     }
@@ -397,7 +557,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!meta || meta.valueType !== "checkbox") {
       return false;
     }
-    const op = (line?.operatorKey || "").toLowerCase();
+    const op = (line?.operatorKey || STR_EMPTY).toLowerCase();
     if (op === "is_null" || op === "is_not_null") {
       return false;
     }
@@ -424,16 +584,16 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       if (!line.propertyKey || !line.operatorKey) {
         continue;
       }
-      const op = (line.operatorKey || "").toLowerCase();
+      const op = (line.operatorKey || STR_EMPTY).toLowerCase();
       const needsValue = op !== "is_null" && op !== "is_not_null";
-      let valueText = (line.valueText || "").trim();
+      let valueText = (line.valueText || STR_EMPTY).trim();
       let valueList = null;
       if (line.propertyKey === "CUSTOMER_TYPE" && valueText.includes(",")) {
         valueList = valueText
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean);
-        valueText = "";
+        valueText = STR_EMPTY;
       }
       if (needsValue && !valueText && (!valueList || !valueList.length)) {
         continue;
@@ -493,12 +653,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const raw = Array.isArray(res?.rows) ? res.rows : [];
       this.caseRows = raw.map((r) => ({
         ...r,
-        rowKey: String(r.caseId || ""),
+        rowKey: String(r.caseId || STR_EMPTY),
         selected: false,
         caseCreatedOnLabel: this.formatDateTimeSafe(r.caseCreatedOn),
         lastUpdatedOnLabel: this.formatDateTimeSafe(r.lastUpdatedOn),
-        hasAttachmentLabel: r.hasAttachment ? "Document" : "",
-        attachmentDownloaded: !!this.attachmentDownloadedByCase[String(r.caseId || "")]
+        hasAttachmentLabel: r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY,
+        attachmentDownloaded: !!this.attachmentDownloadedByCase[String(r.caseId || STR_EMPTY)]
       }));
       this.applyCaseSort();
       this.caseSearchHasRun = true;
@@ -506,15 +666,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.caseRows = [];
       this.caseTotalCount = 0;
       this.caseSearchHasRun = false;
-      this.showError("Search failed", this.extractError(error));
+      this.showError(FEC_BCH_SearchFailedTitle, this.extractError(error));
     } finally {
       this.caseSearchLoading = false;
     }
   }
 
   formatDateTimeSafe(value) {
-    if (value == null || value === "") {
-      return "";
+    if (value == null || value === STR_EMPTY) {
+      return STR_EMPTY;
     }
     return this.formatDateTime(value);
   }
@@ -551,7 +711,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.caseSearchHasRun) {
       return MSG_NO_DATA_FOUND;
     }
-    return "Chưa có dữ liệu — thêm điều kiện lọc và bấm Filter Data.";
+    return FEC_BCH_EmptyCasesHint;
   }
 
   get selectedCaseCount() {
@@ -601,7 +761,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   handleCaseSort(event) {
-    const key = event.currentTarget?.dataset?.key || "";
+    const key = event.currentTarget?.dataset?.key || STR_EMPTY;
     if (!key) {
       return;
     }
@@ -618,10 +778,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const key = this.caseSortBy;
     const dir = this.caseSortDir === "desc" ? -1 : 1;
     const valueOf = (row) => {
-      if (key === "caseCreatedOn") return row.caseCreatedOn || "";
-      if (key === "lastUpdatedOn") return row.lastUpdatedOn || "";
+      if (key === "caseCreatedOn") return row.caseCreatedOn || STR_EMPTY;
+      if (key === "lastUpdatedOn") return row.lastUpdatedOn || STR_EMPTY;
       if (key === "hasAttachment") return row.hasAttachment ? 1 : 0;
-      return String(row?.[key] || "").toLowerCase();
+      return String(row?.[key] || STR_EMPTY).toLowerCase();
     };
     this.caseRows = [...this.caseRows].sort((a, b) => {
       const av = valueOf(a);
@@ -633,7 +793,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   handleCaseReviewClick(event) {
-    const url = event.currentTarget?.dataset?.url || "";
+    const url = event.currentTarget?.dataset?.url || STR_EMPTY;
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
@@ -660,7 +820,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   async handleCaseAttachmentClick(event) {
-    const caseId = event.currentTarget?.dataset?.caseid || "";
+    const caseId = event.currentTarget?.dataset?.caseid || STR_EMPTY;
     if (!caseId) {
       return;
     }
@@ -684,10 +844,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
             : r
         );
       } else {
-        this.showError("Download failed", res?.message || "Không thể tải tệp đính kèm.");
+        this.showError(FEC_BCH_DownloadFailedTitle, res?.message || FEC_BCH_AttachmentDownloadFailedBody);
       }
     } catch (error) {
-      this.showError("Download failed", this.extractError(error));
+      this.showError(FEC_BCH_DownloadFailedTitle, this.extractError(error));
     } finally {
       this.isLoading = false;
     }
@@ -714,7 +874,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
 
     const all = [];
-    let afterCaseId = "";
+    let afterCaseId = STR_EMPTY;
     while (all.length < total && all.length < EXPORT_MAX_ROWS) {
       const res = await searchBulkCasesForExport({
         filtersJson,
@@ -730,10 +890,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           ...r,
           caseCreatedOnLabel: this.formatDateTimeSafe(r.caseCreatedOn),
           lastUpdatedOnLabel: this.formatDateTimeSafe(r.lastUpdatedOn),
-          hasAttachmentLabel: r.hasAttachment ? "Document" : ""
+          hasAttachmentLabel: r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY
         });
       });
-      afterCaseId = String(raw[raw.length - 1]?.caseId || "");
+      afterCaseId = String(raw[raw.length - 1]?.caseId || STR_EMPTY);
       if (!afterCaseId) {
         break;
       }
@@ -742,7 +902,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   handleActionChange(event) {
-    this.selectedAction = event.detail.value || "";
+    this.selectedAction = event.detail.value || STR_EMPTY;
     this.actionRequiredError = false;
     this.caseSetRequiredError = false;
     this.exportSuccessMessage = STR_EMPTY;
@@ -818,7 +978,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (useSelected) {
       sourceRows = this.caseRows.filter((r) => r.selected);
       if (!sourceRows.length) {
-        this.showInfo("Export", "Chọn ít nhất một Case trong lưới.");
+        this.showInfo(FEC_BCH_ExportToastTitle, FEC_BCH_SelectAtLeastOneCase);
         return;
       }
     } else {
@@ -832,7 +992,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
       this.isLoading = false;
       if (!sourceRows.length) {
-        this.showInfo("Export", MSG_NO_DATA_EXPORT);
+        this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
         return;
       }
     }
@@ -867,11 +1027,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
     const list = (Array.isArray(bpInfo) ? bpInfo : [])
       .filter((b) => {
-        const n = String(b.businessProcessCode || "").trim();
+        const n = String(b.businessProcessCode || STR_EMPTY).trim();
         return n && keysFromSource.has(n);
       })
       .map((b) => {
-        const code = String(b.businessProcessCode || "").trim();
+        const code = String(b.businessProcessCode || STR_EMPTY).trim();
         return {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
@@ -881,7 +1041,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       });
 
     if (!list.length) {
-      this.showInfo("Export", MSG_NO_BP_FOUND);
+      this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_BP_FOUND);
       return;
     }
 
@@ -900,8 +1060,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   applyBpSort() {
     const dir = this.bpSortDir === "desc" ? -1 : 1;
     this.bpRows = [...this.bpRows].sort((a, b) => {
-      const av = String(a?.businessProcessCode || "").toLowerCase();
-      const bv = String(b?.businessProcessCode || "").toLowerCase();
+      const av = String(a?.businessProcessCode || STR_EMPTY).toLowerCase();
+      const bv = String(b?.businessProcessCode || STR_EMPTY).toLowerCase();
       if (av > bv) return 1 * dir;
       if (av < bv) return -1 * dir;
       return 0;
@@ -942,8 +1102,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get bpItemsLabel() {
     const total = this.bpRows.length;
-    const noun = total === 1 ? "item" : "items";
-    return `${total} ${noun} • Sorted by Business Process Name`;
+    const noun = total === 1 ? FEC_BCH_BpItemSingular : FEC_BCH_BpItemPlural;
+    return `${total} ${noun}${FEC_BCH_BpItemsSortedSuffix}`;
   }
 
   get bpSortIcon() {
@@ -965,7 +1125,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   handleBpRowSelect(event) {
-    const code = event.currentTarget?.dataset?.code || "";
+    const code = event.currentTarget?.dataset?.code || STR_EMPTY;
     const checked = !!event.detail?.checked;
     this.bpRows = this.bpRows.map((r) =>
       r.businessProcessCode === code ? { ...r, selected: checked } : r
@@ -1041,7 +1201,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       .filter((r) => r.selected)
       .map((r) => r.businessProcessCode);
     if (!selectedBpCodes.length) {
-      this.showError("Export", MSG_BP_REQUIRED);
+      this.showError(FEC_BCH_ExportToastTitle, MSG_BP_REQUIRED);
       return;
     }
     const selectedSet = new Set(selectedBpCodes);
@@ -1049,7 +1209,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       selectedSet.has(this.rowBusinessProcessKey(r))
     );
     if (!rows.length) {
-      this.showInfo("Export", MSG_NO_DATA_EXPORT);
+      this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
       return;
     }
 
@@ -1082,7 +1242,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
 
       if (!filesPayload.length) {
-        this.showInfo("Export", MSG_NO_DATA_EXPORT);
+        this.showInfo(FEC_BCH_ExportToastTitle, MSG_NO_DATA_EXPORT);
         return;
       }
 
@@ -1096,7 +1256,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       );
       if (res?.success && res?.downloadUrl) {
         window.open(res.downloadUrl, "_blank", "noopener,noreferrer");
-        this.showSuccess("Download", MSG_EXPORT_SUCCESS);
+        this.showSuccess(FEC_BCH_DownloadToastTitle, MSG_EXPORT_SUCCESS);
         this.exportSuccessMessage = MSG_EXPORT_SUCCESS;
         this.exportErrorMessage = STR_EMPTY;
         this.closeBpModal();
@@ -1120,7 +1280,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       typeof error === "string" ? error : this.extractError(error);
     this.showError(
       MSG_EXPORT_FAILED,
-      detail || "Không thể tạo file xuất dữ liệu."
+      detail || FEC_BCH_CannotCreateExportFile
     );
   }
 
@@ -1129,7 +1289,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!file) {
       return;
     }
-    const lowerName = (file.name || "").toLowerCase();
+    const lowerName = (file.name || STR_EMPTY).toLowerCase();
     if (!lowerName.endsWith(VALID_FILE_EXTENSION)) {
       this.showError(MSG_IMPORT_FAILED, MSG_INVALID_FILE_FORMAT);
       this.resetImportFileInput();
@@ -1277,7 +1437,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.importErrorMessage = MSG_IMPORT_FAILED;
     this.showError(
       MSG_IMPORT_FAILED,
-      detail || `Không thể import ${fileName || "tệp dữ liệu"}.`
+      detail || `${FEC_BCH_ImportUnablePrefix} ${fileName || FEC_BCH_DataFileFallback}.`
     );
   }
 
@@ -1318,14 +1478,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const aoa = window.XLSX.utils.sheet_to_json(sheet, {
       header: 1,
       raw: false,
-      defval: ""
+      defval: STR_EMPTY
     });
     if (!Array.isArray(aoa) || aoa.length === 0) {
       return null;
     }
     const headerRow = aoa[0] || [];
     const normalized = headerRow.map((h) =>
-      (h == null ? "" : String(h)).replace(/\s+/g, "").toLowerCase()
+      (h == null ? STR_EMPTY : String(h)).replace(/\s+/g, STR_EMPTY).toLowerCase()
     );
     const idxCaseId = this.findHeaderIndex(normalized, HEADERS_CASE_ID);
     const idxRouting = this.findHeaderIndex(normalized, HEADERS_ROUTING_ACTION);
@@ -1349,11 +1509,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const routingAction = this.cellAsString(r[idxRouting]);
       const inputtedRemarks = this.cellAsString(r[idxRemark]);
       const assignmentId =
-        idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : "";
+        idxAssignmentId >= 0 ? this.cellAsString(r[idxAssignmentId]) : STR_EMPTY;
       const assignmentRoutingAction =
         idxAssignmentRouting >= 0
           ? this.cellAsString(r[idxAssignmentRouting])
-          : "";
+          : STR_EMPTY;
       if (
         !caseIdSearch &&
         !routingAction &&
@@ -1385,7 +1545,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   cellAsString(value) {
     if (value === null || value === undefined) {
-      return "";
+      return STR_EMPTY;
     }
     return String(value).trim();
   }
@@ -1420,16 +1580,16 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const r = inputRows[i] || {};
       const meta = resultByIndex[i] || {};
       const baseRow = [
-        r.caseIdSearch || "",
-        r.routingAction || "",
-        r.inputtedRemarks || ""
+        r.caseIdSearch || STR_EMPTY,
+        r.routingAction || STR_EMPTY,
+        r.inputtedRemarks || STR_EMPTY
       ];
       if (isCofOrGsr) {
-        baseRow.push(r.assignmentId || "");
-        baseRow.push(r.assignmentRoutingAction || "");
+        baseRow.push(r.assignmentId || STR_EMPTY);
+        baseRow.push(r.assignmentRoutingAction || STR_EMPTY);
       }
-      baseRow.push(meta.status || "");
-      baseRow.push(meta.errors || "");
+      baseRow.push(meta.status || STR_EMPTY);
+      baseRow.push(meta.errors || STR_EMPTY);
       sheetData.push(baseRow);
     }
     const workbook = window.XLSX.utils.book_new();
@@ -1440,7 +1600,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       type: "array"
     });
     const base64 = arrayBufferToBase64(arrayBuffer);
-    const baseName = (originalFileName || "Import").replace(/\.[^.]+$/, "");
+    const baseName = (originalFileName || "Import").replace(/\.[^.]+$/, STR_EMPTY);
     const resultFileName = `${baseName}_Result.xlsx`;
     await saveResultFile({
       batchRecordId,
@@ -1478,12 +1638,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       );
       if (res?.success && res?.downloadUrl) {
         window.open(res.downloadUrl, "_blank", "noopener,noreferrer");
-        this.showSuccess("Download", res.message || "Đã tạo file ZIP.");
+        this.showSuccess(FEC_BCH_DownloadToastTitle, res.message || FEC_BCH_ZipCreatedSuccess);
       } else {
-        this.showError("Download failed", res?.message || "Không thể tạo file ZIP.");
+        this.showError(FEC_BCH_DownloadFailedTitle, res?.message || FEC_BCH_ZipCreateFailedBody);
       }
     } catch (error) {
-      this.showError("Download failed", this.extractError(error));
+      this.showError(FEC_BCH_DownloadFailedTitle, this.extractError(error));
     } finally {
       this.isLoading = false;
     }
@@ -1520,15 +1680,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         try {
           const list = Array.isArray(rows) ? rows : [];
           const exportRows = list.map((r) => [
-            String(r?.customerType || ""),
-            String(r?.caseIdSearch || ""),
-            String(r?.categoryCode || ""),
-            String(r?.subCategoryCode || ""),
-            String(r?.subCodeCode || ""),
-            String(r?.caseStatus || ""),
-            String(r?.caseCreatedOnLabel || ""),
-            String(r?.lastUpdatedOnLabel || ""),
-            String(r?.hasAttachmentLabel || "")
+            String(r?.customerType || STR_EMPTY),
+            String(r?.caseIdSearch || STR_EMPTY),
+            String(r?.categoryCode || STR_EMPTY),
+            String(r?.subCategoryCode || STR_EMPTY),
+            String(r?.subCodeCode || STR_EMPTY),
+            String(r?.caseStatus || STR_EMPTY),
+            String(r?.caseCreatedOnLabel || STR_EMPTY),
+            String(r?.lastUpdatedOnLabel || STR_EMPTY),
+            String(r?.hasAttachmentLabel || STR_EMPTY)
           ]);
           const worksheet = window.XLSX.utils.aoa_to_sheet([
             FILTERED_CASE_EXPORT_HEADERS,
@@ -1562,37 +1722,37 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     } catch (error) {
       this.rows = [];
       this.pagedRows = [];
-      this.showError("Load failed", this.extractError(error));
+      this.showError(FEC_BCH_LoadFailedTitle, this.extractError(error));
     } finally {
       this.isLoading = false;
     }
   }
 
   normalizeRow(row) {
-    const status = row.status || "";
+    const status = row.status || STR_EMPTY;
     const resultLabel =
-      status === "Processed" || status === "Failure" ? "Result" : "";
+      status === "Processed" || status === "Failure" ? FEC_BCH_Col_Result : STR_EMPTY;
     return {
       ...row,
-      fileDownloadUrl: row.fileDownloadUrl || "",
-      uploadedOnLabel: row.uploadedOn ? this.formatDateTime(row.uploadedOn) : "",
+      fileDownloadUrl: row.fileDownloadUrl || STR_EMPTY,
+      uploadedOnLabel: row.uploadedOn ? this.formatDateTime(row.uploadedOn) : STR_EMPTY,
       totalRecordsCount: row.totalRecordsCount ?? 0,
       totalSuccessRecords: row.totalSuccessRecords ?? 0,
       totalFailedRecords: row.totalFailedRecords ?? 0,
       result: resultLabel,
-      resultDownloadUrl: row.resultDownloadUrl || ""
+      resultDownloadUrl: row.resultDownloadUrl || STR_EMPTY
     };
   }
 
   handleResultClick(event) {
-    const url = event.currentTarget?.dataset?.url || "";
+    const url = event.currentTarget?.dataset?.url || STR_EMPTY;
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
   }
 
   handleFileNameClick(event) {
-    const url = event.currentTarget?.dataset?.url || "";
+    const url = event.currentTarget?.dataset?.url || STR_EMPTY;
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
@@ -1633,7 +1793,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   handleGoToPage() {
     const n = parseInt(this.goToPageInput, 10);
     if (Number.isNaN(n) || n < 1) {
-      this.showInfo("Invalid page", "Enter a page number ≥ 1.");
+      this.showInfo(FEC_BCH_InvalidPageTitle, FEC_BCH_InvalidPageBody);
       return;
     }
     const max = this.totalPages;
@@ -1667,7 +1827,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return (
       error?.body?.message ||
       error?.message ||
-      "Unexpected error"
+      FEC_BCH_UnexpectedError
     );
   }
 

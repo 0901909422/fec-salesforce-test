@@ -1,7 +1,7 @@
 <template>
   <div class="fec-root">
     <template if:true={isLoading}>
-      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      <lightning-spinner alternative-text={batchUi.loading} size="small"></lightning-spinner>
     </template>
 
     <div class="fec-wrapper">
@@ -14,29 +14,27 @@
         >
         <lightning-accordion-section
           name="filters"
-          label="Filter Properties"
+          label={batchUi.sectionFilterProperties}
           class="slds-accordion__section"
         >
           <div class="fec-session-body fec-session-body--filters">
-            <p class="fec-filter-help">
-              Các dòng bộ lọc kết hợp AND. Customer Type nhiều giá trị: nhập cách nhau bằng dấu phẩy.
-            </p>
+            <p class="fec-filter-help">{batchUi.filterHelpAnd}</p>
             <template if:true={filterResetHint}>
-              <p class="fec-filter-help fec-filter-help--hint">Chưa thêm bộ lọc.</p>
+              <p class="fec-filter-help fec-filter-help--hint">{batchUi.filterResetHint}</p>
             </template>
             <div class="fec-filter-toolbar">
               <lightning-button
-                label="Add filter row"
+                label={batchUi.addFilterRow}
                 onclick={handleAddFilterLine}
               ></lightning-button>
               <lightning-button
-                label="Filter Data"
+                label={batchUi.filterData}
                 variant="brand"
                 onclick={handleFilterData}
                 disabled={filterDataDisabled}
               ></lightning-button>
               <lightning-button
-                label="Reset"
+                label={batchUi.reset}
                 onclick={handleResetFilters}
                 disabled={caseSearchLoading}
               ></lightning-button>
@@ -45,48 +43,48 @@
               <div key={fline.rowId} class="fec-filter-row">
                 <lightning-combobox
                   data-rowid={fline.rowId}
-                  label="Filter property"
+                  label={batchUi.filterPropertyField}
                   variant="label-hidden"
                   value={fline.propertyKey}
                   options={propertyOptionsForFilter}
-                  placeholder="Property"
+                  placeholder={batchUi.propertyPlaceholder}
                   onchange={handleFilterPropertyChange}
                 ></lightning-combobox>
                 <lightning-combobox
                   data-rowid={fline.rowId}
-                  label="Operator"
+                  label={batchUi.operatorField}
                   variant="label-hidden"
                   value={fline.operatorKey}
                   options={fline.operatorOptions}
-                  placeholder="Operator"
+                  placeholder={batchUi.operatorPlaceholder}
                   onchange={handleFilterOperatorChange}
                 ></lightning-combobox>
                 <template if:true={fline.showAttachCombo}>
                   <lightning-combobox
                     data-rowid={fline.rowId}
-                    label="Value"
+                    label={batchUi.valueField}
                     variant="label-hidden"
                     value={fline.valueText}
                     options={attachmentPicklistOptions}
-                    placeholder="Value"
+                    placeholder={batchUi.valuePlaceholder}
                     onchange={handleFilterValueChange}
                   ></lightning-combobox>
                 </template>
                 <template if:true={fline.showValueBox}>
                   <lightning-input
                     data-rowid={fline.rowId}
-                    label="Value"
+                    label={batchUi.valueField}
                     variant="label-hidden"
                     type={fline.valueTypeAttr}
                     value={fline.valueText}
-                    placeholder="Value"
+                    placeholder={batchUi.valuePlaceholder}
                     onchange={handleFilterValueChange}
                   ></lightning-input>
                 </template>
                 <lightning-button-icon
                   icon-name="utility:delete"
-                  alternative-text="Remove row"
-                  title="Remove row"
+                  alternative-text={batchUi.removeRow}
+                  title={batchUi.removeRow}
                   data-rowid={fline.rowId}
                   onclick={handleRemoveFilterLine}
                 ></lightning-button-icon>
@@ -106,7 +104,7 @@
         >
         <lightning-accordion-section
           name="cases"
-          label="Filtered Cases"
+          label={batchUi.sectionFilteredCases}
           class="slds-accordion__section"
         >
           <div class="fec-session-body fec-session-body--cases">
@@ -118,21 +116,21 @@
                       <lightning-input
                         type="checkbox"
                         variant="label-hidden"
-                        label="Select all"
+                        label={batchUi.selectAll}
                         checked={allCaseRowsSelected}
                         onchange={handleCaseSelectAll}
                       ></lightning-input>
                     </th>
-                    <th><a href="javascript:void(0);" data-key="customerType" onclick={handleCaseSort}>Customer Type</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseIdSearch" onclick={handleCaseSort}>Case ID</a></th>
-                    <th><a href="javascript:void(0);" data-key="categoryCode" onclick={handleCaseSort}>Category</a></th>
-                    <th><a href="javascript:void(0);" data-key="subCategoryCode" onclick={handleCaseSort}>Sub Category</a></th>
-                    <th><a href="javascript:void(0);" data-key="subCodeCode" onclick={handleCaseSort}>Sub Code</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseStatus" onclick={handleCaseSort}>Case Status</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseCreatedOn" onclick={handleCaseSort}>Case Created On</a></th>
-                    <th><a href="javascript:void(0);" data-key="lastUpdatedOn" onclick={handleCaseSort}>Last Updated On</a></th>
-                    <th><a href="javascript:void(0);" data-key="hasAttachment" onclick={handleCaseSort}>Attachments</a></th>
-                    <th>Attachment Downloaded</th>
+                    <th><a href="javascript:void(0);" data-key="customerType" onclick={handleCaseSort}>{batchUi.colCustomerType}</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseIdSearch" onclick={handleCaseSort}>{batchUi.colCaseId}</a></th>
+                    <th><a href="javascript:void(0);" data-key="categoryCode" onclick={handleCaseSort}>{batchUi.colCategory}</a></th>
+                    <th><a href="javascript:void(0);" data-key="subCategoryCode" onclick={handleCaseSort}>{batchUi.colSubCategory}</a></th>
+                    <th><a href="javascript:void(0);" data-key="subCodeCode" onclick={handleCaseSort}>{batchUi.colSubCode}</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseStatus" onclick={handleCaseSort}>{batchUi.colCaseStatus}</a></th>
+                    <th><a href="javascript:void(0);" data-key="caseCreatedOn" onclick={handleCaseSort}>{batchUi.colCaseCreatedOn}</a></th>
+                    <th><a href="javascript:void(0);" data-key="lastUpdatedOn" onclick={handleCaseSort}>{batchUi.colLastUpdatedOn}</a></th>
+                    <th><a href="javascript:void(0);" data-key="hasAttachment" onclick={handleCaseSort}>{batchUi.colAttachments}</a></th>
+                    <th>{batchUi.colAttachmentDownloaded}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -197,19 +195,19 @@
             </div>
             <div class="fec-footer fec-case-footer">
               <div class="fec-footer__left">
-                <span class="fec-footer__label">Page size</span>
+                <span class="fec-footer__label">{batchUi.pageSize}</span>
                 <lightning-combobox
                   variant="label-hidden"
                   value={casePageSize}
                   options={pageSizeOptions}
                   onchange={handleCasePageSizeChange}
                 ></lightning-combobox>
-                <span class="fec-case-total-label">Total: {caseTotalCount}</span>
+                <span class="fec-case-total-label">{batchUi.totalPrefix} {caseTotalCount}</span>
               </div>
               <div class="fec-footer__center">
                 <lightning-button-icon
                   icon-name="utility:chevronleft"
-                  alternative-text="Previous"
+                  alternative-text={batchUi.previous}
                   onclick={handleCasePreviousPage}
                   disabled={casePreviousDisabled}
                 ></lightning-button-icon>
@@ -217,7 +215,7 @@
                 <span class="fec-footer__label">/ {caseTotalPages}</span>
                 <lightning-button-icon
                   icon-name="utility:chevronright"
-                  alternative-text="Next"
+                  alternative-text={batchUi.next}
                   onclick={handleCaseNextPage}
                   disabled={caseNextDisabled}
                 ></lightning-button-icon>
@@ -237,20 +235,20 @@
         >
         <lightning-accordion-section
           name="action"
-          label="Action"
+          label={batchUi.sectionAction}
           class="slds-accordion__section"
         >
           <div class="fec-session-body fec-session-body--action">
             <div class="fec-case-actions fec-case-actions--stacked">
               <lightning-combobox
-                label="Select Actions"
+                label={batchUi.selectActions}
                 value={selectedAction}
                 options={actionOptions}
                 onchange={handleActionChange}
               ></lightning-combobox>
               <template if:true={isDownloadAction}>
                 <lightning-combobox
-                  label="Case Set"
+                  label={batchUi.caseSet}
                   value={selectedCaseSet}
                   options={caseSetOptions}
                   onchange={handleCaseSetChange}
@@ -259,7 +257,7 @@
               <template if:true={isImportAction}>
                 <div class="fec-import-upload">
                   <lightning-button
-                    label="Upload Files"
+                    label={batchUi.uploadFiles}
                     icon-name="utility:upload"
                     variant="neutral"
                     onclick={triggerImportFilePicker}
@@ -277,7 +275,7 @@
                       <lightning-button-icon
                         icon-name="utility:close"
                         size="small"
-                        alternative-text="Remove file"
+                        alternative-text={batchUi.removeFile}
                         onclick={handleClearImportFile}
                         class="fec-import-chip__remove"
                       ></lightning-button-icon>
@@ -287,21 +285,21 @@
               </template>
               <lightning-button
                 class="fec-case-actions__submit"
-                label="Submit"
+                label={batchUi.submit}
                 variant="brand"
                 onclick={handleActionSubmit}
                 disabled={isImportSubmitting}
               ></lightning-button>
-              <span class="fec-selected-count">Đã chọn: {selectedCaseCount}</span>
+              <span class="fec-selected-count">{batchUi.selectedCountPrefix} {selectedCaseCount}</span>
             </div>
             <template if:true={actionRequiredError}>
-              <p class="fec-template-error" role="alert">Vui lòng chọn action.</p>
+              <p class="fec-template-error" role="alert">{batchUi.errSelectAction}</p>
             </template>
             <template if:true={caseSetRequiredError}>
-              <p class="fec-template-error" role="alert">Vui lòng chọn Case Set.</p>
+              <p class="fec-template-error" role="alert">{batchUi.errSelectCaseSet}</p>
             </template>
             <template if:true={attachDataRequiredError}>
-              <p class="fec-template-error" role="alert">Vui lòng đính kèm tệp dữ liệu</p>
+              <p class="fec-template-error" role="alert">{batchUi.errAttachFile}</p>
             </template>
             <template if:true={exportSuccessMessage}>
               <p class="fec-export-success" role="status">{exportSuccessMessage}</p>
@@ -329,7 +327,7 @@
         >
         <lightning-accordion-section
           name="processed"
-          label="My Bulk Actions"
+          label={batchUi.sectionMyBulkActions}
           class="slds-accordion__section"
         >
           <div class="fec-session-body">
@@ -337,8 +335,8 @@
               <span class="fec-section2-toolbar__spacer"></span>
               <lightning-button-icon
                 icon-name="utility:refresh"
-                alternative-text="Refresh"
-                title="Refresh"
+                alternative-text={batchUi.refresh}
+                title={batchUi.refresh}
                 onclick={handleRefresh}
               ></lightning-button-icon>
             </div>
@@ -348,33 +346,33 @@
                   <tr>
                     <th>
                       <span class="fec-th-inner">
-                        File Name
+                        {batchUi.colFileName}
                         <lightning-icon
                           icon-name="utility:arrowup"
                           size="xx-small"
                           class="fec-sort-icon"
-                          alternative-text=""
+                          alternative-text={strEmpty}
                         ></lightning-icon>
                       </span>
                     </th>
                     <th>
                       <span class="fec-th-inner">
-                        Uploaded On
+                        {batchUi.colUploadedOn}
                         <lightning-icon
                           icon-name="utility:arrowup"
                           size="xx-small"
                           class="fec-sort-icon"
-                          alternative-text=""
+                          alternative-text={strEmpty}
                         ></lightning-icon>
                       </span>
                     </th>
-                    <th>Uploaded By</th>
-                    <th>Total Records Count</th>
-                    <th>Total Success Records</th>
-                    <th>Total Failed Records</th>
-                    <th>Status</th>
-                    <th>Failure Reason</th>
-                    <th>Result</th>
+                    <th>{batchUi.colUploadedBy}</th>
+                    <th>{batchUi.colTotalRecords}</th>
+                    <th>{batchUi.colTotalSuccess}</th>
+                    <th>{batchUi.colTotalFailed}</th>
+                    <th>{batchUi.colStatus}</th>
+                    <th>{batchUi.colFailureReason}</th>
+                    <th>{batchUi.colResult}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -421,7 +419,7 @@
                   </template>
                   <template if:false={hasRows}>
                     <tr>
-                      <td colspan="9" class="fec-empty">No records found.</td>
+                      <td colspan="9" class="fec-empty">{batchUi.noRecordsFound}</td>
                     </tr>
                   </template>
                 </tbody>
@@ -429,7 +427,7 @@
             </div>
             <div class="fec-footer">
               <div class="fec-footer__left">
-                <span class="fec-footer__label">Page size</span>
+                <span class="fec-footer__label">{batchUi.pageSize}</span>
                 <lightning-combobox
                   variant="label-hidden"
                   value={pageSize}
@@ -441,20 +439,20 @@
               <div class="fec-footer__center">
                 <lightning-button-icon
                   icon-name="utility:chevronleft"
-                  alternative-text="Previous"
+                  alternative-text={batchUi.previous}
                   onclick={handlePreviousPage}
                   disabled={previousDisabled}
                 ></lightning-button-icon>
                 <span class="fec-footer__page">{currentPage}</span>
                 <lightning-button-icon
                   icon-name="utility:chevronright"
-                  alternative-text="Next"
+                  alternative-text={batchUi.next}
                   onclick={handleNextPage}
                   disabled={nextDisabled}
                 ></lightning-button-icon>
               </div>
               <div class="fec-footer__goto">
-                <span class="fec-footer__label">Go to page</span>
+                <span class="fec-footer__label">{batchUi.goToPage}</span>
                 <lightning-input
                   variant="label-hidden"
                   value={goToPageInput}
@@ -464,7 +462,7 @@
                   onchange={handleGoToPageInput}
                 ></lightning-input>
                 <lightning-button
-                  label="Go"
+                  label={batchUi.go}
                   onclick={handleGoToPage}
                 ></lightning-button>
               </div>
@@ -486,7 +484,7 @@
       <div class="slds-modal__container fec-bp-modal__container">
         <header class="slds-modal__header fec-bp-modal__header">
           <h2 id="fec-bp-modal-title" class="slds-text-heading_medium fec-bp-modal__title">
-            Bulk Service Case Selection
+            {batchUi.modalBpTitle}
           </h2>
         </header>
         <div class="slds-modal__content slds-p-around_medium fec-bp-modal__content">
@@ -500,7 +498,7 @@
                     <lightning-input
                       type="checkbox"
                       variant="label-hidden"
-                      label="Select all"
+                      label={batchUi.selectAll}
                       checked={allBpRowsSelected}
                       onchange={handleBpSelectAll}
                     ></lightning-input>
@@ -511,11 +509,11 @@
                       class="fec-bp-sort-link"
                       onclick={handleBpSort}
                     >
-                      Business Process Name
+                      {batchUi.modalBpColName}
                       <lightning-icon
                         icon-name={bpSortIcon}
                         size="xx-small"
-                        alternative-text="Sort"
+                        alternative-text={batchUi.sort}
                         class="fec-sort-icon"
                       ></lightning-icon>
                     </a>
@@ -531,7 +529,7 @@
                         <lightning-input
                           type="checkbox"
                           variant="label-hidden"
-                          label="Select"
+                          label={batchUi.selectRow}
                           data-code={bp.businessProcessCode}
                           checked={bp.selected}
                           onchange={handleBpRowSelect}
@@ -543,7 +541,7 @@
                 </template>
                 <template if:false={hasBpRows}>
                   <tr>
-                    <td colspan="3" class="fec-empty">Không tìm thấy Business Process phù hợp.</td>
+                    <td colspan="3" class="fec-empty">{batchUi.noBpFound}</td>
                   </tr>
                 </template>
               </tbody>
@@ -551,7 +549,7 @@
           </div>
           <div class="fec-footer fec-bp-modal__footer-row">
             <div class="fec-footer__left">
-              <span class="fec-footer__label">Page size</span>
+              <span class="fec-footer__label">{batchUi.pageSize}</span>
               <lightning-combobox
                 variant="label-hidden"
                 value={bpPageSize}
@@ -562,20 +560,20 @@
             <div class="fec-footer__center">
               <lightning-button-icon
                 icon-name="utility:chevronleft"
-                alternative-text="Previous"
+                alternative-text={batchUi.previous}
                 onclick={handleBpPreviousPage}
                 disabled={bpPreviousDisabled}
               ></lightning-button-icon>
               <span class="fec-footer__page">{bpCurrentPage}</span>
               <lightning-button-icon
                 icon-name="utility:chevronright"
-                alternative-text="Next"
+                alternative-text={batchUi.next}
                 onclick={handleBpNextPage}
                 disabled={bpNextDisabled}
               ></lightning-button-icon>
             </div>
             <div class="fec-footer__goto">
-              <span class="fec-footer__label">Go to page</span>
+              <span class="fec-footer__label">{batchUi.goToPage}</span>
               <lightning-input
                 variant="label-hidden"
                 value={bpGoToPageInput}
@@ -584,14 +582,14 @@
                 class="fec-footer__goto-input"
                 onchange={handleBpGoToPageInput}
               ></lightning-input>
-              <span class="fec-footer__label">of {bpTotalPages}</span>
-              <lightning-button label="Go" onclick={handleBpGoToPage}></lightning-button>
+              <span class="fec-footer__label">{batchUi.footerOf} {bpTotalPages}</span>
+              <lightning-button label={batchUi.go} onclick={handleBpGoToPage}></lightning-button>
             </div>
           </div>
           <div class="fec-bp-modal__props">
             <lightning-radio-group
               name="exportProperties"
-              label="Export with all Properties"
+              label={batchUi.exportWithAllProperties}
               options={exportPropertyOptions}
               value={includeAllProperties}
               onchange={handleExportPropertiesChange}
@@ -601,11 +599,11 @@
           </div>
         </div>
         <footer class="slds-modal__footer fec-bp-modal__footer">
-          <lightning-button label="Cancel" onclick={closeBpModal}></lightning-button>
+          <lightning-button label={batchUi.cancel} onclick={closeBpModal}></lightning-button>
           <lightning-button
             class="slds-m-left_x-small"
             variant="brand"
-            label="Submit"
+            label={batchUi.submit}
             onclick={handleBpSubmit}
             disabled={bpSubmitLoading}
           ></lightning-button>
