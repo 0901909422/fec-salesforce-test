@@ -1,41 +1,88 @@
 <template>
     <div>
-        <!-- Form Row -->
         <div class="slds-grid slds-gutters form-row">
 
-            <!-- Complaint Type -->
-            <!-- <template if:true={isComplaintCategory}> -->
+            <!-- EDIT MODE -->
+            <template if:true={modeEditCase}>
+
+                <!-- Complaint Type -->
                 <div class="slds-col slds-size_3-of-12">
-                    <lightning-combobox label="Complaint Type" value={complaintTypeValue} options={complaintTypeOptions}
-                        onchange={handleComplaintTypeChange} required class="custom-combobox">
-                    </lightning-combobox>
-                </div>
-            <!-- </template> -->
-
-            <!-- Complaint Source -->
-            <template if:true={showComplaintSource}>
-                <div class="slds-col slds-size_3-of-12">
-
-                    <label class="slds-form-element__label">
-                        <abbr class="slds-required" title="required">*</abbr>
-                        Complaint Source
-
-                        <template if:true={complaintSourceValue}>
-                            <lightning-helptext content={helpText}>
-                            </lightning-helptext>
-                        </template>
-                    </label>
-
-                    <lightning-combobox variant="label-hidden" value={complaintSourceValue}
-                        options={complaintSourceOptions} onchange={handleComplaintSourceChange} required
+                    <lightning-combobox
+                        label="Complaint Type"
+                        value={complaintTypeValue}
+                        options={complaintTypeOptions}
+                        onchange={handleComplaintTypeChange}
+                        required
                         class="custom-combobox">
                     </lightning-combobox>
-
                 </div>
+
+                <!-- Complaint Source -->
+                <template if:true={showComplaintSource}>
+                    <div class="slds-col slds-size_3-of-12">
+
+                        <label class="slds-form-element__label">
+                            <abbr class="slds-required" title="required">*</abbr>
+                            Complaint Source
+
+                            <template if:true={complaintSourceValue}>
+                                <lightning-helptext content={helpText}>
+                                </lightning-helptext>
+                            </template>
+                        </label>
+
+                        <lightning-combobox
+                            variant="label-hidden"
+                            value={complaintSourceValue}
+                            options={complaintSourceOptions}
+                            onchange={handleComplaintSourceChange}
+                            required
+                            class="custom-combobox">
+                        </lightning-combobox>
+
+                    </div>
+                </template>
+
+            </template>
+
+            <!-- VIEW MODE -->
+            <template if:false={modeEditCase}>
+
+                <!-- Complaint Type -->
+                <template if:true={complaintTypeValue}>
+                    <div class="slds-col slds-size_3-of-12">
+                        <label class="slds-form-element__label">
+                            Complaint Type
+                        </label>
+
+                        <div class="slds-form-element__static">
+                            {complaintTypeValue}
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Complaint Source -->
+                <template if:true={complaintSourceValue}>
+                    <div class="slds-col slds-size_3-of-12">
+
+                        <label class="slds-form-element__label">
+                            Complaint Source
+
+                            <template if:true={complaintSourceValue}>
+                                <lightning-helptext content={helpText}>
+                                </lightning-helptext>
+                            </template>
+                        </label>
+
+                        <div class="slds-form-element__static">
+                            {complaintSourceValue}
+                        </div>
+
+                    </div>
+                </template>
+
             </template>
 
         </div>
-
-
     </div>
 </template>

@@ -2111,6 +2111,11 @@ public without sharing class FEC_CaseBusinessService {
         FEC_Current_Status__c = finalStatusBeforeSubmit
       );
 
+      //HieuTT74: [UPDATE 9/5/2026: FECREDIT_CSM_2025_KH-1143 - Cập nhật hiển thị button Execute cho Case]
+      FEC_CaseExecuteService.createRoutingActionHistory(caseId, currentOwnerName, nextOwnerName);
+      //----------//
+
+
       List<FEC_Routing_Action_History__c> dupCandidates = [
         SELECT Id, FEC_Description__c, FEC_Original_User_Queue__c, FEC_Updated_User_Queue__c, CreatedDate
         FROM FEC_Routing_Action_History__c

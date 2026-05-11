@@ -81,7 +81,7 @@ public with sharing class FEC_CaseExecuteService {
         if (
             c.OwnerId != null &&
             String.valueOf(c.OwnerId)
-                .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
+            .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
         ) {
             
             isQueueMember = [
@@ -100,7 +100,7 @@ public with sharing class FEC_CaseExecuteService {
             
             System.debug(
                 'FAILED: User is not owner or queue member'
-            );
+                );
             
             return buildResult(c, false);
         }
@@ -112,7 +112,7 @@ public with sharing class FEC_CaseExecuteService {
         
         System.debug(
             'assignmentCount=' + assignmentCount
-        );
+            );
         
         // 4. No assignment
         if (assignmentCount == 0) {
@@ -130,26 +130,26 @@ public with sharing class FEC_CaseExecuteService {
             
             System.debug(
                 'profileName=' + profileName
-            );
+                );
             
             canExecute =
                 profileName ==
-                    FEC_ConstantCommon.TEAM_CS_SUPPORT
+                FEC_ConstantCommon.TEAM_CS_SUPPORT
                 ||
                 profileName ==
-                    FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
+                FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
         }
         
         System.debug(
             'FINAL canExecute=' + canExecute
-        );
+            );
         
         return buildResult(c, canExecute);
     }
     
     private static ExecuteVisibilityResult buildResult(
         Case c,
-        Boolean canExecute
+    Boolean canExecute
     ) {
         
         ExecuteVisibilityResult result =
@@ -165,11 +165,11 @@ public with sharing class FEC_CaseExecuteService {
         
         System.debug(
             'currentValue=' + currentValue
-        );
+            );
         
         System.debug(
             'shouldUpdate=' + result.shouldUpdate
-        );
+            );
         
         if (result.shouldUpdate) {
             
@@ -179,18 +179,18 @@ public with sharing class FEC_CaseExecuteService {
                 
                 update new Case(
                     Id = c.Id,
-                    FEC_Can_Execute__c = canExecute
-                );
+                FEC_Can_Execute__c = canExecute
+                    );
                 
                 System.debug(
                     'Case updated successfully'
-                );
+                    );
                 
             } catch (Exception e) {
                 
                 System.debug(
                     'UPDATE ERROR: ' + e.getMessage()
-                );
+                    );
                 
                 throw e;
                 
@@ -201,5 +201,119 @@ public with sharing class FEC_CaseExecuteService {
         }
         
         return result;
+    }
+    
+    /**
+     * Create Routing Action History
+     */
+    public static void createRoutingActionHistory(
+        Id caseId,
+    String oldOwnerName,
+    String newOwnerName
+    ) {
+        
+        Case c = [
+            SELECT
+                Id,
+                FEC_Current_Case_Stage__r.FEC_Code__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        
+        User currentUser = [
+            SELECT
+                Id,
+                Email,
+                UserRole.Name 
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ];
+        
+        
+        User oldOwner = [
+            SELECT
+                Id,
+                Name,
+                Email,
+                UserRole.Name, 
+                FEC_Main_Queue__c
+            FROM User
+            WHERE Name = :oldOwnerName
+            LIMIT 1
+        ];
+        
+        
+        
+        Group oldOwnerGroup = [
+            SELECT Id, DeveloperName,Name,Type
+            FROM Group
+            WHERE DeveloperName = :oldOwner.FEC_Main_Queue__c
+            LIMIT 1
+        ];
+        
+        
+        User newOwner = [
+            SELECT
+                Id,Name,
+                Email,
+                UserRole.Name 
+            FROM User
+            WHERE Name = :newOwnerName
+            LIMIT 1
+        ];
+        
+        
+        FEC_Routing_Action_History__c history =
+            new FEC_Routing_Action_History__c(
+            
+        FEC_Routing_Action__c =
+            'Change Owner',
+        
+        FEC_Routing_Action_Type__c =
+            'Case',
+        
+        FEC_Original_User_Queue__c =
+            oldOwnerGroup.Id,
+        
+        FEC_Original_User_Queue_ID__c =
+            oldOwnerGroup.Id,
+        
+        FEC_Updated_User_Queue__c =
+            emailLocalPart(newOwner.Email),
+        
+        FEC_Updated_User_Queue_ID__c =
+            newOwner.Id,
+        
+        FEC_User__c =
+            emailLocalPart(currentUser.Email),
+        
+        FEC_User_Role__c =
+            currentUser.UserRole.Name,
+        
+        FEC_Stage_Name__c =
+            c.FEC_Current_Case_Stage__r
+            .FEC_Code__c,
+        
+        FEC_Case__c =
+            c.Id
+            );
+        
+        insert history;
+        
+        System.debug(
+            'Routing Action History created: '
+            + history.Id
+            );
+    }
+    
+    
+    public static String emailLocalPart(String email) {
+        if (String.isBlank(email)) {
+            return null;
+        }
+        List<String> parts = email.split('@');
+        return parts.isEmpty() ? email.trim() : parts[0].trim();
     }
 }
