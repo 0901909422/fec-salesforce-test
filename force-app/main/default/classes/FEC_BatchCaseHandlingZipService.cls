@@ -6,16 +6,16 @@ public without sharing class FEC_BatchCaseHandlingZipService {
     public static FEC_BatchCaseHandlingZipResult downloadAttachmentsZip(String filtersJson, Integer startIndex, Integer endIndex) {
         FEC_BatchCaseHandlingZipResult out = new FEC_BatchCaseHandlingZipResult();
         out.success = false;
-        out.message = 'No attachment data.';
+        out.message = System.Label.FEC_Batch_Case_Handling_Zip_No_Attachment_Data;
         if (startIndex == null || endIndex == null || startIndex < 1 || endIndex < startIndex) {
-            out.message = 'Case set không hợp lệ.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Case_Set_Invalid;
             return out;
         }
         Integer maxEnd = Math.min(endIndex, MAX_ATTACHMENT_CASE_SET);
         Integer start = startIndex;
         Integer countToTake = maxEnd - start + 1;
         if (countToTake < 1) {
-            out.message = 'Case set không hợp lệ.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Case_Set_Invalid;
             return out;
         }
         Integer offsetRows = start - 1;
@@ -33,7 +33,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             ' ORDER BY FEC_Case_Created_On__c ASC NULLS LAST LIMIT ' + countToTake + ' OFFSET ' + offsetRows
         );
         if (cases.isEmpty()) {
-            out.message = 'Không có Case trong khoảng đã chọn.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_No_Cases_In_Range;
             return out;
         }
 
@@ -49,7 +49,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             WHERE LinkedEntityId IN :caseIds
         ];
         if (links.isEmpty()) {
-            out.message = 'Các Case đã chọn không có tệp đính kèm.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Cases_No_Attachments;
             return out;
         }
 
@@ -67,7 +67,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             WHERE IsLatest = true AND ContentDocumentId IN :docIds
         ];
         if (versions.isEmpty()) {
-            out.message = 'Không lấy được tệp đính kèm.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
 
@@ -88,7 +88,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             added += 1;
         }
         if (added == 0) {
-            out.message = 'Tổng dung lượng file vượt quá 10MB.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
             return out;
         }
 
@@ -109,7 +109,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
         out.success = true;
         out.fileName = zipCv.Title + '.zip';
         out.downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(inserted.Id);
-        out.message = 'Tải file thành công.';
+        out.message = System.Label.FEC_Batch_Case_Handling_Zip_Download_Success;
         return out;
     }
 
@@ -117,7 +117,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
         FEC_BatchCaseHandlingZipResult out = new FEC_BatchCaseHandlingZipResult();
         out.success = false;
         if (files == null || files.isEmpty()) {
-            out.message = 'No files to zip.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_No_Files_To_Zip;
             return out;
         }
         Compression.ZipWriter writer = new Compression.ZipWriter();
@@ -141,7 +141,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             }
             Integer entrySize = entryBlob == null ? 0 : entryBlob.size();
             if (totalRawBytes + entrySize > MAX_ZIP_BYTES) {
-                out.message = 'Tổng dung lượng file vượt quá 10MB.';
+                out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
                 return out;
             }
             String entry = name;
@@ -161,12 +161,12 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             added += 1;
         }
         if (added == 0) {
-            out.message = 'No files to zip.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_No_Files_To_Zip;
             return out;
         }
         Blob archive = writer.getArchive();
         if (archive != null && archive.size() > MAX_ZIP_BYTES) {
-            out.message = 'Tổng dung lượng file vượt quá 10MB.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
             return out;
         }
         String prefix = String.isBlank(archiveName) ? 'FilteredCasesExport' : archiveName;
@@ -186,16 +186,16 @@ public without sharing class FEC_BatchCaseHandlingZipService {
         out.success = true;
         out.fileName = title + '.zip';
         out.downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(ins.Id);
-        out.message = 'Tải file thành công.';
+        out.message = System.Label.FEC_Batch_Case_Handling_Zip_Download_Success;
         return out;
     }
 
     public static FEC_BatchCaseHandlingZipResult downloadCaseAttachmentsZip(Id caseId) {
         FEC_BatchCaseHandlingZipResult out = new FEC_BatchCaseHandlingZipResult();
         out.success = false;
-        out.message = 'No attachment data.';
+        out.message = System.Label.FEC_Batch_Case_Handling_Zip_No_Attachment_Data;
         if (caseId == null) {
-            out.message = 'Case không hợp lệ.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Case_Invalid;
             return out;
         }
         Case c = [
@@ -210,7 +210,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             WHERE LinkedEntityId = :caseId
         ];
         if (links.isEmpty()) {
-            out.message = 'Case không có tệp đính kèm.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Case_No_Attachments;
             return out;
         }
         Set<Id> docIds = new Set<Id>();
@@ -223,7 +223,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             WHERE IsLatest = true AND ContentDocumentId IN :docIds
         ];
         if (versions.isEmpty()) {
-            out.message = 'Không lấy được tệp đính kèm.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
         Compression.ZipWriter writer = new Compression.ZipWriter();
@@ -241,7 +241,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             added += 1;
         }
         if (added == 0) {
-            out.message = 'Tổng dung lượng file vượt quá 10MB.';
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
             return out;
         }
         ContentVersion zipCv = new ContentVersion();
@@ -253,7 +253,7 @@ public without sharing class FEC_BatchCaseHandlingZipService {
         out.success = true;
         out.fileName = zipCv.Title + '.zip';
         out.downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(zipCv.Id);
-        out.message = 'Tải file thành công.';
+        out.message = System.Label.FEC_Batch_Case_Handling_Zip_Download_Success;
         return out;
     }
 }

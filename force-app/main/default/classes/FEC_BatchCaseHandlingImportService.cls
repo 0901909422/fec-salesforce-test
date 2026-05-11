@@ -81,17 +81,17 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         for (FEC_BatchCaseHandlingImportRow rr : output) {
             List<String> errs = new List<String>();
             if (String.isBlank(rr.caseIdSearch)) {
-                errs.add('Thiếu dữ liệu Case ID.');
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id);
             }
             Case matched = String.isNotBlank(rr.caseIdSearch) ? caseBySearch.get(rr.caseIdSearch) : null;
             if (String.isNotBlank(rr.caseIdSearch) && matched == null) {
-                errs.add('Case ID không tồn tại trong hệ thống');
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found);
             } else if (matched != null && matched.IsClosed) {
-                errs.add('Case ID đã ở trạng thái Closed (không cho phép cập nhật)');
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Case_Closed);
             }
             if (String.isNotBlank(rr.caseIdSearch)) {
                 if (seenCaseSearch.contains(rr.caseIdSearch)) {
-                    errs.add('Cùng Case ID xuất hiện nhiều dòng trong file import.');
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id);
                 } else {
                     seenCaseSearch.add(rr.caseIdSearch);
                 }
@@ -104,64 +104,64 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                     try {
                         asgId = Id.valueOf(rr.assignmentId.trim());
                     } catch (Exception e) {
-                        errs.add('Assignment ID không tồn tại trong hệ thống');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
                         asgId = null;
                     }
                     if (asgId != null) {
                         FEC_Assignment__c asg = assignmentById.get(asgId);
                         if (asg == null) {
-                            errs.add('Assignment ID không tồn tại trong hệ thống');
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
                         } else if (matched != null && asg.FEC_Case__c != matched.Id) {
-                            errs.add('Assignment ID không tồn tại trong hệ thống');
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found);
                         } else if (String.isNotBlank(asg.FEC_Assignment_Status__c) && asg.FEC_Assignment_Status__c.startsWith('Resolved-')) {
-                            errs.add('Assignment ID đã ở trạng thái Closed (không cho phép cập nhật)');
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Closed);
                         }
                     }
                     if (String.isNotBlank(rr.routingAction) && String.isNotBlank(rr.assignmentRoutingAction)) {
-                        errs.add('Đã nhập Assignment Routing Action thì không nhập Routing Action ở level Case.');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions);
                     }
                     if (String.isBlank(rr.routingAction) && String.isBlank(rr.assignmentRoutingAction)) {
-                        errs.add('Thiếu dữ liệu Routing Action/Assignment Routing Action.');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing);
                     }
                     if (String.isNotBlank(rr.routingAction)) {
                         String caseMethod = resolveRoutingMethodKey(rr.routingAction);
                         if (caseMethod == null) {
-                            errs.add('Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define');
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                         } else if (!isResolvedOrRejectCaseRouting(rr.routingAction)) {
-                            errs.add('Khi có Assignment ID, chỉ cho phép Routing Action level Case là Resolve/Reject.');
+                            errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only);
                         }
                     }
                     if (String.isNotBlank(rr.assignmentRoutingAction) && resolveRoutingMethodKey(rr.assignmentRoutingAction) == null) {
-                        errs.add('Giá trị Assignment Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid);
                     }
                 } else {
                     if (String.isBlank(rr.routingAction)) {
-                        errs.add('Thiếu dữ liệu Routing Action');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
                     } else if (resolveRoutingMethodKey(rr.routingAction) == null) {
-                        errs.add('Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                     }
                     if (String.isNotBlank(rr.assignmentRoutingAction)) {
-                        errs.add('Không nhập Assignment Routing Action khi không có Assignment ID.');
+                        errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id);
                     }
                 }
             } else {
                 if (String.isNotBlank(rr.assignmentRoutingAction)) {
-                    errs.add('Không nhập Assignment Routing Action đối với quy trình này.');
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process);
                 }
                 if (String.isNotBlank(rr.assignmentId)) {
-                    errs.add('Không sử dụng Assignment ID đối với quy trình này.');
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process);
                 }
                 if (String.isBlank(rr.routingAction)) {
-                    errs.add('Thiếu dữ liệu Routing Action');
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action);
                 } else if (resolveRoutingMethodKey(rr.routingAction) == null) {
-                    errs.add('Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define');
+                    errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid);
                 }
             }
 
             if (String.isBlank(rr.inputtedRemarks)) {
-                errs.add('Thiếu dữ liệu Remark');
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Missing_Remark);
             } else if (rr.inputtedRemarks.length() > REMARK_MAX_LEN) {
-                errs.add('Giá trị Remark vượt quá số ký tự cho phép (32,768 ký tự)');
+                errs.add(System.Label.FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long);
             }
 
             if (!errs.isEmpty()) {
@@ -187,7 +187,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 caseId = Id.valueOf(rr.recordId);
             } catch (Exception e) {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
-                rr.errors = appendError(rr.errors, 'Record Id không hợp lệ.');
+                rr.errors = appendError(rr.errors, System.Label.FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid);
                 continue;
             }
             String actionLabel = rr.routingAction;
@@ -200,8 +200,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.errors = appendError(
                     rr.errors,
                     cofOrGsr
-                        ? 'Giá trị Assignment Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define'
-                        : 'Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define'
+                        ? System.Label.FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid
+                        : System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid
                 );
                 continue;
             }
@@ -209,7 +209,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
-                    'Routing action cần tham số bổ sung (queue / decision / transfer / revert) — không xử lý qua Bulk Import.'
+                    System.Label.FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params
                 );
                 continue;
             }
