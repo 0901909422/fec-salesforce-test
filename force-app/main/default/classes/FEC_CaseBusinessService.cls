@@ -486,7 +486,7 @@ public without sharing class FEC_CaseBusinessService {
 
       if (String.isNotBlank(selectedCaseStageId)) {
         caseStageQuery =
-          'SELECT Id, Name ' +
+          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE Id = :id ' +
           'AND FEC_Active__c = TRUE '; 
@@ -498,7 +498,7 @@ public without sharing class FEC_CaseBusinessService {
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
         caseStageQuery =
-          'SELECT Id, Name ' +
+          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
           'FROM FEC_Case_Stage__c ' +
           'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
           'AND FEC_Active__c = TRUE ' +
@@ -536,7 +536,7 @@ public without sharing class FEC_CaseBusinessService {
 
       result.stage = selectedStage.Id;
       result.stageName = selectedStage.Name;
-      Boolean forceReadonlyIncorrectPaymentOnLatestRevert = isLatestRevertToCurrentStage(
+      Boolean isLatestRevertToCurrentStage = isLatestRevertToCurrentStage(
         selectedCase.Id,
         selectedStage.Id
       );
@@ -630,21 +630,23 @@ public without sharing class FEC_CaseBusinessService {
 
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
-            if (String.isNotBlank(lwcName)) {
+            Boolean isCOFStage1NotRevert = !isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
+            Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
+            if (String.isNotBlank(lwcName) && !isCOFStage1NotRevert) {
               DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
               lwcSlot.componentName = lwcName;
               lwcSlot.order = subSectionOrderTemp;
               lwcSlot.fieldLayout = (Decimal) item.get(
                 'FEC_Sub_Section_Field_Layout__c'
               );
-              lwcSlot.subSectionName = subSectionNameTemp;
+              lwcSlot.subSectionName = isCOFStage1Revert ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
               lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
                 item,
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
               if (
-                forceReadonlyIncorrectPaymentOnLatestRevert &&
+                isLatestRevertToCurrentStage &&
                 LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
               ) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
@@ -2110,6 +2112,11 @@ public without sharing class FEC_CaseBusinessService {
         FEC_User_Role__c = userlst.get(0).UserRole?.Name,
         FEC_Current_Status__c = finalStatusBeforeSubmit
       );
+
+      //HieuTT74: [UPDATE 9/5/2026: FECREDIT_CSM_2025_KH-1143 - Cập nhật hiển thị button Execute cho Case]
+      FEC_CaseExecuteService.createRoutingActionHistory(caseId, currentOwnerName, nextOwnerName);
+      //----------//
+
 
       List<FEC_Routing_Action_History__c> dupCandidates = [
         SELECT Id, FEC_Description__c, FEC_Original_User_Queue__c, FEC_Updated_User_Queue__c, CreatedDate
@@ -4428,9 +4435,15 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    Set<Id> allAssociatedIds = new Set<Id>{ userId, roleId };
-
-    List<Group> userQueues = [
+    
+    // Start with the user's direct ID
+    Set<Id> allAssociatedIds = new Set<Id>{ userId };
+    // 1. Add the Group IDs that correspond to the User's Role
+    Group roleGroup = [SELECT Id FROM Group WHERE RelatedId = :roleId AND Type = 'Role' LIMIT 1];
+    allAssociatedIds.add(roleGroup.Id);
+    System.debug('getTransferQueues allAssociatedIds ' + allAssociatedIds);
+    // 2. Query the Queues where the User, their Role Group, or their Public Groups are members
+    return [
         SELECT Id, Name, DeveloperName  
         FROM Group 
         WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE 
@@ -4440,56 +4453,7 @@ public without sharing class FEC_CaseBusinessService {
             WHERE UserOrGroupId IN :allAssociatedIds
         )
     ];
-
-    Set<String> currentQueueNames = new Set<String>();
-    for (Group g : userQueues) {
-        currentQueueNames.add(g.DeveloperName);
-    }
-
-    if (currentQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 3: Tìm Team Name chung dựa trên Queue Name
-    List<FEC_Team_Queue__c> matchedTeamQueues = [
-        SELECT FEC_Select_Team__r.Name 
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Queue_Name__c IN :currentQueueNames
-    ];
-
-    Set<String> teamNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : matchedTeamQueues) {
-        teamNames.add(tq.FEC_Select_Team__r.Name);
-    }
-
-    if (teamNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 4: Lấy danh sách Tên Queue (FEC_Queue_Name__c) thuộc các Team Name tìm được
-    List<FEC_Team_Queue__c> allQueuesInTeam = [
-        SELECT FEC_Queue_Name__c
-        FROM FEC_Team_Queue__c
-        WHERE FEC_Select_Team__r.Name IN :teamNames
-    ];
-
-    Set<String> targetQueueNames = new Set<String>();
-    for (FEC_Team_Queue__c tq : allQueuesInTeam) {
-        targetQueueNames.add(tq.FEC_Queue_Name__c);
-    }
-
-    if (targetQueueNames.isEmpty()) {
-        return new List<Group>();
-    }
-
-    // BƯỚC 5: Query bảng Group để trả về Id và Name thật của Queue
-    return [
-        SELECT Id, Name, DeveloperName
-        FROM Group
-        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND DeveloperName IN :targetQueueNames
-        ORDER BY Name ASC
-    ];
-  }
+}
 
   private static Section buildAccountInfor(Case c) {
     // MAIN SECTION
