@@ -55,6 +55,10 @@
         <name>CustomObject</name>
     </types>
     <types>
+        <members>FEC_DataCampaign__c.FEC_IsAtOrWithinLifetime__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
         <members>*</members>
         <name>CustomLabel</name>
     </types>

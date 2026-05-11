@@ -31,7 +31,7 @@ public with sharing class FEC_PushCallbackRecordsBatch implements Database.Batch
                 'AND FEC_RecordStatus__c != \'Resolved-Cancelled\') ' +
                 'OR FEC_CallbackRequested__c = \'true\'' +
             ') ' +
-            'AND FEC_RecordCurrentLifetime__c <= FEC_RecordLifetime__c ' +
+            'AND FEC_IsAtOrWithinLifetime__c = true ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true';
 
         this.totalRecords = Database.countQuery(countQuery);
