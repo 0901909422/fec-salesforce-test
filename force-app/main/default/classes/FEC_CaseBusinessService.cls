@@ -224,14 +224,67 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId = selectedCase.FEC_SubCategory__c;
       if (String.isBlank(subCodeId))
         subCodeId = selectedCase.FEC_SubCode__c;
-      Boolean isUpdatedNocDifferentFromCurrent =
-        hasIncomingNocSelection &&
-        (
-          incomingProductTypeId != selectedCase.FEC_Product_Type__c ||
-          incomingCategoryId != selectedCase.FEC_Category__c ||
-          incomingSubCategoryId != selectedCase.FEC_SubCategory__c ||
-          incomingSubCodeId != selectedCase.FEC_SubCode__c
-        );
+
+      // GSR: so bộ NOC từ UI với bộ NOC trên FEC_Case_Flow_History__c (bản đầu có Nature of Case),
+      // cùng hướng chọn bản ghi với FEC_CaseEditNOCController.getOriginalNOCFromFlowHistory (CreatedDate ASC, LIMIT 1).
+      Id flowHistProductTypeId = selectedCase.FEC_Product_Type__c;
+      Id flowHistCategoryId = selectedCase.FEC_Category__c;
+      Id flowHistSubCategoryId = selectedCase.FEC_SubCategory__c;
+      Id flowHistSubCodeId = selectedCase.FEC_SubCode__c;
+      List<FEC_Case_Flow_History__c> flowNocBaselineLst = [
+        SELECT
+          FEC_Nature_of_Cases__c,
+          FEC_Nature_of_Cases__r.FEC_Product_Type__c,
+          FEC_Nature_of_Cases__r.FEC_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Code__c,
+          FEC_Nature_of_Cases__r.FEC_Business_Process__r.FEC_Code__c
+        FROM FEC_Case_Flow_History__c
+        WHERE
+          FEC_Case__c = :selectedCase.Id
+          AND FEC_Nature_of_Cases__c != NULL
+        ORDER BY CreatedDate ASC
+        LIMIT 1
+      ];
+      Boolean hideOriginalInfoSubsectionLabelFromFlowHistGsr = false;
+      if (!flowNocBaselineLst.isEmpty() && flowNocBaselineLst[0].FEC_Nature_of_Cases__r != null) {
+        FEC_Nature_of_Case__c baseNoc = flowNocBaselineLst[0].FEC_Nature_of_Cases__r;
+        flowHistProductTypeId = baseNoc.FEC_Product_Type__c;
+        flowHistCategoryId = baseNoc.FEC_Category__c;
+        flowHistSubCategoryId = baseNoc.FEC_Sub_Category__c;
+        flowHistSubCodeId = baseNoc.FEC_Sub_Code__c;
+        String flowHistNocBpCode = baseNoc.FEC_Business_Process__r != null
+          ? baseNoc.FEC_Business_Process__r.FEC_Code__c
+          : null;
+        hideOriginalInfoSubsectionLabelFromFlowHistGsr =
+          String.isNotBlank(flowHistNocBpCode) &&
+          flowHistNocBpCode.toUpperCase().contains('GSR');
+      }
+
+      // Có thay đổi bộ NOC so với baseline flow history: có payload UI thì so incoming; không có (lần tải đầu getData) thì so Case vs baseline.
+      Boolean isUpdatedNocDifferentFromCurrent;
+      if (hasIncomingNocSelection) {
+        isUpdatedNocDifferentFromCurrent =
+          nocLookupDimensionDiffers(incomingProductTypeId, flowHistProductTypeId) ||
+          nocLookupDimensionDiffers(incomingCategoryId, flowHistCategoryId) ||
+          nocLookupDimensionDiffers(incomingSubCategoryId, flowHistSubCategoryId) ||
+          nocLookupDimensionDiffers(incomingSubCodeId, flowHistSubCodeId);
+      } else {
+        isUpdatedNocDifferentFromCurrent =
+          nocLookupDimensionDiffersIds(
+            selectedCase.FEC_Product_Type__c,
+            flowHistProductTypeId
+          ) ||
+          nocLookupDimensionDiffersIds(
+            selectedCase.FEC_Category__c,
+            flowHistCategoryId
+          ) ||
+          nocLookupDimensionDiffersIds(
+            selectedCase.FEC_SubCategory__c,
+            flowHistSubCategoryId
+          ) ||
+          nocLookupDimensionDiffersIds(selectedCase.FEC_SubCode__c, flowHistSubCodeId);
+      }
       String actualBusinessProcessCode = selectedCase.FEC_Actual_Nature_of_Case__r == null
         ? null
         : selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r?.FEC_Code__c;
@@ -345,7 +398,8 @@ public without sharing class FEC_CaseBusinessService {
 
       String natureOfCaseQuery;
       String selectedNatureOfCaseId = selectedCase.FEC_Actual_Nature_of_Case__c;
-      Boolean isGsrNocDisplayMode = isActualNatureGsr && hasIncomingNocSelection;
+      // GSR: luôn áp dụng rule subsection (ẩn Property Info khi NOC không đổi so với history) kể cả lần tải đầu không truyền NOC từ UI.
+      Boolean isGsrNocDisplayMode = isActualNatureGsr;
       Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
       if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
         // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
@@ -600,13 +654,12 @@ public without sharing class FEC_CaseBusinessService {
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
-              if (subSectionNameTemp != 'Property Info') {
-                continue;
-              }
+              //Có khác: 
               if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
                 continue;
               }
             } else {
+              //Không khác: nếu property info thì không hiển thị
               if ('Property Info'.equals(subSectionNameTemp)) {
                 continue;
               }
@@ -651,6 +704,12 @@ public without sharing class FEC_CaseBusinessService {
               ) {
                 lwcSlot.fecMasterDataSettingIsEdit = false;
               }
+              if (
+                hideOriginalInfoSubsectionLabelFromFlowHistGsr &&
+                'Original Info'.equals(subSectionNameTemp)
+              ) {
+                lwcSlot.hideSubSectionHeading = true;
+              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -672,6 +731,13 @@ public without sharing class FEC_CaseBusinessService {
                 ) {
                   subSectionTemp.order = subSectionOrderTemp;
                 }
+              }
+              if (
+                hideOriginalInfoSubsectionLabelFromFlowHistGsr &&
+                'Original Info'.equals(subSectionNameTemp) &&
+                subSectionTemp != null
+              ) {
+                subSectionTemp.hideSubSectionHeading = true;
               }
 
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
@@ -1530,6 +1596,23 @@ public without sharing class FEC_CaseBusinessService {
     ];
     return !grp.isEmpty() &&
       FEC_ConstantCommon.GROUP_TYPE_QUEUE.equals(grp[0].Type);
+  }
+
+  /** true nếu giá trị lookup NOC từ UI khác baseline Id (null/blank coi là cùng khi cả hai rỗng). */
+  private static Boolean nocLookupDimensionDiffers(String incoming, Id baseline) {
+    String inc = incoming == null ? '' : incoming.trim();
+    String base = baseline == null ? '' : String.valueOf(baseline);
+    if (String.isBlank(inc) && String.isBlank(base)) {
+      return false;
+    }
+    return inc != base;
+  }
+
+  private static Boolean nocLookupDimensionDiffersIds(Id incoming, Id baseline) {
+    return nocLookupDimensionDiffers(
+      incoming == null ? null : String.valueOf(incoming),
+      baseline
+    );
   }
 
   //thangtv: khi Owner hiện tại là Queue, tra FEC_Routing_Action_History__c để tìm User thực sự
@@ -3574,11 +3657,18 @@ public without sharing class FEC_CaseBusinessService {
     public String subSectionName;
     @AuraEnabled
     public Boolean fecMasterDataSettingIsEdit;
+    /** true: không hiển thị dòng label subsection (vd Original Info + GSR trên NOC flow history). */
+    @AuraEnabled
+    public Boolean hideSubSectionHeading;
   }
 
   public class Section implements Comparable {
     @AuraEnabled
     public String name;
+
+    /** true: ẩn label subsection trên UI (vd Original Info khi BP NOC trên flow history chứa GSR). */
+    @AuraEnabled
+    public Boolean hideSubSectionHeading;
 
     @AuraEnabled
     public Error error;

@@ -337,7 +337,7 @@ public with sharing class FEC_DNBHandler {
                 
                 dnbRecord.FEC_Current_Status__c = isActive ? FEC_ConstantCommon.DNB_STATUS_ACTIVE : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
                 dnbRecord.FEC_Original_Reason__c = item.reason;
-                dnbRecord.FEC_DNB_Channel__c = item.source2;
+                dnbRecord.FEC_DNB_Channel__c = item.source;
                 dnbRecord.FEC_Type__c = item.type;
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
                 
