@@ -120,6 +120,7 @@ public with sharing class FEC_CampaignBatchService {
             'AND FEC_SentInstantly__c = null ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
             'AND FEC_RecordStatus__c != \'Pending-callback\' ' +
+            'AND FEC_IsWithinLifetime__c = true ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true ' +
             'AND (FEC_CallbackRequested__c != \'true\' OR FEC_CallbackRequested__c = null)';
     }
@@ -181,7 +182,7 @@ public with sharing class FEC_CampaignBatchService {
                 'AND FEC_RecordStatus__c != \'Resolved-Cancelled\') ' +
                 'OR FEC_CallbackRequested__c = \'true\'' +
             ') ' +
-            'AND FEC_RecordCurrentLifetime__c <= FEC_RecordLifetime__c ' +
+            'AND FEC_IsAtOrWithinLifetime__c = true ' +
             'AND FEC_CS_Campaign__r.FEC_PushInstant__c = true';
     }
 }
