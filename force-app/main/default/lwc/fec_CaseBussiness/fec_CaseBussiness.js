@@ -331,7 +331,8 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   // DungLT — đăng ký LWC upload file động (master data)
   fec_FileUploadCard: () => import('c/fec_FileUploadCard'),
   fec_OriginalInformation: () => import('c/fec_OriginalInformation'),
-  fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm')
+  fec_PointsRedemptionCaseForm: () => import('c/fec_PointsRedemptionCaseForm'),
+  fec_COFFraudRelatedView: () => import('c/fec_COFFraudRelatedView')
 };
 
 /**
@@ -494,7 +495,8 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   businessLoaded = false;
 
-  @track activeSectionlst = ["routing-action"];
+  //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+  @track activeSectionlst = [];
 
   routingAccordionSectionKey = "routing-action";
 
@@ -1363,7 +1365,8 @@ export default class Fec_CaseBussiness extends LightningElement {
             : (res.natureOfCase || natureOfCaseIdFallback);
         this.business = { ...res, natureOfCase };
 
-        this.activeSectionlst = ["routing-action"];
+        //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+        this.activeSectionlst = [];
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
         this.business.hasRoutingAction =
@@ -1579,7 +1582,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyRemovePhonePlacement();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
-        this.activeSectionlst = [...this.activeSectionlst, ...sectionlst];
+        //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+        // Chỉ mở section routing khi thực sự render (showRoutingSection); tránh active-section-name
+        // chứa "routing-action" khi không có section đó — lightning-accordion có thể co các section còn lại.
+        this.activeSectionlst = [
+          ...(this.showRoutingSection ? ["routing-action"] : []),
+          ...sectionlst,
+        ];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
@@ -1982,11 +1991,9 @@ export default class Fec_CaseBussiness extends LightningElement {
         (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
+    //linhdev: Fix jira FECREDIT_CSM_2025_KH-293
     if (obj && obj.name === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER && field) {
-      const trimmed =
-        value == null || value === STR_EMPTY ? STR_EMPTY : String(value).trim();
-      field.customError =
-        trimmed === STR_EMPTY ? null : /^\d+$/.test(trimmed) ? null : FEC_MSG_Param_Must_Number.replace("{0}", field.label || FIELD_FEC_REF_NUMBER);
+      field.customError = null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);

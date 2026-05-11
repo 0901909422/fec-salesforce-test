@@ -55,11 +55,16 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   messageContext;
 
   // tungnm37 thêm: wire lấy businessCode để check COF/GSR
-  @wire(getRecord, { recordId: '$recordId', fields: [CASE_BUSINESS_PROCESS_CODE] })
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: [CASE_BUSINESS_PROCESS_CODE],
+  })
   wiredCase({ data }) {
     if (data) {
       const code = getFieldValue(data, CASE_BUSINESS_PROCESS_CODE);
-      this._isCofGsr = typeof code === 'string' && (code.startsWith('COF') || code.startsWith('GSR'));
+      this._isCofGsr =
+        typeof code === "string" &&
+        (code.startsWith("COF") || code.startsWith("GSR"));
     }
   }
 
@@ -127,6 +132,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
+          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
+          .filter(
+            (item) => !this._isCofGsr || item.Remark_Type__c !== "Assignment",
+          )
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -176,7 +185,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
-    // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
 
@@ -220,7 +228,20 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (message.caseId !== this.recordId) {
       return;
     }
-    if (message.natureOfCaseId) this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
+    //PhongBT: fix th đổi từ bộ noc đủ subcode sang bộ thiếu subcode thì updatedNoc lại hiển thị bộ đủ subcode
+    // Always sync latest NOC natureOfCase (including null) to avoid stale fallback.
+    // this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId ?? null;
+    if (message.natureOfCaseId)
+    this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
+
+    // Chỉ bật edit mode khi đây là hành động thực sự của user (không phải initial load)
+    if (message.isUserAction && !this.modeEditCase) {
+      this.modeEditCase = true;
+      if (!this.activeSections.includes("case-remark")) {
+        this.activeSections = [...this.activeSections, "case-remark"];
+      }
+    }
+
     const caseBusinessEle = this.template.querySelector(
       "c-fec_-case-bussiness",
     );
@@ -258,7 +279,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     console.log("📤 CASE_ACTION:", payload);
 
-    publish(this.messageContext, CASE_ACTION_CHANNEL, payload);
+    publish(this.messageContext, CASE_ACTION, payload);
   }
 
   /**
@@ -439,9 +460,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         updateRecord(recordInput);
       }
 
-      // Chuyển sang Case Review (chế độ xem), không đóng tab
+      //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
+      // Chuyển sang Case Review (chế độ xem), không đóng tab — publish mode trước để handleMessage nhận
+      // đổi từ edit → review (không gán modeEditCase=false trước, nếu không prev===next và bỏ qua resetViewMode/getData).
       setTimeout(async () => {
-        this.modeEditCase = false;
         this.handlePublishMode(false);
 
         this.handlePublishCaseAction("SUBMIT");

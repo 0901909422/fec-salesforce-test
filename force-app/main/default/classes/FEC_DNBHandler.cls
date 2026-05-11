@@ -32,6 +32,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String doNotBother;
         @AuraEnabled public String expectedExcludeTime;
         @AuraEnabled public String reason2;
+        @AuraEnabled public String channel;
         @AuraEnabled public String type;
         @AuraEnabled public String typeValue;
     }
@@ -183,8 +184,8 @@ public with sharing class FEC_DNBHandler {
         
         // ===== System layer =====
         if (res.sys2 != null) {
-            System.debug('code2: ' + res.sys2.code2);
-            System.debug('message2: ' + res.sys2.message2);
+            System.debug('code2: ' + res.sys2.code);
+            System.debug('message2: ' + res.sys2.message);
             System.debug('trans_id: ' + res.sys2.trans_id);
         }
         
@@ -273,9 +274,24 @@ public with sharing class FEC_DNBHandler {
         
         // ===== Build request =====
         FEC_GetDNBCalloutService.DNBRequest req = new FEC_GetDNBCalloutService.DNBRequest();
-        req.phone = caseRecord.FEC_Phone_Number__c;
-        req.nid   = caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c;
-        req.email = caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c;
+        
+        req.phone = String.isNotBlank(caseRecord.FEC_Phone_Number__c)
+            ? caseRecord.FEC_Phone_Number__c
+            : '';
+        
+        req.nid = (
+            caseRecord.FEC_Account_or_Contract__r != null &&
+            String.isNotBlank(caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c)
+            )
+            ? caseRecord.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            : '';
+        
+        req.email = (
+            caseRecord.FEC_Interaction__r != null &&
+            String.isNotBlank(caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c)
+            )
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+            : '';
         
         // ===== Call API =====
         FEC_GetDNBCalloutService.DNBResult res =
@@ -317,17 +333,16 @@ public with sharing class FEC_DNBHandler {
                 dnbRecord.FEC_Case__c = caseId;
                 
                 // safer boolean check
-                Boolean isActive = false;
-                if (item.do_not_bother != null) {
-                    isActive = String.valueOf(item.do_not_bother) == FEC_ConstantCommon.BOOLEAN_TRUE;
-                }
+                Boolean isActive = item.do_not_bother;
                 
                 dnbRecord.FEC_Current_Status__c = isActive ? FEC_ConstantCommon.DNB_STATUS_ACTIVE : FEC_ConstantCommon.DNB_STATUS_INACTIVE;
-                dnbRecord.FEC_Original_Reason__c = item.reason2;
-                dnbRecord.FEC_DNB_Channel__c = item.type;
+                dnbRecord.FEC_Original_Reason__c = item.reason;
+                dnbRecord.FEC_DNB_Channel__c = item.source2;
+                dnbRecord.FEC_Type__c = item.type;
                 dnbRecord.FEC_Phone_Email__c = item.type_value;
                 
-                if (item.expected_exclude_time != null) {
+                if (  String.isNotBlank(item.expected_exclude_time) &&
+                item.expected_exclude_time != 'N/A') {
                     try {
                         dnbRecord.FEC_Expiry_Date__c =
                             FEC_CommonUltils.parseDate(item.expected_exclude_time);
@@ -366,6 +381,7 @@ public with sharing class FEC_DNBHandler {
                     FEC_Expiry_Date__c,
                     FEC_Original_Reason__c,
                     FEC_DNB_Channel__c,
+                    FEC_Type__c,
                     FEC_Phone_Email__c
                 FROM FEC_Do_Not_Bother__c
                 WHERE FEC_Case__c = :caseId
@@ -377,7 +393,8 @@ public with sharing class FEC_DNBHandler {
                 item.doNotBother = record.FEC_Current_Status__c;
                 item.expectedExcludeTime = record.FEC_Expiry_Date__c != null ? String.valueOf(record.FEC_Expiry_Date__c) : null;
                 item.reason2 = record.FEC_Original_Reason__c;
-                item.type = record.FEC_DNB_Channel__c;
+                item.type = record.FEC_Type__c;
+                item.channel = record.FEC_DNB_Channel__c;
                 item.typeValue = record.FEC_Phone_Email__c;
                 dnbList.add(item);
             }

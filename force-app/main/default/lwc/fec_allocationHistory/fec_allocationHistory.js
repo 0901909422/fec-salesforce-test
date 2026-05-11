@@ -3,6 +3,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
+import { formatCurrency0 } from 'c/fec_CommonUtils';
 import { formatDateField } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
@@ -209,7 +210,7 @@ export default class Fec_allocationHistory extends LightningElement {
             CurrentSubPool: row?.CurrentSubPool ?? STR_EMPTY,
             Job: row?.Job ?? STR_EMPTY,
             DPD: row?.DPD ?? STR_EMPTY,
-            POS: row?.POS ?? STR_EMPTY
+            POS: formatCurrency0(row?.POS, { emptyDisplay: STR_EMPTY, integerMode: 'trunc' })
         }));
     }
 
