@@ -195,11 +195,6 @@
         <field>FEC_Customer_Search__c.FEC_Search_Phone_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Is_PIN_Reset_Success__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Support Specialist - Search Functions</label>
     <license>Salesforce</license>
