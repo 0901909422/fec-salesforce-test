@@ -5,6 +5,7 @@
  * trong khoảng StartDate–EndDate của config.
  * Một Case chỉ dùng một điều kiện lookup (ưu tiên theo STT design: CIF_NUMBER → ID_CARD → PHONE_NUMBER →
  * APPLICATION_ID → ACCOUNT_NO/CONTRACT_NO); nếu nhiều bản ghi FEC_CustomerAdditionalInfo__c khớp thì chỉ trả 1 bản (CreatedDate mới nhất).
+ * Chỉ trả bản ghi chi tiết khi Case.CreatedDate >= FEC_CustomerAdditionalInfo__c.CreatedDate (spec B3 Lưu ý).
  */
 public with sharing class FEC_CustomerAdditionalDataController {
 
@@ -76,6 +77,9 @@ public with sharing class FEC_CustomerAdditionalDataController {
 
         List<RowDTO> rows = new List<RowDTO>();
         for (FEC_CustomerAdditionalInfo__c row : raw) {
+            if (c.CreatedDate < row.CreatedDate) {
+                continue;
+            }
             if (row.FEC_Config__c == null) {
                 continue;
             }
@@ -111,6 +115,7 @@ public with sharing class FEC_CustomerAdditionalDataController {
     private static Case queryCase(Id caseId) {
         List<Case> cases = [
             SELECT RecordType.DeveloperName,
+                   CreatedDate,
                    FEC_Account_or_Contract__c,
                    FEC_Account_or_Contract__r.FEC_CIF_Number__c,
                    FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,

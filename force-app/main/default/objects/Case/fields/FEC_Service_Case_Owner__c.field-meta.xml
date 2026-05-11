@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Service_Case_Owner__c</fullName>
-    <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue</description>
+    <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue. Ẩn giá trị khi có assignment (COF/GSR)</description>
     <externalId>false</externalId>
-    <formula>IF (NOT(ISBLANK(ArchiveServiceCaseOwner__c)), ArchiveServiceCaseOwner__c,
+    <formula>IF(
+    /* tungnm37: Nếu có assignment (FEC_Assignment_Users__c có giá trị) thì return empty */
+    NOT(ISBLANK(FEC_Assignment_Users__c)),
+    &apos;&apos;,
+    /* Nếu không có assignment thì hiển thị owner như cũ */
     IF( Or(RecordType.Name = &apos;Customer Case&apos;, RecordType.Name = &apos;Internal Case&apos;),
-    (IF(ISBLANK(Owner:Queue.Id), LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1), Owner:Queue.Name)),&apos;&apos;)
+        (IF(ISBLANK(Owner:Queue.Id),
+            LEFT(Owner:User.Email,FIND(&quot;@&quot;, Owner:User.Email) - 1),
+            Owner:Queue.Name)),
+        &apos;&apos;)
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Service Case Owner</label>
