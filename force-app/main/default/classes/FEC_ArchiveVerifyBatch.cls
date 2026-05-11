@@ -34,9 +34,9 @@ public class FEC_ArchiveVerifyBatch
         return Database.getQueryLocator([
             SELECT Id, CaseNumber, FEC_ID_Search__c
             FROM Case
-            WHERE FEC_Archive_Status__c = 'Processing'
-            AND (FEC_Attachment_Status__c = 'Completed' OR FEC_Attachment_Status__c = NULL)
-            AND Status = 'Closed'
+            WHERE FEC_Archive_Status__c = :FEC_ConstantCommon.PROCESSING_STATUS
+            AND (FEC_Attachment_Status__c = :FEC_ConstantCommon.STATUS_COMPLETED OR FEC_Attachment_Status__c = NULL)
+            AND Status = :FEC_ConstantCommon.STATUS_CLOSED
             AND ClosedDate <= :threshold
             ORDER BY FEC_Archive_Sent_At__c ASC
         ]);
