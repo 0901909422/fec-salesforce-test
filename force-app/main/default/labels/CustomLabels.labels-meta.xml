@@ -15825,4 +15825,836 @@
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
     </labels>
+    <labels>
+        <fullName>FEC_BCH_RequestTimeout</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_RequestTimeout</shortDescription>
+        <value>Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_NoDataExport</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_NoDataExport</shortDescription>
+        <value>Không có dữ liệu để export.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_NoDataFound</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_NoDataFound</shortDescription>
+        <value>Không tìm thấy dữ liệu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportSuccess</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportSuccess</shortDescription>
+        <value>Xuất dữ liệu thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportFailed</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportFailed</shortDescription>
+        <value>Xuất dữ liệu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ImportSuccess</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ImportSuccess</shortDescription>
+        <value>Import dữ liệu thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ImportFailed</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ImportFailed</shortDescription>
+        <value>Import dữ liệu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_RequireFile</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_RequireFile</shortDescription>
+        <value>Vui lòng đính kèm tệp dữ liệu</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_InvalidFileFormat</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_InvalidFileFormat</shortDescription>
+        <value>Định dạng tệp không hợp lệ. Chỉ chấp nhận tệp .xlsx</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FileTooLarge</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FileTooLarge</shortDescription>
+        <value>Kích thước tệp vượt quá 150MB. Vui lòng kiểm tra lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FileNoData</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FileNoData</shortDescription>
+        <value>Tệp đính kèm không có dữ liệu. Vui lòng kiểm tra lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_HeaderInvalid</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_HeaderInvalid</shortDescription>
+        <value>Tệp đính kèm thiếu cột bắt buộc (Case ID, Routing Action, Inputted Remarks).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_BpRequired</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_BpRequired</shortDescription>
+        <value>Vui lòng chọn ít nhất một Business Process.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_NoBpFound</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_NoBpFound</shortDescription>
+        <value>Không tìm thấy Business Process phù hợp.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_TooManyRows</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_TooManyRows</shortDescription>
+        <value>Tổng số dòng vượt quá 100.000. Vui lòng thu hẹp bộ lọc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportNo</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportNo</shortDescription>
+        <value>No</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportYes</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportYes</shortDescription>
+        <value>Yes</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_AttachHas</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_AttachHas</shortDescription>
+        <value>Has attachment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_AttachNo</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_AttachNo</shortDescription>
+        <value>No attachment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ActionPickPlaceholder</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ActionPickPlaceholder</shortDescription>
+        <value>--Chọn action--</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ActionDownload</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ActionDownload</shortDescription>
+        <value>Download Attachments</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ActionExportAll</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ActionExportAll</shortDescription>
+        <value>Export All Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ActionExportSelected</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ActionExportSelected</shortDescription>
+        <value>Export Selected Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ActionImportUpdate</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ActionImportUpdate</shortDescription>
+        <value>Import Update Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_RoutingAction</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_RoutingAction</shortDescription>
+        <value>Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_Remarks</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_Remarks</shortDescription>
+        <value>Inputted Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_Status</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_Status</shortDescription>
+        <value>__Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_Errors</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_Errors</shortDescription>
+        <value>__Errors</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_AssignmentId</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_AssignmentId</shortDescription>
+        <value>Assignment ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ResultHdr_AssignmentRouting</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ResultHdr_AssignmentRouting</shortDescription>
+        <value>Assignment Routing Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterPickProperty</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterPickProperty</shortDescription>
+        <value>--Chọn thuộc tính--</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterPickOperator</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterPickOperator</shortDescription>
+        <value>--Chọn toán tử--</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_NoticeTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_NoticeTitle</shortDescription>
+        <value>Thông báo</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterMetaLoadFailed</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterMetaLoadFailed</shortDescription>
+        <value>Không tải được metadata bộ lọc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SearchFailedTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SearchFailedTitle</shortDescription>
+        <value>Search failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_DownloadFailedTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_DownloadFailedTitle</shortDescription>
+        <value>Download failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_AttachmentDownloadFailedBody</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_AttachmentDownloadFailedBody</shortDescription>
+        <value>Không thể tải tệp đính kèm.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportToastTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportToastTitle</shortDescription>
+        <value>Export</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SelectAtLeastOneCase</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SelectAtLeastOneCase</shortDescription>
+        <value>Chọn ít nhất một Case trong lưới.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_DownloadToastTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_DownloadToastTitle</shortDescription>
+        <value>Download</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_CannotCreateExportFile</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_CannotCreateExportFile</shortDescription>
+        <value>Không thể tạo file xuất dữ liệu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ZipCreatedSuccess</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ZipCreatedSuccess</shortDescription>
+        <value>Đã tạo file ZIP.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ZipCreateFailedBody</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ZipCreateFailedBody</shortDescription>
+        <value>Không thể tạo file ZIP.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_LoadFailedTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_LoadFailedTitle</shortDescription>
+        <value>Load failed</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_InvalidPageTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_InvalidPageTitle</shortDescription>
+        <value>Invalid page</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_InvalidPageBody</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_InvalidPageBody</shortDescription>
+        <value>Enter a page number ≥ 1.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_UnexpectedError</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_UnexpectedError</shortDescription>
+        <value>Unexpected error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ImportUnablePrefix</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ImportUnablePrefix</shortDescription>
+        <value>Không thể import</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_DataFileFallback</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_DataFileFallback</shortDescription>
+        <value>tệp dữ liệu</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_EmptyCasesHint</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_EmptyCasesHint</shortDescription>
+        <value>Chưa có dữ liệu — thêm điều kiện lọc và bấm Filter Data.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_DocumentLinkLabel</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_DocumentLinkLabel</shortDescription>
+        <value>Document</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_BpItemSingular</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_BpItemSingular</shortDescription>
+        <value>item</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_BpItemPlural</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_BpItemPlural</shortDescription>
+        <value>items</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_BpItemsSortedSuffix</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_BpItemsSortedSuffix</shortDescription>
+        <value> • Sorted by Business Process Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Section_FilterProperties</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Section_FilterProperties</shortDescription>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterHelpAnd</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterHelpAnd</shortDescription>
+        <value>Các dòng bộ lọc kết hợp AND. Customer Type nhiều giá trị: nhập cách nhau bằng dấu phẩy.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterResetHint</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterResetHint</shortDescription>
+        <value>Chưa thêm bộ lọc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_AddFilterRow</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_AddFilterRow</shortDescription>
+        <value>Add filter row</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterData</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterData</shortDescription>
+        <value>Filter Data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Reset</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Reset</shortDescription>
+        <value>Reset</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterPropertyField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterPropertyField</shortDescription>
+        <value>Filter property</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_PropertyPlaceholder</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_PropertyPlaceholder</shortDescription>
+        <value>Property</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_OperatorField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_OperatorField</shortDescription>
+        <value>Operator</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ValueField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ValueField</shortDescription>
+        <value>Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_RemoveRow</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_RemoveRow</shortDescription>
+        <value>Remove row</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Section_FilteredCases</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Section_FilteredCases</shortDescription>
+        <value>Filtered Cases</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SelectAll</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SelectAll</shortDescription>
+        <value>Select all</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_CustomerType</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_CustomerType</shortDescription>
+        <value>Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_CaseId</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_CaseId</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_Category</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_Category</shortDescription>
+        <value>Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_SubCategory</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_SubCategory</shortDescription>
+        <value>Sub Category</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_SubCode</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_SubCode</shortDescription>
+        <value>Sub Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_CaseStatus</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_CaseStatus</shortDescription>
+        <value>Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_CaseCreatedOn</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_CaseCreatedOn</shortDescription>
+        <value>Case Created On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_LastUpdatedOn</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_LastUpdatedOn</shortDescription>
+        <value>Last Updated On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_Attachments</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_Attachments</shortDescription>
+        <value>Attachments</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_AttachmentDownloaded</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_AttachmentDownloaded</shortDescription>
+        <value>Attachment Downloaded</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_PageSize</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_PageSize</shortDescription>
+        <value>Page size</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_TotalPrefix</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_TotalPrefix</shortDescription>
+        <value>Total:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Section_Action</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Section_Action</shortDescription>
+        <value>Action</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SelectActions</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SelectActions</shortDescription>
+        <value>Select Actions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_CaseSet</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_CaseSet</shortDescription>
+        <value>Case Set</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_UploadFiles</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_UploadFiles</shortDescription>
+        <value>Upload Files</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SelectedCountPrefix</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SelectedCountPrefix</shortDescription>
+        <value>Đã chọn:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Err_SelectAction</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Err_SelectAction</shortDescription>
+        <value>Vui lòng chọn action.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Err_SelectCaseSet</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Err_SelectCaseSet</shortDescription>
+        <value>Vui lòng chọn Case Set.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Section_MyBulkActions</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Section_MyBulkActions</shortDescription>
+        <value>My Bulk Actions</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_FileName</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_FileName</shortDescription>
+        <value>File Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_UploadedOn</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_UploadedOn</shortDescription>
+        <value>Uploaded On</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_UploadedBy</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_UploadedBy</shortDescription>
+        <value>Uploaded By</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_TotalRecords</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_TotalRecords</shortDescription>
+        <value>Total Records Count</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_TotalSuccess</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_TotalSuccess</shortDescription>
+        <value>Total Success Records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_TotalFailed</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_TotalFailed</shortDescription>
+        <value>Total Failed Records</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_Status</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_Status</shortDescription>
+        <value>Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_FailureReason</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_FailureReason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Col_Result</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Col_Result</shortDescription>
+        <value>Result</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_NoRecordsFound</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_NoRecordsFound</shortDescription>
+        <value>No records found.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_RemoveFile</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_RemoveFile</shortDescription>
+        <value>Remove file</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SortAlt</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SortAlt</shortDescription>
+        <value>Sort</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_SelectRow</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_SelectRow</shortDescription>
+        <value>Select</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Modal_BpSelectionTitle</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Modal_BpSelectionTitle</shortDescription>
+        <value>Bulk Service Case Selection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Modal_BpColName</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Modal_BpColName</shortDescription>
+        <value>Business Process Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_ExportWithAllProperties</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_ExportWithAllProperties</shortDescription>
+        <value>Export with all Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FooterOf</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FooterOf</shortDescription>
+        <value>of</value>
+    </labels>
 </CustomLabels>
