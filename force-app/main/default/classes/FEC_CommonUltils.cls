@@ -647,6 +647,29 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
+   * Format currency với comma thousand separator và giữ đúng số decimal places.
+   * Khác formatCurrency: .format() bỏ trailing zeros (.00), method này giữ lại.
+   * VD: 36888275.000, scale=2 → "36,888,275.00"
+   */
+  public static String formatCurrencyFixed(Decimal amount, Integer scale) {
+    if (amount == null) return '';
+    Integer sc = (scale == null || scale < 0) ? 0 : scale;
+    String plain = amount.setScale(sc, System.RoundingMode.HALF_UP).toPlainString();
+    Integer dotIdx = plain.indexOf('.');
+    String intPart = dotIdx >= 0 ? plain.substring(0, dotIdx) : plain;
+    String decPart = dotIdx >= 0 ? plain.substring(dotIdx + 1) : '';
+    while (decPart.length() < sc) decPart += '0';
+    // Thêm comma thousand separator vào phần nguyên
+    String result = '';
+    Integer len = intPart.length();
+    for (Integer i = 0; i < len; i++) {
+      if (i > 0 && Math.mod(len - i, 3) == 0) result += ',';
+      result += intPart.substring(i, i + 1);
+    }
+    return sc > 0 ? result + '.' + decPart : result;
+  }
+
+  /**
    * Số hiển thị đủ phần thập phân (vd API = 0 → "0.00"), dùng dấu chấm — tránh locale .format() bỏ .00.
    */
   public static String formatDecimalPlainScale(Decimal amount, Integer scale) {
