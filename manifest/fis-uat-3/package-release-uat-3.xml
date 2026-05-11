@@ -810,6 +810,36 @@
 		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
+        <members>FEC_Batch_Case_Handling_Import_Row_Status_Failed</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Attachment_Data</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_Set_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Cases_In_Range</members>
+        <members>FEC_Batch_Case_Handling_Zip_Cases_No_Attachments</members>
+        <members>FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed</members>
+        <members>FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded</members>
+        <members>FEC_Batch_Case_Handling_Zip_Download_Success</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Files_To_Zip</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_No_Attachments</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Case_Closed</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Closed</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</members>
         <name>CustomLabel</name>
     </types>
 	<types>

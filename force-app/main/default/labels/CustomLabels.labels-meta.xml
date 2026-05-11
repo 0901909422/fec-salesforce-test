@@ -15591,7 +15591,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: no attachment data default message</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Attachment_Data</shortDescription>
         <value>No attachment data.</value>
     </labels>
     <labels>
@@ -15599,7 +15599,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: invalid case set range</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_Set_Invalid</shortDescription>
         <value>Case set không hợp lệ.</value>
     </labels>
     <labels>
@@ -15607,7 +15607,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: no cases in selected range</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Cases_In_Range</shortDescription>
         <value>Không có Case trong khoảng đã chọn.</value>
     </labels>
     <labels>
@@ -15615,7 +15615,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: selected cases have no files</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Cases_No_Attachments</shortDescription>
         <value>Các Case đã chọn không có tệp đính kèm.</value>
     </labels>
     <labels>
@@ -15623,7 +15623,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: could not load attachment files</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed</shortDescription>
         <value>Không lấy được tệp đính kèm.</value>
     </labels>
     <labels>
@@ -15631,7 +15631,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: total file size over limit</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded</shortDescription>
         <value>Tổng dung lượng file vượt quá 10MB.</value>
     </labels>
     <labels>
@@ -15639,7 +15639,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: download success</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Download_Success</shortDescription>
         <value>Tải file thành công.</value>
     </labels>
     <labels>
@@ -15647,7 +15647,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: no files to zip</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Files_To_Zip</shortDescription>
         <value>No files to zip.</value>
     </labels>
     <labels>
@@ -15655,7 +15655,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: case id invalid</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_Invalid</shortDescription>
         <value>Case không hợp lệ.</value>
     </labels>
     <labels>
@@ -15663,7 +15663,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch zip: case has no attachments</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_No_Attachments</shortDescription>
         <value>Case không có tệp đính kèm.</value>
     </labels>
     <labels>
@@ -15671,7 +15671,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: missing Case ID</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id</shortDescription>
         <value>Thiếu dữ liệu Case ID.</value>
     </labels>
     <labels>
@@ -15679,7 +15679,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: Case ID not found</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</shortDescription>
         <value>Case ID không tồn tại trong hệ thống</value>
     </labels>
     <labels>
@@ -15687,7 +15687,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: Case is closed</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Closed</shortDescription>
         <value>Case ID đã ở trạng thái Closed (không cho phép cập nhật)</value>
     </labels>
     <labels>
@@ -15695,7 +15695,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: duplicate Case ID in file</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</shortDescription>
         <value>Cùng Case ID xuất hiện nhiều dòng trong file import.</value>
     </labels>
     <labels>
@@ -15703,7 +15703,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: Assignment ID invalid or not found</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found</shortDescription>
         <value>Assignment ID không tồn tại trong hệ thống</value>
     </labels>
     <labels>
@@ -15711,7 +15711,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: Assignment is closed</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Closed</shortDescription>
         <value>Assignment ID đã ở trạng thái Closed (không cho phép cập nhật)</value>
     </labels>
     <labels>
@@ -15719,7 +15719,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: both routing actions set</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</shortDescription>
         <value>Đã nhập Assignment Routing Action thì không nhập Routing Action ở level Case.</value>
     </labels>
     <labels>
@@ -15727,7 +15727,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: missing routing action</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</shortDescription>
         <value>Thiếu dữ liệu Routing Action/Assignment Routing Action.</value>
     </labels>
     <labels>
@@ -15735,7 +15735,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: routing action invalid</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</shortDescription>
         <value>Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
     </labels>
     <labels>
@@ -15743,7 +15743,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: only resolve/reject when assignment set</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</shortDescription>
         <value>Khi có Assignment ID, chỉ cho phép Routing Action level Case là Resolve/Reject.</value>
     </labels>
     <labels>
@@ -15751,7 +15751,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: assignment routing action invalid</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</shortDescription>
         <value>Giá trị Assignment Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
     </labels>
     <labels>
@@ -15759,7 +15759,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: missing routing action</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</shortDescription>
         <value>Thiếu dữ liệu Routing Action</value>
     </labels>
     <labels>
@@ -15767,7 +15767,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: assignment routing without assignment id</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</shortDescription>
         <value>Không nhập Assignment Routing Action khi không có Assignment ID.</value>
     </labels>
     <labels>
@@ -15775,7 +15775,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: no assignment routing for this process</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process</shortDescription>
         <value>Không nhập Assignment Routing Action đối với quy trình này.</value>
     </labels>
     <labels>
@@ -15783,7 +15783,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: no assignment id for this process</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process</shortDescription>
         <value>Không sử dụng Assignment ID đối với quy trình này.</value>
     </labels>
     <labels>
@@ -15791,7 +15791,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: missing remark</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</shortDescription>
         <value>Thiếu dữ liệu Remark</value>
     </labels>
     <labels>
@@ -15799,7 +15799,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import validation: remark exceeds max length</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</shortDescription>
         <value>Giá trị Remark vượt quá số ký tự cho phép (32,768 ký tự)</value>
     </labels>
     <labels>
@@ -15807,7 +15807,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import apply: record id invalid</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</shortDescription>
         <value>Record Id không hợp lệ.</value>
     </labels>
     <labels>
@@ -15815,7 +15815,7 @@
         <categories>Batch Case Handling</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Batch import apply: routing needs extra params</shortDescription>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</shortDescription>
         <value>Routing action cần tham số bổ sung (queue / decision / transfer / revert) — không xử lý qua Bulk Import.</value>
     </labels>
 </CustomLabels>
