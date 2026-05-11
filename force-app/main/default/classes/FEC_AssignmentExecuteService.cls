@@ -19,13 +19,39 @@ public with sharing class FEC_AssignmentExecuteService {
         
         Id userId = UserInfo.getUserId();
         
+        // Integer activeAssignmentCount = [
+        //     SELECT COUNT()
+        //     FROM FEC_Assignment__c
+        //     WHERE
+        //         FEC_Case__c = :caseId
+        //         AND FEC_Assignment_Owner__c = :userId
+        //         AND FEC_Assignment_Status__c NOT IN :CLOSED_STATUSES
+        // ];
+        
+        
+        Set<Id> queueIds = new Set<Id>();
+        
+        for (GroupMember gm : [
+            SELECT GroupId
+            FROM GroupMember
+            WHERE UserOrGroupId = :userId
+        ]) {
+            queueIds.add(gm.GroupId);
+        }
+        
         Integer activeAssignmentCount = [
             SELECT COUNT()
             FROM FEC_Assignment__c
             WHERE
                 FEC_Case__c = :caseId
-                AND FEC_Assignment_Owner__c = :userId
                 AND FEC_Assignment_Status__c NOT IN :CLOSED_STATUSES
+                AND (
+                    FEC_Assignment_Owner__c = :userId
+                    OR (
+                        FEC_Assignment_Owner__c = null
+                        AND FEC_OwnerID__c IN :queueIds
+                    )
+                )
         ];
         
         Boolean canExecute = activeAssignmentCount > 0;

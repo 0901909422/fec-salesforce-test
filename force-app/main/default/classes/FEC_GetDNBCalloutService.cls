@@ -25,25 +25,48 @@ public with sharing class FEC_GetDNBCalloutService {
         @AuraEnabled public String errorMessage;
     }
     
+    // public class ResultItem {
+        //     @AuraEnabled public String confirmed_time;
+        //     @AuraEnabled public String do_not_bother;
+        //     @AuraEnabled public String exclude_time;
+        //     @AuraEnabled public String expected_exclude_time;
+        //     @AuraEnabled public String full_name;
+        //     @AuraEnabled public String nid;
+        //     @AuraEnabled public String reason2;
+        //     @AuraEnabled public String requested_time;
+        //     @AuraEnabled public String source2;
+        //     @AuraEnabled public String type;
+        //     @AuraEnabled public String type_value;
+    // }
+    
     public class ResultItem {
         @AuraEnabled public String confirmed_time;
-        @AuraEnabled public Object do_not_bother;
+        @AuraEnabled public Boolean  do_not_bother;
         @AuraEnabled public String exclude_time;
         @AuraEnabled public String expected_exclude_time;
         @AuraEnabled public String full_name;
         @AuraEnabled public String nid;
-        @AuraEnabled public String reason2;
+        @AuraEnabled public String contract_id;
+        @AuraEnabled public String reason;
         @AuraEnabled public String requested_time;
-        @AuraEnabled public String source2;
+        @AuraEnabled public String source;
+         @AuraEnabled public String source2;
         @AuraEnabled public String type;
         @AuraEnabled public String type_value;
     }
     
     public class Sys2 {
-        @AuraEnabled public String code2;
-        @AuraEnabled public String message2;
+        @AuraEnabled public String code;
+        @AuraEnabled public String message;
         @AuraEnabled public String trans_id;
-        @AuraEnabled public Object request;
+       @AuraEnabled public SysRequest request;
+    }
+    
+    
+    public class SysRequest {
+        @AuraEnabled public String phone;
+        @AuraEnabled public String nid;
+        @AuraEnabled public String email;
     }
     
     public class CalloutResult {
@@ -119,25 +142,38 @@ public with sharing class FEC_GetDNBCalloutService {
         }
         
         try {
-            Map<String, Object> raw = (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
+            
+            Map<String, Object> raw =
+                (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
             
             if (!raw.containsKey('sys')) {
                 result.success = false;
-                result.errorMessage = System.Label.FEC_CS_CASE_SYS_MISSING_MSG;
+                result.errorMessage =
+                    System.Label.FEC_CS_CASE_SYS_MISSING_MSG;
                 return result;
             }
             
-            Map<String, Object> sys = (Map<String, Object>) raw.get('sys');
+            // ===== PARSE SYS =====
+            result.sys2 = (Sys2) JSON.deserialize(
+                JSON.serialize(raw.get('sys')),
+            Sys2.class
+                );
             
-            Integer code = (Integer) sys.get('code');
+            Map<String, Object> sys =
+                (Map<String, Object>) raw.get('sys');
+            
+            String code = String.valueOf(sys.get('code'));
             String message = (String) sys.get('message');
             
-            if (code != 0) {
+            if (code != '0') {
+                
                 result.success = false;
                 result.errorMessage = message;
                 
                 if (sys.containsKey('list_invalid')) {
-                    result.errorMessage += ' - invalid: ' + JSON.serialize(sys.get('list_invalid'));
+                    result.errorMessage +=
+                        ' - invalid: ' +
+                        JSON.serialize(sys.get('list_invalid'));
                 }
                 
                 return result;
@@ -145,21 +181,28 @@ public with sharing class FEC_GetDNBCalloutService {
             
             result.success = true;
             
-            // map result nếu có
+            // ===== PARSE RESULT =====
             if (raw.containsKey('result')) {
-                result.result = (List<ResultItem>) JSON.deserialize(
+                
+                result.result =
+                    (List<ResultItem>) JSON.deserialize(
                     JSON.serialize(raw.get('result')),
                 List<ResultItem>.class
                     );
             }
             
             if (result.result == null || result.result.isEmpty()) {
-                result.errorMessage = System.Label.FEC_Termination_No_Data;
+                result.errorMessage =
+                    System.Label.FEC_Termination_No_Data;
             }
             
         } catch (Exception ex) {
+            
             result.success = false;
             result.errorMessage = ex.getMessage();
+            
+            System.debug('PARSE ERROR: ' + ex.getMessage());
+            System.debug('RAW JSON: ' + jsonResponse);
         }
         
         return result;
@@ -172,6 +215,12 @@ public with sharing class FEC_GetDNBCalloutService {
         if (req == null) {
             return error(System.Label.FEC_CS_CASE_STATUS_REQUEST_INVALID_MSG);
         }
+        
+        if (req.email == null) {
+            req.email = '';
+        }
+        
+        System.debug('Received Request: ' + JSON.serialize(req));
         
         if (String.isBlank(req.phone) || String.isBlank(req.nid)) {
             return error(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
