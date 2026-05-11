@@ -3,6 +3,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
+import { formatCurrency0 } from 'c/fec_CommonUtils';
 import { formatDateField } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
@@ -177,7 +178,8 @@ export default class Fec_CollectionInteractions extends LightningElement {
             this.interactions = null;
         } finally {
             this.isLoading = false;
-            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions) && this.interactions.length > 0;
+            // API OK (mảng có hoặc rỗng): luôn mở section — giống NFU / các khối collection khác
+            if (this._hasApplied) this.isExpanded = Array.isArray(this.interactions);
         }
     }
 
@@ -204,7 +206,10 @@ export default class Fec_CollectionInteractions extends LightningElement {
             InteractedDate: formatDateField(row?.InteractedDate),
             InteractedCode: row?.InteractedCode ?? STR_EMPTY,
             PhoneNumber: row?.PhoneNumber ?? STR_EMPTY,
-            PromisedRepaymentAmount: row?.PromisedRepaymentAmount ?? STR_EMPTY,
+            PromisedRepaymentAmount: formatCurrency0(row?.PromisedRepaymentAmount, {
+                emptyDisplay: STR_EMPTY,
+                integerMode: 'trunc'
+            }),
             NextInteractionDate: formatDateField(row?.NextInteractionDate),
             ContactedPerson: row?.ContactedPerson ?? STR_EMPTY,
             DueReason: row?.DueReason ?? STR_EMPTY,

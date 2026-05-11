@@ -77,6 +77,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Assignment_Users__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Bank_Branch_Name_Noaccent__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -141,6 +146,16 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Can_Execute_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Can_Execute__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Card_Block_Reason__c</field>
         <readable>true</readable>
@@ -156,7 +171,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>Case.FEC_Card_Replacement_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1792,6 +1807,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Notification_History__c.FEC_Case_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Notification_History__c.FEC_Date_Time__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1928,6 +1948,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Relevant_Ticket__c.FEC_Sub_Code_Relevant__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Relevant_Ticket__c.FEC_Stage_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -3750,6 +3775,103 @@
         <field>Case.FEC_Complaint_Source__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_PIN_Reset_Success__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_CS_Check_Classification_by_CS__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_CS_Check_Evaluation_by_CS__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_CS_Check_Final_Product__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_CS_Check_Block_Limit_Date__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_CS_Check_Block_Limit_Amount__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Sales_Check_Evaluation_by_Sales__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Sales_Check_Contact_Point__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Sales_Check_Team_Leader__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Sales_Check_Supervisor__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Sales_Check_Discipline_Result__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>Case.FEC_Complain_Type__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Customer_History__c.FEC_Sales_Channel__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Additional_Info__c.FEC_Application_ID_List__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Additional_Info__c.FEC_Contract_Number_List__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Additional_Info__c.FEC_National_ID_List__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Additional_Info__c.FEC_Province_City__c</field>
+    <readable>true</readable>
+</fieldPermissions>
+<fieldPermissions>
+    <editable>true</editable>
+    <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
+    <readable>true</readable>
+</fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Credit Assessment User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

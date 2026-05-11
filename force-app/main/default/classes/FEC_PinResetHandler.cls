@@ -6,6 +6,7 @@ public without sharing class FEC_PinResetHandler {
         @AuraEnabled public String nationalId;
         @AuraEnabled public String mobile;
         @AuraEnabled public Decimal processActionCount;
+        @AuraEnabled public Boolean isPinResetSuccess;
     }
     
     
@@ -14,7 +15,7 @@ public without sharing class FEC_PinResetHandler {
     public static CardInfoResponse getCardInfo(String customerCaseId){
         try {
             
-            List<Case> cases = [SELECT Id, FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c , FEC_Account_or_Contract__r.FEC_Primary_Phone__c , FEC_Process_Action_Count__c
+            List<Case> cases = [SELECT Id, FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c , FEC_Account_or_Contract__r.FEC_Primary_Phone__c , FEC_Process_Action_Count__c,FEC_Is_PIN_Reset_Success__c
                 FROM Case
                 WHERE Id = :customerCaseId
                 LIMIT 1]
@@ -31,6 +32,7 @@ public without sharing class FEC_PinResetHandler {
                 cases[0].FEC_Process_Action_Count__c != null
                 ? cases[0].FEC_Process_Action_Count__c
                 : 0;
+            response.isPinResetSuccess = cases[0].FEC_Is_PIN_Reset_Success__c;
             return response;
             
         } catch (Exception e) {
@@ -46,7 +48,7 @@ public without sharing class FEC_PinResetHandler {
             List<Case> caselst = [
                         SELECT
                             Id,
-                            FEC_Process_Action_Count__c, FEC_Is_Test_API__c 
+                            FEC_Process_Action_Count__c, FEC_Is_Test_API__c , FEC_Is_PIN_Reset_Success__c
                         FROM Case
                         WHERE Id = :caseId
                         ];
@@ -61,6 +63,7 @@ public without sharing class FEC_PinResetHandler {
             
             if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {
                 selectedCase.FEC_Process_Action_Count__c -= 1;
+                selectedCase.FEC_Is_PIN_Reset_Success__c = true;
             } else if (response.RespCode == '1') {
                 selectedCase.FEC_Process_Action_Count__c =
                     (selectedCase.FEC_Process_Action_Count__c == null ? 0 :

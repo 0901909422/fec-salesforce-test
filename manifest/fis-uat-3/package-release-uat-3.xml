@@ -93,13 +93,29 @@
         <members>FEC_CloseInterationSchedulerBatch</members>
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
+		<members>FEC_AssignmentExecuteService</members>
+        <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_PointsRedemptionCaseController</members>
+        <members>FEC_HoldCaseController</members>
+        <members>FEC_FullCustomerIntegrationJob</members>
+        <members>FEC_SearchController</members>
+        <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_BancaController</members>
+        <members>FEC_RDPaymentContractAssessmentService</members>
+	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_AssignmentTriggerHandler</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
+        <members>FEC_SubProcessService</members>
         <name>ApexClass</name>
     </types>
 	<types>
 		<members>FEC_RoutingActionHistoryTrigger</members>
 		<members>FEC_RelevantTicketTrigger</members>
+		<members>FEC_AssignmentTrigger</members>
+		<members>FEC_NatureOfCaseTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -109,6 +125,17 @@
         <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
+        <members>Case.FEC_CS_Check_Classification_by_CS__c</members>
+        <members>Case.FEC_CS_Check_Evaluation_by_CS__c</members>
+        <members>Case.FEC_CS_Check_Final_Product__c</members>
+        <members>Case.FEC_CS_Check_Block_Limit_Date__c</members>
+        <members>Case.FEC_CS_Check_Block_Limit_Amount__c</members>
+        <members>Case.FEC_Sales_Check_Evaluation_by_Sales__c</members>
+        <members>Case.FEC_Sales_Check_Contact_Point__c</members>
+        <members>Case.FEC_Sales_Check_Team_Leader__c</members>
+        <members>Case.FEC_Sales_Check_Supervisor__c</members>
+        <members>Case.FEC_Sales_Check_Discipline_Result__c</members>
+        <members>Case.FEC_Complain_Type__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
@@ -437,6 +464,8 @@
 		<members>FEC_Category__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Sub_Category__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</members>
+		<members>Case.FEC_Can_Execute__c</members>
+        <members>Case.FEC_Can_Execute_Assignment__c</members>
 		<members>FEC_Customer_History__c.FEC_Available_Credit_Limit__c</members>
 		<members>FEC_Customer_History__c.FEC_Description__c</members>
 		<members>FEC_Customer_History__c.FEC_Error_Code__c</members>
@@ -452,11 +481,32 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Max__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_XSell_Min__c</members>
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
+        <members>FEC_Customer_History__c.FEC_Sales_Channel__c</members>
+        <members>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
+		<members>Case.FEC_Assignment_Users__c</members>
+		<members>FEC_Channel__c.FEC_Cancel_Case__c</members>
+		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
+		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>Case.FEC_Service_Case_Owner__c</members>
+        <members>FEC_Additional_Info__c.FEC_Application_ID_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
+        <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
+        <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
+        <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <name>CustomField</name>
     </types>
     <types>
+        <members>FEC_Routing_Assignment__c</members>
+        <members>FEC_BancaTabView</members>
+        <name>CustomTab</name>
+    </types>
+	<types>
 		<members>FEC_Assignment__c</members>
 		<members>FEC_CustomerAdditionalInfoConfig__c</members>
 		<members>FEC_CustomerAdditionalInfo__c</members>
@@ -471,11 +521,8 @@
 		<members>FEC_Fast_Cash_Info__c</members>
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
+        <members>FEC_Insurance_Info__c</members>
 		<name>CustomObject</name>
-	</types>
-	<types>
-		<members>FEC_Routing_Assignment__c</members>
-		<name>CustomTab</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
@@ -486,6 +533,8 @@
         <members>FEC_Internal_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Assignment_Record_Page</members>
+        <members>Channel_Record_Page</members>
+        <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -517,10 +566,31 @@
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_AssignmentList</members>
         <members>fec_AssignmentRemarkHistoryTable</members>
-        <name>LightningComponentBundle</name>
+        <members>fec_OriginalInformation</members>
+		<members>fec_Search</members>
+		<members>fec_AssignmentExecuteVisibility</members>
+        <members>fec_CaseExecuteVisibility</members>
+        <members>fec_COFFraudRelatedView</members>
+        <members>fec_AssignmentExecuteAction</members>
+        <members>fec_CommonUtils</members>
+        <members>fec_Banca</members>
+		<members>fec_BancaTabView</members>
+        <members>fec_RdPaymentRoutingUtils</members>
+		<members>fec_PointsRedemptionCaseForm</members>
+		<members>fec_ChannelConfig</members>
+		<members>fec_NocChannelConfig</members>
+        <members>fec_SubProcessContainer</members>
+        <members>fec_CustomDoNotBotherViewDatatable</members>
+        <members>fec_MaskedContactTemplate</members>
+        <members>fec_TransferCall</members>
+        <members>fec_AssigmentListView</members>
+        <members>fec_AssignmentViewAll</members>
+		<name>LightningComponentBundle</name>
     </types>
-    <types>
+	<types>
         <members>FEC_Collection_Date_Filter</members>
+        <members>FEC_Assignment_Mode</members>
+        <members>FEC_CaseAction</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -693,8 +763,57 @@
         <members>FEC_Assignment_Status</members>
         <members>FEC_Assignment_Owner</members>
         <members>FEC_Assignment_Id</members>
-        <!-- Interaction Case Service Case -->
+        <members>FEC_Assignment_Remarks_History</members>
         <members>FEC_RelevantTicket_Cannot_Delete</members>
+		<members>FEC_Reason_Error</members>
+		<members>FEC_Duplicate_Queue_Error</members>
+		<members>FEC_User_ID</members>
+		<members>FEC_Buyer_Name</members>
+		<members>FEC_Buyer_DOB</members>
+		<members>FEC_Buyer_NID</members>
+		<members>FEC_Product_Name</members>
+		<members>FEC_Sales_Channel</members>
+		<members>FEC_Insurance_Company</members>
+		<members>FEC_Sub_Channel</members>
+		<members>FEC_Policy_Number</members>
+		<members>FEC_Agent_Code</members>
+		<members>FEC_Expiry_Date</members>
+		<members>FEC_Payment_ID</members>
+		<members>FEC_Cancel_Date</members>
+		<members>FEC_Effective_Date</members>
+		<members>FEC_Premium_Free</members>s
+        <members>FEC_Points_Redeem_Button_Label</members>
+		<members>FEC_Points_Redeem_Fail_After_Max</members>
+		<members>FEC_Points_Redeem_Fail_Prefix</members>
+		<members>FEC_Points_Redeem_Success_Message</members>
+		<members>FEC_Points_Redeemed_Points_Label</members>
+		<members>FEC_Points_Redemption_CMS_Phone_Label</members>
+		<members>FEC_Points_Redemption_Confirm_Message</members>
+		<members>FEC_Points_Redemption_Confirm_Title</members>
+		<members>FEC_Confirm_Before_Submit</members>
+		<members>FEC_Channel_Config_Save_Success</members>
+		<members>FEC_Channel_Config_Save_Error</members>
+		<members>FEC_Search_Channel_Placeholder</members>
+		<members>FEC_No_Results</members>
+		<members>FEC_Label_Get_Nature_Of_Case</members>
+		<members>FEC_Label_Cancel_Case</members>
+		<members>FEC_Label_Update_Case_Status</members>
+		<members>FEC_Insurance_Info_Error</members>
+        <members>FEC_MSG_Service_Error_Label</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
+        <members>FEC_Collections_Transfer_Failed_Summary</members>
+		<members>FEC_TransferCall_Btn_Cancel</members>
+		<members>FEC_TransferCall_Section_CaseInfo</members>
+		<members>FEC_TransferCall_Spinner_Loading</members>
+		<members>FEC_TransferCall_Subtitle</members>
+		<members>FEC_TransferCall_Modal_ConfirmMessage</members>
+		<members>FEC_TransferCall_Btn_TransferToCollection</members>
+		<members>FEC_Notification_16_Collections_Transfer_Success</members>
+        <members>FEC_TransferCall_Modal_RemarkLabel</members>
+		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
+		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
+		<members>FEC_TransferCall_Modal_RemarkRequired</members>
+		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -864,5 +983,57 @@
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
         <name>PermissionSet</name>
     </types>
+	<types>
+        <members>Case.FEC_Execute_Assigment</members>
+        <name>QuickAction</name>
+    </types>
+    <types>
+        <members>Case Time TAT</members>
+        <name>MilestoneType</name>
+    </types>
+    <types>
+        <members>case sla main</members>
+        <name>EntitlementProcess</name>
+    </types>
+    <types>
+        <members>Case</members>
+        <name>Workflow</name>
+    </types>
+    <types>
+        <members>Case.Case24h</members>
+        <members>Case.ChangePriorityToHigh</members>
+        <members>Case.Update_Case_1104h_Violating</members>
+        <members>Case.Update_Case_1104h_Warning</members>
+        <members>Case.Update_Case_1872h_Violating</members>
+        <members>Case.Update_Case_1872h_Warning</members>
+        <members>Case.Update_Case_24h</members>
+        <members>Case.Update_Case_24h_SLA_Violating</members>
+        <members>Case.Update_Case_24h_SLA_Warning</members>
+        <members>Case.Update_Case_24h_Violating</members>
+        <members>Case.Update_Case_24h_Warning</members>
+        <members>Case.Update_Case_336h_Violating</members>
+        <members>Case.Update_Case_336h_Warning</members>
+        <members>Case.Update_Case_360h_Violating</members>
+        <members>Case.Update_Case_360h_Warning</members>
+        <members>Case.Update_Case_48h_1</members>
+        <members>Case.Update_Case_48h_1_SLA_Violating</members>
+        <members>Case.Update_Case_48h_1_SLA_Warning</members>
+        <members>Case.Update_Case_48h_1_SLA_Warning_1</members>
+        <members>Case.Update_Case_48h_1_Violating</members>
+        <members>Case.Update_Case_48h_2_SLA_Violating_1</members>
+        <members>Case.Update_Case_48h_2_Violating</members>
+        <members>Case.Update_Case_48h_2_Violating_1</members>
+        <members>Case.Update_Case_48h_2_Warning</members>
+        <members>Case.Update_Case_72h_Violating</members>
+        <members>Case.Update_Case_72h_Warning</members>
+        <members>Case.Update_Case_96h_Violating</members>
+        <members>Case.Update_Case_96h_Warning</members>
+        <name>WorkflowFieldUpdate</name>
+    </types>
+	<types>
+	 	<members>Case.Customer_Case</members>
+	 	<members>Case.Internal_Case</members>
+		<name>RecordType</name>
+	</types>
 	<version>66.0</version>
 </Package>
