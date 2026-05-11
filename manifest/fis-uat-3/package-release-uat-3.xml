@@ -771,6 +771,7 @@
 		<members>FEC_Label_Update_Case_Status</members>
 		<members>FEC_Insurance_Info_Error</members>
         <members>FEC_MSG_Service_Error_Label</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <name>CustomLabel</name>
     </types>
 	<types>
