@@ -88,6 +88,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   showNewCaseModal = false;
   isSkip;
   isTestApiCase = false;
+  // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+  caseRecordTypeName;
   wiredCaseResult;
   fieldPermissions;
   errorCalloutIsurance;
@@ -438,6 +440,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
       this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
+      // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+      this.caseRecordTypeName = data?.RecordType?.Name;
       this.isTestApiCase = data?.FEC_Is_Test_API__c === true;
       this.isDisplay =
         data.Customer_Histories__r === undefined &&
@@ -469,6 +473,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
+      // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+      this.caseRecordTypeName = result?.RecordType?.Name;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
       this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
       this.phoneNumber = this.fieldPermissions['FEC_Search_Phone_Number__c'] ? result.FEC_Phone_Number__c : null;
@@ -1697,14 +1703,12 @@ hasAnySearchCriteria(params) {
     return null;
   } 
 
+  // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
-    return this.isNoCustomerFound && (this.recordId || this.isListView || this.isCreateCaseTab);
+    return false;
   }
 
   get noCustomerFoundMessage() {
-    if (this.recordId && this.isTestApiCase) {
-      return this.labels.errorApiMessage;
-    }
     return this.labels.errorApiMessage;
   }
 
