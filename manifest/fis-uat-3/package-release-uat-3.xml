@@ -798,6 +798,18 @@
 		<members>FEC_Insurance_Info_Error</members>
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
+        <members>FEC_Collections_Transfer_Failed_Summary</members>
+		<members>FEC_TransferCall_Btn_Cancel</members>
+		<members>FEC_TransferCall_Section_CaseInfo</members>
+		<members>FEC_TransferCall_Spinner_Loading</members>
+		<members>FEC_TransferCall_Subtitle</members>
+		<members>FEC_TransferCall_Modal_ConfirmMessage</members>
+		<members>FEC_TransferCall_Btn_TransferToCollection</members>
+		<members>FEC_Notification_16_Collections_Transfer_Success</members>
+        <members>FEC_TransferCall_Modal_RemarkLabel</members>
+		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
+		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
+		<members>FEC_TransferCall_Modal_RemarkRequired</members>
         <name>CustomLabel</name>
     </types>
 	<types>
