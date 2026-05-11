@@ -1705,23 +1705,10 @@ hasAnySearchCriteria(params) {
 
   // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
-    if (!this.isNoCustomerFound || !(this.recordId || this.isListView || this.isCreateCaseTab)) {
-      return false;
-    }
-    const rt = this.caseRecordTypeName;
-    const isInternalOrInteraction =
-      rt === 'Internal Case' ||
-      rt === 'Interaction';
-    if (this.recordId && this.isTestApiCase && isInternalOrInteraction) {
-      return false;
-    }
-    return true;
+    return false;
   }
 
   get noCustomerFoundMessage() {
-    if (this.recordId && this.isTestApiCase) {
-      return this.labels.errorApiMessage;
-    }
     return this.labels.errorApiMessage;
   }
 
