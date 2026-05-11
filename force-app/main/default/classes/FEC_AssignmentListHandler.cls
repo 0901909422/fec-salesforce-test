@@ -193,4 +193,214 @@ public with sharing class FEC_AssignmentListHandler {
         }
         return result;
     }
+    
+    
+    public class AssignmentViewResponse {
+        
+        @AuraEnabled public Integer totalCount;
+        
+        @AuraEnabled public List<AssignmentViewWrapper> assignments;
+        
+    }
+    
+    public class AssignmentViewWrapper {
+        
+        @AuraEnabled public Id id;
+        @AuraEnabled public String assignmentId;
+        @AuraEnabled public String stageName;
+        @AuraEnabled public String assignmentType;
+        @AuraEnabled public String assignmentStatus;
+        @AuraEnabled public String user;
+        @AuraEnabled public String userRole;
+        @AuraEnabled public Datetime latestModifiedDateTime;
+        
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static AssignmentViewResponse getAssignmentsForView(
+        String caseId,
+    Integer pageSize,
+    Integer pageNumber
+    ) {
+        
+        if (String.isBlank(caseId)) {
+            
+            throw new AuraHandledException(
+                System.Label.LBL_CaseIdRequired
+                );
+        }
+        
+        try {
+            
+            // DEFAULT VALUES
+            pageSize =
+                (pageSize == null || pageSize <= 0)
+                ? 10
+                : pageSize;
+            
+            pageNumber =
+                (pageNumber == null || pageNumber <= 0)
+                ? 1
+                : pageNumber;
+            
+            Integer offsetValue =
+                (pageNumber - 1) * pageSize;
+            
+            AssignmentViewResponse response =
+                new AssignmentViewResponse();
+            
+            // TOTAL COUNT
+            response.totalCount = [
+
+            SELECT COUNT()
+
+            FROM FEC_Assignment__c
+
+            WHERE FEC_Case__c = :caseId
+        ];
+            
+            // PAGING QUERY
+            List<FEC_Assignment__c> assignments = [
+
+            SELECT
+                Id,
+                Name,
+                CreatedDate,
+                CreatedBy.Email,
+                CreatedBy.UserRole.Name,
+                FEC_Assignment_Status__c,
+                FEC_OwnerID__c,
+                FEC_Assignment_Type__c
+
+            FROM FEC_Assignment__c
+
+            WHERE FEC_Case__c = :caseId
+
+            ORDER BY CreatedDate DESC
+
+            LIMIT :pageSize
+            OFFSET :offsetValue
+        ];
+            
+            Set<Id> assignmentIds =
+                new Set<Id>();
+            
+            for (FEC_Assignment__c item : assignments) {
+                
+                assignmentIds.add(item.Id);
+            }
+            
+            Map<Id, FEC_Case_Remarks__c> latestRemarkMap =
+                new Map<Id, FEC_Case_Remarks__c>();
+            
+            // QUERY REMARKS ONLY WHEN HAVE ASSIGNMENTS
+            if (!assignmentIds.isEmpty()) {
+                
+                List<FEC_Case_Remarks__c> remarks = [
+
+                SELECT
+                    Id,
+                    FEC_Assignment__c,
+                    FEC_Stage_Name__c,
+                    LastModifiedDate
+
+                FROM FEC_Case_Remarks__c
+
+                WHERE FEC_Remark_Type__c =
+                    :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+
+                AND FEC_Case__c = :caseId
+
+                AND FEC_Assignment__c IN :assignmentIds
+
+                ORDER BY LastModifiedDate DESC
+            ];
+                
+                for (FEC_Case_Remarks__c remark : remarks) {
+                    
+                    // FIRST = LATEST
+                    if (!latestRemarkMap.containsKey(
+                        remark.FEC_Assignment__c
+                    )) {
+                        
+                        latestRemarkMap.put(
+                            remark.FEC_Assignment__c,
+                        remark
+                            );
+                    }
+                }
+            }
+            
+            response.assignments =
+                new List<AssignmentViewWrapper>();
+            
+            for (FEC_Assignment__c assignment : assignments) {
+                
+                AssignmentViewWrapper wrapper =
+                    new AssignmentViewWrapper();
+                
+                wrapper.id =
+                    assignment.Id;
+                
+                wrapper.assignmentId =
+                    assignment.Name;
+                
+                wrapper.assignmentType =
+                    assignment.FEC_Assignment_Type__c;
+                
+                wrapper.assignmentStatus =
+                    assignment.FEC_Assignment_Status__c;
+                
+                wrapper.user =
+                    assignment.CreatedBy != null
+                    ? assignment.CreatedBy.Email
+                    : '';
+                
+                wrapper.userRole =
+                    assignment.CreatedBy != null &&
+                    assignment.CreatedBy.UserRole != null
+                    ? assignment.CreatedBy.UserRole.Name
+                    : 'No Role Assigned';
+                
+                wrapper.latestModifiedDateTime =
+                    assignment.CreatedDate;
+                
+                if (latestRemarkMap.containsKey(
+                    assignment.Id
+                )) {
+                    
+                    wrapper.stageName =
+                        latestRemarkMap.get(
+                        assignment.Id
+                        ).FEC_Stage_Name__c;
+                }
+                
+                response.assignments.add(wrapper);
+            }
+            
+            return response;
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                LoggingLevel.ERROR,
+            'getAssignmentsForView error: ' +
+                e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+                );
+        }
+    }
+    
+    @AuraEnabled
+    public static Integer countAssignments(String caseId) {
+        
+        return [
+        SELECT COUNT()
+        FROM FEC_Assignment__c
+        WHERE FEC_Case__c = :caseId
+    ];
+    }
 }

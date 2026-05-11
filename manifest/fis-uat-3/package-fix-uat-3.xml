@@ -17,12 +17,20 @@
 	    <members>FEC_CommonUltils</members>
 	    <members>FEC_MainInfoLoanAccountController</members>
 	    <members>FEC_TerminationLoanController</members>
+	    <members>FEC_CaseRemarkController</members>
+	    <members>FEC_CaseTriggerHandler</members>
+	    <members>FEC_PinResetHandler</members>
+	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
+	    <members>FEC_NotificationHistoryController</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
 	    <members>fec_CaseEditNOC</members>
+	    <members>fec_CaseRemarks</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
@@ -34,6 +42,12 @@
 	    <members>fec_UpdateAddress</members>
 	    <members>fec_CollectionInteractions</members>
 	    <members>fec_allocationHistory</members>
+	    <members>fec_RoutingAssignment</members>
+	    <members>fec_PinResetView</members>
+	    <members>fec_MainInfoLoanAccount</members>
+	    <members>fe_Notification_History</members>
+	    <members>fec_NocChannelConfig</members>
+	    <members>fec_OriginalInformation</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
