@@ -1,4 +1,4 @@
-// tungnm37: Channel Config tab - view/edit mode với checkbox
+// tungnm37: Channel Config tab - view/edit mode với 3 checkbox
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
@@ -9,13 +9,11 @@ import FEC_Channel_Config_Save_Error from '@salesforce/label/c.FEC_Channel_Confi
 import FEC_Button_Cancel from '@salesforce/label/c.FEC_Button_Cancel';
 import FEC_Button_Save from '@salesforce/label/c.FEC_Button_Save';
 import FEC_Label_Get_Nature_Of_Case from '@salesforce/label/c.FEC_Label_Get_Nature_Of_Case';
-import FEC_Label_Self_Service_Flag from '@salesforce/label/c.FEC_Label_Self_Service_Flag';
 import FEC_Label_Cancel_Case from '@salesforce/label/c.FEC_Label_Cancel_Case';
 import FEC_Label_Update_Case_Status from '@salesforce/label/c.FEC_Label_Update_Case_Status';
 
 const FIELDS = [
     'FEC_Channel__c.FEC_Get_Nature_Of_Case__c',
-    'FEC_Channel__c.FEC_Self_Service_Flag__c',
     'FEC_Channel__c.FEC_Cancel_Case__c',
     'FEC_Channel__c.FEC_Update_Case_Status__c'
 ];
@@ -26,7 +24,6 @@ export default class Fec_ChannelConfig extends LightningElement {
     @track isEditMode = false;
 
     labelGetNatureOfCase = FEC_Label_Get_Nature_Of_Case;
-    labelSelfServiceFlag = FEC_Label_Self_Service_Flag;
     labelCancelCase = FEC_Label_Cancel_Case;
     labelUpdateCaseStatus = FEC_Label_Update_Case_Status;
     labelCancel = FEC_Button_Cancel;
@@ -37,9 +34,6 @@ export default class Fec_ChannelConfig extends LightningElement {
 
     get getNatureOfCase() {
         return this.record?.data?.fields?.FEC_Get_Nature_Of_Case__c?.value;
-    }
-    get selfServiceFlag() {
-        return this.record?.data?.fields?.FEC_Self_Service_Flag__c?.value;
     }
     get cancelCase() {
         return this.record?.data?.fields?.FEC_Cancel_Case__c?.value;

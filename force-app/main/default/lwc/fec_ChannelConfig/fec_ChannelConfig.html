@@ -16,15 +16,6 @@
                             </td>
                         </tr>
                         <tr class="channel-config-row">
-                            <td class="channel-config-label">{labelSelfServiceFlag}</td>
-                            <td class="channel-config-value">
-                                <input type="checkbox" disabled checked={selfServiceFlag} />
-                            </td>
-                            <td class="channel-config-action">
-                                <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" title="Edit" onclick={handleEdit} data-field="FEC_Self_Service_Flag__c"></lightning-button-icon>
-                            </td>
-                        </tr>
-                        <tr class="channel-config-row">
                             <td class="channel-config-label">{labelCancelCase}</td>
                             <td class="channel-config-value">
                                 <input type="checkbox" disabled checked={cancelCase} />
@@ -33,7 +24,7 @@
                                 <lightning-button-icon icon-name="utility:edit" variant="bare" size="small" title="Edit" onclick={handleEdit} data-field="FEC_Cancel_Case__c"></lightning-button-icon>
                             </td>
                         </tr>
-                        <tr class="channel-config-row">
+                        <tr>
                             <td class="channel-config-label">{labelUpdateCaseStatus}</td>
                             <td class="channel-config-value">
                                 <input type="checkbox" disabled checked={updateCaseStatus} />
@@ -58,9 +49,6 @@
                     <div class="slds-grid slds-gutters slds-wrap">
                         <div class="slds-col slds-size_1-of-1">
                             <lightning-input-field field-name="FEC_Get_Nature_Of_Case__c"></lightning-input-field>
-                        </div>
-                        <div class="slds-col slds-size_1-of-1">
-                            <lightning-input-field field-name="FEC_Self_Service_Flag__c"></lightning-input-field>
                         </div>
                         <div class="slds-col slds-size_1-of-1">
                             <lightning-input-field field-name="FEC_Cancel_Case__c"></lightning-input-field>

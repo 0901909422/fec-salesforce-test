@@ -3200,6 +3200,14 @@
         <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Service_Error_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Service Error Label</shortDescription>
+        <value>Lỗi dịch vụ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
         <categories>Common</categories>
         <language>en_US</language>
@@ -4365,6 +4373,70 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Please fill in all required fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>Đổi điểm thưởng thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>Đổi điểm thưởng thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>Xác nhận đổi điểm</value>
     </labels>
     <labels>
         <fullName>FEC_Post_Date</fullName>
@@ -10324,7 +10396,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Retry</shortDescription>
-        <value>Khoá thẻ thất bại</value>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Disable</fullName>
@@ -15270,13 +15342,6 @@
         <value>Cancel Case</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Self_Service_Flag</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Self Service Flag Label</shortDescription>
-        <value>Self-Service Flag</value>
-    </labels>
-    <labels>
         <fullName>FEC_Label_Update_Case_Status</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -15401,5 +15466,13 @@
         <protected>false</protected>
         <shortDescription>User Id</shortDescription>
         <value>User ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Info_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Info Error</shortDescription>
+        <value>Insurance Info</value>
     </labels>
 </CustomLabels>
