@@ -48,6 +48,7 @@ import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.ge
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
+import { formatDateFlexibleVN } from "c/fec_CommonUtils";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
 import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
 import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
@@ -924,11 +925,11 @@ async fetchBancaInsurance(ids) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: this.formatDate(el.buyerDOB),
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: this.formatDate(el.effectiveDate),
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.StatusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -963,11 +964,11 @@ async fetchBancaInsuranceByPhone(phones) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: this.formatDate(el.buyerDOB),
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: this.formatDate(el.effectiveDate),
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.statusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1004,19 +1005,6 @@ async fetchBancaInsuranceByPhone(phones) {
     return Array.from(map.values());
   }
 
-  formatDate(dateStr) {
-    if (!dateStr) return '';
-    try {
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        const day = d.getDate().toString().padStart(2, '0');
-        const month = (d.getMonth() + 1).toString().padStart(2, '0');
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
-    } catch (e) {
-        return dateStr;
-    }
-  }
 
   preferInsuranceRow(a, b) {
     const phoneA = a?.Phone && String(a.Phone).trim();
@@ -1112,7 +1100,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             AccountNumber: accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
@@ -1136,7 +1124,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: this.formatDate(cust.DateOfBirth),
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             ContractNumber: contractNum,
                             ProductCode: app.Product,
                             ContractStatus: app.Status,
@@ -1445,7 +1433,7 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.AccountNumber] || null,
       _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
@@ -1454,17 +1442,10 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.ContractNumber] || null,
       _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
-  _formatDate(dateStr) {
-    if (!dateStr) return '';
-    // Handle YYYY-MM-DD format
-    const parts = dateStr.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    return dateStr;
-  }
 
   // Returns interleaved array: each data row followed by its history row (if expanded)
   // Used for Account/Contract Search to render history inline
@@ -1872,11 +1853,11 @@ hasAnySearchCriteria(params) {
                       UserId: element.userID,
                       FullName: element.buyerName,
                       BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
+                      DateOfBirth: formatDateFlexibleVN(element.buyerDOB),
                       ProductName: element.productNameEn,
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
+                      EffectiveDate:  formatDateFlexibleVN(element.effectiveDate),
                       Status:  element.StatusDisplay,
                       PolicyNumber:  element.policyNumber,
                     })
