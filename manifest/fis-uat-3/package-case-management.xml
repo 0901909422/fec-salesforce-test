@@ -428,6 +428,7 @@
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
+        <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -512,6 +513,8 @@
         <members>fec_CustomDoNotBotherViewDatatable</members>
         <members>fec_MaskedContactTemplate</members>
         <members>fec_TransferCall</members>
+        <members>fec_AssigmentListView</members>
+        <members>fec_AssignmentViewAll</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
