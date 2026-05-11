@@ -13,6 +13,7 @@
 	    <members>FEC_MainInfoController</members>
 	    <members>FEC_UpdateDisbursementStatusRestService</members>
 	    <members>FEC_CofGsrAssignmentService</members>
+	    <members>FEC_ConstantCommon</members>
 		<name>Apexclass</name>
 	</types>
     <types>
