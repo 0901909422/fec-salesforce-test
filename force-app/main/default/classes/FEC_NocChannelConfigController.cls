@@ -15,7 +15,7 @@ public with sharing class FEC_NocChannelConfigController {
         ];
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static String getChannelIds(String nocId) {
         if (String.isBlank(nocId)) return null;
         List<FEC_Nature_of_Case__c> nocs = [
