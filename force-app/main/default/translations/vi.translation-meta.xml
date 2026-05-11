@@ -816,8 +816,4 @@
         <name>FEC_MSG_Can_Not_Find_Next_Stage</name>
         <label>Không tìm thấy giai đoạn tiếp theo</label>
     </customLabels>
-    <customLabels>
-        <name>FEC_Batch_Case_Handling_Import_Row_Status_Failed</name>
-        <label>Thất bại</label>
-    </customLabels>
 </Translations>
