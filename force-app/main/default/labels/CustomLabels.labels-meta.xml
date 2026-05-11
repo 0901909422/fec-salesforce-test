@@ -15466,11 +15466,4 @@
         <shortDescription>Disbursement Date Required Message</shortDescription>
         <value>DISB_DT is required</value>
     </labels>
-    <labels>
-        <fullName>FEC_UpdateDisb_Msg_DisbDT_Required</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Disbursement Date Required Message</shortDescription>
-        <value>DISB_DT is required</value>
-    </labels>
 </CustomLabels>
