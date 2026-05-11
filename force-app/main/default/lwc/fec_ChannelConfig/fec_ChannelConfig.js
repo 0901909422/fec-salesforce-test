@@ -1,4 +1,4 @@
-// tungnm37: Channel Config tab - view/edit mode với 3 checkbox
+// tungnm37: Channel Config tab - view/edit mode với checkbox
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
@@ -10,11 +10,13 @@ import FEC_Button_Cancel from '@salesforce/label/c.FEC_Button_Cancel';
 import FEC_Button_Save from '@salesforce/label/c.FEC_Button_Save';
 import FEC_Label_Get_Nature_Of_Case from '@salesforce/label/c.FEC_Label_Get_Nature_Of_Case';
 import FEC_Label_Self_Service_Flag from '@salesforce/label/c.FEC_Label_Self_Service_Flag';
+import FEC_Label_Cancel_Case from '@salesforce/label/c.FEC_Label_Cancel_Case';
 import FEC_Label_Update_Case_Status from '@salesforce/label/c.FEC_Label_Update_Case_Status';
 
 const FIELDS = [
     'FEC_Channel__c.FEC_Get_Nature_Of_Case__c',
     'FEC_Channel__c.FEC_Self_Service_Flag__c',
+    'FEC_Channel__c.FEC_Cancel_Case__c',
     'FEC_Channel__c.FEC_Update_Case_Status__c'
 ];
 
@@ -25,6 +27,7 @@ export default class Fec_ChannelConfig extends LightningElement {
 
     labelGetNatureOfCase = FEC_Label_Get_Nature_Of_Case;
     labelSelfServiceFlag = FEC_Label_Self_Service_Flag;
+    labelCancelCase = FEC_Label_Cancel_Case;
     labelUpdateCaseStatus = FEC_Label_Update_Case_Status;
     labelCancel = FEC_Button_Cancel;
     labelSave = FEC_Button_Save;
@@ -38,18 +41,11 @@ export default class Fec_ChannelConfig extends LightningElement {
     get selfServiceFlag() {
         return this.record?.data?.fields?.FEC_Self_Service_Flag__c?.value;
     }
+    get cancelCase() {
+        return this.record?.data?.fields?.FEC_Cancel_Case__c?.value;
+    }
     get updateCaseStatus() {
         return this.record?.data?.fields?.FEC_Update_Case_Status__c?.value;
-    }
-
-    get getNatureOfCaseIcon() {
-        return this.getNatureOfCase ? 'utility:check' : 'utility:close';
-    }
-    get selfServiceFlagIcon() {
-        return this.selfServiceFlag ? 'utility:check' : 'utility:close';
-    }
-    get updateCaseStatusIcon() {
-        return this.updateCaseStatus ? 'utility:check' : 'utility:close';
     }
 
     handleEdit() {

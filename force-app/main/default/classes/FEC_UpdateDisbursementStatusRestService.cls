@@ -198,12 +198,13 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
             return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbStatus_Invalid);
         }
         // REQ-006
-        if (String.isNotBlank(req.DISB_DT)) {
-            try {
-                Date.valueOf(req.DISB_DT);
-            } catch (Exception e) {
-                return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
-            }
+        if (String.isBlank(req.DISB_DT)) {
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Required);
+        }
+        try {
+            Date.valueOf(req.DISB_DT);
+        } catch (Exception e) {
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
         }
         return null;
     }
