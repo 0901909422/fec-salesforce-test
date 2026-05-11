@@ -481,6 +481,7 @@
         <members>fec_COFFraudRelatedView</members>
         <members>fec_AssignmentExecuteAction</members>
         <members>fec_CommonUtils</members>
+        <members>fec_BatchCaseHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -664,6 +665,7 @@
         <members>FEC_RelevantTicket_Cannot_Delete</members>
 		<members>FEC_Reason_Error</members>
 		<members>FEC_Duplicate_Queue_Error</members>
+        <members>FEC_Batch_Case_Handling_Import_Row_Status_Failed</members>
         <name>CustomLabel</name>
     </types>
 	<types>

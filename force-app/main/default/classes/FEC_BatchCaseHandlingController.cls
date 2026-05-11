@@ -1499,7 +1499,7 @@ public without sharing class FEC_BatchCaseHandlingController {
     private static Integer countFailedImportRows(List<CaseHandlingImportRow> rows) {
         Integer n = 0;
         for (CaseHandlingImportRow r : rows) {
-            if (r != null && r.status == 'Failed') {
+            if (r != null && r.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed) {
                 n += 1;
             }
         }
@@ -1530,7 +1530,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 continue;
             }
             rr.recordId = FEC_ConstantCommon.STR_EMPTY;
-            rr.status = 'Success';
+            rr.status = System.Label.FEC_Operation_Success;
             rr.errors = FEC_ConstantCommon.STR_EMPTY;
             output.add(rr);
             if (String.isNotBlank(rr.caseIdSearch)) {
@@ -1659,7 +1659,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             }
 
             if (!errs.isEmpty()) {
-                rr.status = 'Failed';
+                rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = String.join(errs, ' ');
             } else {
                 rr.recordId = matched == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(matched.Id);
@@ -1673,14 +1673,14 @@ public without sharing class FEC_BatchCaseHandlingController {
             return;
         }
         for (CaseHandlingImportRow rr : rows) {
-            if (rr == null || rr.status == 'Failed' || String.isBlank(rr.recordId)) {
+            if (rr == null || rr.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed || String.isBlank(rr.recordId)) {
                 continue;
             }
             Id caseId;
             try {
                 caseId = Id.valueOf(rr.recordId);
             } catch (Exception e) {
-                rr.status = 'Failed';
+                rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, 'Record Id không hợp lệ.');
                 continue;
             }
@@ -1690,7 +1690,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             }
             String methodKey = resolveRoutingMethodKey(actionLabel);
             if (String.isBlank(methodKey)) {
-                rr.status = 'Failed';
+                rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
                     cofOrGsr
@@ -1700,7 +1700,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 continue;
             }
             if (routingActionRequiresExtraParams(methodKey)) {
-                rr.status = 'Failed';
+                rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(
                     rr.errors,
                     'Routing action cần tham số bổ sung (queue / decision / transfer / revert) — không xử lý qua Bulk Import.'
@@ -1710,7 +1710,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             try {
                 FEC_CaseBusinessService.run(methodKey, new Map<String, String>{ 'caseId' => String.valueOf(caseId) });
             } catch (Exception ex) {
-                rr.status = 'Failed';
+                rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                 rr.errors = appendError(rr.errors, ex.getMessage());
                 continue;
             }
@@ -1718,7 +1718,7 @@ public without sharing class FEC_BatchCaseHandlingController {
                 try {
                     FEC_CaseRemarkController.createRemark(rr.inputtedRemarks, String.valueOf(caseId), null);
                 } catch (Exception ex) {
-                    rr.status = 'Failed';
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                     rr.errors = appendError(rr.errors, ex.getMessage());
                 }
             }

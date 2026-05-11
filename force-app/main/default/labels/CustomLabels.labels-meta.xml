@@ -15219,4 +15219,12 @@
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
     </labels>
+    <labels>
+        <fullName>FEC_Batch_Case_Handling_Import_Row_Status_Failed</fullName>
+        <categories>Batch Case Handling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Case_Handling_Import_Row_Status_Failed</shortDescription>
+        <value>Failed</value>
+    </labels>
 </CustomLabels>
