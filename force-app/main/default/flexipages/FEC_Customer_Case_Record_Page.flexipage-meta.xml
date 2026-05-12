@@ -15,17 +15,22 @@
                         <valueListItems>
                             <value>Case.Follow_Up</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.RecordType.Name}</leftValue>
                                     <operator>NE</operator>
                                     <rightValue>Interaction</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Unfollow</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.RecordType.Name}</leftValue>
                                     <operator>NE</operator>
@@ -36,12 +41,16 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Reopen</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
                                     <operator>CONTAINS</operator>
@@ -52,12 +61,16 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Recall</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Final_Status__c}</leftValue>
                                     <operator>CONTAINS</operator>
@@ -68,22 +81,31 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>review</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.New_Assignment</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>handling</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -119,6 +141,75 @@
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.FEC_Execute_Assigment</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Rejected</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-CannotContactCustomer</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-AutoCancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Cancelled</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Resolved-Completed</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Can_Execute_Assignment__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Hold_Case</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>handling</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                     </valueList>
@@ -147,6 +238,18 @@
                 <identifier>force_highlightsPanel</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_CaseExecuteVisibility</componentName>
+                <identifier>c_fec_CaseExecuteVisibility</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AssignmentExecuteVisibility</componentName>
+                <identifier>c_fec_AssignmentExecuteVisibility</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>header</name>
         <type>Region</type>
     </flexiPageRegions>
@@ -169,8 +272,8 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_ManualNotification</componentName>
-                <identifier>c_fec_ManualNotification</identifier>
+                <componentName>fec_DoNotBotherHandling</componentName>
+                <identifier>c_fec_DoNotBotherHandling</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
@@ -178,9 +281,41 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
+            <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Interaction_ID__c</fieldItem>
+                <identifier>RecordFEC_Interaction_ID_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Interaction_ID__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Interaction_ID_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -191,8 +326,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -213,8 +348,8 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By__c</fieldItem>
-                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_cField</identifier>
+                <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_By_View__c</fieldItem>
+                <identifier>RecordFEC_Interaction_rFEC_Last_Updated_By_View_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b2ccf4d4-e823-4b23-b25a-cd1f5ebe8401</name>
@@ -287,6 +422,18 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_ArchiveAttachments</componentName>
+                <identifier>c_fec_ArchiveAttachments</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>NE</operator>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>parentFieldApiName</name>
                     <value>Case.Id</value>
@@ -309,6 +456,12 @@
                 </componentInstanceProperties>
                 <componentName>force:relatedListSingleContainer</componentName>
                 <identifier>force_relatedListSingleContainer4</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-99a61169-31ed-4a25-ae20-3a10c138cab0</name>
@@ -317,69 +470,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentInstanceProperties>
-                    <name>actionNames</name>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>maxRecordsToDisplay</name>
-                    <value>10</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>parentFieldApiName</name>
-                    <value>Case.Id</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListApiName</name>
-                    <value>Assignments__r</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListDisplayType</name>
-                    <value>ADVGRID</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListFieldAliases</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>NAME</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Assignment_Type__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Assignment_Name__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Assignment_Status__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_User__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_User_Role__c</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>FEC_Date_Time__c</value>
-                        </valueListItems>
-                    </valueList>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>relatedListLabel</name>
-                    <value>Assignment List</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>showActionBar</name>
-                    <value>true</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>sortFieldAlias</name>
-                    <value>__DEFAULT__</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>sortFieldOrder</name>
-                    <value>Default</value>
-                </componentInstanceProperties>
-                <componentName>lst:dynamicRelatedList</componentName>
-                <identifier>lst_dynamicRelatedList</identifier>
+                <componentName>fec_AssigmentListView</componentName>
+                <identifier>c_fec_AssigmentListView</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-4be027e5-73e7-4206-818d-db64447680f7</name>
@@ -424,16 +516,34 @@
                     <name>relatedListFieldAliases</name>
                     <valueList>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>FEC_Stage_Name__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Type__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Notification_Channel__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Target_Group__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_Send_Type__c</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>FEC_Send_Status__c</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>FEC_Failure_Reason__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FEC_Send_User__c</value>
+                            <value>FEC_User__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_User_Role__c</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>FEC_Date_Time__c</value>
                         </valueListItems>
                     </valueList>
                 </componentInstanceProperties>
@@ -605,11 +715,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>actionNames</name>
-                    <valueList>
-                        <valueListItems>
-                            <value>New</value>
-                        </valueListItems>
-                    </valueList>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>adminFilters</name>
@@ -643,13 +748,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>
@@ -731,13 +836,13 @@
                             <value>FEC_Account_or_Contract_Revelant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Category_Relevant__c</value>
+                            <value>FEC_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Category_Relevant__c</value>
+                            <value>FEC_Sub_Category_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>FE_Sub_Code_Relevant__c</value>
+                            <value>FEC_Sub_Code_Relevant__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>FEC_User_Relevant__c</value>
@@ -1143,6 +1248,200 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_MainInfoLoanAccount</componentName>
+                <identifier>c_fec_MainInfoLoanAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-c49deaa3-faaa-4c1a-987e-e608beb4a9fc</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_SecondaryInfoLoanAccount</componentName>
+                <identifier>c_fec_SecondaryInfoLoanAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-58dbedb0-9e8b-4404-99d9-ea0de79f3491</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Termination</componentName>
+                <identifier>c_fec_Termination</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4b4eu3j9hxs</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_RepaymentSchedulePaymentHistory</componentName>
+                <identifier>c_fec_RepaymentSchedulePaymentHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-27ddbc1a-f1e0-4852-a7e4-7c34e8af5dc0</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_MRC</componentName>
+                <identifier>c_fec_MRC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-7d545bfe-1c74-4b83-93a2-21a86f18371c</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Asset</componentName>
+                <identifier>c_fec_Asset</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-dfb131a6-2806-405f-8b63-22bc9a0ca209</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AppInfo</componentName>
+                <identifier>c_fec_AppInfo</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-0521ac2f-ea2b-46bf-b7df-9e2d6aab1a69</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-c49deaa3-faaa-4c1a-987e-e608beb4a9fc</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Main Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab23</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-58dbedb0-9e8b-4404-99d9-ea0de79f3491</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Secondary Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab24</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4b4eu3j9hxs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Termination</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab25</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-27ddbc1a-f1e0-4852-a7e4-7c34e8af5dc0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Repayment Schedule &amp; Payment History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab26</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-7d545bfe-1c74-4b83-93a2-21a86f18371c</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>MRC</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab27</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-dfb131a6-2806-405f-8b63-22bc9a0ca209</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Asset</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab28</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-0521ac2f-ea2b-46bf-b7df-9e2d6aab1a69</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Application History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab29</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-ebda0b99-4ea1-492f-a8aa-ad5c77681bc1</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-ebda0b99-4ea1-492f-a8aa-ad5c77681bc1</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_tabset5</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-7cc23ad9-362b-4c6e-ab72-99a2136d98f7</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_MainInfo</componentName>
                 <identifier>c_fec_MainInfo</identifier>
             </componentInstance>
@@ -1255,6 +1554,34 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-7cc23ad9-362b-4c6e-ab72-99a2136d98f7</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Account</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab22</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -1269,6 +1596,33 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab4</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Banca</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab_banca</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Insurance</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-96d9d923-9c87-4d92-989d-7491612034d8</name>
@@ -1338,6 +1692,12 @@
                 </componentInstanceProperties>
                 <componentName>fec_CaseEditNOC</componentName>
                 <identifier>c_fec_CaseEditNOC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_ManualNotification</componentName>
+                <identifier>c_fec_ManualNotification</identifier>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>

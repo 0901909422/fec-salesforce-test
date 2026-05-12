@@ -29,7 +29,6 @@ public with sharing class FEC_GetLoanBasicInfo {
 
     public class LoanBasicInfo {
         public Loan Loan;
-        public RepaymentFeeOverdue RepaymentFeeOverdue;
         public InterestOnOverdueInterest InterestOnOverdueInterest;
         public Product Product;
         public TerminationSimulation TerminationSimulation;
@@ -58,16 +57,12 @@ public with sharing class FEC_GetLoanBasicInfo {
         public Decimal ChargeAmtCollected;
         public Decimal ChargeWaived;
         public Decimal OutstandingChargeAmount;
-        public String Purpose;
-        public String CompanyName;
-    }
-
-    // ===================== OVERDUE =====================
-    public class RepaymentFeeOverdue {
         public Decimal AssessedAmount;
         public Decimal CollectedAmount;
         public Decimal WaivedAmount;
         public Decimal OutstandingAmount;
+        public String Purpose;
+        public String CompanyName;
     }
 
     public class InterestOnOverdueInterest {
@@ -156,6 +151,16 @@ public with sharing class FEC_GetLoanBasicInfo {
         String dateTimeStr,
         String contractNumber
     ) {
+        return callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber, false);
+    }
+
+    public static ResponseWrapper callGetLoanBasicInfo(
+        String transId,
+        String requestorId,
+        String dateTimeStr,
+        String contractNumber,
+        Boolean isTestApi
+    ) {
         try {
             validateRequest(transId, requestorId, dateTimeStr, contractNumber);
 
@@ -163,6 +168,12 @@ public with sharing class FEC_GetLoanBasicInfo {
 
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
             FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Loan_Basic_Info');
+
+            if (isTestApi == true) {
+                throw new CalloutException(
+                    String.format(System.Label.FEC_MSG_API_Error, new List<String>{ 'GetLoanBasicInfo' })
+                );
+            }
 
             //String endpoint = apiSetting?.FEC_Call_Mock__c
                 //? FEC_MockupEndpoint.GET_LOAN_BASIC_INFO_ENDPOINT_MOCKUP
@@ -289,8 +300,6 @@ public with sharing class FEC_GetLoanBasicInfo {
         if (lbiNode != null) {
             result.LoanBasicInfo = new LoanBasicInfo();
             result.LoanBasicInfo.Loan = parseLoan(lbiNode.getChildElement('Loan', null));
-            result.LoanBasicInfo.RepaymentFeeOverdue =
-                parseRepaymentFeeOverdue(lbiNode.getChildElement('RepaymentFeeOverdue', null));
             result.LoanBasicInfo.InterestOnOverdueInterest =
                 parseInterestOnOverdueInterest(lbiNode.getChildElement('InterestOnOverdueInterest', null));
             result.LoanBasicInfo.Product =
@@ -333,19 +342,13 @@ public with sharing class FEC_GetLoanBasicInfo {
         l.ChargeAmtCollected = FEC_CommonUltils.xmlValToDecimal(n, 'ChargeAmtCollected');
         l.ChargeWaived = FEC_CommonUltils.xmlValToDecimal(n, 'ChargeWaived');
         l.OutstandingChargeAmount = FEC_CommonUltils.xmlValToDecimal(n, 'OutstandingChargeAmount');
+        l.AssessedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'AssessedAmount');
+        l.CollectedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'CollectedAmount');
+        l.WaivedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'WaivedAmount');
+        l.OutstandingAmount = FEC_CommonUltils.xmlValToDecimal(n, 'OutstandingAmount');
         l.Purpose = FEC_CommonUltils.getXmlValue(n, 'Purpose');
         l.CompanyName = FEC_CommonUltils.getXmlValue(n, 'CompanyName');
         return l;
-    }
-
-    private static RepaymentFeeOverdue parseRepaymentFeeOverdue(Dom.XmlNode n) {
-        if (n == null) return null;
-        RepaymentFeeOverdue r = new RepaymentFeeOverdue();
-        r.AssessedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'AssessedAmount');
-        r.CollectedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'CollectedAmount');
-        r.WaivedAmount = FEC_CommonUltils.xmlValToDecimal(n, 'WaivedAmount');
-        r.OutstandingAmount = FEC_CommonUltils.xmlValToDecimal(n, 'OutstandingAmount');
-        return r;
     }
 
     private static InterestOnOverdueInterest parseInterestOnOverdueInterest(Dom.XmlNode n) {

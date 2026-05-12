@@ -4,7 +4,16 @@
     <description>Email ID của người chỉnh sửa gần nhất
 Trường tạo mới để hiển thị trên Case details và interaction details do trường standard không hiển thị được đúng  yêu cầu</description>
     <externalId>false</externalId>
-    <formula>LEFT(LastModifiedBy.Email,FIND(&quot;@&quot;,LastModifiedBy.Email)-1)</formula>
+    <formula>IF (NOT(ISBLANK(ArchiveLastUpdatedBy__c)), ArchiveLastUpdatedBy__c, 
+    IF(
+        OR(
+            TRIM(LOWER(LastModifiedBy.LastName)) = &quot;platform integration user&quot;,
+            TRIM(LOWER(LastModifiedBy.Alias)) = &quot;platint&quot;
+        ),
+        &quot;system&quot;,
+        LEFT(LastModifiedBy.Email, FIND(&quot;@&quot;, LastModifiedBy.Email) - 1)
+    )
+)</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Last Updated By</label>
     <required>false</required>

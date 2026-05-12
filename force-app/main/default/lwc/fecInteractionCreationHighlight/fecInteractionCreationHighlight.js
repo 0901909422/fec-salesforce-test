@@ -3,8 +3,10 @@ import { IsConsoleNavigation, openTab } from "lightning/platformWorkspaceApi";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getInteractionHighlightData from "@salesforce/apex/FEC_InteractionInforHandler.getInteractionHighlightData";
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+import getCurrentUserProfileName from '@salesforce/apex/FEC_SearchController.getCurrentUserProfileName';
 import HAS_ACCOUNT_OR_CONTRACT from "@salesforce/schema/Case.FEC_Has_Account_or_Contract__c";
 import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import { refreshApex } from "@salesforce/apex";
@@ -16,12 +18,11 @@ import FEC_LAST_UPDATED_ON_LABEL from "@salesforce/label/c.FEC_Last_Updated_On_L
 import FEC_EXECUTE_LABEL from "@salesforce/label/c.FEC_Execute_Label";
 import FEC_CREATE_CASE_BTN_LABEL from "@salesforce/label/c.FEC_Create_Case_Btn_Label";
 import FEC_WRAP_UP_BTN_LABEL from "@salesforce/label/c.FEC_Wrap_up_Btn_Label";
-
 import FEC_INTERACTION_CHANNEL from "@salesforce/label/c.FEC_Interaction_Channel_Label";
-
 import FEC_INTERACTION_SUB_CHANNEL from "@salesforce/label/c.FEC_Interaction_Sub_Channel_Label";
-
+import FEC_No_Permission_Msg from '@salesforce/label/c.FEC_No_Permission_Msg';
 import { formatDateTime } from "c/fec_CommonUtils";
+import { PROFILE_RELEVANT_DEPTS } from 'c/fec_CommonConst';
 
 export default class FecInteractionCreationHighlight extends NavigationMixin(
   LightningElement,
@@ -46,12 +47,18 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   wiredViewModeResult;
   _resetDone = false;
   isOpen = false;
+  _userProfile;
 
   // ===============================
   // CONSOLE CHECK
   // ===============================
   @wire(IsConsoleNavigation)
   isConsoleNavigation;
+
+  @wire(getCurrentUserProfileName)
+  wiredProfile({ data }) {
+    if (data) this._userProfile = data;
+  }
 
   // ===============================
   // LOAD VIEW MODE (LDS)
@@ -126,6 +133,10 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
     return this.viewMode === "handling";
   }
 
+  get isNotRelevantDepts() {
+    return this._userProfile !== PROFILE_RELEVANT_DEPTS;
+  }
+
   // ===============================
   // GETTERS
   // ===============================
@@ -138,11 +149,11 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
   }
 
   get updatedBy() {
-    return this.record?.FEC_Last_Updated_By__c || "";
+    return this.record?.FEC_Last_Updated_By_View__c || "";
   }
 
   get lastUpdated() {
-    const value = this.record?.FEC_Last_Updated_On__c;
+    const value = this.record?.FEC_Last_Updated_On_View__c;
     if (!value) return "";
 
     return formatDateTime(value);
@@ -188,6 +199,10 @@ export default class FecInteractionCreationHighlight extends NavigationMixin(
 
   async handleCreateCase() {
     console.log("handleCreateCase from creation highlight");
+    if (this._userProfile === PROFILE_RELEVANT_DEPTS) {
+      this.dispatchEvent(new ShowToastEvent({ title: 'Lỗi', message: FEC_No_Permission_Msg, variant: 'error' }));
+      return;
+    }
     this.isOpen = true;
   }
 

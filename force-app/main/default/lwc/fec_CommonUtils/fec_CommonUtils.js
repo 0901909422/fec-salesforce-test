@@ -48,6 +48,21 @@ const formatDateTimeVN = (val) => {
 
   return `${day}/${month}/${year}, ${h}:${m}:${s}`;
 };
+
+/**
+ * Format date-time as DD/MM/YYYY, HH:mm (no seconds, VN display)
+ */
+const formatDateTimeVNShort = (val) => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return val;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year}, ${h}:${m}`;
+};
 /**
  * Format seconds as HH:mm:ss
  */
@@ -112,6 +127,42 @@ const formatToDDMMYYYY = (iso) => {
 };
 
 /**
+ * Flexible date -> DD/MM/YYYY
+ * Accepts:
+ * - YYYY-MM-DD / YYYY/MM/DD (optionally with time)
+ * - DD/MM/YYYY
+ * - MM/DD/YYYY (auto-convert to DD/MM/YYYY when ambiguous)
+ */
+const formatDateFlexibleVN = (input) => {
+  if (!input) return STR_EMPTY;
+  const raw = String(input).trim();
+  if (!raw) return STR_EMPTY;
+
+  const isoLike = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s].*)?$/);
+  if (isoLike) {
+    const [, y, m, d] = isoLike;
+    return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
+  }
+
+  const slashLike = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashLike) {
+    const [, p1, p2, y] = slashLike;
+    const first = Number(p1);
+    const second = Number(p2);
+    const day = first > 12 ? first : second;
+    const month = first > 12 ? second : first;
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${y}`;
+  }
+
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/**
  * Parse DD/MM/YYYY -> YYYY-MM-DD
  * Validate calendar
  */
@@ -150,7 +201,7 @@ const maskWorkPhone = (phone) => {
   const v = String(phone).trim();
   if (v.length < 7) return v;
 
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
@@ -183,11 +234,11 @@ const maskValue = (value, showFull) => {
   }
 
   /* =====================
-   * PHONE bắt đầu bằng 84 (11 số)
-   * Hiển thị: 5 số đầu + 3 số cuối
+   * PHONE bắt đầu bằng 84 (≥11 số: 84 + ít nhất 9 chữ số)
+   * Hiển thị: 5 số đầu + 3 số cuối (chuỗi dài hơn 11 vẫn cùng rule)
    * Ví dụ: 84123***456
    * ===================== */
-  if (/^84\d{9}$/.test(v)) {
+  if (/^84\d{9,}$/.test(v)) {
     return v.substring(0, 5) + "*".repeat(v.length - 8) + v.slice(-3);
   }
 
@@ -205,7 +256,7 @@ const maskValue = (value, showFull) => {
    * Ví dụ: 028*****456
   * ===================== */
   if (/^02\d{8,9}$/.test(v)) {
-  return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
+    return v.substring(0, 3) + "*".repeat(v.length - 6) + v.slice(-3);
   }
 
   /* =====================
@@ -653,7 +704,7 @@ const setConsoleTab = async (label, icon) => {
       });
     }
   } catch (e) {
-   console.error(e);
+    console.error(e);
   }
 };
 
@@ -690,8 +741,8 @@ const formatNumber = (value) => {
 };
 
 const getCaseIdNumber = (idText) => {
-    const match = idText?.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
+  const match = idText?.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
 };
 
 /**
@@ -768,26 +819,30 @@ const formatThousandsFromDigits = (digits) => {
   }).format(n);
 };
 
-const toUpperNoVietnameseAccent = (str) => {
-  if (!str) {
+const formatThousandsFromDigitsEnUs = (digits) => {
+  if (!digits) {
     return STR_EMPTY;
   }
-  let s = str.trim().toLowerCase();
-  const map = [
-    ['à', 'a'], ['á', 'a'], ['ạ', 'a'], ['ả', 'a'], ['ã', 'a'],
-    ['ầ', 'a'], ['ấ', 'a'], ['ậ', 'a'], ['ẩ', 'a'], ['ẫ', 'a'],
-    ['ằ', 'a'], ['ắ', 'a'], ['ặ', 'a'], ['ẳ', 'a'], ['ẵ', 'a'],
-    ['è', 'e'], ['é', 'e'], ['ẹ', 'e'], ['ẻ', 'e'], ['ẽ', 'e'], ['ê', 'e'], ['ề', 'e'], ['ế', 'e'], ['ệ', 'e'], ['ể', 'e'], ['ễ', 'e'],
-    ['ì', 'i'], ['í', 'i'], ['ị', 'i'], ['ỉ', 'i'], ['ĩ', 'i'],
-    ['ò', 'o'], ['ó', 'o'], ['ọ', 'o'], ['ỏ', 'o'], ['õ', 'o'], ['ô', 'o'], ['ồ', 'o'], ['ố', 'o'], ['ộ', 'o'], ['ổ', 'o'], ['ỗ', 'o'], ['ơ', 'o'], ['ờ', 'o'], ['ớ', 'o'], ['ợ', 'o'], ['ở', 'o'], ['ỡ', 'o'],
-    ['ù', 'u'], ['ú', 'u'], ['ụ', 'u'], ['ủ', 'u'], ['ũ', 'u'], ['ư', 'u'], ['ừ', 'u'], ['ứ', 'u'], ['ự', 'u'], ['ử', 'u'], ['ữ', 'u'],
-    ['ỳ', 'y'], ['ý', 'y'], ['ỵ', 'y'], ['ỷ', 'y'], ['ỹ', 'y'],
-    ['đ', 'd']
-  ];
-  map.forEach((pair) => {
-    s = s.split(pair[0]).join(pair[1]);
-  });
-  return s.toUpperCase();
+  const n = parseInt(digits, 10);
+  if (isNaN(n)) {
+    return STR_EMPTY;
+  }
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(n);
+};
+
+const toUpperNoVietnameseAccent = (str) => {
+  if (!str) return '';
+
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toUpperCase()
+    .trim();
 };
 
 const todayIso = () => {
@@ -798,13 +853,128 @@ const todayIso = () => {
   return y + '-' + m + '-' + d;
 };
 
+/** Human-readable file size (B … GB). Dùng bởi fec_FileUploadCard và LWC khác. */
+const formatBytes = (bytes) => {
+  const n = Number(bytes);
+  if (!n || n <= 0) {
+    return "0 B";
+  }
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(n) / Math.log(k));
+  return `${(n / k ** i).toFixed(i > 0 ? 1 : 0)} ${sizes[i]}`;
+};
+
+/** Ngày ngắn theo locale (vd. "18 Apr 2026") — list file. */
+const formatShortDate = (dt) => {
+  if (!dt) {
+    return "";
+  }
+  try {
+    const d = new Date(dt);
+    return d.toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  } catch (e) {
+    return "";
+  }
+};
+
+/** Nhãn phần mở rộng file (tối đa 4 ký tự, in hoa). */
+const extensionBadge = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  if (!e) {
+    return "FILE";
+  }
+  return e.length <= 4 ? e.toUpperCase() : e.slice(0, 4).toUpperCase();
+};
+
+/**
+ * `lightning-icon` icon-name theo phần mở rộng (ContentDocument.FileExtension / tên file).
+ * Dùng cho bảng file / related list.
+ */
+const doctypeIconFromExtension = (ext) => {
+  const e = (ext || "").toLowerCase().replace(/^\./, "");
+  const map = {
+    pdf: "doctype:pdf",
+    xlsx: "doctype:excel",
+    xls: "doctype:excel",
+    csv: "doctype:csv",
+    doc: "doctype:word",
+    docx: "doctype:word",
+    ppt: "doctype:ppt",
+    pptx: "doctype:ppt",
+    txt: "doctype:txt",
+    xml: "doctype:xml",
+    png: "doctype:image",
+    jpg: "doctype:image",
+    jpeg: "doctype:image",
+    gif: "doctype:image",
+    zip: "doctype:zip"
+  };
+  return map[e] || "doctype:attachment";
+};
+
+/**
+ * Map 1 object cùng shape `FEC_CaseLinkedFilesController.CaseLinkedFileRow` → row UI bảng (Title / Owner / …).
+ */
+const mapLinkedFileToTableRow = (row) => {
+  if (!row) {
+    return null;
+  }
+  const ext = row.fileExtension || "";
+  const title = row.title || row.contentDocumentId;
+  return {
+    id: row.linkId,
+    linkLabel: title,
+    contentDocumentId: row.contentDocumentId,
+    ownerLabel: row.ownerName || "—",
+    lastModifiedLabel: formatDateTimeVNShort(row.lastModifiedDate) || "—",
+    sizeLabel: formatBytes(row.contentSize),
+    iconName: doctypeIconFromExtension(ext)
+  };
+};
+
+const formatCurrencyIncludeTax = (value, text) => {
+  let val = formatNumber(value);
+  if (!val || val == '0') return '';
+  return val + ' ' + text;
+}
+
+/** Currency(18,0): phân cách hàng nghìn, không thập phân. VD: 8,200,000 */
+const formatCurrency0 = (value) => {
+  if (value == null || value === '' || value === '-') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '-';
+  return Math.round(num).toLocaleString('en-US');
+};
+
+/** Currency(16,2): phân cách hàng nghìn, 2 thập phân. VD: 5,526,000.00 */
+const formatCurrency2 = (value) => {
+  if (value == null || value === '' || value === '-') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return '-';
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const getUsernameBeforeAt = (email) =>{
+   if (!email) {
+        return "";
+    }
+
+    return email.split("@")[0];
+}
 export {
   formatDate,
   formatDateTime,
   formatDateTimeVN,
+  formatDateTimeVNShort,
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
+  formatDateFlexibleVN,
   parseDateVNI,
   maskWorkPhone,
   maskValue,
@@ -828,7 +998,17 @@ export {
   getCaseIdNumber,
   sortByStringField,
   formatThousandsFromDigits,
+  formatThousandsFromDigitsEnUs,
   stripToIntString,
   todayIso,
-  toUpperNoVietnameseAccent
+  toUpperNoVietnameseAccent,
+  formatCurrencyIncludeTax,
+  formatCurrency0,
+  formatCurrency2,
+  formatBytes,
+  formatShortDate,
+  extensionBadge,
+  doctypeIconFromExtension,
+  mapLinkedFileToTableRow,
+  getUsernameBeforeAt
 };

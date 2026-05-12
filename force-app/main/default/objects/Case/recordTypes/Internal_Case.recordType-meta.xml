@@ -282,11 +282,23 @@
     <picklistValues>
         <picklist>FEC_Interaction_Subchannel__c</picklist>
         <values>
+            <fullName>EA</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Inbound Call</fullName>
             <default>false</default>
         </values>
         <values>
             <fullName>Other</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>PR%2FMKT</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>SBV</fullName>
             <default>false</default>
         </values>
     </picklistValues>
@@ -572,6 +584,21 @@
         </values>
         <values>
             <fullName>Question</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>FEC_RD_Payment_Contract_Assessment__c</picklist>
+        <values>
+            <fullName>Cannot close contract</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed with statement</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Contract can be closed without statement</fullName>
             <default>false</default>
         </values>
     </picklistValues>

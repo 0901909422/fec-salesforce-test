@@ -7,6 +7,7 @@ public without sharing class FEC_CaseTriggerHandler {
     
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
+    public static Boolean isSystemUpdate = false;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -24,24 +25,32 @@ public without sharing class FEC_CaseTriggerHandler {
 
         if (Trigger.isBefore && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onBeforeInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeInsert(listCase);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onBeforeUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onBeforeUpdate(listCase, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
-            handler.onAfterInsert(newCases);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterInsert(listCase);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
             List<Case> newCases = (List<Case>) Trigger.new;
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
-            handler.onAfterUpdate(newCases, oldMap);
+            List<Case> listCase = new List<Case>();
+            filterCase(listCase, newCases);
+            handler.onAfterUpdate(listCase, oldMap);
         }
     }
 
@@ -90,6 +99,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterInsert(List<Case> newCases) {
         isExecuting = true;
+        updateLastModified(newCases, null);
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -112,6 +122,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
+        updateLastModified(newCases, oldMap);
         handleFollowUpOnResolved(newCases, oldMap);
         handleAutoFollowUpOnUpdate(newCases, oldMap);
         if (!FEC_GetNextWorkController.isGetNextWork) {
@@ -122,7 +133,36 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
+        // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
+        syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         isExecuting = false;
+    }
+
+    /**
+     * tungnm37: Khi Case.OwnerId thay đổi, đồng bộ FEC_Assignment_Users__c.
+     * Rule: Queue ID nếu owner là Queue (có assignment), null nếu owner là User (không có assignment).
+     * Bao phủ mọi luồng: Transfer từ UI, Escalate, Route, v.v.
+     */
+    private static void syncAssignmentUsersOnOwnerChange(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> toUpdate = new List<Case>();
+        for (Case c : newCases) {
+            Case oldCase = oldMap.get(c.Id);
+            if (c.OwnerId != null && c.OwnerId != oldCase.OwnerId) {
+                // tungnm37 fix: khi owner đổi về User → clear FEC_Assignment_Users__c để Service Case Owner hiển thị
+                // khi owner đổi về Queue → set = Queue Id để formula ẩn (COF/GSR auto routing)
+                String newAssignmentUsers = c.OwnerId.getSObjectType() == User.SObjectType
+                    ? null
+                    : String.valueOf(c.OwnerId);
+                toUpdate.add(new Case(Id = c.Id, FEC_Assignment_Users__c = newAssignmentUsers));
+            }
+        }
+        if (!toUpdate.isEmpty()) {
+            try {
+                Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
+            } catch (Exception e) {
+                System.debug('FEC_DEBUG syncAssignmentUsersOnOwnerChange error: ' + e.getMessage());
+            }
+        }
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
@@ -514,9 +554,22 @@ public without sharing class FEC_CaseTriggerHandler {
                 if (relatedEmail != null) {
                     c.FEC_Send_To__c = relatedEmail.ToAddress;
                 }
+            } else if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_FE) {
+                // Ép cứng địa chỉ cho FE Credit
+                c.FEC_Send_To__c = FEC_ConstantCommon.EMAIL_READONLY_FROM_FECREDIT;
+                c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
+                c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
+                casesForRouting.add(c);
             } else {
-                // Ép cứng địa chỉ Routing bằng giá trị lấy từ Custom Setting (sendToValue)
-                c.FEC_Send_To__c = sendToValue;
+                // Với Ubank: Tuyệt đối chỉ lấy từ Custom Setting
+                if (c.Origin == FEC_ConstantCommon.CASE_ORIGIN_EMAIL_UBANK) {
+                    c.FEC_Send_To__c = sendToValue;
+                } 
+                // Các trường hợp khác: Lấy ToAddress thực tế của mail làm fallback
+                else if (relatedEmail != null) {
+                    c.FEC_Send_To__c = relatedEmail.ToAddress;
+                }
+
                 c.FEC_Interaction_Subchannel__c = FEC_ConstantCommon.SUBCHANNEL_INCOMING_EMAIL;
                 c.FEC_Interaction_View_Mode__c = FEC_ConstantCommon.INTERACTION_HANDLING_MODE;
                 casesForRouting.add(c);
@@ -975,6 +1028,46 @@ public without sharing class FEC_CaseTriggerHandler {
             if (!toDelete.isEmpty()) delete toDelete;
         } catch (Exception e) {
             System.debug('deleteCasesAsync failed: ' + e.getMessage());
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Filter Case
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/04/07      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void filterCase(List<Case> listCase, List<Case> newCases){
+        for (Case caseIns : newCases) {
+            if (String.isBlank(caseIns.ArchiveExternalId__c)) {
+                listCase.add(caseIns);
+            }
+        }
+    }
+
+    private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> caseUpdates = new List<Case>();
+        for (Case c : newCases) {
+            if (isSystemUpdate) {
+                continue;
+            }
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                if (c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                    continue;
+                }
+            }
+            Case caseUpdate = new Case(
+                Id = c.Id,
+                FEC_Last_Updated_By_View__c = c.FEC_Last_Updated_By__c,
+                FEC_Last_Updated_On_View__c = c.FEC_Last_Updated_On__c
+            );
+            caseUpdates.add(caseUpdate);
+        }
+        if (!caseUpdates.isEmpty()) {
+            update caseUpdates;
         }
     }
 }

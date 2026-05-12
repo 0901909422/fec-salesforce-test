@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Account_or_Contract_Revelant__c</fullName>
     <externalId>false</externalId>
-    <formula>FEC_Related_To__r.FEC_Account_or_Contract__r.FEC_Account_Number__c</formula>
+    <formula>IF(NOT(ISBLANK(FEC_Related_To__r.FEC_Account_or_Contract__c)), FEC_Related_To__r.FEC_Account_or_Contract__r.Name, FEC_Interaction__r.FEC_Account_or_Contract__r.Name)</formula>
     <label>Account/Contract Number</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

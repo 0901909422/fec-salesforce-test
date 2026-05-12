@@ -3,7 +3,6 @@
     <fullName>FEC_Product_Type_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Cloned from FEC_Nature_of_Case__c.FEC_Product_Type_Status__c (master: FEC_Product_Type__r.FEC_Active__c). MDM stores as plain Checkbox since no Lookup available.</description>
-    <externalId>false</externalId>
     <label>Product Type Status</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

@@ -1,0 +1,98 @@
+<template>
+
+    <div class="slds-accordion">
+
+        <section class="slds-accordion__section {sectionClass}">
+
+            <div class="slds-accordion__summary">
+
+                <button class="slds-button slds-button_reset slds-accordion__summary-action" onclick={toggleSection}
+                    disabled={isDisabled}>
+
+                    <!-- ICON (giống hệt standard) -->
+                    <lightning-icon icon-name="utility:chevrondown" size="x-small" class={iconClass}>
+                    </lightning-icon>
+                    <!-- TEXT -->
+                    <span class="slds-accordion__summary-content custom-header">
+                        Do Not Bother
+
+                        <template if:true={errorMessage}>
+                            <span class="error-text">
+                                - {errorMessage}
+                            </span>
+                        </template>
+                    </span>
+
+                </button>
+
+            </div>
+
+            <template if:true={isOpen}>
+                <div class="accordion-body">
+
+                    <!-- NO DATA -->
+                    <template if:true={noData}>
+                        <div class="slds-text-color_error slds-p-around_small">
+                            Không tìm thấy kết quả
+                        </div>
+                    </template>
+
+                    <!-- TABLE -->
+                    <template if:true={showTable}>
+                        <!-- <lightning-datatable key-field="id" data={pagedData} columns={columns} hide-checkbox-column
+                            show-row-number-column sorted-by={sortedBy} sorted-direction={sortDirection}
+                            onsort={handleSort}>
+                        </lightning-datatable> -->
+
+                        <c-fec_-custom-do-not-bother-view-datatable key-field="id" data={pagedData} columns={columns}
+                            ontogglemask={handleToggleMask} hide-checkbox-column show-row-number-column
+                            sorted-by={sortedBy} sorted-direction={sortDirection} onsort={handleSort}>
+                        </c-fec_-custom-do-not-bother-view-datatable>
+
+
+                        <!-- PAGINATION -->
+                        <template if:true={showPagination}>
+                            <div class="pagination-bar">
+                                <div class="pagination-section">
+                                    <span class="pagination-label">Page size</span>
+                                    <lightning-combobox value={pageSizeStr} options={pageSizeOptions}
+                                        onchange={handlePageSizeChange} variant="label-hidden"
+                                        class="page-size-combobox">
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="pagination-section">
+                                    <button class="nav-btn" disabled={isFirstPage} onclick={handlePrevPage}>
+                                        <lightning-icon icon-name="utility:chevronleft"
+                                            size="xx-small"></lightning-icon>
+                                    </button>
+
+                                    <button class="current-page-btn" disabled>
+                                        {currentPage}
+                                    </button>
+
+                                    <button class="nav-btn" disabled={isLastPage} onclick={handleNextPage}>
+                                        <lightning-icon icon-name="utility:chevronright"
+                                            size="xx-small"></lightning-icon>
+                                    </button>
+                                </div>
+
+                                <div class="pagination-section">
+                                    <span class="pagination-label">Go to</span>
+                                    <input type="text" value={gotoPageInputValue} onkeydown={handleGotoKeydown}
+                                        oninput={handleGoToPageInput} class="goto-input" />
+                                    <lightning-button label="Go" variant="brand" onclick={handleGoToPage}>
+                                    </lightning-button>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                </div>
+            </template>
+
+        </section>
+
+    </div>
+
+</template>

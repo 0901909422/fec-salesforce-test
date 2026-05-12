@@ -3,7 +3,6 @@
     <fullName>FEC_Field_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <description>Trạng thái hiển thị của trường trên màn hình Case</description>
-    <externalId>false</externalId>
     <label>Field Status</label>
     <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>

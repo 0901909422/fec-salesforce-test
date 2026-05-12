@@ -1,0 +1,205 @@
+/* ── Wrapper ─────────────────────────────────────────────── */
+.datepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* ── Input row ───────────────────────────────────────────── */
+.input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    background: #fff;
+    padding: 0 8px;
+    height: 32px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+.input-container:hover {
+    border-color: #1b96ff;
+}
+.date-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: #3e3e3c;
+    cursor: pointer;
+    min-width: 0;
+}
+.calendar-icon {
+    display: flex;
+    align-items: center;
+    color: #706e6b;
+    margin-left: 4px;
+    cursor: pointer;
+}
+
+/* ── Popup ───────────────────────────────────────────────── */
+.calendar-popup {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 9999;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    width: 260px;
+    padding: 8px;
+    user-select: none;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #0176d3;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+}
+.nav-btn:hover {
+    background: #f3f3f3;
+}
+.nav-btn:disabled {
+    color: #c9c9c9;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.month-year-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #0176d3;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.month-year-label:hover {
+    background: #f3f3f3;
+}
+
+/* ── Day grid ────────────────────────────────────────────── */
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.day-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #706e6b;
+    padding: 4px 0;
+}
+.day-cell {
+    text-align: center;
+    font-size: 12px;
+    padding: 5px 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #3e3e3c;
+    transition: background 0.1s;
+}
+.day-cell:hover:not(.empty) {
+    background: #e8f4fd;
+    color: #0176d3;
+}
+.day-cell.empty {
+    cursor: default;
+}
+.day-cell.disabled {
+    color: #c9c9c9;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: transparent;
+}
+.day-cell.disabled:hover {
+    background: transparent;
+    color: #c9c9c9;
+}
+.day-cell.today {
+    font-weight: 700;
+    color: #0176d3;
+}
+.day-cell.selected {
+    background: #0176d3;
+    color: #fff;
+    font-weight: 600;
+}
+.day-cell.selected.today {
+    background: #014486;
+    color: #fff;
+}
+
+/* ── Year/Month picker ───────────────────────────────────── */
+.year-month-picker {
+    padding: 4px 0;
+}
+.year-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.year-label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #3e3e3c;
+}
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+.month-btn {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 6px 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #3e3e3c;
+    transition: background 0.1s;
+}
+.month-btn:hover {
+    background: #e8f4fd;
+    color: #0176d3;
+}
+.month-btn.selected {
+    background: #0176d3;
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.cal-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    border-top: 1px solid #f3f3f3;
+    padding-top: 6px;
+}
+.footer-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: #0176d3;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.footer-btn:hover {
+    background: #f3f3f3;
+}

@@ -1,4 +1,4 @@
-import { LightningElement, wire, track } from 'lwc';
+import { LightningElement, wire, track, api } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 
 import getFraudCaseDetail from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getFraudCaseDetail';
@@ -36,6 +36,7 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     // ===============================
     // STATE
     // ===============================
+    @api fraudHandlingCaseId;
     @track caseId;
     @track hierarchy = [];
     @track tasks = [];
@@ -98,17 +99,21 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     // READ URL PARAM
     // ===============================
     @wire(CurrentPageReference)
-    handlePageRef(pageRef) {
-        const caseId = pageRef?.state?.c__caseId;
-        if (!caseId) return;
-
-        // Safe fraud-case detection (FH / TK / SFT)        
-        this.isFraudCase = caseId.startsWith(this.casePrefixesFH);
-        if (!this.dataLoaded) {
-            this.caseId = caseId;
-            this.dataLoaded = true;
-            this.loadData();
+    handlePageReference(pageRef) {
+        if (pageRef && pageRef.state) {
+            this.caseId = pageRef.state.c__caseId || this.fraudHandlingCaseId;
+             // Safe fraud-case detection (FH / TK / SFT)       
+            this.isFraudCase = this.caseId.startsWith(this.casePrefixesFH);
+            if (!this.dataLoaded) {                
+                this.dataLoaded = true;
+                this.loadData();
+            }
+            
+        } else{
+            return
         }
+           
+       
     }
 
     // ===============================

@@ -5,7 +5,7 @@
 
                 <!-- CLOSE BUTTON -->
                 <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
-                    onclick={handleClose}>
+                    onclick={handleCloseButton}>
                     <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
                 </button>
 
@@ -61,7 +61,7 @@
                     <!-- Footer buttons -->
                     <div class="slds-m-top_large slds-grid slds-grid_align-center">
 
-                        <lightning-button label={labels.cancel} onclick={handleClose} class="slds-m-right_small">
+                        <lightning-button label={labels.cancel} onclick={handleCloseButton} class="slds-m-right_small">
                         </lightning-button>
 
                         <lightning-button variant="brand" onclick={handleNext} label={labels.next}>

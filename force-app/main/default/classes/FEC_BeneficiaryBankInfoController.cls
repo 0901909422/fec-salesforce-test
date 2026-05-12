@@ -1,10 +1,10 @@
-public with sharing class FEC_BeneficiaryBankInfoController {
+public without sharing class FEC_BeneficiaryBankInfoController {
 
     private static final String OBJ_BANK_BRANCH = 'FEC_Bank_Branch__c';
     private static final String FLD_BANK_BRANCH_NAME_NOACCENT = 'FEC_Bank_Branch_Name_Noaccent__c';
     private static final String FLD_BANK_NAME_NOACCENT = 'FEC_Bank_Name_Noaccent__c';
-    private static final String OBJ_CUSTOMER_HISTORY = 'FEC_Customer_History__c';
-    private static final String FLD_PROVINCE_CITY = 'FEC_Province_City__c';
+    private static final String OBJ_PROVINCE = 'FEC_Province__c';
+    private static final String FLD_PROVINCE_NAME_VN = 'FEC_Name_VN__c';
     private static final String OBJ_BANK_NAME = 'FEC_Bank_Name__c';
 
     public class PicklistOptionDTO {
@@ -56,7 +56,27 @@ public with sharing class FEC_BeneficiaryBankInfoController {
 
     @AuraEnabled(cacheable=true)
     public static List<PicklistOptionDTO> getProvinceCityPicklistOptions() {
-        return getPicklistOptions(OBJ_CUSTOMER_HISTORY, FLD_PROVINCE_CITY);
+        List<PicklistOptionDTO> out = new List<PicklistOptionDTO>();
+        Schema.SObjectType t = Schema.getGlobalDescribe().get(OBJ_PROVINCE);
+        if (t == null || !t.getDescribe().isAccessible()) {
+            return out;
+        }
+        String soql = 'SELECT ' + FLD_PROVINCE_NAME_VN + ' FROM ' + OBJ_PROVINCE
+            + ' WHERE ' + FLD_PROVINCE_NAME_VN + ' != null ORDER BY ' + FLD_PROVINCE_NAME_VN;
+        List<SObject> rows = Security.stripInaccessible(AccessType.READABLE, Database.query(soql)).getRecords();
+        Set<String> seen = new Set<String>();
+        for (SObject r : rows) {
+            String val = (String) r.get(FLD_PROVINCE_NAME_VN);
+            if (String.isBlank(val) || seen.contains(val)) {
+                continue;
+            }
+            seen.add(val);
+            PicklistOptionDTO row = new PicklistOptionDTO();
+            row.label = val;
+            row.value = val;
+            out.add(row);
+        }
+        return out;
     }
 
     /**
@@ -103,7 +123,7 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         return out;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static RefundFormDefaultsDTO getBeneficiaryFormDefaults(Id caseId) {
         RefundFormDefaultsDTO dto = new RefundFormDefaultsDTO();
         if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
@@ -111,7 +131,12 @@ public with sharing class FEC_BeneficiaryBankInfoController {
         }
         List<Case> caseRows = [
             SELECT Id,
-                FEC_Account_or_Contract__c
+                FEC_Account_or_Contract__c,
+                FEC_Beneficiary_Name__c,
+                FEC_Beneficiary_Account__c,
+                FEC_Bank_Name_Noaccent__c,
+                FEC_Bank_Branch_Name_Noaccent__c,
+                FEC_Province_City__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -121,21 +146,24 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             return dto;
         }
         Case c = caseRows[0];
+        dto.customerHistoryId = c.FEC_Account_or_Contract__c;
+        dto.beneficiaryAccount = c.FEC_Beneficiary_Account__c;
+        dto.bankPicklistValue = c.FEC_Bank_Name_Noaccent__c;
+        dto.bankBranch = c.FEC_Bank_Branch_Name_Noaccent__c;
+        dto.provinceCity = c.FEC_Province_City__c;
+        if (String.isNotBlank(c.FEC_Beneficiary_Name__c)) {
+            dto.beneficiaryName = c.FEC_Beneficiary_Name__c;
+            return dto;
+        }
         if (c.FEC_Account_or_Contract__c == null || !Schema.sObjectType.FEC_Customer_History__c.isAccessible()) {
             return dto;
         }
-        dto.customerHistoryId = c.FEC_Account_or_Contract__c;
         List<FEC_Customer_History__c> histories = [
             SELECT Id,
                 FEC_Customer_Name__c,
                 FEC_First_Name__c,
                 FEC_Middle_Name__c,
-                FEC_Last_Name__c,
-                FEC_Beneficiary_Name__c,
-                FEC_Beneficiary_Account__c,
-                FEC_Bank_Name__c,
-                FEC_Bank_Branch__c,
-                FEC_Province_City__c
+                FEC_Last_Name__c
             FROM FEC_Customer_History__c
             WHERE Id = :c.FEC_Account_or_Contract__c
             LIMIT 1
@@ -160,38 +188,8 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             rawName = String.join(parts, ' ');
         }
         dto.defaultBeneficiaryUpperNoAccent = FEC_CommonUltils.toUpperNoVietnameseAccent(rawName);
-        dto.beneficiaryName = String.isNotBlank(h.FEC_Beneficiary_Name__c) ? h.FEC_Beneficiary_Name__c : dto.defaultBeneficiaryUpperNoAccent;
-        dto.beneficiaryAccount = h.FEC_Beneficiary_Account__c;
-        dto.bankPicklistValue = h.FEC_Bank_Name__c;
-        dto.bankBranch = h.FEC_Bank_Branch__c;
-        dto.provinceCity = h.FEC_Province_City__c;
+        dto.beneficiaryName = dto.defaultBeneficiaryUpperNoAccent;
         return dto;
-    }
-
-    private static List<PicklistOptionDTO> getPicklistOptions(String objectApiName, String fieldApiName) {
-        List<PicklistOptionDTO> out = new List<PicklistOptionDTO>();
-        Schema.SObjectType t = Schema.getGlobalDescribe().get(objectApiName);
-        if (t == null || !t.getDescribe().isAccessible()) {
-            return out;
-        }
-        Map<String, Schema.SObjectField> fields = t.getDescribe().fields.getMap();
-        if (!fields.containsKey(fieldApiName)) {
-            return out;
-        }
-        Schema.DescribeFieldResult d = fields.get(fieldApiName).getDescribe();
-        if (!d.isAccessible()) {
-            return out;
-        }
-        for (Schema.PicklistEntry pe : d.getPicklistValues()) {
-            if (!pe.isActive()) {
-                continue;
-            }
-            PicklistOptionDTO row = new PicklistOptionDTO();
-            row.label = pe.getLabel();
-            row.value = pe.getValue();
-            out.add(row);
-        }
-        return out;
     }
 
     @AuraEnabled
@@ -212,7 +210,7 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             );
             return res;
         }
-        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
+        if (!Schema.sObjectType.Case.isUpdateable()) {
             res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
             return res;
         }
@@ -232,8 +230,18 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             );
             return res;
         }
+        String bn = bankPicklistValue.trim();
+        String br = bankBranch.trim();
+        String pv = provinceCity.trim();
+        if (!isValidProvinceNameVn(pv)) {
+            res.errorMessage = String.format(
+                System.Label.FEC_MSG_Not_Found,
+                new List<String>{ System.Label.FEC_LBL_Province_City }
+            );
+            return res;
+        }
         List<Case> caseRows = [
-            SELECT Id, FEC_Account_or_Contract__c
+            SELECT Id
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -244,32 +252,27 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             return res;
         }
         Case c = caseRows[0];
-        if (c.FEC_Account_or_Contract__c == null) {
-            res.errorMessage = String.format(
-                System.Label.FEC_MSG_Not_Found,
-                new List<String>{ 'Customer History' }
-            );
-            return res;
-        }
         try {
-            FEC_Customer_History__c histUpd = new FEC_Customer_History__c(
-                Id = c.FEC_Account_or_Contract__c,
+            Case caseUpd = new Case(
+                Id = c.Id,
                 FEC_Beneficiary_Name__c = beneficiaryName.trim(),
                 FEC_Beneficiary_Account__c = beneficiaryAccount.trim(),
-                FEC_Bank_Name__c = bankPicklistValue.trim(),
-                FEC_Bank_Branch__c = bankBranch.trim(),
-                FEC_Province_City__c = provinceCity.trim()
+                FEC_Bank_Name_Noaccent__c = bn,
+                FEC_Bank_Branch_Name_Noaccent__c = br,
+                FEC_Province_City__c = pv
             );
-            SObjectAccessDecision histDec = Security.stripInaccessible(
+            SObjectAccessDecision caseDec = Security.stripInaccessible(
                 AccessType.UPDATABLE,
-                new List<SObject>{ histUpd }
+                new List<SObject>{ caseUpd }
             );
-            if (histDec.getRecords().isEmpty()) {
+            if (caseDec.getRecords().isEmpty()) {
                 res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
                 return res;
             }
-            update histDec.getRecords();
+            update caseDec.getRecords();
             res.success = true;
+        } catch (DmlException e) {
+            res.errorMessage = e.getDmlMessage(0);
         } catch (Exception e) {
             res.errorMessage = System.Label.FEC_Toast_Save_Error_Message;
         }
@@ -277,7 +280,7 @@ public with sharing class FEC_BeneficiaryBankInfoController {
     }
 
     /**
-     * Lưu nháp thông tin người thụ hưởng lên FEC_Customer_History__c (cho phép bỏ trống một phần trường).
+     * Lưu nháp thông tin người thụ hưởng lên Case (cho phép bỏ trống một phần trường).
      */
     @AuraEnabled
     public static void saveBeneficiaryBankInfoDraft(
@@ -296,11 +299,11 @@ public with sharing class FEC_BeneficiaryBankInfoController {
                 )
             );
         }
-        if (!Schema.sObjectType.FEC_Customer_History__c.isUpdateable()) {
+        if (!Schema.sObjectType.Case.isUpdateable()) {
             throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
         }
         List<Case> caseRows = [
-            SELECT Id, FEC_Account_or_Contract__c
+            SELECT Id
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -312,37 +315,68 @@ public with sharing class FEC_BeneficiaryBankInfoController {
             );
         }
         Case c = caseRows[0];
-        if (c.FEC_Account_or_Contract__c == null) {
-            throw new AuraHandledException(
-                String.format(
-                    System.Label.FEC_MSG_Not_Found,
-                    new List<String>{ 'Customer History' }
-                )
-            );
-        }
         try {
-            FEC_Customer_History__c histUpd = new FEC_Customer_History__c(
-                Id = c.FEC_Account_or_Contract__c,
+            String bn = String.isNotBlank(bankPicklistValue) ? bankPicklistValue.trim() : null;
+            String br = String.isNotBlank(bankBranch) ? bankBranch.trim() : null;
+            String pv = String.isNotBlank(provinceCity) ? provinceCity.trim() : null;
+            if (String.isNotBlank(bn) && String.isNotBlank(br) && String.isNotBlank(pv)) {
+                if (!isValidProvinceNameVn(pv)) {
+                    throw new AuraHandledException(
+                        String.format(
+                            System.Label.FEC_MSG_Not_Found,
+                            new List<String>{ System.Label.FEC_LBL_Province_City }
+                        )
+                    );
+                }
+            } else if (String.isNotBlank(pv)) {
+                if (!isValidProvinceNameVn(pv)) {
+                    throw new AuraHandledException(
+                        String.format(
+                            System.Label.FEC_MSG_Not_Found,
+                            new List<String>{ System.Label.FEC_LBL_Province_City }
+                        )
+                    );
+                }
+            }
+            Case caseUpd = new Case(
+                Id = c.Id,
                 FEC_Beneficiary_Name__c = String.isNotBlank(beneficiaryName) ? beneficiaryName.trim() : null,
                 FEC_Beneficiary_Account__c = String.isNotBlank(beneficiaryAccount)
                     ? beneficiaryAccount.trim()
                     : null,
-                FEC_Bank_Name__c = String.isNotBlank(bankPicklistValue) ? bankPicklistValue.trim() : null,
-                FEC_Bank_Branch__c = String.isNotBlank(bankBranch) ? bankBranch.trim() : null,
-                FEC_Province_City__c = String.isNotBlank(provinceCity) ? provinceCity.trim() : null
+                FEC_Bank_Name_Noaccent__c = bn,
+                FEC_Bank_Branch_Name_Noaccent__c = br,
+                FEC_Province_City__c = pv
             );
-            SObjectAccessDecision histDec = Security.stripInaccessible(
+            SObjectAccessDecision caseDec = Security.stripInaccessible(
                 AccessType.UPDATABLE,
-                new List<SObject>{ histUpd }
+                new List<SObject>{ caseUpd }
             );
-            if (histDec.getRecords().isEmpty()) {
+            if (caseDec.getRecords().isEmpty()) {
                 throw new AuraHandledException(System.Label.FEC_MSG_Insufficient_Access);
             }
-            update histDec.getRecords();
+            update caseDec.getRecords();
+        } catch (AuraHandledException e) {
+            throw e;
         } catch (DmlException e) {
             throw new AuraHandledException(e.getDmlMessage(0));
         } catch (Exception e) {
             throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
         }
+    }
+
+    private static Boolean isValidProvinceNameVn(String nameVn) {
+        if (String.isBlank(nameVn) || !Schema.sObjectType.FEC_Province__c.isAccessible()) {
+            return false;
+        }
+        String pv = nameVn.trim();
+        List<FEC_Province__c> rows = [
+            SELECT Id
+            FROM FEC_Province__c
+            WHERE FEC_Name_VN__c = :pv
+            LIMIT 1
+        ];
+        rows = (List<FEC_Province__c>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
+        return !rows.isEmpty();
     }
 }

@@ -1,10 +1,4 @@
 import LBL_OPT_SELECT from '@salesforce/label/c.FEC_Opt_Select';
-import LBL_OPT_CIF from '@salesforce/label/c.FEC_Opt_CIF';
-import LBL_OPT_ID_CARD from '@salesforce/label/c.FEC_Opt_IDCard';
-import LBL_OPT_CONTRACT from '@salesforce/label/c.FEC_Opt_Contract';
-import LBL_OPT_ACCOUNT from '@salesforce/label/c.FEC_Opt_Account';
-import LBL_OPT_APP_ID from '@salesforce/label/c.FEC_Opt_AppID';
-import LBL_OPT_PHONE from '@salesforce/label/c.FEC_Opt_Phone';
 import deleteConfirmationTitle from '@salesforce/label/c.FEC_Delete_Confirmation_Title';
 import deleteConfirmationMsg from '@salesforce/label/c.FEC_Delete_Confirmation_Msg';
 import successTitle from '@salesforce/label/c.FEC_Success_Title';
@@ -30,12 +24,12 @@ export const HEADER_ACTIONS = [
 
 export const ACCOUNT_LINKAGE_OPTIONS = [
     { label: LBL_OPT_SELECT, value: '' },
-    { label: LBL_OPT_CIF, value: 'CIF' },
-    { label: LBL_OPT_ID_CARD, value: 'ID_CARD' },
-    { label: LBL_OPT_CONTRACT, value: 'CONTRACT_NO' },
-    { label: LBL_OPT_ACCOUNT, value: 'ACCOUNT_NO' },
-    { label: LBL_OPT_APP_ID, value: 'APPLICATION_ID' },
-    { label: LBL_OPT_PHONE, value: 'PHONE' }
+    { label: 'CIF Number (CIF_NUMBER)', value: 'CIF_NUMBER' },
+    { label: 'ID Card / Citizen ID (ID_CARD)', value: 'ID_CARD' },
+    { label: 'Contract Number (CONTRACT_NO)', value: 'CONTRACT_NO' },
+    { label: 'Account Number (ACCOUNT_NO)', value: 'ACCOUNT_NO' },
+    { label: 'Application ID (APPLICATION_ID)', value: 'APPLICATION_ID' },
+    { label: 'Primary Phone Number (PHONE_NUMBER)', value: 'PHONE_NUMBER' }
 ];
 
 // Status constants
@@ -60,3 +54,47 @@ export const DELETABLE_STATUSES = new Set([
 export const EDITABLE_STATUSES = new Set([
     STATUS_UPLOADED, STATUS_REUPLOADED, STATUS_FAILURE, STATUS_PROCESSED
 ]);
+export const CAMPAIGN_EXCEL_HEADERS = [
+    "ProductLine",
+    "Campaign ID",
+    "App ID",
+    "Account or Contract number",
+    "DateTime 1",
+    "DateTime 2",
+    "DateTime 3",
+    "Number 1",
+    "Number 2",
+    "Number 3",
+    "Number 4",
+    "Number 5",
+    "String 1",
+    "String 2",
+    "String 3",
+    "String 4",
+    "String 5"
+];
+
+export const CAMPAIGN_INPROGRESS_EXPORT_HEADERS = [
+    "ProductLine",
+    "App ID",
+    "Account or Contract number",
+    "Campaign ID",
+    "DateTime 1",
+    "DateTime 2",
+    "DateTime 3",
+    "Number 1",
+    "Number 2",
+    "Number 3",
+    "Number 4",
+    "Number 5",
+    "String 1",
+    "String 2",
+    "String 3",
+    "String 4",
+    "String 5",
+    "Uploaded Time",
+    "Inserted Time"
+];
+
+// Column indices that should be formatted as Text (z: '@') to prevent Excel auto-conversion
+export const CAMPAIGN_STRING_COLUMNS = [0, 1, 2, 3, 12, 13, 14, 15, 16];

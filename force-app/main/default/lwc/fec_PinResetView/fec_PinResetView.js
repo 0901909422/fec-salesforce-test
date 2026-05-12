@@ -1,4 +1,4 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
 import getCardInfo from "@salesforce/apex/FEC_PinResetHandler.getCardInfo";
 import resetPin from "@salesforce/apex/FEC_PinResetHandler.resetPin";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -8,7 +8,8 @@ import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 import FEC_Card_Number_Required_MSG from "@salesforce/label/c.FEC_Card_Number_Required_MSG";
 import FEC_CIF_Number_Required_MSG from "@salesforce/label/c.FEC_CIF_Number_Required_MSG";
-
+import ISSUBMITED from "@salesforce/schema/Case.FEC_Is_Submited__c";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import {
   ERROR_MODAL_TITLE,
   SUCCESS_MODAL_TITLE,
@@ -16,15 +17,29 @@ import {
   ERROR_TOAST_TYPE,
 } from "c/fec_CommonConst";
 
+import FEC_RESET_PIN_SUCCESS from "@salesforce/label/c.FEC_RESET_PIN_SUCCESS";
+import FEC_RESET_PIN_ERROR from "@salesforce/label/c.FEC_RESET_PIN_ERROR";
+import FEC_RESET_PIN_FAILED from "@salesforce/label/c.FEC_RESET_PIN_FAILED";
+import PIN_RESET_CHANNEL from "@salesforce/messageChannel/FEC_PinReset__c";
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+  publish,
+} from "lightning/messageService";
 export default class Fec_PinResetView extends LightningElement {
   @api recordId;
+
+  @wire(MessageContext)
+  messageContext;
 
   cardNumber;
   cifNumber;
   nationalId;
   mobile;
   processActionCount = 0;
-
+  successReset = false;
   isOpen = false;
 
   label = {
@@ -34,8 +49,18 @@ export default class Fec_PinResetView extends LightningElement {
     FEC_No_Btn,
     FEC_Card_Number_Required_MSG,
     FEC_CIF_Number_Required_MSG,
+    FEC_RESET_PIN_SUCCESS,
+    FEC_RESET_PIN_ERROR,
+    FEC_RESET_PIN_FAILED,
   };
   // ================= INIT =================
+  @wire(getRecord, { recordId: "$recordId", fields: [ISSUBMITED] })
+  case;
+
+  get isSubmited() {
+    return getFieldValue(this.case.data, ISSUBMITED);
+  }
+
   connectedCallback() {
     this.loadCardInfo();
   }
@@ -44,11 +69,10 @@ export default class Fec_PinResetView extends LightningElement {
     getCardInfo({ customerCaseId: this.recordId })
       .then((res) => {
         console.log("res: ", JSON.stringify(res));
-        this.cardNumber = res.cardNumber;
-        this.cifNumber = res.cifNumber;
         this.nationalId = res.nationalId;
         this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
+        this.successReset = res.isPinResetSuccess;
       })
       .catch((err) => {
         this.showToast("Error", err.body.message, "error");
@@ -68,8 +92,40 @@ export default class Fec_PinResetView extends LightningElement {
     this.openModal();
   }
 
-  get isDisable() {
-    return this.processActionCount >= 3;
+  get hiddenButton() {
+    return Boolean(this.successReset || this.processActionCount >= 3);
+}
+
+  get message() {
+    if (this.successReset) {
+      return this.label.FEC_RESET_PIN_SUCCESS;
+    }
+
+    if (this.processActionCount >= 3) {
+      return this.label.FEC_RESET_PIN_FAILED;
+    }
+
+    if (this.processActionCount > 0) {
+      return this.label.FEC_RESET_PIN_ERROR;
+    }
+
+    return null;
+  }
+
+  get messageClass() {
+    if (this.successReset) {
+      return "success-text ";
+    }
+
+    if (this.processActionCount >= 3) {
+      return "slds-text-color_error  slds-text-title_bold";
+    }
+
+    if (this.processActionCount > 0) {
+      return "slds-text-color_error slds-text-title_bold";
+    }
+
+    return "";
   }
 
   // ================= MODAL =================
@@ -88,34 +144,6 @@ export default class Fec_PinResetView extends LightningElement {
   handleConfirmReset() {
     this.isLoading = true;
 
-    if (
-      this.cardNumber === null ||
-      this.cardNumber === undefined ||
-      this.cardNumber === ""
-    ) {
-      this.showToast(
-        ERROR_MODAL_TITLE,
-        this.label.FEC_Card_Number_Required_MSG,
-        ERROR_TOAST_TYPE,
-      );
-      this.close();
-      return;
-    }
-
-    if (
-      this.cifNumber === null ||
-      this.cifNumber === undefined ||
-      this.cardNumber === ""
-    ) {
-      this.showToast(
-        ERROR_MODAL_TITLE,
-        this.label.FEC_CIF_Number_Required_MSG,
-        ERROR_MODAL_TITLE,
-      );
-      this.close();
-      return;
-    }
-
     resetPin({
       caseId: this.recordId,
       nationalId: this.nationalId,
@@ -124,8 +152,12 @@ export default class Fec_PinResetView extends LightningElement {
       .then((res) => {
         console.log("res from api: ", JSON.stringify(res));
         if (res.RespCode != "1") {
-          this.showToast(SUCCESS_MODAL_TITLE, res.RespDesc, SUCCESS_TOAST_TYPE);
+          this.successReset = true;
+          this.publishResetResult("SUCCESS");
         } else {
+          this.successReset = false;
+
+          this.publishResetResult("ERROR", res.RespDesc || res.errorMessage);
           this.showToast(
             ERROR_MODAL_TITLE,
             res.RespDesc || res.errorMessage,
@@ -134,9 +166,12 @@ export default class Fec_PinResetView extends LightningElement {
         }
       })
       .catch((err) => {
-        this.showToast(ERROR_MODAL_TITLE, err.body?.message, ERROR_MODAL_TITLE);
+        console.error("error from resetPin: ", JSON.stringify(err));
+        this.publishResetResult("ERROR", err?.body?.message);
+        this.showToast(ERROR_MODAL_TITLE, err?.body?.message, ERROR_TOAST_TYPE);
       })
       .finally(() => {
+        this.loadCardInfo();
         this.close();
       });
   }
@@ -150,5 +185,15 @@ export default class Fec_PinResetView extends LightningElement {
         variant,
       }),
     );
+  }
+
+  async publishResetResult(status, message = "") {
+    const payload = {
+      status, // "SUCCESS" | "ERROR"
+      caseId: this.recordId,
+      message,
+    };
+
+    publish(this.messageContext, PIN_RESET_CHANNEL, payload);
   }
 }

@@ -1,0 +1,519 @@
+/* ════════════════════════════════════════════════════════
+   fecDecisionTableStageView.css — Decision Table Stage
+════════════════════════════════════════════════════════ */
+
+/* ── Wrapper ──────────────────────────────────────────── */
+.decision-table-stage-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    min-height: 400px;
+}
+
+/* ── Panel Header ─────────────────────────────────────── */
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e5e5;
+    background-color: #f8f9fa;
+}
+
+.panel-title {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #0070d2;
+}
+
+.selected-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    background-color: #e6f2ff;
+    color: #0070d2;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+.decision-toolbar {
+    padding: 0.5rem 1rem;
+    background-color: #fafbfc;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.search-container {
+    flex: 1;
+    max-width: 350px;
+}
+
+/* ── Table Scroll ─────────────────────────────────────── */
+.table-scroll {
+    overflow-x: auto;
+}
+
+/* ── Decision Table ───────────────────────────────────── */
+.decision-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+/* ── Group Headers ────────────────────────────────────── */
+.group-header-row {
+    background-color: #16325c;
+}
+
+.group-header {
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.375rem 0.75rem;
+    text-align: center;
+    border: 1px solid #0a2952;
+}
+
+.conditions-group {
+    background-color: #1a4480;
+    border-right: 2px solid #f0c040;
+}
+
+.actions-group {
+    background-color: #27573a;
+}
+
+/* ── Column Headers ───────────────────────────────────── */
+.col-header-row th {
+    background-color: #f3f5f7;
+    color: #3c3c3c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dde1e6;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.col-header-row th:hover {
+    background-color: #e5f2ff;
+}
+
+/* ── Clickable Dynamic Column Headers (double-click to edit) ── */
+.clickable-header {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.clickable-header:hover {
+    background-color: #dbeeff !important;
+}
+
+.clickable-header:active {
+    background-color: #c9e0ff !important;
+}
+
+/* ── Selection Highlights ─────────────────────────────── */
+.selected-col {
+    background-color: rgba(0, 112, 210, 0.08) !important;
+}
+
+.selected-col-header {
+    background-color: rgba(0, 112, 210, 0.15) !important;
+    border-bottom: 2px solid #0070d2 !important;
+}
+
+.selected-row td {
+    background-color: #e5f2ff !important;
+    border-top: 2px solid #0070d2 !important;
+    border-bottom: 2px solid #0070d2 !important;
+}
+
+.selected-row td:first-child {
+    border-left: 2px solid #0070d2 !important;
+}
+
+.selected-row td:last-child {
+    border-right: 2px solid #0070d2 !important;
+}
+
+/* ── Table Body ───────────────────────────────────────── */
+.decision-table tbody tr {
+    border-bottom: 1px solid #e5e5e5;
+    transition: background-color 0.15s;
+    cursor: pointer;
+}
+
+.decision-table tbody tr:hover td {
+    background-color: #f0f4ff;
+}
+
+.decision-table td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e9f0;
+    vertical-align: middle;
+}
+
+/* ── Condition Cell ───────────────────────────────────── */
+.condition-cell {
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: #3c3c3c;
+}
+
+/* ── Action Cell ──────────────────────────────────────── */
+.action-cell {
+    font-size: 0.8125rem;
+    color: #1a1a1a;
+}
+
+/* ── Action Buttons ───────────────────────────────────── */
+.action-buttons {
+    text-align: center;
+}
+
+/* ── Empty State ──────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 300px;
+    color: #706e6b;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+.table-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+    background: #f3f5f7;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+    background: #c8d0da;
+    border-radius: 3px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9baabf;
+}
+
+/* ── Condition Pill (IN/NOT_IN values) ────────────────── */
+.condition-pill {
+    display: inline-block;
+    margin: 1px 2px;
+    padding: 2px 8px;
+    background-color: #e8f4fd;
+    border: 1px solid #b0d4f1;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+}
+
+/* ── Pill Input Container (Modal) ─────────────────────── */
+.pill-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 24px;
+}
+
+.pill-remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #706e6b;
+    padding: 0 2px;
+    margin-left: 4px;
+    line-height: 1;
+}
+
+.pill-remove-btn:hover {
+    color: #c23934;
+}
+
+/* ── Priority Column ──────────────────────────────────── */
+.priority-cell {
+    text-align: center;
+    font-weight: 600;
+    color: #706e6b;
+    font-size: 0.75rem;
+}
+
+.priority-header {
+    text-align: center;
+    font-weight: 700;
+    color: #fff;
+    background-color: #54698d;
+    width: 40px;
+    min-width: 40px;
+}
+
+/* ── Inline Edit ──────────────────────────────────────── */
+.inline-edit-container {
+    position: relative;
+    width: 100%;
+}
+
+.inline-edit-input {
+    width: 100%;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    border: 1px solid #0070d2;
+    border-radius: 3px;
+    outline: none;
+    background-color: #fff;
+    box-shadow: 0 0 3px rgba(0, 112, 210, 0.3);
+    box-sizing: border-box;
+}
+
+.inline-edit-input:focus {
+    border-color: #0070d2;
+    box-shadow: 0 0 5px rgba(0, 112, 210, 0.5);
+}
+
+/* ── Cell Mini Toolbar ────────────────────────────────── */
+.cell-mini-toolbar {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.mini-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid #d8dde6;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 0.7rem;
+    line-height: 1;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.mini-toolbar-btn:hover {
+    background-color: #f3f3f3;
+    border-color: #b0b0b0;
+}
+
+.mini-toolbar-btn.delete-btn:hover {
+    background-color: #fde8e8;
+    border-color: #c23934;
+}
+
+.mini-toolbar-btn.or-btn {
+    width: auto;
+    padding: 0 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #0070d2;
+    border-color: #0070d2;
+    background-color: #f0f7ff;
+}
+
+.mini-toolbar-btn.or-btn:hover {
+    background-color: #d8ebff;
+    border-color: #005fb2;
+}
+
+/* ── Cell Value Row (OR sub-values) ───────────────────── */
+.cell-value-row {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    min-width: 60px;
+    padding: 1px 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.cell-value-row:hover {
+    background-color: #f0f7ff;
+    border-radius: 3px;
+}
+
+.cell-value-row + .cell-value-row {
+    border-top: 1px dashed #d8dde6;
+    margin-top: 1px;
+    padding-top: 2px;
+}
+
+/* ── Otherwise Row ────────────────────────────────────── */
+.otherwise-row td {
+    background-color: #fef3e0 !important;
+}
+
+.otherwise-row:hover td {
+    background-color: #fde8c8 !important;
+}
+
+.otherwise-priority {
+    font-style: italic;
+    color: #b05e0a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: lowercase;
+}
+
+/* Condition cell clickable styling — handled by .cell-value-row above */
+
+/* ════════════════════════════════════════════════════════
+   TEST PANEL
+   ════════════════════════════════════════════════════════ */
+
+.test-panel-wrapper {
+    border-top: 2px solid #d8dde6;
+    margin-top: 16px;
+    padding-top: 8px;
+}
+
+.test-panel-header {
+    cursor: pointer;
+    background-color: #eef1f6;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    user-select: none;
+    padding: 8px 12px;
+}
+
+.test-panel-header:hover {
+    background-color: #e8e8e8;
+}
+
+.test-panel-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #3e3e3c;
+}
+
+.test-panel-subtitle {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: #706e6b;
+}
+
+.test-panel-body {
+    background-color: #f9fbfd;
+    border: 1px solid #d8dde6;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    padding: 12px;
+}
+
+.test-matched-row {
+    background-color: #e8f5e9 !important;
+    border-left: 3px solid #4caf50;
+}
+
+.test-matched-row td {
+    background-color: #e8f5e9 !important;
+}
+
+.test-match-info {
+    background-color: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 4px;
+}
+
+.test-match-info p {
+    margin: 2px 0;
+}
+
+.test-no-match {
+    border-radius: 4px;
+}
+
+.test-trace {
+    font-size: 0.75rem;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.trace-rule {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: 4px;
+}
+
+.trace-rule-match {
+    background-color: #e8f5e9;
+    border-left: 3px solid #4caf50;
+}
+
+.trace-rule-first-match {
+    background-color: #e8f5e9;
+    border-left: 4px solid #1b5e20;
+    box-shadow: 0 1px 3px rgba(27, 94, 32, 0.2);
+}
+
+.trace-rule-fail {
+    background-color: #fce4ec;
+    border-left: 3px solid #ef5350;
+}
+
+.trace-rule-skip {
+    background-color: #f5f5f5;
+    border-left: 3px solid #bdbdbd;
+    opacity: 0.7;
+}
+
+.trace-rule-header {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.trace-match { color: #2e7d32; }
+.trace-first-match { color: #1b5e20; font-weight: 700; }
+.trace-not-match { color: #c62828; }
+.trace-skipped { color: #757575; }
+.trace-condition { font-size: 0.7rem; color: #546e7a; }
+.trace-condition-detail { font-size: 0.7rem; color: #455a64; margin-top: 1px; }
+.trace-cond-pass { color: #2e7d32; }
+.trace-cond-fail { color: #c62828; }
+
+/* ── Range Column Sub-Headers ─────────────────────────── */
+.range-sub-header-row th {
+    background-color: #eef1f6;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #54698d;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    border: 1px solid #dde1e6;
+}
+
+.range-sub-header {
+    white-space: nowrap;
+}

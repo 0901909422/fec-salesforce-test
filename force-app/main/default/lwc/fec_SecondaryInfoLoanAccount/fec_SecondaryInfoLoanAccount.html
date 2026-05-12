@@ -1,16 +1,67 @@
 <template>
-    <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}
-        onsectiontoggle={handleSectionToggle}>
-        <c-fec_-common-record-detail-section section-title={customLabel.disbursementLabel}
-            section-label={disbursementSectionLabel} fields={disbursementFields} section-loading={isLoadingDisbursement}
-            columns="3">
-        </c-fec_-common-record-detail-section>
-        <c-fec_-common-record-detail-section section-title={customLabel.collectionInfoLabel}
-            section-label={collectionsSectionLabel} fields={collectionInfoFields}
-            section-loading={isLoadingCollections} columns="3">
-        </c-fec_-common-record-detail-section>
-        <c-fec_-common-record-detail-section section-title={customLabel.salesInfoLabel}
-            section-label={salesSectionLabel} fields={salesInfoFields} section-loading={isLoadingSales} columns="3">
-        </c-fec_-common-record-detail-section>
-    </lightning-accordion>
+    <div class="slds-accordion fec-secondary-loan-accordion">
+        <section class={disbursementSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleDisbursementToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={disbursementIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>{disbursementHeaderText}</span>
+                    </span>
+                </h3>
+            </div>
+            <div class={disbursementContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.disbursementLabel}
+                    fields={disbursementFields} section-loading={isLoadingDisbursement} columns="3">
+                </c-fec_-common-record-detail-section>
+            </div>
+        </section>
+
+        <section class={collectionsSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleCollectionsToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={collectionsIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.collectionInfoLabel}
+                            <template if:true={collectionsSectionLabelError}>
+                                <span class="fec-secondary-loan-header-error"> - {collectionsSectionLabelError}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={collectionsContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.collectionInfoLabel}
+                    fields={collectionInfoFields} section-loading={isLoadingCollections} columns="3">
+                </c-fec_-common-record-detail-section>
+            </div>
+        </section>
+
+        <section class={salesSectionClass}>
+            <div class="slds-accordion__summary" onclick={handleSalesToggle}>
+                <h3 class="slds-accordion__summary-heading">
+                    <span class="slds-accordion__summary-content slds-grid">
+                        <lightning-icon icon-name={salesIconName} size="x-small"
+                            class="slds-m-right_x-small">
+                        </lightning-icon>
+                        <span>
+                            {customLabel.salesInfoLabel}
+                            <template if:true={salesSectionLabelError}>
+                                <span class="fec-secondary-loan-header-error"> - {salesSectionLabelError}</span>
+                            </template>
+                        </span>
+                    </span>
+                </h3>
+            </div>
+            <div class={salesContentClass}>
+                <c-fec_-common-record-detail-section body-only section-title={customLabel.salesInfoLabel}
+                    fields={salesInfoFields} section-loading={isLoadingSales} columns="3">
+                </c-fec_-common-record-detail-section>
+            </div>
+        </section>
+    </div>
 </template>

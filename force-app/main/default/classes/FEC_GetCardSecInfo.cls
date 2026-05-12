@@ -11,6 +11,29 @@
 ****************************************************************************************/
  
 public with sharing class FEC_GetCardSecInfo {
+
+    private static ResponseLog responseLog;
+
+    // =========================================================================
+    // RESPONSE LOG
+    // =========================================================================
+    public class ResponseLog {
+        public String apiName;
+        public String endpoint;
+        public String method;
+        public String requestBody;
+        public HttpResponse response;
+        public String errorMessage;
+
+        public ResponseLog(String apiName, String endpoint, String method, String requestBody, HttpResponse response, String errorMessage) {
+            this.apiName = apiName;
+            this.endpoint = endpoint;
+            this.method = method;
+            this.requestBody = requestBody;
+            this.response = response;
+            this.errorMessage = errorMessage;
+        }
+    }
  
     // =========================================================================
     // RESPONSE WRAPPER
@@ -156,12 +179,18 @@ public with sharing class FEC_GetCardSecInfo {
     }
   
     // =========================================================================
-    // CARDS DELIVERY
+    // CARDS DELIVERY (CardsDeliveries / CardDelivery trong GetCardSecInfo)
     // =========================================================================
     public class CardsDelivery {
-        public String CardNumber; // Card Number
-        public String KindOfIssue; // Type of Issue
-        public String DeliveryDate; // Delivery Date
+        public String CardNumber;
+        public String KindOfIssue;
+        public String DeliveryDate;
+        /** Ngày phát hành / cập nhật (XML: IssuelastUpdate) */
+        public String IssuelastUpdate;
+        public String FinalSt;
+        public String Recipient;
+        public String TrackingNo;
+        public String DelayNotes;
     }
   
     // =========================================================================
@@ -172,7 +201,7 @@ public with sharing class FEC_GetCardSecInfo {
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
         String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
         
-        return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
+        return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber, false);
     }
   
     // =========================================================================
@@ -218,10 +247,20 @@ public with sharing class FEC_GetCardSecInfo {
         String transID,
         String requestorId,
         String dateTimeStr,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ) {
   
-        validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+        validateRequest(transID, requestorId, dateTimeStr, accountNumber, isTestApi);
+
+        if (isTestApi) {
+            throw new CalloutException(
+                String.format(
+                    System.Label.FEC_MSG_API_Error,
+                    new List<String>{ 'API Fail' }
+                )
+            );
+        }
         
         // Build SOAP request using Dom.XmlNode
         Dom.Document doc = new Dom.Document();
@@ -253,10 +292,17 @@ public with sharing class FEC_GetCardSecInfo {
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_Card_Sec_Info');
   
-        String endpoint = apiSetting?.FEC_Call_Mock__c
-            ? FEC_MockupEndpoint.GET_CARD_SEC_INFO_ENDPOINT_MOCKUP
-            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
+        String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
+        HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, FEC_ConstantCommon.API_METHOD_POST, FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, requestBody);
+
+        responseLog = new ResponseLog(
+            'FEC_GetCardSecInfo',
+            endpoint,
+            FEC_ConstantCommon.API_METHOD_POST,
+            requestBody,
+            res,
+            null
+        );
   
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
             throw new CalloutException(String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
@@ -398,23 +444,42 @@ public with sharing class FEC_GetCardSecInfo {
             }
         }
         
-        // CardsDeliveries
+        // CardsDeliveries (mỗi phần tử có thể là CardsDelivery hoặc CardDelivery; có thể lồng CardDelivery)
         Dom.XmlNode deliveriesNode = infoNode.getChildElement('CardsDeliveries', null);
         if (deliveriesNode != null) {
             result.CardSecInfo.CardsDeliveries = new List<CardsDelivery>();
             for (Dom.XmlNode child : deliveriesNode.getChildElements()) {
                 String childName = child.getName();
-                // Bỏ qua namespace prefix nếu có
                 if (childName.contains(':')) {
                     childName = childName.substring(childName.indexOf(':') + 1);
                 }
-                if (childName == 'CardsDelivery') {
-                    CardsDelivery delivery = new CardsDelivery();
-                    delivery.CardNumber = FEC_CommonUltils.getXmlValue(child, 'CardNumber');
-                    delivery.KindOfIssue = FEC_CommonUltils.getXmlValue(child, 'KindOfIssue');
-                    delivery.DeliveryDate = FEC_CommonUltils.getXmlValue(child, 'DeliveryDate');
-                    result.CardSecInfo.CardsDeliveries.add(delivery);
+                if (childName != 'CardsDelivery' && childName != 'CardDelivery') {
+                    continue;
                 }
+                Dom.XmlNode src = child;
+                Dom.XmlNode nested = child.getChildElement('CardDelivery', null);
+                if (nested != null) {
+                    src = nested;
+                }
+                CardsDelivery delivery = new CardsDelivery();
+                delivery.CardNumber = FEC_CommonUltils.getXmlValue(src, 'CardNumber');
+                delivery.KindOfIssue = FEC_CommonUltils.getXmlValue(src, 'KindOfIssue');
+                if (String.isBlank(delivery.KindOfIssue) && src != child) {
+                    delivery.KindOfIssue = FEC_CommonUltils.getXmlValue(child, 'KindOfIssue');
+                }
+                delivery.DeliveryDate = FEC_CommonUltils.getXmlValue(src, 'DeliveryDate');
+                if (String.isBlank(delivery.DeliveryDate) && src != child) {
+                    delivery.DeliveryDate = FEC_CommonUltils.getXmlValue(child, 'DeliveryDate');
+                }
+                delivery.IssuelastUpdate = FEC_CommonUltils.getXmlValue(src, 'IssuelastUpdate');
+                if (String.isBlank(delivery.IssuelastUpdate)) {
+                    delivery.IssuelastUpdate = FEC_CommonUltils.getXmlValue(src, 'IssueLastUpdate');
+                }
+                delivery.FinalSt = FEC_CommonUltils.getXmlValue(src, 'FinalSt');
+                delivery.Recipient = FEC_CommonUltils.getXmlValue(src, 'Recipient');
+                delivery.TrackingNo = FEC_CommonUltils.getXmlValue(src, 'TrackingNo');
+                delivery.DelayNotes = FEC_CommonUltils.getXmlValue(src, 'DelayNotes');
+                result.CardSecInfo.CardsDeliveries.add(delivery);
             }
         }
   
@@ -554,7 +619,8 @@ public with sharing class FEC_GetCardSecInfo {
         String transID,
         String requestorId,
         String dateTimeStr,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ) {
   
         if (String.isBlank(transID) || transID.length() > 36) {
@@ -594,4 +660,16 @@ public with sharing class FEC_GetCardSecInfo {
             );
         }
     }
-  }
+
+    public static void logApiResponse() {
+        if (responseLog != null) {
+            FEC_CommonUltils.logApi(
+                responseLog.apiName,
+                responseLog.endpoint,
+                responseLog.method,
+                responseLog.requestBody,
+                responseLog.response,
+                responseLog.errorMessage);
+        }
+    }
+}

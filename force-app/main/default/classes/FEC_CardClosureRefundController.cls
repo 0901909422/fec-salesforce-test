@@ -1,4 +1,4 @@
-public with sharing class FEC_CardClosureRefundController {
+public without sharing class FEC_CardClosureRefundController {
 
     private static final String BLOCK_CODE_CARD = 'C';
     private static final String FUNC_BLOCK = 'B';
@@ -55,7 +55,9 @@ public with sharing class FEC_CardClosureRefundController {
             SELECT Id,
                 FEC_SubCode__r.FEC_Code__c,
                 FEC_Card_Block_Service_Attempts__c,
-                FEC_Account_or_Contract__c
+                FEC_Account_or_Contract__c,
+                FEC_Account_Number__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -72,9 +74,10 @@ public with sharing class FEC_CardClosureRefundController {
         dto.cardBlockServiceAttempts = attInt;
         dto.attemptsExhausted = attInt >= MAX_BLOCK_SERVICE_ATTEMPTS;
         String cardBlock = null;
+        String accountNumberForDisb = c.FEC_Account_Number__c;
         if (c.FEC_Account_or_Contract__c != null) {
             List<FEC_Customer_History__c> histories = [
-                SELECT Id, FEC_Block_Code__c
+                SELECT Id, FEC_Block_Code__c, FEC_Account_Number__c
                 FROM FEC_Customer_History__c
                 WHERE Id = :c.FEC_Account_or_Contract__c
                 LIMIT 1
@@ -83,12 +86,64 @@ public with sharing class FEC_CardClosureRefundController {
             if (!histories.isEmpty()) {
                 FEC_Customer_History__c h = histories[0];
                 cardBlock = h.FEC_Block_Code__c;
+                if (String.isBlank(accountNumberForDisb)) {
+                    accountNumberForDisb = h.FEC_Account_Number__c;
+                }
             }
         }
         Boolean cardAlreadyC = BLOCK_CODE_CARD.equals(cardBlock);
         dto.cardBlocked = cardAlreadyC;
         dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !cardAlreadyC;
-        if (Schema.sObjectType.FEC_Pending_Disbursement__c.isAccessible()) {
+        Boolean pendingFromApi = false;
+        if (!String.isBlank(accountNumberForDisb)) {
+            try {
+                FEC_GetDisbInfoByAcctCallout.GetDisbInfoByAcctExecutionResult disbExec =
+                    FEC_GetDisbInfoByAcctCallout.getDisbInfoByAcctExecutionResult(accountNumberForDisb, null, c.FEC_Is_Test_API__c);
+                FEC_GetDisbInfoByAcctCallout.logApiResponse();
+                FEC_GetDisbInfoByAcctCallout.ResultWrapper rw =
+                    FEC_GetDisbInfoByAcctCallout.convertToResultWrapper(disbExec.response);
+                if (rw.isSuccess
+                    && rw.applications != null
+                    && !rw.applications.isEmpty()) {
+                    FEC_GetDisbInfoByAcctCallout.ApplicationDetailWrapper w = rw.applications[0];
+                    dto.pendingApplicationId = w.applicationId;
+                    dto.pendingApplicationStatus = w.appStatusLos;
+                    if (String.isNotBlank(w.disbAmount)) {
+                        String amtStr = w.disbAmount.trim().replace(',', '');
+                        try {
+                            dto.pendingDisbursedAmount = Decimal.valueOf(amtStr);
+                        } catch (Exception parseAmt) {
+                            dto.pendingDisbursedAmount = null;
+                        }
+                    }
+                    if (String.isNotBlank(w.requestedDt)) {
+                        String dtPart = w.requestedDt.trim();
+                        Integer spIdx = dtPart.indexOf(' ');
+                        if (spIdx > 0) {
+                            dtPart = dtPart.substring(0, spIdx);
+                        }
+                        List<String> ymd = dtPart.split('/');
+                        if (ymd.size() == 3) {
+                            try {
+                                dto.pendingDisbursementApprovalDate = Date.newInstance(
+                                    Integer.valueOf(ymd[0]),
+                                    Integer.valueOf(ymd[1]),
+                                    Integer.valueOf(ymd[2])
+                                );
+                            } catch (Exception parseDt) {
+                                dto.pendingDisbursementApprovalDate = null;
+                            }
+                        }
+                    }
+                    dto.pendingDisbursementStatus = w.disbStatus;
+                    dto.pendingCsDecision = resolvePendingDisbursementCsDecision(w.disbStatus, w.appStatusLos);
+                    pendingFromApi = true;
+                }
+            } catch (Exception e) {
+                pendingFromApi = false;
+            }
+        }
+        if (!pendingFromApi && Schema.sObjectType.FEC_Pending_Disbursement__c.isAccessible()) {
             Map<String, Schema.SObjectField> pdFieldMap = Schema.SObjectType.FEC_Pending_Disbursement__c.fields.getMap();
             String caseLookupField = null;
             if (pdFieldMap.containsKey('FEC_Case__c')) {
@@ -123,7 +178,6 @@ public with sharing class FEC_CardClosureRefundController {
         return dto;
     }
 
-    @TestVisible
     private static String resolvePendingDisbursementCsDecision(String disbStatusEsb, String appStatusLos) {
         if (String.isBlank(disbStatusEsb)) {
             return null;
@@ -193,7 +247,8 @@ public with sharing class FEC_CardClosureRefundController {
                 FEC_Account_Number__c,
                 FEC_Account_or_Contract__c,
                 FEC_SubCode__r.FEC_Code__c,
-                FEC_Card_Block_Service_Attempts__c
+                FEC_Card_Block_Service_Attempts__c,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -231,13 +286,13 @@ public with sharing class FEC_CardClosureRefundController {
         FEC_Customer_History__c customerHistory = historyRows[0];
         String accountNumber = String.isNotBlank(customerHistory.FEC_Account_Number__c) ? customerHistory.FEC_Account_Number__c : c.FEC_Account_Number__c;
         if (String.isBlank(accountNumber)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'AccountNumber' });
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Account Number' });
             return dto;
         }
 
         String last4Digit = getLast4Digit(customerHistory.FEC_Card_Number__c);
         if (String.isBlank(last4Digit)) {
-            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Last4Digit' });
+            dto.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Card Number' });
             return dto;
         }
 
@@ -267,14 +322,15 @@ public with sharing class FEC_CardClosureRefundController {
                 BLOCK_CODE_CARD,
                 funcCode,
                 last4Digit,
-                accountNumber
+                accountNumber,
+                c.FEC_Is_Test_API__c
             );
             FEC_CardLockUnLockCallout.logApiResponse();
 
             dto.transId = transId;
             dto.success = FEC_CardLockUnLockCallout.isSuccess(response);
-            dto.code = response != null && response.Sys2 != null ? response.Sys2.Code : null;
-            dto.description = response != null && response.Sys2 != null ? response.Sys2.Description : null;
+            dto.code = response != null && response.Sys != null ? response.Sys.Code : null;
+            dto.description = response != null && response.Sys != null ? response.Sys.Description : null;
             dto.errorMessage = response != null ? response.errorMessage : null;
 
             if (dto.success && funcCode == FUNC_BLOCK) {

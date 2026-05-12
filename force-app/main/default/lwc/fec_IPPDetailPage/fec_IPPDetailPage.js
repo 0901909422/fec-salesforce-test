@@ -1,7 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { CurrentPageReference } from 'lightning/navigation';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { formatCurrency, isNegative, autoHighlightNegativeCurrency } from 'c/fec_currencyUtils';
 import refreshIPPScheduleData from '@salesforce/apex/FEC_IPPScheduleController.refreshIPPScheduleData';
 import getIPPHelpTextMap from '@salesforce/apex/FEC_IPPController.getIPPHelpTextMap';
@@ -22,8 +21,7 @@ import TSA_NAME_LABEL from '@salesforce/label/c.FEC_TSA_Name_Label';
 import ORIGINATION_CHANNEL_LABEL from '@salesforce/label/c.FEC_Origination_Channel_Label';
 import DISBURSEMENT_CHANNEL_LABEL from '@salesforce/label/c.FEC_Disbursement_Channel_Label';
 import FEC_MSG_Error_API_Label from '@salesforce/label/c.FEC_MSG_Error_API_Label';
-import NO_IPP_SCHEDULE_DATA_LABEL from '@salesforce/label/c.FEC_MSG_No_IPP_Schedule_Data';
-import NO_DATA_TO_DISPLAY_LABEL from '@salesforce/label/c.FEC_MSG_No_Data_To_Display';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 import FEC_IPP_Label from '@salesforce/label/c.FEC_IPP_Label';
 import FEC_Details_Label from '@salesforce/label/c.FEC_Details_Label';
@@ -46,6 +44,10 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     // Loading state
     isLoading = true;
+
+    // Error states for section-level API failure display
+    hasIPPScheduleError = false;
+    hasSalesInfoError = false;
     
     // Help text map for field inline help (giống IPPDetails / Card Payment)
     helpTextMap = {};
@@ -91,8 +93,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             tsaNameLabel: TSA_NAME_LABEL,
             originationChannelLabel: ORIGINATION_CHANNEL_LABEL,
             disbursementChannelLabel: DISBURSEMENT_CHANNEL_LABEL,
-            noIPPScheduleDataLabel: NO_IPP_SCHEDULE_DATA_LABEL,
-            noDataToDisplayLabel: NO_DATA_TO_DISPLAY_LABEL
+            noIPPScheduleDataLabel: FEC_Common_No_Results_Label,
+            noDataToDisplayLabel: FEC_Common_No_Results_Label
         };
     }
 
@@ -131,6 +133,8 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
             this.updateServiceConsoleTab();
             return;
         }
+        this.hasIPPScheduleError = false;
+        this.hasSalesInfoError = false;
         refreshIPPScheduleData({ ippId: this.recordId })
             .then(data => {
                 console.log('[IPPDetailPage] refreshIPPScheduleData response:', {
@@ -203,19 +207,17 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
                         disbursementChannel: rec.FEC_Disbursement_Channel__c ?? this.ippRecord.disbursementChannel
                     };
                 }
+                this.hasIPPScheduleError = false;
+                this.hasSalesInfoError = false;
                 this.updateServiceConsoleTab();
                 this.isLoading = false;
             })
-            .catch(error => {
+            .catch(() => {
                 this.ippSchedules = [];
+                this.hasIPPScheduleError = true;
+                this.hasSalesInfoError = true;
                 this.isLoading = false;
                 this.updateServiceConsoleTab();
-                const msg = (error && error.body && error.body.message) ? error.body.message : (error.message || String(error));
-                this.dispatchEvent(new ShowToastEvent({
-                    title: 'Không tải được IPP Schedule',
-                    message: msg,
-                    variant: 'error'
-                }));
             });
     }
     
@@ -293,6 +295,26 @@ export default class Fec_IPPDetailPage extends NavigationMixin(LightningElement)
     
     get hasSchedules() {
         return this.ippSchedules && this.ippSchedules.length > 0;
+    }
+
+    get hasSalesInfoData() {
+        if (!this.ippRecord || !this.hasSchedules) {
+            return false;
+        }
+
+        const salesValues = [
+            this.ippRecord.applicationId,
+            this.ippRecord.ccCode,
+            this.ippRecord.ccName,
+            this.ippRecord.dsaCode,
+            this.ippRecord.dsaName,
+            this.ippRecord.tsaCode,
+            this.ippRecord.tsaName,
+            this.ippRecord.originationChannel,
+            this.ippRecord.disbursementChannel
+        ];
+
+        return salesValues.some(value => value !== null && value !== undefined && String(value).trim() !== '');
     }
 
     get schedulePageSize() {

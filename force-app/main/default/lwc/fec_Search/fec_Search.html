@@ -62,13 +62,13 @@
                                 <div class="slds-text-align_center slds-text-body_regular slds-m-bottom_medium">
                                     <span class="no-result-text">
                                         <span class="no-result-icon">&#x2297;</span>
-                                        Không tìm thấy kết quả
+                                        {noCustomerFoundMessage}
                                     </span>
                                 </div>
                             </template>
                             <template if:false={isAccountContractSearch}>
-                                <div class="slds-text-align_center slds-text-body_regular slds-text-color_weak slds-m-bottom_medium">
-                                    Không tìm thấy khách hàng
+                                <div class={noCustomerFoundClass}>
+                                    {noCustomerFoundMessage}
                                 </div>
                             </template>
                             <template if:true={isDisplayCreateCase}>
@@ -187,7 +187,11 @@
                             </lightning-tab>
                             <template if:false={isAccountContractSearch}>
                                 <lightning-tab label="Insurance" value="Insurance">
-                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column onrowaction={handleRowAction}></c-masked-toggle-datatable>
+                                    <c-masked-toggle-datatable key-field="id" data={insuranceData} columns={insuranceColumns} hide-checkbox-column 
+                                    onrowaction={handleRowAction}
+                                    onshowhistory={handleInsuranceDblClick}
+                                    >
+                                </c-masked-toggle-datatable>
                                 </lightning-tab>
                             </template>
                         </lightning-tabset>

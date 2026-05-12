@@ -22,6 +22,8 @@ export default class Fec_CommonRecordDetailSection extends LightningElement {
     @api sectionTitle;
     /** Hiển thị trên thanh section (lightning-accordion-section label). Mặc định dùng sectionTitle. */
     @api sectionLabel;
+    /** true: chỉ render nội dung (form/spinner), không bọc lightning-accordion-section — dùng khi cha tự làm header SLDS accordion. */
+    @api bodyOnly = false;
     @api showRefreshButton = false;
     @api columns = 2;
     @api sectionLoading = false;

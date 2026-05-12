@@ -45,11 +45,13 @@ public with sharing class FEC_ConstantCommon {
     public static final String STR_DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS';
     public static final String STR_DATETIME_FORMAT_Z = 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     public static final String STR_DATETIME_FORMAT_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX';
+    public static final String STR_DATETIME_FORMAT_SSSSSS_XXX = 'yyyy-MM-dd\'T\'HH:mm:ss.SSSSSSXXX';
     public static final String DATETIME_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss';
     public static final String DATE_FORMAT = 'yyyy-MM-dd';
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
     public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+    public static final String DATETIME_FORMAT_LOG = 'yyyy-MM-dd HH:mm:ss';
 
     public static final String PAYMENT_PREFIX = 'pay_';
     
@@ -102,7 +104,20 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
     public static final String PATTERN_TOKEN_KYC = '\\{\\{(.*?)\\}\\}';
+    public static final String MERGE_FIELD_OPEN = '{{{';
+    public static final String MERGE_FIELD_CLOSE = '}}}';
+    public static final String MERGE_FIELD_NORMALIZE_REPLACEMENT = '{{{$1}}}';
+    public static final String PATTERN_MERGE_FIELD = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_TRIPLE_BRACE = '\\{\\{\\{([^}]+)\\}\\}\\}';
+    public static final String PATTERN_DOUBLE_BRACE = '\\{\\{([^{}]+)\\}\\}';
+    public static final String PATTERN_FLEXIBLE_BRACES = '\\{\\{+([^{}]+)\\}\\}+';
 
+    public static final String PATTERN_CASE_MERGE_FIELD = '\\{\\{Case\\.([^}]+)\\}\\}';
+    public static final String PATTERN_USER_MERGE_FIELD = '\\{\\{User\\.([^}]+)\\}\\}';
+    public static final String PATTERN_CLEAN_TEXT = '[^a-zA-Z0-9-_]';
+    /** Nhận diện "Stage N" trong tên stage Case (dyn LWC FEC_CaseBusinessService). */
+    public static final Pattern PAT_STAGE_NAME_WITH_NUMBER = Pattern.compile('(?i)[\\s-]stage ([0-9]+)( -|$)');
+    
     // CARD: 16 hoặc 19 digits
     public static final String PATTERN_CARD = '^(\\d{16}|\\d{19})$';
 
@@ -116,6 +131,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_PORTAL = 'PORTAL';
     public static final String REQUESTOR_MOBILE_APP = 'MOBILE_APP';
     public static final String REQUESTOR_PEGA_CSM = 'PegaCSM';
+    /** Giá trị RequestorID trong mẫu SOAP/CMS (chữ hoa + gạch ngang). */
+    public static final String REQUESTOR_PEGA_CSM_LEGACY = 'PEGA-CSM';
     public static final String REQUESTOR_PEGA_CSM_HYPHEN = 'PEGA_CSM';
     public static final String REQUESTOR_APS = 'APS';
     public static final String REQUESTOR_SD = 'SD';
@@ -127,11 +144,23 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_ESB = 'ESB';
     public static final String REQUESTOR_CORE = 'CORE';
     public static final String REQUESTOR_MOBILE = 'MOBILE';
+    public static final String REQUESTOR_VTIGER_CL = 'VTIGER_CL';
+    public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
-
+    public static final String REQUESTOR_VMXVERSION_EMEA_CARD = 'E8V2';
+    public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
+    public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
+    public static final String REQUESTOR_ORG_EMEA_CARD = '150';
+    
     public static final String ADDRESS_TYPE_CURRES = 'CURRES';
     public static final String ADDRESS_TYPE_PERMNENT = 'PERMNENT';
+    /** API trả PERMANENT — khác PERMNENT (mã nguồn CIF). */
+    public static final String ADDRESS_TYPE_PERMANENT = 'PERMANENT';
     public static final String ADDRESS_TYPE_OFFICE = 'OFFICE';
+    /** FEC_Address_Info__c.FEC_Address_Type__c — giá trị picklist. */
+    public static final String SF_ADDRESS_TYPE_PERMANENT = 'Permanent Address';
+    public static final String SF_ADDRESS_TYPE_OFFICE = 'Office Address';
+    public static final String SF_ADDRESS_TYPE_CURRENT = 'Current Address';
     public static final String TEXT_YES = 'Yes';
 
     public static final String TEXT_NO = 'No';
@@ -186,6 +215,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
+    public static final String PRODUCT_TYPE_CASHBACK = 'Cashback';
+    public static final String PRODUCT_TYPE_EVOUCHER = 'EVoucher';
+    public static final String PRODUCT_TYPE_MVOUCHER = 'MVoucher';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
 
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
@@ -213,6 +245,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String DELIMITER_SEMICOLON = ';';
     public static final String DELIMITER_UNDERSCORE = '_';
 
+    // tungnm37 thêm: Assignment constants cho COF/GSR
+    public static final String ASSIGNMENT_NAME_CALL = 'Call';
+    public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
+    public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
+
+    // tungnm37 thêm: UpdateDisbursementStatus log constants
+    public static final String DISB_LOG_CRMID    = 'CRMID=';
+    public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
+    public static final String DISB_LOG_RESPONSE = ' Response=';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
@@ -221,6 +264,11 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    // RC27 — Thay thế thẻ
+    // Toannd61
+    public static final String SUB_CODE_CARD_REPLACEMENT_FEE  = 'RC27.01'; // Có phí
+    public static final String SUB_CODE_CARD_REPLACEMENT_FREE = 'RC27.02'; // Miễn phí
 
     
     public static final String FEC_CATEGORY_REQUEST = 'Request';
@@ -274,6 +322,17 @@ public with sharing class FEC_ConstantCommon {
     //Get Next Work
     public static final String CASE_TYPE_DESCRIPTION = 'Get Next Work';
     public static final String CASE_ROUTING_ACTION = 'Route to';
+    public static final String CASE_TRANSFER_ACTION = 'Transfer';
+    public static final String CASE_ESCALATE_ACTION = 'Escalate';
+    public static final String CASE_REVERT_ACTION = 'Revert';
+    public static final String CASE_REVERTING_CREATOR = 'RevertingCreator';
+    public static final String CASE_DECISION_VALUE = 'Cannot Contact Customer';
+    public static final String CASE_UPDATE_VALUE = 'Update';
+    public static final String CASE_REJECT_ACTION = 'Reject';
+    public static final String CASE_RESOLVE_ACTION = 'Resolve';
+    public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
+    public static final String TEAM_VALUE = 'CannotContactCustomer';
+    
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
@@ -324,6 +383,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CODE_FAILURE      = '3';
     public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
+    public static final String ERROR_CODE_VALIDATION = 'VALIDATION_ERROR';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
@@ -400,6 +460,23 @@ public with sharing class FEC_ConstantCommon {
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+    // Notification history channels and send-type aliases
+    public static final String NOTIFICATION_HISTORY_CHANNEL_EMAIL = 'EMAIL';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_ZNS = 'ZNS';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_MOBILE_APP = 'MOBILE_APP';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_EMAIL_LOWER = 'email';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_TITLE = 'Zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_LOWER = 'zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS = 'Zalo ZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO = 'Zalo';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS_COMPACT = 'ZaloZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP = 'Mobile App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_COMPACT = 'MobileApp';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_LOWER = 'mobile app';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_APP = 'App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH = 'Push';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH_NOTIFICATION = 'Push Notification';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APPLICATION = 'Mobile Application';
 
 
     //internalSendToSet
@@ -411,4 +488,225 @@ public with sharing class FEC_ConstantCommon {
     public static final String EMAIL_CS_D2C = 'cs_d2c@fecredit.com.vn';
     public static final String EMAIL_CS_OM = 'CS_OM@fecredit.com.vn';
     public static final String EMAIL_CS_QC_TEAM = 'CS_QC_TEAM@fecredit.com.vn';
+
+    public static final String STATUS_SUCCESS = 'SUCCESS';
+    public static final String CASE_STATUS_ON_HOLD = 'On Hold';
+    
+    public static final Map<String, String> decisionToTeamMap = new Map<String, String>{
+      // Nhóm thường (Pending-) -> Bỏ prefix
+      'Pending CS' => 'CSInternal',
+      'Pending Customer' => 'Customer',
+      'Pending Card Ops' => 'CardOpsOutOfSystem',
+      'Pending Collections' => 'CollectionsOutOfSystem',
+      'Pending Contract Processing' => 'CPOutOfSystem',
+      'Pending Credit Assessment' => 'CAOutOfSystem',
+      'Pending Direct Sales' => 'DirectSalesOutOfSystem',
+      'Pending Telesales' => 'TelesalesOutOfSystem',
+      'Pending IT' => 'ITOutOfSystem',
+      'Pending Payment' => 'PaymentOutOfSystem',
+      'Pending Product' => 'PBDOutOfSystem',
+      'Pending RCP&A' => 'RCPAOutOfSystem',
+      'Pending Security' => 'SecurityOutOfSystem',
+      'Pending Vendor' => 'VendorOutOfSystem',
+      // Nhóm đặc biệt (cần map Team và đổi Owner sang Queue)
+      'Out Of Process' => 'OutOfProcess',
+      'CIC Related' => 'CICRelated',
+      'Document Preparation' => 'DocumentPreparation',
+      'Task Under Review' => 'TaskUnderReview'
+    };
+    
+    public static final String CASE_ALL_REQUEST = 'All';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+
+    //----------HARD CODE VALUE FOR CALL API (Non-production)----------
+    public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    
+    /** Profile names */
+    public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+
+    /** MIME types for file attachments */
+    public static final String MIME_OCTET_STREAM = 'application/octet-stream';
+    public static final String MIME_PDF = 'application/pdf';
+    public static final String MIME_PNG = 'image/png';
+    public static final String MIME_JPEG = 'image/jpeg';
+    public static final String MIME_EXCEL = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    public static final String MIME_WORD = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    /** FileType values for ContentVersion */
+    public static final String FILE_TYPE_PDF = 'PDF';
+    public static final String FILE_TYPE_PNG = 'PNG';
+    public static final String FILE_TYPE_JPG = 'JPG';
+    public static final String FILE_TYPE_JPEG = 'JPEG';
+    public static final String FILE_TYPE_EXCEL_X = 'EXCEL_X';
+    public static final String FILE_TYPE_EXCEL = 'EXCEL';
+    public static final String FILE_TYPE_WORD_X = 'WORD_X';
+    public static final String FILE_TYPE_WORD = 'WORD';
+
+    public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
+    public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_1 = 'RL16.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
+
+    // RD Payment Contract Assessment — picklist API values & routing keys
+    public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
+    public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
+    public static final String RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT = 'Contract can be closed without statement';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_TEAM        = 'team';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_QUEUE       = 'queueDevName';
+    public static final String RD_ASSESSMENT_TEAM_SP                 = 'SP';
+    public static final String RD_ASSESSMENT_TEAM_CC                 = 'CC';
+
+    public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
+    public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
+    public static final String P_TAG_REGEX = '(?i)</p>';
+    public static final String HTML_TAG_REGEX = '<[^>]+>';
+    public static final String CUSTOM_NOTIFICATION_TYPE_NOT_FOUND = 'CustomNotificationType not found.';
+    public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
+    public static final String NO_MATCH = 'No match';
+    public static final String SKIP_ITEM = 'Skip item (null/blank)';
+    
+    /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
+    public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
+    public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
+    
+    //HieuTT74 - Update ngày 25/4/2026 - Assigment Routing Action
+    // ================= ACTION =================
+    public static final String ACTION_ESCALATE = 'Escalate';
+    public static final String ACTION_REJECT = 'Reject';
+    public static final String ACTION_RESOLVE = 'Resolve';
+    public static final String ACTION_REVERT = 'Revert';
+    public static final String ACTION_TRANSFER = 'Transfer';
+    public static final String ACTION_ROUTE_TO = 'Route_to';
+    public static final String ACTION_ROUTE_TO_DISPLAY = 'Route to';
+    public static final String ACTION_UPDATE = 'Update';
+    
+    // ================= DECISION =================
+    public static final String DECISION_USER = 'USER';
+    public static final String DECISION_QUEUE = 'QUEUE';
+    public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
+    
+    public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
+    
+    // ================= ASSIGNMENT STATUS =================
+    public static final String ASSIGNMENT_STATUS_COMPLETED = 'Completed';
+    public static final String ASSIGNMENT_STATUS_REVERTING_CREATOR = 'RevertingCreator';
+    
+    // ================= TEAM =================
+    public static final String TEAM_CS_SUPPORT = 'CS Support';
+    public static final String TEAM_CS_CUSTOMER_CARE = 'CS Customer Care';
+    
+    // ================= QUEUE NAME =================
+    public static final String QUEUE_CS_SUPPORT = 'DQ-CS Support';
+    public static final String QUEUE_CS_CUSTOMER_CARE = 'DQ-CS Customer Care';
+    
+    public static final String QUEUE_HANDLING = 'Handling';
+    public static final String QUEUE_CARE_INTERNAL_TASK = 'Care Internal Task';
+    
+    // ================= BUSINESS PROCESS =================
+    public static final String BP_GENERAL_SERVICE = 'General Service Request';
+    public static final String BP_COMPLAINT = 'Complaint';
+    public static final String BP_FEEDBACK = 'Feedback';
+    
+    // ================= ROUTE STATUS =================
+    public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
+    
+    // ================= ROUTING TYPE =================
+    public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
+    
+    // ================= ROUTE ACTION HISTORY =================
+    public static final String HISTORY_ACTION_ROUTE_TO = 'Route to';
+    
+    // ================= UPDATE DECISION KEYS =================
+    public static final String DECISION_OUT_OF_PROCESS = 'OUT_OF_PROCESS';
+    public static final String DECISION_CIC_RELATED = 'CIC_RELATED';
+    public static final String DECISION_DOCUMENT_PREP = 'DOCUMENT_PREP';
+    public static final String DECISION_TASK_UNDER_REVIEW = 'TASK_UNDER_REVIEW';
+    
+    // ================= CASE STATUS =================
+    public static final String STATUS_PENDING_CS = 'Pending-CSInternal';
+    public static final String STATUS_PENDING_CUSTOMER = 'Pending-Customer';
+    public static final String STATUS_PENDING_CARD_OPS = 'Pending-CardOpsOutOfSystem';
+    public static final String STATUS_PENDING_COLLECTIONS = 'Pending-CollectionsOutOfSystem';
+    public static final String STATUS_PENDING_CP = 'Pending-CPOutOfSystem';
+    public static final String STATUS_PENDING_CA = 'Pending-CAOutOfSystem';
+    public static final String STATUS_PENDING_DS = 'Pending-DirectSalesOutOfSystem';
+    public static final String STATUS_PENDING_TELESALES = 'Pending-TelesalesOutOfSystem';
+    public static final String STATUS_PENDING_IT = 'Pending-ITOutOfSystem';
+    public static final String STATUS_PENDING_PAYMENT = 'Pending-PaymentOutOfSystem';
+    public static final String STATUS_PENDING_PRODUCT = 'Pending-PBDOutOfSystem';
+    public static final String STATUS_PENDING_RCPA = 'Pending-RCPAOutOfSystem';
+    public static final String STATUS_PENDING_SECURITY = 'Pending-SecurityOutOfSystem';
+    public static final String STATUS_PENDING_VENDOR = 'Pending-VendorOutOfSystem';
+    
+    public static final String STATUS_PENDING_OUT_OF_PROCESS = 'Pending-OutOfProcess';
+    public static final String STATUS_PENDING_CIC = 'Pending-CICRelated';
+    public static final String STATUS_PENDING_DOCUMENT = 'Pending-DocumentPreparation';
+    public static final String STATUS_PENDING_TASK_REVIEW = 'Pending-TaskUnderReview';
+    
+    
+    public static final Map<String, String> CASE_STATUS_MAP = new Map<String, String>{
+        'PENDING_CS' => 'Pending-CSInternal',
+        'PENDING_CUSTOMER' => 'Pending-Customer',
+        'PENDING_CARD_OPS' => 'Pending-CardOpsOutOfSystem',
+        'PENDING_COLLECTIONS' => 'Pending-CollectionsOutOfSystem',
+        'PENDING_CP' => 'Pending-CPOutOfSystem',
+        'PENDING_CA' => 'Pending-CAOutOfSystem',
+        'PENDING_DS' => 'Pending-DirectSalesOutOfSystem',
+        'PENDING_TELESALES' => 'Pending-TelesalesOutOfSystem',
+        'PENDING_IT' => 'Pending-ITOutOfSystem',
+        'PENDING_PAYMENT' => 'Pending-PaymentOutOfSystem',
+        'PENDING_PRODUCT' => 'Pending-PBDOutOfSystem',
+        'PENDING_RCPA' => 'Pending-RCPAOutOfSystem',
+        'PENDING_SECURITY' => 'Pending-SecurityOutOfSystem',
+        'PENDING_VENDOR' => 'Pending-VendorOutOfSystem',
+        
+        'OUT_OF_PROCESS' => 'Pending-OutOfProcess',
+        'CIC_RELATED' => 'Pending-CICRelated',
+        'DOCUMENT_PREP' => 'Pending-DocumentPreparation',
+        'TASK_UNDER_REVIEW' => 'Pending-TaskUnderReview'
+    };
+    
+    public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
+        TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
+        TEAM_CS_CUSTOMER_CARE => QUEUE_CS_CUSTOMER_CARE
+    };
+    
+    public static final Map<String, String> DECISION_QUEUE_MAP = new Map<String, String>{
+        DECISION_OUT_OF_PROCESS => QUEUE_HANDLING,
+        DECISION_CIC_RELATED => QUEUE_CARE_INTERNAL_TASK,
+        DECISION_DOCUMENT_PREP => QUEUE_CARE_INTERNAL_TASK,
+        DECISION_TASK_UNDER_REVIEW => QUEUE_CARE_INTERNAL_TASK
+    };
+
+    public static final String COF_GENERAL_FLOW = 'COF - General Flow';
+    public static final String STAGE_ONE = 'Stage 1';
+    public static final String ORIGINAL_INFORMATION = 'Original Information';
+    
+    //HieuTT74: Update common constant - ngày 28-4-2026
+    public static final String CHANNEL_FACEBOOK = 'Facebook';
+    public static final String CHANNEL_WEBCHAT = 'Webchat';
+    
+    public static final String CHANNEL_FACEBOOK_LOWER = 'facebook';
+    public static final String CHANNEL_ZALO_LOWER = 'zalo';
+    public static final String CHANNEL_WEBCHAT_LOWER = 'webchat';
+    
+    // ===== KYC =====
+    public static final String KYC_METHOD_OTHER = 'Other';
+    public static final String KYC_STATUS_NOT_KYC = 'NOT KYC';
+    public static final String KYC_STATUS_KYC = 'KYC';
+    
+    public static final String KYC_RESULT_PASS = 'Pass';
+    public static final String KYC_RESULT_FAIL = 'Fail';
+    
+    
+    public static final String DNB_STATUS_ACTIVE = 'Active';
+    public static final String DNB_STATUS_INACTIVE = 'Inactive';
+    public static final String BOOLEAN_TRUE = 'true';
+
+    public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
+    public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    public static final String QUEUE_ID_START = '00G';
+
 }

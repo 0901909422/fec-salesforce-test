@@ -1,4 +1,4 @@
-public with sharing class FEC_CaseRemarkController {
+public without sharing class FEC_CaseRemarkController {
   @AuraEnabled
   public static List<FEC_Case_Remarks__c> getRemarklst(String caseId) {
     try {
@@ -23,18 +23,12 @@ public with sharing class FEC_CaseRemarkController {
         result.addAll(jsonToRemarks(caselst[0].FEC_Draft_Remarks__c));
       }
 
-      result.addAll([
-        SELECT
-          Id,
-          FEC_Case_Remarks__c,
-          FEC_Stage_Name__c,
-          FEC_User__c,
-          FEC_User_Role__c,
-          CreatedDate
-        FROM FEC_Case_Remarks__c
-        WHERE FEC_Case__c = :caseId
-        ORDER BY CreatedDate DESC
-      ]);
+      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, FEC_Remark_Type__c, CreatedDate ' +
+        'FROM FEC_Case_Remarks__c ' +
+        'WHERE FEC_Case__c = :caseId ' +
+        'ORDER BY CreatedDate DESC';
+
+      result.addAll((List<FEC_Case_Remarks__c>) Database.query(soql));
 
       return result;
     } catch (Exception e) {
@@ -94,18 +88,41 @@ public with sharing class FEC_CaseRemarkController {
   /** Xóa draft Case Remarks trên Case (trước khi Submit để chỉ lưu 1 bản ghi = nội dung hiện tại). */
   @AuraEnabled
   public static void clearDraftRemarks(String caseId) {
-    if (String.isBlank(caseId))
-      return;
-    List<Case> caselst = [
-      SELECT Id, FEC_Draft_Remarks__c
-      FROM Case
-      WHERE Id = :caseId
-      LIMIT 1
-    ];
-    if (caselst.isEmpty())
-      return;
-    caselst[0].FEC_Draft_Remarks__c = null;
-    Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    try {
+      if (String.isBlank(caseId))
+        return;
+      List<Case> caselst = [
+        SELECT Id, OwnerId, FEC_Draft_Remarks__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      if (caselst.isEmpty())
+        return;
+      Case c = caselst[0];
+      System.debug(
+        'FEC_DBG clearDraftRemarks caseId=' +
+          caseId +
+          ' runUserId=' +
+          UserInfo.getUserId() +
+          ' profileId=' +
+          UserInfo.getProfileId() +
+          ' caseOwnerId=' +
+          c.OwnerId +
+          ' userIsOwner=' +
+          (UserInfo.getUserId() == c.OwnerId)
+      );
+      c.FEC_Draft_Remarks__c = null;
+      Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    } catch (Exception e) {
+      System.debug(
+        'FEC_DBG clearDraftRemarks ERROR msg=' +
+          e.getMessage() +
+          ' stack=' +
+          e.getStackTraceString()
+      );
+      throw new AuraHandledException(e.getMessage());
+    }
   }
 
   /** Submit chỉ tạo 1 bản ghi: lấy bản nháp mới nhất (phần tử cuối trong draft). */
@@ -154,6 +171,51 @@ public with sharing class FEC_CaseRemarkController {
 
       caselst[0].FEC_Draft_Remarks__c = null;
       Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  /** tungnm37: Submit remark trực tiếp với content - dùng cho COF/GSR tránh duplicate do draft bị clear trước */
+  @AuraEnabled
+  public static void submitRemarkDirect(String caseId, String stageNameFromClient, String remarkContent) {
+    try {
+      if (String.isBlank(caseId) || String.isBlank(remarkContent)) return;
+
+      List<User> userlst = [SELECT Id, Email, UserRole.Name FROM User WHERE Id = :UserInfo.getUserId()];
+      if (userlst.isEmpty()) return;
+
+      String emailId = String.isNotBlank(userlst[0].Email) ? userlst[0].Email.substringBefore('@') : null;
+      String roleName = userlst[0].UserRole?.Name;
+
+      List<Case> caselst = [SELECT Id, FEC_Stage_Name__c FROM Case WHERE Id = :caseId LIMIT 1];
+      if (caselst.isEmpty()) return;
+
+      String stageName = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
+
+      // Tránh duplicate: kiểm tra remark giống nhau trong 30s
+      Datetime cutoff = Datetime.now().addSeconds(-30);
+      List<FEC_Case_Remarks__c> recentForCase = [
+        SELECT Id, FEC_Case_Remarks__c FROM FEC_Case_Remarks__c
+        WHERE FEC_Case__c = :caseId AND CreatedDate >= :cutoff ORDER BY CreatedDate DESC LIMIT 1
+      ];
+      Boolean isDuplicate = !recentForCase.isEmpty() && remarkContent.equals(recentForCase[0].FEC_Case_Remarks__c);
+      if (isDuplicate) return;
+
+      insert new FEC_Case_Remarks__c(
+        FEC_Case__c = caseId,
+        FEC_Case_Remarks__c = remarkContent,
+        FEC_User__c = emailId,
+        FEC_User_Role__c = roleName,
+        FEC_Stage_Name__c = stageName
+      );
+
+      // Clear draft
+      List<Case> caseToUpdate = [SELECT Id, FEC_Draft_Remarks__c FROM Case WHERE Id = :caseId LIMIT 1];
+      if (!caseToUpdate.isEmpty()) {
+        caseToUpdate[0].FEC_Draft_Remarks__c = null;
+        Database.update(caseToUpdate, AccessLevel.SYSTEM_MODE);
+      }
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

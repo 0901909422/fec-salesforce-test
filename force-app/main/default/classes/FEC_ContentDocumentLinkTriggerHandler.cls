@@ -1,4 +1,4 @@
-// Handler ContentDocumentLink: chặn gắn/gỡ/share file khi Case đang review hoặc Interaction không handling.
+// Handler ContentDocumentLink: chặn gắn/share khi Case đang review hoặc Interaction không handling; cho phép gỡ file (delete link) kể cả Review.
 public without sharing class FEC_ContentDocumentLinkTriggerHandler {
   private static Boolean isExecuting = false;
 
@@ -47,7 +47,10 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
   }
 
   private void onBeforeDelete(List<ContentDocumentLink> oldlst) {
-    preventRemoveFromRecordInCaseReview(oldlst);
+    if (oldlst == null || oldlst.isEmpty()) {
+      return;
+    }
+    // Cho phép xóa ContentDocumentLink (gỡ file khỏi Case) kể cả khi Case đang Review.
   }
 
   // Share: một số luồng Lightning chỉ fire after insert; xóa CDL vi phạm để share không lưu.
@@ -106,25 +109,6 @@ public without sharing class FEC_ContentDocumentLinkTriggerHandler {
     }
     Set<Id> caseIdsToBlock = FEC_FileActionOnReviewService.getCaseIdsThatBlockFileActions(caseIds);
     for (ContentDocumentLink cdl : newlst) {
-      if (caseIdsToBlock.contains(cdl.LinkedEntityId)) {
-        cdl.addError(FEC_FileActionOnReviewService.ERROR_FILE_ACTION_IN_REVIEW);
-      }
-    }
-  }
-
-  // Chặn gỡ file khỏi record khi Case đang review.
-  private void preventRemoveFromRecordInCaseReview(List<ContentDocumentLink> oldlst) {
-    Set<Id> caseIds = new Set<Id>();
-    for (ContentDocumentLink cdl : oldlst) {
-      if (cdl.LinkedEntityId != null && cdl.LinkedEntityId.getSObjectType() == Case.SObjectType) {
-        caseIds.add(cdl.LinkedEntityId);
-      }
-    }
-    if (caseIds.isEmpty()) {
-      return;
-    }
-    Set<Id> caseIdsToBlock = FEC_FileActionOnReviewService.getCaseIdsThatBlockFileActions(caseIds);
-    for (ContentDocumentLink cdl : oldlst) {
       if (caseIdsToBlock.contains(cdl.LinkedEntityId)) {
         cdl.addError(FEC_FileActionOnReviewService.ERROR_FILE_ACTION_IN_REVIEW);
       }

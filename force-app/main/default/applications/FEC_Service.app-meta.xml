@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
-    <actionOverrides>
-        <actionName>View</actionName>
-        <comment>Action override created by Lightning App Builder during activation.</comment>
-        <content>Assignment_Record_Page</content>
-        <formFactor>Large</formFactor>
-        <skipRecordTypeSelect>false</skipRecordTypeSelect>
-        <type>Flexipage</type>
-        <pageOrSobjectType>FEC_Assignment__c</pageOrSobjectType>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>View</actionName>
-        <comment>Action override created by Lightning App Builder during activation.</comment>
-        <content>Assignment_Record_Page</content>
-        <formFactor>Small</formFactor>
-        <skipRecordTypeSelect>false</skipRecordTypeSelect>
-        <type>Flexipage</type>
-        <pageOrSobjectType>FEC_Assignment__c</pageOrSobjectType>
-    </actionOverrides>
     <brand>
         <headerColor>#2DE70B</headerColor>
         <logo>feclogo</logo>
@@ -591,15 +573,20 @@
     <tabs>FEC_KYC__c</tabs>
     <tabs>FEC_Channel__c</tabs>
     <tabs>FEC_Notification_Channel__c</tabs>
+    <tabs>FEC_Notification__c</tabs>
     <tabs>standard-ServiceResource</tabs>
     <tabs>FEC_Enhanced_Letterhead__c</tabs>
     <tabs>Templates</tabs>
     <tabs>FEC_Clear_Session__c</tabs>
+    <tabs>FE_Department_Admin</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
         <mappings>
             <tab>FEC_Account_Contract_Search</tab>
+        </mappings>
+        <mappings>
+            <tab>FE_Department_Admin</tab>
         </mappings>
         <mappings>
             <tab>FEC_Action_Button__c</tab>
@@ -639,6 +626,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Notification_Channel__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Notification__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_Product_Type__c</tab>

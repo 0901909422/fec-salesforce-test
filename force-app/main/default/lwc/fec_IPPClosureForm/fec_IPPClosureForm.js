@@ -11,7 +11,6 @@ import FEC_MSG_IPP_Closure_Select_One from '@salesforce/label/c.FEC_MSG_IPP_Clos
 import FEC_MSG_IPP_Closure_No_Eligible from '@salesforce/label/c.FEC_MSG_IPP_Closure_No_Eligible';
 import LBL_LOADING from '@salesforce/label/c.Loading';
 import FEC_SPINNER_SAVING from '@salesforce/label/c.FEC_Spinner_Saving';
-import FEC_LBL_IPP_Closure_Heading from '@salesforce/label/c.FEC_LBL_IPP_Closure_Heading';
 import FEC_LBL_IPP_Closure_Col_IppRecordNo from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppRecordNo';
 import FEC_LBL_IPP_Closure_Col_IppPlan from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppPlan';
 import FEC_LBL_IPP_Closure_Col_IppOpenDate from '@salesforce/label/c.FEC_LBL_IPP_Closure_Col_IppOpenDate';
@@ -31,7 +30,7 @@ import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
-const IPP_SAVE_FAILED = 'IPP_SAVE_FAILED';
+const IPP_SAVE_FAILED = 'IPP save failed';
 
 export default class Fec_IPPClosureForm extends LightningElement {
 
@@ -43,12 +42,17 @@ export default class Fec_IPPClosureForm extends LightningElement {
         return this.isEdit === false;
     }
 
+    get ippTableLocked() {
+        return this.isReadOnly || this.savedIppToCloseOnCase != null;
+    }
+
     get datatableMaxRowSelection() {
-        return this.isReadOnly ? 0 : 1;
+        return this.ippTableLocked ? 0 : 1;
     }
 
     @track ippList = [];
     @track selectedIppId = null;
+    @track savedIppToCloseOnCase = null;
     @track isLoading = false;
     @track completeLoading = false;
     @track showNoti11 = false;
@@ -57,7 +61,6 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     labelLoading = LBL_LOADING;
     labelSaving = FEC_SPINNER_SAVING;
-    headingText = FEC_LBL_IPP_Closure_Heading;
 
     ippColumns = [
         { label: FEC_LBL_IPP_Closure_Col_IppRecordNo, fieldName: 'ippRecordNo', type: 'text', sortable: true },
@@ -85,6 +88,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
         this.isLoading = true;
         this.ippList = [];
         this.selectedIppId = null;
+        this.savedIppToCloseOnCase = null;
         this.showNoti11 = false;
         this.loadSucceeded = false;
         this.showNoEligibleWarning = false;
@@ -93,8 +97,18 @@ export default class Fec_IPPClosureForm extends LightningElement {
                 const rawRows = (data && data.rows) ? data.rows : [];
                 const rows = rawRows.map(row => this.mapRowToDisplay(row));
                 this.ippList = rows;
-                this.showNoEligibleWarning = !!(data && data.showNoEligibleWarning);
+                this.showNoEligibleWarning = rows.length === 0;
                 this.loadSucceeded = true;
+                this.savedIppToCloseOnCase = data && data.savedIppToCloseOnCase ? data.savedIppToCloseOnCase : null;
+                if (this.savedIppToCloseOnCase && rows.some((r) => r.Id === this.savedIppToCloseOnCase)) {
+                    this.selectedIppId = this.savedIppToCloseOnCase;
+                }
+                const hasEligibleRows = rows.length > 0;
+                this.dispatchEvent(new CustomEvent('fecippclosureload', { bubbles: true, composed: true, detail: {
+                    noEligibleForClosure: this.showNoEligibleWarning,
+                    hasEligibleRows: hasEligibleRows,
+                    savedIppToCloseOnCase: this.savedIppToCloseOnCase
+                } }));
             })
             .catch((err) => {
                 this.loadSucceeded = false;
@@ -134,14 +148,20 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows || [];
-        this.selectedIppId = selectedRows.length === 1 ? selectedRows[0].Id : null;
+        const hasSelection = selectedRows.length === 1;
+        this.selectedIppId = hasSelection ? selectedRows[0].Id : null;
         this.showNoti11 = false;
+        this.dispatchEvent(new CustomEvent('fecippclosureselection', { bubbles: true, composed: true, detail: { hasSelection: hasSelection } }));
     }
 
     /** Submit Case: bắt buộc chọn một dòng khi bảng có IPP đủ điều kiện. */
     @api validateSelectionRequiredForSubmit() {
-        if (this.isReadOnly) {
+        if (this.ippTableLocked) {
             return true;
+        }
+        if (this.isLoading) {
+            this.showToast(FEC_Toast_Validation_Title, labelLoading, 'error');
+            return false;
         }
         if (!this.loadSucceeded || !this.ippList || this.ippList.length === 0) {
             return true;
@@ -156,7 +176,7 @@ export default class Fec_IPPClosureForm extends LightningElement {
 
     /** Parent Save & Close / Submit: lưu IPP đã chọn nếu có; bỏ qua khi không có dòng hoặc chưa chọn. */
     @api saveSelectedIPPIfApplicable() {
-        if (this.isReadOnly) {
+        if (this.ippTableLocked) {
             return Promise.resolve();
         }
         const hasRows = this.ippList && this.ippList.length > 0;

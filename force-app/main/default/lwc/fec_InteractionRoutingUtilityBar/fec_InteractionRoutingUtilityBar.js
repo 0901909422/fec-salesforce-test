@@ -3,7 +3,12 @@ import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { IsConsoleNavigation, openTab, getFocusedTabInfo, openSubtab, focusTab } from 'lightning/platformWorkspaceApi';
 import { minimizeUtility } from 'lightning/platformUtilityBarApi';
+import executeRoutingAssignments from "@salesforce/apex/FEC_InteractionRoutingController.executeRoutingAssignments";
 import USER_ID from '@salesforce/user/Id';
+
+import { updateRecord } from 'lightning/uiRecordApi';
+import ID_FIELD from '@salesforce/schema/Case.Id';
+import STATUS_FIELD from '@salesforce/schema/Case.FEC_Is_Test_API__c';
 
 
 const COLUMNS = [
@@ -29,6 +34,8 @@ export default class FecInteractionRoutingUtilityBar extends LightningElement {
     subscription = null;
 
     @track cases = [];
+    @track caseId = '';
+    @track isLoading = false;
     columns = COLUMNS;
 
     // Turn on/off auto open
@@ -199,7 +206,15 @@ export default class FecInteractionRoutingUtilityBar extends LightningElement {
             console.warn('Could not minimize utility:', e);
         }
     }
-
+    callExecuteRouting() {
+        executeRoutingAssignments()
+            .then(() => {
+            console.log('executeRoutingAssignments success');
+            })
+            .catch(error => {
+            console.error('executeRoutingAssignments error', error);
+            });
+    }
     showToast(title, message, variant) {
         this.dispatchEvent(
             new ShowToastEvent({
@@ -209,4 +224,51 @@ export default class FecInteractionRoutingUtilityBar extends LightningElement {
             })
         );
     }
+    handleCaseIdChange(event) {
+        console.log('Case Id input changed:', event.detail.value);
+        this.caseId = (event.detail.value || '').trim();
+    }
+
+    async handleUpdate() {
+        if (!this.caseId) {
+            this.showToast('Error', 'Please enter a Case Id.', 'error');
+            return;
+        }
+
+        if (!this.isValidSalesforceId(this.caseId)) {
+            this.showToast('Error', 'Please enter a valid Salesforce record Id.', 'error');
+            return;
+        }
+
+        this.isLoading = true;
+
+        try {
+            const fields = {};
+            fields[ID_FIELD.fieldApiName] = this.caseId;
+            fields[STATUS_FIELD.fieldApiName] = true;
+
+            await updateRecord({ fields });
+
+            this.showToast('Success', `Case ${this.caseId} was updated successfully.`, 'success');
+            this.caseId = '';
+        } catch (error) {
+            let message = 'Failed to update Case Status.';
+
+            if (error?.body?.message) {
+                message = error.body.message;
+            } else if (error?.message) {
+                message = error.message;
+            }
+
+            this.showToast('Error', message, 'error');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    isValidSalesforceId(recordId) {
+        return /^[a-zA-Z0-9]{15,18}$/.test(recordId);
+    }
+
+
 }

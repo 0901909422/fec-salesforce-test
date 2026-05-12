@@ -22,11 +22,11 @@ public with sharing class FEC_TerminationLoanController {
     @AuraEnabled(cacheable=false)
     public static TerminationDataDTO getTerminationData(Id caseId) {
         TerminationDataDTO dto = new TerminationDataDTO();
-        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Termination__c.SObjectType);
+        dto.helpTexts = FEC_CommonUltils.buildHelpTextMap(FEC_Customer_History__c.SObjectType);
         dto.earlyTermination = new List<Map<String, Object>>();
         dto.overdue = new List<Map<String, Object>>();
         dto.feeChargeList = new List<Map<String, Object>>();
-
+        
         if (caseId == null) {
             dto.error = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return dto;
@@ -39,7 +39,7 @@ public with sharing class FEC_TerminationLoanController {
         }
 
         List<FEC_Customer_History__c> histories = [
-            SELECT FEC_Contract_Number__c
+            SELECT Id, FEC_Contract_Number__c
             FROM FEC_Customer_History__c
             WHERE Id = :cases[0].FEC_Account_or_Contract__c
             LIMIT 1
@@ -80,10 +80,10 @@ public with sharing class FEC_TerminationLoanController {
         buildOverdue(result, basicRes, secRes);
         buildFeeChargeList(result, basicRes);
         if (secRes?.LoanSecInfo != null) {
-            saveEarlyTerminationToRecord(caseId, secRes);
+            saveEarlyTerminationToRecord(histories[0].Id, secRes);
         }
         if (basicRes?.LoanBasicInfo != null) {
-            saveFeeChargeToRecord(caseId, basicRes);
+            saveFeeChargeToRecord(histories[0].Id, basicRes);
         }
         dto.earlyTermination = (List<Map<String, Object>>)result.get('earlyTermination');
         dto.overdue = (List<Map<String, Object>>)result.get('overdue');
@@ -114,20 +114,23 @@ public with sharing class FEC_TerminationLoanController {
         result.put('earlyTermination', rows);
     }
 
-    /** Lưu Early Termination (LoanSecInfo) → FEC_Termination__c. */
-    private static void saveEarlyTerminationToRecord(Id caseId, FEC_GetLoanSecInfo.ResponseWrapper secRes) {
+    /** Lưu Early Termination (LoanSecInfo) → FEC_Customer_History__c. */
+    private static void saveEarlyTerminationToRecord(Id customerHistoryId, FEC_GetLoanSecInfo.ResponseWrapper secRes) {
         FEC_GetLoanSecInfo.Loan secLoan = secRes.LoanSecInfo.Loan;
         FEC_GetLoanSecInfo.TerminationSimulation termSim = secRes.LoanSecInfo.TerminationSimulation;
         FEC_GetLoanSecInfo.LPI lpi = secRes.LoanSecInfo.LPI;
 
-        List<FEC_Termination__c> existing = [
+        List<FEC_Customer_History__c> histories = [
             SELECT Id
-            FROM FEC_Termination__c
-            WHERE FEC_Case__c = :caseId
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
             LIMIT 1
         ];
+        if (histories.isEmpty()) {
+            return;
+        }
 
-        FEC_Termination__c rec = existing.isEmpty() ? new FEC_Termination__c(FEC_Case__c = caseId) : existing[0];
+        FEC_Customer_History__c rec = histories[0];
         rec.FEC_Termination_Amount__c = termSim?.NetReceivable;
         rec.FEC_Excess_Amount__c = termSim?.ExcessAmounts;
         rec.FEC_Pre_Payment_Penalty__c = termSim?.PrePaymentPenalty;
@@ -143,57 +146,43 @@ public with sharing class FEC_TerminationLoanController {
         rec.FEC_Penalty_Fee_Overdue__c = termSim?.PenaltyFeeOverdue;
         rec.FEC_Repayment_Fee_Overdue__c = termSim?.RepaymentFeeOverdue;
 
-        if (existing.isEmpty()) {
-            insert rec;
-        } else {
-            update rec;
-        }
+        update rec;
     }
 
-    /** Lưu Fee/Charge + Overdue (GetLoanBasicInfo) → FEC_Termination__c. */
-    private static void saveFeeChargeToRecord(Id caseId, FEC_GetLoanBasicInfo.ResponseWrapper basicRes) {
-        FEC_GetLoanBasicInfo.RepaymentFeeOverdue rfo = basicRes?.LoanBasicInfo?.RepaymentFeeOverdue;
-        FEC_GetLoanBasicInfo.InterestOnOverdueInterest iooi = basicRes?.LoanBasicInfo?.InterestOnOverdueInterest;
+    /** Lưu Fee/Charge + Overdue (GetLoanBasicInfo) → FEC_Customer_History__c. */
+    private static void saveFeeChargeToRecord(Id customerHistoryId, FEC_GetLoanBasicInfo.ResponseWrapper basicRes) {
+        FEC_GetLoanBasicInfo.Loan loan = basicRes?.LoanBasicInfo?.Loan;
         FEC_GetLoanBasicInfo.PassDue passDue = basicRes?.LoanBasicInfo?.PassDue;
         FEC_GetLoanBasicInfo.Product product = basicRes?.LoanBasicInfo?.Product;
-        if (rfo == null && iooi == null && passDue == null && product == null) {
+        if (loan == null && passDue == null && product == null) {
             return;
         }
 
-        List<FEC_Termination__c> existing = [
+        List<FEC_Customer_History__c> histories = [
             SELECT Id
-            FROM FEC_Termination__c
-            WHERE FEC_Case__c = :caseId
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
             LIMIT 1
         ];
-        FEC_Termination__c rec = existing.isEmpty() ? new FEC_Termination__c(FEC_Case__c = caseId) : existing[0];
-
-        if (rfo != null) {
-            rec.FEC_Assessed_Amount__c = rfo.AssessedAmount;
-            rec.FEC_Collected_Amount__c = rfo.CollectedAmount;
-            rec.FEC_Waived_Amount__c = rfo.WaivedAmount;
-            rec.FEC_Outstanding_Amount__c = rfo.OutstandingAmount;
+        if (histories.isEmpty()) {
+            return;
         }
-        if (iooi != null) {
-            rec.FEC_Interest_on_Overdue_Interest__c = iooi.OutstandingAmount;
+        FEC_Customer_History__c rec = histories[0];
+
+        if (loan != null) {
+            rec.FEC_Assessed_Amount__c = loan.SysCalcChargeAmount;
+            rec.FEC_Collected_Amount__c = loan.ChargeAmtCollected;
+            rec.FEC_Waived_Amount__c = loan.ChargeWaived;
+            rec.FEC_Outstanding_Amount__c = loan.OutstandingChargeAmount;
         }
         if (passDue != null) {
-            String overduePenalty;
-            if (passDue.OverduePenalty != null) {
-                overduePenalty = String.valueOf(passDue.OverduePenalty);
-            }
-            rec.FEC_Overdue_Penalty__c = overduePenalty;
+            rec.FEC_Overdue_Penalty__c = parseDecimalFromString(String.valueOf(passDue.OverduePenalty));
         }
         if (product != null) {
             rec.FEC_Principal_Overdue__c = product.PrincipalDue;
             rec.FEC_Interest_Overdue__c = product.InterestDue;
         }
-
-        if (existing.isEmpty()) {
-            insert rec;
-        } else {
-            update rec;
-        }
+        update rec;
     }
 
     private static void buildOverdue(
@@ -210,7 +199,6 @@ public with sharing class FEC_TerminationLoanController {
         addField(rows, System.Label.FEC_Termination_Field_Principal_Overdue_Label, product?.PrincipalDue, false);
         addField(rows, System.Label.FEC_Termination_Field_Interest_Overdue_Label, product?.InterestDue, false);
         addField(rows, System.Label.FEC_Termination_Field_Installments_Overdue_Label, termSim?.InstallmentsOverdue, false);
-        addField(rows, System.Label.FEC_Termination_Field_Repayment_Fee_Overdue_Label, termSim?.RepaymentFeeOverdue, false);
         addField(rows, System.Label.FEC_Termination_Field_Penalty_Fee_Overdue_Label, termSim?.PenaltyFeeOverdue, false);
         addField(rows, System.Label.FEC_Termination_Field_Overdue_Penalty_Label, passDue?.OverduePenalty, false);
 
@@ -223,14 +211,17 @@ public with sharing class FEC_TerminationLoanController {
     ) {
         List<Map<String, Object>> listData = new List<Map<String, Object>>();
 
-        FEC_GetLoanBasicInfo.RepaymentFeeOverdue rfo = basicRes?.LoanBasicInfo?.RepaymentFeeOverdue;
-        if (rfo != null) {
-            listData.add(buildFeeRow('Repayment Fee Overdue', rfo.AssessedAmount, rfo.CollectedAmount, rfo.WaivedAmount, rfo.OutstandingAmount));
-        }
-
-        FEC_GetLoanBasicInfo.InterestOnOverdueInterest iooi = basicRes?.LoanBasicInfo?.InterestOnOverdueInterest;
-        if (iooi != null) {
-            listData.add(buildFeeRow('Interest on Overdue Interest', iooi.AssessedAmount, iooi.CollectedAmount, iooi.WaivedAmount, iooi.OutstandingAmount));
+        FEC_GetLoanBasicInfo.Loan loan = basicRes?.LoanBasicInfo?.Loan;
+        if (loan != null) {
+            listData.add(
+                buildFeeRow(
+                    System.Label.FEC_Termination_Fee_Charge_Type_Label,
+                    loan.SysCalcChargeAmount,
+                    loan.ChargeAmtCollected,
+                    loan.ChargeWaived,
+                    loan.OutstandingChargeAmount
+                )
+            );
         }
 
         result.put('feeChargeList', listData);
@@ -252,7 +243,7 @@ public with sharing class FEC_TerminationLoanController {
         m.put('value', value);
         m.put(
             'valueFormatted',
-            value != null ? FEC_CommonUltils.formatDecimalPlainScale(value, 2) : null
+            value != null ? FEC_CommonUltils.formatCurrencyFixed(value, 2) : null
         );
         m.put('isNegative', isNegative != null && isNegative);
         rows.add(m);

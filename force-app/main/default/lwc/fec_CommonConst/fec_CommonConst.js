@@ -38,6 +38,7 @@ const UBANK_PRODUCT_NAME = 'UBank';
 const RECORD_TYPE_INTERACTION = 'Interaction';
 const RECORD_TYPE_CUSTOMER_CASE = 'Customer_Case';
 const RECORD_TYPE_INTERNAL_CASE = 'Internal_Case';
+const RECORD_TYPE_CUSTOMER_CASE_NAME = 'Customer Case';
 const NON_EXISTING_CUSTOMER_PRODUCT_NAME = "Non-Existing Customer";
 const NON_EXISTING_CUSTOMER_TYPE = "Non-existing";
 const MSG_NO_RESULTS = 'Không tìm thấy kết quả';
@@ -51,6 +52,8 @@ const CASE_ORIGIN_EMAIL_INTERNAL = 'Email-Internal';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESULT_ERROR = "result-error";
 const RESULT_SUCCESS = "result-success";
+const RESPONE_MESSARE_ERROR = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thất bại'
+const RESPONE_MESSARE_SUCCESS = 'Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công'
 const CHANNEL_OPTIONS = [
   { label: "Inbound", value: "Inbound" },
   { label: "Outbound", value: "Outbound" },
@@ -105,7 +108,7 @@ const FORM_STATE_LOADING = 'LOADING';
 const FORM_STATE_NONE = 'NONE';
 const FORM_STATE_HAS_DATA = 'HAS_DATA';
 const INTERNAL_REQUEST = 'Internal Request';
-const INTERNAL_UBANK = 'Ubank'
+const INTERNAL_UBANK = 'Ubank';
 const PATTERN_EMAIL_FEC_STRICT = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,5}(\.[A-Za-z]{2,5})?$/;
 const PATTERN_PHONE_VN_FEC = /^(0\d{9}|84\d{9})$/;
 const CONTRACT_CLOSURE_EMAIL_CHANNEL_C360 = 'C360';
@@ -113,6 +116,109 @@ const CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY = 'TEMPORARY';
 const CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY = 'Temporary Address';
 const CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT = 'Địa chỉ';
 const CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT = 'Văn phòng';
+const WARNING_HOLD_CASE = 'Warning';
+const WARNING_HOLD_TOAST = 'warning';
+const RESPONSE_SUCCESS = 'SUCCESS';
+const TARGET_GROUP_INTERNAL_USER = 'Internal User';
+const SEARCH_PLACEHOLDER = 'Search User...';
+const SEARCH_BY_EMAIL = 'Search By Email';
+const SEARCH_INTERNAL_USERS = 'Search Internal Users';
+const MIN_FAST_CASH_REGISTRATION_VND = 2000000;
+const MAX_FAST_CASH_BLOCK_ATTEMPTS = 3;
+const FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX = 'fec_fc_noclock_';
+const FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX = 'fec_fc_blkfail_';
+const FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX = 'fec_fc_blkok_';
+const ERROR_TILE_SHOWTOAST = 'Thất bại';
+const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
+const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+const FEC_SENT_SUCCESS = 'Notification sent successfully';
+const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const FEC_ERROR_LOADING_ORIGINAL_INFORMATION = 'Error loading Original Information';
+
+const CATEGORY = {
+  COMPLAINT: "Complaint"
+};
+
+const COMPLAINT_TYPE_TEXT = {
+  HIGH_RISK: "High risk",
+  URGENT: "Urgent"
+};
+ const COMPLAINT_SOURCE_LABEL = {
+  SBV: "Ngân hàng Nhà nước Việt Nam",
+  CIC: "Trung tâm Thông tin Tín dụng",
+  VCCA: "Cục Cạnh tranh và Bảo vệ người tiêu dùng",
+  "PR/MKT": "Trung tâm Truyền thông",
+  VIP: "Cấp quản lý cao",
+  EA: "Quan hệ đối ngoại"
+};
+
+const OPEN_STATUS = 'Open';
+const NEW_STATUS = 'New';
+const QUEUE_ID_START = '00G';
+
+const ACTION_OPTIONS_CS_SUPPORT = [
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Revert", value: "Revert" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+  { label: "Update", value: "Update" },
+];
+
+const ACTION_OPTIONS_OTHER = [
+  { label: "Escalate", value: "Escalate" },
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+];
+
+const DECISION_OPTIONS_MAP = {
+  Revert: [
+    { label: "User", value: "USER" },
+    { label: "User’s Team Queue", value: "USER_TEAM_QUEUE" },
+  ],
+
+  Transfer: [
+    { label: "User", value: "USER" },
+    { label: "Queue", value: "QUEUE" },
+  ],
+
+  Update: [
+    { label: "Pending CS", value: "PendingCS" },
+    { label: "Pending Customer", value: "PendingCustomer" },
+    { label: "Pending Card Ops", value: "PendingCardOps" },
+    { label: "Pending Collections", value: "PendingCollections" },
+    {
+      label: "Pending Contract Processing",
+      value: "PendingContractProcessing",
+    },
+    { label: "Pending Credit Assessment", value: "PendingCreditAssessment" },
+    { label: "Pending Direct Sales", value: "PendingDirectSales" },
+    { label: "Pending Telesales", value: "PendingTelesales" },
+    { label: "Pending IT", value: "PendingIT" },
+    { label: "Pending Payment", value: "PendingPayment" },
+    { label: "Pending Product", value: "PendingProduct" },
+    { label: "Pending RCP&A", value: "PendingRCPA" },
+    { label: "Pending Security", value: "PendingSecurity" },
+    { label: "Pending Vendor", value: "PendingVendor" },
+    { label: "Out Of Process", value: "OutOfProcess" },
+    { label: "CIC Related", value: "CICRelated" },
+    { label: "Document Preparation", value: "DocumentPreparation" },
+    { label: "Task Under Review", value: "TaskUnderReview" },
+    { label: "Cannot Contact Customer", value: "CannotContactCustomer" },
+  ],
+};
+
+const ACTIONS_REQUIRE_DECISION = ["Revert", "Transfer", "Update"];
+
+const ACTIONS_REQUIRE_SUBDECISION_MAP = {
+  Transfer: ["USER", "QUEUE"],
+  Route_to: ["TEAM"],
+};
+
+const CUSTOMER_PHONE_NUMBER = 'FEC_Customer_Phone_Number__c';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -155,6 +261,7 @@ export {
     RECORD_TYPE_INTERACTION,
     RECORD_TYPE_CUSTOMER_CASE,
     RECORD_TYPE_INTERNAL_CASE,
+    RECORD_TYPE_CUSTOMER_CASE_NAME,
     NON_EXISTING_CUSTOMER_PRODUCT_NAME,
     NON_EXISTING_CUSTOMER_TYPE,
     MSG_NO_RESULTS,
@@ -187,5 +294,38 @@ export {
     CONTRACT_CLOSURE_EMAIL_CHANNEL_TEMPORARY,
     CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY,
     CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT,
-    CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT
+    CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT,
+    WARNING_HOLD_CASE,
+    WARNING_HOLD_TOAST,
+    RESPONSE_SUCCESS,
+    TARGET_GROUP_INTERNAL_USER,
+    SEARCH_PLACEHOLDER,
+    SEARCH_BY_EMAIL,
+    SEARCH_INTERNAL_USERS,
+    MIN_FAST_CASH_REGISTRATION_VND,
+    MAX_FAST_CASH_BLOCK_ATTEMPTS,
+    FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
+    FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
+    FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+    ERROR_TILE_SHOWTOAST,
+    RESPONE_MESSARE_ERROR,
+    RESPONE_MESSARE_SUCCESS,
+    MSG_ENTER_EMAIL_CORRECTLY,
+    NOTIFICATION_CHANNEL_SF_APP,
+    FEC_SENT_SUCCESS,
+    PROFILE_RELEVANT_DEPTS,
+    PAGE_SIZE_OPTIONS,
+    FEC_ERROR_LOADING_ORIGINAL_INFORMATION,
+    CATEGORY,
+    COMPLAINT_TYPE_TEXT,
+    COMPLAINT_SOURCE_LABEL,
+    OPEN_STATUS,
+    NEW_STATUS,
+    QUEUE_ID_START,
+  ACTION_OPTIONS_CS_SUPPORT,
+  ACTION_OPTIONS_OTHER,
+  DECISION_OPTIONS_MAP,
+  ACTIONS_REQUIRE_DECISION,
+  ACTIONS_REQUIRE_SUBDECISION_MAP,
+  CUSTOMER_PHONE_NUMBER
 };

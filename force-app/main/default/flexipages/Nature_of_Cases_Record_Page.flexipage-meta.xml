@@ -81,6 +81,36 @@
                 <identifier>RecordFEC_Sub_Code_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Do_Not_Bother__c</fieldItem>
+                <identifier>RecordFEC_Do_Not_Bother__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Transfer_Call_to_Collection__c</fieldItem>
+                <identifier>RecordFEC_Transfer_Call_to_Collection__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Remove_Phone__c</fieldItem>
+                <identifier>RecordFEC_Remove_Phone__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-7e0f0ea0-0c79-4d31-91f9-f82f95fb15a5</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -268,6 +298,90 @@
     </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Do_Not_Bother__c</fieldItem>
+                <identifier>RecordFEC_Do_Not_Bother_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Transfer_Call_to_Collection__c</fieldItem>
+                <identifier>RecordFEC_Transfer_Call_to_Collection_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_Remove_Phone__c</fieldItem>
+                <identifier>RecordFEC_Remove_Phone_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <name>Facet-6289af61-fe72-4bf8-b01f-6bf770472181</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <name>Facet-9a9d414f-9188-4521-873a-9cec549a50bf</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-6289af61-fe72-4bf8-b01f-6bf770472181</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:column</componentName>
+                <identifier>flexipage_column</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-9a9d414f-9188-4521-873a-9cec549a50bf</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:column</componentName>
+                <identifier>flexipage_column2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-f8c0cec6-0903-4c32-9eda-ddf1242da9a1</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>columns</name>
+                    <value>Facet-f8c0cec6-0903-4c32-9eda-ddf1242da9a1</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>horizontalAlignment</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Section</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:fieldSection</componentName>
+                <identifier>flexipage_fieldSection</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-dafc244f-0a76-499d-80a1-08e18841b329</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
             <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
@@ -299,6 +413,34 @@
                 <identifier>relatedListsTab</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>nocChannelConfigTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Channel Config</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocChannelConfigTab</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-dafc244f-0a76-499d-80a1-08e18841b329</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Sub Process Config</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>maintabs</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -319,6 +461,16 @@
         </itemInstances>
         <name>main</name>
         <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_NocChannelConfig</componentName>
+                <identifier>fec_NocChannelConfig</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocChannelConfigTabContent</name>
+        <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>

@@ -8,8 +8,8 @@ public without sharing class FEC_InteractionInforHandler {
                FEC_Created_On__c,
                FEC_Created_by__c,
                FEC_External_Interaction_ID__c,
-               FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c,
+               FEC_Last_Updated_On_View__c,
+               FEC_Last_Updated_By_View__c,
                FEC_Outcome_Code__c,
                FEC_Interaction_Remarks__c,
                FEC_Interaction_Email__c,
@@ -111,8 +111,8 @@ public without sharing class FEC_InteractionInforHandler {
         List<Case> caseList = [
         SELECT FEC_Interaction_ID__c,
                FEC_Interaction_Status__c,
-               FEC_Last_Updated_On__c,
-               FEC_Last_Updated_By__c,
+               FEC_Last_Updated_On_View__c,
+               FEC_Last_Updated_By_View__c,
                FEC_Channel__c,
                FEC_Interaction_Subchannel__c
         FROM Case
@@ -693,6 +693,7 @@ public without sharing class FEC_InteractionInforHandler {
             viewMode = c.FEC_Interaction_View_Mode__c;
         }
         
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
         update new Case(
             Id = recordId,
             FEC_Interaction_View_Mode__c = viewMode,
@@ -721,5 +722,39 @@ public without sharing class FEC_InteractionInforHandler {
         List<Case> parentList = [SELECT FEC_ID_Search__c FROM Case WHERE Id = :caseList[0].ParentId LIMIT 1];
         if (parentList.isEmpty()) return null;
         return String.isNotBlank(parentList[0].FEC_ID_Search__c) ? parentList[0].FEC_ID_Search__c : null;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Case getChatInteractionInfo(Id recordId) {
+        List<Case> caseList = [
+            SELECT FEC_Customer_Username__c,
+                   FEC_Interaction_Masked_Phone__c,
+                   FEC_Phone_Number__c,
+                   FEC_Created_On__c,
+                   FEC_Created_by__c,
+                   FEC_External_Interaction_ID__c
+            FROM Case
+            WHERE Id = :recordId
+            LIMIT 1
+        ];
+        return caseList.isEmpty() ? null : caseList[0];
+    }
+
+    @AuraEnabled
+    public static void updateChatInteractionFields(Id recordId, String username, String phone) {
+        if (recordId == null) return;
+        Case c = new Case(Id = recordId);
+        if (String.isNotBlank(username)) c.FEC_Customer_Username__c = username;
+        if (String.isNotBlank(phone)) {
+            c.FEC_Phone_Number__c = phone;
+            c.FEC_Search_Phone_Number__c = phone;
+        }
+        update c;
+    }
+
+    @AuraEnabled
+    public static void saveChatHistory(Id recordId, String chatHistory) {
+        if (recordId == null) return;
+        update new Case(Id = recordId, FEC_Chat_History__c = chatHistory);
     }
 }

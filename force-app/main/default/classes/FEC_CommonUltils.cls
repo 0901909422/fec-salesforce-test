@@ -36,7 +36,12 @@ public with sharing class FEC_CommonUltils {
     }
   }
 
-  public static void notifyUsers(
+  /** Nhãn UI picklist từ master: chỉ dùng FEC_Name_VN__c (không fallback Name). */
+  public static String picklistLabelFromFecNameVn(String fecNameVn) {
+    return fecNameVn != null ? fecNameVn.trim() : '';
+  }
+
+  public static Boolean notifyUsers(
     Set<String> recipientsIds,
     Id targetId,
     String targetPageRef,
@@ -62,8 +67,10 @@ public with sharing class FEC_CommonUltils {
     // Actually send the notification
     try {
       notification.send(recipientsIds);
+      return true;
     } catch (Exception e) {
       System.debug('Problem sending notification: ' + e.getMessage());
+      return false;
     }
   }
 
@@ -96,6 +103,38 @@ public with sharing class FEC_CommonUltils {
    */
   public static Boolean isCaseStatusResolved(String status) {
     return String.isNotBlank(status) && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED);
+  }
+
+  /**
+   * FEC_Notification__c.FEC_Customer_Type__c là Multi-Select Picklist (lưu token cách nhau bởi ;).
+   * Khớp nếu rule chứa token CASE_ALL_REQUEST (FEC_ConstantCommon) hoặc chứa đúng giá trị customer type của Case.
+   */
+  public static Boolean notificationCustomerTypeMatchesCase(
+    String notificationMultiSelectValue,
+    String caseCustomerType
+  ) {
+    if (String.isBlank(notificationMultiSelectValue)) {
+      return false;
+    }
+    if (notificationMultiSelectIncludesToken(notificationMultiSelectValue, FEC_ConstantCommon.CASE_ALL_REQUEST)) {
+      return true;
+    }
+    if (String.isBlank(caseCustomerType)) {
+      return false;
+    }
+    return notificationMultiSelectIncludesToken(notificationMultiSelectValue, caseCustomerType);
+  }
+
+  private static Boolean notificationMultiSelectIncludesToken(String multiSelectStoredValue, String token) {
+    if (String.isBlank(multiSelectStoredValue) || String.isBlank(token)) {
+      return false;
+    }
+    for (String part : multiSelectStoredValue.split(FEC_ConstantCommon.DELIMITER_SEMICOLON)) {
+      if (token.equals(part.trim())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -556,7 +595,7 @@ public with sharing class FEC_CommonUltils {
     } else if (body != null) {
       req.setBody(body);
     }
-    req.setTimeout(120000); // 120 seconds timeout
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX); // 120 seconds timeout
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -583,7 +622,7 @@ public with sharing class FEC_CommonUltils {
         req.setBody(body);
     }
 
-    req.setTimeout(120000);
+    req.setTimeout(FEC_ConstantCommon.HTTP_TIMEOUT_MAX);
 
     Http http = new Http();
     HttpResponse res = http.send(req);
@@ -597,10 +636,37 @@ public with sharing class FEC_CommonUltils {
       String.valueOf(Math.abs(Crypto.getRandomInteger())).substring(0, 6);
   }
 
+  public static String generateTransactionUUID() {
+    return UUID.randomUUID().toString();
+  }
+
   public static String formatCurrency(Decimal amount, Integer scale) {
     if (amount == null)
       return '';
     return amount.setScale(scale).format();
+  }
+
+  /**
+   * Format currency với comma thousand separator và giữ đúng số decimal places.
+   * Khác formatCurrency: .format() bỏ trailing zeros (.00), method này giữ lại.
+   * VD: 36888275.000, scale=2 → "36,888,275.00"
+   */
+  public static String formatCurrencyFixed(Decimal amount, Integer scale) {
+    if (amount == null) return '';
+    Integer sc = (scale == null || scale < 0) ? 0 : scale;
+    String plain = amount.setScale(sc, System.RoundingMode.HALF_UP).toPlainString();
+    Integer dotIdx = plain.indexOf('.');
+    String intPart = dotIdx >= 0 ? plain.substring(0, dotIdx) : plain;
+    String decPart = dotIdx >= 0 ? plain.substring(dotIdx + 1) : '';
+    while (decPart.length() < sc) decPart += '0';
+    // Thêm comma thousand separator vào phần nguyên
+    String result = '';
+    Integer len = intPart.length();
+    for (Integer i = 0; i < len; i++) {
+      if (i > 0 && Math.mod(len - i, 3) == 0) result += ',';
+      result += intPart.substring(i, i + 1);
+    }
+    return sc > 0 ? result + '.' + decPart : result;
   }
 
   /**
@@ -903,9 +969,9 @@ public with sharing class FEC_CommonUltils {
     HttpResponse response,
     String errorMessage
   ){
-    Boolean isSuccess = (response.getStatusCode() == 200);
-    String statusCode =  String.valueOf(response.getStatusCode());
-    String responseBody = response.getBody();
+    Boolean isSuccess = (response != null && response.getStatusCode() == 200);
+    String statusCode = response == null ? '' : String.valueOf(response.getStatusCode());
+    String responseBody = response == null ? '' : response.getBody();
     try {
       FEC_API_Log__c log = new FEC_API_Log__c();
 
@@ -1134,14 +1200,55 @@ public with sharing class FEC_CommonUltils {
   }
 
   /**
-   * Gửi nhiều email cùng lúc (bulk).
+   * Lấy OrgWideEmailAddress Id để gửi notification.
+   * Ưu tiên OrgWide có Purpose = 'Default No-Reply Address', fallback OrgWide đầu tiên.
+   * @return Id của OrgWideEmailAddress, hoặc null nếu không tìm thấy
    */
-  public static void sendEmails(List<Messaging.SingleEmailMessage> emails) {
-    if (emails == null || emails.isEmpty()) return;
+  public static Id getOrgWideEmailIdForNotification() {
     try {
-      Messaging.sendEmail(emails, false);
+      List<OrgWideEmailAddress> owas = [
+        SELECT Id, Address, Purpose
+        FROM OrgWideEmailAddress
+        ORDER BY DisplayName ASC
+        LIMIT 10
+      ];
+      if (owas.isEmpty()) return null;
+      // Ưu tiên Default No-Reply Address
+      for (OrgWideEmailAddress owa : owas) {
+        if (owa.Purpose == 'DefaultNoreply') return owa.Id;
+      }
+      // Fallback: đầu tiên
+      return owas[0].Id;
+    } catch (Exception e) {
+      System.debug('getOrgWideEmailIdForNotification error: ' + e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Build email với OrgWideEmailAddress sender.
+   */
+  public static Messaging.SingleEmailMessage buildEmailWithSender(List<String> toAddresses, String subject, String htmlBody, Id orgWideEmailId) {
+    Messaging.SingleEmailMessage mail = buildEmail(toAddresses, subject, htmlBody);
+    if (orgWideEmailId != null) {
+      mail.setOrgWideEmailAddressId(orgWideEmailId);
+    }
+    return mail;
+  }
+
+  /**
+   * Gửi nhiều email cùng lúc (bulk).
+   * @return Kết quả từng email (cùng thứ tự với tham số), rỗng nếu không gửi hoặc lỗi toàn bộ trước khi có kết quả.
+   */
+  public static List<Messaging.SendEmailResult> sendEmails(List<Messaging.SingleEmailMessage> emails) {
+    if (emails == null || emails.isEmpty()) {
+      return new List<Messaging.SendEmailResult>();
+    }
+    try {
+      return Messaging.sendEmail(emails, false);
     } catch (Exception e) {
       System.debug('FEC_CommonUltils.sendEmails failed: ' + e.getMessage());
+      return new List<Messaging.SendEmailResult>();
     }
   }
 
@@ -1181,29 +1288,51 @@ public with sharing class FEC_CommonUltils {
       return accountNumber;
   }
 
+  private static final Map<String, String> UPPER_NO_ACCENT_CHAR_MAP = new Map<String, String>{
+    'à' => 'a', 'á' => 'a', 'ạ' => 'a', 'ả' => 'a', 'ã' => 'a',
+    'â' => 'a', 'ầ' => 'a', 'ấ' => 'a', 'ậ' => 'a', 'ẩ' => 'a', 'ẫ' => 'a',
+    'ă' => 'a', 'ằ' => 'a', 'ắ' => 'a', 'ặ' => 'a', 'ẳ' => 'a', 'ẵ' => 'a',
+    'À' => 'a', 'Á' => 'a', 'Ạ' => 'a', 'Ả' => 'a', 'Ã' => 'a',
+    'Â' => 'a', 'Ầ' => 'a', 'Ấ' => 'a', 'Ậ' => 'a', 'Ẩ' => 'a', 'Ẫ' => 'a',
+    'Ă' => 'a', 'Ằ' => 'a', 'Ắ' => 'a', 'Ặ' => 'a', 'Ẳ' => 'a', 'Ẵ' => 'a',
+    'è' => 'e', 'é' => 'e', 'ẹ' => 'e', 'ẻ' => 'e', 'ẽ' => 'e',
+    'ê' => 'e', 'ề' => 'e', 'ế' => 'e', 'ệ' => 'e', 'ể' => 'e', 'ễ' => 'e',
+    'È' => 'e', 'É' => 'e', 'Ẹ' => 'e', 'Ẻ' => 'e', 'Ẽ' => 'e',
+    'Ê' => 'e', 'Ề' => 'e', 'Ế' => 'e', 'Ệ' => 'e', 'Ể' => 'e', 'Ễ' => 'e',
+    'ì' => 'i', 'í' => 'i', 'ị' => 'i', 'ỉ' => 'i', 'ĩ' => 'i',
+    'Ì' => 'i', 'Í' => 'i', 'Ị' => 'i', 'Ỉ' => 'i', 'Ĩ' => 'i',
+    'ò' => 'o', 'ó' => 'o', 'ọ' => 'o', 'ỏ' => 'o', 'õ' => 'o',
+    'ô' => 'o', 'ồ' => 'o', 'ố' => 'o', 'ộ' => 'o', 'ổ' => 'o', 'ỗ' => 'o',
+    'ơ' => 'o', 'ờ' => 'o', 'ớ' => 'o', 'ợ' => 'o', 'ở' => 'o', 'ỡ' => 'o',
+    'Ò' => 'o', 'Ó' => 'o', 'Ọ' => 'o', 'Ỏ' => 'o', 'Õ' => 'o',
+    'Ô' => 'o', 'Ồ' => 'o', 'Ố' => 'o', 'Ộ' => 'o', 'Ổ' => 'o', 'Ỗ' => 'o',
+    'Ơ' => 'o', 'Ờ' => 'o', 'Ớ' => 'o', 'Ợ' => 'o', 'Ở' => 'o', 'Ỡ' => 'o',
+    'ù' => 'u', 'ú' => 'u', 'ụ' => 'u', 'ủ' => 'u', 'ũ' => 'u',
+    'ư' => 'u', 'ừ' => 'u', 'ứ' => 'u', 'ự' => 'u', 'ử' => 'u', 'ữ' => 'u',
+    'Ù' => 'u', 'Ú' => 'u', 'Ụ' => 'u', 'Ủ' => 'u', 'Ũ' => 'u',
+    'Ư' => 'u', 'Ừ' => 'u', 'Ứ' => 'u', 'Ự' => 'u', 'Ử' => 'u', 'Ữ' => 'u',
+    'ỳ' => 'y', 'ý' => 'y', 'ỵ' => 'y', 'ỷ' => 'y', 'ỹ' => 'y',
+    'Ỳ' => 'y', 'Ý' => 'y', 'Ỵ' => 'y', 'Ỷ' => 'y', 'Ỹ' => 'y',
+    'đ' => 'd', 'Đ' => 'd'
+  };
+
   /**
-   * Uppercase ASCII; strips common Vietnamese diacritics for default beneficiary display.
+   * Chuyển đổi chuỗi thành chữ in hoa không dấu, dùng Map tĩnh.
+   * @param input Chuỗi cần chuyển đổi
+   * @return Chuỗi đã chuyển đổi, hoặc rỗng nếu input null/blank.
    */
   public static String toUpperNoVietnameseAccent(String input) {
     if (String.isBlank(input)) {
       return '';
     }
-    String s = input.trim().toLowerCase();
-    s = s.replace('à', 'a').replace('á', 'a').replace('ạ', 'a').replace('ả', 'a').replace('ã', 'a');
-    s = s.replace('ầ', 'a').replace('ấ', 'a').replace('ậ', 'a').replace('ẩ', 'a').replace('ẫ', 'a');
-    s = s.replace('ằ', 'a').replace('ắ', 'a').replace('ặ', 'a').replace('ẳ', 'a').replace('ẵ', 'a');
-    s = s.replace('è', 'e').replace('é', 'e').replace('ẹ', 'e').replace('ẻ', 'e').replace('ẽ', 'e');
-    s = s.replace('ề', 'e').replace('ế', 'e').replace('ệ', 'e').replace('ể', 'e').replace('ễ', 'e');
-    s = s.replace('ì', 'i').replace('í', 'i').replace('ị', 'i').replace('ỉ', 'i').replace('ĩ', 'i');
-    s = s.replace('ò', 'o').replace('ó', 'o').replace('ọ', 'o').replace('ỏ', 'o').replace('õ', 'o');
-    s = s.replace('ồ', 'o').replace('ố', 'o').replace('ộ', 'o').replace('ổ', 'o').replace('ỗ', 'o');
-    s = s.replace('ờ', 'o').replace('ớ', 'o').replace('ợ', 'o').replace('ở', 'o').replace('ỡ', 'o');
-    s = s.replace('ù', 'u').replace('ú', 'u').replace('ụ', 'u').replace('ủ', 'u').replace('ũ', 'u');
-    s = s.replace('ừ', 'u').replace('ứ', 'u').replace('ự', 'u').replace('ử', 'u').replace('ữ', 'u');
-    s = s.replace('ỳ', 'y').replace('ý', 'y').replace('ỵ', 'y').replace('ỷ', 'y').replace('ỹ', 'y');
-    s = s.replace('đ', 'd');
-    s = s.replace('\u0300', '').replace('\u0301', '').replace('\u0303', '').replace('\u0309', '').replace('\u0323', '');
-    return s.toUpperCase();
+    List<String> parts = new List<String>();
+    for (Integer i = 0; i < input.length(); i++) {
+      String ch = input.substring(i, i + 1);
+      parts.add(UPPER_NO_ACCENT_CHAR_MAP.containsKey(ch) ? UPPER_NO_ACCENT_CHAR_MAP.get(ch) : ch);
+    }
+    String s = String.join(parts, '');
+    s = s.replaceAll('[\\u0300-\\u036F]', '');
+    return s.toUpperCase().trim();
   }
 
   /**
@@ -1228,5 +1357,101 @@ public with sharing class FEC_CommonUltils {
     // Join back with "_"
     return String.join(parts, '_');
 
+  }
+
+  public static void logException(String author, String func, String errMsg, String stackTrace) {
+    try {
+      FEC_Log__c log = new FEC_Log__c(
+        FEC_Author__c = author,
+        FEC_Function_Name__c = func,
+        FEC_Error_Message__c = errMsg,
+        FEC_Stack_Trace_String__c = stackTrace
+      );
+      insert log;
+    } catch (Exception ex) {
+      System.debug('Log Exception Error:' + ex.getMessage());
+    }
+  }
+
+  public static String buildDatetimeForAPI() {
+    Datetime dt = Datetime.now();
+
+    String base = dt.format('yyyy-MM-dd\'T\'HH:mm:ss');
+    String ms = String.valueOf(dt.millisecond()).leftPad(3, '0');
+    String micro = ms + '000';
+    String tz = dt.format('XXX');
+
+    return base + '.' + micro + tz;
+}
+
+  /**
+   * DateTime trên HTTP header Transfer Call / Pega — khớp Postman: yyyyMMddTHHmmss.SSS GMT.
+   */
+  public static String formatTransferCallRequestDateTime(Datetime dt) {
+    Datetime useDt = dt == null ? Datetime.now() : dt;
+    return useDt.formatGMT(FEC_ConstantCommon.TRANSFER_CALL_DATETIME_FORMAT_GMT) +
+      FEC_ConstantCommon.TRANSFER_CALL_DATETIME_SUFFIX_GMT;
+  }
+
+  /** Rút gọn chuỗi cho log (HTTP body, …). */
+  public static String truncateForLog(String text, Integer maxLen, String truncatedSuffix) {
+    if (String.isBlank(text) || maxLen == null || maxLen <= 0 || text.length() <= maxLen) {
+      return text;
+    }
+    String suffix = truncatedSuffix != null ? truncatedSuffix : '';
+    return text.substring(0, maxLen) + suffix;
+  }
+  
+    
+  /**
+   * Lấy Profile name của current user
+   */
+  public static String getCurrentUserProfileName() {
+    try {
+      User u = [SELECT Profile.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+      return u.Profile.Name;
+    } catch (Exception e) {
+      System.debug('getCurrentUserProfileName error: ' + e.getMessage());
+      return null;
+    }
+  }
+
+  public static Decimal parseAmountSafe(String val) {
+    if (String.isBlank(val)) return null;
+
+    val = val.replace(',', '').trim();
+
+    try {
+        return Decimal.valueOf(val);
+    } catch (Exception e) {
+        System.debug('Invalid decimal for tag Amount: [' + val + ']');
+        return null;
+    }
+  }
+
+  /**
+   * Parse an Object value to Decimal.
+   * Handles both Decimal and String (varchar from OData/PostgreSQL).
+   */
+  public static Decimal parseDecimal(Object val) {
+    if (val == null) return null;
+    if (val instanceof Decimal) return (Decimal) val;
+    String s = String.valueOf(val).trim();
+    return String.isBlank(s) ? null : Decimal.valueOf(s);
+  }
+
+  /**
+   * Parse an Object value to DateTime.
+   * Handles DateTime, epoch millis as String (varchar from OData/PostgreSQL).
+   */
+  public static DateTime parseDateTime(Object val) {
+    if (val == null) return null;
+    if (val instanceof DateTime) return (DateTime) val;
+    String s = String.valueOf(val).trim();
+    if (String.isBlank(s)) return null;
+    if (s.isNumeric()) {
+      return DateTime.newInstance(Long.valueOf(s));
+    }
+    return null;
   }
 }

@@ -16,13 +16,13 @@ public without sharing class FEC_CardLockUnLockCallout {
     // ============================================================
     public class LockUnlockResponse {
         public String pxObjClass;
-        public Sys2 Sys2;
+        public Sys Sys;
 
         public String errorCode;
         public String errorMessage;
     }
 
-    public class Sys2 {
+    public class Sys {
         public String BlockCode;
         public String Code;
         public String DateTimeStr;
@@ -76,7 +76,8 @@ public without sharing class FEC_CardLockUnLockCallout {
         String blockCode,
         String funcCode,
         String last4Digit,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ){
         LockUnlockResponse response = new LockUnlockResponse();
         try{
@@ -91,17 +92,32 @@ public without sharing class FEC_CardLockUnLockCallout {
                 'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON
             };
 
+            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_CardLockUnlock');
+
+            String last4DigitParam = '';
+            String accountNumberParam = '';
+            
+            Boolean useRealData = isTestAPI ||
+                apiSetting?.FEC_Enviroment__c != FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION;
+            
+            if (useRealData) {
+                last4DigitParam = last4Digit;
+                accountNumberParam = accountNumber;
+            } else {
+                last4DigitParam = apiConfig?.FEC_Last_4_Digit_Hard_Code__c;
+                accountNumberParam = apiConfig?.FEC_Account_Number_Hard_Code__c;
+            }
+            
+
             request.body = new Map<String, String>{
                 'BlockCode' => blockCode,
                 'Func' => funcCode,
-                'Last4Digit' => last4Digit,
-                'AccountNumber' => accountNumber
+                'Last4Digit' => last4DigitParam,
+                'AccountNumber' => accountNumberParam
             };
 
             String requestBodyJson = JSON.serialize(request.body);
-
-            FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-            FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_CardLockUnlock');
 
             String endpoint = apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c;
                 
@@ -137,8 +153,9 @@ public without sharing class FEC_CardLockUnLockCallout {
 
     public static Boolean isSuccess(LockUnlockResponse response){
         return response != null
-            && response.Sys2 != null
-            && response.Sys2.Code == '1';
+            && response.Sys != null
+            && (response.Sys.Code == '1' // LOCK_SUCCESS
+                || response.Sys.Code == '2'); // UNLOCK_SUCCESS
     }
 
     // ============================================================

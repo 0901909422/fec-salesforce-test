@@ -1,4 +1,7 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import FEC_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Account_or_Contract__c';
+import FEC_CONTRACT_NUMBER from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import loadSecondaryLoanInfo from '@salesforce/apex/FEC_SecondaryInfoLoanAccountController.loadSecondaryLoanInfo';
 import loadSecondaryLoanCollections from '@salesforce/apex/FEC_SecondaryInfoLoanAccountController.loadSecondaryLoanCollections';
 import loadSecondaryLoanSales from '@salesforce/apex/FEC_SecondaryInfoLoanAccountController.loadSecondaryLoanSales';
@@ -44,6 +47,9 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
     @track isLoadingDisbursement = false;
     @track disbursementInitError = false;
 
+    /** Tránh load trùng LDS; đổi khi đổi hợp đồng Loan. */
+    _caseContractSignature;
+
     customLabel = {
         disbursementLabel: FEC_Disbursement_Label,
         collectionInfoLabel: FEC_Collections_Info_Label,
@@ -51,7 +57,24 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         msgErrorAPI: FEC_MSG_Error_API_Label,
     };
 
-    connectedCallback() {
+    @wire(getRecord, {
+        recordId: '$recordId',
+        fields: [FEC_ACCOUNT_OR_CONTRACT, FEC_CONTRACT_NUMBER],
+    })
+    wiredCaseForLoanRefresh({ data, error }) {
+        if (!this.recordId || !data || error) {
+            return;
+        }
+        const historyId = getFieldValue(data, FEC_ACCOUNT_OR_CONTRACT);
+        const contractNo = getFieldValue(data, FEC_CONTRACT_NUMBER);
+        const signature = `${this.recordId}|${historyId || ''}|${contractNo || ''}`;
+        if (this._caseContractSignature === signature) {
+            return;
+        }
+        this._caseContractSignature = signature;
+        this.collectionsStage = S_IDLE;
+        this.salesStage = S_IDLE;
+        this.accountData = null;
         this.loadDisbursement();
     }
 
@@ -92,16 +115,10 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         };
     }
 
-    handleSectionToggle(event) {
-        const raw = event.detail?.openSections;
-        let next = [];
-        if (raw == null) {
-            next = [];
-        } else if (Array.isArray(raw)) {
-            next = [...raw];
-        } else {
-            next = [raw];
-        }
+    toggleSection(sectionName) {
+        const prev = Array.isArray(this.activeSections) ? [...this.activeSections] : [];
+        const idx = prev.indexOf(sectionName);
+        const next = idx > -1 ? prev.filter((s) => s !== sectionName) : [...prev, sectionName];
         this.activeSections = next;
 
         if (next.includes(FEC_Collections_Info_Label)) {
@@ -110,6 +127,73 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
         if (next.includes(FEC_Sales_Info_Label)) {
             this.ensureSalesLoaded();
         }
+    }
+
+    handleDisbursementToggle() {
+        this.toggleSection(FEC_Disbursement_Label);
+    }
+
+    handleCollectionsToggle() {
+        this.toggleSection(FEC_Collections_Info_Label);
+    }
+
+    handleSalesToggle() {
+        this.toggleSection(FEC_Sales_Info_Label);
+    }
+
+    get isDisbursementOpen() {
+        return this.activeSections.includes(FEC_Disbursement_Label);
+    }
+
+    get isCollectionsOpen() {
+        return this.activeSections.includes(FEC_Collections_Info_Label);
+    }
+
+    get isSalesOpen() {
+        return this.activeSections.includes(FEC_Sales_Info_Label);
+    }
+
+    get disbursementIconName() {
+        return this.isDisbursementOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get collectionsIconName() {
+        return this.isCollectionsOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get salesIconName() {
+        return this.isSalesOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    get disbursementSectionClass() {
+        return `slds-accordion__section${this.isDisbursementOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get collectionsSectionClass() {
+        return `slds-accordion__section${this.isCollectionsOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get salesSectionClass() {
+        return `slds-accordion__section${this.isSalesOpen ? ' slds-is-open' : ''}`;
+    }
+
+    get disbursementContentClass() {
+        return this.isDisbursementOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get collectionsContentClass() {
+        return this.isCollectionsOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get salesContentClass() {
+        return this.isSalesOpen ? 'slds-accordion__content' : 'slds-accordion__content slds-hide';
+    }
+
+    get disbursementHeaderText() {
+        if (this.disbursementInitError) {
+            return `${this.customLabel.disbursementLabel} - ${this.customLabel.msgErrorAPI}`;
+        }
+        return this.customLabel.disbursementLabel;
     }
 
     ensureCollectionsLoaded() {
@@ -152,25 +236,12 @@ export default class Fec_SecondaryInfoLoanAccount extends LightningElement {
             });
     }
 
-    get disbursementSectionLabel() {
-        if (this.disbursementInitError) {
-            return `${this.customLabel.disbursementLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
+    get collectionsSectionLabelError() {
+        return this.collectionsStage === S_ERROR ? this.customLabel.msgErrorAPI : null;
     }
 
-    get collectionsSectionLabel() {
-        if (this.collectionsStage === S_ERROR) {
-            return `${this.customLabel.collectionInfoLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
-    }
-
-    get salesSectionLabel() {
-        if (this.salesStage === S_ERROR) {
-            return `${this.customLabel.salesInfoLabel} - ${this.customLabel.msgErrorAPI}`;
-        }
-        return null;
+    get salesSectionLabelError() {
+        return this.salesStage === S_ERROR ? this.customLabel.msgErrorAPI : null;
     }
 
     get isLoadingCollections() {

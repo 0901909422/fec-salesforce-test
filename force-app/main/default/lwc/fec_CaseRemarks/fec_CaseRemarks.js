@@ -3,12 +3,17 @@ import { LightningElement, api, track } from 'lwc';
 import getRemarklst from '@salesforce/apex/FEC_CaseRemarkController.getRemarklst';
 import createRemark from '@salesforce/apex/FEC_CaseRemarkController.createRemark';
 import submitRemark from '@salesforce/apex/FEC_CaseRemarkController.submitRemark';
+// tungnm37: import submitRemarkDirect cho COF/GSR (nhận content trực tiếp, không đọc từ draft)
+import submitRemarkDirect from '@salesforce/apex/FEC_CaseRemarkController.submitRemarkDirect';
 
 import { formatDateTime } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 
 export default class Fec_CaseRemarks extends LightningElement {
   @api caseId;
+
+  // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
+  @api isCofGsr = false;
 
   _isEdit = false;
   @api get isEdit() {
@@ -81,6 +86,12 @@ export default class Fec_CaseRemarks extends LightningElement {
     return true;
   }
 
+  // tungnm37 thêm: lấy giá trị remark hiện tại để truyền vào Apex khi submit
+  @api getRemarkValue() {
+    const textarea = this.template.querySelector('lightning-textarea');
+    return (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
+  }
+
   @api async createRemark(stageNameFromClient) {
     const textarea = this.template.querySelector('lightning-textarea');
     const remarkText =
@@ -103,6 +114,20 @@ export default class Fec_CaseRemarks extends LightningElement {
       caseId: this.caseId,
       stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
     });
+    // tungnm37: refresh history sau khi submit remark
+    this.loadRemarks();
+  }
+
+  // tungnm37: submitRemarkDirect - dùng cho COF/GSR, truyền content trực tiếp tránh duplicate do draft bị clear
+  @api async submitRemarkDirect(stageNameFromClient) {
+    const textarea = this.template.querySelector('lightning-textarea');
+    const remarkText = (textarea && textarea.value) || this.draftRemarkValue || STR_EMPTY;
+    await submitRemarkDirect({
+      caseId: this.caseId,
+      stageNameFromClient: stageNameFromClient ?? STR_EMPTY,
+      remarkContent: remarkText
+    });
+    this.loadRemarks();
   }
 
   handleRemarkInput(e) {
