@@ -4,7 +4,7 @@ import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'light
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatCurrency0 } from 'c/fec_CommonUtils';
-import { formatDateField } from 'c/fec_DateFormatter';
+import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
@@ -200,7 +200,8 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (!Array.isArray(this.interactions)) {
             return [];
         }
-        return this.interactions.map((row, idx) => ({
+        const sorted = sortByDefaultDateFieldDesc(this.interactions, 'InteractedDate');
+        return sorted.map((row, idx) => ({
             Id: `ci-${idx}`,
             InteractedAgentsID: row?.InteractedAgentsID ?? STR_EMPTY,
             InteractedDate: formatDateField(row?.InteractedDate),
