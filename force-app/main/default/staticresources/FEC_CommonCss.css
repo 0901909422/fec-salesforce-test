@@ -46,6 +46,11 @@ c-fec_-noc-general-assignment .slds-accordion__summary {
   border-radius: 4px;
 }
 
+c-fec_-noc-routing-assignment .slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px;
+}
+
 
 c-fec_-noc-general-assignment .slds-card__header {
   background-color: #f3f3f3;
@@ -64,6 +69,18 @@ c-fec_-general-assignment-history .slds-card__header {
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
+c-fec_-routing-assignment-history .slds-card {
+  border-radius: 0.5rem;
+  border: 1px solid #dddbda;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+c-fec_-routing-assignment-history .slds-card__header {
+  background-color: #ffffff;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
 c-fec_-general-assignment-detail-simple .slds-card {
   border-radius: 0.5rem;
   border: 1px solid #dddbda;
@@ -74,6 +91,20 @@ c-fec_-general-assignment-detail-simple .slds-card {
 c-fec_-general-assignment-detail-simple .slds-card__header {
   background-color: #f3f3f3;
   border-radius: 0.5rem 0.5rem 0 0;
+}
+
+c-fec_-routing-assignment-detail-simple .slds-card {
+  border-radius: 0.5rem;
+  border: 1px solid #dddbda;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+c-fec_-routing-assignment-detail-simple .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  min-height: 2.75rem;
 }
 /* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
 c-fec-email-section .slds-accordion__summary {
@@ -115,6 +146,24 @@ c-lwc-multi-lookup .slds-input-has-icon .slds-input__icon.channel-icon {
 /* lwcMultiLookup: set 1px padding on lightning-icon inside selected pills */
 c-lwc-multi-lookup lightning-pill lightning-icon {
   padding: 1px !important;
+}
+
+/* Fix edit form grid layout for RA and GA detail simple (LWC shadow DOM) */
+c-fec_-routing-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap,
+c-fec_-general-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+c-fec_-routing-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap > .slds-col.slds-size_1-of-2,
+c-fec_-general-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap > .slds-col.slds-size_1-of-2 {
+  flex: 0 0 50% !important;
+  max-width: 50% !important;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  box-sizing: border-box;
 }
 
 c-lwc-multi-lookup lightning-input input {

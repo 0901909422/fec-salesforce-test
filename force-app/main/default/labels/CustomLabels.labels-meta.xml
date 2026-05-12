@@ -15482,7 +15482,7 @@
         <shortDescription>Disbursement Date Required Message</shortDescription>
         <value>DISB_DT is required</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>vi</language>
         <protected>false</protected>
@@ -15565,6 +15565,62 @@
         <protected>false</protected>
         <shortDescription>GA Code Required Field</shortDescription>
         <value>General Assignment Code là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Success Title</shortDescription>
+        <value>Thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Create_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Create Success Message</shortDescription>
+        <value>Đã tạo Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Update_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Update Success Message</shortDescription>
+        <value>Đã cập nhật Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Error</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Error Title</shortDescription>
+        <value>Lỗi</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Customer_Type_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Customer Type Required</shortDescription>
+        <value>Vui lòng chọn Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Channel_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Channel Required</shortDescription>
+        <value>Vui lòng chọn ít nhất một Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Team_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Team Required</shortDescription>
+        <value>Vui lòng chọn Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Queue_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Queue Required</shortDescription>
+        <value>Vui lòng chọn Queue</value>
     </labels>
 
 </CustomLabels>

@@ -228,7 +228,13 @@ export default class Fec_NocGeneralAssignment extends NavigationMixin(LightningE
             { label: 'Channel', fieldName: 'Channel', type: 'text' },
             { label: 'Stage', fieldName: 'Stage', type: 'text' },
             { label: 'General Assignment Name', fieldName: 'GeneralAssignmentName', type: 'text' },
-            { label: 'Status', fieldName: 'Active', type: 'boolean' }
+            { label: 'Status', fieldName: 'Active', type: 'boolean' },
+            {
+                type: 'action',
+                typeAttributes: {
+                    rowActions: [{ label: 'View', name: 'view_detail' }]
+                }
+            }
         ];
     }
 

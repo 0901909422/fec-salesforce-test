@@ -1,0 +1,129 @@
+<template>
+    <article class="slds-card">
+        <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title"><span>Detail Information</span></h2>
+                </div>
+            </header>
+        </div>
+        <div class="slds-card__body">
+            <template if:true={isLoaded}>
+                <!-- VIEW MODE -->
+                <template if:false={_isEditMode}>
+                    <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-vertical_small">
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">RA Name</span>
+                                <span class="row-value">{record.Name}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">Customer Type</span>
+                                <span class="row-value">{record.FEC_Customer_Type__c}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">Channel</span>
+                                <span class="row-value">{record.FEC_Channel__c}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">Team</span>
+                                <span class="row-value">{record.FEC_Team__c}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">Queue</span>
+                                <span class="row-value">{record.FEC_Queue__c}</span>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                            <div class="row-item">
+                                <span class="row-label">Active</span>
+                                <span class="row-value">
+                                    <template if:true={record.FEC_Active__c}>
+                                        <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                    </template>
+                                    <template if:false={record.FEC_Active__c}>
+                                        <span>—</span>
+                                    </template>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- EDIT MODE -->
+                <template if:true={_isEditMode}>
+                    <div class="slds-p-around_medium">
+                        <div class="form-grid">
+                            <!-- Row 1: RA Name | Customer Type -->
+                            <div class="form-label">RA Name</div>
+                            <div class="form-value">{record.Name}</div>
+                            <div class="form-label">Customer Type</div>
+                            <div class="form-value">
+                                <lightning-combobox label="" value={editCustomerType} options={customerTypeOptions} onchange={handleCustomerTypeChange}></lightning-combobox>
+                            </div>
+                            <!-- Row 2: Channel | Team -->
+                            <div class="form-label">Channel</div>
+                            <div class="form-value">
+                                <div class="ra-search-wrap">
+                                    <div class="slds-input-has-icon slds-input-has-icon_right">
+                                        <lightning-icon icon-name="utility:search" size="x-small" class="slds-icon slds-input__icon slds-input__icon_right"></lightning-icon>
+                                        <input type="text" class="slds-input" placeholder="Search Channel..."
+                                            value={channelSearchTerm}
+                                            oninput={handleChannelSearch}
+                                            onfocus={handleChannelFocus}
+                                            onblur={handleChannelBlur}
+                                            autocomplete="off" />
+                                    </div>
+                                    <template if:true={showChannelDropdown}>
+                                        <div class="ra-dropdown">
+                                            <ul class="slds-listbox slds-listbox_vertical">
+                                                <template for:each={filteredChannelOptions} for:item="opt">
+                                                    <li key={opt.value} class="ra-option" data-value={opt.value} onmousedown={handleChannelSelect}>{opt.label}</li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </template>
+                                    <template if:true={editChannelIds.length}>
+                                        <div class="slds-m-top_x-small">
+                                            <template for:each={editChannelIds} for:item="ch">
+                                                <lightning-pill key={ch} label={ch} name={ch} onremove={handleChannelRemove}></lightning-pill>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="form-label">Team</div>
+                            <div class="form-value">
+                                <lightning-combobox label="" value={editTeam} options={teamOptions} onchange={handleTeamChange}></lightning-combobox>
+                            </div>
+                            <!-- Row 3: Queue | Active -->
+                            <div class="form-label">Queue</div>
+                            <div class="form-value">
+                                <lightning-combobox label="" value={editQueue} options={queueOptions} onchange={handleQueueChange}></lightning-combobox>
+                            </div>
+                            <div class="form-label">Active</div>
+                            <div class="form-value">
+                                <input type="checkbox" checked={editActive} onchange={handleActiveChange} />
+                            </div>
+                        </div>
+                        <div class="slds-text-align_center slds-m-top_medium">
+                            <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                            <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+                        </div>
+                    </div>
+                </template>
+            </template>
+            <template if:false={isLoaded}>
+                <lightning-spinner size="small"></lightning-spinner>
+            </template>
+        </div>
+    </article>
+</template>
