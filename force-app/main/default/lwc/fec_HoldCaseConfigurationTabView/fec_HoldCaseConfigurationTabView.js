@@ -1,3 +1,16 @@
+/****************************************************************************************
+ * File Name    : Fec_HoldCaseConfigurationTabView.js
+ * Author       : Quangdv7
+ * Date         : 2026-05-11
+ * Description  : Call data object Hold Case Config
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-05-11    Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference,NavigationMixin } from 'lightning/navigation';
 

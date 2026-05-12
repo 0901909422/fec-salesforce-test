@@ -32,6 +32,17 @@
 
                     </div>
                 </div>
+                <!-- RIGHT ACTION -->
+                <div class="slds-page-header__col-actions">
+                    <template if:true={showEditButton}>
+                        <lightning-button
+                            label="Edit"
+                            variant="neutral"
+                            icon-name="utility:edit"
+                            onclick={handleEdit}>
+                        </lightning-button>
+                    </template>
+                </div>
             </div>
         </div>
 
