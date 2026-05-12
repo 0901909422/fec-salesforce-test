@@ -12,12 +12,31 @@ public class FEC_CustomSyncValidator {
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix');
         Boolean metadataMissing = apiConfig == null || String.isBlank(apiConfig.FEC_Endpoint__c);
 
+        // 3. Check WhatSync__c exists in FEC_Business_Process__c
+        Set<String> whatSyncCodes = new Set<String>();
+        for (CustomSync__c rec : records) {
+            if (String.isNotBlank(rec.WhatSync__c)) {
+                whatSyncCodes.add(rec.WhatSync__c);
+            }
+        }
+        Set<String> validCodes = new Set<String>();
+        if (!whatSyncCodes.isEmpty()) {
+            for (FEC_Business_Process__c bp : [
+                SELECT Id, FEC_Code__c FROM FEC_Business_Process__c WHERE FEC_Code__c IN :whatSyncCodes
+            ]) {
+                validCodes.add(bp.FEC_Code__c);
+            }
+        }
+
         for (CustomSync__c rec : records) {
             if (settingMissing) {
                 rec.addError('CustomSyncSetting is incomplete. Please ensure Endpoint, ApiKey, and LimitQuanitySync are configured.');
             }
             if (metadataMissing) {
                 rec.addError('Custom Metadata FEC_API_Config "FEC_Custom_Sync_Bix" is missing or has no Endpoint.');
+            }
+            if (String.isNotBlank(rec.WhatSync__c) && !validCodes.contains(rec.WhatSync__c)) {
+                // rec.addError('What Sync "' + rec.WhatSync__c + '" does not exist in Business Process.');
             }
 
             // 3. Compare keys between RequestBodyMapping__c and MappingDataType__c

@@ -12,6 +12,8 @@ Checklist
         - Mapping Data Type: là json với cấu trức Map<'FieldBix','DataType'> DataType của field dưới Bix
         - PK Column: là Table của Bix
         - TargetObject: là lấy data từ object nào 
+    - WhatSync__c phải giống với FEC_Business_Process__r.FEC_Code__c
+        - điều kiện quét record: FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName
 - Tất cả sử dụng permision FEC_Common_System_Setting
 
 
