@@ -27,6 +27,8 @@
 	    <members>FEC_GetCardSecInfo</members>
 	    <members>FEC_MainInfoAccountController</members>
 	    <members>FEC_SecondaryInfoAccountController</members>
+	    <members>FEC_IncorrectPaymentController</members>
+	    <members>FEC_RefundRequestController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
