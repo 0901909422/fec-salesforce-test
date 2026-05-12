@@ -292,9 +292,12 @@ public without sharing class FEC_CaseBusinessService {
       String actualBusinessProcessCode = selectedCase.FEC_Actual_Nature_of_Case__r == null
         ? null
         : selectedCase.FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r?.FEC_Code__c;
-      Boolean isActualNatureGsr =
+      Boolean isActualNatureGsrCof =
         String.isNotBlank(actualBusinessProcessCode) &&
-        actualBusinessProcessCode.toUpperCase().contains('GSR');
+        (actualBusinessProcessCode.toUpperCase().contains('GSR') || actualBusinessProcessCode.toUpperCase().contains('COF')) ;
+      Boolean isActualNatureGsrOnly =
+        String.isNotBlank(actualBusinessProcessCode) &&
+        (actualBusinessProcessCode.toUpperCase().contains('GSR')) ;
       // 06/04/2026 adhoc for sub code
       result.subCodeCode = FEC_ConstantCommon.STR_EMPTY;
       if (String.isNotBlank(subCodeId)) {
@@ -403,9 +406,10 @@ public without sharing class FEC_CaseBusinessService {
       String natureOfCaseQuery;
       String selectedNatureOfCaseId = selectedCase.FEC_Actual_Nature_of_Case__c;
       // GSR: luôn áp dụng rule subsection (ẩn Property Info khi NOC không đổi so với history) kể cả lần tải đầu không truyền NOC từ UI.
-      Boolean isGsrNocDisplayMode = isActualNatureGsr;
+      Boolean isGsrCofNocDisplayMode = isActualNatureGsrCof;
+      Boolean isGsrNocOnlyDisplayMode = isActualNatureGsrOnly;
       Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
-      if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
+      if (isGsrCofNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
         // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
         useActualNatureAndSettingObj = false;
       }
@@ -624,30 +628,6 @@ public without sharing class FEC_CaseBusinessService {
 
         List<SObject> masterDatalst = Database.query(soql);
 
-        if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
-          System.debug(
-            LoggingLevel.DEBUG,
-            '[GSR-NOC-DIFF] Đổi NOC: từ baseline(flow)=[' +
-              flowHistProductTypeId +
-              '|' +
-              flowHistCategoryId +
-              '|' +
-              flowHistSubCategoryId +
-              '|' +
-              flowHistSubCodeId +
-              '] sang resolve=[' +
-              productTypeId +
-              '|' +
-              categoryId +
-              '|' +
-              subCategoryId +
-              '|' +
-              subCodeId +
-              '] natureOfCaseId=' +
-              selectedNatureOfCaseId
-          );
-        }
-
         // ====================================== CREATE BUSINESS ============================
         // Retrieve Data
         Map<String, Set<String>> objToFieldlstMap = new Map<String, Set<String>>();
@@ -680,8 +660,9 @@ public without sharing class FEC_CaseBusinessService {
           String itemType = (String) item.get('FEC_Type__c');
 
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
-          if (isGsrNocDisplayMode) {
+          if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
+
               //Có khác: 
               if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
                 continue;
