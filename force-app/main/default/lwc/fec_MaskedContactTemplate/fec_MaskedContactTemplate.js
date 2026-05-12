@@ -15,8 +15,8 @@ export default class Fec_MaskedContactTemplate extends LightningElement {
 
   get iconName() {
     return this.isVisible
-      ? ICON_HIDE
-      : ICON_PREVIEW;
+      ?ICON_PREVIEW 
+      :ICON_HIDE;
   }
 
   handleToggle() {

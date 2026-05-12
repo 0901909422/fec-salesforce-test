@@ -50,6 +50,7 @@ import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.ge
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
+import { formatDateFlexibleVN } from "c/fec_CommonUtils";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
 import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
 import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
@@ -193,12 +194,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -261,12 +257,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        }, 
+        type: "text", 
         sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -301,13 +292,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
       { label: "Sold Date", fieldName: "SoldDate", sortable: true,
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            dateStyle: "short"
-        },
+        type: "text", 
        },
       { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
@@ -332,12 +317,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       {
         label: "Buyer NID",
@@ -364,12 +344,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       {
         label: "Effective Date",
         fieldName: "EffectiveDate",
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true,
       },
       { label: "Status", fieldName: "Status", sortable: true },
@@ -391,7 +366,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         type: "maskedToggle",
         sortable: true,
       },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Date of Birth", fieldName: "DateOfBirth", type: "text", sortable: true },
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
       {
         label: "Account Number",
@@ -993,11 +968,11 @@ async fetchBancaInsurance(ids) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.StatusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1032,11 +1007,11 @@ async fetchBancaInsuranceByPhone(phones) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.statusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1072,6 +1047,7 @@ async fetchBancaInsuranceByPhone(phones) {
     });
     return Array.from(map.values());
   }
+
 
   preferInsuranceRow(a, b) {
     const phoneA = a?.Phone && String(a.Phone).trim();
@@ -1167,7 +1143,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             AccountNumber: accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
@@ -1191,7 +1167,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             ContractNumber: contractNum,
                             ProductCode: app.Product,
                             ContractStatus: app.Status,
@@ -1500,7 +1476,7 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.AccountNumber] || null,
       _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
@@ -1509,17 +1485,10 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.ContractNumber] || null,
       _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
-  _formatDate(dateStr) {
-    if (!dateStr) return '';
-    // Handle YYYY-MM-DD format
-    const parts = dateStr.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    return dateStr;
-  }
 
   // Returns interleaved array: each data row followed by its history row (if expanded)
   // Used for Account/Contract Search to render history inline
@@ -1554,23 +1523,28 @@ hasAnySearchCriteria(params) {
     if (!action || !action.name) {
       return;
     }
-    let id = row;
-    console.log('Row JSON yy1:', JSON.stringify(row, null, 2));
-    if (action.name == "create_history") {
-      switch (action.label.fieldName) {
-        case "AccountNumber":
-          row = this.cardData.find(r => r.AccountNumber == row);
-          break;
-        case "ContractNumber":
-          row = this.loanContractData.find(r => r.ContractNumber == row);
-          break;
-        case "UserId":
-          row = this.insuranceData.find(r => r.UserId == row);
-          break;
+
+    let id;
+    // Resolve full row object and identifier string
+    if (typeof row === 'string') {
+      id = row;
+      const type = action.type;
+      let foundRow;
+      if (type === 'Card') {
+        foundRow = this.cardData.find(r => r.AccountNumber === id);
+      } else if (type === 'Loan') {
+        foundRow = this.loanContractData.find(r => r.ContractNumber === id) || 
+                   this.loanB2Data.find(r => r.ContractNumber === id) || 
+                   this.loanCash24Data.find(r => r.ContractNumber === id);
+      } else if (type === 'Insurance') {
+        foundRow = this.insuranceData.find(r => r.UserId === id);
       }
-    } 
+      if (foundRow) row = foundRow;
+    } else {
+      id = row?.AccountNumber || row?.ContractNumber || row?.UserId || row?.id;
+    }
+
     let cifNumber = row?.CIFNumber ?? '';
-    console.log('cifNumber ', cifNumber );
     
     switch (action.name) {
       case "create_history": {
@@ -1579,7 +1553,7 @@ hasAnySearchCriteria(params) {
             new CustomEvent("rowselected", {
               detail: {
                 fullName: row?.FullName || "",
-                nationalId: row?.AccountNumber || row?.ContractNumber || "",
+                nationalId: id || "",
                 cifNumber: cifNumber
               },
               bubbles: true,
@@ -1632,18 +1606,11 @@ hasAnySearchCriteria(params) {
           ) {
             customerName = this._customers[customerIndex].FullName;
           }
-          isListView = window.location.href.includes("/FEC_Customer_Search")
-            ? false
-            : !this.recordId;
+          // Align isListView for Insurance search tab to ensure Internal Case and navigation
+          isListView = !this.recordId;
         }
 
-        // [CHANGE][Author : LongNH76] Ưu tiên phone từ dòng kết quả; fallback phone user nhập để tránh trống FEC_Search_Phone_Number__c.
-        // Old behavior (kept for reference):
-        // phone: row?.Phone
-        const resolvedPhone =
-          (row?.Phone && String(row.Phone).trim()) ||
-          (this.phoneNumber && String(this.phoneNumber).trim()) ||
-          null;
+        const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
 
         createHistory({
           value: id,
@@ -1657,23 +1624,14 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListView,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: row?.BuyerNID || '', // Only for Insurance
+          buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
         })
           .then(async (res) => {
-            // const payload = {
-            //     isModeEdit: true
-            // };
-            this.showToast(
-              "Success",
-              "History created successfully",
-              "success",
-            );
-            await this._pollHistoryReady(res);
+            this.showToast("Success", "History created successfully", "success");
+            
             if (this.recordId) {
-                //publish(this.messageContext, IS_MODE_EDIT, payload);
                 this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-                // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
                 const devName = await getCaseRecordTypeDevName({ caseId: res });
@@ -1966,11 +1924,11 @@ hasAnySearchCriteria(params) {
                       UserId: element.userID,
                       FullName: element.buyerName,
                       BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
+                      DateOfBirth: formatDateFlexibleVN(element.buyerDOB),
                       ProductName: element.productNameEn,
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
+                      EffectiveDate:  formatDateFlexibleVN(element.effectiveDate),
                       Status:  element.StatusDisplay,
                       PolicyNumber:  element.policyNumber,
                     })
