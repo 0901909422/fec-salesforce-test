@@ -55,16 +55,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   messageContext;
 
   // tungnm37 thêm: wire lấy businessCode để check COF/GSR
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: [CASE_BUSINESS_PROCESS_CODE],
-  })
+  @wire(getRecord, { recordId: '$recordId', fields: [CASE_BUSINESS_PROCESS_CODE] })
   wiredCase({ data }) {
     if (data) {
       const code = getFieldValue(data, CASE_BUSINESS_PROCESS_CODE);
-      this._isCofGsr =
-        typeof code === "string" &&
-        (code.startsWith("COF") || code.startsWith("GSR"));
+      this._isCofGsr = typeof code === 'string' && (code.startsWith('COF') || code.startsWith('GSR'));
     }
   }
 
@@ -132,10 +127,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
-          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
-          .filter(
-            (item) => !this._isCofGsr || item.Remark_Type__c !== "Assignment",
-          )
+          // tungnm37: ẩn Assignment Remark của Stage 1 (Stage 1 chỉ hiện Case Remark)
+          .filter((item) => {
+            if (item.FEC_Remark_Type__c === 'Assignment') {
+              const stageName = item.FEC_Stage_Name__c || '';
+              return !/stage\s*1/i.test(stageName);
+            }
+            return true;
+          })
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -397,8 +396,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
       if (!(isRoutingMode && hasManualItems)) {
-        isAllValid = false;
-        this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
+      isAllValid = false;
+      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       }
     }
 
@@ -429,7 +428,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       if (caseBusinessEle && caseRemarksEle) {
         caseBusinessEle.remarkContent = caseRemarksEle.getRemarkValue();
       }
-
+      const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode || this._isCofGsr;
+      // tungnm37: COF/GSR Stage 2 → Apex đã tạo Case Remark → LWC không gọi submitRemarkDirect
+      // Stage 1 → Apex không tạo Case Remark → LWC phải gọi submitRemarkDirect
+      const isStage1 = /stage\s*1/i.test(stageName);
+      // skipSubmitRemark: routing mode + không phải Stage 1 → Apex đã xử lý Case Remark
+      const skipSubmitRemark = isRoutingModeSubmit && !isStage1;
+      console.log('[FEC_DEBUG] handleSubmit stageName=' + stageName + ' isRoutingMode=' + isRoutingModeSubmit + ' isStage1=' + isStage1 + ' skipSubmitRemark=' + skipSubmitRemark);
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
@@ -443,10 +448,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37: luôn dùng submitRemarkDirect - truyền content trực tiếp, tránh duplicate do draft bị clear
-      const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      await caseRemarksEle.submitRemarkDirect(stageName);
-      // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
+      // tungnm37: COF/GSR Stage 2 → Apex đã tạo Case Remark → skip submitRemarkDirect
+      const hasManualItemsSubmit = skipSubmitRemark; // alias for clarity
+      if (!skipSubmitRemark) {
+        await caseRemarksEle.submitRemarkDirect(stageName);
+      }      // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
       this._isCofGsr = isRoutingModeSubmit;
       this.loadRemarkHistory();
 

@@ -522,12 +522,17 @@
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
+        <members>FEC_Incorrect_Payment_Info__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
         <name>AuraDefinitionBundle</name>
     </types>
+    <types>
+		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
+		<name>Layout</name>
+	</types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>

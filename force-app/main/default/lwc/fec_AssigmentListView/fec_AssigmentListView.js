@@ -7,37 +7,26 @@ import { getUsernameBeforeAt, formatDateTime } from "c/fec_CommonUtils";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import { NavigationMixin } from "lightning/navigation";
+
 import {
   getFocusedTabInfo,
   openSubtab,
   setTabLabel,
-  setTabIcon,
 } from "lightning/platformWorkspaceApi";
 
 import { urlCmpWithRecordId } from "c/fec_CommonUtils";
 
-//Custom labels
+// Custom labels
 import LABEL_ASSIGNMENT_LIST from "@salesforce/label/c.FEC_Assignment_List";
-
 import LABEL_ASSIGNMENT_ID from "@salesforce/label/c.FEC_Assignment_Id";
-
 import LABEL_STAGE_NAME from "@salesforce/label/c.FEC_Label_Stage_Name";
-
-// import LABEL_ASSIGNMENT_TYPE from "@salesforce/label/c.FEC_Assignment_Type";
-
 import LABEL_ASSIGNMENT_STATUS from "@salesforce/label/c.FEC_Assignment_Status";
-
 import LABEL_USER from "@salesforce/label/c.FEC_User_Label";
-
 import LABEL_USER_ROLE from "@salesforce/label/c.CS_OrgChart_Table_UserTable_UserRole_Column";
-
 import LABEL_DATE_TIME from "@salesforce/label/c.FEC_Notification_History_Sort_DateTime";
-
 import LABEL_VIEW_ALL from "@salesforce/label/c.FEC_View_All_Btn_Label";
-
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 
-// import FEC_Error_Message from "@salesforce/label/c.FEC_Error_Message";
 export default class Fec_AssigmentListView extends NavigationMixin(
   LightningElement,
 ) {
@@ -53,13 +42,61 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     LABEL_ASSIGNMENT_LIST,
     LABEL_ASSIGNMENT_ID,
     LABEL_STAGE_NAME,
-    // LABEL_ASSIGNMENT_TYPE,
     LABEL_ASSIGNMENT_STATUS,
     LABEL_USER,
     LABEL_USER_ROLE,
     LABEL_DATE_TIME,
     LABEL_VIEW_ALL,
   };
+
+  columns = [
+    {
+      label: LABEL_ASSIGNMENT_ID,
+      fieldName: "assignmentUrl",
+      type: "url",
+      typeAttributes: {
+        label: {
+          fieldName: "assignmentId",
+        },
+        target: "_self",
+      },
+    },
+    {
+      label: "Assignment Type",
+      fieldName: "assignmentType",
+      type: "text",
+    },
+    {
+      label: "Assignment Name",
+      fieldName: "assignmentName",
+      type: "text",
+    },
+    {
+      label: LABEL_ASSIGNMENT_STATUS,
+      fieldName: "assignmentStatus",
+      type: "text",
+    },
+    {
+      label: LABEL_STAGE_NAME,
+      fieldName: "stageName",
+      type: "text",
+    },
+    {
+      label: LABEL_USER,
+      fieldName: "user",
+      type: "text",
+    },
+    {
+      label: LABEL_USER_ROLE,
+      fieldName: "userRole",
+      type: "text",
+    },
+    {
+      label: LABEL_DATE_TIME,
+      fieldName: "dateTime",
+      type: "text",
+    },
+  ];
 
   @wire(getAssignmentsForView, {
     caseId: "$recordId",
@@ -70,17 +107,17 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     this.isLoading = true;
 
     if (data) {
-      // TOTAL ASSIGNMENT COUNT
       this.totalAssignmentCount = data.totalCount || 0;
 
-      // DISPLAY RECORDS
-      this.assignments = (data.assignments || []).map((item, index) => {
+      this.assignments = (data.assignments || []).map((item) => {
         return {
           id: item.id,
 
-          rowNumber: index + 1,
-
           assignmentId: item.assignmentId,
+
+          assignmentUrl: `/lightning/r/FEC_Assignment__c/${item.id}/view`,
+
+          assignmentName: item.assignmentName,
 
           stageName: item.stageName,
 
@@ -115,42 +152,34 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     return this.totalAssignmentCount;
   }
 
-  // SHOW VIEW ALL ONLY WHEN > 10
+  // SHOW VIEW ALL
   get showViewAll() {
-    // return this.totalAssignmentCount > 10;
-    return true; // Always show "View All" as per the requirement
-  }
-
-  handleOpenAssignment(event) {
-    const assignmentId = event.currentTarget.dataset.id;
-
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: assignmentId,
-        objectApiName: "FEC_Assignment__c",
-        actionName: "view",
-      },
-    });
+    return true;
   }
 
   async handleViewAll() {
     try {
-      console.log("handleViewAll");
-
       const focusedTab = await getFocusedTabInfo();
 
-      console.log("focusedTab:", JSON.stringify(focusedTab));
-
       const subtabId = await openSubtab(focusedTab.tabId, {
-        url: urlCmpWithRecordId("fec_AssignmentViewAll", this.recordId),
+        pageReference: {
+          type: "standard__component",
+
+          attributes: {
+            componentName: "c__fec_AssignmentViewAll",
+          },
+
+          state: {
+            c__recordId: this.recordId,
+          },
+        },
 
         focus: true,
       });
 
       await setTabLabel(subtabId, "Assignment - View All");
     } catch (error) {
-      console.error("handleViewAll error", JSON.stringify(error));
+      console.error("handleViewAll error", error);
     }
   }
 
