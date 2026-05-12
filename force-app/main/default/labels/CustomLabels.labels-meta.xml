@@ -15737,14 +15737,6 @@
         <value>Original Value</value>
     </labels>
     <labels>
-        <fullName>FEC_Parent_Hold_Case_Config</fullName>
-        <categories>Label</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Parent Hold Case Config</shortDescription>
-        <value>Parent Hold Case Config</value>
-    </labels>
-    <labels>
         <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>

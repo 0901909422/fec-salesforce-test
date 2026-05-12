@@ -20,26 +20,6 @@
             </lightning-accordion-section>
         </lightning-accordion>
     </div>
-    <!-- ===================== Parent Hold Case Config ===================== -->
-    <div class="customer-info-container slds-card slds-p-around_small">
-        <lightning-accordion
-            active-section-name={activeSections}
-            allow-multiple-sections-open>
-
-            <lightning-accordion-section
-                name="ParentholdCase"
-                label={customLabel.parentHoldCaseConfig}>
-
-                <c-fec_-related-list-paging
-                    default-sorted-by="name"
-                    records={parentHoldCaseDisplay}
-                    columns={holdCaseColumns}
-                    onrowselect={handleHoldCaseConfigurationSelect}>
-                </c-fec_-related-list-paging>
-            </lightning-accordion-section>
-        </lightning-accordion>
-    </div>
-
     <!-- ===================== MAIN MODAL ===================== -->
     <template if:true={isShowModal}>
         <section

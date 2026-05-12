@@ -46,7 +46,6 @@ import FEC_NFU_Modal_Save_Error from '@salesforce/label/c.FEC_NFU_Modal_Save_Err
 import FEC_Hold_Case_Save_Success from '@salesforce/label/c.FEC_Hold_Case_Save_Success'; 
 import FEC_Error_Manual from '@salesforce/label/c.FEC_Error_Manual'; 
 import FEC_Hold_Case_Config from '@salesforce/label/c.FEC_Hold_Case_Config'; 
-import FEC_Parent_Hold_Case_Config from '@salesforce/label/c.FEC_Parent_Hold_Case_Config'; 
 import FEC_New_Hold_Case_Config from '@salesforce/label/c.FEC_New_Hold_Case_Config';
 import FEC_List_Of_NFU_Code from '@salesforce/label/c.FEC_List_Of_NFU_Code'; 
 
@@ -88,7 +87,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     caseStageName = STR_EMPTY;
     selectedNfuRow = null;
 
-    activeSections = ['holdCase','ParentholdCase'];
+    activeSections = ['holdCase'];
 
     /* ================= LABEL ================= */
     customLabel = {
@@ -109,7 +108,6 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         holdCaseSaveSuccess: FEC_Hold_Case_Save_Success,
         errorManual: FEC_Error_Manual,
         holdCaseConfig: FEC_Hold_Case_Config,
-        parentHoldCaseConfig: FEC_Parent_Hold_Case_Config,
         newHoldCaseConfig: FEC_New_Hold_Case_Config,
         requiredInformation: FEC_Required_Information,
         information: FEC_Information,
@@ -230,12 +228,6 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     get holdCaseDisplay() {
         return this.holdCase && this.holdCase.length > 0
             ? this.holdCase
-            : [{}];
-    }
-
-    get parentHoldCaseDisplay() {
-        return this.parentHoldCase && this.parentHoldCase.length > 0
-            ? this.parentHoldCase
             : [{}];
     }
 
