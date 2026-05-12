@@ -1096,9 +1096,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
     this.business.hasRoutingAction =
-      Array.isArray(this.business.routingActionlst) &&
-      this.business.routingActionlst.length > 0;
-    this._updateDynCmpIsEditFlags();
+      (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
+      (Array.isArray(this.business.routingActionlst) &&
+      this.business.routingActionlst.length > 0);
     this.business = { ...this.business };
   }
 
@@ -1372,9 +1372,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.activeSectionlst = [];
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
+        // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
         this.business.hasRoutingAction =
-          Array.isArray(this.business.routingActionlst) &&
-          this.business.routingActionlst.length > 0;
+          (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
+          (Array.isArray(this.business.routingActionlst) &&
+          this.business.routingActionlst.length > 0);
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -2760,8 +2762,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
      if (routeToEle) {
-      // tungnm37 thêm: COF/GSR shortcut - không cần tìm selectedAction
-      if (this.isRoutingAssignmentMode) {
+      // tungnm37 thêm: COF/GSR shortcut - chỉ chạy khi action là Route to, các action khác (Cancel, Escalate...) chạy bình thường
+      if (this.isRoutingAssignmentMode && routeToEle.value === ACTION_ROUTE_TO) {
         await run({
           method: 'Route to COF/GSR',
           params: {
