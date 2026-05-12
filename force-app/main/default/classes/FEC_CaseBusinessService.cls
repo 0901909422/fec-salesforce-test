@@ -624,6 +624,30 @@ public without sharing class FEC_CaseBusinessService {
 
         List<SObject> masterDatalst = Database.query(soql);
 
+        if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
+          System.debug(
+            LoggingLevel.DEBUG,
+            '[GSR-NOC-DIFF] Đổi NOC: từ baseline(flow)=[' +
+              flowHistProductTypeId +
+              '|' +
+              flowHistCategoryId +
+              '|' +
+              flowHistSubCategoryId +
+              '|' +
+              flowHistSubCodeId +
+              '] sang resolve=[' +
+              productTypeId +
+              '|' +
+              categoryId +
+              '|' +
+              subCategoryId +
+              '|' +
+              subCodeId +
+              '] natureOfCaseId=' +
+              selectedNatureOfCaseId
+          );
+        }
+
         // ====================================== CREATE BUSINESS ============================
         // Retrieve Data
         Map<String, Set<String>> objToFieldlstMap = new Map<String, Set<String>>();
