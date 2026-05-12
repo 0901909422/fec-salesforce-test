@@ -204,8 +204,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_User_Role__c = userRoleName,
                     FEC_Assignment_Routing_Action__c = stageName,
                     FEC_Manual__c = false
-                    FEC_Assignment_Routing_Action__c = stageName,
-                    FEC_Manual__c = false
                 ));
             }
             insert assignments;
@@ -346,8 +344,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Team__c = teamName,
                     FEC_Assignment_Remark__c = remark,
                     FEC_User_Role__c = userRoleName,
-                    FEC_Assignment_Routing_Action__c = stageName,
-                    FEC_Manual__c = true
                     FEC_Assignment_Routing_Action__c = stageName,
                     FEC_Manual__c = true
                 ));
