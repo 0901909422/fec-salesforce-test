@@ -248,6 +248,11 @@ const NONE_STRING = '--None--';
 const FIELD_ACCOUNT_CONTRACT_NUMBER_PL = 'FEC_Account_Contract_Number_PL__c';
 const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 
+//linhdev fix section Account Info + Case Info
+const SECTION_NAME_ACCOUNT_INFORMATION = 'Account Information';
+const SECTION_NAME_CASE_INFORMATION = 'Case Information';
+const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
+
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
   2: 'slds-medium-size_2-of-12',
@@ -515,8 +520,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   businessLoaded = false;
 
-  //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
-  @track activeSectionlst = [];
+  //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
+  // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
+  @track activeMainSectionlst = [];
+  @track activeRoutingSectionlst = [];
 
   routingAccordionSectionKey = "routing-action";
 
@@ -1403,7 +1410,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.business = { ...res, natureOfCase };
 
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
-        this.activeSectionlst = [];
+        this.activeMainSectionlst = [];
+        this.activeRoutingSectionlst = [];
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
         // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
@@ -1617,13 +1625,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyRemovePhonePlacement();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
-        //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
-        // Chỉ mở section routing khi thực sự render (showRoutingSection); tránh active-section-name
-        // chứa "routing-action" khi không có section đó — lightning-accordion có thể co các section còn lại.
-        this.activeSectionlst = [
-          ...(this.showRoutingSection ? ["routing-action"] : []),
-          ...sectionlst,
-        ];
+        //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
+        this.activeMainSectionlst = [...sectionlst];
+        //linhdev fix section Account Info + Case Info
+        Promise.resolve().then(() => {
+          this._ensureAccountCaseSectionsExpanded();
+        });
+        this.activeRoutingSectionlst = this.showRoutingSection ? ["routing-action"] : [];
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
@@ -1713,6 +1721,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   /** Form Remove Phone: trong section Case Information, ngay dưới subsection Property Info (không tạo accordion riêng). */
+  //linhdev fix section Account Info + Case Info
   _applyRemovePhonePlacement() {
     const sections = this.business?.sectionlst;
     if (!sections?.length) {
@@ -1723,8 +1732,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       section.subSectionlst?.forEach((sub) => {
         sub.showRemovePhoneAfter =
           show &&
-          section.name === SECTION_CASE_INFORMATION &&
-          sub.name === SUBSECTION_PROPERTY_INFO;
+          section.name === SECTION_NAME_CASE_INFORMATION &&
+          sub.name === SUBSECTION_NAME_PROPERTY_INFO;
       });
     });
     this.business = { ...this.business };
@@ -3556,7 +3565,28 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
       this._updateDynCmpIsEditFlags();
       this._rebuildAllSectionSortedRows();
       this._scheduleRefreshFileUploadCards();
+      //linhdev fix section Account Info + Case Info
+      this._ensureAccountCaseSectionsExpanded();
     });
+  }
+
+  //linhdev fix section Account Info + Case Info
+  /** Đưa Account Information + Case Information vào active-section-name (sau đổi NOC / resolve LWC động). */
+  _ensureAccountCaseSectionsExpanded() {
+    if (!this.business?.sectionlst?.length) return;
+    const want = new Set([
+      SECTION_NAME_ACCOUNT_INFORMATION,
+      SECTION_NAME_CASE_INFORMATION,
+    ]);
+    const extraIds = this.business.sectionlst
+      .filter((s) => want.has(s.name))
+      .map((s) => s.id)
+      .filter(Boolean);
+    if (!extraIds.length) return;
+    const cur = Array.isArray(this.activeMainSectionlst)
+      ? this.activeMainSectionlst
+      : [];
+    this.activeMainSectionlst = [...new Set([...extraIds, ...cur])];
   }
 
   /**

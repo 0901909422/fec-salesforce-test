@@ -1,7 +1,7 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeSectionlst}>
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
@@ -147,7 +147,7 @@
   <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
   <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
   <!--END: Hieutt74: Update ngày 12/5/2026-->
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeSectionlst}>
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
     <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>
