@@ -30,6 +30,12 @@ public without sharing class FEC_IPPConversionController {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;
         @AuraEnabled public String errorMessage;
+        @AuraEnabled public Decimal actionCount;
+    }
+
+    public class ActionStatusDTO {
+        @AuraEnabled public Decimal actionCount;
+        @AuraEnabled public Boolean canConvert;
     }
 
     /**
@@ -179,6 +185,29 @@ public without sharing class FEC_IPPConversionController {
         return dto;
     }
 
+    @AuraEnabled(cacheable=false)
+    public static ActionStatusDTO getConvertActionStatus(Id caseId) {
+        ActionStatusDTO dto = new ActionStatusDTO();
+        dto.actionCount = null;
+        dto.canConvert = true;
+        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+            return dto;
+        }
+        List<Case> cases = [
+            SELECT Id, FEC_Process_Action_Count__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            return dto;
+        }
+        dto.actionCount = cases[0].FEC_Process_Action_Count__c;
+        dto.canConvert = dto.actionCount == null
+            || (dto.actionCount != -1 && dto.actionCount < MAX_RETRY_COUNT);
+        return dto;
+    }
+
     /**
      * Convert IPP: build AddIPP request from Case + selected transaction + tenor, call FEC_AddIPP.addIPP, return result.
      */
@@ -257,11 +286,14 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
+            updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
+            updateCaseActionCountForConvertResult(c, false);
         }
+        result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         return result;
     }
 
@@ -337,11 +369,14 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = refNo;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
+            updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
+            updateCaseActionCountForConvertResult(c, false);
         }
+        result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         return result;
     }
 
@@ -416,11 +451,14 @@ public without sharing class FEC_IPPConversionController {
         req.cardSeq = 0;
         req.ippKey = planForApi;
         try {
-            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req);
+            FEC_AddIPP.AddIPPResult addResult = FEC_AddIPP.addIPP(req, c != null ? c.FEC_Is_Test_API__c : false);
             applyAddIppResultToConvertResult(addResult, result);
+            updateCaseActionCountForConvertResult(c, result.success == true);
         } catch (Exception e) {
             result.errorMessage = e.getMessage();
+            updateCaseActionCountForConvertResult(c, false);
         }
+        result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
         return result;
     }
 
@@ -441,6 +479,7 @@ public without sharing class FEC_IPPConversionController {
         }
         List<Case> cases = [
             SELECT Id, FEC_Account_Number__c, FEC_Account_Contract_Number_Text__c, FEC_Account_or_Contract__c,
+                   FEC_Process_Action_Count__c, FEC_Is_Test_API__c,
                    FEC_Account_or_Contract__r.FEC_Account_Number__c, FEC_Account_or_Contract__r.FEC_Card_Number__c
             FROM Case
             WHERE Id = :caseId
@@ -545,5 +584,25 @@ public without sharing class FEC_IPPConversionController {
                 result.errorMessage = System.Label.FEC_MSG_IPP_AddIpp_Default_Failed;
             }
         }
+    }
+
+    private static void updateCaseActionCountForConvertResult(Case c, Boolean isSuccess) {
+        if (c == null || c.Id == null) {
+            return;
+        }
+        if (!Schema.sObjectType.Case.isUpdateable()
+            || !Schema.sObjectType.Case.fields.FEC_Process_Action_Count__c.isUpdateable()) {
+            return;
+        }
+        if (isSuccess) {
+            c.FEC_Process_Action_Count__c = -1;
+        } else {
+            if (c.FEC_Process_Action_Count__c == null || c.FEC_Process_Action_Count__c < 0) {
+                c.FEC_Process_Action_Count__c = 0;
+            }
+            c.FEC_Process_Action_Count__c += 1;
+        }
+        FEC_CaseTriggerHandler.isExecuting = true;
+        update c;
     }
 }

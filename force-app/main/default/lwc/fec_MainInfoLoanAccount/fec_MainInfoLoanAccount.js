@@ -135,7 +135,7 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
             this.buildField(FEC_MainInfo_Charge_Off_Date_Label, this.accountData?.chargeOffDate, 'FEC_Charge_Off_Date__c'),
             this.buildField(FEC_MainInfo_Contract_Status_Label, this.accountData?.contractStatus, 'FEC_Contract_Status__c'),
             this.buildField(FEC_MainInfo_Product_Code_Label, this.accountData?.productCode, 'FEC_Product_Code__c'),
-            this.buildField(FEC_MainInfo_Rate_Label, this.accountData?.rate, 'FEC_Rate__c'),
+            this.buildField(FEC_MainInfo_Rate_Label, this.formatPercentage(this.accountData?.rate), 'FEC_Rate__c'),
             this.buildField(FEC_MainInfo_Agreement_Date_Label, this.accountData?.agreementDate, 'FEC_Agreement_Date__c'),
             this.buildField(FEC_MainInfo_Scheme_ID_Label, this.accountData?.schemeID, 'FEC_Scheme_ID__c'),
             this.buildField(FEC_Application_ID_Label, this.accountData?.applicationId, 'FEC_Application_ID__c'),
@@ -151,7 +151,7 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
             this.buildMoneyField(FEC_MainInfo_Loan_Amount_Label, this.accountData?.loanAmount, 'FEC_Loan_Amount__c'),
             this.buildField(FEC_MainInfo_Installment_Remaining_Label, this.accountData?.installmentRemaining, 'FEC_Installments_Remaining__c'),
             this.buildMoneyField(FEC_MainInfo_EMI_Label, this.accountData?.emi, 'FEC_EMI__c'),
-            this.buildField(FEC_MainInfo_Tenure_Label, this.accountData?.tenure, 'FEC_Tenure__c'),
+            this.buildField(FEC_MainInfo_Tenure_Label, this.accountData?.tenure != null ? `${parseInt(this.accountData.tenure, 10)} months` : null, 'FEC_Tenure__c'),
             this.buildMoneyField(FEC_MainInfo_Insurance_Amount_Label, this.accountData?.insuranceAmount, 'FEC_Insurance_Amount__c'),
             
         ];
@@ -192,20 +192,35 @@ export default class Fec_MainInfoLoanAccount extends LightningElement {
         return helpTexts[fieldApiName] || helpTexts[fieldApiName.toLowerCase()] || null;
     }
 
+    formatCurrency(value) {
+        if (value == null || value === '') return null;
+        const num = parseFloat(String(value).replace(/,/g, ''));
+        if (isNaN(num)) return String(value);
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    formatPercentage(value) {
+        if (value == null || value === '') return null;
+        const num = parseFloat(String(value).replace(/,/g, '').replace(/%/g, ''));
+        if (isNaN(num)) return String(value);
+        return num.toFixed(2) + '%';
+    }
+
     buildField(label, value, fieldApiName) {
         const helpText = this.getHelpText(fieldApiName);
         return {
             label,
-            value: value || '-',
+            value: (value != null && value !== '') ? value : '-',
             helpText: helpText || undefined
         };
     }
 
     buildMoneyField(label, value, fieldApiName) {
         const helpText = this.getHelpText(fieldApiName);
+        const formatted = this.formatCurrency(value);
         return {
             label,
-            value: value || '-',
+            value: formatted || '-',
             type: isNegative(value) ? 'negative' : 'regular',
             helpText: helpText || undefined
         };

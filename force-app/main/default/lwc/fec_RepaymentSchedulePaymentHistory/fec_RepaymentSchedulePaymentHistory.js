@@ -4,6 +4,7 @@ import FEC_ACCOUNT_OR_CONTRACT from '@salesforce/schema/Case.FEC_Account_or_Cont
 import FEC_CONTRACT_NUMBER from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getSectionData from '@salesforce/apex/FEC_RepaySchedPayHistController.getSectionData';
+import refreshRealTimePayment from '@salesforce/apex/FEC_RepaySchedPayHistController.refreshRealTimePayment';
 import FEC_Repayment_Schedule_Label from '@salesforce/label/c.FEC_Repayment_Schedule_Label';
 import FEC_Payment_History_Label from '@salesforce/label/c.FEC_Payment_History_Label';
 import FEC_Real_Time_Payment_Label from '@salesforce/label/c.FEC_Real_Time_Payment_Label';
@@ -31,6 +32,8 @@ import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particula
 import FEC_Repay_Payment_Channel_Label from '@salesforce/label/c.FEC_Repay_Payment_Channel_Label';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 import FEC_Repay_Refresh_Button_Label from '@salesforce/label/c.FEC_Repay_Refresh_Button_Label';
+import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
+
 const SECTION4_EMPTY_CELL = '-';
 const SECTION4_TYPE_SCHEDULE = 'Repayment Schedule';
 const SECTION4_TYPE_PAYMENT = 'Payment History';
@@ -38,6 +41,15 @@ const SECTION4_TYPE_PAYMENT = 'Payment History';
 /** Ô trống / placeholder từ API (giống HYPHEN Apex). */
 const isRepayEmptyCell = (value) =>
     value == null || String(value).trim() === '' || String(value).trim() === SECTION4_EMPTY_CELL;
+
+/** Chuỗi số từ Apex (vd. 477,000) → hiển thị en-US 2 thập phân (477,000.00). */
+const formatPaymentHistoryAmount = (value) => {
+    if (isRepayEmptyCell(value)) return SECTION4_EMPTY_CELL;
+    const num =
+        typeof value === 'number' ? value : Number(String(value).replace(/,/g, ''));
+    if (Number.isNaN(num)) return String(value);
+    return formatCurrency2(num);
+};
 
 /**
  * Bỏ dòng Payment History do max(basicPh, secPh, payments) tạo thêm: chỉ còn paymentNo.
@@ -53,8 +65,6 @@ const isPaymentHistoryMeaningfulRow = (row) => {
     );
 };
 
-import { toSortDateStr, formatCurrency0, formatCurrency2 } from 'c/fec_CommonUtils';
-
 /**
  * LWC Repayment Schedule & Payment History - 4 sections:
  * Repayment Schedule, Payment History, Real-Time Payment, Repayment Schedule & Payment History
@@ -64,6 +74,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     @track errorMessage;
     @track sectionData = {};
+
     /** Chỉ dùng cho section 4; được cập nhật khi bấm Refresh (cùng section 3). Section 1 & 2 giữ sectionData. */
     @track section4Data = { repaymentScheduleTable: [], paymentHistoryTable: [] };
     @track helpTextMap = {};
@@ -90,17 +101,31 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         refreshButton: FEC_Repay_Refresh_Button_Label,
     };
 
-    get activeSections() {
-        return [
-            FEC_Repayment_Schedule_Label,
-            FEC_Payment_History_Label,
-            FEC_Real_Time_Payment_Label,
-            FEC_Repayment_Schedule_Payment_History_Label,
-        ];
-    }
+    activeSections = [
+        FEC_Repayment_Schedule_Label,
+        FEC_Payment_History_Label,
+        FEC_Real_Time_Payment_Label,
+        FEC_Repayment_Schedule_Payment_History_Label,
+    ];
 
     get repaymentScheduleSectionName() {
         return FEC_Repayment_Schedule_Label;
+    }
+
+    @track isRepayScheduleOpen = true;
+
+    get repayScheduleErrorSectionClass() {
+        return this.isRepayScheduleOpen
+            ? 'slds-accordion__section slds-is-open repay-error-section'
+            : 'slds-accordion__section repay-error-section';
+    }
+
+    get repayScheduleChevronIcon() {
+        return this.isRepayScheduleOpen ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    handleRepayScheduleErrorToggle() {
+        this.isRepayScheduleOpen = !this.isRepayScheduleOpen;
     }
 
     get repaymentScheduleTotalInstallment() {
@@ -165,6 +190,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         return !this.errorMessage;
     }
 
+    get repaymentScheduleError() {
+        return this.sectionData.repaymentScheduleError === true;
+    }
+
     /* Payment History: Total Payment Amount (màu đỏ) + bảng 6 cột */
     get paymentHistoryTotalAmount() {
         const totals = this.sectionData.paymentHistoryTotals || {};
@@ -181,7 +210,6 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
             { label: FEC_Repay_Booking_Date_Label, fieldName: 'bookingDate' },
             { label: FEC_Repay_Payment_Amount_Label, fieldName: 'paymentAmount', cellAlign: 'right' },
             { label: FEC_Repay_Particulars_Label, fieldName: 'particulars' },
-            { label: FEC_Repay_Payment_Channel_Label, fieldName: 'paymentChannel' },
         ];
         return cols.map((c) => ({
             ...c,
@@ -220,6 +248,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 Id: 'ph-' + i,
                 ...row,
                 paymentNo: i + 1,
+                paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
             };
         });
     }
@@ -237,7 +266,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
 
     get realTimePaymentPagingColumns() {
         const cols = [
-            { label: FEC_Repay_Payment_Date_Label, fieldName: 'paymentDate' },
+            { label: FEC_Repay_Payment_Date_Label, fieldName: 'paymentDate', cellAlign: 'center' },
             { label: FEC_Repay_Payment_Amount_Label, fieldName: 'paymentAmount', cellAlign: 'right' },
             { label: FEC_Repay_Payment_Channel_Label, fieldName: 'paymentChannel' },
         ];
@@ -274,6 +303,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
         return sorted.map((row, i) => ({
             Id: 'rt-' + (row.rowIndex != null ? row.rowIndex : i + 1),
             ...row,
+            paymentAmount: formatPaymentHistoryAmount(row.paymentAmount),
         }));
     }
 
@@ -367,7 +397,10 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                 paymentNo: (p.paymentNo != null && p.paymentNo !== '') ? String(p.paymentNo) : e,
                 paymentDate: paymentDateVal,
                 bookingDate: (p.bookingDate != null && p.bookingDate !== '') ? p.bookingDate : e,
-                paymentAmount: (p.paymentAmount != null && p.paymentAmount !== '') ? p.paymentAmount : e,
+                paymentAmount:
+                    p.paymentAmount != null && p.paymentAmount !== ''
+                        ? formatPaymentHistoryAmount(p.paymentAmount)
+                        : e,
                 particulars: (p.particulars != null && p.particulars !== '') ? p.particulars : e,
                 paymentChannel: (p.paymentChannel != null && p.paymentChannel !== '') ? p.paymentChannel : e,
             });
@@ -438,6 +471,7 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
                     paymentHistoryTable: data.paymentHistoryTable || [],
                     realTimePaymentTable: realTime,
                     repaymentSchedulePaymentHistory: data.repaymentSchedulePaymentHistory || [],
+                    repaymentScheduleError: data.repaymentScheduleError === true,
                 };
                 this.section4Data = {
                     repaymentScheduleTable: data.repaymentScheduleTable || [],
@@ -459,21 +493,21 @@ export default class Fec_RepaymentSchedulePaymentHistory extends LightningElemen
     }
 
     /* ================= SECTION REFRESH ================= */
-    /** Click Refresh → chỉ refresh section 3 (Real-Time Payment) và section 4 (Repayment Schedule & Payment History). Section 1 & 2 giữ nguyên. */
+    /** Refresh Real-Time: Apex riêng — không nuốt lỗi giữa chừng như getSectionData. Section 4 giữ dữ liệu load ban đầu cho đến khi F5 / đổi hợp đồng. */
     handleRealTimeRefresh() {
         if (!this.recordId) return;
         this.refreshStatusMap.realTimePayment = 'NONE';
         this.isRefreshingRealTime = true;
-        getSectionData({ caseId: this.recordId })
-            .then((data) => {
-                const realTime = Array.isArray(data.realTimePaymentTable) ? data.realTimePaymentTable : [];
+        refreshRealTimePayment({ caseId: this.recordId })
+            .then((rows) => {
+                const realTime = Array.isArray(rows) ? rows : [];
                 this.sectionData = { ...this.sectionData, realTimePaymentTable: realTime };
-                this.section4Data = {
-                    repaymentScheduleTable: data.repaymentScheduleTable || [],
-                    paymentHistoryTable: data.paymentHistoryTable || [],
-                };
                 this.refreshStatusMap.realTimePayment = 'SUCCESS';
-                this.showToast('Success', `Refresh ${FEC_Real_Time_Payment_Label} & ${FEC_Repayment_Schedule_Payment_History_Label} successfully`, 'success');
+                this.showToast(
+                    'Success',
+                    `${FEC_Real_Time_Payment_Label} refreshed`,
+                    'success'
+                );
             })
             .catch((err) => {
                 this.refreshStatusMap.realTimePayment = 'ERROR';

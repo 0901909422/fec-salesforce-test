@@ -100,6 +100,7 @@ public without sharing class FEC_CaseTriggerHandler {
      */
     private void onAfterInsert(List<Case> newCases) {
         isExecuting = true;
+        updateLastModified(newCases, null);
         handleAutoFollowUpOnInsert(newCases);
         updateEmail2CaseFieldsOnInsert(newCases);
         FEC_CasePendingStatusService.syncPendingStatusWhenSubmittedOwnerChanges(newCases, null);
@@ -133,7 +134,36 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
+        // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
+        syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         isExecuting = false;
+    }
+
+    /**
+     * tungnm37: Khi Case.OwnerId thay đổi, đồng bộ FEC_Assignment_Users__c.
+     * Rule: Queue ID nếu owner là Queue (có assignment), null nếu owner là User (không có assignment).
+     * Bao phủ mọi luồng: Transfer từ UI, Escalate, Route, v.v.
+     */
+    private static void syncAssignmentUsersOnOwnerChange(List<Case> newCases, Map<Id, Case> oldMap) {
+        List<Case> toUpdate = new List<Case>();
+        for (Case c : newCases) {
+            Case oldCase = oldMap.get(c.Id);
+            if (c.OwnerId != null && c.OwnerId != oldCase.OwnerId) {
+                // tungnm37 fix: khi owner đổi về User → clear FEC_Assignment_Users__c để Service Case Owner hiển thị
+                // khi owner đổi về Queue → set = Queue Id để formula ẩn (COF/GSR auto routing)
+                String newAssignmentUsers = c.OwnerId.getSObjectType() == User.SObjectType
+                    ? null
+                    : String.valueOf(c.OwnerId);
+                toUpdate.add(new Case(Id = c.Id, FEC_Assignment_Users__c = newAssignmentUsers));
+            }
+        }
+        if (!toUpdate.isEmpty()) {
+            try {
+                Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
+            } catch (Exception e) {
+                System.debug('FEC_DEBUG syncAssignmentUsersOnOwnerChange error: ' + e.getMessage());
+            }
+        }
     }
 
     private void syncGlobalSearch(List<Case> newCases, Map<Id, Case> oldMap) {
@@ -1005,9 +1035,14 @@ public without sharing class FEC_CaseTriggerHandler {
     private static void updateLastModified(List<Case> newCases, Map<Id, Case> oldMap) {
         List<Case> caseUpdates = new List<Case>();
         for (Case c : newCases) {
-            Case oldCase = oldMap.get(c.Id);
-            if (isSystemUpdate || c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+            if (isSystemUpdate) {
                 continue;
+            }
+            if (oldMap != null) {
+                Case oldCase = oldMap.get(c.Id);
+                if (c.FEC_Interaction_View_Mode__c != oldCase.FEC_Interaction_View_Mode__c) {
+                    continue;
+                }
             }
             Case caseUpdate = new Case(
                 Id = c.Id,

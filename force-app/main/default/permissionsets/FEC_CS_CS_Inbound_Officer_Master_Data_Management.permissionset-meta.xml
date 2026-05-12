@@ -541,6 +541,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Product_Type__c.FEC_Active__c</field>
         <readable>true</readable>
@@ -631,6 +636,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Routing_Assignment__c.FEC_Active__c</field>
         <readable>true</readable>
@@ -645,7 +655,6 @@
         <field>FEC_Routing_Assignment__c.FEC_Customer_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Routing_Assignment__c.FEC_Queue__c</field>
@@ -806,6 +815,11 @@
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+    <editable>false</editable>
+    <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
+    <readable>true</readable>
+</fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Inbound Officer - Master Data Management</label>
     <license>Salesforce</license>

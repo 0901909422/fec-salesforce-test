@@ -3,6 +3,9 @@
  * đã lọc theo Case; config FEC_CustomerAdditionalInfoConfig__c truy vấn riêng theo FEC_Config__c.
  * Khớp KeyIdentifier + KeyIDValue với FEC_Account_or_Contract__r; chỉ bản ghi chi tiết isActive, config isActive,
  * trong khoảng StartDate–EndDate của config.
+ * Một Case chỉ dùng một điều kiện lookup (ưu tiên theo STT design: CIF_NUMBER → ID_CARD → PHONE_NUMBER →
+ * APPLICATION_ID → ACCOUNT_NO/CONTRACT_NO); nếu nhiều bản ghi FEC_CustomerAdditionalInfo__c khớp thì chỉ trả 1 bản (CreatedDate mới nhất).
+ * Chỉ trả bản ghi chi tiết khi Case.CreatedDate >= FEC_CustomerAdditionalInfo__c.CreatedDate (spec B3 Lưu ý).
  */
 public with sharing class FEC_CustomerAdditionalDataController {
 
@@ -13,14 +16,12 @@ public with sharing class FEC_CustomerAdditionalDataController {
         @AuraEnabled public String sourceFileName { get; set; }
     }
 
-    private static final String KEY_CIF = 'CIF';
+    private static final String KEY_CIF_NUMBER = 'CIF_NUMBER';
     private static final String KEY_ID_CARD = 'ID_CARD';
-    private static final String KEY_PHONE = 'PHONE';
-    private static final String KEY_PID = 'PID';
+    private static final String KEY_PHONE_NUMBER = 'PHONE_NUMBER';
     private static final String KEY_APPLICATION_ID = 'APPLICATION_ID';
     private static final String KEY_ACCOUNT_NO = 'ACCOUNT_NO';
     private static final String KEY_CONTRACT_NO = 'CONTRACT_NO';
-    private static final String KEY_USER_ID = 'USER_ID';
 
     @AuraEnabled(cacheable=true)
     public static List<RowDTO> getAdditionalDataRows(Id caseId) {
@@ -36,6 +37,9 @@ public with sharing class FEC_CustomerAdditionalDataController {
         if (c == null) {
             return result;
         }
+        if (c.RecordType == null || c.RecordType.DeveloperName != FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME) {
+            return result;
+        }
         Map<String, Set<String>> keyToValues = buildKeyValueMap(c);
         if (keyToValues.isEmpty()) {
             return result;
@@ -47,7 +51,7 @@ public with sharing class FEC_CustomerAdditionalDataController {
         }
         Date today = Date.today();
         List<FEC_CustomerAdditionalInfo__c> raw = [
-            SELECT Name, FEC_FieldID__c, FEC_FieldValue__c, FEC_KeyIdentifier__c, FEC_KeyIDValue__c,
+            SELECT Id, CreatedDate, Name, FEC_FieldID__c, FEC_FieldValue__c, FEC_KeyIdentifier__c, FEC_KeyIDValue__c,
                    FEC_LinkedFilename__c, FEC_Config__c
             FROM FEC_CustomerAdditionalInfo__c
             WHERE FEC_IsActive__c = TRUE
@@ -71,7 +75,11 @@ public with sharing class FEC_CustomerAdditionalDataController {
             cfgById.putAll(cfgRows);
         }
 
+        List<RowDTO> rows = new List<RowDTO>();
         for (FEC_CustomerAdditionalInfo__c row : raw) {
+            if (c.CreatedDate < row.CreatedDate) {
+                continue;
+            }
             if (row.FEC_Config__c == null) {
                 continue;
             }
@@ -98,21 +106,22 @@ public with sharing class FEC_CustomerAdditionalDataController {
                 : row.FEC_FieldID__c;
             dto.fieldValue = row.FEC_FieldValue__c;
             dto.sourceFileName = row.FEC_LinkedFilename__c;
-            result.add(dto);
+            rows.add(dto);
         }
+        result.addAll(rows);
         return result;
     }
 
     private static Case queryCase(Id caseId) {
         List<Case> cases = [
-            SELECT FEC_Account_or_Contract__c,
+            SELECT RecordType.DeveloperName,
+                   CreatedDate,
+                   FEC_Account_or_Contract__c,
                    FEC_Account_or_Contract__r.FEC_CIF_Number__c,
                    FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
                    FEC_Account_or_Contract__r.FEC_Primary_Phone__c,
-                   FEC_Account_or_Contract__r.FEC_PID_Number__c,
                    FEC_Account_or_Contract__r.FEC_Application_ID__c,
-                   FEC_Account_or_Contract__r.FEC_Account_Number__c,
-                   FEC_Account_or_Contract__r.FEC_User_ID__c
+                   FEC_Account_or_Contract__r.FEC_Account_Number__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -126,29 +135,30 @@ public with sharing class FEC_CustomerAdditionalDataController {
             return m;
         }
         FEC_Customer_History__c ac = c.FEC_Account_or_Contract__r;
-        putKeyValue(m, KEY_CIF, ac.FEC_CIF_Number__c);
-        putKeyValue(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c);
-        putKeyValue(m, KEY_PHONE, ac.FEC_Primary_Phone__c);
-        putKeyValue(m, KEY_PID, ac.FEC_PID_Number__c);
-        putKeyValue(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c);
-        putKeyValue(m, KEY_ACCOUNT_NO, ac.FEC_Account_Number__c);
-        putKeyValue(m, KEY_CONTRACT_NO, ac.FEC_Account_Number__c);
-        putKeyValue(m, KEY_USER_ID, ac.FEC_User_ID__c);
+        tryPutSingleLookupKey(m, KEY_CIF_NUMBER, ac.FEC_CIF_Number__c);
+        tryPutSingleLookupKey(m, KEY_ID_CARD, ac.FEC_National_ID_Passport_ID__c);
+        tryPutSingleLookupKey(m, KEY_PHONE_NUMBER, ac.FEC_Primary_Phone__c);
+        tryPutSingleLookupKey(m, KEY_APPLICATION_ID, ac.FEC_Application_ID__c);
+        if (ac.FEC_Account_Number__c != null) {
+            String acctTrim = ac.FEC_Account_Number__c.trim();
+            if (!String.isBlank(acctTrim)) {
+                m.put(KEY_ACCOUNT_NO, new Set<String>{ acctTrim });
+                m.put(KEY_CONTRACT_NO, new Set<String>{ acctTrim });
+            }
+        }
         return m;
     }
 
-    private static void putKeyValue(Map<String, Set<String>> m, String keyIdentifier, String rawValue) {
-        if (String.isBlank(keyIdentifier) || rawValue == null) {
-            return;
+    private static Boolean tryPutSingleLookupKey(Map<String, Set<String>> m, String keyIdentifier, String rawValue) {
+        if (rawValue == null) {
+            return false;
         }
         String v = rawValue.trim();
         if (String.isBlank(v)) {
-            return;
+            return false;
         }
-        if (!m.containsKey(keyIdentifier)) {
-            m.put(keyIdentifier, new Set<String>());
-        }
-        m.get(keyIdentifier).add(v);
+        m.put(keyIdentifier, new Set<String>{ v });
+        return true;
     }
 
     private static Boolean isInDateWindow(FEC_CustomerAdditionalInfoConfig__c cfg, Date today) {

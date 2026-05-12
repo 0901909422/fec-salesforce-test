@@ -3200,6 +3200,14 @@
         <value>Tải dữ liệu không thành công</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Service_Error_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MSG Service Error Label</shortDescription>
+        <value>Lỗi dịch vụ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Error_Panel_Body</fullName>
         <categories>Common</categories>
         <language>en_US</language>
@@ -3561,8 +3569,8 @@
         <categories>CSM</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Lí do chặn địa chỉ — Account Status T-1</shortDescription>
-        <value>Lí do: Account Status (account level, T-1) = {0}</value>
+        <shortDescription>Lí do chặn địa chỉ — Account Status</shortDescription>
+        <value>Lí do: Account Status = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code</fullName>
@@ -3570,7 +3578,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code</shortDescription>
-        <value>Lí do: Block Code (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_1</fullName>
@@ -3578,7 +3586,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code 1</shortDescription>
-        <value>Lí do: Block Code 1 (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code 1 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Block_Code_2</fullName>
@@ -3586,7 +3594,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Lí do chặn địa chỉ — Block Code 2</shortDescription>
-        <value>Lí do: Block Code 2 (account level, T-1) = {0}</value>
+        <value>Lí do: Block Code 2 = {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Address_Update_Reason_Generic</fullName>
@@ -4365,6 +4373,70 @@
         <protected>false</protected>
         <shortDescription>Auto-generated label</shortDescription>
         <value>Please fill in all required fields.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Button_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Button_Label</shortDescription>
+        <value>Redeem Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_After_Max</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
+        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Prefix</shortDescription>
+        <value>Đổi điểm thưởng thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Success_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Points redemption success toast body</shortDescription>
+        <value>Đổi điểm thưởng thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeemed_Points_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeemed_Points_Label</shortDescription>
+        <value>Redeemed Points</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_CMS_Phone_Label</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_CMS_Phone_Label</shortDescription>
+        <value>CMS Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Message</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Message</shortDescription>
+        <value>Bạn có muốn tiếp tục thực hiện đổi điểm thưởng?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Confirm_Title</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
+        <value>Xác nhận đổi điểm</value>
     </labels>
     <labels>
         <fullName>FEC_Post_Date</fullName>
@@ -10295,6 +10367,14 @@
         <value>CS Decision</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_No_Pending_Disbursement</fullName>
+        <categories>Card LockUnlock LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_No_Pending_Disbursement</shortDescription>
+        <value>Không có khoản chờ giải ngân.</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Card_Block_Beneficiary_Required</fullName>
         <categories>Card LockUnlock LWC</categories>
         <language>en_US</language>
@@ -10316,7 +10396,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Retry</shortDescription>
-        <value>Khoá thẻ thất bại</value>
+        <value>Khoá thẻ thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Disable</fullName>
@@ -11440,6 +11520,14 @@
         <value>Select contract number</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_Selected_Contract_Number</fullName>
+        <categories>Incorrect Payment LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_LBL_Selected_Contract_Number</shortDescription>
+        <value>Selected contract number</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Select_Payment_Method</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -11551,7 +11639,7 @@
         <shortDescription>FEC_MSG_Adjusted_Amount_Must_Equal_Payment</shortDescription>
         <value>Tổng số tiền điều chỉnh phải bằng số tiền thanh toán.</value>
     </labels>
-     <labels>
+    <labels>
         <fullName>FEC_MSG_Adjusted_Amount_Must_Equal_Excess_Amount</fullName>
         <categories>Incorrect Payment LWC</categories>
         <language>en_US</language>
@@ -12922,6 +13010,14 @@
         <value>Nhập để tìm tỉnh/thành...</value>
     </labels>
     <labels>
+        <fullName>FEC_LBL_UpdateAddress_Ward_Search_Placeholder</fullName>
+        <categories>Update Address LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Address — ward/district combobox search placeholder</shortDescription>
+        <value>Nhập để tìm phường/xã...</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_UpdateAddress_Original_Information</fullName>
         <categories>Update Address LWC</categories>
         <language>en_US</language>
@@ -13352,6 +13448,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR</shortDescription>
         <value>Mở khoá thẻ thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Reason_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason Error</shortDescription>
+        <value>Không tìm thấy NFU Config cho Sub Code</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_ACTION_UNBLOCK_CARD_ERROR_RETRY</fullName>
@@ -13802,6 +13906,13 @@
         <value>Relevant Ticket was created successfully.</value>
     </labels>
     <labels>
+        <fullName>FEC_RelevantTicket_Cannot_Delete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Relevant Ticket cannot delete</shortDescription>
+        <value>Không thể xóa Ticket đã liên kết</value>
+    </labels>
+    <labels>
         <fullName>FEC_Chat_Conversations_Label</fullName>
         <categories>FEC_ChatHub</categories>
         <language>en_US</language>
@@ -13825,7 +13936,7 @@
         <shortDescription>Chat - Save failed error message</shortDescription>
         <value>Save failed. Please try again.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_Account_Contract_Number</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -14274,7 +14385,7 @@
         <shortDescription>FEC_CollectionDateFilter_ErrorExceedRange</shortDescription>
         <value>Khoảng thời gian không được vượt quá {0} ngày.</value>
     </labels>
-<labels>
+    <labels>
         <fullName>FEC_CollectionDateFilter_SuccessMsg</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -14573,7 +14684,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Status</shortDescription>
-        <value>Status</value>
+        <value>Assignment Status</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Owner</fullName>
@@ -14581,7 +14692,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Owner</shortDescription>
-        <value>Owner</value>
+        <value>Assignment Owner</value>
     </labels>
     <labels>
         <fullName>FEC_Assignment_Id</fullName>
@@ -14590,5 +14701,888 @@
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Id</shortDescription>
         <value>Assignment ID</value>
+    </labels>
+    <!-- tungnm37 thêm: UpdateDisbursementStatus API messages -->
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InvalidRequest</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Request body is invalid</shortDescription>
+        <value>Request body is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_TransID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - TransID is required</shortDescription>
+        <value>TransID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_RequestorID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - RequestorID is required</shortDescription>
+        <value>RequestorID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is required</shortDescription>
+        <value>DateTime is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DateTime_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DateTime is invalid</shortDescription>
+        <value>DateTime is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is required</shortDescription>
+        <value>CRMID is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbStatus_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_STATUS is invalid</shortDescription>
+        <value>DISB_STATUS is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - DISB_DT is invalid</shortDescription>
+        <value>DISB_DT is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_CRMID_Invalid</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - CRMID is invalid</shortDescription>
+        <value>CRMID is invalid</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Success</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_InternalError</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Internal Server Error</shortDescription>
+        <value>Internal Server Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_AlreadyResolved</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>UpdateDisbursementStatus - Case already Resolved-Completed</shortDescription>
+        <value>Case {0} has status as Resolved-Completed so it cannot be processed.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_No_Response_From_Server</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No HTTP response body from server</shortDescription>
+        <value>No response from server.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Unexpected_Missing_Node</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP body missing expected response element</shortDescription>
+        <value>Unexpected SOAP response (no {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SOAP_Parsing_Error</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SOAP/XML parse failure message template</shortDescription>
+        <value>Error parsing response: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Response_Status_Detail</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Business status and description from SOAP SysResponse</shortDescription>
+        <value>API status: {0} | {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_API_Code_And_Description</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP/CMS code and description for eligibility errors</shortDescription>
+        <value>Code: {0} | Description: {1}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
+        <categories>API</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unrecognized Sys.Code in SOAP response</shortDescription>
+        <value>Unknown system response code: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short eligible status text</shortDescription>
+        <value>Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Status_Not_Eligible</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Short not eligible status text</shortDescription>
+        <value>Not Eligible</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Loan_Loading_Or_No_Data</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan eligibility section empty state</shortDescription>
+        <value>Loading or no data available.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_Loan_Section</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Loan section title</shortDescription>
+        <value>Loan</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Eligibility</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell eligibility field label</shortDescription>
+        <value>Top-up Xsell Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Min</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell min amount label</shortDescription>
+        <value>Top-up Xsell Min</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_CheckEligible_TopUp_Xsell_Max</fullName>
+        <categories>Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up xsell max amount label</shortDescription>
+        <value>Top-up Xsell Max</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Lbl_Loading</fullName>
+        <categories>Common LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Spinner alternative text</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Section_Title</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Card eligibility section title</shortDescription>
+        <value>Card</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_TopUp</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Top-up E-voucher eligibility button</shortDescription>
+        <value>Top-up/ E-voucher Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Btn_IPP</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash IPP eligibility button</shortDescription>
+        <value>Fast Cash/ IPP Eligibility</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Available_Credit_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Available credit limit label</shortDescription>
+        <value>Available Credit Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Reason</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Reason field label</shortDescription>
+        <value>Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Fast_Cash_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fast Cash status label</shortDescription>
+        <value>Fast Cash Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_IPP_Status</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP status label</shortDescription>
+        <value>IPP Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Limit</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Credit limit label</shortDescription>
+        <value>Limit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Error_Code</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error code label</shortDescription>
+        <value>Error Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Lbl_Description</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description label</shortDescription>
+        <value>Description</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Tenure</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP tenor table column</shortDescription>
+        <value>Tenure</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP rate column</shortDescription>
+        <value>Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Registration_Rate</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP registration rate column</shortDescription>
+        <value>Registration Rate</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Monthly_Installment</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP monthly installment column</shortDescription>
+        <value>Monthly Installment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Col_Conversion_Fee</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>IPP conversion fee column</shortDescription>
+        <value>Conversion Fee</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_TopUp_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after top-up eligibility load</shortDescription>
+        <value>Top-up / E-voucher eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_IPP_Load_Success</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Toast body after IPP eligibility load</shortDescription>
+        <value>Fast Cash / IPP eligibility loaded successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_No_Account_Warning</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Warn when account number missing before eligibility</shortDescription>
+        <value>No account number found. Link Account/Contract (FEC_Account_or_Contract__c) with FEC_Account_Number__c on Customer History, or enter account on the Case. Eligibility is saved on that Customer History record.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed with HTTP status placeholder</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Request_Failed_Http_Unknown</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Request failed when HTTP status unknown</shortDescription>
+        <value>Request failed (HTTP status unknown).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unknown_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error for extractErrorMsg</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_CardEligibility_Unexpected_Error</fullName>
+        <categories>Card Eligibility LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Unexpected error for extractErrorMsg fallback</shortDescription>
+        <value>An unexpected error occurred.</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_Card_Not_Found</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No card number on Customer History for Check Eligible</shortDescription>
+        <value>không tìm thấy số thẻ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_CheckEligible_No_Matching_History</fullName>
+        <categories>Check Eligible Loan LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Customer History row for Case/contract (Check Eligible)</shortDescription>
+        <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Case_Read_Error</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Case wire failed for SMS tab</shortDescription>
+        <value>Could not read Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Case_Id</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Case ID</shortDescription>
+        <value>Case ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Date Time</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Failure_Reason</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Failure Reason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Content</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Content</shortDescription>
+        <value>Notification Content</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Notification_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Notification Type</shortDescription>
+        <value>Notification Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Status</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Status</shortDescription>
+        <value>Sent Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_System</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent System</shortDescription>
+        <value>Sent System</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_Sent_Type</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column Sent Type</shortDescription>
+        <value>Sent Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Col_User</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Grid column User</shortDescription>
+        <value>User</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Email_Need_Record</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Email tab: recordId missing</shortDescription>
+        <value>Open this panel on a Case record to load notification history.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Empty_Dash</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Placeholder em dash in grid / fallback empty message</shortDescription>
+        <value>—</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Error_Unknown</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Generic unknown error parsing</shortDescription>
+        <value>Unknown error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Loading</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Empty state / spinner while SMS log loads</shortDescription>
+        <value>Loading…</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Phone_Prefix</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Label before resolved phone on SMS tab</shortDescription>
+        <value>Phone:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Http_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed with HTTP status; replace {0}</shortDescription>
+        <value>Request failed (HTTP {0}).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_Load_Failed</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SMS log request failed without HTTP code</shortDescription>
+        <value>Unable to load SMS log.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_SMS_No_Log_Default</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Banner when IT Telco indicates no SMS log (fallback if no sys description)</shortDescription>
+        <value>No SMS log found for this phone number.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Sort_DateTime</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>fec_RelatedListPaging sorted-by description</shortDescription>
+        <value>Date Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_Email</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Email</shortDescription>
+        <value>Email</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_MobileApp</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section Mobile App</shortDescription>
+        <value>Mobile App</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_SMS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section SMS</shortDescription>
+        <value>SMS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_History_Tab_ZNS</fullName>
+        <categories>Notification History LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Accordion section ZNS</shortDescription>
+        <value>ZNS</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Duplicate_Queue_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Duplicate Queue Error</shortDescription>
+        <value>Không thể tạo trùng Assignment cho cùng 1 rổ công việc của đơn vị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Assignment_Remarks_History</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
+        <value>Assignment Remarks History</value>
+    </labels>
+    <!-- tungnm37 thêm: Channel Config labels -->
+    <labels>
+        <fullName>FEC_Confirm_Before_Submit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm Before Submit</shortDescription>
+        <value>Vui lòng Confirm Team/Queue trước khi Submit.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Success</shortDescription>
+        <value>Đã lưu Channel Config.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Channel_Config_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel Config Save Error</shortDescription>
+        <value>Lỗi khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Search_Channel_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Channel Placeholder</shortDescription>
+        <value>Search Channel...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_No_Results</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Results</shortDescription>
+        <value>Không tìm thấy kết quả</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Get_Nature_Of_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Get Nature Of Case Label</shortDescription>
+        <value>Get Nature Of Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Cancel_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Case Label</shortDescription>
+        <value>Cancel Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Update_Case_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Update Case Status Label</shortDescription>
+        <value>Update Case Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Agent_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Agent Code</shortDescription>
+        <value>Agent Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_DOB</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer DOB</shortDescription>
+        <value>Date of Birth</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_NID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer NID</shortDescription>
+        <value>Buyer NID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Buyer_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Buyer Name</shortDescription>
+        <value>Buyer Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Cancel_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cancel Date</shortDescription>
+        <value>Cancel Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Effective_Date</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Effective Date</shortDescription>
+        <value>Effective Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Expiry_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Expiry Date</shortDescription>
+        <value>Expiry Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Company</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Company</shortDescription>
+        <value>Insurance Company</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Payment_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Payment ID</shortDescription>
+        <value>Payment ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Policy_Number</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Policy Number</shortDescription>
+        <value>Policy Number</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Premium_Free</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Premium Free</shortDescription>
+        <value>Premium Free</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Product_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Product Name</shortDescription>
+        <value>Product Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sales_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sales Channel</shortDescription>
+        <value>Sales Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Sub_Channel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub Channel</shortDescription>
+        <value>Sub Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_User_ID</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Id</shortDescription>
+        <value>User ID</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Insurance_Info_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Insurance Info Error</shortDescription>
+        <value>Insurance Info</value>
+    </labels>
+    <labels>
+        <fullName>FEC_UpdateDisb_Msg_DisbDT_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Disbursement Date Required Message</shortDescription>
+        <value>DISB_DT is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_Cancel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút Cancel trong modal</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_TransferToCollection</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút/tiêu đề modal Transfer Data to Collection</shortDescription>
+        <value>Transfer Data to Collection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_ConfirmMessage</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nội dung xác nhận trong modal</shortDescription>
+        <value>Bạn sắp chuyển dữ liệu tới Collections trước khi chuyển cuộc gọi. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Section_CaseInfo</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề accordion Case Information</shortDescription>
+        <value>Case Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Spinner_Loading</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: alternative-text spinner Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Subtitle</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề phụ Transfer Call</shortDescription>
+        <value>Transfer Call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_MaxFailed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại sau 3 lần — dòng tóm tắt không còn thử lại</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_ConfirmTransfer</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút xác nhận Transfer Data to Collections</shortDescription>
+        <value>Transfer Data to Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkLabel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn textarea Remark for Collections</shortDescription>
+        <value>Remark for Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkRequired</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
+        <value>Vui lòng nhập Remark for Collections.</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
     </labels>
 </CustomLabels>

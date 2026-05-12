@@ -214,6 +214,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PRODUCT_TYPE_LOAN = 'LOAN';
     public static final String PRODUCT_TYPE_CARD = 'CARD';
     public static final String PRODUCT_TYPE_UBANK = 'UBank';
+    public static final String PRODUCT_TYPE_CASHBACK = 'Cashback';
+    public static final String PRODUCT_TYPE_EVOUCHER = 'EVoucher';
+    public static final String PRODUCT_TYPE_MVOUCHER = 'MVoucher';
     public static final String PRODUCT_NON_EXISTING_CUSTOMER = 'Non-Existing Customer';
 
     public static final String CASE_STATUS_RESOLVED_CANCELLED = 'Resolved-Cancelled';
@@ -247,6 +250,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
 
+    // tungnm37 thêm: UpdateDisbursementStatus log constants
+    public static final String DISB_LOG_CRMID    = 'CRMID=';
+    public static final String DISB_LOG_STATUS   = ' DISB_STATUS=';
+    public static final String DISB_LOG_RESPONSE = ' Response=';
+
     public static final String CASE_NON_EXISTING_CUSTOMER = 'Non-Existing';
     public static final String CASE_EXISTING_CUSTOMER = 'Existing';
 
@@ -255,6 +263,11 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
+
+    // RC27 — Thay thế thẻ
+    // Toannd61
+    public static final String SUB_CODE_CARD_REPLACEMENT_FEE  = 'RC27.01'; // Có phí
+    public static final String SUB_CODE_CARD_REPLACEMENT_FREE = 'RC27.02'; // Miễn phí
 
     
     public static final String FEC_CATEGORY_REQUEST = 'Request';
@@ -369,6 +382,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CODE_FAILURE      = '3';
     public static final String CODE_SYS_ERROR    = '0';
     public static final String ERROR_PREFIX      = 'Error: ';
+    public static final String ERROR_CODE_VALIDATION = 'VALIDATION_ERROR';
     public static final String SUCCESS_MESSAGE_CANCEL_CASE = System.Label.FEC_MSG_CancelCS_Success;
     public static final String PHONE_REGEX_VN    = '^0[0-9]{9}$';
     public static final String PHONE_REGEX_INTL  = '^\\+[0-9]{8,15}$';
@@ -445,6 +459,23 @@ public with sharing class FEC_ConstantCommon {
     // Auto Notification - Channel names (FEC_Notification_Channel__c.Name)
     public static final String NOTIFICATION_CHANNEL_EMAIL = 'Email';
     public static final String NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
+    // Notification history channels and send-type aliases
+    public static final String NOTIFICATION_HISTORY_CHANNEL_EMAIL = 'EMAIL';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_ZNS = 'ZNS';
+    public static final String NOTIFICATION_HISTORY_CHANNEL_MOBILE_APP = 'MOBILE_APP';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_EMAIL_LOWER = 'email';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_TITLE = 'Zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZNS_LOWER = 'zns';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS = 'Zalo ZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO = 'Zalo';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS_COMPACT = 'ZaloZNS';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP = 'Mobile App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_COMPACT = 'MobileApp';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_LOWER = 'mobile app';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_APP = 'App';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH = 'Push';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_PUSH_NOTIFICATION = 'Push Notification';
+    public static final String NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APPLICATION = 'Mobile Application';
 
 
     //internalSendToSet
@@ -512,6 +543,17 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String SUB_CODE_PROCESS_UPDATE_MOBILE = 'RC09.01';
     public static final String SUB_CODE_PROCESS_UPDATE_ADDRESS = 'RC09.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_1 = 'RL16.02';
+    public static final String SUB_CODE_RD_PAYMENT_ASSESSMENT_2 = 'RL16.03';
+
+    // RD Payment Contract Assessment — picklist API values & routing keys
+    public static final String RD_ASSESSMENT_CANNOT_CLOSE            = 'Cannot close contract';
+    public static final String RD_ASSESSMENT_CLOSE_WITH_STATEMENT    = 'Contract can be closed with statement';
+    public static final String RD_ASSESSMENT_CLOSE_WITHOUT_STATEMENT = 'Contract can be closed without statement';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_TEAM        = 'team';
+    public static final String RD_ASSESSMENT_ROUTING_KEY_QUEUE       = 'queueDevName';
+    public static final String RD_ASSESSMENT_TEAM_SP                 = 'SP';
+    public static final String RD_ASSESSMENT_TEAM_CC                 = 'CC';
 
     public static final String TARGET_USER_NOT_FOUND = 'Target User not found';
     public static final String BR_TAG_REGEX = '(?i)<br\\s*/?>';
@@ -521,6 +563,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String NOTIFICATION_SEND_FAILED = 'Notification send failed: ';
     public static final String NO_MATCH = 'No match';
     public static final String SKIP_ITEM = 'Skip item (null/blank)';
+    
+    /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
+    public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
+    public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
     
     //HieuTT74 - Update ngày 25/4/2026 - Assigment Routing Action
     // ================= ACTION =================
@@ -631,7 +677,10 @@ public with sharing class FEC_ConstantCommon {
         DECISION_DOCUMENT_PREP => QUEUE_CARE_INTERNAL_TASK,
         DECISION_TASK_UNDER_REVIEW => QUEUE_CARE_INTERNAL_TASK
     };
-    
+
+    public static final String COF_GENERAL_FLOW = 'COF - General Flow';
+    public static final String STAGE_ONE = 'Stage 1';
+    public static final String ORIGINAL_INFORMATION = 'Original Information';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';
@@ -653,4 +702,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String DNB_STATUS_ACTIVE = 'Active';
     public static final String DNB_STATUS_INACTIVE = 'Inactive';
     public static final String BOOLEAN_TRUE = 'true';
+
+    public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
+    public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    public static final String QUEUE_ID_START = '00G';
+
 }

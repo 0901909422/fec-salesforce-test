@@ -1,74 +1,98 @@
 <template>
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
-            <lightning-accordion-section name={repaymentScheduleSectionName} label={customLabel.repaymentSchedule} class="slds-accordion__section">
-                <div class="slds-form slds-p-around_small repay-section-content">
-                    <template if:true={isLoading}>
-                        <div class="fec-section-spinner-wrapper">
-                            <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
-                        </div>
-                    </template>
-                    <template if:false={isLoading}>
-                    <!-- 3 cột tổng: format giống Termination / MainInfo / IPP Detail -->
-                    <div class="repay-schedule-summary slds-m-bottom_medium">
-                        <div class="repay-schedule-summary-item">
-                            <div class="repay-schedule-row-inner">
-                                <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    {customLabel.totalInstallmentAmount}
-                                    <span class="repay-helptext-wrap">
-                                        <template if:true={helpTextMap.FEC_Total_Installment_Amount__c}>
-                                            <lightning-helptext content={helpTextMap.FEC_Total_Installment_Amount__c}></lightning-helptext>
-                                        </template>
-                                    </span>
+
+            <!-- Repayment Schedule error: raw <section> bên trong lightning-accordion → cùng container → height đồng nhất -->
+            <template if:true={repaymentScheduleError}>
+                <section class={repayScheduleErrorSectionClass}>
+                    <div class="slds-accordion__summary">
+                        <h3 class="slds-accordion__summary-heading">
+                            <button class="slds-button slds-button_reset slds-accordion__summary-action"
+                                    type="button"
+                                    onclick={handleRepayScheduleErrorToggle}>
+                                <lightning-icon icon-name={repayScheduleChevronIcon} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                <span class="slds-accordion__summary-content">
+                                    {customLabel.repaymentSchedule}&nbsp;-&nbsp;<span class="sync-fail-text">{customLabel.msgErrorAPI}</span>
                                 </span>
-                                <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalInstallment}</div>
-                            </div>
-                        </div>
-                        <div class="repay-schedule-summary-item">
-                            <div class="repay-schedule-row-inner">
-                                <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    {customLabel.totalPrincipal}
-                                    <span class="repay-helptext-wrap">
-                                        <template if:true={helpTextMap.FEC_Total_Principal__c}>
-                                            <lightning-helptext content={helpTextMap.FEC_Total_Principal__c}></lightning-helptext>
-                                        </template>
-                                    </span>
-                                </span>
-                                <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalPrincipal}</div>
-                            </div>
-                        </div>
-                        <div class="repay-schedule-summary-item">
-                            <div class="repay-schedule-row-inner">
-                                <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
-                                    {customLabel.totalInterest}
-                                    <span class="repay-helptext-wrap">
-                                        <template if:true={helpTextMap.FEC_Total_Interest__c}>
-                                            <lightning-helptext content={helpTextMap.FEC_Total_Interest__c}></lightning-helptext>
-                                        </template>
-                                    </span>
-                                </span>
-                                <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalInterest}</div>
-                            </div>
-                        </div>
+                            </button>
+                        </h3>
                     </div>
-                    <template if:true={hasRepaymentScheduleTableData}>
-                        <c-fec_-related-list-paging
-                            columns={repaymentSchedulePagingColumns}
-                            records={repaymentSchedulePagingRecords}
-                            default-sorted-by="dueDate"
-                            default-sort-direction="asc"
-                            page-size={repaymentSchedulePageSize}
-                            page-size-options={pageSizeOptions}
-                            hide-row-number
-                            hide-updated-time>
-                        </c-fec_-related-list-paging>
-                    </template>
-                    <template if:false={hasRepaymentScheduleTableData}>
-                        <div class="repay-no-data">{customLabel.noData}</div>
-                    </template>
-                    </template>
-                </div>
-            </lightning-accordion-section>
+                    <div class="slds-accordion__content slds-hide"></div>
+                </section>
+            </template>
+
+            <!-- Repayment Schedule normal -->
+            <template if:false={repaymentScheduleError}>
+                <lightning-accordion-section name={repaymentScheduleSectionName} label={customLabel.repaymentSchedule} class="slds-accordion__section">
+                    <div class="slds-form slds-p-around_small repay-section-content">
+                        <template if:true={isLoading}>
+                            <div class="fec-section-spinner-wrapper">
+                                <lightning-spinner alternative-text={customLabel.loadingAlt} size="medium"></lightning-spinner>
+                            </div>
+                        </template>
+                        <template if:false={isLoading}>
+                        <!-- 3 cột tổng: format giống Termination / MainInfo / IPP Detail -->
+                        <div class="repay-schedule-summary slds-m-bottom_medium">
+                            <div class="repay-schedule-summary-item">
+                                <div class="repay-schedule-row-inner">
+                                    <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
+                                        {customLabel.totalInstallmentAmount}
+                                        <span class="repay-helptext-wrap">
+                                            <template if:true={helpTextMap.FEC_Total_Installment_Amount__c}>
+                                                <lightning-helptext content={helpTextMap.FEC_Total_Installment_Amount__c}></lightning-helptext>
+                                            </template>
+                                        </span>
+                                    </span>
+                                    <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalInstallment}</div>
+                                </div>
+                            </div>
+                            <div class="repay-schedule-summary-item">
+                                <div class="repay-schedule-row-inner">
+                                    <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
+                                        {customLabel.totalPrincipal}
+                                        <span class="repay-helptext-wrap">
+                                            <template if:true={helpTextMap.FEC_Total_Principal__c}>
+                                                <lightning-helptext content={helpTextMap.FEC_Total_Principal__c}></lightning-helptext>
+                                            </template>
+                                        </span>
+                                    </span>
+                                    <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalPrincipal}</div>
+                                </div>
+                            </div>
+                            <div class="repay-schedule-summary-item">
+                                <div class="repay-schedule-row-inner">
+                                    <span class="repay-schedule-label repay-schedule-label-gray slds-text-title_bold">
+                                        {customLabel.totalInterest}
+                                        <span class="repay-helptext-wrap">
+                                            <template if:true={helpTextMap.FEC_Total_Interest__c}>
+                                                <lightning-helptext content={helpTextMap.FEC_Total_Interest__c}></lightning-helptext>
+                                            </template>
+                                        </span>
+                                    </span>
+                                    <div class="repay-schedule-value slds-text-body_regular">{repaymentScheduleTotalInterest}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <template if:true={hasRepaymentScheduleTableData}>
+                            <c-fec_-related-list-paging
+                                columns={repaymentSchedulePagingColumns}
+                                records={repaymentSchedulePagingRecords}
+                                default-sorted-by="dueDate"
+                                default-sort-direction="asc"
+                                page-size={repaymentSchedulePageSize}
+                                page-size-options={pageSizeOptions}
+                                hide-row-number
+                                hide-updated-time>
+                            </c-fec_-related-list-paging>
+                        </template>
+                        <template if:false={hasRepaymentScheduleTableData}>
+                            <div class="repay-no-data">{customLabel.noData}</div>
+                        </template>
+                        </template>
+                    </div>
+                </lightning-accordion-section>
+            </template>
+
             <lightning-accordion-section name={paymentHistorySectionName} label={customLabel.paymentHistory} class="slds-accordion__section">
                 <div class="slds-form slds-p-around_small repay-section-content">
                     <template if:true={isLoading}>

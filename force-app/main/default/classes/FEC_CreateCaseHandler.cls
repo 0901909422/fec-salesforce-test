@@ -248,7 +248,7 @@ public without sharing class FEC_CreateCaseHandler {
         
         
         if (dto.channel == FEC_ConstantCommon.CHANNEL_CHAT) {
-            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
+            interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         } else {
             interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         }
@@ -478,7 +478,7 @@ public without sharing class FEC_CreateCaseHandler {
         // CHANNEL (FIXED = CHAT)
         // ---------------------------
         interactionCase.FEC_Channel__c = FEC_ConstantCommon.CHANNEL_CHAT;
-        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_PENDING;
+        interactionCase.Status = FEC_ConstantCommon.CASE_STATUS_OPEN;
         
         // ---------------------------
         // SUB CHANNEL

@@ -25,7 +25,9 @@
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
               <template if:true={row.isFields}>
-                <p class="sub-section">{row.sub.name}</p>
+                <template if:false={row.sub.hideSubSectionHeading}>
+                  <p class="sub-section">{row.sub.name}</p>
+                </template>
 
                 <template for:each={row.sub.objlst} for:item="obj">
                   <lightning-record-edit-form
@@ -246,8 +248,10 @@
           </div>
         </template>
       </lightning-accordion-section>
+      
     </template>
-
+    <!--HieuTT74: [UPDATE 8/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
+    <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
     <!-- routing action -->
     <lightning-accordion-section
       key={routingAccordionSectionKey}
@@ -290,7 +294,8 @@
               user-group={userGroup}
               onassignmentsloaded={handleAssignmentsLoaded}
               onadditem={handleAddItem}
-              onmanualitemschange={handleManualItemsChange}>
+              onmanualitemschange={handleManualItemsChange}
+              onduplicatequeue={handleDuplicateQueue}>
             </c-fec_-routing-assignment>
           </template>
         </div>
@@ -363,8 +368,11 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <c-fec_-assignment-list record-id={recordId}>
+  <!--Hieutt74: Update ngày 21/4/2026-->
+  <!--Assigment Routing Action-->
+  <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
   </c-fec_-assignment-list>
+  <!--END: Hieutt74: Update ngày 21/4/2026-->
   <c-fec_-modal
     header={header}
     onclose={handleCloseModal}

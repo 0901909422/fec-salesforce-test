@@ -1,0 +1,26 @@
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding:
+        0 1rem
+        0.75rem 1rem;
+}
+
+.header-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.header-icon {
+    --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+.page-size lightning-combobox {
+    width: 90px;
+}
+
+.page-input {
+    width: 70px;
+}
