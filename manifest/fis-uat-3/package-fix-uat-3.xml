@@ -24,6 +24,9 @@
 	    <members>FEC_NotificationHistoryController</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
+	    <members>FEC_GetCardSecInfo</members>
+	    <members>FEC_MainInfoAccountController</members>
+	    <members>FEC_SecondaryInfoAccountController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -50,11 +53,16 @@
 	    <members>fec_OriginalInformation</members>
 	    <members>fec_DateFormatter</members>
 	    <members>fec_RelatedListPaging</members>
+	    <members>fec_CommonUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <name>CustomField</name>
+    </types>
+	<types>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <name>FlexiPage</name>
     </types>
 	<types>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
