@@ -1705,7 +1705,7 @@
         <field>FEC_District__c.FEC_Province_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
-        <fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Do_Not_Bother__c.FEC_Action__c</field>
         <readable>true</readable>
@@ -1755,7 +1755,7 @@
         <field>FEC_Do_Not_Bother__c.FEC_Updated_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
-<fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_District__c.FEC_Province__c</field>
         <readable>true</readable>
