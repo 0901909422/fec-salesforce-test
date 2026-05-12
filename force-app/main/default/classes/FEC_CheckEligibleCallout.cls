@@ -8,6 +8,7 @@
 * ===============================================================
    1.0      2026-03-23     LongNH76             Create
    1.1      2026-05-04     LongNH76             Change Mess Valid
+   1.2      2026-05-12     LongNH76             Delete Pattern Validate
 * ===============================================================
  
 ****************************************************************************************/
@@ -201,9 +202,9 @@ public without sharing class FEC_CheckEligibleCallout {
             throw new CalloutException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'CardNumber'}));
         }
 
-        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
-            throw new CalloutException(System.Label.FEC_MSG_National_ID_Invalid);
-        }
+        // if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, idCardNumber)) {
+        //     throw new CalloutException(System.Label.FEC_MSG_National_ID_Invalid);
+        // }
     }
 
     // /**

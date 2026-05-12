@@ -35,6 +35,7 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 import { 
   ACTION_REOPEN, 
@@ -83,6 +84,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
@@ -99,7 +102,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -738,8 +746,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeOptionlst = res;
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
-        //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-        //lưu bộ có subcode chứ không phải bộ không subcode định submit
+        // Không có option Sub-Code: resolve NOC không Sub-Code; getByCase (Apex) không fallback Sub-Code từ Case khi đã có Sub-Category từ UI.
         const triple =
           this.productTypeSelectedId &&
           this.categorySelectedId &&
@@ -770,8 +777,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
-    //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-    //lưu bộ có subcode chứ không phải bộ không subcode định submit
     syncSubCodeComboValue() {
     const el = this.template.querySelector(`c-fec_-combo-box[data-id="sub-code"]`);
     if (el) {

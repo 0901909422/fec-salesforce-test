@@ -111,8 +111,8 @@ export default class Fec_AssignmentList extends LightningElement {
     );
   }
 
-  handleModeMessage(message) {
-    console.log("MODE MESSAGE:", message);
+  async handleModeMessage(message) {
+    console.log("MODE MESSAGE:", JSON.stringify(message));
 
     if (message?.caseId !== this.recordId) {
       return;
@@ -120,7 +120,20 @@ export default class Fec_AssignmentList extends LightningElement {
 
     this.modeEditCase = message?.isEditMode;
 
-    // 👇 force UI update nếu cần
+    /*
+     * IMPORTANT:
+     * Reload assignments
+     * after execute action
+     */
+    console.log("START RELOAD ASSIGNMENTS");
+
+    await this.initData();
+
+    console.log("RELOAD ASSIGNMENTS DONE");
+
+    /*
+     * Refresh readonly state
+     */
     this.refreshReadonlyState();
   }
 
@@ -185,16 +198,18 @@ export default class Fec_AssignmentList extends LightningElement {
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
-          item.FEC_Assignment_Owner_Text__c
-          || (item.FEC_Assignment_Owner__c?.startsWith("00G")
-              ? item.FEC_Assignment_Owner__r?.Name
-              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")),
+        // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
+        owner:
+          item.FEC_Assignment_Owner_Text__c ||
+          (item.FEC_Assignment_Owner__c?.startsWith("00G")
+            ? item.FEC_Assignment_Owner__r?.Name
+            : getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || ""),
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
         status:
           // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
-          item.FEC_Assignment_Type__c === 'Routing' && item.FEC_Assignment_Status__c === OPEN_STATUS
+          item.FEC_Assignment_Type__c === "Routing" &&
+          item.FEC_Assignment_Status__c === OPEN_STATUS
             ? OPEN_STATUS
             : item.FEC_Assignment_Status__c === OPEN_STATUS
               ? NEW_STATUS
