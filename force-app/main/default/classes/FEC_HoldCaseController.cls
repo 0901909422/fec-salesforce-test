@@ -76,7 +76,7 @@ public with sharing class FEC_HoldCaseController {
                        FEC_Active__c,
                        Hold_Case_Type__c	
                 FROM FEC_Hold_Case_Config__c
-                WHERE FEC_Sub_Code__c = :subCode
+                WHERE FEC_Nature_of_Cases__r.FEC_Sub_Code__c = :subCode
                 AND   FEC_Active__c   = true
                 WITH SECURITY_ENFORCED
             ];
@@ -175,7 +175,7 @@ public with sharing class FEC_HoldCaseController {
             List<FEC_Hold_Case_Config__c> configs = [
                 SELECT FEC_NFU_Code__c
                 FROM FEC_Hold_Case_Config__c
-                WHERE FEC_Sub_Code__c = :c.FEC_SubCode__c
+                WHERE FEC_Nature_of_Cases__r.FEC_Sub_Code__c = :c.FEC_SubCode__c
                 AND   FEC_Active__c   = true
                 WITH SECURITY_ENFORCED
                 LIMIT 1

@@ -29,6 +29,8 @@
 	    <members>FEC_SecondaryInfoAccountController</members>
 	    <members>FEC_IncorrectPaymentController</members>
 	    <members>FEC_RefundRequestController</members>
+	    <members>FEC_CheckEligibleCallout</members>
+	    <members>FEC_HoldCaseController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
