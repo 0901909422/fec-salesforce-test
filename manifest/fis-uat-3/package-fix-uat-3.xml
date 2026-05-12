@@ -48,6 +48,8 @@
 	    <members>fe_Notification_History</members>
 	    <members>fec_NocChannelConfig</members>
 	    <members>fec_OriginalInformation</members>
+	    <members>fec_DateFormatter</members>
+	    <members>fec_RelatedListPaging</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
