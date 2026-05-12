@@ -1,7 +1,7 @@
 import { LightningElement, api, track } from "lwc";
 import getAssignmentRemarks from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentRemarks";
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
-import {getUsernameBeforeAt}  from 'c/fec_CommonUtils';
+import { getUsernameBeforeAt, formatDateTime } from "c/fec_CommonUtils";
 export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
   @api recordId;
   @api assignmentId;
@@ -17,30 +17,33 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
     {
       label: "Assignment Remark",
       fieldName: "remark",
+      type: "text",
+      wrapText: true,
+      hideDefaultActions: true,
     },
     {
       label: "Stage Name",
       fieldName: "stage",
+      type: "text",
+      hideDefaultActions: true,
     },
     {
       label: "User",
       fieldName: "user",
+      type: "text",
+      hideDefaultActions: true,
     },
     {
       label: "User Role",
       fieldName: "userRole",
+      type: "text",
+      hideDefaultActions: true,
     },
     {
       label: "Date Time",
       fieldName: "createdDate",
-      type: "date",
-      typeAttributes: {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      },
+      type: "text",
+      hideDefaultActions: true,
     },
   ];
 
@@ -61,7 +64,7 @@ export default class Fec_AssignmentRemarkHistoryTable extends LightningElement {
         stage: item.FEC_Stage_Name__c,
         user: getUsernameBeforeAt(item.FEC_User__c),
         userRole: item.FEC_User_Role__c,
-        createdDate: item.CreatedDate,
+        createdDate: formatDateTime(item.CreatedDate),
       }));
 
       this.currentPage = 1;

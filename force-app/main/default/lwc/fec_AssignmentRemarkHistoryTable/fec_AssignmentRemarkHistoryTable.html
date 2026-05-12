@@ -1,8 +1,11 @@
 <template>
 
-    <template if:true={isHasData}><lightning-datatable data={pagedData} key-field="id" hide-checkbox-column
-            columns={columns}>
-        </lightning-datatable>
+    <template if:true={isHasData}>
+        <div class="table-wrapper">
+            <lightning-datatable data={pagedData} key-field="id" columns={columns} hide-checkbox-column
+                resize-column-disabled suppress-bottom-bar class="custom-datatable">
+            </lightning-datatable>
+        </div>
         <template if:true={showPagination}>
             <div class="slds-m-top_medium slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
 
