@@ -3,7 +3,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
-import { formatDateField } from 'c/fec_DateFormatter';
+import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
@@ -21,36 +21,19 @@ import FEC_Phone_Number from '@salesforce/label/c.FEC_Phone_Number';
 import FEC_Communication_Date from '@salesforce/label/c.FEC_Communication_Date';
 import FEC_Address from '@salesforce/label/c.FEC_Address';
 
+import { PREVIEW_COMMUNICATION_HISTORY } from './fec_communicationHistoryPreviewData';
+
 const CASE_FIELDS = [CONTRACT_FIELD, RT_NAME_FIELD];
 
 const SECTION_LABEL = 'Communication History';
 
-/** Mẫu để test UI (bật Preview trên App Builder) */
-const PREVIEW_COMMUNICATION_HISTORY = [
-    {
-        ContractNumber: 'HD-2024-001234',
-        CommunicationType: 'SMS',
-        Template: 'PAYMENT_REMINDER_V2',
-        CampaignName: 'Thu hồi nợ T4/2026',
-        PhoneNumber: '09061234567',
-        CommunicatedDate: '13/04/2026 09:15:00',
-        Address2: '123 Nguyễn Huệ, Q.1, TP.HCM'
-    },
-    {
-        ContractNumber: 'HD-2024-001234',
-        CommunicationType: 'Email',
-        Template: 'LEGAL_NOTICE_STD',
-        CampaignName: 'Nhắc nợ Level 2',
-        PhoneNumber: STR_EMPTY,
-        CommunicatedDate: '05/04/2026 14:00:00',
-        Address2: '—'
-    }
-];
-
 export default class Fec_communicationHistory extends LightningElement {
     @api recordId;
 
-    /** Bật trên App Builder: bỏ qua API, hiển thị bảng với dữ liệu mẫu (chỉ để test FE). */
+    /**
+     * App Builder / test: luồng hiển thị giống production (chờ Apply…).
+     * Khi true, lần load sau Apply không gọi Apex mà trả dữ liệu từ PREVIEW_COMMUNICATION_HISTORY.
+     */
     @api previewSampleData = false;
 
     _contractNumber;
@@ -92,12 +75,6 @@ export default class Fec_communicationHistory extends LightningElement {
     ];
 
     connectedCallback() {
-        if (this.previewSampleData) {
-            this.communicationHistories = PREVIEW_COMMUNICATION_HISTORY.map((r) => ({ ...r }));
-            this.isLoading = false;
-            this.isExpanded = true;
-            return;
-        }
         this._subscription = subscribe(
             this.messageContext,
             COLLECTION_DATE_FILTER,
@@ -118,12 +95,6 @@ export default class Fec_communicationHistory extends LightningElement {
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_FIELDS })
     wiredCase({ data, error }) {
-        if (this.previewSampleData) {
-            this.communicationHistories = PREVIEW_COMMUNICATION_HISTORY.map((r) => ({ ...r }));
-            this.isLoading = false;
-            this.isExpanded = true;
-            return;
-        }
         if (data) {
             this._contractNumber = data.fields.FEC_Contract_Number__c?.value;
             this._recordTypeName = data.fields.RecordType?.displayValue;
@@ -135,12 +106,6 @@ export default class Fec_communicationHistory extends LightningElement {
     }
 
     async loadCommunicationHistory() {
-        if (this.previewSampleData) {
-            this.communicationHistories = PREVIEW_COMMUNICATION_HISTORY.map((r) => ({ ...r }));
-            this.isLoading = false;
-            return;
-        }
-
         if (!this._hasApplied) return;
 
         this.isLoading = true;
@@ -148,6 +113,11 @@ export default class Fec_communicationHistory extends LightningElement {
         try {
             if (!this._contractNumber || !this._recordTypeName) {
                 this.communicationHistories = null;
+                return;
+            }
+
+            if (this.previewSampleData) {
+                this.communicationHistories = PREVIEW_COMMUNICATION_HISTORY.map((r) => ({ ...r }));
                 return;
             }
 
@@ -181,7 +151,7 @@ export default class Fec_communicationHistory extends LightningElement {
     }
 
     get showCollapsed() {
-        return !this.isLoading && !this._hasApplied && !this.previewSampleData;
+        return !this.isLoading && !this._hasApplied;
     }
 
     get showErrorBanner() {
@@ -192,7 +162,7 @@ export default class Fec_communicationHistory extends LightningElement {
         return (
             !this.isLoading &&
             Array.isArray(this.communicationHistories) &&
-            (this._hasApplied || this.previewSampleData)
+            this._hasApplied
         );
     }
 
@@ -201,7 +171,8 @@ export default class Fec_communicationHistory extends LightningElement {
         if (!Array.isArray(this.communicationHistories)) {
             return [];
         }
-        return this.communicationHistories.map((row, idx) => ({
+        const sorted = sortByDefaultDateFieldDesc(this.communicationHistories, 'CommunicatedDate');
+        return sorted.map((row, idx) => ({
             Id: `ch-${idx}`,
             ContractNumber: row?.ContractNumber ?? STR_EMPTY,
             CommunicationType: row?.CommunicationType ?? STR_EMPTY,
