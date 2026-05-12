@@ -71,6 +71,10 @@
 	    <members>fec_DoNotBotherHandling</members>
 	    <members>fec_DoNotBotherNonExistingCustomer</members>
 	    <members>fec_SubProcessContainer</members>
+	    <members>fec_DoNotBotherExistingCustomer</members>
+	    <members>fec_DoNotBotherInformationView</members>
+	    <members>fec_ReusableDNBCustomTable</members>
+	    <members>fec_AssignmentExecuteVisibility</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
