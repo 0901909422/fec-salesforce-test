@@ -111,6 +111,8 @@
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
         <members>FEC_SubProcessService</members>
+        <members>FEC_BatchCaseCreationController</members>
+		<members>FEC_BatchDataCreationController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -523,6 +525,8 @@
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
+        <members>FEC_Batch_Case_Creation__c</members>
+		<members>FEC_Batch_Data_Creation__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -536,6 +540,8 @@
         <members>FEC_Assignment_Record_Page</members>
         <members>Channel_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Batch_Case_Creation</members>
+		<members>FEC_Batch_Data_Creation</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -979,6 +985,8 @@
         <members>FEC_RD_Payment_User_Customer_360</members>
         <members>FEC_RD_Telesales_User_1_Customer_360</members>
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
+        <members>FEC_Batch_Case_Creation</members>
+		<members>FEC_Permission_Set_Batch_Data_Creation</members>
         <name>PermissionSet</name>
     </types>
 	<types>
@@ -1032,6 +1040,11 @@
 	 	<members>Case.Customer_Case</members>
 	 	<members>Case.Internal_Case</members>
 		<name>RecordType</name>
+	</types>
+    <types>
+		<members>FEC_Batch_Case_Creation__c-Batch Case Creation Layout</members>
+		<members>FEC_Batch_Data_Creation__c-Batch Data Creation Layout</members>
+		<name>Layout</name>
 	</types>
 	<version>66.0</version>
 </Package>
