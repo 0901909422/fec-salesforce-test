@@ -31,6 +31,7 @@
 	    <members>FEC_RefundRequestController</members>
 	    <members>FEC_CheckEligibleCallout</members>
 	    <members>FEC_HoldCaseController</members>
+	    <members>FEC_AssignmentController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
