@@ -168,9 +168,13 @@ export default class Fec_RoutingAssignment extends LightningElement {
 
   handleConfirm() {
     this.showValidationError = false;
-    if (!this.formTeam || !this.formQueue || !this.formRemark) {
+    const errors = [];
+    if (!this.formTeam) errors.push('Team');
+    if (!this.formQueue) errors.push('Queue');
+    if (!this.formRemark) errors.push('Assignment Remark');
+    if (errors.length > 0) {
       this.showValidationError = true;
-      this.validationErrorMsg = 'Vui lòng điền đầy đủ thông tin: Team, Queue và Remark.';
+      this.validationErrorMsg = errors.join(', ') + ' là bắt buộc.';
       return;
     }
     // tungnm37: check duplicate queue
