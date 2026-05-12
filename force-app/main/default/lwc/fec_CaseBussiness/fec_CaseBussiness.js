@@ -2760,8 +2760,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
      if (routeToEle) {
-      // tungnm37 thêm: COF/GSR shortcut - không cần tìm selectedAction
-      if (this.isRoutingAssignmentMode) {
+      // tungnm37 thêm: COF/GSR shortcut - chỉ chạy khi action là Route to, các action khác (Cancel, Escalate...) chạy bình thường
+      if (this.isRoutingAssignmentMode && routeToEle.value === ACTION_ROUTE_TO) {
         await run({
           method: 'Route to COF/GSR',
           params: {
