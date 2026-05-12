@@ -109,7 +109,7 @@
                   <p class="sub-section">{row.dynCmp.subSectionName}</p>
                 </template>
                 <div data-fec-lwc={row.dynCmp.componentName}>
-                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode}
+                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
                     is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
                 </div>
               </template>

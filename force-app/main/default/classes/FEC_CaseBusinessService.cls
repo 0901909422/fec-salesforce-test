@@ -319,6 +319,24 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
+      result.subCategoryCode = FEC_ConstantCommon.STR_EMPTY;
+      if (String.isNotBlank(subCategoryId)) {
+        try {
+          Id subCategoryRecordId = subCategoryId;
+          List<FEC_Sub_Category__c> subCategorylst = [
+            SELECT FEC_Code__c
+            FROM FEC_Sub_Category__c
+            WHERE Id = :subCategoryRecordId
+            LIMIT 1
+          ];
+          if (!subCategorylst.isEmpty() && subCategorylst[0].FEC_Code__c != null) {
+            result.subCategoryCode = subCategorylst[0].FEC_Code__c;
+          }
+        } catch (Exception e) {
+          System.debug('getByCase subCategoryCode: ' + e.getMessage());
+        }
+      }
+
       // =============================== GET ROUTING ACTION ===========================
 
       Boolean isRevert = false;
@@ -570,7 +588,7 @@ public without sharing class FEC_CaseBusinessService {
             'SELECT Id, Name, FEC_Business_Process__r.Name ' +
             'FROM FEC_Case_Stage__c ' +
             'WHERE Id = :id ' +
-            'AND FEC_Active__c = TRUE '; 
+            'AND FEC_Active__c = TRUE ';
             // +
             // 'AND FEC_User_Group__c INCLUDES (\'' +
             // String.join(new List<String>(rolelst), '\',\'') +
@@ -583,7 +601,7 @@ public without sharing class FEC_CaseBusinessService {
             'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ';
-            // + 
+            // +
             // 'AND FEC_User_Group__c INCLUDES (\'' +
             // String.join(new List<String>(rolelst), '\',\'') +
             // '\')';
@@ -680,7 +698,7 @@ public without sharing class FEC_CaseBusinessService {
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
 
-              //Có khác: 
+              //Có khác:
               if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
                 continue;
               }
@@ -3590,6 +3608,9 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public String subCodeCode;
+
+    @AuraEnabled
+    public String subCategoryCode;
 
     @AuraEnabled
     public String stage;
