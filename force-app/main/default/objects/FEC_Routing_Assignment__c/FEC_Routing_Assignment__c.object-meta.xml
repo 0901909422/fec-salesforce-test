@@ -157,7 +157,7 @@
     <nameField>
         <displayFormat>RA - {0}</displayFormat>
         <label>RA Name</label>
-        <trackHistory>false</trackHistory>
+        <trackHistory>true</trackHistory>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Routing Assignment</pluralLabel>
