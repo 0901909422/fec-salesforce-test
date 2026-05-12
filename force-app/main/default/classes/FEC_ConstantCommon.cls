@@ -264,6 +264,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String MASKING_TYPE_PHONE = 'Mobile/ Phone';
     public static final String MASKING_TYPE_PASSPORT = 'National ID/ Passport';
 
+    // RC27 — Thay thế thẻ
+    // Toannd61
+    public static final String SUB_CODE_CARD_REPLACEMENT_FEE  = 'RC27.01'; // Có phí
+    public static final String SUB_CODE_CARD_REPLACEMENT_FREE = 'RC27.02'; // Miễn phí
+
     
     public static final String FEC_CATEGORY_REQUEST = 'Request';
     public static final String FEC_CATEGORY_FEEDBACK = 'Feedback';
@@ -340,6 +345,7 @@ public with sharing class FEC_ConstantCommon {
     };
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
+    public static final String FEC_RAH_DESCRIPTION_AUTO_ASSIGNMENT = 'Auto Assignment';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
 
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
@@ -510,10 +516,18 @@ public with sharing class FEC_ConstantCommon {
     };
     
     public static final String CASE_ALL_REQUEST = 'All';
-    public static final String CASE_ALL_CUSTOMER = 'All';
-
-    //----------HARD CODE VALUE FOR CALL API (Non-production)----------
+    
+    //----------HARD CODE VALUE FOR RESET PIN (Non-production)----------
     public static final String ENVIROMENT_NON_PRODUCTION = 'Non-Production';
+    public static final String RESET_PIN_DEFAULT_NID = '261089113994';
+    public static final String RESET_PIN_DEFAULT_PHONE = '84983893967';
+    public static final String CASE_ALL_CUSTOMER = 'All';
+    
+    //----------HARD CODE VALUE FOR CARD LOCK UNLOCK (Non-production)----------
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_BLOCK_CODE = 'C';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_LAST4DIGIT = '6309';
+    public static final String CARD_LOCK_UNLOCK_DEFAULT_ACCOUNT_NUMBER = '0001500010000173373';
+    
     
     /** Profile names */
     public static final String PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
@@ -562,6 +576,48 @@ public with sharing class FEC_ConstantCommon {
     /** Transfer Call: định dạng phần DateTime trên HTTP header (GMT). */
     public static final String TRANSFER_CALL_DATETIME_FORMAT_GMT = 'yyyyMMdd\'T\'HHmmss.SSS';
     public static final String TRANSFER_CALL_DATETIME_SUFFIX_GMT = ' GMT';
+
+    /** Transfer Call: RequestorID gửi lên Pega Collections. */
+    public static final String TRANSFER_CALL_REQUESTOR_ID_CSM = 'CSM';
+
+    /** Transfer Call: tên FEC_API_Config__mdt record cho endpoint. */
+    public static final String API_CONFIG_NAME = 'FEC_Transfer_Information';
+
+    /**
+     * Transfer Call: thứ tự các fieldKey trong mảng data[].
+     * Theo spec: 7 field, KHÔNG có csCaseID (csCaseID nằm ở root body riêng).
+     */
+    public static final List<String> TRANSFER_CALL_DATA_FIELD_ORDER = new List<String>{
+        'productType',
+        'extAppId',
+        'phoneNumber',
+        'category',
+        'subCategory',
+        'subCode',
+        'remark'
+    };
+
+    /** Transfer Call: giá trị mặc định khi field trống. */
+    public static final String TRANSFER_CALL_DEFAULT_GENESYS_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PRODUCT_TYPE  = '';
+    public static final String TRANSFER_CALL_DEFAULT_EXT_APP_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PHONE         = '';
+    public static final String TRANSFER_CALL_DEFAULT_CATEGORY      = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CATEGORY  = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CODE      = '';
+    public static final String TRANSFER_CALL_DEFAULT_CS_CASE_ID    = '';
+
+    /** Transfer Call: giới hạn độ dài log/hint khi parse lỗi. */
+    public static final Integer TRANSFER_CALL_DEBUG_BODY_MAX_LEN   = 1000;
+    public static final Integer TRANSFER_CALL_API_HINT_RAW_MAX_LEN = 500;
+
+    /** Transfer Call: các key JSON ưu tiên khi trích xuất thông tin lỗi từ response. */
+    public static final List<String> TRANSFER_CALL_JSON_ERROR_HINT_KEYS = new List<String>{
+        'Reason', 'reason', 'message', 'errorMessage', 'error', 'detail', 'ResultOfClass'
+    };
+
+    /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
+    public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
     
     //HieuTT74 - Update ngày 25/4/2026 - Assigment Routing Action
     // ================= ACTION =================
@@ -672,7 +728,10 @@ public with sharing class FEC_ConstantCommon {
         DECISION_DOCUMENT_PREP => QUEUE_CARE_INTERNAL_TASK,
         DECISION_TASK_UNDER_REVIEW => QUEUE_CARE_INTERNAL_TASK
     };
-    
+
+    public static final String COF_GENERAL_FLOW = 'COF - General Flow';
+    public static final String STAGE_ONE = 'Stage 1';
+    public static final String ORIGINAL_INFORMATION = 'Original Information';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';
@@ -699,5 +758,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
     public static final String QUEUE_ID_START = '00G';
+    /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
+    public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
 
 }
