@@ -562,40 +562,41 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
       if (stagelst.isEmpty()) {
-      String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
-      String caseStageQuery;
-      Map<String, Object> bindVars;
-      if (String.isNotBlank(selectedCaseStageId)) {
-        caseStageQuery =
-          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
-          'FROM FEC_Case_Stage__c ' +
-          'WHERE Id = :id ' +
-          'AND FEC_Active__c = TRUE '; 
-          // +
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
-        bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
-      } else {
-        caseStageQuery =
-          'SELECT Id, Name, FEC_Business_Process__r.Name ' +
-          'FROM FEC_Case_Stage__c ' +
-          'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
-          'AND FEC_Active__c = TRUE ' +
-          'AND FEC_Default_Stage__c = TRUE ';
-          // + 
-          // 'AND FEC_User_Group__c INCLUDES (\'' +
-          // String.join(new List<String>(rolelst), '\',\'') +
-          // '\')';
-        bindVars = new Map<String, Object>{
-          'selectedNatureOfCaseId' => selectedNatureOfCaseId
-        };
+        String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
+        String caseStageQuery;
+        Map<String, Object> bindVars;
+        if (String.isNotBlank(selectedCaseStageId)) {
+          caseStageQuery =
+            'SELECT Id, Name, FEC_Business_Process__r.Name ' +
+            'FROM FEC_Case_Stage__c ' +
+            'WHERE Id = :id ' +
+            'AND FEC_Active__c = TRUE '; 
+            // +
+            // 'AND FEC_User_Group__c INCLUDES (\'' +
+            // String.join(new List<String>(rolelst), '\',\'') +
+            // '\')';
+          bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
+        } else {
+          caseStageQuery =
+            'SELECT Id, Name, FEC_Business_Process__r.Name ' +
+            'FROM FEC_Case_Stage__c ' +
+            'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
+            'AND FEC_Active__c = TRUE ' +
+            'AND FEC_Default_Stage__c = TRUE ';
+            // + 
+            // 'AND FEC_User_Group__c INCLUDES (\'' +
+            // String.join(new List<String>(rolelst), '\',\'') +
+            // '\')';
+          bindVars = new Map<String, Object>{
+            'selectedNatureOfCaseId' => selectedNatureOfCaseId
+          };
+        }
+          stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
+          caseStageQuery,
+          bindVars,
+          AccessLevel.USER_MODE
+        );
       }
-        stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
-        caseStageQuery,
-        bindVars,
-        AccessLevel.USER_MODE
-      );
 
       if (stagelst.isEmpty()) {
         selectedCase.FEC_Current_Case_Stage__c = null;
