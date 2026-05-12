@@ -84,6 +84,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
@@ -100,7 +102,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {

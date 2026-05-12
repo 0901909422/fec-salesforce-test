@@ -200,6 +200,8 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       Case selectedCase = caselst.get(0);
+      // Giữ stage đọc từ DB trước khi draft null field — dùng map sang stage tương đương khi đổi bộ NOC.
+      Id caseStageIdPreservedAtLoad = selectedCase.FEC_Current_Case_Stage__c;
 
       if(!selectedCase.FEC_Is_Submited__c) {
         selectedCase.FEC_Current_Case_Stage__c = null;
@@ -540,12 +542,29 @@ public without sharing class FEC_CaseBusinessService {
       // ================================= GET CASE STAGE ===========================
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
+      List<FEC_Case_Stage__c> stagelst = new List<FEC_Case_Stage__c>();
+      if (
+        hasIncomingNocSelection &&
+        String.isNotBlank(caseStageIdPreservedAtLoad) &&
+        String.isNotBlank(selectedNatureOfCaseId)
+      ) {
+        FEC_Case_Stage__c remappedStageForNewNoc = resolveCaseStageForNewNatureOfCase(
+          caseStageIdPreservedAtLoad,
+          (Id) selectedNatureOfCaseId
+        );
+        if (remappedStageForNewNoc != null) {
+          stagelst = [
+            SELECT Id, Name, FEC_Business_Process__r.Name
+            FROM FEC_Case_Stage__c
+            WHERE Id = :remappedStageForNewNoc.Id AND FEC_Active__c = TRUE
+            LIMIT 1
+          ];
+        }
+      }
+      if (stagelst.isEmpty()) {
       String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
-
       String caseStageQuery;
-
       Map<String, Object> bindVars;
-
       if (String.isNotBlank(selectedCaseStageId)) {
         caseStageQuery =
           'SELECT Id, Name, FEC_Business_Process__r.Name ' +
@@ -556,7 +575,6 @@ public without sharing class FEC_CaseBusinessService {
           // 'AND FEC_User_Group__c INCLUDES (\'' +
           // String.join(new List<String>(rolelst), '\',\'') +
           // '\')';
-
         bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
       } else {
         caseStageQuery =
@@ -569,13 +587,11 @@ public without sharing class FEC_CaseBusinessService {
           // 'AND FEC_User_Group__c INCLUDES (\'' +
           // String.join(new List<String>(rolelst), '\',\'') +
           // '\')';
-
         bindVars = new Map<String, Object>{
           'selectedNatureOfCaseId' => selectedNatureOfCaseId
         };
       }
-
-      List<FEC_Case_Stage__c> stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
+        stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
         caseStageQuery,
         bindVars,
         AccessLevel.USER_MODE
@@ -4782,6 +4798,68 @@ public without sharing class FEC_CaseBusinessService {
     main.subSectionlst.add(caseDetails);
 
     return main;
+  }
+
+  /**
+   * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
+   * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
+   * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
+   * rồi cờ default; không dùng FEC_Order__c.
+   */
+  private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
+    Id priorCaseStageId,
+    Id newNatureOfCaseId
+  ) {
+    if (priorCaseStageId == null || newNatureOfCaseId == null) {
+      return null;
+    }
+    List<FEC_Case_Stage__c> oldLst = [
+      SELECT Id, Name, FEC_Default_Stage__c, FEC_Nature_of_Cases__c
+      FROM FEC_Case_Stage__c
+      WHERE Id = :priorCaseStageId AND FEC_Active__c = TRUE
+      LIMIT 1
+    ];
+    if (oldLst.isEmpty()) {
+      return null;
+    }
+    FEC_Case_Stage__c oldSt = oldLst[0];
+    if (oldSt.FEC_Nature_of_Cases__c == newNatureOfCaseId) {
+      return null;
+    }
+    List<FEC_Case_Stage__c> newLst = [
+      SELECT Id, Name, FEC_Default_Stage__c
+      FROM FEC_Case_Stage__c
+      WHERE FEC_Nature_of_Cases__c = :newNatureOfCaseId AND FEC_Active__c = TRUE
+      ORDER BY Name
+    ];
+    if (newLst.isEmpty()) {
+      return null;
+    }
+    Integer oldStageNum = extractStageNumberFromStageName(oldSt.Name);
+    if (oldStageNum != null) {
+      for (FEC_Case_Stage__c n : newLst) {
+        if (extractStageNumberFromStageName(n.Name) == oldStageNum) {
+          return n;
+        }
+      }
+    }
+    for (FEC_Case_Stage__c n : newLst) {
+      if (n.FEC_Default_Stage__c == oldSt.FEC_Default_Stage__c) {
+        return n;
+      }
+    }
+    return newLst[0];
+  }
+
+  private static Integer extractStageNumberFromStageName(String stageName) {
+    if (String.isBlank(stageName)) {
+      return null;
+    }
+    Matcher m = FEC_ConstantCommon.PAT_STAGE_NAME_WITH_NUMBER.matcher(stageName);
+    if (m.find()) {
+      return Integer.valueOf(m.group(1));
+    }
+    return null;
   }
 
   public class CaseBusinessServiceException extends Exception {
