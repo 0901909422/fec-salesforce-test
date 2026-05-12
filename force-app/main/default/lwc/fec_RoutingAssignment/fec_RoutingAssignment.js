@@ -11,6 +11,7 @@ import FEC_Choose_Team_Placeholder from '@salesforce/label/c.FEC_Choose_Team_Pla
 import FEC_Choose_Queue_Placeholder from '@salesforce/label/c.FEC_Choose_Queue_Placeholder';
 import FEC_Enter_Remark_Placeholder from '@salesforce/label/c.FEC_Enter_Remark_Placeholder';
 import FEC_Remark_Label from '@salesforce/label/c.FEC_Remark_Label';
+import FEC_Duplicate_Queue_Error from '@salesforce/label/c.FEC_Duplicate_Queue_Error';
 
 const ROUTING_ASSIGNMENT_PREFIXES = ['COF', 'GSR'];
 
@@ -34,7 +35,14 @@ export default class Fec_RoutingAssignment extends LightningElement {
   @track manualItems = [];
   @track formTeam = '';
   @track formQueue = '';
+
+  // tungnm37: expose để parent check form đang mở chưa confirm
+  @api get hasUnconfirmedForm() {
+    return this.showAddForm && (this.formTeam || this.formQueue);
+  }
   @track formRemark = '';
+  @track showValidationError = false;
+  @track validationErrorMsg = '';
 
   teamLabel = FEC_Team_Label;
   queueLabel = FEC_Queue_Label;
@@ -142,6 +150,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
 
   handleCancelForm() {
     this.showAddForm = false;
+    this.showValidationError = false;
   }
 
   handleTeamChange(e) {
@@ -158,8 +167,18 @@ export default class Fec_RoutingAssignment extends LightningElement {
   }
 
   handleConfirm() {
+    this.showValidationError = false;
     if (!this.formTeam || !this.formQueue || !this.formRemark) {
-      // validate
+      this.showValidationError = true;
+      this.validationErrorMsg = 'Vui lòng điền đầy đủ thông tin: Team, Queue và Remark.';
+      return;
+    }
+    // tungnm37: check duplicate queue
+    const isDuplicateQueue = this.manualItems.some(i => i.queueName === this.formQueue);
+    if (isDuplicateQueue) {
+      this.dispatchEvent(new CustomEvent('duplicatequeue', {
+        detail: { message: FEC_Duplicate_Queue_Error }
+      }));
       return;
     }
     const newItem = {
@@ -181,6 +200,16 @@ export default class Fec_RoutingAssignment extends LightningElement {
     this.manualItems = this.manualItems.filter(i => i.key !== key);
     this.dispatchEvent(new CustomEvent('manualitemschange', {
       detail: { items: this.manualItems }
+    }));
+  }
+
+  // tungnm37: clear manual items sau khi submit thành công
+  @api clearManualItems() {
+    this.manualItems = [];
+    this.showAddForm = false;
+    this.showValidationError = false;
+    this.dispatchEvent(new CustomEvent('manualitemschange', {
+      detail: { items: [] }
     }));
   }
 }

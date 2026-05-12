@@ -20,6 +20,11 @@
                 <default>false</default>
                 <label>Call</label>
             </value>
+            <value>
+                <fullName>Routing</fullName>
+                <default>false</default>
+                <label>Routing</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

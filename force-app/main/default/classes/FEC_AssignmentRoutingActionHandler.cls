@@ -10,6 +10,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
     String subDecision
     ) {
         try {
+            claimAssignmentIfQueueOwner(caseId, assignmentId);
             
             if (action == FEC_ConstantCommon.ACTION_ESCALATE) {
                 handleEscalate(caseId, assignmentId, remark);
@@ -83,6 +84,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         a.FEC_OwnerID__c = managerId;
         
         update a;
+        syncAssignmentUsersToCase(caseId, assignmentId);
         
         insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_ESCALATE, remark);
     }
@@ -174,6 +176,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         }
         
         update assignment;
+        syncAssignmentUsersToCase(caseId, assignmentId);
         
         insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_REVERT, remark);
     }
@@ -245,6 +248,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         assignment.FEC_Assignment_Status__c = getRouteToStatus(team);
         
         update assignment;
+        syncAssignmentUsersToCase(caseId, assignmentId);
         
         insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_ROUTE_TO_DISPLAY, remark);
     }
@@ -283,6 +287,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         }
         
         update assignment;
+        syncAssignmentUsersToCase(caseId, assignmentId);
         
         insertHistory(caseId, assignmentId, 'Transfer', remark);
     }
@@ -339,6 +344,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         }
         
         update assignment;
+        syncAssignmentUsersToCase(caseId, assignmentId);
         update caseUpdate;
         
         insertHistory(
@@ -537,5 +543,162 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
     private static Id getQueueForUpdateDecision(String decision) {
         String queueName = FEC_ConstantCommon.DECISION_QUEUE_MAP.get(decision);
         return queueName != null ? getQueueIdByName(queueName) : null;
+    }
+    
+    /**
+     * tungnm37: Đồng bộ Case.FEC_Assignment_Users__c theo rule:
+     * - Nếu FEC_Assignment_Owner__c != null → lưu User ID
+     * - Nếu FEC_Assignment_Owner__c == null → lưu Queue ID từ FEC_OwnerID__c
+     */
+    private static void syncAssignmentUsersToCase(Id caseId, Id assignmentId) {
+        try {
+            List<FEC_Assignment__c> assignments = [
+                SELECT Id, FEC_Assignment_Owner__c, FEC_OwnerID__c
+                FROM FEC_Assignment__c
+                WHERE Id = :assignmentId
+                LIMIT 1
+            ];
+            if (assignments.isEmpty()) return;
+            
+            FEC_Assignment__c a = assignments[0];
+            String userValue;
+            if (a.FEC_Assignment_Owner__c != null) {
+                // Owner là User → lưu User ID
+                userValue = String.valueOf(a.FEC_Assignment_Owner__c);
+            } else if (String.isNotBlank(a.FEC_OwnerID__c)) {
+                // Owner là Queue → FEC_OwnerID__c có thể là Queue Id hoặc Queue Name
+                // Kiểm tra nếu là valid Salesforce Id (18 ký tự) thì dùng trực tiếp
+                try {
+                    Id queueId = (Id) a.FEC_OwnerID__c;
+                    userValue = String.valueOf(queueId);
+                } catch (Exception ex) {
+                    // FEC_OwnerID__c là Queue Name → tìm Queue Id
+                    List<Group> groups = [
+                        SELECT Id FROM Group
+                        WHERE Name = :a.FEC_OwnerID__c AND Type = 'Queue'
+                        LIMIT 1
+                    ];
+                    if (!groups.isEmpty()) {
+                        userValue = String.valueOf(groups[0].Id);
+                    }
+                }
+            }
+            
+            if (String.isNotBlank(userValue)) {
+                Database.update(
+                    new Case(Id = caseId, FEC_Assignment_Users__c = userValue),
+                AccessLevel.SYSTEM_MODE
+                    );
+            }
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG syncAssignmentUsersToCase error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
+        }
+    }
+    
+    
+    private static void claimAssignmentIfQueueOwner(
+        Id caseId,
+    Id assignmentId
+    ) {
+        
+        Id currentUserId = UserInfo.getUserId();
+        
+        User currentUser = [
+        SELECT
+            Id,
+            Email,
+            UserRole.Name
+        FROM User
+        WHERE Id = :currentUserId
+        LIMIT 1
+    ];
+        
+        FEC_Assignment__c ass = [
+        SELECT
+            Id,
+            FEC_Assignment_Owner__c,
+            FEC_OwnerID__c
+        FROM FEC_Assignment__c
+        WHERE Id = :assignmentId
+        LIMIT 1
+    ];
+        
+        // chỉ xử lý khi owner là Queue
+        if (
+            ass.FEC_Assignment_Owner__c != null ||
+            String.isBlank(ass.FEC_OwnerID__c)
+        ) {
+            return;
+        }
+        
+        String oldQueueId = ass.FEC_OwnerID__c;
+        
+        // claim assignment
+        update new FEC_Assignment__c(
+            Id = assignmentId,
+        FEC_Assignment_Owner__c = currentUserId,
+        FEC_OwnerID__c = currentUserId
+            );
+        
+        syncAssignmentUsersToCase(caseId, assignmentId);
+        
+        Case c = [
+        SELECT
+            FEC_Current_Case_Stage__r.FEC_Code__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        
+        insert new FEC_Routing_Action_History__c(
+            
+        FEC_Routing_Action__c =
+            'Change Owner',
+        
+        FEC_Routing_Action_Type__c =
+            FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        
+        FEC_Original_User_Queue__c =
+            oldQueueId,
+        
+        FEC_Original_User_Queue_ID__c =
+            oldQueueId,
+        
+        FEC_Updated_User_Queue__c =
+            emailLocalPart(currentUser.Email),
+        
+        FEC_Updated_User_Queue_ID__c =
+            currentUserId,
+        
+        FEC_User__c =
+            emailLocalPart(currentUser.Email),
+        
+        FEC_User_Role__c =
+            currentUser.UserRole != null
+            ? currentUser.UserRole.Name
+            : null,
+        
+        FEC_Stage_Name__c =
+            c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        
+        FEC_Assignment__c =
+            assignmentId,
+        
+        FEC_Case__c =
+            caseId
+            );
+    }
+    
+    private static String emailLocalPart(String email) {
+        
+        if (String.isBlank(email)) {
+            return null;
+        }
+        
+        List<String> parts = email.split('@');
+        
+        return parts.isEmpty()
+            ? email.trim()
+            : parts[0].trim();
     }
 }
