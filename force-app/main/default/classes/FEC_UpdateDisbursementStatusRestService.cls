@@ -52,6 +52,7 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
     private static final String CODE_BAD_REQUEST      = '400';
     private static final String CODE_CASE_NOT_FOUND   = '105';
     private static final String CODE_BUSINESS_ERROR   = '201';
+    private static final String CODE_INTERNAL_ERROR   = '500';
     // ─── Main Handler ────────────────────────────────────────────────────────
 
     @HttpPost
@@ -158,7 +159,7 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
 
         } catch (Exception e) {
             System.debug('FEC_DEBUG UpdateDisbursementStatus error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
-            response = new UpdateDisbursementStatusResponse('500', System.Label.FEC_UpdateDisb_Msg_InternalError);
+            response = new UpdateDisbursementStatusResponse(CODE_INTERNAL_ERROR, System.Label.FEC_UpdateDisb_Msg_InternalError);
             res.statusCode = 500;
             res.responseBody = Blob.valueOf(JSON.serialize(response));
         } finally {
@@ -180,12 +181,19 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
         if (String.isBlank(req.Sys.RequestorID)) {
             return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_RequestorID_Required);
         }
-        // REQ-003
-        if (String.isBlank(req.Sys.RequestDateTime)) {
-            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DateTime_Required);
+        // REQ-003: DateTime phải đúng định dạng ISO 8601
+        if (String.isBlank(req.Sys.RequestDateTime) || !Pattern.matches(
+            '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})?$',
+            req.Sys.RequestDateTime
+        )) {
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DateTime_Invalid);
         }
         try {
-            Datetime.valueOfGmt(req.Sys.RequestDateTime.replace('T', ' ').replace('Z', ''));
+            String normalized = req.Sys.RequestDateTime.replaceAll('(Z|[+-]\\d{2}:\\d{2})$', '').replace('T', ' ');
+            if (normalized.contains('.')) {
+                normalized = normalized.substringBefore('.');
+            }
+            Datetime.valueOfGmt(normalized);
         } catch (Exception e) {
             return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DateTime_Invalid);
         }
@@ -197,13 +205,14 @@ global without sharing class FEC_UpdateDisbursementStatusRestService {
         if (String.isBlank(req.DISB_STATUS) || !VALID_DISB_STATUSES.contains(req.DISB_STATUS)) {
             return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbStatus_Invalid);
         }
-        // REQ-006
-        if (String.isNotBlank(req.DISB_DT)) {
-            try {
-                Date.valueOf(req.DISB_DT);
-            } catch (Exception e) {
-                return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
-            }
+        // REQ-006: DISB_DT phải đúng định dạng yyyy-MM-dd
+        if (String.isBlank(req.DISB_DT) || !Pattern.matches('^\\d{4}-\\d{2}-\\d{2}$', req.DISB_DT)) {
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
+        }
+        try {
+            Date.valueOf(req.DISB_DT);
+        } catch (Exception e) {
+            return new UpdateDisbursementStatusResponse(CODE_BAD_REQUEST, System.Label.FEC_UpdateDisb_Msg_DisbDT_Invalid);
         }
         return null;
     }

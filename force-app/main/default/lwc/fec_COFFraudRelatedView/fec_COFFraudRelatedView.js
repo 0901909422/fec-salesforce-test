@@ -1,6 +1,6 @@
 import { LightningElement, api, wire, track } from "lwc";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
-
+import { getRecord } from "lightning/uiRecordApi";
 import CASE_OBJECT from "@salesforce/schema/Case";
 import COMPLAINT_TYPE from "@salesforce/schema/Case.FEC_Complain_Type__c";
 import COMPLAINT_SOURCE from "@salesforce/schema/Case.FEC_Complaint_Source__c";
@@ -12,6 +12,7 @@ import {
 } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_ACTION_CHANNEL from "@salesforce/messageChannel/FEC_CaseAction__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import getCategory from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCategory";
 import updateCase from "@salesforce/apex/FEC_COFFraudRelatedHandler.updateCase";
 import {
@@ -19,15 +20,20 @@ import {
   COMPLAINT_TYPE_TEXT,
   COMPLAINT_SOURCE_LABEL,
 } from "c/fec_CommonConst";
-
+import { getFieldValue } from "lightning/uiRecordApi";
+const FIELDS = [
+  "Case.RecordTypeId",
+  "Case.FEC_Complain_Type__c",
+  "Case.FEC_Complaint_Source__c",
+];
 export default class Fec_COFFraudRelatedView extends LightningElement {
   @api recordId;
 
   @track complaintTypeOptions = [];
   @track complaintSourceOptions = [];
 
-  @track complaintTypeValue;
-  @track complaintSourceValue;
+  @track complaintTypeValue = null;
+  @track complaintSourceValue = null;
 
   productTypeId;
   categoryId;
@@ -40,11 +46,15 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   subscription = null;
   subscriptionCaseAction = null;
 
+  modeEditCase = false;
+  modeSubscription = null;
+
   @wire(MessageContext)
   messageContext;
   connectedCallback() {
     this.subscribeToMessageChannel();
     this.subscribeCaseActionChannel();
+    this.subscribeModeChannel();
   }
 
   disconnectedCallback() {
@@ -77,6 +87,17 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
       this.messageContext,
       CASE_ACTION_CHANNEL,
       (message) => this.handleCaseActionMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
+  subscribeModeChannel() {
+    if (this.modeSubscription) return;
+
+    this.modeSubscription = subscribe(
+      this.messageContext,
+      IS_MODE_EDIT,
+      (message) => this.handleModeMessage(message),
       { scope: APPLICATION_SCOPE },
     );
   }
@@ -134,11 +155,48 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
       });
   }
 
+  handleModeMessage(message) {
+    console.log("MODE MESSAGE:", JSON.stringify(message));
+
+    if (message?.caseId !== this.recordId) {
+      return;
+    }
+
+    this.modeEditCase = message?.isModeEdit || false;
+
+    console.log("modeEditCase =", this.modeEditCase);
+  }
   // Lấy metadata object
-  @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
-  objectInfo({ data, error }) {
+  // @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
+  // objectInfo({ data, error }) {
+  //   if (data) {
+  //     this.recordTypeId = data.defaultRecordTypeId;
+  //   }
+  // }
+
+  @wire(getRecord, {
+    recordId: "$recordId",
+    fields: FIELDS,
+  })
+  wiredCase({ data, error }) {
     if (data) {
-      this.recordTypeId = data.defaultRecordTypeId;
+      this.recordTypeId = data.fields.RecordTypeId.value;
+
+      // lấy trực tiếp từ DB
+      this.complaintTypeValue = getFieldValue(data, COMPLAINT_TYPE);
+
+      this.complaintSourceValue = getFieldValue(data, COMPLAINT_SOURCE);
+
+      if (!this.complaintTypeValue) {
+        this.complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
+      }
+      console.log("Complaint Type:", this.complaintTypeValue);
+
+      console.log("Complaint Source:", this.complaintSourceValue);
+    }
+
+    if (error) {
+      console.error("wiredCase error:", error);
     }
   }
 
@@ -166,10 +224,14 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
   // Handlers
   handleComplaintTypeChange(event) {
-    console.log("Selected Complaint Type:", event.detail.value);
+    console.log("RAW VALUE=", JSON.stringify(event.detail.value));
+
+    console.log("HIGH_RISK=", JSON.stringify(COMPLAINT_TYPE_TEXT.HIGH_RISK));
+
+    console.log("EQUAL=", event.detail.value === COMPLAINT_TYPE_TEXT.HIGH_RISK);
+
     this.complaintTypeValue = event.detail.value;
 
-    // reset source nếu type đổi
     this.complaintSourceValue = null;
   }
 
@@ -188,6 +250,7 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
       this.complaintTypeValue === COMPLAINT_TYPE_TEXT.URGENT
     );
   }
+
   get helpText() {
     return COMPLAINT_SOURCE_LABEL[this.complaintSourceValue] || "";
   }

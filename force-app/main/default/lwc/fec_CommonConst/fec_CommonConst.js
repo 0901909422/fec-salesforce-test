@@ -156,6 +156,70 @@ const COMPLAINT_TYPE_TEXT = {
 const OPEN_STATUS = 'Open';
 const NEW_STATUS = 'New';
 const QUEUE_ID_START = '00G';
+
+const ACTION_OPTIONS_CS_SUPPORT = [
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Revert", value: "Revert" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+  { label: "Update", value: "Update" },
+];
+
+const ACTION_OPTIONS_OTHER = [
+  { label: "Escalate", value: "Escalate" },
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+];
+
+const DECISION_OPTIONS_MAP = {
+  Revert: [
+    { label: "User", value: "USER" },
+    { label: "User’s Team Queue", value: "USER_TEAM_QUEUE" },
+  ],
+
+  Transfer: [
+    { label: "User", value: "USER" },
+    { label: "Queue", value: "QUEUE" },
+  ],
+
+  Update: [
+    { label: "Pending CS", value: "PendingCS" },
+    { label: "Pending Customer", value: "PendingCustomer" },
+    { label: "Pending Card Ops", value: "PendingCardOps" },
+    { label: "Pending Collections", value: "PendingCollections" },
+    {
+      label: "Pending Contract Processing",
+      value: "PendingContractProcessing",
+    },
+    { label: "Pending Credit Assessment", value: "PendingCreditAssessment" },
+    { label: "Pending Direct Sales", value: "PendingDirectSales" },
+    { label: "Pending Telesales", value: "PendingTelesales" },
+    { label: "Pending IT", value: "PendingIT" },
+    { label: "Pending Payment", value: "PendingPayment" },
+    { label: "Pending Product", value: "PendingProduct" },
+    { label: "Pending RCP&A", value: "PendingRCPA" },
+    { label: "Pending Security", value: "PendingSecurity" },
+    { label: "Pending Vendor", value: "PendingVendor" },
+    { label: "Out Of Process", value: "OutOfProcess" },
+    { label: "CIC Related", value: "CICRelated" },
+    { label: "Document Preparation", value: "DocumentPreparation" },
+    { label: "Task Under Review", value: "TaskUnderReview" },
+    { label: "Cannot Contact Customer", value: "CannotContactCustomer" },
+  ],
+};
+
+const ACTIONS_REQUIRE_DECISION = ["Revert", "Transfer", "Update"];
+
+const ACTIONS_REQUIRE_SUBDECISION_MAP = {
+  Transfer: ["USER", "QUEUE"],
+  Route_to: ["TEAM"],
+};
+
+const CUSTOMER_PHONE_NUMBER = 'FEC_Customer_Phone_Number__c';
+
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
     MANUAL_NOTIFICATION_HEADER_VI, 
@@ -257,5 +321,11 @@ export {
     COMPLAINT_SOURCE_LABEL,
     OPEN_STATUS,
     NEW_STATUS,
-    QUEUE_ID_START
+    QUEUE_ID_START,
+  ACTION_OPTIONS_CS_SUPPORT,
+  ACTION_OPTIONS_OTHER,
+  DECISION_OPTIONS_MAP,
+  ACTIONS_REQUIRE_DECISION,
+  ACTIONS_REQUIRE_SUBDECISION_MAP,
+  CUSTOMER_PHONE_NUMBER
 };
