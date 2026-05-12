@@ -65,6 +65,10 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         const wasFastCash = this._subCategoryCode === FAST_CASH_SUB_CATEGORY_CODE;
         this._subCategoryCode = newCode;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+        if (wasFastCash && newCode !== FAST_CASH_SUB_CATEGORY_CODE) {
+            this._notifyFastCashPropertyInfoVisibility(false);
+        }
         if (this._isFastCashScope) {
             this._maybeHydrateForFastCashScope();
         } else if (wasFastCash) {
@@ -231,8 +235,21 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 if (this.blockFailCount >= MAX_FAST_CASH_BLOCK_ATTEMPTS) {
                     this.showNoti10 = true;
                 }
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+                this._notifyFastCashPropertyInfoVisibility(false);
             })
             .catch(() => {});
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+    _notifyFastCashPropertyInfoVisibility(hide) {
+        this.dispatchEvent(
+            new CustomEvent("fecfastcashpropertyinfovisibility", {
+                bubbles: true,
+                composed: true,
+                detail: { hidePropertyInfo: hide === true }
+            })
+        );
     }
 
     hydrateFromCaseThenEligibility() {
@@ -265,6 +282,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.displayErrorDescription = STR_EMPTY;
         this.maxAmountDecimal = null;
         this.clearBlockMessages();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+        this._notifyFastCashPropertyInfoVisibility(false);
     }
 
     clearBlockMessages() {
@@ -287,6 +306,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                     this.notEligible = true;
                     this.displayErrorCode = STR_EMPTY;
                     this.displayErrorDescription = dto && dto.technicalMessage ? dto.technicalMessage : STR_EMPTY;
+                    //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+                    this._notifyFastCashPropertyInfoVisibility(true);
                     return;
                 }
                 if (dto.fastCashStatus === this.customLabel.statusEligible) {
@@ -294,6 +315,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                     this.notEligible = false;
                     this.displayErrorCode = STR_EMPTY;
                     this.displayErrorDescription = STR_EMPTY;
+                    //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+                    this._notifyFastCashPropertyInfoVisibility(false);
                     if (dto.maxAmount != null) {
                         this.maxAmountDecimal = Number(dto.maxAmount);
                     }
@@ -307,6 +330,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 this.eligible = false;
                 this.displayErrorCode = dto.errorCode || STR_EMPTY;
                 this.displayErrorDescription = dto.errorDescription || STR_EMPTY;
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+                this._notifyFastCashPropertyInfoVisibility(true);
             })
             .catch(() => {
                 this.eligibilityLoading = false;
@@ -314,6 +339,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 this.eligible = false;
                 this.displayErrorCode = STR_EMPTY;
                 this.displayErrorDescription = STR_EMPTY;
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+                this._notifyFastCashPropertyInfoVisibility(true);
             });
     }
 

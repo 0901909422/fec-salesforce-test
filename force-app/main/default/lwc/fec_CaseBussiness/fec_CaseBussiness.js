@@ -400,6 +400,10 @@ function mergeSectionSortedRows(section) {
   const fieldOrderBySubSectionName = new Map();
 
   (section.subSectionlst || []).forEach((sub, subIndex) => {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+    if (sub._hideForFastCash) {
+      return;
+    }
     const fecOrd = readFecSubSectionOrder(sub);
     const sortOrder =
       fecOrd !== undefined ? fecOrd : subIndex + 1;
@@ -531,6 +535,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track addressUpdateFailCount = 0;
 
   _ippClosureHasEligibleRows = false;
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+  _hidePropertyInfoForFastCash = false;
 
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
@@ -1380,6 +1387,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     natureOfCaseIdFallback = null,
   ) {
     this.businessLoaded = false;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+    this._hidePropertyInfoForFastCash = false;
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
@@ -1623,6 +1632,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyCsSupportAssessmentRoutingActionSync();
         this._applyInternalFieldVisibility();
         this._applyRemovePhonePlacement();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+        this._applyFastCashPropertyInfoVisibility();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
@@ -1737,6 +1748,39 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
     this.business = { ...this.business };
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+  handleFastCashPropertyInfoVisibility(event) {
+    const hide = !!(event.detail && event.detail.hidePropertyInfo);
+    this._hidePropertyInfoForFastCash = hide;
+    this._applyFastCashPropertyInfoVisibility();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1294
+  _applyFastCashPropertyInfoVisibility() {
+    if (!this.business?.sectionlst) {
+      return;
+    }
+    let changed = false;
+    this.business.sectionlst.forEach((section) => {
+      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+        return;
+      }
+      section.subSectionlst?.forEach((sub) => {
+        if (sub.name !== SUBSECTION_NAME_PROPERTY_INFO) {
+          return;
+        }
+        const next = !!this._hidePropertyInfoForFastCash;
+        if (sub._hideForFastCash !== next) {
+          sub._hideForFastCash = next;
+          changed = true;
+        }
+      });
+    });
+    if (changed) {
+      this._rebuildAllSectionSortedRows();
+    }
   }
 
   handleInputKeydown(e) {
