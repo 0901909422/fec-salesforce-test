@@ -4803,7 +4803,8 @@ public without sharing class FEC_CaseBusinessService {
   /**
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
-   * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới), không rơi về default Stage 1.
+   * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
+   * rồi cờ default; không dùng FEC_Order__c.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,
@@ -4813,7 +4814,7 @@ public without sharing class FEC_CaseBusinessService {
       return null;
     }
     List<FEC_Case_Stage__c> oldLst = [
-      SELECT Id, Name, FEC_Order__c, FEC_Default_Stage__c, FEC_Nature_of_Cases__c
+      SELECT Id, Name, FEC_Default_Stage__c, FEC_Nature_of_Cases__c
       FROM FEC_Case_Stage__c
       WHERE Id = :priorCaseStageId AND FEC_Active__c = TRUE
       LIMIT 1
@@ -4826,20 +4827,13 @@ public without sharing class FEC_CaseBusinessService {
       return null;
     }
     List<FEC_Case_Stage__c> newLst = [
-      SELECT Id, Name, FEC_Order__c, FEC_Default_Stage__c
+      SELECT Id, Name, FEC_Default_Stage__c
       FROM FEC_Case_Stage__c
       WHERE FEC_Nature_of_Cases__c = :newNatureOfCaseId AND FEC_Active__c = TRUE
-      ORDER BY FEC_Order__c NULLS LAST, Name
+      ORDER BY Name
     ];
     if (newLst.isEmpty()) {
       return null;
-    }
-    if (oldSt.FEC_Order__c != null) {
-      for (FEC_Case_Stage__c n : newLst) {
-        if (n.FEC_Order__c == oldSt.FEC_Order__c) {
-          return n;
-        }
-      }
     }
     Integer oldStageNum = extractStageNumberFromStageName(oldSt.Name);
     if (oldStageNum != null) {
