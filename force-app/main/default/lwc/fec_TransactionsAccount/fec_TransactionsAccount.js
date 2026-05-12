@@ -8,6 +8,9 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-16     Quangdv7             Create
+   1.1      2026-05-12     Agent                Unbilled: show dual-source columns (BasicInfo | M_FAS); sort effective by effectiveSortEpoch
+   1.2      2026-05-12     Agent                Unbilled table: Currency Code, Merchant Category Code, OTP Sent columns
+   1.3      2026-05-12     Agent                Pending: columns per sheet; M_FAS AUTHS rows; dual vs VMX detail (detail null); no row nav without Id
  
 ****************************************************************************************/
 
@@ -78,12 +81,12 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             cellAlign: 'center',
             hoverFields: [
                 { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode' },
-                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan' },
-                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate' },
-                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode' },
-                { label: this.customLabel.postDateLabel, fieldName: 'postDate' },
+                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlanDualDisplay' },
+                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDateDualDisplay' },
+                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCodeDualDisplay' },
+                { label: this.customLabel.postDateLabel, fieldName: 'postDateDualDisplay' },
                 { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag' },
-                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount' },
+                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmountDualDisplay' },
                 { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode' },
                 { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription' },
                 { label: this.customLabel.otpSentLabel, fieldName: 'otpSent' },
@@ -92,21 +95,39 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
         },
         {
             label: this.customLabel.effectiveDateLabel,
-            fieldName: 'effectiveDate',
+            fieldName: 'effectiveDateDualDisplay',
+            sortFieldName: 'effectiveSortEpoch',
             type: 'text',
-            cellAlign: 'center'
+            cellAlign: 'left',
+            width: '260px'
         },
         {
             label: this.customLabel.postDateLabel,
-            fieldName: 'postDate',
+            fieldName: 'postDateDualDisplay',
             type: 'text',
-            cellAlign: 'center'
+            cellAlign: 'left',
+            width: '240px'
         },
         {
             label: this.customLabel.transactionAmountLabel,
-            fieldName: 'transactionAmount',
+            fieldName: 'transactionAmountDualDisplay',
             type: 'text',
-            cellAlign: 'right'
+            cellAlign: 'left',
+            width: '220px'
+        },
+        {
+            label: this.customLabel.authorizationCodeLabel,
+            fieldName: 'authorizationCodeDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '220px'
+        },
+        {
+            label: this.customLabel.transactionPlanLabel,
+            fieldName: 'transactionPlanDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '200px'
         },
         {
             label: this.customLabel.merchantDescriptionLabel,
@@ -119,47 +140,93 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
             fieldName: 'creditDebitFlag',
             type: 'text',
             cellAlign: 'center'
+        },
+        {
+            label: this.customLabel.currencyCodeLabel,
+            fieldName: 'currencyCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.merchantCategoryCodeLabel,
+            fieldName: 'merchantCategoryCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.otpSentLabel,
+            fieldName: 'otpSent',
+            type: 'text',
+            cellAlign: 'center',
+            width: '88px'
         }
     ];
 
     pendingTransactionsColumns = [
         {
-            label: this.customLabel.transactionCodeLabel,
-            fieldName: 'transactionCode',
-            type: 'link',
-            recordIdField: 'Id',
-            hoverTitle: this.customLabel.pendingTransactionsLabel,
-            cellAlign: 'center',
-            hoverFields: [
-                { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode' },
-                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan' },
-                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate' },
-                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode' },
-                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount' },
-                { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse' },
-                { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription' },
-                { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode' },
-                { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode' },
-                { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription' },
-                { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode' }
-            ]
-        },
-        {
             label: this.customLabel.effectiveDateLabel,
-            fieldName: 'effectiveDate',
+            fieldName: 'effectiveDateDualDisplay',
+            sortFieldName: 'effectiveSortEpoch',
             type: 'text',
-            cellAlign: 'center'
+            cellAlign: 'left',
+            width: '200px'
         },
         {
             label: this.customLabel.transactionAmountLabel,
-            fieldName: 'transactionAmount',
+            fieldName: 'transactionAmountDualDisplay',
             type: 'text',
-            cellAlign: 'right'
+            cellAlign: 'left',
+            width: '160px'
         },
         {
             label: this.customLabel.merchantDescriptionLabel,
-            fieldName: 'merchantDescription',
-            type: 'text'
+            fieldName: 'merchantDescriptionDualDisplay',
+            type: 'text',
+            width: '220px'
+        },
+        {
+            label: this.customLabel.transactionPlanLabel,
+            fieldName: 'transactionPlanDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.merchantCategoryCodeLabel,
+            fieldName: 'merchantCategoryDualDisplay',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.currencyCodeLabel,
+            fieldName: 'currencyCodeDualDisplay',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.approvalCodeLabel,
+            fieldName: 'approvalCodeDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.authorizationResponseLabel,
+            fieldName: 'authorizationResponseDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '160px'
+        },
+        {
+            label: this.customLabel.declineDescriptionLabel,
+            fieldName: 'declineDescriptionDualDisplay',
+            type: 'text',
+            cellAlign: 'left',
+            width: '200px'
         }
     ];
 
@@ -206,16 +273,35 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
 
     /* ================= DATA MAPPER ================= */
    mapUnbilled(tx) {
+        const effectiveSortEpoch =
+            tx.effectiveSortEpoch != null && tx.effectiveSortEpoch !== undefined
+                ? Number(tx.effectiveSortEpoch)
+                : tx.effectiveDate
+                    ? Date.parse(tx.effectiveDate)
+                    : 0;
+
         return {
-            ...tx,
             Id: tx.Id,
 
             transactionCode: tx.transactionCode || '',
             merchantDescription: tx.merchantDescription || '',
             creditDebitFlag: tx.creditDebitFlag || '',
 
+            effectiveDateDualDisplay:
+                tx.effectiveDateDualDisplay || formatDateTime(tx.effectiveDate),
+            postDateDualDisplay:
+                tx.postDateDualDisplay || formatDateVNI(tx.postingDate),
+            transactionAmountDualDisplay:
+                tx.transactionAmountDualDisplay || formatNumber(tx.transactionAmount),
+            authorizationCodeDualDisplay:
+                tx.authorizationCodeDualDisplay || (tx.authorizationCode || ''),
+            transactionPlanDualDisplay:
+                tx.transactionPlanDualDisplay || (tx.transactionPlan || ''),
+
+            effectiveSortEpoch,
+
             effectiveDate: formatDateTime(tx.effectiveDate),
-            postDate: formatDateVNI (tx.postingDate),
+            postDate: formatDateVNI(tx.postingDate),
             transactionAmount: formatNumber(tx.transactionAmount),
 
             transactionPlan: tx.transactionPlan || '',
@@ -227,32 +313,61 @@ export default class Fec_TransactionsAccount extends NavigationMixin(LightningEl
     }
 
     mapPending(tx) {
+        const effectiveSortEpoch =
+            tx.effectiveSortEpoch != null && tx.effectiveSortEpoch !== undefined
+                ? Number(tx.effectiveSortEpoch)
+                : tx.effectiveDate
+                    ? Date.parse(tx.effectiveDate)
+                    : 0;
+
         return {
             Id: tx.Id,
+            effectiveSortEpoch,
 
-            transactionCode: tx.transactionCode || '',
-            merchantDescription: tx.merchantDescription || '',
+            effectiveDateDualDisplay:
+                tx.effectiveDateDualDisplay || formatDateTime(tx.effectiveDate),
+            transactionAmountDualDisplay:
+                tx.transactionAmountDualDisplay ||
+                formatNumber(tx.transactionAmount),
+            merchantDescriptionDualDisplay:
+                tx.merchantDescriptionDualDisplay || (tx.merchantDescription || ''),
+            transactionPlanDualDisplay:
+                tx.transactionPlanDualDisplay || (tx.transactionPlan || ''),
+            merchantCategoryDualDisplay:
+                tx.merchantCategoryDualDisplay || (tx.merchantCategoryCode || ''),
+            currencyCodeDualDisplay:
+                tx.currencyCodeDualDisplay || (tx.currencyCode || ''),
+            approvalCodeDualDisplay:
+                tx.approvalCodeDualDisplay || (tx.approvalCode || ''),
+            authorizationResponseDualDisplay:
+                tx.authorizationResponseDualDisplay ||
+                (tx.authorizationResponse || ''),
+            declineDescriptionDualDisplay:
+                tx.declineDescriptionDualDisplay || (tx.declineDescription || ''),
 
             effectiveDate: formatDateTime(tx.effectiveDate),
             transactionAmount: formatNumber(tx.transactionAmount),
+            merchantDescription: tx.merchantDescription || '',
             transactionPlan: tx.transactionPlan || '',
-            authorizationCode: tx.authorizationCode || '',
             merchantCategoryCode: tx.merchantCategoryCode || '',
             currencyCode: tx.currencyCode || '',
-
+            approvalCode: tx.approvalCode || '',
             authorizationResponse: tx.authorizationResponse || '',
-            declineDescription: tx.declineDescription || '',
-            declineReasonCode: tx.declineReasonCode || '',
-            approvalCode: tx.approvalCode || ''
+            declineDescription: tx.declineDescription || ''
         };
     }
 
     /* ================= ROW SELECT ================= */
     handleTransactionSelect(event) {
         const recordId = event.detail?.recordId;
-        if (!recordId) return;
-
         const sectionType = event.currentTarget?.dataset?.section;
+
+        if (sectionType === 'pending') {
+            return;
+        }
+        if (!recordId) {
+            return;
+        }
 
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',

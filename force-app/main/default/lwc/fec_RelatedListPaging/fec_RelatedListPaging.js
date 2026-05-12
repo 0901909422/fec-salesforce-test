@@ -8,6 +8,7 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
+   1.1      2026-05-12     Agent                Optional column.sortFieldName: sort by different row field than display (dual-string columns)
  
 ****************************************************************************************/
 
@@ -54,7 +55,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
         // records có thể được gán trước connectedCallback (thứ tự @api không bảo đảm) —
         // lúc đó setter chưa sort được; áp dụng sort sau khi đã có sortedBy.
         if (this.sortedBy && this._records.length > 0) {
-            this.sortData(this.sortedBy, this.sortedDirection);
+            this.sortData(this.resolveSortField(this.sortedBy), this.sortedDirection);
         }
     }
 
@@ -82,10 +83,19 @@ export default class Fec_RelatedListPaging extends LightningElement {
             this.sortedDirection = this.defaultSortDirection || 'desc';
         }
         if (this.sortedBy) {
-            this.sortData(this.sortedBy, this.sortedDirection);
+            this.sortData(this.resolveSortField(this.sortedBy), this.sortedDirection);
         }
 
         this.eyeStates = {};
+    }
+
+    /** Row field used for compare when column defines sortFieldName (display vs sort key). */
+    resolveSortField(displayFieldName) {
+        if (!displayFieldName || !Array.isArray(this.columns)) {
+            return displayFieldName;
+        }
+        const col = this.columns.find(c => c.fieldName === displayFieldName);
+        return col && col.sortFieldName ? col.sortFieldName : displayFieldName;
     }
 
     /* ================= GETTERS ================= */
@@ -496,7 +506,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
         }
 
         this.currentPage = 1;
-        this.sortData(fieldName, this.sortedDirection);
+        this.sortData(this.resolveSortField(fieldName), this.sortedDirection);
     }
 
     sortData(fieldName, direction) {
