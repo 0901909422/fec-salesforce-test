@@ -95,14 +95,9 @@ public with sharing class FEC_SearchController {
             objCase.FEC_Contract_Number__c = value;
         }
 
-        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case trước khi tạo History
-        // để các luồng Insurance/Card/Loan đều có nguồn dữ liệu thống nhất.
-        if (String.isNotBlank(phone)) {
-            objCase.FEC_Search_Phone_Number__c = phone;
-        }
-        if (String.isNotBlank(buyerNID)) {
-            objCase.FEC_Search_National_ID__c = buyerNID;
-        }
+        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case từ khung search.
+        objCase.FEC_Search_Phone_Number__c = phone;
+        objCase.FEC_Search_National_ID__c = buyerNID;
 
         upsert objCase;
 

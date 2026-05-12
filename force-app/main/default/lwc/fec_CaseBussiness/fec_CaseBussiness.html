@@ -25,7 +25,9 @@
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
               <template if:true={row.isFields}>
-                <p class="sub-section">{row.sub.name}</p>
+                <template if:false={row.sub.hideSubSectionHeading}>
+                  <p class="sub-section">{row.sub.name}</p>
+                </template>
 
                 <template for:each={row.sub.objlst} for:item="obj">
                   <lightning-record-edit-form
@@ -187,7 +189,7 @@
                 </template>
                 <template if:true={row.sub.showRemovePhoneAfter}>
                   <div class="slds-m-top_medium">
-                    <c-fec_-remove-phone-form is-edit={isEdit}></c-fec_-remove-phone-form>
+                    <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
                   </div>
                 </template>
               </template>
@@ -248,8 +250,7 @@
       </lightning-accordion-section>
       
     </template>
-    <!--HieuTT74: [UPDATE 8/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
-    <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+    
     <!-- routing action -->
     <lightning-accordion-section
       key={routingAccordionSectionKey}
@@ -366,7 +367,10 @@
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <!--Hieutt74: Update ngày 21/4/2026-->
+  <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
+    <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+  <!--END: Hieutt74: Update ngày 21/4/2026-->
+  <!--Hieutt74: Update ngày 12/5/2026-->
   <!--Assigment Routing Action-->
   <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
   </c-fec_-assignment-list>

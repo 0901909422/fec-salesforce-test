@@ -181,7 +181,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>Case.FEC_Card_Replacement_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1743,6 +1743,16 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Customer_Segmentation__c.FEC_Survey_Points__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Incorrect_Payment_Info__c.FEC_Adjusted_Amount__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Incorrect_Payment_Info__c.FEC_Correct_Account_Contract__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -3761,6 +3771,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_PIN_Reset_Success__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
     <editable>true</editable>
     <field>Case.FEC_CS_Check_Classification_by_CS__c</field>
     <readable>true</readable>
@@ -3845,11 +3860,6 @@
 <fieldPermissions>
     <editable>true</editable>
     <field>FEC_Additional_Info__c.FEC_Province_City__c</field>
-    <readable>true</readable>
-</fieldPermissions>
-<fieldPermissions>
-    <editable>true</editable>
-    <field>FEC_Assignment__c.FEC_Assignment_Status__c</field>
     <readable>true</readable>
 </fieldPermissions>
 <fieldPermissions>
@@ -3985,6 +3995,16 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_Do_Not_Bother__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Incorrect_Payment_Info__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>

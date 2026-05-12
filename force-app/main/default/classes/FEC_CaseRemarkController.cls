@@ -9,8 +9,7 @@ public without sharing class FEC_CaseRemarkController {
       List<FEC_Case_Remarks__c> result = new List<FEC_Case_Remarks__c>();
 
       List<Case> caselst = [
-        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c, 
-               FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+        SELECT Id, FEC_Draft_Remarks__c, FEC_Is_Submited__c
         FROM Case
         WHERE Id = :caseId
         LIMIT 1
@@ -24,20 +23,9 @@ public without sharing class FEC_CaseRemarkController {
         result.addAll(jsonToRemarks(caselst[0].FEC_Draft_Remarks__c));
       }
 
-      // tungnm37 thêm: COF/GSR chỉ hiện Assignment Remark, ẩn Case Remark (type=Case)
-      String businessCode = null;
-      if (!caselst.isEmpty() && caselst[0].FEC_Actual_Nature_of_Case__r != null 
-          && caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r != null) {
-        businessCode = caselst[0].FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c;
-      }
-      Boolean isCofGsr = businessCode != null && (businessCode.startsWith('COF') || businessCode.startsWith('GSR'));
-
-      String remarkTypeFilter = isCofGsr ? 'AND Remark_Type__c = \'Assignment\'' : '';
-
-      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, CreatedDate ' +
+      String soql = 'SELECT Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c, FEC_Remark_Type__c, CreatedDate ' +
         'FROM FEC_Case_Remarks__c ' +
         'WHERE FEC_Case__c = :caseId ' +
-        remarkTypeFilter + ' ' +
         'ORDER BY CreatedDate DESC';
 
       result.addAll((List<FEC_Case_Remarks__c>) Database.query(soql));
@@ -183,6 +171,53 @@ public without sharing class FEC_CaseRemarkController {
 
       caselst[0].FEC_Draft_Remarks__c = null;
       Database.update(caselst, AccessLevel.SYSTEM_MODE);
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  /** tungnm37: Submit remark trực tiếp với content - dùng cho COF/GSR tránh duplicate do draft bị clear trước */
+  @AuraEnabled
+  public static void submitRemarkDirect(String caseId, String stageNameFromClient, String remarkContent) {
+    try {
+      if (String.isBlank(caseId) || String.isBlank(remarkContent)) return;
+
+      List<User> userlst = [SELECT Id, Email, UserRole.Name FROM User WHERE Id = :UserInfo.getUserId()];
+      if (userlst.isEmpty()) return;
+
+      String emailId = String.isNotBlank(userlst[0].Email) ? userlst[0].Email.substringBefore('@') : null;
+      String roleName = userlst[0].UserRole?.Name;
+
+      List<Case> caselst = [SELECT Id, FEC_Stage_Name__c FROM Case WHERE Id = :caseId LIMIT 1];
+      if (caselst.isEmpty()) return;
+
+      String stageName = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
+
+      // Tránh duplicate: kiểm tra remark giống nhau trong 30s (chỉ check Case Remark, không check Assignment Remark)
+      Datetime cutoff = Datetime.now().addSeconds(-30);
+      List<FEC_Case_Remarks__c> recentForCase = [
+        SELECT Id, FEC_Case_Remarks__c FROM FEC_Case_Remarks__c
+        WHERE FEC_Case__c = :caseId AND CreatedDate >= :cutoff
+          AND FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+        ORDER BY CreatedDate DESC LIMIT 1
+      ];
+      Boolean isDuplicate = !recentForCase.isEmpty() && remarkContent.equals(recentForCase[0].FEC_Case_Remarks__c);
+      if (isDuplicate) return;
+
+      insert new FEC_Case_Remarks__c(
+        FEC_Case__c = caseId,
+        FEC_Case_Remarks__c = remarkContent,
+        FEC_User__c = emailId,
+        FEC_User_Role__c = roleName,
+        FEC_Stage_Name__c = stageName
+      );
+
+      // Clear draft
+      List<Case> caseToUpdate = [SELECT Id, FEC_Draft_Remarks__c FROM Case WHERE Id = :caseId LIMIT 1];
+      if (!caseToUpdate.isEmpty()) {
+        caseToUpdate[0].FEC_Draft_Remarks__c = null;
+        Database.update(caseToUpdate, AccessLevel.SYSTEM_MODE);
+      }
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

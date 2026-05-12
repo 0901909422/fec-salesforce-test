@@ -14,12 +14,34 @@
 	    <members>FEC_UpdateDisbursementStatusRestService</members>
 	    <members>FEC_CofGsrAssignmentService</members>
 	    <members>FEC_ConstantCommon</members>
+	    <members>FEC_CommonUltils</members>
+	    <members>FEC_MainInfoLoanAccountController</members>
+	    <members>FEC_TerminationLoanController</members>
+	    <members>FEC_CaseRemarkController</members>
+	    <members>FEC_CaseTriggerHandler</members>
+	    <members>FEC_PinResetHandler</members>
+	    <members>FEC_GetSMSInfoFromITTelcoCallout</members>
+	    <members>FEC_NotificationHistoryController</members>
+	    <members>FEC_NatureOfCaseTriggerHandler</members>
+	    <members>FEC_NocChannelConfigController</members>
+	    <members>FEC_GetCardSecInfo</members>
+	    <members>FEC_MainInfoAccountController</members>
+	    <members>FEC_SecondaryInfoAccountController</members>
+	    <members>FEC_IncorrectPaymentController</members>
+	    <members>FEC_RefundRequestController</members>
+	    <members>FEC_CheckEligibleCallout</members>
+	    <members>FEC_HoldCaseController</members>
+	    <members>FEC_AssignmentController</members>
+	    <members>FEC_AssignmentExecuteService</members>
+	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_SubProcessService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
 	    <members>fec_CaseEditNOC</members>
+	    <members>fec_CaseRemarks</members>
 	    <members>fec_IPPClosureForm</members>
 	    <members>fec_AssignmentExecuteAction</members>
 	    <members>fec_AssignmentList</members>
@@ -31,6 +53,24 @@
 	    <members>fec_UpdateAddress</members>
 	    <members>fec_CollectionInteractions</members>
 	    <members>fec_allocationHistory</members>
+	    <members>fec_RoutingAssignment</members>
+	    <members>fec_PinResetView</members>
+	    <members>fec_MainInfoLoanAccount</members>
+	    <members>fe_Notification_History</members>
+	    <members>fec_NocChannelConfig</members>
+	    <members>fec_OriginalInformation</members>
+	    <members>fec_DateFormatter</members>
+	    <members>fec_RelatedListPaging</members>
+	    <members>fec_CommonUtils</members>
+        <members>fec_MaskedContactTemplate</members>
+	    <members>fec_AssigmentListView</members>
+	    <members>fec_AssignmentRemarkHistoryTable</members>
+	    <members>fec_AssignmentViewAll</members>
+	    <members>fec_CustomDoNotBotherViewDatatable</members>
+	    <members>fec_CustomerCaseExecuteAction</members>
+	    <members>fec_DoNotBotherHandling</members>
+	    <members>fec_DoNotBotherNonExistingCustomer</members>
+	    <members>fec_SubProcessContainer</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -38,9 +78,15 @@
         <name>CustomField</name>
     </types>
 	<types>
+        <members>FEC_Interaction_Case_Record_Page</members>
+        <members>Nature_of_Cases_Record_Page</members>
+        <name>FlexiPage</name>
+    </types>
+	<types>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
+        <members>FEC_Assignment_Remark_Label</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
