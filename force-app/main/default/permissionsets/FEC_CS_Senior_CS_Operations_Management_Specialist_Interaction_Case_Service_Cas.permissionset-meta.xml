@@ -3761,6 +3761,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_PIN_Reset_Success__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
     <editable>true</editable>
     <field>Case.FEC_CS_Check_Classification_by_CS__c</field>
     <readable>true</readable>
