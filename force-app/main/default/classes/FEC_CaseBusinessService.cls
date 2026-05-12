@@ -216,6 +216,9 @@ public without sharing class FEC_CaseBusinessService {
       String incomingCategoryId = categoryId;
       String incomingSubCategoryId = subCategoryId;
       String incomingSubCodeId = subCodeId;
+      // Có payload NOC từ UI (CASE_NOC / getData): chỉ dùng đúng bộ đang chọn — không gán lại Product/Category/Sub-Category/Sub-Code từ Case.
+      // Không payload (mở trang, getData không tham số): fallback từ Case như trước.
+      if (!hasIncomingNocSelection) {
       if (String.isBlank(productTypeId))
         productTypeId = selectedCase.FEC_Product_Type__c;
       if (String.isBlank(categoryId))
@@ -224,6 +227,7 @@ public without sharing class FEC_CaseBusinessService {
         subCategoryId = selectedCase.FEC_SubCategory__c;
       if (String.isBlank(subCodeId))
         subCodeId = selectedCase.FEC_SubCode__c;
+      }
 
       // GSR: so bộ NOC từ UI với bộ NOC trên FEC_Case_Flow_History__c (bản đầu có Nature of Case),
       // cùng hướng chọn bản ghi với FEC_CaseEditNOCController.getOriginalNOCFromFlowHistory (CreatedDate ASC, LIMIT 1).
@@ -619,6 +623,30 @@ public without sharing class FEC_CaseBusinessService {
           'ORDER BY FEC_Section__c, FEC_Sub_Section_Order__c NULLS LAST, FEC_Sub_Section__c, FEC_Field_Object_Name__c, FEC_Field_Order_Display__c';
 
         List<SObject> masterDatalst = Database.query(soql);
+
+        if (isGsrNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
+          System.debug(
+            LoggingLevel.DEBUG,
+            '[GSR-NOC-DIFF] Đổi NOC: từ baseline(flow)=[' +
+              flowHistProductTypeId +
+              '|' +
+              flowHistCategoryId +
+              '|' +
+              flowHistSubCategoryId +
+              '|' +
+              flowHistSubCodeId +
+              '] sang resolve=[' +
+              productTypeId +
+              '|' +
+              categoryId +
+              '|' +
+              subCategoryId +
+              '|' +
+              subCodeId +
+              '] natureOfCaseId=' +
+              selectedNatureOfCaseId
+          );
+        }
 
         // ====================================== CREATE BUSINESS ============================
         // Retrieve Data

@@ -16,13 +16,16 @@ const formatDateField = (raw) => {
     let dateObj = null;
     let hasTime = false;
     
-    // Format: YYYYMMDD (8 ký tự số) - không có giờ
+    // Format: YYYYMMDD (8 ký tự số) - parse giống YYYYMMDDTHHmmss, giờ mặc định 00:00:00
     if (/^\d{8}$/.test(rawStr)) {
         const y = rawStr.substring(0, 4);
         const m = rawStr.substring(4, 6);
         const d = rawStr.substring(6, 8);
-        dateObj = new Date(`${y}-${m}-${d}`);
-        hasTime = false;
+        const h = '00';
+        const min = '00';
+        const s = '00';
+        dateObj = new Date(`${y}-${m}-${d}T${h}:${min}:${s}`);
+        hasTime = true;
     }
     // Format: YYYYMMDDTHHmmss.SSS GMT hoặc YYYYMMDDTHHmmss - có giờ
     else if (/^\d{8}T\d{6}/.test(rawStr)) {
