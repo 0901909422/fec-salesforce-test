@@ -84,14 +84,15 @@ public with sharing class FEC_PushCampaignDataBatch implements Database.Batchabl
     private void sendChunk(List<FEC_DataCampaign> chunk) {
         String payload = JSON.serialize(chunk);
         System.debug('>>> [PushCampaignData] sendChunk — records: ' + chunk.size() + ' | payload size: ' + payload.length() + ' bytes');
-        System.debug('>>> [PushCampaignData] payload: ' + payload.abbreviate(5000));
         HttpResponse response = FEC_CampaignApiCaller.sendCampaignData(payload);
         Integer statusCode = response != null ? response.getStatusCode() : null;
         System.debug('>>> [PushCampaignData] response status: ' + statusCode);
         if (response != null && statusCode != FEC_Constants.HTTP_STATUS_OK
             && statusCode != FEC_Constants.HTTP_STATUS_CREATED) {
-            System.debug('>>> [PushCampaignData] callout error — status: ' + statusCode + ' | body: ' + response.getBody().abbreviate(2000));
+            String errorBody = response.getBody() != null ? response.getBody().abbreviate(2000) : '';
+            System.debug('>>> [PushCampaignData] callout error — status: ' + statusCode + ' | body: ' + errorBody);
             this.errorCount++;
+            this.errorDetails += 'HTTP ' + statusCode + ': ' + errorBody + '\n';
             FEC_CampaignBatchLogger.logCalloutError(
                 this.batchLogId, 'FEC_PushCampaignDataBatch',
                 statusCode, response.getBody(), chunk.size()
