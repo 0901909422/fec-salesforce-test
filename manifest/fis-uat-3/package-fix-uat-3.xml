@@ -75,6 +75,7 @@
 	    <members>fec_DoNotBotherInformationView</members>
 	    <members>fec_ReusableDNBCustomTable</members>
 	    <members>fec_AssignmentExecuteVisibility</members>
+        <members>fec_communicationHistory</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
