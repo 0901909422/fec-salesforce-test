@@ -15744,4 +15744,11 @@
         <shortDescription>Parent Hold Case Config</shortDescription>
         <value>Parent Hold Case Config</value>
     </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
+    </labels>
 </CustomLabels>

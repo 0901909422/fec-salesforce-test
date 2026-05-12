@@ -34,27 +34,61 @@ public with sharing class FEC_NotificationHistoryController {
             return out;
         }
 
-        List<String> sendTypes = sendTypesForChannel(channel);
-        if (sendTypes.isEmpty()) {
+        List<String> channelValues = getChannelValues(channel);
+        if (channelValues.isEmpty()) {
             return out;
         }
 
-        List<FEC_Notification_History__c> rows = [
-            SELECT
-                Id,
-                FEC_Send_Date_Time__c,
-                FEC_Send_Type__c,
-                FEC_Notification_Template__c,
-                FEC_Notification_Content__c,
-                FEC_Send_System__c,
-                FEC_Send_User__c,
-                FEC_Send_Status__c,
-                FEC_Failure_Reason__c,
-                FEC_Case__c
-            FROM FEC_Notification_History__c
-            WHERE FEC_Case__c = :caseId AND FEC_Send_Type__c IN :sendTypes
-            ORDER BY FEC_Send_Date_Time__c DESC NULLS LAST
+        // 1. Fetch National ID from current Case to allow cross-case history search
+        List<Case> currentCases = [
+            SELECT FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
         ];
+        
+        String nationalId = (currentCases.isEmpty()) ? null : currentCases[0].FEC_Account_or_Contract__r?.FEC_National_ID_Passport_ID__c;
+
+        // 2. Build Query - Search by National ID if available, else fallback to current caseId
+        List<FEC_Notification_History__c> rows;
+        if (String.isNotBlank(nationalId)) {
+            rows = [
+                SELECT
+                    Id,
+                    FEC_Send_Date_Time__c,
+                    FEC_Send_Type__c,
+                    FEC_Notification_Channel__c,
+                    FEC_Notification_Template__c,
+                    FEC_Notification_Content__c,
+                    FEC_Send_System__c,
+                    FEC_Send_User__c,
+                    FEC_Send_Status__c,
+                    FEC_Failure_Reason__c,
+                    FEC_Case__c
+                FROM FEC_Notification_History__c
+                WHERE FEC_Notification_Channel__c IN :channelValues
+                  AND FEC_Case__r.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c = :nationalId
+                ORDER BY FEC_Send_Date_Time__c DESC NULLS LAST
+            ];
+        } else {
+            rows = [
+                SELECT
+                    Id,
+                    FEC_Send_Date_Time__c,
+                    FEC_Send_Type__c,
+                    FEC_Notification_Channel__c,
+                    FEC_Notification_Template__c,
+                    FEC_Notification_Content__c,
+                    FEC_Send_System__c,
+                    FEC_Send_User__c,
+                    FEC_Send_Status__c,
+                    FEC_Failure_Reason__c,
+                    FEC_Case__c
+                FROM FEC_Notification_History__c
+                WHERE FEC_Case__c = :caseId AND FEC_Notification_Channel__c IN :channelValues
+                ORDER BY FEC_Send_Date_Time__c DESC NULLS LAST
+            ];
+        }
 
         String tz = UserInfo.getTimeZone().getID();
         for (FEC_Notification_History__c r : rows) {
@@ -63,6 +97,7 @@ public with sharing class FEC_NotificationHistoryController {
             row.sentDateTime = r.FEC_Send_Date_Time__c != null
                 ? r.FEC_Send_Date_Time__c.format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT, tz)
                 : FEC_ConstantCommon.STR_EMPTY;
+            // Displays Manual/Auto as intended
             row.sentType = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_Type__c);
             row.notificationType = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Template__c);
             row.notificationContent = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Content__c);
@@ -82,11 +117,11 @@ public with sharing class FEC_NotificationHistoryController {
         return getNotificationHistoryForCase(caseId, FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_EMAIL);
     }
 
-    private static List<String> sendTypesForChannel(String channel) {
-        if (String.isBlank(channel)) {
+    private static List<String> getChannelValues(String tabChannel) {
+        if (String.isBlank(tabChannel)) {
             return new List<String>();
         }
-        String c = channel.trim().toUpperCase();
+        String c = tabChannel.trim().toUpperCase();
         if (c == FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_EMAIL) {
             return new List<String>{
                 FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL,
@@ -97,10 +132,10 @@ public with sharing class FEC_NotificationHistoryController {
         if (c == FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_ZNS) {
             return new List<String>{
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_CHANNEL_ZNS,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO,
+                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZNS_TITLE,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZNS_LOWER,
-                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS,
-                FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_ZALO_ZNS_COMPACT
             };
         }
@@ -108,8 +143,6 @@ public with sharing class FEC_NotificationHistoryController {
             return new List<String>{
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_COMPACT,
-                FEC_ConstantCommon.REQUESTOR_MOBILE_APP,
-                FEC_ConstantCommon.REQUESTOR_MOBILE,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_MOBILE_APP_LOWER,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_APP,
                 FEC_ConstantCommon.NOTIFICATION_HISTORY_SEND_TYPE_PUSH,

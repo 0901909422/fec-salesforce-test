@@ -86,13 +86,14 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
-  //PhongBT 07/05/26:  Khi đã submit: Updated section chỉ editable ở Handling hoặc khi bật mode edit (giống Creation NOC).
-  // Review mode → read only.
+  // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
+  // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
+  // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
   get isUpdatedSectionEditable() {
     if (!this.isSubmittedState) {
       return false;
     }
-    return this.modeEditCase === true || this.interactionViewMode === VIEW_MODE_HANDLING;
+    return this.modeEditCase === true;
   }
 
   get showUpdatedSection() {
