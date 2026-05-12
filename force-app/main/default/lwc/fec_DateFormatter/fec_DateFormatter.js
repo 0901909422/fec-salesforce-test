@@ -55,4 +55,59 @@ const formatDateField = (raw) => {
     return raw;
 };
 
-export { formatDateField };
+/**
+ * Parse giá trị cột ngày thô (API / DD/MM / YYYYMMDD…) thành timestamp để so sánh khi sort.
+ * @param {*} v
+ * @returns {number|null} epoch ms hoặc null nếu không parse được
+ */
+const toTimeForDefaultSort = (v) => {
+    if (v == null || v === '') return null;
+    if (typeof v === 'number' && !Number.isNaN(v)) return v;
+    if (typeof v !== 'string') {
+        const t = Date.parse(String(v));
+        return Number.isNaN(t) ? null : t;
+    }
+    const s = v.trim();
+    if (s === STR_EMPTY) return null;
+    let m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]).getTime();
+    m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:,\s*|\s+)(\d{2}):(\d{2}):(\d{2})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +m[6]).getTime();
+    if (/^\d{8}$/.test(s)) {
+        return new Date(+s.substring(0, 4), +s.substring(4, 6) - 1, +s.substring(6, 8)).getTime();
+    }
+    if (/^\d{8}T\d{6}/.test(s)) {
+        return new Date(
+            +s.substring(0, 4),
+            +s.substring(4, 6) - 1,
+            +s.substring(6, 8),
+            +s.substring(9, 11),
+            +s.substring(11, 13),
+            +s.substring(13, 15)
+        ).getTime();
+    }
+    const t = Date.parse(s);
+    return Number.isNaN(t) ? null : t;
+};
+
+/**
+ * Copy mảng object và sort theo trường ngày giảm dần (mới → cũ), dùng trước khi đưa vào bảng paging.
+ * @param {object[]} rows
+ * @param {string} fieldName
+ * @returns {object[]}
+ */
+const sortByDefaultDateFieldDesc = (rows, fieldName) => {
+    if (!Array.isArray(rows) || rows.length <= 1) {
+        return Array.isArray(rows) ? [...rows] : [];
+    }
+    return [...rows].sort((a, b) => {
+        const ta = toTimeForDefaultSort(a?.[fieldName]);
+        const tb = toTimeForDefaultSort(b?.[fieldName]);
+        if (ta != null && tb != null) return tb - ta;
+        if (ta == null && tb != null) return 1;
+        if (ta != null && tb == null) return -1;
+        return 0;
+    });
+};
+
+export { formatDateField, toTimeForDefaultSort, sortByDefaultDateFieldDesc };
