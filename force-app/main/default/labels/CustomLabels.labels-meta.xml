@@ -14524,7 +14524,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Assignment Remark Label</shortDescription>
-        <value>Remark</value>
+        <value>Assignment Remark</value>
     </labels>
     <labels>
         <fullName>FEC_Choose_Queue_Placeholder</fullName>

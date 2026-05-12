@@ -61,7 +61,7 @@ public with sharing class FEC_NotificationHistoryController {
                     FEC_Notification_Template__c,
                     FEC_Notification_Content__c,
                     FEC_Send_System__c,
-                    FEC_Send_User__c,
+                    FEC_Send_User__r.Name,
                     FEC_Send_Status__c,
                     FEC_Failure_Reason__c,
                     FEC_Case__c
@@ -80,7 +80,7 @@ public with sharing class FEC_NotificationHistoryController {
                     FEC_Notification_Template__c,
                     FEC_Notification_Content__c,
                     FEC_Send_System__c,
-                    FEC_Send_User__c,
+                    FEC_Send_User__r.Name,
                     FEC_Send_Status__c,
                     FEC_Failure_Reason__c,
                     FEC_Case__c
@@ -102,7 +102,7 @@ public with sharing class FEC_NotificationHistoryController {
             row.notificationType = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Template__c);
             row.notificationContent = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Content__c);
             row.sentSystem = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_System__c);
-            row.user = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_User__c);
+            row.user = r.FEC_Send_User__r != null ? FEC_CommonUltils.defaultToEmpty(r.FEC_Send_User__r.Name) : FEC_ConstantCommon.STR_EMPTY;
             row.sentStatus = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_Status__c);
             row.failureReason = FEC_CommonUltils.defaultToEmpty(r.FEC_Failure_Reason__c);
             row.caseId = r.FEC_Case__c != null ? String.valueOf(r.FEC_Case__c) : FEC_ConstantCommon.STR_EMPTY;
