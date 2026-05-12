@@ -9,7 +9,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             this.value = value;
         }
     }
-
     public class RepaymentScheduleTotalsDTO {
         @AuraEnabled public String totalInstallmentAmount;
         @AuraEnabled public String totalPrincipal;
@@ -51,10 +50,10 @@ public with sharing class FEC_RepaySchedPayHistController {
         @AuraEnabled public String paymentAmount;
         @AuraEnabled public String paymentChannel;
     }
-
     public class SectionDataResult {
         @AuraEnabled public Map<String, String> helpTexts;
         @AuraEnabled public String errorMessage;
+        @AuraEnabled public Boolean repaymentScheduleError;
         @AuraEnabled public RepaymentScheduleTotalsDTO repaymentScheduleTotals;
         @AuraEnabled public List<RepaymentScheduleRowDTO> repaymentScheduleTable;
         @AuraEnabled public PaymentHistoryTotalsDTO paymentHistoryTotals;
@@ -89,18 +88,40 @@ public with sharing class FEC_RepaySchedPayHistController {
         }
     }
 
-    private static String getContractNumber(Id caseId) {
-        List<Case> cases = [SELECT Id, FEC_Account_or_Contract__c FROM Case WHERE Id = :caseId LIMIT 1];
-        if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) return null;
-        List<FEC_Customer_History__c> histories = [
-            SELECT FEC_Contract_Number__c
-            FROM FEC_Customer_History__c
-            WHERE Id = :cases[0].FEC_Account_or_Contract__c
+    private static Case getCaseInfo(Id caseId) {
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Is_Test_API__c
+            FROM Case
+            WHERE Id = :caseId
             LIMIT 1
         ];
-        return (histories.isEmpty() || String.isBlank(histories[0].FEC_Contract_Number__c))
-            ? null
-            : histories[0].FEC_Contract_Number__c;
+        return cases.isEmpty() ? null : cases[0];
+    }
+
+    /** Ưu tiên FEC_Contract_Number__c trên Customer History; fallback Case.FEC_Contract_Number__c (tránh callout khác số hợp đồng bạn test trên Case). */
+    private static String getContractNumber(Id caseId) {
+        List<Case> cases = [
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Contract_Number__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (cases.isEmpty()) {
+            return null;
+        }
+        Case c = cases[0];
+        if (c.FEC_Account_or_Contract__c != null) {
+            List<FEC_Customer_History__c> histories = [
+                SELECT FEC_Contract_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+            if (!histories.isEmpty() && String.isNotBlank(histories[0].FEC_Contract_Number__c)) {
+                return histories[0].FEC_Contract_Number__c;
+            }
+        }
+        return String.isNotBlank(c.FEC_Contract_Number__c) ? c.FEC_Contract_Number__c : null;
     }
 
     private static Id getCustomerHistoryId(Id caseId) {
@@ -318,7 +339,6 @@ public with sharing class FEC_RepaySchedPayHistController {
             result.realTimePaymentTable.add(row);
         }
     }
-
     private static void fillRepaymentSchedulePaymentHistory(SectionDataResult result) {
         result.repaymentSchedulePaymentHistory = new List<FieldItemDTO>();
 
@@ -364,6 +384,7 @@ public with sharing class FEC_RepaySchedPayHistController {
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_RePayment_Schedule__c.SObjectType));
         result.helpTexts.putAll(FEC_CommonUltils.buildHelpTextMap(FEC_Payment_History__c.SObjectType));
         result.errorMessage = null;
+        result.repaymentScheduleError = false;
         result.repaymentScheduleTotals = new RepaymentScheduleTotalsDTO();
         result.repaymentScheduleTable = new List<RepaymentScheduleRowDTO>();
         result.paymentHistoryTotals = new PaymentHistoryTotalsDTO();
@@ -376,13 +397,16 @@ public with sharing class FEC_RepaySchedPayHistController {
             return result;
         }
 
+        Case caseInfo = getCaseInfo(caseId);
+        Boolean isTestApi = caseInfo?.FEC_Is_Test_API__c == true;
+
         String contractNumber = getContractNumber(caseId);
         if (String.isBlank(contractNumber)) {
             result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
             return result;
         }
 
-        String transId = FEC_CommonUltils.generateTransactionId();
+        String transId = FEC_CommonUltils.generateTransactionUUID();
         String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
 
@@ -391,8 +415,12 @@ public with sharing class FEC_RepaySchedPayHistController {
         FEC_GetPaymentInfo.ResponseWrapper paymentRes = null;
 
         try {
-            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber);
-        } catch (Exception e) { }
+            basicRes = FEC_GetLoanBasicInfo.callGetLoanBasicInfo(transId, requestorId, dateTimeStr, contractNumber, isTestApi);
+        } catch (Exception e) {
+            result.repaymentScheduleError = true;
+        }
+        
+        
 
         try {
             secRes = FEC_GetLoanSecInfo.callGetLoanSecInfo(transId, requestorId, dateTimeStr, contractNumber);
@@ -425,9 +453,33 @@ public with sharing class FEC_RepaySchedPayHistController {
         return result;
     }
 
-    /** Stub: LWC refresh. */
+    /**
+     * Chỉ gọi GetPaymentInfo + map Real-Time (giống pattern fec_PaymentHistoryAcount.syncRealtimePayment).
+     * Lỗi API không nuốt im — LWC hiển thị toast; khác getSectionData đang try/catch GetPaymentInfo.
+     */
     @AuraEnabled
-    public static void refreshRealTimePayment(Id caseId) {
-        if (caseId == null) return;
+    public static List<RealTimePaymentRowDTO> refreshRealTimePayment(Id caseId) {
+        if (caseId == null) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
+            );
+        }
+        String contractNumber = getContractNumber(caseId);
+        if (String.isBlank(contractNumber)) {
+            throw new AuraHandledException(System.Label.FEC_MSG_Error_API_Label);
+        }
+        String transId = FEC_CommonUltils.generateTransactionUUID();
+        String dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT);
+        String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
+
+        FEC_GetPaymentInfo.ResponseWrapper paymentRes = FEC_GetPaymentInfo.callGetPaymentInfo(
+            transId,
+            requestorId,
+            dateTimeStr,
+            contractNumber
+        );
+        SectionDataResult temp = new SectionDataResult();
+        fillRealTimePaymentFromApi(temp, paymentRes);
+        return temp.realTimePaymentTable != null ? temp.realTimePaymentTable : new List<RealTimePaymentRowDTO>();
     }
 }

@@ -4,7 +4,8 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
         @AuraEnabled public String Success;
         @AuraEnabled public List<AllocationHistory> AllocationHistory;
         @AuraEnabled public List<CommunicationHistory> CommunicationHistory;
-        @AuraEnabled public List<InteractionHistory> CollectionInteractions;
+        /** API middleware trả key InteractionHistory; LWC đọc trực tiếp key này. */
+        @AuraEnabled public List<CollectionInteractionItem> InteractionHistory;
         @AuraEnabled public List<NFUItem> NFUDetailsList;
     }
 
@@ -38,7 +39,8 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
         //     "ContractNumber":"20161129-0006618","Address":"",
     }
 
-    public class InteractionHistory {
+    /** Bản ghi tương tác — đổi tên class để tránh trùng property InteractionHistory (JSON API). */
+    public class CollectionInteractionItem {
         @AuraEnabled public String InteractedAgentsID;
         @AuraEnabled public String InteractedDate;
         @AuraEnabled public String InteractedCode;
@@ -107,7 +109,9 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
 
             if (resp.getStatusCode() >= 200 && resp.getStatusCode() < 300) {
                 System.debug('response: ' + resp.getBody());
-                return (CollectionDataResponse) JSON.deserialize(resp.getBody(), CollectionDataResponse.class);
+                CollectionDataResponse deserialized =
+                    (CollectionDataResponse) JSON.deserialize(resp.getBody(), CollectionDataResponse.class);
+                return deserialized;
             } else {
                 System.debug('response: ' + resp);
                 CollectionDataResponse err = new CollectionDataResponse();
@@ -121,4 +125,5 @@ public with sharing class FEC_FetchCollectionDataServiceCallout {
             return err;
         }
     }
+
 }

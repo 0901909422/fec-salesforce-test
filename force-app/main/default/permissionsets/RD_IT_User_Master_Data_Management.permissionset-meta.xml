@@ -522,7 +522,22 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Cancel_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Channel__c.FEC_Self_Service_Flag__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Update_Case_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -976,6 +991,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Notification_Channel__c.FEC_Create__c</field>
         <readable>true</readable>
@@ -1217,6 +1237,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Routing_Action__c.FEC_Routing_Action_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1240,7 +1265,6 @@
         <field>FEC_Routing_Assignment__c.FEC_Customer_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Routing_Assignment__c.FEC_Queue__c</field>
@@ -1587,6 +1611,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_MDM_Channel__c.Process_Change_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
@@ -1947,7 +1976,6 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -2096,7 +2124,7 @@
         <object>FEC_Decision_Table__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
+    
     <recordTypeVisibilities>
         <recordType>FEC_Notification__c.Auto_Notification</recordType>
         <visible>true</visible>

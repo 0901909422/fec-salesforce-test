@@ -3,6 +3,7 @@ import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getAssignments from "@salesforce/apex/FEC_AssignmentListHandler.getAssignments";
+import getQueueNames from "@salesforce/apex/FEC_AssignmentListHandler.getQueueNames"; // tungnm37 thêm
 import getUserDepartment from "@salesforce/apex/FEC_AssignmentListHandler.getUserDepartment";
 import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsersInGroup";
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
@@ -21,7 +22,7 @@ import {
   APPLICATION_SCOPE,
   MessageContext,
 } from "lightning/messageService";
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
 
 import FEC_Assignment_List from "@salesforce/label/c.FEC_Assignment_List";
 import FEC_Assignment_Routing_Action from "@salesforce/label/c.FEC_Assignment_Routing_Action";
@@ -29,16 +30,21 @@ import FEC_Assignment_Id from "@salesforce/label/c.FEC_Assignment_Id";
 import FEC_Assignment_Status from "@salesforce/label/c.FEC_Assignment_Status";
 import FEC_Assignment_Owner from "@salesforce/label/c.FEC_Assignment_Owner";
 
+import FEC_Assignment_Remarks_History from "@salesforce/label/c.FEC_Assignment_Remarks_History";
+
 import {
   PAGE_SIZE_OPTIONS,
   ACTION_OPTIONS_CS_SUPPORT,
   ACTION_OPTIONS_OTHER,
   DECISION_OPTIONS_MAP,
   ACTIONS_REQUIRE_DECISION,
-  ACTIONS_REQUIRE_SUBDECISION,
+  ACTIONS_REQUIRE_SUBDECISION_MAP,
   ACTION,
+  OPEN_STATUS,
+  QUEUE_ID_START,
+  NEW_STATUS,
 } from "c/fec_CommonConst";
-
+import { getUsernameBeforeAt } from "c/fec_CommonUtils";
 export default class Fec_AssignmentList extends LightningElement {
   label = {
     FEC_Assignment_List,
@@ -46,15 +52,23 @@ export default class Fec_AssignmentList extends LightningElement {
     FEC_Assignment_Id,
     FEC_Assignment_Status,
     FEC_Assignment_Owner,
+    FEC_Assignment_Remarks_History,
   };
 
   async connectedCallback() {
-    this.loadStyles();
-    this.userDept = await getUserDepartment();
+    try {
+      this.loadStyles();
 
-    console.log(this.userDept);
-    this.initSubscription();
-    // this.modeEditCase = true;
+      console.log("Before getUserDepartment");
+
+      this.userDept = await getUserDepartment();
+
+      console.log("After getUserDepartment:", JSON.stringify(this.userDept));
+
+      this.initSubscription();
+    } catch (error) {
+      console.error("getUserDepartment error:", JSON.stringify(error));
+    }
   }
 
   loadStyles() {
@@ -100,7 +114,11 @@ export default class Fec_AssignmentList extends LightningElement {
   handleModeMessage(message) {
     console.log("MODE MESSAGE:", message);
 
-    this.modeEditCase = message?.isModeEdit;
+    if (message?.caseId !== this.recordId) {
+      return;
+    }
+
+    this.modeEditCase = message?.isEditMode;
 
     // 👇 force UI update nếu cần
     this.refreshReadonlyState();
@@ -160,15 +178,27 @@ export default class Fec_AssignmentList extends LightningElement {
         caseId: this.recordId,
       });
       console.log("getAssignments result:", JSON.stringify(result));
+
+      // tungnm37: FEC_OwnerID__c giờ lưu Queue Name trực tiếp
       this.assignments = result.map((item) => ({
         id: item.Id,
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
 
-        owner: item.FEC_Assignment_Owner__r?.Username || "",
+        owner: // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
+          item.FEC_Assignment_Owner_Text__c
+          || (item.FEC_Assignment_Owner__c?.startsWith("00G")
+              ? item.FEC_Assignment_Owner__r?.Name
+              : (getUsernameBeforeAt(item.FEC_Assignment_Owner__r?.Email) || "")),
 
         isOwner: item.FEC_Assignment_Owner__c ? this.isOwner(item) : false,
-        status: item.FEC_Assignment_Status__c,
+        status:
+          // tungnm37 sửa: COF/GSR (Routing type) hiện 'Open', các loại khác giữ nguyên 'New'
+          item.FEC_Assignment_Type__c === 'Routing' && item.FEC_Assignment_Status__c === OPEN_STATUS
+            ? OPEN_STATUS
+            : item.FEC_Assignment_Status__c === OPEN_STATUS
+              ? NEW_STATUS
+              : item.FEC_Assignment_Status__c,
 
         isOpen: false,
 
@@ -215,6 +245,14 @@ export default class Fec_AssignmentList extends LightningElement {
   }
 
   get getActionOptions() {
+    console.log("userDept:", this.userDept);
+    console.log("isCSSupport:", this.isCSSupport);
+    console.log(
+      "ACTION_OPTIONS_CS_SUPPORT:",
+      JSON.stringify(ACTION_OPTIONS_CS_SUPPORT),
+    );
+    console.log("ACTION_OPTIONS_OTHER:", JSON.stringify(ACTION_OPTIONS_OTHER));
+
     return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
   }
 
@@ -253,12 +291,15 @@ export default class Fec_AssignmentList extends LightningElement {
     this.assignments = this.assignments.map((item) => {
       if (item.id !== id) return item;
 
+      const requiredSubDecisionValues =
+        ACTIONS_REQUIRE_SUBDECISION_MAP[item.action] || [];
+
       return {
         ...item,
         decision: value,
         subDecision: null,
 
-        showSubDecision: ACTIONS_REQUIRE_SUBDECISION.includes(item.action),
+        showSubDecision: requiredSubDecisionValues.includes(value),
 
         isUserDecision: value === "USER",
         isQueueDecision: value === "QUEUE",
@@ -267,9 +308,16 @@ export default class Fec_AssignmentList extends LightningElement {
         showQueueByTeam: false,
       };
     });
+
     this.updatePagedData();
-    if (value === "USER") this.loadUsers();
-    if (value === "QUEUE") this.loadQueues();
+
+    if (value === "USER") {
+      this.loadUsers();
+    }
+
+    if (value === "QUEUE") {
+      this.loadQueues();
+    }
 
     if (value === "TEAM") {
       this.loadTeams();
@@ -454,7 +502,8 @@ export default class Fec_AssignmentList extends LightningElement {
   async handlePublishMode(isEdit) {
     if (this.messageContext == null) return;
     const payload = {
-      isModeEdit: Boolean(isEdit),
+      caseId: this.recordId,
+      isEditMode: Boolean(isEdit),
     };
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
@@ -511,5 +560,10 @@ export default class Fec_AssignmentList extends LightningElement {
       this.currentPage--;
       this.updatePagedData();
     }
+  }
+
+  //getter
+  get hasAssignmentData() {
+    return Array.isArray(this.pagedData) && this.pagedData.length > 0;
   }
 }

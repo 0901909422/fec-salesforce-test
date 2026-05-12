@@ -133,6 +133,92 @@ const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sendi
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
 const FEC_SENT_SUCCESS = 'Notification sent successfully';
 const PROFILE_RELEVANT_DEPTS = 'Relevant Depts';
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const FEC_ERROR_LOADING_ORIGINAL_INFORMATION = 'Error loading Original Information';
+
+const CATEGORY = {
+  COMPLAINT: "Complaint"
+};
+
+const COMPLAINT_TYPE_TEXT = {
+  HIGH_RISK: "High risk",
+  URGENT: "Urgent"
+};
+ const COMPLAINT_SOURCE_LABEL = {
+  SBV: "Ngân hàng Nhà nước Việt Nam",
+  CIC: "Trung tâm Thông tin Tín dụng",
+  VCCA: "Cục Cạnh tranh và Bảo vệ người tiêu dùng",
+  "PR/MKT": "Trung tâm Truyền thông",
+  VIP: "Cấp quản lý cao",
+  EA: "Quan hệ đối ngoại"
+};
+
+const OPEN_STATUS = 'Open';
+const NEW_STATUS = 'New';
+const QUEUE_ID_START = '00G';
+
+const ACTION_OPTIONS_CS_SUPPORT = [
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Revert", value: "Revert" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+  { label: "Update", value: "Update" },
+];
+
+const ACTION_OPTIONS_OTHER = [
+  { label: "Escalate", value: "Escalate" },
+  { label: "Reject", value: "Reject" },
+  { label: "Resolve", value: "Resolve" },
+  { label: "Transfer", value: "Transfer" },
+  { label: "Route to", value: "Route_to" },
+];
+
+const DECISION_OPTIONS_MAP = {
+  Revert: [
+    { label: "User", value: "USER" },
+    { label: "User’s Team Queue", value: "USER_TEAM_QUEUE" },
+  ],
+
+  Transfer: [
+    { label: "User", value: "USER" },
+    { label: "Queue", value: "QUEUE" },
+  ],
+
+  Update: [
+    { label: "Pending CS", value: "PendingCS" },
+    { label: "Pending Customer", value: "PendingCustomer" },
+    { label: "Pending Card Ops", value: "PendingCardOps" },
+    { label: "Pending Collections", value: "PendingCollections" },
+    {
+      label: "Pending Contract Processing",
+      value: "PendingContractProcessing",
+    },
+    { label: "Pending Credit Assessment", value: "PendingCreditAssessment" },
+    { label: "Pending Direct Sales", value: "PendingDirectSales" },
+    { label: "Pending Telesales", value: "PendingTelesales" },
+    { label: "Pending IT", value: "PendingIT" },
+    { label: "Pending Payment", value: "PendingPayment" },
+    { label: "Pending Product", value: "PendingProduct" },
+    { label: "Pending RCP&A", value: "PendingRCPA" },
+    { label: "Pending Security", value: "PendingSecurity" },
+    { label: "Pending Vendor", value: "PendingVendor" },
+    { label: "Out Of Process", value: "OutOfProcess" },
+    { label: "CIC Related", value: "CICRelated" },
+    { label: "Document Preparation", value: "DocumentPreparation" },
+    { label: "Task Under Review", value: "TaskUnderReview" },
+    { label: "Cannot Contact Customer", value: "CannotContactCustomer" },
+  ],
+};
+
+const ACTIONS_REQUIRE_DECISION = ["Revert", "Transfer", "Update"];
+
+const ACTIONS_REQUIRE_SUBDECISION_MAP = {
+  Transfer: ["USER", "QUEUE"],
+  Route_to: ["TEAM"],
+};
+
+const CUSTOMER_PHONE_NUMBER = 'FEC_Customer_Phone_Number__c';
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -221,11 +307,25 @@ export {
     FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+    ERROR_TILE_SHOWTOAST,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,
-    ERROR_TILE_SHOWTOAST,
     MSG_ENTER_EMAIL_CORRECTLY,
     NOTIFICATION_CHANNEL_SF_APP,
     FEC_SENT_SUCCESS,
-    PROFILE_RELEVANT_DEPTS
+    PROFILE_RELEVANT_DEPTS,
+    PAGE_SIZE_OPTIONS,
+    FEC_ERROR_LOADING_ORIGINAL_INFORMATION,
+    CATEGORY,
+    COMPLAINT_TYPE_TEXT,
+    COMPLAINT_SOURCE_LABEL,
+    OPEN_STATUS,
+    NEW_STATUS,
+    QUEUE_ID_START,
+  ACTION_OPTIONS_CS_SUPPORT,
+  ACTION_OPTIONS_OTHER,
+  DECISION_OPTIONS_MAP,
+  ACTIONS_REQUIRE_DECISION,
+  ACTIONS_REQUIRE_SUBDECISION_MAP,
+  CUSTOMER_PHONE_NUMBER
 };

@@ -27,6 +27,7 @@ import FEC_Repay_Particulars_Label from '@salesforce/label/c.FEC_Repay_Particula
 import FEC_Repay_Booking_Date_Label from '@salesforce/label/c.FEC_Repay_Booking_Date_Label';
 import FEC_LBL_Incorrect_Contract_Number from '@salesforce/label/c.FEC_LBL_Incorrect_Contract_Number';
 import FEC_LBL_Select_Contract_Number from '@salesforce/label/c.FEC_LBL_Select_Contract_Number';
+import FEC_LBL_Selected_Contract_Number from '@salesforce/label/c.FEC_LBL_Selected_Contract_Number';
 import FEC_LBL_Select_Payment_Method from '@salesforce/label/c.FEC_LBL_Select_Payment_Method';
 import FEC_LBL_Incorrect_Contract_Hint from '@salesforce/label/c.FEC_LBL_Incorrect_Contract_Hint';
 import FEC_LBL_Payment_Method from '@salesforce/label/c.FEC_LBL_Payment_Method';
