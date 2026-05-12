@@ -15,7 +15,7 @@ public with sharing class FEC_SubProcessService {
         public Boolean showTransferCall = false;
     }
 
-    @AuraEnabled
+    @AuraEnabled(cacheable=true)
     public static SubProcessWrapper getSubProcesses(
         Id recordId,
         Id productTypeId,

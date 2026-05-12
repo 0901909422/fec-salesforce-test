@@ -32,6 +32,9 @@
 	    <members>FEC_CheckEligibleCallout</members>
 	    <members>FEC_HoldCaseController</members>
 	    <members>FEC_AssignmentController</members>
+	    <members>FEC_AssignmentExecuteService</members>
+	    <members>FEC_CaseExecuteService</members>
+	    <members>FEC_SubProcessService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -60,6 +63,14 @@
 	    <members>fec_RelatedListPaging</members>
 	    <members>fec_CommonUtils</members>
         <members>fec_MaskedContactTemplate</members>
+	    <members>fec_AssigmentListView</members>
+	    <members>fec_AssignmentRemarkHistoryTable</members>
+	    <members>fec_AssignmentViewAll</members>
+	    <members>fec_CustomDoNotBotherViewDatatable</members>
+	    <members>fec_CustomerCaseExecuteAction</members>
+	    <members>fec_DoNotBotherHandling</members>
+	    <members>fec_DoNotBotherNonExistingCustomer</members>
+	    <members>fec_SubProcessContainer</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
