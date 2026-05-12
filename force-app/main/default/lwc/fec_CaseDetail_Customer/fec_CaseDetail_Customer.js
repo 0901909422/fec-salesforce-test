@@ -229,10 +229,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (caseBusinessEle) {
       caseBusinessEle.getData(
-        message.productTypeId,
-        message.categoryId,
-        message.subCategoryId,
-        message.subCodeId,
+        message.productTypeId ?? null,
+        message.categoryId ?? null,
+        message.subCategoryId ?? null,
+        message.subCodeId ?? null,
         message.natureOfCaseId,
       );
       // tungnm37 thêm: track COF/GSR sau khi getData
@@ -260,7 +260,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     console.log("📤 CASE_ACTION:", payload);
 
-    publish(this.messageContext, CASE_ACTION_CHANNEL, payload);
+    publish(this.messageContext, CASE_ACTION, payload);
   }
 
   /**
@@ -386,6 +386,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (!isAllValid) {
       this.isSubmitting = false;
+      this.isLoaded = true;
       return;
     }
 
@@ -394,11 +395,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
         this.isSubmitting = false;
+        this.isLoaded = true;
         return;
       }
     }
 
-    this.isLoaded = false;
+    this.isLoaded = false; // đã set ở đầu handleSubmit
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
