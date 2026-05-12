@@ -1676,14 +1676,24 @@ hasAnySearchCriteria(params) {
                 // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
-                this.dispatchEvent(
-                  new CustomEvent('closerequest', {
-                    detail: {
-                      recordId: res
-                    }
-                  })
-                );
-            }
+                const devName = await getCaseRecordTypeDevName({ caseId: res });
+                if (devName === 'Internal_Case') {
+                    this.dispatchEvent(
+                        new CustomEvent('closerequest', {
+                            detail: { recordId: res }
+                        })
+                    );
+                  } else {
+                      this[NavigationMixin.Navigate]({
+                          type: "standard__recordPage",
+                          attributes: {
+                              recordId: res,
+                              objectApiName: "Case",
+                              actionName: "view"
+                          }
+                      });
+                  }
+              }
             //await this.refreshTab();
           })
           .catch((e) => {
