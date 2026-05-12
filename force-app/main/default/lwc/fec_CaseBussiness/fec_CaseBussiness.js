@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, CUSTOMER_PHONE_NUMBER } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -425,7 +425,9 @@ function mergeSectionSortedRows(section) {
       isLwc: true,
       sortOrder,
       outerClass: dynCmp.lwcColClassName,
-      showLwcSubHeading: !!dynCmp.subSectionName,
+      showLwcSubHeading:
+        Boolean(dynCmp?.subSectionName) &&
+        dynCmp?.hideSubSectionHeading !== true,
       dynCmp,
     });
   });
@@ -469,6 +471,7 @@ function normalizeMasterDataLwcEntry(entry) {
       typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
+hideSubSectionHeading: o.hideSubSectionHeading === true,
   };
 }
 
@@ -1472,7 +1475,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
                   field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
                   field.apiName === FIELD_CASE_PHONE_NUMBER ||
-                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER;
+                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER ||
+                  field.apiName === CUSTOMER_PHONE_NUMBER;
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1838,7 +1842,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
       fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
       fieldName === FIELD_CASE_PHONE_NUMBER ||
-      fieldName === FIELD_RECIPIENT_PHONE_NUMBER
+      fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
+      fieldName === CUSTOMER_PHONE_NUMBER
     ) {
       value = applyPhoneInputMaxLength(value);
     }
@@ -1920,7 +1925,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
         fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
         fieldName === FIELD_CASE_PHONE_NUMBER ||
-        fieldName === FIELD_RECIPIENT_PHONE_NUMBER) &&
+        fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
+        fieldName === CUSTOMER_PHONE_NUMBER
+      ) &&
       field
     ) {
       field.customError = validateUpdatedInfoPhone(value) || null;
@@ -2766,6 +2773,10 @@ export default class Fec_CaseBussiness extends LightningElement {
             remarkContent: this.remarkContent || null,
           },
         });
+        // tungnm37: clear manual items sau khi submit thành công
+        this._manualItems = [];
+        const routingComp = this.template.querySelector('c-fec_-routing-assignment');
+        if (routingComp) routingComp.clearManualItems();
         return true;
       }
       let method = routeToEle.value;
@@ -2895,7 +2906,39 @@ export default class Fec_CaseBussiness extends LightningElement {
    * Collect tất cả field values từ business.sectionlst thành JSON string.
    * Chỉ lấy field có value, bỏ qua field masked/hidden.
    * Format: [{ apiName, label, value, objectName }]
+   * value: ưu tiên nhãn hiển thị (tiếng Việt) — picklist dùng label từ picklistOptionsMap;
+   * ngày dùng displayValue; không đổi field.value dùng cho bind form/Case.
    */
+  _fieldValueForFlowHistoryJson(objectName, field) {
+    const raw = field.value;
+    const opts = this.business?.picklistOptionsMap?.[objectName]?.[field.apiName];
+    if (opts?.length) {
+      const opt = findPicklistOptionByRaw(opts, raw);
+      if (opt?.label != null && String(opt.label).trim() !== STR_EMPTY) {
+        return opt.label;
+      }
+    }
+    if (field.isDate && field.displayValue) {
+      return field.displayValue;
+    }
+    const rdv = field.readonlyDisplayValue;
+    if (
+      rdv != null &&
+      String(rdv).trim() !== STR_EMPTY &&
+      String(rdv) !== String(raw ?? STR_EMPTY)
+    ) {
+      return rdv;
+    }
+    if (
+      field.displayValue != null &&
+      String(field.displayValue).trim() !== STR_EMPTY &&
+      String(field.displayValue) !== String(raw ?? STR_EMPTY)
+    ) {
+      return field.displayValue;
+    }
+    return raw;
+  }
+
   _collectFieldListJson() {
     try {
       const fields = [];
@@ -2905,15 +2948,15 @@ export default class Fec_CaseBussiness extends LightningElement {
           // Chỉ lấy các field thuộc sub-section có FEC_Sub_Section__c = "Property Info"
           if (sub.name !== 'Property Info') continue;
           for (const obj of sub.objlst ?? []) {
+            const objectName = obj.name;
             for (const field of obj.fieldlst ?? []) {
               if (field.isHidden) continue;
-              const val = field.value;
-              // if (val === null || val === undefined || val === '') continue;
+              const val = this._fieldValueForFlowHistoryJson(objectName, field);
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
-                value: String(val),
-                objectName: obj.name
+                value: String(val ?? STR_EMPTY),
+                objectName
               });
             }
           }
@@ -3470,6 +3513,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fecSubSectionOrder,
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
+hideSubSectionHeading: meta.hideSubSectionHeading === true,
               lwcColClassName,
             };
           })

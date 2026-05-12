@@ -420,6 +420,7 @@
 		<members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
 		<members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>Case.FEC_Service_Case_Owner__c</members>
         <members>FEC_Additional_Info__c.FEC_Application_ID_List__c</members>
         <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
         <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
@@ -729,6 +730,20 @@
 		<members>FEC_Label_Update_Case_Status</members>
 		<members>FEC_Insurance_Info_Error</members>
         <members>FEC_MSG_Service_Error_Label</members>
+        <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
+        <members>FEC_Collections_Transfer_Failed_Summary</members>
+		<members>FEC_TransferCall_Btn_Cancel</members>
+		<members>FEC_TransferCall_Section_CaseInfo</members>
+		<members>FEC_TransferCall_Spinner_Loading</members>
+		<members>FEC_TransferCall_Subtitle</members>
+		<members>FEC_TransferCall_Modal_ConfirmMessage</members>
+		<members>FEC_TransferCall_Btn_TransferToCollection</members>
+		<members>FEC_Notification_16_Collections_Transfer_Success</members>
+        <members>FEC_TransferCall_Modal_RemarkLabel</members>
+		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
+		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
+		<members>FEC_TransferCall_Modal_RemarkRequired</members>
+		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
         <name>CustomLabel</name>
     </types>
 	<types>
