@@ -54,6 +54,7 @@
 	    <members>fec_DateFormatter</members>
 	    <members>fec_RelatedListPaging</members>
 	    <members>fec_CommonUtils</members>
+        <members>fec_MaskedContactTemplate</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
