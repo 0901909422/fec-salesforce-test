@@ -138,11 +138,29 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const FIELD_INVITED_PHONE = "FEC_Invited_Phone__c";
+const FIELD_ZALO_USED = "FEC_Zalo_Used__c";
+const FIELD_DEBT_COLLECTION_PHONE = "FEC_Debt_Collection_Phone__c";
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
+  FIELD_INVITED_PHONE,
+  FIELD_ZALO_USED,
+  FIELD_DEBT_COLLECTION_PHONE,
+]);
+/** Case: input tel + validateUpdatedInfoPhone + giới hạn độ dài (0/84). */
+const PHONE_VALIDATED_FIELD_APIS = new Set([
+  FIELD_UPDATED_INFO_PHONE_NUMBER,
+  FIELD_REGISTERED_PHONE_NUMBER,
+  FIELD_CASE_PHONE_NUMBER,
+  FIELD_RECIPIENT_PHONE_NUMBER,
+  CUSTOMER_PHONE_NUMBER,
+  FIELD_INVITED_PHONE,
+  FIELD_ZALO_USED,
+  FIELD_DEBT_COLLECTION_PHONE,
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -214,7 +232,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
 const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
 const VALUE_COMPLAINT_SOURCE = ['High Risk', 'Urgent'];
@@ -1473,12 +1490,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 field.isDate =
                   field.type === "DATE" || DATE_FIELDS.has(field.apiName);
-                field.isPhone =
-                  field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-                  field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
-                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER ||
-                  field.apiName === CUSTOMER_PHONE_NUMBER;
+                field.isPhone = PHONE_VALIDATED_FIELD_APIS.has(field.apiName);
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1702,12 +1714,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   handleInputKeydown(e) {
-    const phoneFields = [
-      FIELD_UPDATED_INFO_PHONE_NUMBER,
-      FIELD_REGISTERED_PHONE_NUMBER,
-      FIELD_CASE_PHONE_NUMBER,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
       FIELD_OLD_CITIZEN_ID_NUMBER,
@@ -1757,7 +1763,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       key === "Home" ||
       key === "End";
 
-    if (phoneFields.includes(fieldName)) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       if (!isDigit && !isControl) e.preventDefault();
       // Chặn gõ thêm số khi đã đủ độ dài: 0xxx → 10 ký tự, 84xxx → 11 ký tự
       if (isDigit) {
@@ -1840,13 +1846,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.setDraft(objId, fieldName, value);
 
-    if (
-      fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-      fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER ||
-      fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
-      fieldName === CUSTOMER_PHONE_NUMBER
-    ) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       value = applyPhoneInputMaxLength(value);
     }
     if (fieldName === FIELD_UPDATED_INFO_NATIONAL_ID) {
@@ -1923,15 +1923,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._rebuildAllSectionSortedRows();
     }
 
-    if (
-      (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-        fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER ||
-        fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
-        fieldName === CUSTOMER_PHONE_NUMBER
-      ) &&
-      field
-    ) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName) && field) {
       field.customError = validateUpdatedInfoPhone(value) || null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
