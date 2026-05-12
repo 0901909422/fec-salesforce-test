@@ -61,6 +61,19 @@ export default class Fec_NocChannelConfig extends LightningElement {
         return !this.isLoading && this.searchResults.length === 0 && this.isOpen;
     }
 
+    @track _dropdownStyle = '';
+
+    get dropdownStyle() {
+        return this._dropdownStyle;
+    }
+
+    _updateDropdownPosition() {
+        const input = this.template.querySelector('input');
+        if (!input) return;
+        const rect = input.getBoundingClientRect();
+        this._dropdownStyle = `top:${rect.bottom + window.scrollY}px;left:${rect.left + window.scrollX}px;width:${rect.width}px;`;
+    }
+
     handleInput(event) {
         this.searchTerm = event.target.value;
         if (this.searchTerm.length < 1) {
@@ -70,13 +83,13 @@ export default class Fec_NocChannelConfig extends LightningElement {
         }
         this.isLoading = true;
         this.isOpen = true;
+        this._updateDropdownPosition();
         if (this._timer) clearTimeout(this._timer);
         this._timer = setTimeout(() => {
             searchChannels({ searchTerm: this.searchTerm })
                 .then(data => {
-                    // Lọc bỏ những channel đã chọn
                     const selectedIds = this.selectedChannels.map(c => c.id);
-                    this.searchResults = data.filter(ch => !selectedIds.includes(ch.Id));
+                    this.searchResults = (data || []).filter(ch => !selectedIds.includes(ch.Id));
                     this.isLoading = false;
                 })
                 .catch(() => { this.isLoading = false; });
@@ -84,7 +97,10 @@ export default class Fec_NocChannelConfig extends LightningElement {
     }
 
     handleFocus() {
-        if (this.searchTerm.length >= 1) this.isOpen = true;
+        if (this.searchTerm.length >= 1) {
+            this.isOpen = true;
+            this._updateDropdownPosition();
+        }
     }
 
     handleBlur() {

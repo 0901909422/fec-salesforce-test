@@ -4,9 +4,6 @@
 
             <lightning-accordion-section name="sms" label={labelTabSms}>
                 <div class={smsSectionClass}>
-                    <template lwc:if={resolvedPhoneDisplay}>
-                        <div class="channel-phone-hint">{labelPhonePrefix} {resolvedPhoneDisplay}</div>
-                    </template>
                     <div class="slds-is-relative">
                         <template lwc:if={smsHasRows}>
                             <template lwc:if={smsLoading}>
@@ -62,7 +59,27 @@
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
                                 </div>
                             </template>
-                            <div class={znsEmptyMsgClass}>{znsEmptyMessage}</div>
+                            <!-- Bảng dựng tạm cho ZNS -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={znsEmptyMsgClass}>{znsEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -89,7 +106,27 @@
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
                                 </div>
                             </template>
-                            <div class={emailEmptyMsgClass}>{emailEmptyMessage}</div>
+                            <!-- Bảng dựng tạm cho Email -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={emailEmptyMsgClass}>{emailEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -116,7 +153,27 @@
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
                                 </div>
                             </template>
-                            <div class={mobileAppEmptyMsgClass}>{mobileAppEmptyMessage}</div>
+                            <!-- Bảng dựng tạm cho Mobile App -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={mobileAppEmptyMsgClass}>{mobileAppEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </template>
                 </div>

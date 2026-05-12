@@ -38,7 +38,7 @@ public without sharing class FEC_NatureOfCaseTriggerHandler {
                 children = [
                     SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
                     WHERE FEC_Business_Process__c = :bpId
-                      AND Id != :parent.Id AND FEC_Channel__c = null
+                      AND Id != :parent.Id
                 ];
             }
             // Level 2 (BP + Cat): con là NOC cùng BP+Cat
@@ -47,7 +47,7 @@ public without sharing class FEC_NatureOfCaseTriggerHandler {
                     SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
                     WHERE FEC_Business_Process__c = :bpId
                       AND FEC_Category__c = :catId
-                      AND Id != :parent.Id AND FEC_Channel__c = null
+                      AND Id != :parent.Id
                 ];
             }
             // Level 3 (BP + Cat + SubCat): con là NOC cùng BP+Cat+SubCat
@@ -57,7 +57,7 @@ public without sharing class FEC_NatureOfCaseTriggerHandler {
                     WHERE FEC_Business_Process__c = :bpId
                       AND FEC_Category__c = :catId
                       AND FEC_Sub_Category__c = :subCatId
-                      AND Id != :parent.Id AND FEC_Channel__c = null
+                      AND Id != :parent.Id
                 ];
             }
             // Level 4 (đầy đủ): không có con

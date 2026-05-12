@@ -60,6 +60,9 @@
           </div>
           <!-- Confirm button -->
           <div class="slds-col slds-size_1-of-1 slds-text-align_right slds-m-top--small">
+            <template if:true={showValidationError}>
+              <p class="slds-text-color_error slds-m-bottom--x-small">{validationErrorMsg}</p>
+            </template>
             <lightning-button
               variant="brand"
               label={confirmLabel}

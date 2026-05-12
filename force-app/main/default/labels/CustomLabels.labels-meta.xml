@@ -15667,4 +15667,11 @@
         <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
         <value>Vui lòng nhập Remark for Collections.</value>
     </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
+    </labels>
 </CustomLabels>

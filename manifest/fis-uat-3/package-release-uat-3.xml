@@ -498,6 +498,7 @@
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
+        <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -582,6 +583,8 @@
         <members>fec_CustomDoNotBotherViewDatatable</members>
         <members>fec_MaskedContactTemplate</members>
         <members>fec_TransferCall</members>
+        <members>fec_AssigmentListView</members>
+        <members>fec_AssignmentViewAll</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -810,6 +813,7 @@
 		<members>FEC_TransferCall_Btn_ConfirmTransfer</members>
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
+		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
         <name>CustomLabel</name>
     </types>
 	<types>
