@@ -172,8 +172,7 @@ public with sharing class FEC_CampaignBatchService {
             'CreatedDate, LastModifiedDate, CreatedBy.Name, LastModifiedBy.Name, ' +
             'FEC_CS_Campaign__r.FEC_Campaign__r.FEC_CampaignId__c, ' +
             'FEC_CS_Campaign__r.FEC_PushInstant__c, ' +
-            'FEC_InsertionDate__c, FEC_CallbackRequested__c, ' +
-            'FEC_RecordCurrentLifetime__c, FEC_RecordLifetime__c ' +
+            'FEC_InsertionDate__c, FEC_CallbackRequested__c ' +
             'FROM FEC_DataCampaign__c ' +
             'WHERE FEC_InsertionDate__c >= :dtStart AND FEC_InsertionDate__c <= :dtEnd ' +
             'AND (' +
