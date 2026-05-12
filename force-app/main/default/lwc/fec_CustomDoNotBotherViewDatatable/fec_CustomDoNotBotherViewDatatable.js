@@ -6,7 +6,7 @@ export default class Fec_CustomDoNotBotherViewDatatable extends LightningDatatab
     static customTypes = {
         maskedContact: {
             template: customTypeTemplate,
-            standardCellLayout: true,
+           standardCellLayout: false,
             typeAttributes: [
                 "maskedValue",
                 "rawValue",
