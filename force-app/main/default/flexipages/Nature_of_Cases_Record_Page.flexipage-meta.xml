@@ -441,6 +441,34 @@
                 <identifier>flexipage_tab</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>nocRoutingAssignmentTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Routing Assignment</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocRoutingAssignmentTab</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>nocGeneralAssignmentTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>General Assignment</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocGeneralAssignmentTab</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>maintabs</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -470,6 +498,26 @@
             </componentInstance>
         </itemInstances>
         <name>nocChannelConfigTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_NocRoutingAssignment</componentName>
+                <identifier>fec_NocRoutingAssignment</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocRoutingAssignmentTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_NocGeneralAssignment</componentName>
+                <identifier>fec_NocGeneralAssignment</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocGeneralAssignmentTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
