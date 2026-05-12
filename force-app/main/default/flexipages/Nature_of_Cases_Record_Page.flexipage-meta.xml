@@ -500,26 +500,6 @@
         <name>nocChannelConfigTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>c:fec_NocRoutingAssignment</componentName>
-                <identifier>fec_NocRoutingAssignment</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>nocRoutingAssignmentTabContent</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>c:fec_NocGeneralAssignment</componentName>
-                <identifier>fec_NocGeneralAssignment</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>nocGeneralAssignmentTabContent</name>
-        <type>Facet</type>
-    </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>
     <template>
