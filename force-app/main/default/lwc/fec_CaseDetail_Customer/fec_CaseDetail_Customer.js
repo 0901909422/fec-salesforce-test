@@ -248,10 +248,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (caseBusinessEle) {
       caseBusinessEle.getData(
-        message.productTypeId,
-        message.categoryId,
-        message.subCategoryId,
-        message.subCodeId,
+        message.productTypeId ?? null,
+        message.categoryId ?? null,
+        message.subCategoryId ?? null,
+        message.subCodeId ?? null,
         message.natureOfCaseId,
       );
       // tungnm37 thêm: track COF/GSR sau khi getData
@@ -436,7 +436,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();
-      
+
       if (
         caseBusinessEle &&
         typeof caseBusinessEle.refreshFileUploadCards === "function"

@@ -2906,7 +2906,39 @@ export default class Fec_CaseBussiness extends LightningElement {
    * Collect tất cả field values từ business.sectionlst thành JSON string.
    * Chỉ lấy field có value, bỏ qua field masked/hidden.
    * Format: [{ apiName, label, value, objectName }]
+   * value: ưu tiên nhãn hiển thị (tiếng Việt) — picklist dùng label từ picklistOptionsMap;
+   * ngày dùng displayValue; không đổi field.value dùng cho bind form/Case.
    */
+  _fieldValueForFlowHistoryJson(objectName, field) {
+    const raw = field.value;
+    const opts = this.business?.picklistOptionsMap?.[objectName]?.[field.apiName];
+    if (opts?.length) {
+      const opt = findPicklistOptionByRaw(opts, raw);
+      if (opt?.label != null && String(opt.label).trim() !== STR_EMPTY) {
+        return opt.label;
+      }
+    }
+    if (field.isDate && field.displayValue) {
+      return field.displayValue;
+    }
+    const rdv = field.readonlyDisplayValue;
+    if (
+      rdv != null &&
+      String(rdv).trim() !== STR_EMPTY &&
+      String(rdv) !== String(raw ?? STR_EMPTY)
+    ) {
+      return rdv;
+    }
+    if (
+      field.displayValue != null &&
+      String(field.displayValue).trim() !== STR_EMPTY &&
+      String(field.displayValue) !== String(raw ?? STR_EMPTY)
+    ) {
+      return field.displayValue;
+    }
+    return raw;
+  }
+
   _collectFieldListJson() {
     try {
       const fields = [];
@@ -2916,15 +2948,15 @@ export default class Fec_CaseBussiness extends LightningElement {
           // Chỉ lấy các field thuộc sub-section có FEC_Sub_Section__c = "Property Info"
           if (sub.name !== 'Property Info') continue;
           for (const obj of sub.objlst ?? []) {
+            const objectName = obj.name;
             for (const field of obj.fieldlst ?? []) {
               if (field.isHidden) continue;
-              const val = field.value;
-              // if (val === null || val === undefined || val === '') continue;
+              const val = this._fieldValueForFlowHistoryJson(objectName, field);
               fields.push({
                 apiName: field.apiName,
                 label: field.label,
-                value: String(val),
-                objectName: obj.name
+                value: String(val ?? STR_EMPTY),
+                objectName
               });
             }
           }
