@@ -138,11 +138,29 @@ const FIELD_ORIGINAL_INFO_PHONE_NUMBER = "FEC_Original_Info_Phone_Number__c";
 const CASE_REGISTERED_PHONE_NUMBER = "Case.FEC_Registered_Phone_Number__c";
 const FIELD_REGISTERED_PHONE_NUMBER = "FEC_Registered_Phone_Number__c";
 const FIELD_CASE_PHONE_NUMBER = "FEC_Case_Phone_Number__c";
+const FIELD_INVITED_PHONE = "FEC_Invited_Phone__c";
+const FIELD_ZALO_USED = "FEC_Zalo_Used__c";
+const FIELD_DEBT_COLLECTION_PHONE = "FEC_Debt_Collection_Phone__c";
+const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
+  FIELD_INVITED_PHONE,
+  FIELD_ZALO_USED,
+  FIELD_DEBT_COLLECTION_PHONE,
+]);
+/** Case: input tel + validateUpdatedInfoPhone + giới hạn độ dài (0/84). */
+const PHONE_VALIDATED_FIELD_APIS = new Set([
+  FIELD_UPDATED_INFO_PHONE_NUMBER,
+  FIELD_REGISTERED_PHONE_NUMBER,
+  FIELD_CASE_PHONE_NUMBER,
+  FIELD_RECIPIENT_PHONE_NUMBER,
+  CUSTOMER_PHONE_NUMBER,
+  FIELD_INVITED_PHONE,
+  FIELD_ZALO_USED,
+  FIELD_DEBT_COLLECTION_PHONE,
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -214,7 +232,6 @@ const CS_SUPPORT_ASSESMENT_TYPE = "FEC_CS_Support_Assessment_Type__c";
 const CONFIRM_D2C_ASSESMENT = "FEC_Confirm_D2C_Assessment__c";
 const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
-const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
 const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
 const VALUE_COMPLAINT_SOURCE = ['High Risk', 'Urgent'];
@@ -872,6 +889,22 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.dispatchEvent(new CustomEvent('additem', { detail: { caseId: this.recordId } }));
   }
   //Toannd61: resolve method theo Action.code (FEC_Code__c), không theo value custom label — khớp run() REVERT/ROUTE_TO
+
+  //Thangtv
+  // Hiển thị Queue ổn định cho Route To (hỗ trợ cả string và object {label,value})
+  get routeToQueueDisplayLabel() {
+    const queue = this.business?.nextQueue;
+    if (!queue) {
+      return this.business?.nextQueueLabel || STR_EMPTY;
+    }
+    if (typeof queue === "string") {
+      return queue;
+    }
+    if (typeof queue === "object") {
+      return queue.label || queue.name || queue.value || this.business?.nextQueueLabel || STR_EMPTY;
+    }
+    return STR_EMPTY;
+  }
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
     const KNOWN_ROUTING_METHODS = [
@@ -1096,9 +1129,9 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
     this.business.hasRoutingAction =
-      Array.isArray(this.business.routingActionlst) &&
-      this.business.routingActionlst.length > 0;
-    this._updateDynCmpIsEditFlags();
+      (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
+      (Array.isArray(this.business.routingActionlst) &&
+      this.business.routingActionlst.length > 0);
     this.business = { ...this.business };
   }
 
@@ -1361,7 +1394,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           categoryId !== null ||
           subCategoryId !== null ||
           subCodeId !== null;
-        const hasExplicitNatureFallback = natureOfCaseIdFallback !== undefined;
+        const hasExplicitNatureFallback =
+          natureOfCaseIdFallback !== undefined && natureOfCaseIdFallback != null;
         const natureOfCase =
           hasNocSelectionPayload && hasExplicitNatureFallback
             ? natureOfCaseIdFallback
@@ -1372,9 +1406,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.activeSectionlst = [];
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
+        // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
         this.business.hasRoutingAction =
-          Array.isArray(this.business.routingActionlst) &&
-          this.business.routingActionlst.length > 0;
+          (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
+          (Array.isArray(this.business.routingActionlst) &&
+          this.business.routingActionlst.length > 0);
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -1471,12 +1507,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 field.isDate =
                   field.type === "DATE" || DATE_FIELDS.has(field.apiName);
-                field.isPhone =
-                  field.apiName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-                  field.apiName === FIELD_REGISTERED_PHONE_NUMBER ||
-                  field.apiName === FIELD_CASE_PHONE_NUMBER ||
-                  field.apiName === FIELD_RECIPIENT_PHONE_NUMBER ||
-                  field.apiName === CUSTOMER_PHONE_NUMBER;
+                field.isPhone = PHONE_VALIDATED_FIELD_APIS.has(field.apiName);
                 if (field.isDate) {
                   field.displayValue = formatToDDMMYYYY(field.value);
                 } else {
@@ -1700,12 +1731,6 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   handleInputKeydown(e) {
-    const phoneFields = [
-      FIELD_UPDATED_INFO_PHONE_NUMBER,
-      FIELD_REGISTERED_PHONE_NUMBER,
-      FIELD_CASE_PHONE_NUMBER,
-      FIELD_RECIPIENT_PHONE_NUMBER,
-    ];
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
       FIELD_OLD_CITIZEN_ID_NUMBER,
@@ -1755,7 +1780,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       key === "Home" ||
       key === "End";
 
-    if (phoneFields.includes(fieldName)) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       if (!isDigit && !isControl) e.preventDefault();
       // Chặn gõ thêm số khi đã đủ độ dài: 0xxx → 10 ký tự, 84xxx → 11 ký tự
       if (isDigit) {
@@ -1838,13 +1863,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.setDraft(objId, fieldName, value);
 
-    if (
-      fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-      fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-      fieldName === FIELD_CASE_PHONE_NUMBER ||
-      fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
-      fieldName === CUSTOMER_PHONE_NUMBER
-    ) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       value = applyPhoneInputMaxLength(value);
     }
     if (fieldName === FIELD_UPDATED_INFO_NATIONAL_ID) {
@@ -1921,15 +1940,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._rebuildAllSectionSortedRows();
     }
 
-    if (
-      (fieldName === FIELD_UPDATED_INFO_PHONE_NUMBER ||
-        fieldName === FIELD_REGISTERED_PHONE_NUMBER ||
-        fieldName === FIELD_CASE_PHONE_NUMBER ||
-        fieldName === FIELD_RECIPIENT_PHONE_NUMBER ||
-        fieldName === CUSTOMER_PHONE_NUMBER
-      ) &&
-      field
-    ) {
+    if (PHONE_VALIDATED_FIELD_APIS.has(fieldName) && field) {
       field.customError = validateUpdatedInfoPhone(value) || null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
@@ -1998,9 +2009,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         (field.customError ? " slds-has-error" : STR_EMPTY);
       this.business = { ...this.business };
     }
-    //linhdev: Fix jira FECREDIT_CSM_2025_KH-293
     if (obj && obj.name === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER && field) {
-      field.customError = null;
+      const trimmed =
+        value == null || value === STR_EMPTY ? STR_EMPTY : String(value).trim();
+      field.customError =
+        trimmed === STR_EMPTY ? null : /^\d+$/.test(trimmed) ? null : FEC_MSG_Param_Must_Number.replace("{0}", field.label || FIELD_FEC_REF_NUMBER);
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);
@@ -2760,8 +2773,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
 
      if (routeToEle) {
-      // tungnm37 thêm: COF/GSR shortcut - không cần tìm selectedAction
-      if (this.isRoutingAssignmentMode) {
+      // tungnm37 thêm: COF/GSR shortcut - chỉ chạy khi action là Route to, các action khác (Cancel, Escalate...) chạy bình thường
+      if (this.isRoutingAssignmentMode && routeToEle.value === ACTION_ROUTE_TO) {
         await run({
           method: 'Route to COF/GSR',
           params: {

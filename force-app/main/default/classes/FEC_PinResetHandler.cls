@@ -61,16 +61,44 @@ public without sharing class FEC_PinResetHandler {
             FEC_PINReissueServiceCallout.PINResponse response = FEC_PINReissueServiceCallout.callPINReissue(nationalId,transactionId, mobile, selectedCase.FEC_Is_Test_API__c);
             FEC_PINReissueServiceCallout.logApiResponse();
             
-            if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {
-                selectedCase.FEC_Process_Action_Count__c -= 1;
+            // if (response.RespCode != '1' && selectedCase.FEC_Process_Action_Count__c > 0) {
+                //     selectedCase.FEC_Process_Action_Count__c -= 1;
+                //     selectedCase.FEC_Is_PIN_Reset_Success__c = true;
+            // } else if (response.RespCode == '1') {
+                //     selectedCase.FEC_Process_Action_Count__c =
+                //         (selectedCase.FEC_Process_Action_Count__c == null ? 0 :
+                //         selectedCase.FEC_Process_Action_Count__c) + 1;
+            // }
+            
+            Integer count =
+                selectedCase.FEC_Process_Action_Count__c == null
+                ? 0
+                : Integer.valueOf(selectedCase.FEC_Process_Action_Count__c);
+            
+            Boolean isSuccess = response.RespCode != '1';
+            
+            if (isSuccess) {
+                
                 selectedCase.FEC_Is_PIN_Reset_Success__c = true;
-            } else if (response.RespCode == '1') {
-                selectedCase.FEC_Process_Action_Count__c =
-                    (selectedCase.FEC_Process_Action_Count__c == null ? 0 :
-                    selectedCase.FEC_Process_Action_Count__c) + 1;
+                
+                if (count > 0) {
+                    selectedCase.FEC_Process_Action_Count__c = count - 1;
+                }
+                
+            } else {
+                
+                selectedCase.FEC_Process_Action_Count__c = count + 1;
             }
             
             update selectedCase;
+            
+            Case checkCase = [
+                SELECT FEC_Is_PIN_Reset_Success__c
+                FROM Case
+                WHERE Id = :selectedCase.Id
+            ];
+            
+            System.debug('AFTER UPDATE: ' + checkCase.FEC_Is_PIN_Reset_Success__c);
             System.debug(response);
             return response;
             

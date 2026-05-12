@@ -306,11 +306,62 @@ public without sharing class FEC_IncorrectPaymentController {
         applyCorrectContractInputAndPicklist(c, first.correctContract);
         c.FEC_Adjusted_Amount__c = first.adjustedAmount != null ? first.adjustedAmount : null;
         c.FEC_Incorrect_Payment_Adj_Rows__c = JSON.serialize(validAdjs);
+        Savepoint sp = Database.setSavepoint();
         try {
             update new List<Case>{ c };
+            syncIncorrectPaymentInfoRows(caseId, validAdjs);
+        } catch (AuraHandledException e) {
+            Database.rollback(sp);
+            throw e;
         } catch (DmlException e) {
+            Database.rollback(sp);
             throw new AuraHandledException(e.getDmlMessage(0));
         }
+    }
+    //Fix jira FECREDIT_CSM_2025_KH-1271
+    private static String resolveIncorrectPaymentInfoCorrectContractField(Map<String, Schema.SObjectField> fieldMap) {
+        if (fieldMap.containsKey('fec_correct_contract_number__c')) {
+            return 'FEC_Correct_Contract_Number__c';
+        }
+        if (fieldMap.containsKey('fec_correct_account_contract__c')) {
+            return 'FEC_Correct_Account_Contract__c';
+        }
+        return null;
+    }
+
+    private static void syncIncorrectPaymentInfoRows(Id caseId, List<AdjustmentDTO> rows) {
+        if (caseId == null || rows == null || rows.isEmpty()) {
+            return;
+        }
+        Schema.SObjectType infoType = Schema.getGlobalDescribe().get('FEC_Incorrect_Payment_Info__c');
+        if (infoType == null) {
+            return;
+        }
+        String correctFieldApi = resolveIncorrectPaymentInfoCorrectContractField(infoType.getDescribe().fields.getMap());
+        Id cid = caseId;
+        List<SObject> toDelete = Database.query(
+            'SELECT Id FROM FEC_Incorrect_Payment_Info__c WHERE FEC_Case__c = :cid'
+        );
+        if (!toDelete.isEmpty()) {
+            delete toDelete;
+        }
+        List<SObject> toInsert = new List<SObject>();
+        for (AdjustmentDTO adj : rows) {
+            if (adj == null) {
+                continue;
+            }
+            SObject rec = infoType.newSObject();
+            rec.put('FEC_Case__c', caseId);
+            if (String.isNotBlank(correctFieldApi)) {
+                rec.put(correctFieldApi, String.isNotBlank(adj.correctContract) ? adj.correctContract.trim() : null);
+            }
+            rec.put('FEC_Adjusted_Amount__c', adj.adjustedAmount);
+            toInsert.add(rec);
+        }
+        if (toInsert.isEmpty()) {
+            return;
+        }
+        Database.insert(toInsert, true);
     }
 
     @AuraEnabled
