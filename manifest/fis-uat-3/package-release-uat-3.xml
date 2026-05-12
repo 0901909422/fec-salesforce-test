@@ -522,6 +522,7 @@
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
+        <members>FEC_Incorrect_Payment_Info__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
