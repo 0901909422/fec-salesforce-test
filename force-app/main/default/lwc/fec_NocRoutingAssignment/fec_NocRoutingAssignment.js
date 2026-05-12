@@ -239,7 +239,7 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
             return refreshApex(this.wiredResult);
         })
         .catch(e => {
-            this._toast(LABEL_ERROR, e?.body?.message || e?.message || 'Lỗi', 'error');
+            this._toast(LABEL_ERROR, e?.body?.message || e?.message || LABEL_ERROR, 'error');
         });
     }
 
@@ -333,7 +333,7 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
             this._loadHistory(this.detailRecord.id);
         })
         .catch(e => {
-            this._toast(LABEL_ERROR, e?.body?.message || e?.message || 'Lỗi', 'error');
+            this._toast(LABEL_ERROR, e?.body?.message || e?.message || LABEL_ERROR, 'error');
         });
     }
 
