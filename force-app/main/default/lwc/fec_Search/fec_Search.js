@@ -27,6 +27,7 @@ import FEC_MSG_Create_Customer_History_Error from '@salesforce/label/c.FEC_MSG_C
 import FEC_MSG_Create_Customer_History_Success from '@salesforce/label/c.FEC_MSG_Create_Customer_History_Success';
 import FEC_Error_Callout_Insurance from '@salesforce/label/c.FEC_Error_Callout_Insurance';
 import FEC_MSG_Service_Error_Label from '@salesforce/label/c.FEC_MSG_Service_Error_Label';
+import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 import checkFieldEditPermissions from "@salesforce/apex/FEC_SearchController.checkFieldEditPermissions";
 import SkipModal from "c/fec_SkipModal";
@@ -49,6 +50,7 @@ import getCardInfoByAccountNumber from "@salesforce/apex/FEC_SearchController.ge
 import getApplicationHistory from "@salesforce/apex/FEC_SearchController.getApplicationHistory";
 import CASE_ID_FIELD from "@salesforce/schema/Case.Id";
 import SEARCH_NATIONAL_ID_FIELD from "@salesforce/schema/Case.FEC_Search_National_ID__c";
+import { formatDateFlexibleVN } from "c/fec_CommonUtils";
 import SEARCH_PHONE_FIELD from "@salesforce/schema/Case.FEC_Search_Phone_Number__c";
 import SEARCH_APP_ID_FIELD from "@salesforce/schema/Case.FEC_Search_Application_ID__c";
 import SEARCH_CONTRACT_FIELD from "@salesforce/schema/Case.FEC_Search_Contract_Number__c";
@@ -67,6 +69,8 @@ const FIELDS_TO_CHECK = [
     'FEC_Search_Email_Address__c',
     'FEC_Search_Customer_Number__c'
 ];
+
+const FEC_TEST_API_SERVICE_ERROR_ACCOUNT = "0001500010000005555";
 
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
@@ -88,6 +92,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   showNewCaseModal = false;
   isSkip;
   isTestApiCase = false;
+  isSearchServiceError = false;
   // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   caseRecordTypeName;
   wiredCaseResult;
@@ -103,6 +108,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   FEC_MSG_Create_Customer_History_Error = FEC_MSG_Create_Customer_History_Error;
   FEC_MSG_Create_Customer_History_Success = FEC_MSG_Create_Customer_History_Success;
   FEC_Toast_Refresh_Success = FEC_Toast_Refresh_Success;
+  FEC_Common_No_Results_Label = FEC_Common_No_Results_Label;
 
   labels = {
     errorCalloutInsuranceMsg: FEC_Error_Callout_Insurance,
@@ -188,12 +194,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       { label: "Plastic ID", fieldName: "PlasticID", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -256,12 +257,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        }, 
+        type: "text", 
         sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
       ...(this.isAccountContractSearch ? [{ label: "Application ID", fieldName: "ApplicationID", sortable: true }] : []),
@@ -296,13 +292,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return [
       { label: "Contract Number", fieldName: "ContractNumber", sortable: true },
       { label: "Sold Date", fieldName: "SoldDate", sortable: true,
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            dateStyle: "short"
-        },
+        type: "text", 
        },
       { label: "Balance Amount", fieldName: "BalanceAmount", sortable: true },
       { label: "Product Code", fieldName: "ProductCode", sortable: true },
@@ -327,12 +317,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       { label: "Customer Name", fieldName: "FullName", sortable: true },
       { label: "Date of Birth", 
         fieldName: "DateOfBirth", 
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true },
       {
         label: "Buyer NID",
@@ -359,12 +344,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       {
         label: "Effective Date",
         fieldName: "EffectiveDate",
-        type: "date", 
-        typeAttributes:{
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric"
-        },
+        type: "text", 
         sortable: true,
       },
       { label: "Status", fieldName: "Status", sortable: true },
@@ -386,7 +366,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         type: "maskedToggle",
         sortable: true,
       },
-      { label: "Date of Birth", fieldName: "DateOfBirth", sortable: true },
+      { label: "Date of Birth", fieldName: "DateOfBirth", type: "text", sortable: true },
       { label: "Account Status", fieldName: "AccountStatus", sortable: true },
       {
         label: "Account Number",
@@ -694,6 +674,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
 
   handleClear() {
     this.isNoCustomerFound = false;
+    this.isSearchServiceError = false;
     this.nationalId = null;
     this.phoneNumber = null;
     this.applicationId = null;
@@ -793,9 +774,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.processSearch() 
   }
 
+  _isSimulatedTestApiServiceErrorSearch() {
+    if (!this.isTestApiCase) {
+      return false;
+    }
+    const acc =
+      this.accountNumber != null && this.accountNumber !== undefined
+        ? String(this.accountNumber).trim()
+        : "";
+    return acc === FEC_TEST_API_SERVICE_ERROR_ACCOUNT;
+  }
+
   async processSearch() {
     this.isLoaded = false;
     this.isNoCustomerFound = false;
+    this.isSearchServiceError = false;
 
     // reset data
     this.cardData = [];
@@ -913,7 +906,21 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.loanCash24Data.length > 0 ||
         this.insuranceData.length > 0;
 
-      this.isNoCustomerFound = !hasAnyData;
+      if (this._isSimulatedTestApiServiceErrorSearch()) {
+        this.cardData = [];
+        this.loanData = [];
+        this.loanContractData = [];
+        this.loanB2Data = [];
+        this.loanCash24Data = [];
+        this.insuranceData = [];
+        this.ubankData = [];
+        this._customers = [];
+        this.isSearchServiceError = true;
+        this.isNoCustomerFound = true;
+      } else {
+        this.isSearchServiceError = false;
+        this.isNoCustomerFound = !hasAnyData;
+      }
 
     } catch (e) {
       console.error("Error fetching data:", e);
@@ -961,11 +968,11 @@ async fetchBancaInsurance(ids) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.StatusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1000,11 +1007,11 @@ async fetchBancaInsuranceByPhone(phones) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: el.buyerDOB,
+      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: el.effectiveDate,
+      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
       Status: el.statusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1040,6 +1047,7 @@ async fetchBancaInsuranceByPhone(phones) {
     });
     return Array.from(map.values());
   }
+
 
   preferInsuranceRow(a, b) {
     const phoneA = a?.Phone && String(a.Phone).trim();
@@ -1135,7 +1143,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             AccountNumber: accNum,
                             AccountStatus: app.Status,
                             PlasticID: "Loading...", // Hiển thị trạng thái đang lấy data
@@ -1159,7 +1167,7 @@ hasAnySearchCriteria(params) {
                             FullName: cust.FullName,
                             NationalID1: currentNationalId,
                             NationalID2: "",
-                            DateOfBirth: cust.DateOfBirth,
+                            DateOfBirth: formatDateFlexibleVN(cust.DateOfBirth),
                             ContractNumber: contractNum,
                             ProductCode: app.Product,
                             ContractStatus: app.Status,
@@ -1468,7 +1476,7 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.AccountNumber] || null,
       _btnClass: (this.appHistoryMap[r.AccountNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
@@ -1477,17 +1485,10 @@ hasAnySearchCriteria(params) {
       ...r,
       _historyState: this.appHistoryMap[r.ContractNumber] || null,
       _btnClass: (this.appHistoryMap[r.ContractNumber]?.expanded) ? 'fec-toggle-btn fec-expanded' : 'fec-toggle-btn',
-      _dateOfBirth: this._formatDate(r.DateOfBirth)
+      _dateOfBirth: formatDateFlexibleVN(r.DateOfBirth)
     }));
   }
 
-  _formatDate(dateStr) {
-    if (!dateStr) return '';
-    // Handle YYYY-MM-DD format
-    const parts = dateStr.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    return dateStr;
-  }
 
   // Returns interleaved array: each data row followed by its history row (if expanded)
   // Used for Account/Contract Search to render history inline
@@ -1522,23 +1523,28 @@ hasAnySearchCriteria(params) {
     if (!action || !action.name) {
       return;
     }
-    let id = row;
-    console.log('Row JSON yy1:', JSON.stringify(row, null, 2));
-    if (action.name == "create_history") {
-      switch (action.label.fieldName) {
-        case "AccountNumber":
-          row = this.cardData.find(r => r.AccountNumber == row);
-          break;
-        case "ContractNumber":
-          row = this.loanContractData.find(r => r.ContractNumber == row);
-          break;
-        case "UserId":
-          row = this.insuranceData.find(r => r.UserId == row);
-          break;
+
+    let id;
+    // Resolve full row object and identifier string
+    if (typeof row === 'string') {
+      id = row;
+      const type = action.type;
+      let foundRow;
+      if (type === 'Card') {
+        foundRow = this.cardData.find(r => r.AccountNumber === id);
+      } else if (type === 'Loan') {
+        foundRow = this.loanContractData.find(r => r.ContractNumber === id) || 
+                   this.loanB2Data.find(r => r.ContractNumber === id) || 
+                   this.loanCash24Data.find(r => r.ContractNumber === id);
+      } else if (type === 'Insurance') {
+        foundRow = this.insuranceData.find(r => r.UserId === id);
       }
-    } 
+      if (foundRow) row = foundRow;
+    } else {
+      id = row?.AccountNumber || row?.ContractNumber || row?.UserId || row?.id;
+    }
+
     let cifNumber = row?.CIFNumber ?? '';
-    console.log('cifNumber ', cifNumber );
     
     switch (action.name) {
       case "create_history": {
@@ -1547,15 +1553,15 @@ hasAnySearchCriteria(params) {
             new CustomEvent("rowselected", {
               detail: {
                 fullName: row?.FullName || "",
-                nationalId: row?.AccountNumber || row?.ContractNumber || "",
+                nationalId: id || "",
                 cifNumber: cifNumber
               },
               bubbles: true,
               composed: true,
             }),
           );
-
         }
+
         let categories = [];
 
         // 1. Check Card data
@@ -1600,18 +1606,11 @@ hasAnySearchCriteria(params) {
           ) {
             customerName = this._customers[customerIndex].FullName;
           }
-          isListView = window.location.href.includes("/FEC_Customer_Search")
-            ? false
-            : !this.recordId;
+          // Align isListView for Insurance search tab to ensure Internal Case and navigation
+          isListView = !this.recordId;
         }
 
-        // [CHANGE][Author : LongNH76] Ưu tiên phone từ dòng kết quả; fallback phone user nhập để tránh trống FEC_Search_Phone_Number__c.
-        // Old behavior (kept for reference):
-        // phone: row?.Phone
-        const resolvedPhone =
-          (row?.Phone && String(row.Phone).trim()) ||
-          (this.phoneNumber && String(this.phoneNumber).trim()) ||
-          null;
+        const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
 
         createHistory({
           value: id,
@@ -1625,30 +1624,20 @@ hasAnySearchCriteria(params) {
           applicationId: row?.ApplicationID,
           isListView: isListView,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
-          buyerNID: row?.BuyerNID || '', // Only for Insurance
+          buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
         })
           .then(async (res) => {
-            // const payload = {
-            //     isModeEdit: true
-            // };
-            this.showToast(
-              "Success",
-              "History created successfully",
-              "success",
-            );
-            await this._pollHistoryReady(res);
+            this.showToast("Success", "History created successfully", "success");
+            
             if (this.recordId) {
-                //publish(this.messageContext, IS_MODE_EDIT, payload);
                 this.handlePublishMessageChanel();
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
-                // await refreshApex(this.wiredCaseResult);
                 this.dispatchEvent(new RefreshEvent());
             } else {
+                // Navigate immediately
                 this.dispatchEvent(
                   new CustomEvent('closerequest', {
-                    detail: {
-                      recordId: res
-                    }
+                    detail: { recordId: res }
                   })
                 );
             }
@@ -1703,26 +1692,21 @@ hasAnySearchCriteria(params) {
     return null;
   } 
 
-  // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
-    if (!this.isNoCustomerFound || !(this.recordId || this.isListView || this.isCreateCaseTab)) {
-      return false;
-    }
-    const rt = this.caseRecordTypeName;
-    const isInternalOrInteraction =
-      rt === 'Internal Case' ||
-      rt === 'Interaction';
-    if (this.recordId && this.isTestApiCase && isInternalOrInteraction) {
-      return false;
-    }
-    return true;
+    return (
+      (this.isCreateCaseTab ||
+        this.tabName === 'FEC_Customer_Search' ||
+        this.tabName === 'FEC_Account_Contract_Search' ||
+        !!this.recordId) &&
+      !this.isSearchServiceError
+    );
   }
 
   get noCustomerFoundMessage() {
-    if (this.recordId && this.isTestApiCase) {
-      return this.labels.errorApiMessage;
+    if (this.isSearchServiceError) {
+      return FEC_MSG_Service_Error_Label;
     }
-    return this.labels.errorApiMessage;
+    return FEC_Common_No_Results_Label;
   }
 
   get noCustomerFoundClass() {
@@ -1929,11 +1913,11 @@ hasAnySearchCriteria(params) {
                       UserId: element.userID,
                       FullName: element.buyerName,
                       BuyerNID: element.buyerNID,
-                      DateOfBirth: element.buyerDOB,
+                      DateOfBirth: formatDateFlexibleVN(element.buyerDOB),
                       ProductName: element.productNameEn,
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
-                      EffectiveDate:  element.effectiveDate,
+                      EffectiveDate:  formatDateFlexibleVN(element.effectiveDate),
                       Status:  element.StatusDisplay,
                       PolicyNumber:  element.policyNumber,
                     })

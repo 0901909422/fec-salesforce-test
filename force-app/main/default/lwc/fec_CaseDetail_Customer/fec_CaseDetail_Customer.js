@@ -248,10 +248,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (caseBusinessEle) {
       caseBusinessEle.getData(
-        message.productTypeId,
-        message.categoryId,
-        message.subCategoryId,
-        message.subCodeId,
+        message.productTypeId ?? null,
+        message.categoryId ?? null,
+        message.subCategoryId ?? null,
+        message.subCodeId ?? null,
         message.natureOfCaseId,
       );
       // tungnm37 thêm: track COF/GSR sau khi getData
@@ -356,6 +356,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   async handleSubmit() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
+    this.isLoaded = false; // tungnm37: disable button ngay lập tức trước mọi xử lý
 
     let isAllValid = true;
     this.errlst = [];
@@ -403,6 +404,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (!isAllValid) {
       this.isSubmitting = false;
+      this.isLoaded = true;
       return;
     }
 
@@ -411,11 +413,12 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const blocked = await caseBusinessEle.checkSubmitBlock();
       if (blocked) {
         this.isSubmitting = false;
+        this.isLoaded = true;
         return;
       }
     }
 
-    this.isLoaded = false;
+    // this.isLoaded = false; // đã set ở đầu handleSubmit
 
     try {
       const stageName = caseBusinessEle?.getStageName?.() ?? STR_EMPTY;
@@ -433,11 +436,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       }
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();
-      
-      // Submit xóa draft trên Case — createRemark phải sau submit rồi mới submitRemark.
-      await caseRemarksEle.createRemark(stageName);
-      await caseRemarksEle.submitRemark(stageName);
-      this.loadRemarkHistory();
 
       if (
         caseBusinessEle &&
@@ -445,13 +443,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37 thêm: COF/GSR Stage 2 với manual items → bỏ qua createRemark/submitRemark nếu Case Remarks trống
+      // tungnm37: luôn dùng submitRemarkDirect - truyền content trực tiếp, tránh duplicate do draft bị clear
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      const hasManualItemsSubmit = (caseBusinessEle?._manualItems?.length ?? 0) > 0;
-      if (!(isRoutingModeSubmit && hasManualItemsSubmit && !caseRemarksEle?.validate())) {
-        await caseRemarksEle.createRemark(stageName);
-        await caseRemarksEle.submitRemark(stageName);
-      }
+      await caseRemarksEle.submitRemarkDirect(stageName);
       // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
       this._isCofGsr = isRoutingModeSubmit;
       this.loadRemarkHistory();
