@@ -744,6 +744,7 @@
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
 		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
+        <name>CustomLabel</name>
     </types>
 	<types>
 		<!-- Interaction Case Service Case -->
