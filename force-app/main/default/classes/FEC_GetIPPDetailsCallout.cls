@@ -157,8 +157,8 @@ public with sharing class FEC_GetIPPDetailsCallout {
 
         // Hard code toàn bộ payload khi môi trường Non-Production (chỉ combination dữ liệu này có response thật ở API mock/non-prod)
         if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
-            && String.isNotBlank(apiSetting?.FEC_Account_Number_Hard_Code__c)) {
-            reqData.accountNumber   = apiSetting.FEC_Account_Number_Hard_Code__c;
+            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+            reqData.accountNumber   = apiConfig.FEC_Account_Number_Hard_Code__c;
             reqData.effectiveDate   = '2026-05-04';
             reqData.amount          = 2250000;
             reqData.planNumber      = '97102';
