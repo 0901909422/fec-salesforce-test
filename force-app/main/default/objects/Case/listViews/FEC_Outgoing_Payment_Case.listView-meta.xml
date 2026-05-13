@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Outgoing_Payment_Case</fullName>
     <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
@@ -30,9 +30,9 @@
         <value>Outgoing Payment</value>
     </filters>
     <filters>
-        <field>FEC_Owner_In_Assignment_Users__c</field>
-        <operation>equals</operation>
-        <value>1</value>
+        <field>FEC_Assignment_Users__c</field>
+        <operation>contains</operation>
+        <value>00GAz000005JuCiMAK</value>
     </filters>
     <label>Outgoing Payment</label>
     <queue>FEC_Outgoing_Payment</queue>
