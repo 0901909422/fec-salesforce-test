@@ -295,14 +295,4 @@ public with sharing class FEC_SalesChannelFromApplicationService {
 
         return null;
     }
-
-    @TestVisible
-    static Boolean sgoTsaExcludedForTest(String dsa, String tsa) {
-        return sgoTsaExcluded(dsa, tsa);
-    }
-
-    @TestVisible
-    static Boolean tpBlockedForTest(String dsa, String tsa) {
-        return tpBlocked(dsa, tsa);
-    }
 }
