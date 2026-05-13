@@ -930,7 +930,6 @@ const getUsernameBeforeAt = (email) =>{
 
     return email.split("@")[0];
 }
-
 export {
   formatDate,
   formatDateTime,
