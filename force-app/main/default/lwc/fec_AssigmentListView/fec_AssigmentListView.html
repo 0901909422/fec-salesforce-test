@@ -5,149 +5,37 @@
         <div slot="title" class="slds-media slds-media_center">
 
             <div class="slds-media__figure">
-                <lightning-icon
-                    icon-name="standard:work_order"
-                    size="small"
-                    class="header-icon">
+                <lightning-icon icon-name="standard:work_order" size="small" class="header-icon">
                 </lightning-icon>
             </div>
 
             <div class="slds-media__body">
                 <h2 class="slds-card__header-title">
                     <span class="title">
-                          {labels.LABEL_ASSIGNMENT_LIST} ({assignmentCount})
+                        {labels.LABEL_ASSIGNMENT_LIST} ({assignmentCount})
                     </span>
                 </h2>
             </div>
 
         </div>
 
-        <!-- TABLE -->
-        <div class="table-wrapper">
+        <template if:true={showTable}>
+            <div class="table-wrapper">
 
-            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout custom-table">
+                <lightning-datatable key-field="id" data={assignments} columns={columns} hide-checkbox-column
+                    show-row-number-column is-loading={isLoading}>
+                </lightning-datatable>
 
-                <thead>
-                    <tr>
+            </div>
 
-                        <th class="index-col"></th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_ASSIGNMENT_ID}
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_STAGE_NAME}
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                <!-- {labels.LABEL_ASSIGNMENT_TYPE} -->
-                                 Assignment Type
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_ASSIGNMENT_STATUS}
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_USER}
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_USER_ROLE}
-                            </div>
-                        </th>
-
-                        <th scope="col">
-                            <div class="slds-truncate">
-                                {labels.LABEL_DATE_TIME}
-                            </div>
-                        </th>
-
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    <template for:each={assignments} for:item="item">
-
-                        <tr key={item.id}>
-
-                            <td class="index-col">
-                                {item.rowNumber}
-                            </td>
-
-                            <td>
-                                <a
-                                    href="javascript:void(0)"
-                                    data-id={item.id}
-                                    onclick={handleOpenAssignment}>
-
-                                    {item.assignmentId}
-
-                                </a>
-                            </td>
-
-                            <td>
-                                <div
-                                    class="slds-truncate"
-                                    title={item.stageName}>
-
-                                    {item.stageName}
-
-                                </div>
-                            </td>
-
-                            <td>{item.assignmentType}</td>
-
-                            <td>{item.assignmentStatus}</td>
-
-                            <td>
-                                <a href="javascript:void(0)">
-                                    {item.user}
-                                </a>
-                            </td>
-
-                            <td>
-                                <div
-                                    class="slds-truncate"
-                                    title={item.userRole}>
-
-                                    {item.userRole}
-
-                                </div>
-                            </td>
-
-                            <td>{item.dateTime}</td>
-
-                        </tr>
-
-                    </template>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-        <!-- FOOTER -->
-         <template if:true={showViewAll}>
-        <div class="assignment-footer" style="text-align: center;margin-top: 10px;">
-            <a href="javascript:void(0)" onclick={handleViewAll}>
-                {labels.LABEL_VIEW_ALL}
-            </a>
-        </div>
+            <!-- FOOTER -->
+            <template if:true={showViewAll}>
+                <div class="assignment-footer" style="text-align: center;">
+                    <a href="javascript:void(0)" onclick={handleViewAll}>
+                        {labels.LABEL_VIEW_ALL}
+                    </a>
+                </div>
+            </template>
         </template>
     </lightning-card>
 </template>

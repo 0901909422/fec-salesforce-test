@@ -20,12 +20,13 @@ public with sharing class FEC_RelevantTicketController {
 
     @AuraEnabled
     public static Id createRelevantTicket(String interactionId, String relatedToId) {
-        // tungnm37 sửa: lưu stage hiện tại (FEC_Current_Case_Stage__r.FEC_Code__c) vào FEC_Stage_Name__c
+        System.debug('FEC_DEBUG createRelevantTicket interactionId=' + interactionId + ' relatedToId=' + relatedToId);
         String currentStageCode = null;
         if (String.isNotBlank(relatedToId)) {
             List<Case> cases = [SELECT FEC_Current_Case_Stage__r.FEC_Code__c FROM Case WHERE Id = :relatedToId LIMIT 1];
             if (!cases.isEmpty()) currentStageCode = cases[0].FEC_Current_Case_Stage__r?.FEC_Code__c;
         }
+        System.debug('FEC_DEBUG createRelevantTicket currentStageCode=' + currentStageCode);
         FEC_Relevant_Ticket__c rt = new FEC_Relevant_Ticket__c();
         rt.FEC_Interaction__c  = relatedToId;
         rt.FEC_Related_To__c   = String.isNotBlank(interactionId) ? interactionId : null;
@@ -48,9 +49,13 @@ public with sharing class FEC_RelevantTicketController {
             List<Case> cases = [SELECT FEC_Current_Case_Stage__r.FEC_Code__c FROM Case WHERE Id = :ticket.FEC_Interaction__c LIMIT 1];
             if (!cases.isEmpty()) {
                 String currentStageCode = cases[0].FEC_Current_Case_Stage__r?.FEC_Code__c;
-                // tungnm37 sửa: null stage_name (ticket cũ) hoặc khác stage hiện tại → chặn
-                if (String.isBlank(ticket.FEC_Stage_Name__c) || ticket.FEC_Stage_Name__c != currentStageCode) {
-                    throw new AuraHandledException(System.Label.FEC_RelevantTicket_Cannot_Delete);
+                // Chỉ check stage khi Case có stage (có workflow)
+                // Nếu Case không có stage → cho phép xóa tự do
+                if (String.isNotBlank(currentStageCode)) {
+                    // Case có stage: chặn nếu ticket null stage (ticket cũ) hoặc khác stage hiện tại
+                    if (String.isBlank(ticket.FEC_Stage_Name__c) || ticket.FEC_Stage_Name__c != currentStageCode) {
+                        throw new AuraHandledException(System.Label.FEC_RelevantTicket_Cannot_Delete);
+                    }
                 }
             }
         }

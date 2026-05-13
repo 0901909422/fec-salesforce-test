@@ -3,18 +3,18 @@ import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page"
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
-import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult"
-import FEC_DNB_Has_Data_Question from '@salesforce/label/c.FEC_DNB_Has_Data_Question';
-import FEC_DNB_No_Data_Question from '@salesforce/label/c.FEC_DNB_No_Data_Question';
+import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
+import FEC_DNB_Has_Data_Question from "@salesforce/label/c.FEC_DNB_Has_Data_Question";
+import FEC_DNB_No_Data_Question from "@salesforce/label/c.FEC_DNB_No_Data_Question";
 
-import FEC_DNB_National_Id from '@salesforce/label/c.LBL_NationalID';
-import FEC_DNB_NID_Placeholder from '@salesforce/label/c.FEC_DNB_NID_Placeholder';
-import FEC_DNB_NID_Error from '@salesforce/label/c.FEC_MSG_National_ID_Invalid';
+import FEC_DNB_National_Id from "@salesforce/label/c.LBL_NationalID";
+import FEC_DNB_NID_Placeholder from "@salesforce/label/c.FEC_DNB_NID_Placeholder";
+import FEC_DNB_NID_Error from "@salesforce/label/c.FEC_MSG_National_ID_Invalid";
 
-import FEC_DNB_Update_Button from '@salesforce/label/c.FEC_DNB_Update_Button';
+import FEC_DNB_Update_Button from "@salesforce/label/c.FEC_DNB_Update_Button";
 
-import FEC_DNB_Modal_Title from '@salesforce/label/c.FEC_DNB_Modal_Title';
-import FEC_DNB_Modal_Message from '@salesforce/label/c.FEC_DNB_Modal_Message';;
+import FEC_DNB_Modal_Title from "@salesforce/label/c.FEC_DNB_Modal_Title";
+import FEC_DNB_Modal_Message from "@salesforce/label/c.FEC_DNB_Modal_Message";
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
@@ -68,6 +68,11 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
     { label: "Expiry Date", fieldName: "expiry", type: "text" },
     { label: "Original Reason", fieldName: "originalReason", type: "text" },
     { label: "Update Reason", fieldName: "updateReason", type: "picklist" },
+    {
+      label: "Remarks",
+      fieldName: "remarks",
+      type: "textarea",
+    },
   ];
 
   async connectedCallback() {
@@ -156,6 +161,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         hasContact,
 
         reasonOptionsFormatted: this.getReasonOptions(),
+        remarks: ""
       };
     };
 
@@ -367,6 +373,16 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
     this.data = this.data.map((row) =>
       row.id === id ? { ...row, isHidden: !row.isHidden } : row,
+    );
+
+    this.refreshData();
+  }
+
+  handleTextareaChange(event) {
+    const { id, field, value } = event.detail;
+
+    this.data = this.data.map((row) =>
+      row.id === id ? { ...row, [field]: value } : row,
     );
 
     this.refreshData();

@@ -127,6 +127,42 @@ const formatToDDMMYYYY = (iso) => {
 };
 
 /**
+ * Flexible date -> DD/MM/YYYY
+ * Accepts:
+ * - YYYY-MM-DD / YYYY/MM/DD (optionally with time)
+ * - DD/MM/YYYY
+ * - MM/DD/YYYY (auto-convert to DD/MM/YYYY when ambiguous)
+ */
+const formatDateFlexibleVN = (input) => {
+  if (!input) return STR_EMPTY;
+  const raw = String(input).trim();
+  if (!raw) return STR_EMPTY;
+
+  const isoLike = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s].*)?$/);
+  if (isoLike) {
+    const [, y, m, d] = isoLike;
+    return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
+  }
+
+  const slashLike = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashLike) {
+    const [, p1, p2, y] = slashLike;
+    const first = Number(p1);
+    const second = Number(p2);
+    const day = first > 12 ? first : second;
+    const month = first > 12 ? second : first;
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${y}`;
+  }
+
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/**
  * Parse DD/MM/YYYY -> YYYY-MM-DD
  * Validate calendar
  */
@@ -930,22 +966,6 @@ const getUsernameBeforeAt = (email) =>{
 
     return email.split("@")[0];
 }
-
-/** Encode ArrayBuffer to base64 (chunked for large buffers). */
-const arrayBufferToBase64 = (buffer) => {
-  if (!buffer) {
-    return "";
-  }
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-};
-
 export {
   formatDate,
   formatDateTime,
@@ -954,6 +974,7 @@ export {
   mask,
   formatDateVNI,
   formatToDDMMYYYY,
+  formatDateFlexibleVN,
   parseDateVNI,
   maskWorkPhone,
   maskValue,
@@ -989,6 +1010,5 @@ export {
   extensionBadge,
   doctypeIconFromExtension,
   mapLinkedFileToTableRow,
-  getUsernameBeforeAt,
-  arrayBufferToBase64
+  getUsernameBeforeAt
 };

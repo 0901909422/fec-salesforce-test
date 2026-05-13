@@ -22,6 +22,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api sortedBy;
     @api pageSize = 10;
     @api showRefresh = false;
+    @api showNewButton = false;
     @api updatedTime; // Timestamp or Date object
     @api hideRowNumber = false; // Hide row number column
     @api hideUpdatedTime = false; // Hide updated time display
@@ -32,12 +33,14 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
-    /** Khi không có dòng dữ liệu; component cha có thể truyền empty-state-message khác (vd. fec_AppInfo). */
-    @api emptyStateMessage = FEC_Common_No_Results_Label;
+    @api renderEmptyTableChrome = false;
+    @api selectionMode = 'multiple'; 
+    @api enableCheckboxColumn = false;
 
     /* ================= STATE ================= */
     _records = [];
     @track currentPage = 1;
+    @track selectedRecordIds = new Set();
     _gotoPage;
 
     // Sorting state - single column sort
@@ -50,6 +53,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
         if (this.defaultSortedBy) {
             this.sortedBy = this.defaultSortedBy;
             this.sortedDirection = this.defaultSortDirection || 'desc';
+        }
+        // records có thể được gán trước connectedCallback (thứ tự @api không bảo đảm) —
+        // lúc đó setter chưa sort được; áp dụng sort sau khi đã có sortedBy.
+        if (this.sortedBy && this._records.length > 0) {
+            this.sortData(this.sortedBy, this.sortedDirection);
         }
     }
 
@@ -71,7 +79,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
 
-        // Re-apply existing sort if any
+        // Nếu records đến trước connectedCallback, sortedBy chưa có → áp mặc định từ cha rồi sort
+        if (!this.sortedBy && this.defaultSortedBy) {
+            this.sortedBy = this.defaultSortedBy;
+            this.sortedDirection = this.defaultSortDirection || 'desc';
+        }
         if (this.sortedBy) {
             this.sortData(this.sortedBy, this.sortedDirection);
         }
@@ -82,6 +94,19 @@ export default class Fec_RelatedListPaging extends LightningElement {
     /* ================= GETTERS ================= */
     get hasRecords() {
         return this._records.length > 0;
+    }
+
+    get showTableSurface() {
+        return this.hasRecords || this.renderEmptyTableChrome === true;
+    }
+
+    /** Colspan: cột STT (nếu có) + số cột dữ liệu. */
+    get emptyBodyColspan() {
+        let n = Array.isArray(this.columns) ? this.columns.length : 1;
+        if (!this.hideRowNumber) {
+            n += 1;
+        }
+        return n;
     }
 
     get recordCount() {
@@ -104,6 +129,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return this.currentPage === this.totalPages;
     }
 
+    get showCheckboxColumn() {
+        return this.enableCheckboxColumn;
+    }
     /* ================= SORTED BY LABEL ================= */
     /**
      * Get the label of the currently sorted field for display in header.
@@ -195,6 +223,12 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return true;
     }
 
+    get rowSelectionClass() {
+        return this.selectionMode === 'single'
+            ? 'row-single'
+            : 'row-multiple';
+    }
+
     /* ================= DISPLAY RECORDS ================= */
     get displayRecords() {
         return this.pagedRecords.map((row, index) => {
@@ -203,6 +237,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
             return {
                 id: row.Id || `${this.currentPage}-${index}`,
+                isSelected: this.selectedRecordIds.has(row.Id),
                 rowNumber: rowIndex + 1,
                 cells: this.columns.map(col => {
 
@@ -499,13 +534,25 @@ export default class Fec_RelatedListPaging extends LightningElement {
         const toTime = (v) => {
             if (!v) return null;
 
-            if (typeof v === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
-                const [d, m, y] = v.split('/');
-                return new Date(+y, +m - 1, +d).getTime();
+            if (typeof v === 'string') {
+                // DD/MM/YYYY (fec_CommonUtils.formatDate)
+                let m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (m) {
+                    const [, d, mo, y] = m;
+                    return new Date(+y, +mo - 1, +d).getTime();
+                }
+                // DD/MM/YYYY, HH:mm:ss hoặc DD/MM/YYYY HH:mm:ss (fec_CommonUtils.formatDateTime / VN)
+                m = v.match(
+                    /^(\d{2})\/(\d{2})\/(\d{4})(?:,\s*|\s+)(\d{2}):(\d{2}):(\d{2})$/
+                );
+                if (m) {
+                    const [, d, mo, y, h, min, s] = m;
+                    return new Date(+y, +mo - 1, +d, +h, +min, +s).getTime();
+                }
             }
 
             const t = Date.parse(v);
-            return isNaN(t) ? null : t;
+            return Number.isNaN(t) ? null : t;
         };
 
         /** Chuỗi đã format (vd 735,287) hoặc số — dùng để sort đúng thứ tự số, không sort theo chữ cái */
@@ -612,6 +659,74 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     handleRefresh() {
         this.dispatchEvent(new CustomEvent('refresh'));
+    }
+
+    handleNew() {
+        this.dispatchEvent( new CustomEvent('new'));
+    }
+
+    handleSelectAll(event) {
+        const checked = event.target.checked;
+
+        const visibleIds = this.pagedRecords
+            .map(r => r.Id)
+            .filter(Boolean);
+
+        const newSet = new Set(this.selectedRecordIds);
+
+        if (this.selectionMode === 'single') {
+            this.selectedRecordIds = checked && visibleIds.length
+                ? new Set([visibleIds[0]])
+                : new Set();
+            return;
+        }
+
+        if (checked) {
+            visibleIds.forEach(id => newSet.add(id));
+        } else {
+            visibleIds.forEach(id => newSet.delete(id));
+        }
+
+        this.selectedRecordIds = newSet;
+
+        this.dispatchEvent(
+            new CustomEvent('rowselectionchange', {
+                detail: {
+                    selectedRecordIds: Array.from(this.selectedRecordIds)
+                },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    handleRowCheckboxChange(event) {
+        const id = event.currentTarget.dataset.id;
+        const checked = event.target.checked;
+
+
+        if (this.selectionMode === 'single') {
+            this.selectedRecordIds = checked ? new Set([id]) : new Set();
+        } else {
+            const newSet = new Set(this.selectedRecordIds);
+
+            if (checked) {
+                newSet.add(id);
+            } else {
+                newSet.delete(id);
+            }
+
+            this.selectedRecordIds = newSet;
+        }
+        this.dispatchEvent(
+            new CustomEvent('rowselectionchange', {
+                detail: {
+                    selectedRecordIds: Array.from(this.selectedRecordIds)
+                },
+                bubbles: true,
+                composed: true
+            })
+        );
     }
 
     handleLinkClick(event) {
