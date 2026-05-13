@@ -526,6 +526,7 @@
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Incorrect_Payment_Info__c</members>
+        <members>FEC_Sales_Logic__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -534,7 +535,8 @@
     </types>
     <types>
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
-		<name>Layout</name>
+        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
+        <name>Layout</name>
 	</types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
