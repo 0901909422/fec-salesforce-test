@@ -2,6 +2,7 @@ import { LightningElement, api, wire } from "lwc";
 
 import canExecute from "@salesforce/apex/FEC_CaseExecuteService.canExecute";
 import forceShowExecute from "@salesforce/apex/FEC_CaseExecuteService.forceShowExecute";
+import forceHideExecute from "@salesforce/apex/FEC_CaseExecuteService.forceHideExecute";
 
 import {
   MessageContext,
@@ -33,7 +34,7 @@ export default class Fec_CaseExecuteVisibility extends LightningElement {
     this.subscription = subscribe(
       this.messageContext,
       CASE_ACTION_CHANNEL,
-      (message) => {
+      async (message) => {
         console.log("CASE_ACTION_CHANNEL = ", message);
 
         /*
@@ -42,6 +43,26 @@ export default class Fec_CaseExecuteVisibility extends LightningElement {
         localStorage.removeItem(`${this.recordId}`);
 
         console.log("localStorage removed");
+
+            /*
+             * Sync backend
+             */
+            try {
+
+                await forceHideExecute({
+                    caseId: this.recordId
+                });
+
+                console.log(
+                    "FEC_Can_Execute__c updated = false"
+                );
+
+                this.canExecute = false;
+
+            } catch (e) {
+
+                console.error(e);
+            }
       },
     );
   }
