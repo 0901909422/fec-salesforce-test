@@ -152,6 +152,9 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     return this.totalAssignmentCount;
   }
 
+  get showTable() {
+    return this.totalAssignmentCount > 0;
+  }
   // SHOW VIEW ALL
   get showViewAll() {
     return true;
