@@ -74,8 +74,6 @@
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
-        <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
-        <members>Case.FEC_Owner_In_Assignment_Users__c</members>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <name>CustomField</name>
     </types>
