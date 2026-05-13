@@ -407,14 +407,10 @@ public without sharing class FEC_AssignmentController {
         if (String.isBlank(c.FEC_Team__c) || String.isBlank(team)) return;
 
         Set<String> setTeam = new Set<String>(c.FEC_Team__c.split('_'));
+        setTeam.remove(team);
 
-        if (setTeam.contains(team)) {
-            setTeam.remove(team);
-        }
-
-        c.FEC_Team__c = setTeam.isEmpty()
-            ? null
-            : String.join(new List<String>(setTeam), '_');
+        String joined = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
+        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined); 
     }
 
     // ===== ADD TEAM =====
@@ -427,13 +423,10 @@ public without sharing class FEC_AssignmentController {
             setTeam.addAll(c.FEC_Team__c.split('_'));
         }
 
-        if (!setTeam.contains(team)) {
-            setTeam.add(team);
-        }
+        setTeam.add(team);
 
-        c.FEC_Team__c = setTeam.isEmpty()
-            ? null
-            : String.join(new List<String>(setTeam), '_');
+        String joined = setTeam.isEmpty() ? null : String.join(new List<String>(setTeam), '_');
+        c.FEC_Team__c = FEC_CommonUltils.sortTeamField(joined); 
     }
 
     private static Boolean isTeamExist(Case c, String team) {
