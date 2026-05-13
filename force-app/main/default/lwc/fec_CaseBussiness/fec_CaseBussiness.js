@@ -2430,6 +2430,30 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveDraftIfApplicable();
   }
 
+  _getRemovePhoneFormEls() {
+    const out = [];
+    const wraps = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_RemovePhoneForm"]',
+    );
+    wraps?.forEach((wrap) => {
+      const host = wrap && wrap.firstElementChild;
+      if (host && typeof host.saveDraftIfApplicable === "function") {
+        out.push(host);
+      }
+    });
+    return out;
+  }
+
+  _saveRemovePhoneDraftIfApplicable() {
+    const hosts = this._getRemovePhoneFormEls();
+    if (!hosts.length) {
+      return Promise.resolve();
+    }
+    return Promise.all(
+      hosts.map((el) => el.saveDraftIfApplicable()),
+    );
+  }
+
   _savePointsRedemptionDraftIfApplicable() {
     const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2703,6 +2727,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
         this._savePointsRedemptionDraftIfApplicable(),
+        this._saveRemovePhoneDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2733,8 +2758,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     })
       // DungLT — flush upload file sau khi submit record forms
       .then(() => this._uploadFecFileUploadCardsIfApplicable())
+      .then(() => afterForms())
       .then(() => {
-        afterForms();
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
       });
@@ -2790,6 +2815,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
+      this._saveRemovePhoneDraftIfApplicable(),
     ]);
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {

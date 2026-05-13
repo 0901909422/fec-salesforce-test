@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEligibility';
+import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneController.saveRemovePhoneSelections';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
 import FEC_MainInfo_Contract_Status_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Status_Label';
@@ -16,6 +17,8 @@ import { STR_EMPTY, RESULT_ERROR } from 'c/fec_CommonConst';
 import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 
 export default class Fec_RemovePhoneForm extends LightningElement {
+
+    @api recordId;
 
     @api isEdit;
 
@@ -122,5 +125,32 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             .finally(() => {
                 this.isLoading = false;
             });
+    }
+
+    @api saveDraftIfApplicable() {
+        if (this.isReadOnly) {
+            return Promise.resolve();
+        }
+        if (!this.recordId || !this.phone || !this.rows || this.rows.length === 0) {
+            return Promise.resolve();
+        }
+        if (this.phone !== this.lastCheckedPhone) {
+            return Promise.resolve();
+        }
+        const selectedSet = new Set(this.selectedRowIds || []);
+        const rowPayload = (this.rows || []).map((r) => ({
+            customerName: r.customerName,
+            contractNumber: r.contractNumber,
+            contractStatus: r.contractStatus,
+            phoneType: r.phoneType,
+            removable: r.removable,
+            reason: r.reason,
+            checkRemovePhone: selectedSet.has(r.id)
+        }));
+        return saveRemovePhoneSelections({
+            caseId: this.recordId,
+            removedPhoneNumber: this.phone,
+            rows: rowPayload
+        });
     }
 }
