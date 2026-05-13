@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -16656,5 +16656,117 @@
         <protected>false</protected>
         <shortDescription>FEC_BCH_FooterOf</shortDescription>
         <value>of</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Save_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Save Success Title</shortDescription>
+        <value>Thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Saved_Message</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Saved Message</shortDescription>
+        <value>Đã lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Save_Error</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Save Error Title</shortDescription>
+        <value>Lỗi</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Save_Error_Message</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Save Error Message</shortDescription>
+        <value>Lỗi khi lưu.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Create_Success_Message</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Create Success Message</shortDescription>
+        <value>Đã tạo General Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Create_Error_Message</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Create Error Message</shortDescription>
+        <value>Lỗi khi tạo record.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Channel_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Channel Required</shortDescription>
+        <value>Vui lòng chọn ít nhất một Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Name_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>GA Name Required</shortDescription>
+        <value>Vui lòng chọn ít nhất một General Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Success Title</shortDescription>
+        <value>Thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Create_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Create Success Message</shortDescription>
+        <value>Đã tạo Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Update_Success</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Update Success Message</shortDescription>
+        <value>Đã cập nhật Routing Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Error</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Error Title</shortDescription>
+        <value>Lỗi</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Customer_Type_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Customer Type Required</shortDescription>
+        <value>Vui lòng chọn Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Channel_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Channel Required</shortDescription>
+        <value>Vui lòng chọn ít nhất một Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Team_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Team Required</shortDescription>
+        <value>Vui lòng chọn Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Queue_Required</fullName>
+        <language>vi</language>
+        <protected>false</protected>
+        <shortDescription>RA Queue Required</shortDescription>
+        <value>Vui lòng chọn Queue</value>
     </labels>
 </CustomLabels>
