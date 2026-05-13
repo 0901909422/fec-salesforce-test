@@ -15,6 +15,11 @@
                 <label>Call</label>
             </value>
             <value>
+                <fullName>Click to Call</fullName>
+                <default>false</default>
+                <label>Click to Call</label>
+            </value>
+            <value>
                 <fullName>Routing</fullName>
                 <default>false</default>
                 <label>Routing</label>
