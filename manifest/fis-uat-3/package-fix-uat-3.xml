@@ -37,6 +37,7 @@
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
+	    <members>FEC_FastCashCaseController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
