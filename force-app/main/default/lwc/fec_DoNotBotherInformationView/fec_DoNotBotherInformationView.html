@@ -52,40 +52,74 @@
 
                         <!-- PAGINATION -->
                         <!-- <template if:true={showPagination}> -->
-                            <div class="pagination-bar">
-                                <div class="pagination-section">
-                                    <span class="pagination-label">Page size</span>
-                                    <lightning-combobox value={pageSizeStr} options={pageSizeOptions}
-                                        onchange={handlePageSizeChange} variant="label-hidden"
-                                        class="page-size-combobox">
-                                    </lightning-combobox>
-                                </div>
+                        <!-- PAGINATION -->
+                        <div class="table-pagination
+                        slds-m-top_small
+                        slds-grid
+                        slds-grid_align-spread
+                        slds-grid_vertical-align-center">
 
-                                <div class="pagination-section">
-                                    <button class="nav-btn" disabled={isFirstPage} onclick={handlePrevPage}>
-                                        <lightning-icon icon-name="utility:chevronleft"
-                                            size="xx-small"></lightning-icon>
-                                    </button>
+                            <!-- PAGE SIZE -->
+                            <div class="page-size
+                            slds-grid
+                            slds-grid_vertical-align-center">
 
-                                    <button class="current-page-btn" disabled>
-                                        {currentPage}
-                                    </button>
+                                <span class="slds-m-right_x-small">
+                                    {labels.pageSizeLabel}
+                                </span>
 
-                                    <button class="nav-btn" disabled={isLastPage} onclick={handleNextPage}>
-                                        <lightning-icon icon-name="utility:chevronright"
-                                            size="xx-small"></lightning-icon>
-                                    </button>
-                                </div>
+                                <lightning-combobox value={pageSizeStr} options={pageSizeOptions}
+                                    onchange={handlePageSizeChange} variant="label-hidden">
+                                </lightning-combobox>
 
-                                <div class="pagination-section">
-                                    <span class="pagination-label">Go to</span>
-                                    <input type="text" value={gotoPageInputValue} onkeydown={handleGotoKeydown}
-                                        oninput={handleGoToPageInput} class="goto-input" />
-                                    <lightning-button label="Go" variant="brand" onclick={handleGoToPage}>
-                                    </lightning-button>
-                                </div>
                             </div>
-                        </template>
+
+                            <!-- PAGINATION -->
+                            <div class="pagination-controls
+                            slds-grid
+                            slds-grid_vertical-align-center">
+
+                                <lightning-button-icon class="square-icon" icon-name="utility:chevronleft"
+                                    alternative-text="Previous" onclick={handlePrevPage} disabled={isFirstPage}>
+                                </lightning-button-icon>
+
+                                <span class="page-number">
+                                    {currentPage}
+                                </span>
+
+                                <lightning-button-icon class="square-icon" icon-name="utility:chevronright"
+                                    alternative-text="Next" onclick={handleNextPage} disabled={isLastPage}>
+                                </lightning-button-icon>
+
+                            </div>
+
+                            <!-- GO TO PAGE -->
+                            <div class="go-to-page
+                            slds-grid
+                            slds-grid_vertical-align-center">
+
+                                <span class="slds-m-right_x-small">
+                                    {labels.goToPageLabel}
+                                </span>
+
+                                <lightning-input type="number" value={currentPage} min="1" max={totalPages}
+                                    variant="label-hidden" class="page-input" onchange={handleGoToPageInput}>
+                                </lightning-input>
+
+                                <span class="slds-m-horizontal_x-small">
+
+                                    of {totalPages}
+
+                                </span>
+
+                                <lightning-button class="square-go-btn" label={labels.goBtnLabel}
+                                    onclick={handleGoToPage} variant="brand">
+                                </lightning-button>
+
+                            </div>
+
+                        </div>
+                    </template>
                     <!-- </template> -->
 
                 </div>

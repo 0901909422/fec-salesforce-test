@@ -60,6 +60,23 @@ public without sharing class FEC_NatureOfCaseTriggerHandler {
                       AND Id != :parent.Id
                 ];
             }
+            // Level 3b (Cat + SubCat, không có BP): con là NOC cùng Cat+SubCat
+            else if (bpId == null && catId != null && subCatId != null && subCodeId == null) {
+                children = [
+                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
+                    WHERE FEC_Category__c = :catId
+                      AND FEC_Sub_Category__c = :subCatId
+                      AND Id != :parent.Id
+                ];
+            }
+            // Level 2b (chỉ Cat, không có BP): con là NOC cùng Cat
+            else if (bpId == null && catId != null && subCatId == null && subCodeId == null) {
+                children = [
+                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
+                    WHERE FEC_Category__c = :catId
+                      AND Id != :parent.Id
+                ];
+            }
             // Level 4 (đầy đủ): không có con
             else {
                 continue;
