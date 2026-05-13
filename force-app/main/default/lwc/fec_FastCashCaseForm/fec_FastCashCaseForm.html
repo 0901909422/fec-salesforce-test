@@ -9,16 +9,16 @@
       <template if:false={eligibilityLoading}>
         <template if:true={showNotEligible}>
           <lightning-layout-item size="12" padding="around-small">
+            <p class="validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
+          </lightning-layout-item>
+          <lightning-layout-item size="4" padding="around-small">
             <lightning-input type="text" label={customLabel.lblFastCashStatus} value={fastCashStatusLabel} disabled></lightning-input>
           </lightning-layout-item>
-          <lightning-layout-item size="6" padding="around-small">
+          <lightning-layout-item size="4" padding="around-small">
             <lightning-input type="text" label={customLabel.lblErrorCode} value={displayErrorCode} disabled></lightning-input>
           </lightning-layout-item>
-          <lightning-layout-item size="6" padding="around-small">
+          <lightning-layout-item size="4" padding="around-small">
             <lightning-input type="text" label={customLabel.lblErrorDescription} value={displayErrorDescription} disabled></lightning-input>
-          </lightning-layout-item>
-          <lightning-layout-item size="12" padding="around-small">
-            <p class="validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
           </lightning-layout-item>
         </template>
         <template if:true={showEligible}>

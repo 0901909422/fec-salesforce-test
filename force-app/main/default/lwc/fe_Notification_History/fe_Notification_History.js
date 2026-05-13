@@ -3,6 +3,7 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import COMMON_STYLES from '@salesforce/resourceUrl/FEC_CommonCss';
+import { formatDateTimeVN } from 'c/fec_CommonUtils';
 
 import getSmsInfoFromItTelco from '@salesforce/apex/FEC_GetSMSInfoFromITTelcoCallout.getSmsInfoFromItTelco';
 import getNotificationHistoryForCase from '@salesforce/apex/FEC_NotificationHistoryController.getNotificationHistoryForCase';
@@ -308,7 +309,10 @@ export default class Fe_Notification_History extends LightningElement {
                 return;
             }
             this.emailHistoryLoading = false;
-            this.emailRows = Array.isArray(data) ? data : [];
+            this.emailRows = Array.isArray(data) ? data.map(item => ({
+                ...item,
+                sentDateTime: formatDateTimeVN(item.sentDateTime)
+            })) : [];
             return;
         }
         if (channel === 'zns') {
@@ -426,7 +430,7 @@ export default class Fe_Notification_History extends LightningElement {
                 for (const dt of dates) {
                     rows.push({
                         id: seq++,
-                        dateTime: String(dt).trim(),
+                        dateTime: formatDateTimeVN(String(dt).trim()),
                         notificationType: typeVal || lblEmptyDash,
                         notificationContent: contentVal || lblEmptyDash
                     });
