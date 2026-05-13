@@ -987,6 +987,38 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((res) => {
           this.subCodeOptionlst = res;
+
+          const noSubCodeOptions = !res || res.length === 0;
+          if (this.productTypeSelectedId && this.updatedCategoryId && this.updatedSubCategoryId && noSubCodeOptions) {
+            return getNatureOfCaseWithoutSubCode({
+              productTypeId: this.productTypeSelectedId,
+              categoryId: this.updatedCategoryId,
+              subCategoryId: this.updatedSubCategoryId
+            })
+              .then((noc) => {
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: noc?.Id ?? null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              })
+              .catch((err) => {
+                console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              });
+          }
         })
         .catch((err) => {
           console.error("getSubCodelst error (Updated section):", err);
