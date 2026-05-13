@@ -966,22 +966,6 @@ const getUsernameBeforeAt = (email) =>{
 
     return email.split("@")[0];
 }
-
-/** Encode ArrayBuffer to base64 (chunked for large buffers). */
-const arrayBufferToBase64 = (buffer) => {
-  if (!buffer) {
-    return "";
-  }
-  const bytes = new Uint8Array(buffer);
-  const chunkSize = 0x8000;
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    const chunk = bytes.subarray(i, i + chunkSize);
-    binary += String.fromCharCode.apply(null, chunk);
-  }
-  return btoa(binary);
-};
-
 export {
   formatDate,
   formatDateTime,
@@ -1026,6 +1010,5 @@ export {
   extensionBadge,
   doctypeIconFromExtension,
   mapLinkedFileToTableRow,
-  getUsernameBeforeAt,
-  arrayBufferToBase64
+  getUsernameBeforeAt
 };
