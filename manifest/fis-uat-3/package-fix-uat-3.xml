@@ -35,6 +35,11 @@
 	    <members>FEC_AssignmentExecuteService</members>
 	    <members>FEC_CaseExecuteService</members>
 	    <members>FEC_SubProcessService</members>
+	    <members>FEC_CheckEligibleController</members>
+	    <members>FEC_CardClosureRefundController</members>
+	    <members>FEC_FastCashCaseController</members>
+        <members>FEC_RelevantTicketController</members>
+        <members>FEC_RelevantTicketTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -76,6 +81,9 @@
 	    <members>fec_ReusableDNBCustomTable</members>
 	    <members>fec_AssignmentExecuteVisibility</members>
         <members>fec_communicationHistory</members>
+        <members>fecCheckEligibleLoanSection</members>
+        <members>fec_CardClosureRefundForm</members>
+        <members>fec_FastCashCaseForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -84,6 +92,7 @@
     </types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
+        <members>FEC_Internal_Case_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
