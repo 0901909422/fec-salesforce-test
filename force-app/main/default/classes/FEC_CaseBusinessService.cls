@@ -555,12 +555,17 @@ public without sharing class FEC_CaseBusinessService {
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
       List<FEC_Case_Stage__c> stagelst = new List<FEC_Case_Stage__c>();
-      if (
-        hasIncomingNocSelection &&
+      //PhongBT: Fix cập nhật sai case stage
+      // Remap stage theo NOC case hiện tại, giữ số stage (Stage 2 → Stage 2 NOC đúng):
+      // - Có payload NOC từ UI (đổi bộ NOC trên màn), hoặc
+      // - Mới vào màn (không payload) nhưng Case đã Submit: nếu FEC_Current_Case_Stage__c
+      //   thuộc NOC khác với bộ NOC trên Case thì resolveCaseStageForNewNatureOfCase đồng bộ lại.
+      Boolean shouldTryRemapStageToCaseNature =
         String.isNotBlank(caseStageIdPreservedAtLoad) &&
         //PhongBT: Fix cập nhật sai case stage
-        templateNatureIdForCaseStages != null
-      ) {
+        templateNatureIdForCaseStages != null &&
+        (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true);
+      if (shouldTryRemapStageToCaseNature) {
         FEC_Case_Stage__c remappedStageForNewNoc = resolveCaseStageForNewNatureOfCase(
           caseStageIdPreservedAtLoad,
           //PhongBT: Fix cập nhật sai case stage
@@ -577,11 +582,13 @@ public without sharing class FEC_CaseBusinessService {
       }
       if (stagelst.isEmpty()) {
         String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
-        //PhongBT: Tránh load stage theo Id khi Id vẫn trỏ NOC khác với bộ NOC đang chọn trên UI.
+        //PhongBT: Fix cập nhật sai case stage
+        // Tránh load stage theo Id khi Id trỏ NOC khác với bộ NOC đang chọn (UI) hoặc với NOC trên Case (đã submit, mở màn).
         if (
           hasIncomingNocSelection &&
           templateNatureIdForCaseStages != null &&
-          String.isNotBlank(selectedCaseStageId)
+          String.isNotBlank(selectedCaseStageId) &&
+          (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true)
         ) {
           List<FEC_Case_Stage__c> stageNocCheck = [
             SELECT FEC_Nature_of_Cases__c
