@@ -1,18 +1,11 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
-  <lightning-accordion
-    if:true={businessLoaded}
-    allow-multiple-sections-open
-    active-section-name={activeSectionlst}
-  >
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
-      <lightning-accordion-section
-        key={section.id}
-        name={section.id}
-        label={section.name}
-      >
+      <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
         <div class="error" if:true={section.hasError}>
           <p>{section.error.label}</p>
           <p>{customLabel.reasonLabel}:</p>
@@ -30,155 +23,73 @@
                 </template>
 
                 <template for:each={row.sub.objlst} for:item="obj">
-                  <lightning-record-edit-form
-                    key={obj.id}
-                    object-api-name={obj.name}
-                    onsuccess={handleSuccess}
-                    onerror={handleFormError}
-                    record-id={obj.id}
-                  >
+                  <lightning-record-edit-form key={obj.id} object-api-name={obj.name} onsuccess={handleSuccess}
+                    onerror={handleFormError} record-id={obj.id}>
                     <div class="slds-grid slds-wrap">
                       <template for:each={obj.fieldlst} for:item="field">
                         <!-- editable -->
-                        <div
-                          key={field.apiName}
-                          if:false={field.isHidden}
-                          class={field.className}
-                        >
+                        <div key={field.apiName} if:false={field.isHidden} class={field.className}>
                           <!-- editable -->
-                          <div
-                            if:true={field.editable}
-                            class={field.editWrapperClass}
-                          >
+                          <div if:true={field.editable} class={field.editWrapperClass}>
                             <p class="label">
                               <abbr if:true={field.mandatory} title="*">*</abbr>
                               {field.label}
-                              <lightning-helptext
-                                if:true={field.hasHelpText}
-                                class="slds-m-left--x-small"
-                                content={field.helpText}
-                              ></lightning-helptext>
+                              <lightning-helptext if:true={field.hasHelpText} class="slds-m-left--x-small"
+                                content={field.helpText}></lightning-helptext>
                             </p>
 
                             <template if:true={field.isDate}>
-                              <lightning-input
-                                type="date"
-                                date-style="short"
-                                placeholder="DD/MM/YYYY"
-                                value={field.value}
-                                data-section={section.id}
-                                data-sub={row.sub.name}
-                                data-obj-name={obj.name}
-                                data-field={field.apiName}
-                                data-obj={obj.id}
-                                data-field-type="date"
-                                variant="label-hidden"
-                                required={field.mandatory}
-                                onchange={handleChangeInput}
-                                onpaste={handlePaste}
-                              >
+                              <lightning-input type="date" date-style="short" placeholder="DD/MM/YYYY"
+                                value={field.value} data-section={section.id} data-sub={row.sub.name}
+                                data-obj-name={obj.name} data-field={field.apiName} data-obj={obj.id}
+                                data-field-type="date" variant="label-hidden" required={field.mandatory}
+                                onchange={handleChangeInput} onpaste={handlePaste}>
                               </lightning-input>
-                              <lightning-input-field
-                                field-name={field.apiName}
-                                value={field.value}
-                                class="slds-hide"
-                                variant="label-hidden"
-                                data-is-date-field 
-                                onchange={handleDateChange}
-                                data-obj={obj.id}
-                              >
+                              <lightning-input-field field-name={field.apiName} value={field.value} class="slds-hide"
+                                variant="label-hidden" data-is-date-field onchange={handleDateChange} data-obj={obj.id}>
                               </lightning-input-field>
                             </template>
                             <template if:true={field.isPhone}>
-                              <lightning-input
-                                type="tel"
-                                value={field.value}
-                                maxlength="11"
-                                data-section={section.id}
-                                data-sub={row.sub.name}
-                                data-obj-name={obj.name}
-                                data-field={field.apiName}
-                                data-obj={obj.id}
-                                data-is-phone-field
-                                variant="label-hidden"
-                                required={field.mandatory}
-                                onchange={handleChangeInput}
-                                onkeydown={handleInputKeydown}
-                                onpaste={handlePaste}
-                              >
+                              <lightning-input type="tel" value={field.value} maxlength="11" data-section={section.id}
+                                data-sub={row.sub.name} data-obj-name={obj.name} data-field={field.apiName}
+                                data-obj={obj.id} data-is-phone-field variant="label-hidden" required={field.mandatory}
+                                onchange={handleChangeInput} onkeydown={handleInputKeydown} onpaste={handlePaste}>
                               </lightning-input>
-                              <lightning-input-field
-                                field-name={field.apiName}
-                                value={field.value}
-                                class="slds-hide"
-                                variant="label-hidden"
-                                data-is-phone-field
-                                onchange={handlePhoneChange}
-                                data-obj={obj.id}
-                              >
+                              <lightning-input-field field-name={field.apiName} value={field.value} class="slds-hide"
+                                variant="label-hidden" data-is-phone-field onchange={handlePhoneChange}
+                                data-obj={obj.id}>
                               </lightning-input-field>
                             </template>
                             <template if:false={field.isDate}>
                               <template if:false={field.isPhone}>
-                                <lightning-input-field
-                                  data-section={section.id}
-                                  data-sub={row.sub.name}
-                                  data-obj={obj.id}
-                                  data-field={field.apiName}
-                                  data-obj-name={obj.name}
-                                  variant="label-hidden"
-                                  field-name={field.apiName}
-                                  required={field.mandatory}
-                                  disabled={field.isInternalRequest}
-                                  onchange={handleChangeInput}
-                                  onkeydown={handleInputKeydown}
-                                  onpaste={handlePaste}
-                                  value={field.value}
-                                  >
+                                <lightning-input-field data-section={section.id} data-sub={row.sub.name}
+                                  data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
+                                  variant="label-hidden" field-name={field.apiName} required={field.mandatory}
+                                  disabled={field.isInternalRequest} onchange={handleChangeInput}
+                                  onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
                                 </lightning-input-field>
                               </template>
                             </template>
-                            <div
-                              if:true={field.customError}
-                              class="slds-form-element__help slds-m-top_x-small phone-error"
-                            >
+                            <div if:true={field.customError}
+                              class="slds-form-element__help slds-m-top_x-small phone-error">
                               {field.customError}
                             </div>
                           </div>
 
                           <!-- readonly -->
-                          <div
-                            if:true={field.readonly}
-                            class="read slds-border--bottom slds-m-around--x-small"
-                          >
+                          <div if:true={field.readonly} class="read slds-border--bottom slds-m-around--x-small">
                             <p class="label">
                               {field.label}
-                              <lightning-helptext
-                                if:true={field.hasHelpText}
-                                class="slds-m-left--x-small"
-                                content={field.helpText}
-                              ></lightning-helptext>
+                              <lightning-helptext if:true={field.hasHelpText} class="slds-m-left--x-small"
+                                content={field.helpText}></lightning-helptext>
                             </p>
-                            <p class="value"
-                              data-id="field-read-only"
-                              data-record-id={obj.id}
-                              data-obj-name={obj.name}
-                              data-field={field.apiName}
-                              data-value={field.value}
-                              data-is-update-read-only={field.isUpdateReadOnly}
-                            >
+                            <p class="value" data-id="field-read-only" data-record-id={obj.id} data-obj-name={obj.name}
+                              data-field={field.apiName} data-value={field.value}
+                              data-is-update-read-only={field.isUpdateReadOnly}>
                               {field.readonlyDisplayValue}
-                              <lightning-icon
-                                if:true={field.masked}
-                                data-section={section.id}
-                                data-sub={row.sub.name}
-                                data-obj={obj.id}
-                                data-field={field.apiName}
-                                icon-name={iconHideConst}
-                                size="x-small"
-                                class="slds-m-left--small"
-                                onclick={handleToggleMask}
-                              >
+                              <lightning-icon if:true={field.masked} data-section={section.id} data-sub={row.sub.name}
+                                data-obj={obj.id} data-field={field.apiName} icon-name={iconHideConst} size="x-small"
+                                class="slds-m-left--small" onclick={handleToggleMask}>
                               </lightning-icon>
                             </p>
                           </div>
@@ -189,7 +100,7 @@
                 </template>
                 <template if:true={row.sub.showRemovePhoneAfter}>
                   <div class="slds-m-top_medium">
-                    <c-fec_-remove-phone-form is-edit={isEdit}></c-fec_-remove-phone-form>
+                    <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
                   </div>
                 </template>
               </template>
@@ -199,12 +110,8 @@
                   <p class="sub-section">{row.dynCmp.subSectionName}</p>
                 </template>
                 <div data-fec-lwc={row.dynCmp.componentName}>
-                  <lwc:component lwc:is={row.dynCmp.ctor} 
-                    record-id={recordId} 
-                    sub-code-code={business.subCodeCode} 
-                    is-edit={row.dynCmp.isEdit}
-                    is-hidden-lwc={isHiddenLwc}
-                  ></lwc:component>
+                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
+                    is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
                 </div>
               </template>
             </div>
@@ -215,31 +122,18 @@
         <template if:true={finalShowProcessAction}>
           <div class="process-action" if:true={section.isLastSection}>
             <template for:each={business.processActionlst} for:item="process">
-              <lightning-button
-                key={process.value}
-                variant="brand"
-                label={process.label}
-                onclick={handleProcessAction}
-                class="slds-m-right_x-small"
-                data-id={process.value}
-                disabled={process.disabled}
-              ></lightning-button>
+              <lightning-button key={process.value} variant="brand" label={process.label} onclick={handleProcessAction}
+                class="slds-m-right_x-small" data-id={process.value} disabled={process.disabled}></lightning-button>
             </template>
           </div>
         </template>
 
         <template if:true={section.isLastSection}>
-           <div
-            if:true={isProcessActionFailed}
-            class="process-action-result process-action-result--error"
-          >
+          <div if:true={isProcessActionFailed} class="process-action-result process-action-result--error">
             <p>{processActionMsg}</p>
           </div>
 
-           <div
-            if:true={isProcessActionSuccessed}
-            class="process-action-result process-action-result--success"
-          >
+          <div if:true={isProcessActionSuccessed} class="process-action-result process-action-result--success">
             <p>{processActionMsg}</p>
           </div>
 
@@ -248,151 +142,99 @@
           </div>
         </template>
       </lightning-accordion-section>
-      
+
     </template>
-    <!--HieuTT74: [UPDATE 8/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
-    <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+  </lightning-accordion>
+  <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
+  <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+  <!--END: Hieutt74: Update ngày 12/5/2026-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
-    <lightning-accordion-section
-      key={routingAccordionSectionKey}
-      if:true={showRoutingSection}
-      name="routing-action"
-      label={customLabel.routingActionLabel}
-    >
+    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
+      label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
-          <lightning-select
-            data-id="routing-action"
-            label={customLabel.actionLabel}
-            value={actionValue}
-            options={business.routingActionlst}
-            onchange={handleChangeAction}
-            disabled={isRoutingActionDisabled}
-            required={isEdit}
-          ></lightning-select>
+          <lightning-select data-id="routing-action" label={customLabel.actionLabel} value={actionValue}
+            options={business.routingActionlst} onchange={handleChangeAction} disabled={isRoutingActionDisabled}
+            required={isEdit}></lightning-select>
         </div>
 
         <!-- tungnm37 sửa: ẩn Team/Queue cũ khi COF/GSR, thay bằng fec_RoutingAssignment -->
         <div if:true={showRouteTo} class={routingAssignmentContainerClass}>
           <template if:false={isRoutingAssignmentMode}>
             <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <p class="label">{customLabel.teamLabel}</p>
-            <p class="value">{business.nextTeam}</p>
-          </div>
-            <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <p class="label">{customLabel.queueLabel}</p>
-            <p class="value">{routeToQueueDisplayLabel}</p>
+              <p class="label">{customLabel.teamLabel}</p>
+              <p class="value">{business.nextTeam}</p>
             </div>
-                </template>
+            <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+              <p class="label">{customLabel.queueLabel}</p>
+              <p class="value">{routeToQueueDisplayLabel}</p>
+            </div>
+          </template>
           <!-- tungnm37 thêm: Routing Assignment LWC nằm bên phải, cùng cột 6-of-12 với Team/Queue cũ -->
           <template if:true={isRoutingAssignmentMode}>
-            <c-fec_-routing-assignment
-              nature-of-case-id={business.natureOfCase}
-              business-code={business.code}
-              customer-type={business.customerType}
-              is-submited={business.isSubmited}
-              user-group={userGroup}
-              onassignmentsloaded={handleAssignmentsLoaded}
-              onadditem={handleAddItem}
-              onmanualitemschange={handleManualItemsChange}
-              onduplicatequeue={handleDuplicateQueue}>
+            <c-fec_-routing-assignment nature-of-case-id={business.natureOfCase} business-code={business.code}
+              customer-type={business.customerType} is-submited={business.isSubmited} user-group={userGroup}
+              onassignmentsloaded={handleAssignmentsLoaded} onadditem={handleAddItem}
+              onmanualitemschange={handleManualItemsChange} onduplicatequeue={handleDuplicateQueue}>
             </c-fec_-routing-assignment>
           </template>
         </div>
-        <div
-          if:true={showRevert}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+        <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <p class="label">{customLabel.decisionLabel}</p>
             <p class="value">{revertDecisionDisplayLabel}</p>
           </div>
         </div>
-         <div
-          if:true={showTransfer}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
-            <lightning-combobox
-              name="decision"
-              label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel}
-              value={decisionValue}
-              onchange={handleChange}
-              options={decisionOptions}
-              required
-            >
+        <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionOptions} required>
             </lightning-combobox>
           </div>
 
-          <div
-            if:true={decisionValue}
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
+          <div if:true={decisionValue}
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
             <template if:true={isSubDecisionOptionsDisplay}>
-               <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel} placeholder=
-{customLabel.chooseSubDecisionLabel}
-                value={subDecisionValue} onchange={handleChange} options={subDecisionOptions} required>
+              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel}
+                placeholder={customLabel.chooseSubDecisionLabel} value={subDecisionValue} onchange={handleChange}
+                options={subDecisionOptions} required>
                 options={subDecisionOptions} required>
               </lightning-combobox>
             </template>
             <!-- <template if:false={isSubDecisionOptionsDisplay}>
               <p>Không tìm thấy giá trị thỏa mãn.</p>
             </template> -->
-            
+
           </div>
         </div>
-         <div
-          if:true={showUpdate}
-          class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12"
-        >
-          <div
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small"
-          >
-            <lightning-combobox
-              name="decision"
-              label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel}
-              value={decisionValue}
-              onchange={handleChange}
-              options={decisionUpdateOptions}
-              required
-            >
+        <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionUpdateOptions} required>
             </lightning-combobox>
           </div>
         </div>
       </div>
     </lightning-accordion-section>
   </lightning-accordion>
-  <!--Hieutt74: Update ngày 21/4/2026-->
+
   <!--Assigment Routing Action-->
   <c-fec_-assignment-list if:true={showAssignmentList} record-id={recordId}>
   </c-fec_-assignment-list>
   <!--END: Hieutt74: Update ngày 21/4/2026-->
-  <c-fec_-modal
-    header={header}
-    onclose={handleCloseModal}
-    if:true={isModalOpen}
-  >
+  <c-fec_-modal header={header} onclose={handleCloseModal} if:true={isModalOpen}>
     <div slot="content">
-      <div class="t-a-c"><p>{content}</p></div>
+      <div class="t-a-c">
+        <p>{content}</p>
+      </div>
     </div>
     <div slot="footer">
-      <lightning-button
-        label="Không"
-        onclick={handleCloseModal}
-      ></lightning-button>
+      <lightning-button label="Không" onclick={handleCloseModal}></lightning-button>
 
-      <lightning-button
-        variant="brand"
-        label="Có"
-        onclick={handleRun}
-        class="slds-m-left_x-small"
-      ></lightning-button>
+      <lightning-button variant="brand" label="Có" onclick={handleRun} class="slds-m-left_x-small"></lightning-button>
     </div>
   </c-fec_-modal>
 </template>

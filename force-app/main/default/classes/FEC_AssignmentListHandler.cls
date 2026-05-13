@@ -207,6 +207,7 @@ public with sharing class FEC_AssignmentListHandler {
         
         @AuraEnabled public Id id;
         @AuraEnabled public String assignmentId;
+        @AuraEnabled public String assignmentName;
         @AuraEnabled public String stageName;
         @AuraEnabled public String assignmentType;
         @AuraEnabled public String assignmentStatus;
@@ -265,6 +266,7 @@ public with sharing class FEC_AssignmentListHandler {
             SELECT
                 Id,
                 Name,
+                FEC_Assignment_Name__c,
                 CreatedDate,
                 CreatedBy.Email,
                 CreatedBy.UserRole.Name,
@@ -347,6 +349,9 @@ public with sharing class FEC_AssignmentListHandler {
                 
                 wrapper.assignmentType =
                     assignment.FEC_Assignment_Type__c;
+                
+                wrapper.assignmentName =
+                    assignment.FEC_Assignment_Name__c;
                 
                 wrapper.assignmentStatus =
                     assignment.FEC_Assignment_Status__c;

@@ -15,16 +15,16 @@
                 name="previewSampleData"
                 type="Boolean"
                 default="false"
-                label="Preview: dữ liệu Communication History mẫu"
-                description="Bật để test UI không cần API (tắt khi lên production)."/>
+                label="Preview: trả dữ liệu mẫu thay API"
+                description="Luồng hiển thị giống production (chờ Apply). Khi bật, sau Apply không gọi Apex mà dùng dữ liệu mẫu để test UI. Tắt trên production."/>
         </targetConfig>
         <targetConfig targets="lightning__AppPage,lightning__HomePage">
             <property
                 name="previewSampleData"
                 type="Boolean"
                 default="false"
-                label="Preview: dữ liệu Communication History mẫu"
-                description="Bật để test UI không cần API (tắt khi lên production)."/>
+                label="Preview: trả dữ liệu mẫu thay API"
+                description="Luồng hiển thị giống production (chờ Apply). Khi bật, sau Apply không gọi Apex mà dùng dữ liệu mẫu để test UI. Tắt trên production."/>
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

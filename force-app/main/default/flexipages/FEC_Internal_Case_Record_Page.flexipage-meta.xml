@@ -862,16 +862,10 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab29</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Insurance</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

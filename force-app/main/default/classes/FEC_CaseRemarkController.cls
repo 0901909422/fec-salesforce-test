@@ -193,11 +193,13 @@ public without sharing class FEC_CaseRemarkController {
 
       String stageName = String.isNotBlank(stageNameFromClient) ? stageNameFromClient : caselst[0].FEC_Stage_Name__c;
 
-      // Tránh duplicate: kiểm tra remark giống nhau trong 30s
+      // Tránh duplicate: kiểm tra remark giống nhau trong 30s (chỉ check Case Remark, không check Assignment Remark)
       Datetime cutoff = Datetime.now().addSeconds(-30);
       List<FEC_Case_Remarks__c> recentForCase = [
         SELECT Id, FEC_Case_Remarks__c FROM FEC_Case_Remarks__c
-        WHERE FEC_Case__c = :caseId AND CreatedDate >= :cutoff ORDER BY CreatedDate DESC LIMIT 1
+        WHERE FEC_Case__c = :caseId AND CreatedDate >= :cutoff
+          AND FEC_Remark_Type__c != :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+        ORDER BY CreatedDate DESC LIMIT 1
       ];
       Boolean isDuplicate = !recentForCase.isEmpty() && remarkContent.equals(recentForCase[0].FEC_Case_Remarks__c);
       if (isDuplicate) return;

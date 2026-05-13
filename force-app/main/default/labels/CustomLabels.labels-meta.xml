@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -14524,7 +14524,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Assignment Remark Label</shortDescription>
-        <value>Remark</value>
+        <value>Assignment Remark</value>
     </labels>
     <labels>
         <fullName>FEC_Choose_Queue_Placeholder</fullName>

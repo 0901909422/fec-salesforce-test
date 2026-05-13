@@ -1,13 +1,22 @@
 import { LightningElement, api, wire } from "lwc";
+
 import { publish, MessageContext } from "lightning/messageService";
+
 import { CloseActionScreenEvent } from "lightning/actions";
+
+import { RefreshEvent } from "lightning/refresh";
+
 import resetViewMode from "@salesforce/apex/FEC_InteractionInforHandler.resetViewMode";
+
+import executeAssignment from "@salesforce/apex/FEC_AssignmentExecuteService.executeAssignment";
+
 import ASSIGNMENT_MODE from "@salesforce/messageChannel/FEC_Assignment_Mode__c";
-import {
-  setMode,
-} from "c/fec_CustomerCaseModeStore";
+
+import { setMode } from "c/fec_CustomerCaseModeStore";
+
 export default class Fec_AssignmentExecuteAction extends LightningElement {
   _recordId;
+
   isPublished = false;
 
   @wire(MessageContext)
@@ -15,11 +24,15 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
 
   @api
   set recordId(value) {
+    console.log("recordId setter = ", value);
+
     this._recordId = value;
 
-    // publish only once when recordId is ready
+    /*
+     * Run only once
+     */
     if (value && !this.isPublished) {
-      this.handlePublishMessageChannel();
+      this.handleExecute();
     }
   }
 
@@ -27,16 +40,39 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
     return this._recordId;
   }
 
-  async handlePublishMessageChannel() {
+  async handleExecute() {
     this.isPublished = true;
 
     try {
-      // reset view mode before publish
-      await resetViewMode({
-        recordId: this.recordId,
-        viewMode: 'handling'
+      console.log("START handleExecute");
+
+      console.log("recordId = ", this.recordId);
+
+      /*
+       * STEP 1
+       * Execute assignment ownership
+       */
+      await executeAssignment({
+        caseId: this.recordId,
       });
 
+      console.log("executeAssignment SUCCESS");
+
+      /*
+       * STEP 2
+       * Reset view mode
+       */
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: "handling",
+      });
+
+      console.log("resetViewMode SUCCESS");
+
+      /*
+       * STEP 3
+       * Publish LMS
+       */
       const payload = {
         caseId: this.recordId,
         isEditMode: true,
@@ -47,11 +83,23 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
       setMode(true);
 
       publish(this.messageContext, ASSIGNMENT_MODE, payload);
+
+      /*
+       * STEP 4
+       * Refresh page
+       */
+      this.dispatchEvent(new RefreshEvent());
+      await new Promise((resolve) => setTimeout(resolve, 300));
     } catch (error) {
-      console.error("Error resetting view mode:", error);
+      console.error("ERROR:", JSON.stringify(error));
     } finally {
-      // close action after publish
-      this.dispatchEvent(new CloseActionScreenEvent());
+      /*
+       * STEP 5
+       * Close action
+       */
+      setTimeout(() => {
+        this.dispatchEvent(new CloseActionScreenEvent());
+      }, 800);
     }
   }
 }
