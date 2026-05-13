@@ -10,10 +10,14 @@
    1.0      2025-01-10     Quangdv7             Create
    1.1      2026-05-12     Agent                Billed tx: GetCardFinancialTransactions by statement period; VN column labels
    1.2      2026-05-13     Agent                Billed API: FromDate/ToDate from statement cycle only (no fixed window / fallback / bypass)
+   1.3      2026-05-13     Agent                Billed: API FromDate = stmt - 2mo, ToDate = stmt; filter by PostingDate vs prev/current stmt dates
  
 ****************************************************************************************/
 
 public without sharing class FEC_StatementsAccountController {
+
+    /** SOAP window before statement date (posting delay / cycle mismatch). */
+    private static final Integer BILLED_FIN_TXN_API_MONTHS_BACK = -2;
 
     /* =====================================================
        DTO
@@ -334,7 +338,10 @@ public without sharing class FEC_StatementsAccountController {
     }
 
     /* =====================================================
-     BILLED TRANSACTIONS — GetCardFinancialTransactions (by statement period)
+     BILLED TRANSACTIONS — GetCardFinancialTransactions
+     SOAP: FromDate = statement date + BILLED_FIN_TXN_API_MONTHS_BACK, ToDate = statement date.
+     Rows: PostingDate > previous statement date AND PostingDate <= current statement date
+     (PostingDate only; no previous stmt → lower bound = same SOAP FromDate, inclusive).
      ===================================================== */
     @AuraEnabled(cacheable=false)
     public static List<BilledTransactionDTO> getBilledTransactions(Id statementId) {
@@ -380,11 +387,23 @@ public without sharing class FEC_StatementsAccountController {
             return new List<BilledTransactionDTO>();
         }
 
-        Date stmtEnd = stmt.FEC_Statement_Date__c;
-        Date fromDate = computeFinancialTxnFromDate(
-            stmt.FEC_Customer_History__c,
-            stmtEnd
-        );
+        Date currentStmtDate = stmt.FEC_Statement_Date__c;
+        Date apiFromDate = currentStmtDate.addMonths(BILLED_FIN_TXN_API_MONTHS_BACK);
+        Date apiToDate = currentStmtDate;
+
+        Date prevStatementDate = null;
+        List<FEC_Statement__c> prevStmtRows = [
+            SELECT FEC_Statement_Date__c
+            FROM FEC_Statement__c
+            WHERE FEC_Customer_History__c = :stmt.FEC_Customer_History__c
+                AND FEC_Statement_Date__c != null
+                AND FEC_Statement_Date__c < :currentStmtDate
+            ORDER BY FEC_Statement_Date__c DESC
+            LIMIT 1
+        ];
+        if (!prevStmtRows.isEmpty()) {
+            prevStatementDate = prevStmtRows[0].FEC_Statement_Date__c;
+        }
 
         Map<String, String> helpTemplate =
             FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
@@ -396,8 +415,8 @@ public without sharing class FEC_StatementsAccountController {
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
                     accountNumber,
-                    fromDate,
-                    stmtEnd
+                    apiFromDate,
+                    apiToDate
                 );
 
             List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
@@ -411,7 +430,7 @@ public without sharing class FEC_StatementsAccountController {
                 if (ft == null) {
                     continue;
                 }
-                if (!finTxnInStatementCycle(ft, fromDate, stmtEnd)) {
+                if (!finTxnBelongsToBilledCycle(ft, prevStatementDate, currentStmtDate, apiFromDate)) {
                     continue;
                 }
                 result.add(buildBilledDtoFromFinancialTxn(ft, helpTemplate));
@@ -424,24 +443,28 @@ public without sharing class FEC_StatementsAccountController {
         }
     }
 
-    private static Boolean finTxnInStatementCycle(
+    /**
+     * Billed cycle by posting date: {@code PostingDate > prev statement date}
+     * and {@code PostingDate <= current statement date}.
+     * When there is no prior statement, lower bound is {@code apiFromDate} (same as SOAP FromDate), inclusive.
+     */
+    private static Boolean finTxnBelongsToBilledCycle(
         FEC_GetCardFinancialTransactions.FinancialTransaction ft,
-        Date fromDate,
-        Date stmtEnd
+        Date prevStatementDate,
+        Date currentStmtDate,
+        Date apiFromDate
     ) {
         if (ft == null) {
             return false;
         }
         Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
-        if (postD != null && (postD < fromDate || postD > stmtEnd)) {
+        if (postD == null) {
             return false;
         }
-        Date effDate = effectiveDateFromFinancialTxn(ft);
-        if (postD == null && effDate != null
-            && (effDate < fromDate || effDate > stmtEnd)) {
-            return false;
+        if (prevStatementDate != null) {
+            return postD > prevStatementDate && postD <= currentStmtDate;
         }
-        return true;
+        return postD >= apiFromDate && postD <= currentStmtDate;
     }
 
     private static BilledTransactionDTO buildBilledDtoFromFinancialTxn(
@@ -467,22 +490,6 @@ public without sharing class FEC_StatementsAccountController {
         dto.otpSent = formatOtpSent(ft.OTPSent);
         dto.effectiveSortEpoch = effectiveSortEpochFromFinancialTxn(ft, effDate);
         return dto;
-    }
-
-    private static Date computeFinancialTxnFromDate(Id customerHistoryId, Date stmtEnd) {
-        List<FEC_Statement__c> prev = [
-            SELECT FEC_Statement_Date__c
-            FROM FEC_Statement__c
-            WHERE FEC_Customer_History__c = :customerHistoryId
-                AND FEC_Statement_Date__c != null
-                AND FEC_Statement_Date__c < :stmtEnd
-            ORDER BY FEC_Statement_Date__c DESC
-            LIMIT 1
-        ];
-        if (!prev.isEmpty()) {
-            return prev[0].FEC_Statement_Date__c.addDays(1);
-        }
-        return stmtEnd.addMonths(-2);
     }
 
     private static Date effectiveDateFromFinancialTxn(
