@@ -26,6 +26,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FEC_Business_Process__r.FEC_Code__c (quy trình Fast Card / RC11…)
+  public static final String FAST_CARD = 'Fast Cash';
   // tungnm37 thêm: COF/GSR route string constant
   public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
@@ -693,6 +695,14 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FAST_CARD: chỉ ẩn subsection C360 Info; section Account Information và subsection khác vẫn render.
+          if (
+            FAST_CARD.equals(businessProcessCode) &&
+            'C360 Info'.equals(subSectionNameTemp)
+          ) {
+            continue;
+          }
 
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
