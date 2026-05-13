@@ -1,6 +1,6 @@
 /**
  * Đồng bộ FEC_Sales_Channel__c / FEC_Sales_Sub_Channel__c trên FEC_Customer_History__c
- * theo FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c của FEC_Application_List__c (bảng II – Sales Logic.xlsx).
+ * theo FEC_CC_Code__c, FEC_DSA_Code__c, FEC_TSA_Code__c của FEC_Application_List__c
  */
 public with sharing class FEC_SalesChannelFromApplicationService {
 
