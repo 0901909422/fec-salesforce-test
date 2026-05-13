@@ -929,7 +929,6 @@
 		<members>FEC_New_Hold_Case_Config</members>
 		<members>FEC_New_Value</members>
 		<members>FEC_Original_Value</members>
-		<members>FEC_Parent_Hold_Case_Config</members>
         <name>CustomLabel</name>
     </types>
 	<types>
