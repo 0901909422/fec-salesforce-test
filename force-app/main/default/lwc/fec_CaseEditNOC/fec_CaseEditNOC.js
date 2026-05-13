@@ -84,6 +84,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
@@ -100,7 +102,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -816,9 +823,18 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.handleEnable("category");
   }
 
+  //linhdev fix section Account Info + Case Info
   handleChangeCategory(e) {
     this.categorySelectedId = e.detail.value;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
+    this.handleDisable("sub-category");
+    this.handleDisable("sub-code");
     this.handleEnable("sub-category");
+    if (this.productTypeSelectedId && this.categorySelectedId) {
+      this.handlePublishMessageChanel();
+    }
   }
 
   handleChangeSubCategory(e) {

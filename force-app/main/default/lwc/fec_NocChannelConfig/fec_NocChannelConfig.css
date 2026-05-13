@@ -1,6 +1,7 @@
 .noc-channel-config-search {
     position: relative;
     width: 100%;
+    max-width: 400px;
 }
 
 .noc-channel-config-dropdown {

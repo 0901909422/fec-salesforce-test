@@ -27,7 +27,7 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         List<FEC_Customer_History__c> chList = [
-            SELECT FEC_Card_Number__c, FEC_Primary_Phone__c
+            SELECT FEC_National_ID_Passport_ID__c, FEC_Primary_Phone__c
             FROM FEC_Customer_History__c
             WHERE Id = :chId
             LIMIT 1
@@ -38,21 +38,21 @@ public with sharing class FEC_CheckEligibleController {
         }
 
         FEC_Customer_History__c ch = chList[0];
-        String cardNum = ch.FEC_Card_Number__c != null ? ch.FEC_Card_Number__c.trim() : null;
-        if (String.isBlank(cardNum)) {
-            return errMessageResponse(System.Label.FEC_MSG_CheckEligible_Card_Not_Found);
+        String nationalId = ch.FEC_National_ID_Passport_ID__c != null ? ch.FEC_National_ID_Passport_ID__c.trim() : null;
+        if (String.isBlank(nationalId)) {
+            return errMessageResponse(System.Label.FEC_MSG_CheckEligible_No_Matching_History); // Used generic missing message or original label
         }
         String phone = ch.FEC_Primary_Phone__c != null ? ch.FEC_Primary_Phone__c.trim() : null;
         if (String.isBlank(phone)) {
             phone = null;
         }
 
-        String errId = validateIdParamForCallout(cardNum);
+        String errId = validateIdParamForCallout(nationalId);
         if (errId != null) {
             return errResponse(FEC_ConstantCommon.ERROR_CODE_VALIDATION, errId);
         }
         // Chuẩn hóa trước khi gọi (callout không trim/validate)
-        String idForCallout = cardNum.trim();
+        String idForCallout = nationalId.trim();
         String phoneForCallout = phone;
 
         FEC_CheckEligibleCallout.CheckEligibleResponse response = FEC_CheckEligibleCallout.checkEligibility(
@@ -79,7 +79,7 @@ public with sharing class FEC_CheckEligibleController {
     }
 
     /**
-     * Giá trị gán query ID_CARD_NUMBER: số thẻ, 4–20 chữ số (sau trim).
+     * Giá trị gán query ID_CARD_NUMBER: số CMND/CCCD/Passport.
      */
     private static String validateIdParamForCallout(String value) {
         if (String.isBlank(value)) {
@@ -89,12 +89,9 @@ public with sharing class FEC_CheckEligibleController {
             );
         }
         String t = value.trim();
-        if (!Pattern.compile('^\\d{4,20}$').matcher(t).matches()) {
-            return String.format(
-                System.Label.FEC_MSG_Param_Required,
-                new List<String>{ 'ID_CARD_NUMBER' }
-            );
-        }
+        // if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, t)) {
+        //     return System.Label.FEC_MSG_National_ID_Invalid;
+        // }
         return null;
     }
 }

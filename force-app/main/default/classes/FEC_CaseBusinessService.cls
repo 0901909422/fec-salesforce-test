@@ -708,7 +708,7 @@ public without sharing class FEC_CaseBusinessService {
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
 
-              //Có khác: 
+              //Có khác:
               if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
                 continue;
               }
@@ -1004,6 +1004,7 @@ public without sharing class FEC_CaseBusinessService {
         !selectedCase.FEC_Is_Submited__c &&
         selectedStage != null &&
         String.isNotBlank(routeToId) &&
+        !FEC_BlockCodeRoutingService.isCustomerHistoryForcedOmDay2(selectedCase.FEC_Account_or_Contract__c) &&
         (FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FEE.equals(result.subCodeCode) ||
          FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FREE.equals(result.subCodeCode))
       ) {

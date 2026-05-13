@@ -998,16 +998,6 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_Banca</componentName>
-                <identifier>c_fec_Banca</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
                     <value>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</value>
@@ -1076,33 +1066,6 @@
                 <identifier>flexipage_tab33</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Banca</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab34</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Insurance</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
         <name>Facet-6cfaf373-39cd-4b31-9241-7aec8e4a5c61</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -1139,6 +1102,16 @@
             </componentInstance>
         </itemInstances>
         <name>Facet-i9z6432zuwn</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1321,6 +1294,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab27</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Insurance</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -1340,6 +1320,27 @@
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Banca</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab34</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
