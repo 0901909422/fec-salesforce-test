@@ -3894,6 +3894,8 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Is_Owner_Or_Assigned__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Application_ID_List__c</field>
