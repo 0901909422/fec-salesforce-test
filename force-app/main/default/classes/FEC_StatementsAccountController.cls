@@ -9,6 +9,7 @@
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
    1.1      2026-05-12     Agent                Billed tx: GetCardFinancialTransactions by statement period; VN column labels
+   1.2      2026-05-13     Agent                Billed API: FromDate/ToDate from statement cycle only (no fixed window / fallback / bypass)
  
 ****************************************************************************************/
 
@@ -410,46 +411,62 @@ public without sharing class FEC_StatementsAccountController {
                 if (ft == null) {
                     continue;
                 }
-                Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
-                if (postD != null && (postD < fromDate || postD > stmtEnd)) {
+                if (!finTxnInStatementCycle(ft, fromDate, stmtEnd)) {
                     continue;
                 }
-                Date effDate = effectiveDateFromFinancialTxn(ft);
-                if (postD == null && effDate != null
-                    && (effDate < fromDate || effDate > stmtEnd)) {
-                    continue;
-                }
-
-                BilledTransactionDTO dto = new BilledTransactionDTO();
-                dto.helpTexts = helpTemplate;
-                dto.Id = null;
-
-                dto.effectiveDate = effDate;
-                dto.postDate = postD;
-                dto.transactionAmount = ft.TRNXAmount;
-                dto.merchantDescription = ft.MerchantName;
-                dto.creditDebitFlag = ft.CreditDebitFlag;
-                dto.transactionPlan = ft.Plan;
-                dto.transactionCode = ft.TransactionCode;
-                dto.authorizationCode = ft.AuthCode;
-                dto.merchantCategoryCode = ft.MCC;
-                dto.currencyCode = ft.TRNXCurrencyCode;
-                dto.otpSent = formatOtpSent(ft.OTPSent);
-
-                dto.effectiveSortEpoch = effectiveSortEpochFromFinancialTxn(
-                    ft,
-                    effDate
-                );
-
-                result.add(dto);
+                result.add(buildBilledDtoFromFinancialTxn(ft, helpTemplate));
             }
-
             return result;
         } catch (Exception e) {
             throw new AuraHandledException(
                 String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()})
             );
         }
+    }
+
+    private static Boolean finTxnInStatementCycle(
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft,
+        Date fromDate,
+        Date stmtEnd
+    ) {
+        if (ft == null) {
+            return false;
+        }
+        Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
+        if (postD != null && (postD < fromDate || postD > stmtEnd)) {
+            return false;
+        }
+        Date effDate = effectiveDateFromFinancialTxn(ft);
+        if (postD == null && effDate != null
+            && (effDate < fromDate || effDate > stmtEnd)) {
+            return false;
+        }
+        return true;
+    }
+
+    private static BilledTransactionDTO buildBilledDtoFromFinancialTxn(
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft,
+        Map<String, String> helpTemplate
+    ) {
+        Date effDate = effectiveDateFromFinancialTxn(ft);
+        Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
+
+        BilledTransactionDTO dto = new BilledTransactionDTO();
+        dto.helpTexts = helpTemplate;
+        dto.Id = null;
+        dto.effectiveDate = effDate;
+        dto.postDate = postD;
+        dto.transactionAmount = ft.TRNXAmount;
+        dto.merchantDescription = ft.MerchantName;
+        dto.creditDebitFlag = ft.CreditDebitFlag;
+        dto.transactionPlan = ft.Plan;
+        dto.transactionCode = ft.TransactionCode;
+        dto.authorizationCode = ft.AuthCode;
+        dto.merchantCategoryCode = ft.MCC;
+        dto.currencyCode = ft.TRNXCurrencyCode;
+        dto.otpSent = formatOtpSent(ft.OTPSent);
+        dto.effectiveSortEpoch = effectiveSortEpochFromFinancialTxn(ft, effDate);
+        return dto;
     }
 
     private static Date computeFinancialTxnFromDate(Id customerHistoryId, Date stmtEnd) {

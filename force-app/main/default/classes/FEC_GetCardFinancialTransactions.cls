@@ -8,6 +8,9 @@
 * ===============================================================
    1.0      2025-12-16     Quangdv7             Create
    1.1      2026-05-12     Agent                FinancialTransaction: MCC, TRNXCurrencyCode (+ XML fallbacks)
+   1.2      2026-05-13     Agent                parseResponse: accept FinancialTransactions row nodes (host payload)
+   1.3      2026-05-13     Agent                Find Transactions node with/without CIF namespace
+   1.4      2026-05-13     Agent                Single 6-arg call entry; removed optional non-prod bypass overload
  
 ****************************************************************************************/
  
@@ -66,8 +69,8 @@ public with sharing class FEC_GetCardFinancialTransactions {
         Date toDate
     ) {
         try {
- 
-            validateRequest(transID, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
+
+            validateRequest(transId, requestorId, dateTimeStr, accountNumber, fromDate,toDate);
 
             // ================= CONFIG =================
             FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -291,51 +294,78 @@ public with sharing class FEC_GetCardFinancialTransactions {
         }
  
         // ================= TRANSACTIONS =================
-    result.Transactions = new List<FinancialTransaction>();
- 
-    Dom.XmlNode txnsNode = responseNode.getChildElement('Transactions', null);
-    if (txnsNode != null) {
- 
-        for (Dom.XmlNode txnNode : txnsNode.getChildElements()) {
- 
-            if (txnNode.getName() != 'Transaction') continue;
- 
-            FinancialTransaction ft = new FinancialTransaction();
-            ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
-            ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
-            ft.CreditDebitFlag = FEC_CommonUltils.getXmlValue(txnNode, 'CreditDebitFlag');
-            ft.TransactionType = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionType');
-            ft.Status = FEC_CommonUltils.getXmlValue(txnNode, 'Status');
-            ft.TRNXAmount = FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount');
-            ft.TransactionCode = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode');
-            ft.Fee = FEC_CommonUltils.xmlValToDecimal(txnNode, 'Fee');
-            ft.PostingDate = FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate');
-            ft.SettlementDate = FEC_CommonUltils.getXmlValue(txnNode, 'SettlementDate');
-            ft.Plan = FEC_CommonUltils.getXmlValue(txnNode, 'Plan');
-            ft.PlanType = FEC_CommonUltils.getXmlValue(txnNode, 'PlanType');
-            ft.RRN = FEC_CommonUltils.getXmlValue(txnNode, 'RRN');
-            ft.AuthCode = FEC_CommonUltils.getXmlValue(txnNode, 'AuthCode');
-            ft.MerchantName = FEC_CommonUltils.getXmlValue(txnNode, 'MerchantName');
-            ft.PaymentFlag = FEC_CommonUltils.getXmlValue(txnNode, 'PaymentFlag');
-            ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
-            ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
-            ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
-            ft.MCC = firstNonBlankFin(
-                FEC_CommonUltils.getXmlValue(txnNode, 'MCC'),
-                FEC_CommonUltils.getXmlValue(txnNode, 'MerchantCategoryCode')
-            );
-            ft.TRNXCurrencyCode = firstNonBlankFin(
-                FEC_CommonUltils.getXmlValue(txnNode, 'TRNXCurrencyCode'),
-                FEC_CommonUltils.getXmlValue(txnNode, 'CurrencyCode'),
-                FEC_CommonUltils.getXmlValue(txnNode, 'TRNX_Currency_Code')
-            );
+        result.Transactions = new List<FinancialTransaction>();
 
-            result.Transactions.add(ft);
+        Dom.XmlNode txnsNode = responseNode.getChildElement('Transactions', null);
+        if (txnsNode == null) {
+            txnsNode = FEC_CommonUltils.findChildByName(responseNode, 'Transactions');
         }
- 
+        if (txnsNode == null) {
+            txnsNode = responseNode.getChildElement(
+                'Transactions',
+                'http://fecredit.com.vn/CIF_CardInfo'
+            );
         }
- 
+        if (txnsNode != null) {
+
+            for (Dom.XmlNode txnNode : txnsNode.getChildElements()) {
+
+                if (!isFinancialTxnRowElement(txnNode)) {
+                    continue;
+                }
+
+                FinancialTransaction ft = new FinancialTransaction();
+                ft.TRNXDateAndTime = FEC_CommonUltils.getXmlValue(txnNode, 'TRNXDateAndTime');
+                ft.Description = FEC_CommonUltils.getXmlValue(txnNode, 'Description');
+                ft.CreditDebitFlag = FEC_CommonUltils.getXmlValue(txnNode, 'CreditDebitFlag');
+                ft.TransactionType = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionType');
+                ft.Status = FEC_CommonUltils.getXmlValue(txnNode, 'Status');
+                ft.TRNXAmount = FEC_CommonUltils.xmlValToDecimal(txnNode, 'TRNXAmount');
+                ft.TransactionCode = FEC_CommonUltils.getXmlValue(txnNode, 'TransactionCode');
+                ft.Fee = FEC_CommonUltils.xmlValToDecimal(txnNode, 'Fee');
+                ft.PostingDate = FEC_CommonUltils.getXmlValue(txnNode, 'PostingDate');
+                ft.SettlementDate = FEC_CommonUltils.getXmlValue(txnNode, 'SettlementDate');
+                ft.Plan = FEC_CommonUltils.getXmlValue(txnNode, 'Plan');
+                ft.PlanType = FEC_CommonUltils.getXmlValue(txnNode, 'PlanType');
+                ft.RRN = FEC_CommonUltils.getXmlValue(txnNode, 'RRN');
+                ft.AuthCode = FEC_CommonUltils.getXmlValue(txnNode, 'AuthCode');
+                ft.MerchantName = FEC_CommonUltils.getXmlValue(txnNode, 'MerchantName');
+                ft.PaymentFlag = FEC_CommonUltils.getXmlValue(txnNode, 'PaymentFlag');
+                ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
+                ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
+                ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
+                ft.MCC = firstNonBlankFin(
+                    FEC_CommonUltils.getXmlValue(txnNode, 'MCC'),
+                    FEC_CommonUltils.getXmlValue(txnNode, 'MerchantCategoryCode')
+                );
+                ft.TRNXCurrencyCode = firstNonBlankFin(
+                    FEC_CommonUltils.getXmlValue(txnNode, 'TRNXCurrencyCode'),
+                    FEC_CommonUltils.getXmlValue(txnNode, 'CurrencyCode'),
+                    FEC_CommonUltils.getXmlValue(txnNode, 'TRNX_Currency_Code')
+                );
+
+                result.Transactions.add(ft);
+            }
+        }
+
         return result;
+    }
+
+    /** Host may send {@code Transaction} or {@code FinancialTransactions} per row under Transactions. */
+    private static Boolean isFinancialTxnRowElement(Dom.XmlNode n) {
+        if (n == null) {
+            return false;
+        }
+        String nm = n.getName();
+        if (String.isBlank(nm)) {
+            return false;
+        }
+        Integer colon = nm.indexOf(':');
+        if (colon >= 0) {
+            nm = nm.substring(colon + 1);
+        }
+        return nm.equalsIgnoreCase('Transaction')
+            || nm.equalsIgnoreCase('FinancialTransactions');
     }
 
     private static String firstNonBlankFin(String a, String b) {
