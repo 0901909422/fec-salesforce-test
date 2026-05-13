@@ -482,6 +482,7 @@
         <members>Channel_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <members>FEC_Batch_Case_Handling</members>
+		<members>Template_Import_Record_Page</members>
 		<members>Hold_Case_Config_Record_Page</members>
         <name>FlexiPage</name>
     </types>
