@@ -994,14 +994,14 @@ public without sharing class FEC_CaseBusinessService {
       );
 
       // [HARDCODE RC27.01/RC27.02 — Display Override]:
-      // Đặt SAU applyToBusinessIfApplicable để tránh bị Block Code ghi đè lại.
-      // Khi Case ở Stage 1 (chưa submit) với sub-code RC27.01/RC27.02,
-      // luôn hiển thị Team=SP, Queue=CS Support bất kể Block Code.
+      // Khi Case ở Stage 1 (chưa submit) với sub-code RC27.01/RC27.02 và KHÔNG có Block Code,
+      // hiển thị Team=SP, Queue=CS Support. Block Code được phép ghi đè RC27.
       // Toannd61
       if (
         !selectedCase.FEC_Is_Submited__c &&
         selectedStage != null &&
         String.isNotBlank(routeToId) &&
+        !FEC_BlockCodeRoutingService.isCustomerHistoryForcedOmDay2(selectedCase.FEC_Account_or_Contract__c) &&
         (FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FEE.equals(result.subCodeCode) ||
          FEC_ConstantCommon.SUB_CODE_CARD_REPLACEMENT_FREE.equals(result.subCodeCode))
       ) {
@@ -2213,8 +2213,10 @@ public without sharing class FEC_CaseBusinessService {
 
       // [HARDCODE RC27.01/RC27.02]: Stage1 → Stage3 (SP), bỏ qua Stage2.
       // SubCode lấy từ NOC (natureOfCaseId) nếu chưa set trên Case (lần submit đầu).
+      // Block Code được phép ghi đè RC27: bỏ qua hardcode nếu Block Code đang kích hoạt.
       // Toannd61
-      if (isCreationStageRoute) {
+      if (isCreationStageRoute &&
+          !FEC_BlockCodeRoutingService.isCustomerHistoryForcedOmDay2(updatedCase.FEC_Account_or_Contract__c)) {
         String rc27SubCode = updatedCase.FEC_SubCode__r?.FEC_Code__c;
         if (String.isBlank(rc27SubCode) && String.isNotBlank(natureOfCaseId)) {
           List<FEC_Nature_of_Case__c> nocRc27Lst = [
