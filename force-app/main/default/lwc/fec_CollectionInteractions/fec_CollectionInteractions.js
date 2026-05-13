@@ -3,7 +3,8 @@ import { getRecord } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
-import { formatDateField } from 'c/fec_DateFormatter';
+import { formatCurrency0 } from 'c/fec_CommonUtils';
+import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
@@ -199,13 +200,17 @@ export default class Fec_CollectionInteractions extends LightningElement {
         if (!Array.isArray(this.interactions)) {
             return [];
         }
-        return this.interactions.map((row, idx) => ({
+        const sorted = sortByDefaultDateFieldDesc(this.interactions, 'InteractedDate');
+        return sorted.map((row, idx) => ({
             Id: `ci-${idx}`,
             InteractedAgentsID: row?.InteractedAgentsID ?? STR_EMPTY,
             InteractedDate: formatDateField(row?.InteractedDate),
             InteractedCode: row?.InteractedCode ?? STR_EMPTY,
             PhoneNumber: row?.PhoneNumber ?? STR_EMPTY,
-            PromisedRepaymentAmount: row?.PromisedRepaymentAmount ?? STR_EMPTY,
+            PromisedRepaymentAmount: formatCurrency0(row?.PromisedRepaymentAmount, {
+                emptyDisplay: STR_EMPTY,
+                integerMode: 'trunc'
+            }),
             NextInteractionDate: formatDateField(row?.NextInteractionDate),
             ContactedPerson: row?.ContactedPerson ?? STR_EMPTY,
             DueReason: row?.DueReason ?? STR_EMPTY,

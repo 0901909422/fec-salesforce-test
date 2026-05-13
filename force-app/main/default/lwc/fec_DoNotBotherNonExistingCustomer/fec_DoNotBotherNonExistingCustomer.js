@@ -14,8 +14,8 @@ import FEC_DNB_Update_Button from '@salesforce/label/c.FEC_DNB_Update_Button';
 
 import FEC_DNB_Modal_Title from '@salesforce/label/c.FEC_DNB_Modal_Title';
 import FEC_DNB_Modal_Message from '@salesforce/label/c.FEC_DNB_Modal_Message';
-
-
+import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
+import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement {

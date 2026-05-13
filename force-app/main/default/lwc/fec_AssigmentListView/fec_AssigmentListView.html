@@ -1,0 +1,41 @@
+<template>
+    <lightning-card class="assignment-card">
+
+        <!-- HEADER -->
+        <div slot="title" class="slds-media slds-media_center">
+
+            <div class="slds-media__figure">
+                <lightning-icon icon-name="standard:work_order" size="small" class="header-icon">
+                </lightning-icon>
+            </div>
+
+            <div class="slds-media__body">
+                <h2 class="slds-card__header-title">
+                    <span class="title">
+                        {labels.LABEL_ASSIGNMENT_LIST} ({assignmentCount})
+                    </span>
+                </h2>
+            </div>
+
+        </div>
+
+        <template if:true={showTable}>
+            <div class="table-wrapper">
+
+                <lightning-datatable key-field="id" data={assignments} columns={columns} hide-checkbox-column
+                    show-row-number-column is-loading={isLoading}>
+                </lightning-datatable>
+
+            </div>
+
+            <!-- FOOTER -->
+            <template if:true={showViewAll}>
+                <div class="assignment-footer" style="text-align: center;">
+                    <a href="javascript:void(0)" onclick={handleViewAll}>
+                        {labels.LABEL_VIEW_ALL}
+                    </a>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

@@ -88,7 +88,7 @@ public without sharing class FEC_MainInfoAccountController {
         }
 
         Case c = [
-            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,FEC_Product_Type__r.Name
+            SELECT Id, FEC_Account_or_Contract__c, FEC_Account_Number__c,FEC_Product_Type__r.Name, FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -196,7 +196,8 @@ public without sharing class FEC_MainInfoAccountController {
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    accountNumber
+                    accountNumber,
+                    c.FEC_Is_Test_API__c
                 );
         } catch (Exception e) {
             System.debug(System.Label.FEC_MSG_API_Error + e.getMessage());

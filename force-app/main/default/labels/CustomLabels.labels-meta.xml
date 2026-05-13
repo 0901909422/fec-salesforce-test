@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -14524,7 +14524,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Assignment Remark Label</shortDescription>
-        <value>Remark</value>
+        <value>Assignment Remark</value>
     </labels>
     <labels>
         <fullName>FEC_Choose_Queue_Placeholder</fullName>
@@ -15481,5 +15481,266 @@
         <protected>false</protected>
         <shortDescription>Disbursement Date Required Message</shortDescription>
         <value>DISB_DT is required</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_Cancel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút Cancel trong modal</shortDescription>
+        <value>Cancel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_TransferToCollection</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút/tiêu đề modal Transfer Data to Collection</shortDescription>
+        <value>Transfer Data to Collection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_ConfirmMessage</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nội dung xác nhận trong modal</shortDescription>
+        <value>Bạn sắp chuyển dữ liệu tới Collections trước khi chuyển cuộc gọi. Bạn có chắc chắn muốn tiếp tục không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Section_CaseInfo</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề accordion Case Information</shortDescription>
+        <value>Case Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Spinner_Loading</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: alternative-text spinner Loading</shortDescription>
+        <value>Loading</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Subtitle</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề phụ Transfer Call</shortDescription>
+        <value>Transfer Call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Collections_Transfer_MaxFailed_Summary</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections thất bại sau 3 lần — dòng tóm tắt không còn thử lại</shortDescription>
+        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Btn_ConfirmTransfer</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nút xác nhận Transfer Data to Collections</shortDescription>
+        <value>Transfer Data to Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkLabel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn textarea Remark for Collections</shortDescription>
+        <value>Remark for Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Modal_RemarkRequired</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
+        <value>Vui lòng nhập Remark for Collections.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Auto</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto</shortDescription>
+        <value>Auto</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Changed_Status</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Changed Status</shortDescription>
+        <value>Changed Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Status</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Status</shortDescription>
+        <value>Current Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date</shortDescription>
+        <value>Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Detail_Information</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Detail Information</shortDescription>
+        <value>Detail Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Manual</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Manual</shortDescription>
+        <value>Vui lòng chọn NFU Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_MessageError_For_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error MessageError For Hold Case</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Field</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Field</shortDescription>
+        <value>Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HCC_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HCC Name</shortDescription>
+        <value>HCC Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Config</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Config</shortDescription>
+        <value>Hold Case Config</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Save_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Save Success</shortDescription>
+        <value>Hold Case Config created successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Type</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Type</shortDescription>
+        <value>Hold Case Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Of_NFU_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>List Of NFU Code</shortDescription>
+        <value>List of NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Manual</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Manual</shortDescription>
+        <value>Manual</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Modal_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Modal Error</shortDescription>
+        <value>Chỉ chọn được 1 NFU Code do đang thiết lập Hold Case tự động</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Modal_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Modal Save Error</shortDescription>
+        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Reason_VN</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason VN</shortDescription>
+        <value>NFU Reason VN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Hold_Case_Config</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Hold Case Config</shortDescription>
+        <value>New Hold Case Config</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Value</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Value</shortDescription>
+        <value>New Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Original_Value</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Original Value</shortDescription>
+        <value>Original Value</value>
+    </labels>
+    <labels>
+        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Table</shortDescription>
+        <value>User Role</value>
     </labels>
 </CustomLabels>

@@ -48,7 +48,7 @@
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
-         <members>FEC_ChannelFunctionService</members>
+        <members>FEC_ChannelFunctionService</members>
 	    <members>FEC_ChannelFunctionServiceTest</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
