@@ -445,6 +445,7 @@
     <types>
         <members>FEC_Routing_Assignment__c</members>
         <members>FEC_BancaTabView</members>
+        <members>FEC_Template_Import__c</members>
         <members>FEC_HoldCaseConfiguration</members>
         <name>CustomTab</name>
     </types>
@@ -465,6 +466,7 @@
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Batch_Case_Handling__c</members>
+        <members>FEC_Template_Import__c</members>
         <members>FEC_Hold_Case_Config__c</members>
 		<name>CustomObject</name>
 	</types>
@@ -538,6 +540,10 @@
         <members>fec_RelatedListPaging</members>
 		<name>LightningComponentBundle</name>
     </types>
+    <types>
+        <members>FEC_SheetJS</members>
+        <name>StaticResource</name>
+    </types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
@@ -546,6 +552,7 @@
     </types>
     <types>
         <members>FEC_DNB_Reason</members>
+        <members>FEC_Status</members>
         <name>GlobalValueSet</name>
     </types>
     <types>
@@ -899,6 +906,8 @@
         <members>FEC_BCH_Modal_BpColName</members>
         <members>FEC_BCH_ExportWithAllProperties</members>
         <members>FEC_BCH_FooterOf</members>
+        <members>FEC_Btn_Previous</members>
+        <members>FEC_Btn_Next</members>
         <members>FEC_Auto</members>
 		<members>FEC_Changed_Status</members>
 		<members>FEC_Current_Status</members>
