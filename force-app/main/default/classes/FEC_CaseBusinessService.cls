@@ -539,11 +539,9 @@ public without sharing class FEC_CaseBusinessService {
       } catch (DmlException e) {
       }
 
-      //PhongBT: Fix cập nhật sai case stage
-      // FEC_Case_Stage__c.FEC_Nature_of_Cases__c lookup template FEC_Nature_of_Case__c.
-      // Khi COF/GSR dùng Actual NOC (useActualNatureAndSettingObj), Id trên selectedNatureOfCase
-      // là Actual — không dùng cho query stage; nếu không map sang template thì remap rỗng
-      // và fallback theo Id stage cũ giữ stage của NOC trước (vd A→B→A vẫn stage B).
+      // ================================= GET CASE STAGE ===========================
+      //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+      // Resolve template NOC Id (FEC_Case_Stage__c.FEC_Nature_of_Cases__c trỏ template, không phải Actual).
       Id templateNatureIdForCaseStages = resolveTemplateNatureOfCaseIdForCaseStages(
         useActualNatureAndSettingObj,
         selectedNatureOfCase,
@@ -555,20 +553,19 @@ public without sharing class FEC_CaseBusinessService {
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
       List<FEC_Case_Stage__c> stagelst = new List<FEC_Case_Stage__c>();
-      //PhongBT: Fix cập nhật sai case stage
-      // Remap stage theo NOC case hiện tại, giữ số stage (Stage 2 → Stage 2 NOC đúng):
-      // - Có payload NOC từ UI (đổi bộ NOC trên màn), hoặc
-      // - Mới vào màn (không payload) nhưng Case đã Submit: nếu FEC_Current_Case_Stage__c
-      //   thuộc NOC khác với bộ NOC trên Case thì resolveCaseStageForNewNatureOfCase đồng bộ lại.
-      Boolean shouldTryRemapStageToCaseNature =
+      //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+      // Remap stage khi:
+      // 1) User đổi NOC trên UI (hasIncomingNocSelection), hoặc
+      // 2) Mới vào màn case đã submit: kiểm tra stage hiện tại có thuộc NOC case không.
+      // Giữ đúng số tầng (Stage 2 → Stage 2 của NOC mới).
+      if (
         String.isNotBlank(caseStageIdPreservedAtLoad) &&
-        //PhongBT: Fix cập nhật sai case stage
+        //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
         templateNatureIdForCaseStages != null &&
-        (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true);
-      if (shouldTryRemapStageToCaseNature) {
+        (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true)
+      ) {
         FEC_Case_Stage__c remappedStageForNewNoc = resolveCaseStageForNewNatureOfCase(
           caseStageIdPreservedAtLoad,
-          //PhongBT: Fix cập nhật sai case stage
           templateNatureIdForCaseStages
         );
         if (remappedStageForNewNoc != null) {
@@ -582,10 +579,9 @@ public without sharing class FEC_CaseBusinessService {
       }
       if (stagelst.isEmpty()) {
         String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
-        //PhongBT: Fix cập nhật sai case stage
-        // Tránh load stage theo Id khi Id trỏ NOC khác với bộ NOC đang chọn (UI) hoặc với NOC trên Case (đã submit, mở màn).
+        //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+        // Nếu stage hiện tại thuộc NOC khác → không dùng, để fallback query default stage đúng NOC.
         if (
-          hasIncomingNocSelection &&
           templateNatureIdForCaseStages != null &&
           String.isNotBlank(selectedCaseStageId) &&
           (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true)
@@ -617,7 +613,8 @@ public without sharing class FEC_CaseBusinessService {
             // '\')';
           bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
         } else {
-          //PhongBT: Fix cập nhật sai case stage
+          //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+          // Dùng template NOC Id cho default stage query (tránh dùng Actual NOC Id).
           Id nocIdForDefaultStageQuery = templateNatureIdForCaseStages != null
             ? templateNatureIdForCaseStages
             : (String.isNotBlank(selectedNatureOfCaseId)
@@ -626,8 +623,8 @@ public without sharing class FEC_CaseBusinessService {
           caseStageQuery =
             'SELECT Id, Name, FEC_Business_Process__r.Name ' +
             'FROM FEC_Case_Stage__c ' +
-            //PhongBT: Fix cập nhật sai case stage
-            'WHERE FEC_Nature_of_Cases__c = :nocIdForDefaultStageQuery ' +
+            //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+            'WHERE FEC_Nature_of_Cases__c = :nocId ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ';
             // + 
@@ -635,8 +632,8 @@ public without sharing class FEC_CaseBusinessService {
             // String.join(new List<String>(rolelst), '\',\'') +
             // '\')';
           bindVars = new Map<String, Object>{
-            //PhongBT: Fix cập nhật sai case stage
-            'nocIdForDefaultStageQuery' => nocIdForDefaultStageQuery
+            //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
+            'nocId' => nocIdForDefaultStageQuery
           };
         }
           stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
@@ -4851,10 +4848,12 @@ public without sharing class FEC_CaseBusinessService {
     return main;
   }
 
-  //PhongBT: Fix cập nhật sai case stage
+  //PhongBT 13/05/26: fix case stage bị sai không update được master data đúng
   /**
-   * Id FEC_Nature_of_Case__c (template) dùng cho FEC_Case_Stage__c.FEC_Nature_of_Cases__c.
-   * Khi đang đọc từ FEC_Actual_Nature_of_Case__c, tra lại template theo dimension trong caseBindMap.
+   * FEC_Case_Stage__c.FEC_Nature_of_Cases__c trỏ template FEC_Nature_of_Case__c.
+   * Khi COF/GSR dùng Actual NOC, selectedNatureOfCase.Id là Actual — cần tra ngược
+   * template theo dimension (productType/category/subCategory/subCode/customerType)
+   * để các query FEC_Case_Stage__c khớp được.
    */
   private static Id resolveTemplateNatureOfCaseIdForCaseStages(
     Boolean useActualNatureAndSettingObj,
@@ -4892,7 +4891,7 @@ public without sharing class FEC_CaseBusinessService {
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
    * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
-   * rồi cờ default; không dùng FEC_Order__c.
+   * rồi cờ default; cuối cùng mới lấy bản ghi đầu theo Name.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,
