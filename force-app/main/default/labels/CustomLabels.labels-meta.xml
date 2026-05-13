@@ -11349,7 +11349,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Lbl_Updated_At</shortDescription>
-        <value>Updated At</value>
+        <value>Modified on</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Page_Info</fullName>
@@ -15031,5 +15031,12 @@
         <protected>false</protected>
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Blank_Column</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Blank_Column</shortDescription>
+        <value>Row {0}: {1} is blank</value>
     </labels>
 </CustomLabels>
