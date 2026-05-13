@@ -467,6 +467,7 @@
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Batch_Case_Handling__c</members>
         <members>FEC_Template_Import__c</members>
+        <members>FEC_Hold_Case_Config__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -481,6 +482,7 @@
         <members>Channel_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <members>FEC_Batch_Case_Handling</members>
+		<members>Hold_Case_Config_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
