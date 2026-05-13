@@ -6,6 +6,18 @@
         </div>
     </template>
     <template if:false={isLoading}>
+        <!-- Processing overlay -->
+        <template if:true={isSubmitting}>
+            <section class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <div class="slds-modal__content slds-p-around_large slds-text-align_center">
+                        <lightning-spinner size="medium" alternative-text="Processing"></lightning-spinner>
+                        <p class="slds-m-top_medium">Processing...</p>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
          <!-- ===================================================== -->
         <!-- MAIN CARD -->
         <!-- ===================================================== -->
@@ -38,6 +50,7 @@
                 </div>
             
                 <!-- Right: Assign Button -->
+                <template if:true={showAssignButton}>
                 <div class="slds-col slds-size_3-of-12 slds-text-align_right">
                     <lightning-button
                         label={labels.assignToMe}
@@ -45,6 +58,7 @@
                         onclick={handleAssign}>
                     </lightning-button>
                 </div>
+                </template>
             
             </div>
             
@@ -427,11 +441,12 @@
                         </div>   
                 
                         <div class="slds-scrollable_x">
-                            {labels.assignedTo}: CS@WB
+                            {labels.assignedTo}: {assignedToName}
                         </div>                     
                     </template>
                 </section>
                 
+                <template if:true={isEditMode}>
                 <section class="slds-box">                    
                     <div class="task-history-grid">
                         <!-- Decision -->
@@ -485,7 +500,8 @@
                             onclick={submit}>
                         </lightning-button>
                     </div>
-                </section>    
+                </section>
+                </template>    
 
             </div>
             <!-- ================= FOOTER ================= -->

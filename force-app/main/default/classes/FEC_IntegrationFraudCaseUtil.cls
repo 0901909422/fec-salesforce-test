@@ -160,7 +160,17 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         /** 
          * Email address of the user who created the case.
          */
-        public String creatorEmail;       
+        public String creatorEmail;   
+
+         /** 
+         * CaseId of the Case object.
+         */
+        public String caseDataId;   
+         /** 
+         * intCaseId of the Case object.
+         */
+        public String intCaseId;      
+        
 
         /** 
          * List of additional key-value information 
@@ -249,6 +259,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         @AuraEnabled public List<RemarksInfo> remarksInfo;          // Case/Fraud remarks history
         @AuraEnabled public List<ServiceCasesInfo> serviceCasesInfo;// Related service case records
         @AuraEnabled public List<NotificationInfo> notificationInfo;// Notification tracking records
+        @AuraEnabled public Boolean isAssignedToCurrentUser;        // Whether case is assigned to current user
+        @AuraEnabled public String assignedToName;                  // Owner name (User or Queue)
     }
     /**
      * DTO representing customer profile information
@@ -500,6 +512,8 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         w.remarks      = safeText((String) payload.get(c.REMARKS));
         w.userType     = (String) payload.get(c.USER_TYPE);
         w.caseId       = (String) payload.get(c.FRAUD_CASEID);
+        w.caseDataId   = (String) payload.get('caseDataId');
+        w.intCaseId = (String) payload.get('IntCaseId');
        
 
         // Automatically assign current user's email as creator
@@ -509,10 +523,10 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         // - Use provided value if available
         // - Otherwise generate a random one
         String tmpServiceCaseId = (String) payload.get(c.SERVICE_CASEID);
-        w.serviceCaseId = String.isBlank(tmpServiceCaseId)
-            ? randomServiceCaseId()
-            : tmpServiceCaseId;
-
+        // w.serviceCaseId = String.isBlank(tmpServiceCaseId)
+        //     ? randomServiceCaseId()
+        //     : tmpServiceCaseId;
+        w.serviceCaseId = tmpServiceCaseId;
         // Determine Channel Integration Code:
         // - Use provided value if available
         // - Otherwise fallback to default constant
@@ -555,6 +569,12 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
                         String fileName  = infoValue.substring(0, firstPipe);
                         String extension = infoValue.substring(firstPipe + 1, secondPipe);
                         String base64Val = infoValue.substring(secondPipe + 1);
+
+                        // If the value is a Salesforce ContentDocument ID, fetch actual file content
+                        if (base64Val != null && base64Val.length() == 18 && base64Val.startsWith('069')) {
+                            base64Val = getBase64FromContentDocumentId(base64Val);
+                        }
+
                         String convertZipFile = createZipBase64(fileName, base64Val);
                         if (convertZipFile != null) {
                             infoValue =
@@ -583,6 +603,23 @@ public with sharing class FEC_IntegrationFraudCaseUtil {
         return w;
     }
    
+
+    /**
+     * Fetches file content as base64 from a ContentDocument ID.
+     */
+    private static String getBase64FromContentDocumentId(String contentDocumentId) {
+        List<ContentVersion> versions = [
+            SELECT VersionData
+            FROM ContentVersion
+            WHERE ContentDocumentId = :contentDocumentId
+              AND IsLatest = true
+            LIMIT 1
+        ];
+        if (!versions.isEmpty() && versions[0].VersionData != null) {
+            return EncodingUtil.base64Encode(versions[0].VersionData);
+        }
+        return null;
+    }
 
     private static String createZipBase64(String fileName, String base64Data) {
 

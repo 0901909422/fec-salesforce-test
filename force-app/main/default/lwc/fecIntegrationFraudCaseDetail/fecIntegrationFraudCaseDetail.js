@@ -1,8 +1,9 @@
-import { LightningElement, wire, track } from 'lwc';
+import { LightningElement, wire, track, api } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 
 import getFraudCaseDetail from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getFraudCaseDetail';
 import getIntegrationFieldTypes from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getIntegrationFieldTypes';
+import getOriginalSnapshot from '@salesforce/apex/FEC_IntegrationFraudCaseDetailController.getOriginalSnapshot';
 
 // Labels
 import LBL_FraudCaseDetail from '@salesforce/label/c.LBL_FraudCaseDetail';
@@ -36,11 +37,22 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     // ===============================
     // STATE
     // ===============================
+    @api fraudHandlingCaseId;
+    @api serviceCaseId;
+    @api actionMode;
     @track caseId;
+    @track integrateCaseId;
     @track hierarchy = [];
     @track tasks = [];
     @track loading = false;
     @track error;
+    isFromUrl = false;
+
+    // Snapshot state
+    @track snapshotCase = null;
+    @track snapshotInfos = [];
+    @track snapshotDate = '';
+    @track isViewOriginal = false;
 
     casePrefixes = {};
     fieldTypes = {};
@@ -98,17 +110,28 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     // READ URL PARAM
     // ===============================
     @wire(CurrentPageReference)
-    handlePageRef(pageRef) {
-        const caseId = pageRef?.state?.c__caseId;
-        if (!caseId) return;
-
-        // Safe fraud-case detection (FH / TK / SFT)        
-        this.isFraudCase = caseId.startsWith(this.casePrefixesFH);
-        if (!this.dataLoaded) {
-            this.caseId = caseId;
-            this.dataLoaded = true;
-            this.loadData();
+    handlePageReference(pageRef) {
+        if (pageRef && pageRef.state) {
+            this.caseId = pageRef.state.c__caseId || this.fraudHandlingCaseId;
+            this.isFromUrl = !!pageRef.state.c__caseId;
+            this.integrateCaseId = this.serviceCaseId;
+            this.isViewOriginal = pageRef.state.c__actionMode === 'ViewOriginal' || this.actionMode === 'ViewOriginal';
+             // Safe fraud-case detection (FH / TK / SFT)       
+            this.isFraudCase = this.caseId.startsWith(this.casePrefixesFH);
+            if (!this.dataLoaded) {                
+                this.dataLoaded = true;
+                if (this.isViewOriginal) {
+                    this.loadOriginalSnapshot();
+                } else {
+                    this.loadData();
+                }
+            }
+            
+        } else{
+            return
         }
+           
+       
     }
 
     // ===============================
@@ -119,18 +142,18 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
         this.error = null;
 
         const caseGetURL = '/lightning/r/FEC_Integration_Case__c/';
-
+        console.log('this.integrateCaseId: ', this.integrateCaseId);
+        console.log('caseId: this.caseId: ', this.caseId);
         getFraudCaseDetail({ caseId: this.caseId })
             .then(res => {
                 const hierarchy = res?.hierarchy || [];
-                //console.log('getFraudCaseDetail: ', res);
+                console.log('getFraudCaseDetail: ', res);
 
-                this.hierarchy = hierarchy.map(item => ({
-                    ...item,
-                    caseUrl: `${caseGetURL}${item.Id}/view`,
-                    Infos: (item.Infos || []).map(info => {
+                this.hierarchy = hierarchy.map((item, index) => {
+                    const infos = (item.Infos || []).map(info => {
                         let value = info.FEC_Info_Value__c || info.value;
                         const fieldName = info.FEC_Source_Id__c || info.id;
+                        const displayName = info.displayName || info.FEC_Display_Name__c || fieldName;
 
                         // Format Deadline (YYYYMMDD → DD/MM/YYYY)
                         if (fieldName === this.deadlineFile && value) {
@@ -139,15 +162,36 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
 
                         return {
                             id: fieldName,
+                            displayName,
                             value,
                             fieldType: info.fileType,
                             isFile: this.fieldTypes?.FILE
                                 ? info.fileType === this.fieldTypes.FILE
                                 : false,
+                            isFileWithValue: this.fieldTypes?.FILE
+                                ? info.fileType === this.fieldTypes.FILE && !!value
+                                : false,
                             fileName: info.fileName
                         };
-                    })
-                }));
+                    });
+
+                    // Build layout columns for this case
+                    const columnCount = 4;
+                    const size = Math.ceil(infos.length / columnCount);
+                    const layoutColumns = Array.from({ length: columnCount }, (_, i) => ({
+                        key: `col-${i}`,
+                        items: infos.slice(i * size, (i + 1) * size)
+                    })).filter(col => col.items.length > 0);
+
+                    return {
+                        ...item,
+                        caseUrl: `${caseGetURL}${item.Id}/view`,
+                        isExpanded: false,
+                        sectionIcon: 'utility:chevronright',
+                        Infos: infos,
+                        layoutColumns
+                    };
+                });
 
                 this.tasks = res?.tasks || [];
             })
@@ -161,10 +205,126 @@ export default class IntegrationFraudCaseDetail extends LightningElement {
     }
 
     // ===============================
+    // LOAD ORIGINAL SNAPSHOT
+    // ===============================
+    loadOriginalSnapshot() {
+        this.loading = true;
+        this.error = null;
+
+        const svcCaseId = this.integrateCaseId || this.serviceCaseId;
+        console.log('loadOriginalSnapshot serviceCaseId:', svcCaseId);
+
+        getOriginalSnapshot({ serviceCaseId: svcCaseId })
+            .then(res => {
+                if (!res) {
+                    this.error = 'No original snapshot found.';
+                    return;
+                }
+
+                const caseData = res.case || {};
+                const infos = res.infos || [];
+                this.snapshotDate = res.snapshotDate || '';
+
+                this.snapshotCase = {
+                    FEC_CaseID__c: caseData.FEC_CaseID__c,
+                    FEC_Case_Status__c: caseData.FEC_Case_Status__c,
+                    FEC_Creator_Email__c: caseData.FEC_Creator_Email__c,
+                    FEC_Category__c: caseData.FEC_Category__c,
+                    FEC_Sub_Category__c: caseData.FEC_Sub_Category__c,
+                    FEC_Sub_Code__c: caseData.FEC_Sub_Code__c,
+                    CreatedDate: caseData.CreatedDate,
+                    LastModifiedDate: caseData.LastModifiedDate,
+                    FEC_CS_Remark__c: caseData.FEC_CS_Remark__c
+                };
+
+                this.snapshotInfos = infos.map(info => {
+                    const fieldName = info.FEC_Info_ID__c;
+                    let value = info.FEC_Info_Value__c;
+                    const fileType = info.FEC_Property_Type__c;
+                    let fileName = null;
+
+                    if (fileType === this.fieldTypes?.FILE && value && value.includes('|')) {
+                        fileName = value.split('|')[0];
+                    }
+
+                    return {
+                        id: fieldName,
+                        displayName: fieldName,
+                        value,
+                        fieldType: fileType,
+                        isFile: this.fieldTypes?.FILE ? fileType === this.fieldTypes.FILE : false,
+                        isFileWithValue: this.fieldTypes?.FILE ? fileType === this.fieldTypes.FILE && !!value : false,
+                        fileName
+                    };
+                });
+            })
+            .catch(err => {
+                console.error('getOriginalSnapshot error', err);
+                this.error = err?.body?.message || 'Failed to load original snapshot';
+            })
+            .finally(() => {
+                this.loading = false;
+            });
+    }
+
+    get snapshotLayoutColumns() {
+        if (!this.snapshotInfos || this.snapshotInfos.length === 0) return [];
+        const columnCount = 4;
+        const size = Math.ceil(this.snapshotInfos.length / columnCount);
+        return Array.from({ length: columnCount }, (_, i) => ({
+            key: `col-${i}`,
+            items: this.snapshotInfos.slice(i * size, (i + 1) * size)
+        })).filter(col => col.items.length > 0);
+    }
+
+    // ===============================
     // MAIN CASE
     // ===============================
     get mainCase() {
-        return this.hierarchy?.[0];
+        const fh = this.hierarchy?.find(item => 
+            item.FEC_CaseID__c && item.FEC_CaseID__c.startsWith(this.casePrefixesFH)
+        );
+        return fh || this.hierarchy?.[0];
+    }
+
+    get fhCases() {
+        return this.hierarchy.filter(item => 
+            item.FEC_CaseID__c && item.FEC_CaseID__c.startsWith(this.casePrefixesFH)
+        );
+    }
+
+    get hasMultipleCases() {
+        if (this.isFromUrl) return false;
+        return this.fhCases.length > 1;
+    }
+
+    get hasSingleCase() {
+        if (this.isFromUrl) return true;
+        return this.fhCases.length <= 1;
+    }
+
+    toggleSection(event) {
+        const caseId = event.currentTarget.dataset.id;
+        this.hierarchy = this.hierarchy.map(item =>
+            item.Id === caseId
+                ? { ...item, isExpanded: !item.isExpanded, sectionIcon: !item.isExpanded ? 'utility:chevrondown' : 'utility:chevronright' }
+                : item
+        );
+    }
+
+    getSectionIcon(item) {
+        return item.isExpanded ? 'utility:chevrondown' : 'utility:chevronright';
+    }
+
+    getLayoutColumnsForCase(caseItem) {
+        if (!caseItem?.Infos) return [];
+        const infos = caseItem.Infos;
+        const columnCount = 4;
+        const size = Math.ceil(infos.length / columnCount);
+        return Array.from({ length: columnCount }, (_, i) => ({
+            key: `col-${i}`,
+            items: infos.slice(i * size, (i + 1) * size)
+        })).filter(col => col.items.length > 0);
     }
 
     // ===============================

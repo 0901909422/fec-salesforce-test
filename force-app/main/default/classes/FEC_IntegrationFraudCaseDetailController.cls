@@ -30,6 +30,36 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
     }
 
     /**
+     * Returns the original snapshot data for a service case.
+     * Used when actionMode=ViewOriginal to display the initial state.
+     *
+     * @param serviceCaseId The service case ID
+     * @return Map containing case and infos from snapshot JSON
+     */
+    @AuraEnabled(cacheable = true)
+    public static Map<String, Object> getOriginalSnapshot(String serviceCaseId) {
+        if (String.isBlank(serviceCaseId)) {
+            return null;
+        }
+
+        List<FEC_Integration_Case_Snapshot__c> snapshots = [
+            SELECT FEC_Data__c, FEC_Type__c, FEC_Service_Case_Id__c, CreatedDate
+            FROM FEC_Integration_Case_Snapshot__c
+            WHERE FEC_Service_Case_Id__c = :serviceCaseId
+            AND FEC_Type__c = 'ORIGINAL'
+            LIMIT 1
+        ];
+
+        if (snapshots.isEmpty() || String.isBlank(snapshots[0].FEC_Data__c)) {
+            return null;
+        }
+
+        Map<String, Object> snapshotData = (Map<String, Object>) JSON.deserializeUntyped(snapshots[0].FEC_Data__c);
+        snapshotData.put('snapshotDate', FEC_IntegrationFraudCaseUtil.formatDateTime(snapshots[0].CreatedDate));
+        return snapshotData;
+    }
+
+    /**
      * Returns mapping between case prefix and integration case field name.
      * Used by frontend to determine case type (FH, BU, TK, etc.).
      */
@@ -171,6 +201,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Sys_Channel__c,
                    FEC_Creator_Email__c,
                    CreatedDate,
+                   FEC_Integrate_Case_ID__c ,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
             WHERE FEC_CaseID__c = :caseId
@@ -200,6 +231,33 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         log('BU CaseIDs = ' + result.buCaseIds);
         return result;
     }
+    private static List<FEC_Integration_Case__c> loadFaudCaseByServiceId(String serviceCaseId) {
+        if (String.isBlank(serviceCaseId)) {
+            return new List<FEC_Integration_Case__c>();
+        }
+        List<FEC_Integration_Case__c> records = [
+            SELECT Id,
+                   FEC_CaseID__c,
+                   FEC_Parent_CaseID__c,
+                   FEC_Service_Case_ID__c,
+                   FEC_Case_Status__c,
+                   FEC_Category__c,
+                   FEC_Sub_Category__c,
+                   FEC_Sub_Code__c,
+                   FEC_Remark__c,
+                   FEC_CS_Remark__c,
+                   FEC_Investigation_Conclusion__c,
+                   FEC_Sys_Channel__c,
+                   FEC_Creator_Email__c,
+                   CreatedDate,
+                   FEC_Integrate_Case_ID__c ,
+                   LastModifiedDate
+            FROM FEC_Integration_Case__c
+            WHERE FEC_Integrate_Case_ID__c =:serviceCaseId
+            ORDER BY CreatedDate DESC
+        ];
+        return records;
+    }
 
     /**
      * Loads TK cases that belong to BU cases.
@@ -227,6 +285,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                    FEC_Creator_Email__c,
                    FEC_Investigation_Conclusion__c,
                    CreatedDate,
+                   FEC_Integrate_Case_ID__c,
                    LastModifiedDate
             FROM FEC_Integration_Case__c
             WHERE FEC_Parent_CaseID__c IN :buCaseIds
@@ -247,7 +306,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
         List<FEC_Integration_Case__c> hierarchy =
             new List<FEC_Integration_Case__c>();
 
-        hierarchy.add(rootCase);
+        List<FEC_Integration_Case__c> fraudCase = loadFaudCaseByServiceId(rootCase.FEC_Integrate_Case_ID__c);
+        hierarchy.addAll(fraudCase);
 
         for (FEC_Integration_Case__c bu : rootAndBu) {
             if (bu.FEC_Parent_CaseID__c == rootCaseId) {
@@ -337,7 +397,7 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
             
                 FEC_FraudConstantCommon.KEY_FRAUD_TASK_URL =>
                     c.FEC_Service_Case_ID__c != null
-                        ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Service_Case_ID__c
+                        ? FEC_FraudConstantCommon.SERVICE_CASE_LINK + c.FEC_Integrate_Case_ID__c+'/view'
                         : null,
             
                 FEC_FraudConstantCommon.TASK_NAME =>
@@ -396,8 +456,8 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
                 'FEC_CS_Remark__c'            => c.FEC_CS_Remark__c,
                 'FEC_Investigation_Conclusion__c'
                                              => c.FEC_Investigation_Conclusion__c,
-                'CreatedDate'                 => c.CreatedDate,
-                'LastModifiedDate'            => c.LastModifiedDate,
+                'CreatedDate'                 => FEC_IntegrationFraudCaseUtil.formatDateTime(c.CreatedDate),
+                'LastModifiedDate'            => FEC_IntegrationFraudCaseUtil.formatDateTime(c.LastModifiedDate),
                 'Infos'        => buildInfoList(
                     c,
                     infoByCaseId,
@@ -424,22 +484,38 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
             return infos;
         }
 
-        for (FEC_Integration_Case_Info__c inf :
-            infoByCaseId.get(caseRec.Id)) {
+        List<FEC_Integration_Case_Info__c> caseInfos = infoByCaseId.get(caseRec.Id);
+
+        // Collect all info IDs for bulk query
+        Set<String> infoIds = new Set<String>();
+        for (FEC_Integration_Case_Info__c inf : caseInfos) {
+            infoIds.add(inf.FEC_Info_ID__c);
+        }
+
+        // Bulk query master data for field type and display name
+        Map<String, FEC_Master_Data_Integration__c> masterDataMap = new Map<String, FEC_Master_Data_Integration__c>();
+        for (FEC_Master_Data_Integration__c m : [
+            SELECT FEC_Source_Id__c, FEC_Source_Field_Type__c, FEC_Source_Name__c, FEC_Source_NameVN__c
+            FROM FEC_Master_Data_Integration__c
+            WHERE FEC_Source_Id__c IN :infoIds
+        ]) {
+            if (!masterDataMap.containsKey(m.FEC_Source_Id__c)) {
+                masterDataMap.put(m.FEC_Source_Id__c, m);
+            }
+        }
+
+        for (FEC_Integration_Case_Info__c inf : caseInfos) {
 
             String fileType;
             String fileName;
+            String displayName;
 
-            // Determine field type from master data
-            List<FEC_Master_Data_Integration__c> exist = [
-                SELECT FEC_Source_Field_Type__c
-                FROM FEC_Master_Data_Integration__c
-                WHERE FEC_Source_Id__c = :inf.FEC_Info_ID__c
-                LIMIT 1
-            ];
-
-            if (!exist.isEmpty()) {
-                fileType = exist[0].FEC_Source_Field_Type__c;
+            FEC_Master_Data_Integration__c masterRec = masterDataMap.get(inf.FEC_Info_ID__c);
+            if (masterRec != null) {
+                fileType = masterRec.FEC_Source_Field_Type__c;
+                displayName = (userLang == 'vi')
+                    ? masterRec.FEC_Source_NameVN__c
+                    : masterRec.FEC_Source_Name__c;
             }
 
             // Extract file name if info represents a file
@@ -456,10 +532,11 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
             }
 
             infos.add(new Map<String, String>{
-                'id'        => inf.FEC_Info_ID__c,
-                'value'     => inf.FEC_Info_Value__c,
-                'fileType'  => fileType,
-                'fileName'  => fileName
+                'id'          => inf.FEC_Info_ID__c,
+                'displayName' => displayName,
+                'value'       => inf.FEC_Info_Value__c,
+                'fileType'    => fileType,
+                'fileName'    => fileName
             });
         }
         return infos;
