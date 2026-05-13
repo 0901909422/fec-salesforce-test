@@ -38,6 +38,10 @@
 	    <members>FEC_AssignmentTriggerHandler</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
+	    <members>FEC_ChannelFunctionService</members>
+	    <members>FEC_ChannelFunctionServiceTest</members>
+	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
+	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
         <name>ApexClass</name>
     </types>
 	<types>
