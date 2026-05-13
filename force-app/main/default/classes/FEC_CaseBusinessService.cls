@@ -539,6 +539,18 @@ public without sharing class FEC_CaseBusinessService {
       } catch (DmlException e) {
       }
 
+      //PhongBT: Fix cập nhật sai case stage
+      // FEC_Case_Stage__c.FEC_Nature_of_Cases__c lookup template FEC_Nature_of_Case__c.
+      // Khi COF/GSR dùng Actual NOC (useActualNatureAndSettingObj), Id trên selectedNatureOfCase
+      // là Actual — không dùng cho query stage; nếu không map sang template thì remap rỗng
+      // và fallback theo Id stage cũ giữ stage của NOC trước (vd A→B→A vẫn stage B).
+      Id templateNatureIdForCaseStages = resolveTemplateNatureOfCaseIdForCaseStages(
+        useActualNatureAndSettingObj,
+        selectedNatureOfCase,
+        caseBindMap,
+        rolelst
+      );
+
       // ================================= GET CASE STAGE ===========================
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
@@ -546,11 +558,13 @@ public without sharing class FEC_CaseBusinessService {
       if (
         hasIncomingNocSelection &&
         String.isNotBlank(caseStageIdPreservedAtLoad) &&
-        String.isNotBlank(selectedNatureOfCaseId)
+        //PhongBT: Fix cập nhật sai case stage
+        templateNatureIdForCaseStages != null
       ) {
         FEC_Case_Stage__c remappedStageForNewNoc = resolveCaseStageForNewNatureOfCase(
           caseStageIdPreservedAtLoad,
-          (Id) selectedNatureOfCaseId
+          //PhongBT: Fix cập nhật sai case stage
+          templateNatureIdForCaseStages
         );
         if (remappedStageForNewNoc != null) {
           stagelst = [
@@ -563,6 +577,25 @@ public without sharing class FEC_CaseBusinessService {
       }
       if (stagelst.isEmpty()) {
         String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
+        //PhongBT: Tránh load stage theo Id khi Id vẫn trỏ NOC khác với bộ NOC đang chọn trên UI.
+        if (
+          hasIncomingNocSelection &&
+          templateNatureIdForCaseStages != null &&
+          String.isNotBlank(selectedCaseStageId)
+        ) {
+          List<FEC_Case_Stage__c> stageNocCheck = [
+            SELECT FEC_Nature_of_Cases__c
+            FROM FEC_Case_Stage__c
+            WHERE Id = :selectedCaseStageId
+            LIMIT 1
+          ];
+          if (
+            !stageNocCheck.isEmpty() &&
+            stageNocCheck[0].FEC_Nature_of_Cases__c != templateNatureIdForCaseStages
+          ) {
+            selectedCaseStageId = null;
+          }
+        }
         String caseStageQuery;
         Map<String, Object> bindVars;
         if (String.isNotBlank(selectedCaseStageId)) {
@@ -577,10 +610,17 @@ public without sharing class FEC_CaseBusinessService {
             // '\')';
           bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
         } else {
+          //PhongBT: Fix cập nhật sai case stage
+          Id nocIdForDefaultStageQuery = templateNatureIdForCaseStages != null
+            ? templateNatureIdForCaseStages
+            : (String.isNotBlank(selectedNatureOfCaseId)
+              ? (Id) selectedNatureOfCaseId
+              : null);
           caseStageQuery =
             'SELECT Id, Name, FEC_Business_Process__r.Name ' +
             'FROM FEC_Case_Stage__c ' +
-            'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
+            //PhongBT: Fix cập nhật sai case stage
+            'WHERE FEC_Nature_of_Cases__c = :nocIdForDefaultStageQuery ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ';
             // + 
@@ -588,7 +628,8 @@ public without sharing class FEC_CaseBusinessService {
             // String.join(new List<String>(rolelst), '\',\'') +
             // '\')';
           bindVars = new Map<String, Object>{
-            'selectedNatureOfCaseId' => selectedNatureOfCaseId
+            //PhongBT: Fix cập nhật sai case stage
+            'nocIdForDefaultStageQuery' => nocIdForDefaultStageQuery
           };
         }
           stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
@@ -4801,6 +4842,43 @@ public without sharing class FEC_CaseBusinessService {
     main.subSectionlst.add(caseDetails);
 
     return main;
+  }
+
+  //PhongBT: Fix cập nhật sai case stage
+  /**
+   * Id FEC_Nature_of_Case__c (template) dùng cho FEC_Case_Stage__c.FEC_Nature_of_Cases__c.
+   * Khi đang đọc từ FEC_Actual_Nature_of_Case__c, tra lại template theo dimension trong caseBindMap.
+   */
+  private static Id resolveTemplateNatureOfCaseIdForCaseStages(
+    Boolean useActualNatureAndSettingObj,
+    SObject selectedNatureOfCase,
+    Map<String, Object> caseBindMap,
+    List<String> rolelst
+  ) {
+    if (selectedNatureOfCase == null) {
+      return null;
+    }
+    if (!useActualNatureAndSettingObj) {
+      return (Id) selectedNatureOfCase.get('Id');
+    }
+    String templateNocQuery =
+      'SELECT Id FROM FEC_Nature_of_Case__c ' +
+      'WHERE FEC_Product_Type__c = :productType ' +
+      'AND FEC_Category__c = :category ' +
+      'AND FEC_Sub_Category__c = :subCategory ' +
+      'AND FEC_Sub_Code__c = :subCode ' +
+      'AND FEC_Customer_Type__c = :customerType ' +
+      'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
+      'AND FEC_Active__c = TRUE ' +
+      'AND FEC_User_Group__c INCLUDES (\'' +
+      String.join(new List<String>(rolelst), '\',\'') +
+      '\')';
+    List<SObject> templateRows = Database.queryWithBinds(
+      templateNocQuery,
+      caseBindMap,
+      AccessLevel.USER_MODE
+    );
+    return templateRows.isEmpty() ? null : (Id) templateRows[0].get('Id');
   }
 
   /**
