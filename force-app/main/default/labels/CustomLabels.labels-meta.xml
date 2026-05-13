@@ -15579,6 +15579,164 @@
         <value>Vui lòng nhập Remark for Collections.</value>
     </labels>
     <labels>
+        <fullName>FEC_Auto</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Auto</shortDescription>
+        <value>Auto</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Changed_Status</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Changed Status</shortDescription>
+        <value>Changed Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Current_Status</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Status</shortDescription>
+        <value>Current Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Date</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Date</shortDescription>
+        <value>Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Detail_Information</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Detail Information</shortDescription>
+        <value>Detail Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Manual</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Manual</shortDescription>
+        <value>Vui lòng chọn NFU Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_MessageError_For_Hold_Case</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error MessageError For Hold Case</shortDescription>
+        <value>Complete this field.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Field</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Field</shortDescription>
+        <value>Field</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HCC_Name</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>HCC Name</shortDescription>
+        <value>HCC Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Config</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Config</shortDescription>
+        <value>Hold Case Config</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Save_Success</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Save Success</shortDescription>
+        <value>Hold Case Config created successfully</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Hold_Case_Type</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Type</shortDescription>
+        <value>Hold Case Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_List_Of_NFU_Code</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>List Of NFU Code</shortDescription>
+        <value>List of NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Manual</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Manual</shortDescription>
+        <value>Manual</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Modal_Error</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Modal Error</shortDescription>
+        <value>Chỉ chọn được 1 NFU Code do đang thiết lập Hold Case tự động</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Modal_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Modal Save Error</shortDescription>
+        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NFU_Reason_VN</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason VN</shortDescription>
+        <value>NFU Reason VN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Hold_Case_Config</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Hold Case Config</shortDescription>
+        <value>New Hold Case Config</value>
+    </labels>
+    <labels>
+        <fullName>FEC_New_Value</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Value</shortDescription>
+        <value>New Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Original_Value</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Original Value</shortDescription>
+        <value>Original Value</value>
+    </labels>
+    <labels>
         <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>
