@@ -15579,244 +15579,162 @@
         <value>Vui lòng nhập Remark for Collections.</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Row_Status_Failed</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Auto</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Row_Status_Failed</shortDescription>
-        <value>Failed</value>
+        <shortDescription>Auto</shortDescription>
+        <value>Auto</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_No_Attachment_Data</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Changed_Status</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Attachment_Data</shortDescription>
-        <value>No attachment data.</value>
+        <shortDescription>Changed Status</shortDescription>
+        <value>Changed Status</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Case_Set_Invalid</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Current_Status</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_Set_Invalid</shortDescription>
-        <value>Case set không hợp lệ.</value>
+        <shortDescription>Current Status</shortDescription>
+        <value>Current Status</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_No_Cases_In_Range</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Date</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Cases_In_Range</shortDescription>
-        <value>Không có Case trong khoảng đã chọn.</value>
+        <shortDescription>Date</shortDescription>
+        <value>Date</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Cases_No_Attachments</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Detail_Information</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Cases_No_Attachments</shortDescription>
-        <value>Các Case đã chọn không có tệp đính kèm.</value>
+        <shortDescription>Detail Information</shortDescription>
+        <value>Detail Information</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Error_Manual</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed</shortDescription>
-        <value>Không lấy được tệp đính kèm.</value>
+        <shortDescription>Error Manual</shortDescription>
+        <value>Vui lòng chọn NFU Code.</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Error_MessageError_For_Hold_Case</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded</shortDescription>
-        <value>Tổng dung lượng file vượt quá 10MB.</value>
+        <shortDescription>Error MessageError For Hold Case</shortDescription>
+        <value>Complete this field.</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Download_Success</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Field</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Download_Success</shortDescription>
-        <value>Tải file thành công.</value>
+        <shortDescription>Field</shortDescription>
+        <value>Field</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_No_Files_To_Zip</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_HCC_Name</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_No_Files_To_Zip</shortDescription>
-        <value>No files to zip.</value>
+        <shortDescription>HCC Name</shortDescription>
+        <value>HCC Name</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Case_Invalid</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Hold_Case_Config</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_Invalid</shortDescription>
-        <value>Case không hợp lệ.</value>
+        <shortDescription>Hold Case Config</shortDescription>
+        <value>Hold Case Config</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Zip_Case_No_Attachments</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Hold_Case_Save_Success</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Zip_Case_No_Attachments</shortDescription>
-        <value>Case không có tệp đính kèm.</value>
+        <shortDescription>Hold Case Save Success</shortDescription>
+        <value>Hold Case Config created successfully</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Hold_Case_Type</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id</shortDescription>
-        <value>Thiếu dữ liệu Case ID.</value>
+        <shortDescription>Hold Case Type</shortDescription>
+        <value>Hold Case Type</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_List_Of_NFU_Code</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</shortDescription>
-        <value>Case ID không tồn tại trong hệ thống</value>
+        <shortDescription>List Of NFU Code</shortDescription>
+        <value>List of NFU Code</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Case_Closed</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Manual</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Case_Closed</shortDescription>
-        <value>Case ID đã ở trạng thái Closed (không cho phép cập nhật)</value>
+        <shortDescription>Manual</shortDescription>
+        <value>Manual</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_NFU_Modal_Error</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</shortDescription>
-        <value>Cùng Case ID xuất hiện nhiều dòng trong file import.</value>
+        <shortDescription>NFU Modal Error</shortDescription>
+        <value>Chỉ chọn được 1 NFU Code do đang thiết lập Hold Case tự động</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_NFU_Modal_Save_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found</shortDescription>
-        <value>Assignment ID không tồn tại trong hệ thống</value>
+        <shortDescription>NFU Modal Save Error</shortDescription>
+        <value>Vui lòng chọn ít nhất 1 NFU Code.</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Closed</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_NFU_Reason_VN</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Closed</shortDescription>
-        <value>Assignment ID đã ở trạng thái Closed (không cho phép cập nhật)</value>
+        <shortDescription>NFU Reason VN</shortDescription>
+        <value>NFU Reason VN</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_New_Hold_Case_Config</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</shortDescription>
-        <value>Đã nhập Assignment Routing Action thì không nhập Routing Action ở level Case.</value>
+        <shortDescription>New Hold Case Config</shortDescription>
+        <value>New Hold Case Config</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_New_Value</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</shortDescription>
-        <value>Thiếu dữ liệu Routing Action/Assignment Routing Action.</value>
+        <shortDescription>New Value</shortDescription>
+        <value>New Value</value>
     </labels>
     <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</fullName>
-        <categories>Batch Case Handling</categories>
+        <fullName>FEC_Original_Value</fullName>
+        <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</shortDescription>
-        <value>Giá trị Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</shortDescription>
-        <value>Khi có Assignment ID, chỉ cho phép Routing Action level Case là Resolve/Reject.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</shortDescription>
-        <value>Giá trị Assignment Routing Action không đúng format hoặc không tồn tại trong Datagroup đã define</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</shortDescription>
-        <value>Thiếu dữ liệu Routing Action</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</shortDescription>
-        <value>Không nhập Assignment Routing Action khi không có Assignment ID.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process</shortDescription>
-        <value>Không nhập Assignment Routing Action đối với quy trình này.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process</shortDescription>
-        <value>Không sử dụng Assignment ID đối với quy trình này.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</shortDescription>
-        <value>Thiếu dữ liệu Remark</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</shortDescription>
-        <value>Giá trị Remark vượt quá số ký tự cho phép (32,768 ký tự)</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</shortDescription>
-        <value>Record Id không hợp lệ.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</fullName>
-        <categories>Batch Case Handling</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</shortDescription>
-        <value>Routing action cần tham số bổ sung (queue / decision / transfer / revert) — không xử lý qua Bulk Import.</value>
+        <shortDescription>Original Value</shortDescription>
+        <value>Original Value</value>
     </labels>
     <labels>
         <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>

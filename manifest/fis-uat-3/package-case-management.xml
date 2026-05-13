@@ -52,6 +52,7 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_SubProcessService</members>
+        <members>Fec_HoldCaseConfigurationController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -457,7 +458,10 @@
     <types>
         <members>FEC_Routing_Assignment__c</members>
         <members>FEC_BancaTabView</members>
+<<<<<<< ours
         <members>FEC_General_Assignment__c</members>
+        <members>FEC_HoldCaseConfiguration</members>
+>>>>>>> theirs
         <name>CustomTab</name>
     </types>
 	<types>
@@ -546,6 +550,7 @@
         <members>fec_TransferCall</members>
         <members>fec_AssigmentListView</members>
         <members>fec_AssignmentViewAll</members>
+<<<<<<< ours
         <members>fec_NocGeneralAssignment</members>
         <members>fec_GeneralAssignmentDetailSimple</members>
         <members>fec_GeneralAssignmentHistory</members>
@@ -555,6 +560,11 @@
         <members>fec_NocRoutingAssignment</members>
         <members>fec_RoutingAssignmentDetailSimple</members>
         <members>fec_RoutingAssignmentHistory</members>
+        <members>fec_CommonDetailView</members>
+        <members>fec_HoldCaseConfiguration</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_RelatedListPaging</members>
+>>>>>>> theirs
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -918,6 +928,7 @@
         <members>FEC_BCH_Modal_BpColName</members>
         <members>FEC_BCH_ExportWithAllProperties</members>
         <members>FEC_BCH_FooterOf</members>
+<<<<<<< ours
         <members>FEC_GA_Save_Success</members>
         <members>FEC_GA_Saved_Message</members>
         <members>FEC_GA_Save_Error</members>
@@ -934,6 +945,28 @@
         <members>FEC_RA_Channel_Required</members>
         <members>FEC_RA_Team_Required</members>
         <members>FEC_RA_Queue_Required</members>
+        <members>FEC_Auto</members>
+		<members>FEC_Changed_Status</members>
+		<members>FEC_Current_Status</members>
+		<members>FEC_Date</members>
+		<members>FEC_Detail_Information</members>
+		<members>FEC_Error_Manual</members>
+		<members>FEC_Error_MessageError_For_Hold_Case</members>
+		<members>FEC_Field</members>
+		<members>FEC_HCC_Name</members>
+		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Save_Success</members>
+		<members>FEC_Hold_Case_Type</members>
+		<members>FEC_List_Of_NFU_Code</members>
+		<members>FEC_Manual</members>
+		<members>FEC_NFU_Modal_Error</members>
+		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_NFU_Reason_VN</members>
+		<members>FEC_New_Hold_Case_Config</members>
+		<members>FEC_New_Value</members>
+		<members>FEC_Original_Value</members>
+		<members>FEC_Parent_Hold_Case_Config</members>
+>>>>>>> theirs
         <name>CustomLabel</name>
     </types>
     <types>
