@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Unmet Need Reason --></label>
+    <name>FEC_Unmet_Need_Reason__c</name>
+    <picklistValues>
+        <masterLabel>Borrowing from Other Provider</masterLabel>
+        <translation>Cần vay bên khác</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Card Not Received</masterLabel>
+        <translation>Chưa nhận thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Lost Card</masterLabel>
+        <translation>Mất thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Low Credit Limit</masterLabel>
+        <translation>Hạn mức thấp</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Chance for Survey</masterLabel>
+        <translation>Chưa có cơ hội khảo sát</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Longer Need Card</masterLabel>
+        <translation>Không còn nhu cầu sử dụng thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>No Need to Use Card</masterLabel>
+        <translation>Không có nhu cầu sử dụng thẻ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Not Tech-Savvy</masterLabel>
+        <translation>Không rành công nghệ</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Overseas</masterLabel>
+        <translation>Đi nước ngoài</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Remote Area</masterLabel>
+        <translation>Ở vùng sâu/ vùng xa</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Unattractive Promotions</masterLabel>
+        <translation>Chương trình/ khuyến mãi ít hoặc không hấp dẫn</translation>
+    </picklistValues>
+</CustomFieldTranslation>

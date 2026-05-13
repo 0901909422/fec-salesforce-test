@@ -1,0 +1,145 @@
+<template>
+  <!-- tungnm37 thêm: Routing Assignment - hiện Team/Queue từ FEC_Routing_Assignment__c -->
+  <template if:true={isVisible}>
+
+    <!-- tungnm37: nút Add Item - toggle mở/đóng form -->
+    <div if:true={showAddItem} class="slds-m-bottom--small">
+      <lightning-button
+        variant="neutral"
+        label={addItemLabel}
+        icon-name="utility:add"
+        onclick={handleToggleForm}>
+      </lightning-button>
+    </div>
+
+    <!-- tungnm37: form Add Item - hiện khi click nút Add Item -->
+    <template if:true={showAddForm}>
+      <div class="add-item-form slds-box slds-m-bottom--small">
+        <div class="slds-grid slds-wrap slds-gutters">
+          <!-- Team picklist -->
+          <div class="slds-col slds-size_1-of-2">
+            <lightning-combobox
+              label={teamLabel}
+              required
+              value={formTeam}
+              options={teamOptions}
+              onchange={handleTeamChange}
+              placeholder={chooseTeamPlaceholder}>
+            </lightning-combobox>
+          </div>
+          <!-- Queue picklist -->
+          <div class="slds-col slds-size_1-of-2 slds-grid slds-align_absolute-center">
+            <div class="slds-grow">
+              <lightning-combobox
+                label={queueLabel}
+                required
+                value={formQueue}
+                options={queueOptions}
+                onchange={handleQueueChange}
+                placeholder={chooseQueuePlaceholder}>
+              </lightning-combobox>
+            </div>
+            <div class="slds-m-left--x-small slds-m-top_large">
+              <lightning-button-icon
+                icon-name="utility:close"
+                variant="bare"
+                alternative-text="Close"
+                onclick={handleCancelForm}>
+              </lightning-button-icon>
+            </div>
+          </div>
+          <!-- Assignment Remark -->
+          <div class="slds-col slds-size_1-of-1 slds-m-top--small">
+            <lightning-textarea
+              label={assignmentRemarkLabel}
+              required
+              value={formRemark}
+              onchange={handleRemarkChange}
+              placeholder={enterRemarkPlaceholder}>
+            </lightning-textarea>
+          </div>
+          <!-- Confirm button -->
+          <div class="slds-col slds-size_1-of-1 slds-text-align_right slds-m-top--small">
+            <template if:true={showValidationError}>
+              <p class="slds-text-color_error slds-m-bottom--x-small">{validationErrorMsg}</p>
+            </template>
+            <lightning-button
+              variant="brand"
+              label={confirmLabel}
+              onclick={handleConfirm}>
+            </lightning-button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- tungnm37: list các item đã thêm (ngang: Team | Queue | Remark | X) -->
+    <template if:true={hasManualItems}>
+      <table class="manual-items-table">
+        <thead>
+          <tr>
+            <th class="col-team">{teamLabel}</th>
+            <th class="col-queue">{queueLabel}</th>
+            <th class="col-remark">{assignmentRemarkLabel}</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={manualItems} for:item="item">
+            <tr key={item.key}>
+              <td class="col-team">{item.teamName}</td>
+              <td class="col-queue">{item.queueName}</td>
+              <td class="col-remark">{item.remark}</td>
+              <td class="col-action">
+                <lightning-button-icon
+                  icon-name="utility:close"
+                  variant="bare"
+                  alternative-text="Remove"
+                  data-key={item.key}
+                  onclick={handleRemoveItem}>
+                </lightning-button-icon>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </template>
+
+    <!-- tungnm37: 1 record → dọc (chỉ hiện ở Stage 1) -->
+    <template if:true={isSingle}>
+      <template if:false={isSubmited}>
+        <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <p class="label">{teamLabel}</p>
+          <p class="value">{firstItem.team}</p>
+        </div>
+        <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+          <p class="label">{queueLabel}</p>
+          <p class="value">{firstItem.queue}</p>
+        </div>
+      </template>
+    </template>
+
+    <!-- tungnm37: nhiều record → ngang (chỉ hiện ở Stage 1) -->
+    <template if:false={isSingle}>
+      <template if:false={isSubmited}>
+        <template for:each={assignments} for:item="item">
+          <div key={item.team} class="slds-grid">
+            <div class="slds-col slds-size_1-of-2">
+              <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+                <p class="label">{teamLabel}</p>
+                <p class="value">{item.team}</p>
+              </div>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+              <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+                <p class="label">{queueLabel}</p>
+                <p class="value">{item.queue}</p>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+    </template>
+
+  </template>
+</template>

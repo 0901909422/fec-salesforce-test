@@ -1,0 +1,166 @@
+<template>
+    <lightning-card title={labels.LABEL_TITLE}>
+        <!-- Progress Indicator -->
+        <lightning-progress-indicator current-step={currentStep} type="path" class="slds-m-bottom_medium">
+            <template for:each={stepIndicatorSteps} for:item="step">
+                <lightning-progress-step key={step.value} label={step.label} value={step.value}></lightning-progress-step>
+            </template>
+        </lightning-progress-indicator>
+
+        <!-- Step 1: Select Object -->
+        <template if:true={isStepSelectObject}>
+            <div class="slds-p-around_medium">
+                <lightning-combobox
+                    label="Target Object"
+                    placeholder="Search and select an object..."
+                    options={filteredObjectOptions}
+                    value={selectedObject}
+                    onchange={handleObjectChange}
+                ></lightning-combobox>
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNextFromStep1} disabled={isNextDisabledStep1}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 2: Select/Create Field -->
+        <template if:true={isStepSelectField}>
+            <div class="slds-p-around_medium">
+                <lightning-radio-group
+                    label="Field Option"
+                    options={fieldModeOptions}
+                    value={fieldMode}
+                    onchange={handleFieldModeChange}
+                    type="button"
+                    class="slds-m-bottom_small"
+                ></lightning-radio-group>
+
+                <template if:true={isExistingField}>
+                    <lightning-combobox
+                        label="Select Field"
+                        placeholder="Choose an existing field..."
+                        options={fieldOptions}
+                        value={selectedField}
+                        onchange={handleExistingFieldChange}
+                    ></lightning-combobox>
+                </template>
+
+                <template if:true={isNewField}>
+                    <lightning-input label="Field Label" value={fieldLabel} onchange={handleFieldLabelChange} required></lightning-input>
+                    <lightning-input label="Field API Name" value={fieldApiName} onchange={handleFieldApiNameChange} required class="slds-m-top_x-small"></lightning-input>
+                    <template if:true={apiNameError}>
+                        <div class="slds-text-color_error slds-m-top_xx-small">{apiNameError}</div>
+                    </template>
+                    <template if:true={fieldExistsError}>
+                        <div class="slds-text-color_error slds-m-top_xx-small">{fieldExistsError}</div>
+                    </template>
+                    <lightning-combobox label="Field Type" options={fieldTypeOptions} value={fieldType} onchange={handleFieldTypeChange} class="slds-m-top_x-small"></lightning-combobox>
+                    <lightning-input label="Length" type="number" value={fieldLength} onchange={handleFieldLengthChange} class="slds-m-top_x-small"></lightning-input>
+                    <lightning-textarea label="Description" value={fieldDescription} onchange={handleFieldDescriptionChange} class="slds-m-top_x-small"></lightning-textarea>
+                    <template if:true={showPicklistValues}>
+                        <lightning-textarea label="Picklist Values (one per line)" value={picklistValues} onchange={handlePicklistValuesChange} class="slds-m-top_x-small"></lightning-textarea>
+                    </template>
+                    <template if:true={showRelatedObject}>
+                        <lightning-combobox label="Related Object" options={filteredObjectOptions} value={relatedObject} onchange={handleRelatedObjectChange} class="slds-m-top_x-small"></lightning-combobox>
+                    </template>
+                </template>
+
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button label="Back" onclick={handleBackToStep1} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNextFromStep2} disabled={isNextDisabledStep2}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 3: Deploy Field -->
+        <template if:true={isStepDeployField}>
+            <div class="slds-p-around_medium">
+                <div class="slds-m-bottom_medium">
+                    <p><strong>Object:</strong> {selectedObject}</p>
+                    <p><strong>Field:</strong> {fieldLabel} ({fieldApiName})</p>
+                    <p><strong>Type:</strong> {fieldType}</p>
+                </div>
+
+                <template if:false={isDeploying}>
+                    <template if:false={deployError}>
+                        <lightning-button variant="brand" label="Deploy Field" onclick={handleDeploy}></lightning-button>
+                    </template>
+                </template>
+
+                <template if:true={isDeploying}>
+                    <lightning-spinner alternative-text="Deploying..." size="medium"></lightning-spinner>
+                    <p class="slds-m-top_small">{deployStatus}</p>
+                </template>
+
+                <template if:true={deployError}>
+                    <div class="slds-box slds-theme_error slds-m-top_small">
+                        <p>{deployError}</p>
+                    </div>
+                    <lightning-button variant="brand" label="Retry" onclick={handleRetryDeploy} class="slds-m-top_small"></lightning-button>
+                </template>
+
+                <template if:false={isDeploying}>
+                    <div class="slds-m-top_medium slds-text-align_right">
+                        <lightning-button label="Back" onclick={handleBackToStep2} class="slds-m-right_x-small"></lightning-button>
+                        <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Step 4: Configure MDS -->
+        <template if:true={isStepConfigureMDS}>
+            <div class="slds-p-around_medium">
+                <lightning-combobox label="Section" options={sectionOptions} value={selectedSection} onchange={handleSectionChange} allow-custom-value></lightning-combobox>
+                <lightning-combobox label="Sub Section" options={subSectionOptions} value={selectedSubSection} onchange={handleSubSectionChange} allow-custom-value class="slds-m-top_x-small"></lightning-combobox>
+                <lightning-input label="Sub Section Order" value={subSectionOrder} onchange={handleSubSectionOrderChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input label="Sub Section Layout" value={subSectionLayout} onchange={handleSubSectionLayoutChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input label="Sub Section Field Layout" value={subSectionFieldLayout} onchange={handleSubSectionFieldLayoutChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input label="Field Order Display" type="number" value={fieldOrderDisplay} onchange={handleFieldOrderChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input type="toggle" label="Field Status (Active)" checked={fieldStatus} onchange={handleFieldStatusChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input type="checkbox" label="Read Only" checked={fieldReadOnly} onchange={handleFieldReadOnlyChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-input type="checkbox" label="Mandatory" checked={fieldMandatory} onchange={handleFieldMandatoryChange} class="slds-m-top_x-small"></lightning-input>
+                <lightning-dual-listbox label="Applicable Role" source-label="Available" selected-label="Selected" options={roleOptions} value={applicableRole} onchange={handleApplicableRoleChange} class="slds-m-top_x-small"></lightning-dual-listbox>
+
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button label="Back" onclick={handleBackToStep3or2} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNextFromStep4}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Step 5: Review & Save -->
+        <template if:true={isStepReviewSave}>
+            <div class="slds-p-around_medium">
+                <div class="slds-box slds-m-bottom_medium">
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Review</h3>
+                    <p><strong>Target Object:</strong> {selectedObject}</p>
+                    <p><strong>Field:</strong> {fieldLabel} ({fieldApiName})</p>
+                    <p><strong>Section:</strong> {selectedSection}</p>
+                    <p><strong>Sub Section:</strong> {selectedSubSection}</p>
+                    <p><strong>Order:</strong> {fieldOrderDisplay}</p>
+                    <p><strong>Status:</strong> {fieldStatus}</p>
+                    <p><strong>Read Only:</strong> {fieldReadOnly}</p>
+                    <p><strong>Mandatory:</strong> {fieldMandatory}</p>
+                </div>
+
+                <template if:true={pushStatus}>
+                    <p class="slds-m-bottom_small">{pushStatus}</p>
+                </template>
+
+                <div class="slds-m-top_medium slds-text-align_right">
+                    <lightning-button label="Back" onclick={handleBackToStep4} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Save" onclick={handleSave} class="slds-m-right_x-small"></lightning-button>
+                    <template if:true={savedRecordId}>
+                        <lightning-button variant="success" label={labels.LABEL_PUSH_TO_LIVE} onclick={handlePushToLive} disabled={isPushing} class="slds-m-right_x-small"></lightning-button>
+                        <lightning-button variant="neutral" label="Finish" onclick={handleFinish}></lightning-button>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>

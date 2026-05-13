@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fieldUpdates>
+        <fullName>Case24h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <name>Case24h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>ChangePriorityToHigh</fullName>
+        <field>Priority</field>
+        <literalValue>High</literalValue>
+        <name>Changes the case priority to high.</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Literal</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_1104h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 1104h Violating&quot;</formula>
+        <name>Update Case 1104h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_1104h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 1104h Warning&quot;</formula>
+        <name>Update Case 1104h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_1872h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 1872h Violating&quot;</formula>
+        <name>Update Case 1872h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_1872h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 1872h Warning&quot;</formula>
+        <name>Update Case 1872h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_24h</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 24h&quot;</formula>
+        <name>Update Case 24h</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_24h_SLA_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 24h Violating&quot;</formula>
+        <name>Update Case 24h SLA Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_24h_SLA_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 24h&quot;</formula>
+        <name>Update Case 24h SLA Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_24h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 24h Violating&quot;</formula>
+        <name>Update Case 24h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_24h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 24h Warning&quot;</formula>
+        <name>Update Case 24h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_336h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 336h Violating&quot;</formula>
+        <name>Update Case 336h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_336h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 336h Warning&quot;</formula>
+        <name>Update Case 336h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_360h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 360h Violating&quot;</formula>
+        <name>Update Case 360h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_360h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 360h Warning&quot;</formula>
+        <name>Update Case 360h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_1</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 4h8-1 warning&quot;</formula>
+        <name>Update Case 48h-1 SLA Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_1_SLA_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 48h-1 SLA Violating&quot;</formula>
+        <name>Update Case 48h -1 SLA Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_1_SLA_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 48h-1&quot;</formula>
+        <name>Update Case 48h -1 SLA Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_1_SLA_Warning_1</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 48h-1 Warning&quot;</formula>
+        <name>Update Case 48h-1 SLA Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_1_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 48h-1 violating&quot;</formula>
+        <name>Update Case 48h-1 SLA Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_2_SLA_Violating_1</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 48h-1 Violating&quot;</formula>
+        <name>Update Case 48h-1 SLA Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_2_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 48h-2 violating&quot;</formula>
+        <name>Update Case 48h-2 SLA Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_2_Violating_1</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 48h-2 violating&quot;</formula>
+        <name>Update Case 48h-2 Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_48h_2_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 48h-2 warning&quot;</formula>
+        <name>Update Case 48h-2 SLA Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_72h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 72h Violating&quot;</formula>
+        <name>Update Case 72h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_72h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 72h Warning&quot;</formula>
+        <name>Update Case 72h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_96h_Violating</fullName>
+        <field>FEC_SLA_Violating_Warning__c</field>
+        <formula>&quot;Case 96h Violating&quot;</formula>
+        <name>Update Case 96h Violating</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+    <fieldUpdates>
+        <fullName>Update_Case_96h_Warning</fullName>
+        <field>FEC_SLA_Warning__c</field>
+        <formula>&quot;Case 96h Warning&quot;</formula>
+        <name>Update Case 96h Warning</name>
+        <notifyAssignee>false</notifyAssignee>
+        <operation>Formula</operation>
+        <protected>false</protected>
+        <reevaluateOnChange>false</reevaluateOnChange>
+    </fieldUpdates>
+</Workflow>

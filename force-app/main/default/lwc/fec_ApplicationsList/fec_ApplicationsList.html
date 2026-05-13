@@ -1,0 +1,39 @@
+<template>
+     <template if:true={hasData}>
+         <div class="customer-info-container slds-card slds-p-around_small">
+            <lightning-accordion active-section-name={activeSections} allow-multiple-sections-open>
+                <!-- ================= Registration Info ================= -->
+                  <lightning-accordion-section name="registration" label="Registration Info ">
+                     <c-fec_-related-list-paging records={registration} columns={registrationColumns}
+                     default-sorted-by="updateDate" default-sort-direction="desc" onrowselect={handleRegistrationSelect}>
+                    </c-fec_-related-list-paging>
+                  </lightning-accordion-section>
+            </lightning-accordion>
+         </div>
+     </template>
+     <template if:false={hasData}>
+        <div class="slds-accordion">
+
+            <!-- SECTION Registration-->
+            <section class="slds-accordion__section slds-is-open">
+                <div class="slds-accordion__summary">
+                    <h3 class="slds-accordion__summary-heading">
+                        <span class="slds-accordion__summary-content slds-grid">
+                            <lightning-icon icon-name="utility:chevrondown" size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <span>
+                                {customLabel.registrationInfoLabel}&nbsp;-&nbsp;
+                                <span class="sync-fail-text">
+                                    {customLabel.msgErrorApiLabel}
+                                </span>
+                            </span>
+
+                        </span>
+                    </h3>
+                </div>
+                <div class="slds-accordion__content slds-hide">
+                </div>
+            </section>
+            </div>
+     </template>
+</template>

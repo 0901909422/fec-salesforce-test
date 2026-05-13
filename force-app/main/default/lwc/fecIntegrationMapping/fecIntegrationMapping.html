@@ -1,0 +1,175 @@
+<template>
+    <lightning-card title={labels.Integration_Mapping_Title}>
+         <!-- LOADING -->
+        <template lwc:if={loading}>
+            <lightning-spinner alternative-text={labels.Loading}></lightning-spinner>
+        </template>
+        <template lwc:if={notLoading}>
+            <div class="slds-box slds-m-bottom_medium">            
+            <div class="slds-grid slds-wrap slds-gutters">
+
+                <lightning-combobox
+                    label={labels.User_Type}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={userTypeOptions}
+                    value={userType}
+                    onchange={handleUserType}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label={labels.Int_Channel}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={channelOptions}
+                    value={channel}
+                    onchange={handleChannel}>
+                </lightning-combobox>
+                <lightning-combobox
+                    label={labels.Int_User_Type}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={intUserTypeOptions}
+                    value={intUserType}
+                    onchange={handleIntUserType}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label={labels.Int_Product_Line}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={productLineOptions}
+                    value={productLine}
+                    onchange={handleProductLine}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label={labels.Int_Service_Type}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={serviceTypeOptions}
+                    value={serviceType}
+                    onchange={handleServiceType}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label={labels.Int_Category}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={categoryOptions}
+                    value={category}
+                    onchange={handleCategory}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label={labels.Int_Sub_Category}
+                    required
+                    class="slds-col slds-size_1-of-4"
+                    options={subCategoryOptions}
+                    value={subCategory}
+                    onchange={handleSubCategory}>
+                </lightning-combobox>
+
+                <template if:true={hasSubCodeOptions}>
+                    <lightning-combobox
+                        label={labels.Int_Sub_Code}
+                        required
+                        class="slds-col slds-size_1-of-4"
+                        options={subCodeOptions}
+                        value={subCode}
+                        onchange={handleSubCode}>
+                    </lightning-combobox>
+                </template>
+
+            </div>
+        </div>
+
+        <!-- PROPERTY TABLE -->
+        <div class="slds-p-around_medium">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{labels.Integrating_Property}</th>
+                        <th>{labels.Vietnamese_Name}</th>
+                        <th>{labels.Integrating_Property_Type}</th>
+                        <th>{labels.CSM_Property}</th>
+                        <th>{labels.CSM_Property_Type}</th>
+                        <th>{labels.Auto_Mapping}</th>
+                        <th>{labels.Mandatory}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={rows} for:item="r" for:index="i">
+                        <tr key={r.id}>
+                            <td>{i}</td>
+                            <td>{r.property}</td>
+                            <td>
+                                <div class="vn-name" title={r.displayName}>
+                                    {r.displayName}
+                                </div>
+                            </td>
+                            <td>{r.type}</td>
+                            <td class="slds-relative">
+                                <lightning-input
+                                    type="text"
+                                    value={r.csmProperty}
+                                    placeholder="Search field..."
+                                    data-id={r.id}
+                                    onchange={handleCsmSearch}
+                                    style="width: 120px;">
+                                </lightning-input>
+
+                                <!-- AUTOCOMPLETE DROPDOWN -->
+                                <template if:true={r.showDropdown}>
+                                    <div class="slds-dropdown slds-dropdown_fluid slds-dropdown_length-5">
+                                        <ul class="slds-listbox slds-listbox_vertical">
+                                            <template for:each={r.csmOptions} for:item="opt">
+                                                    <li
+                                                        key={opt.id}
+                                                        class="slds-listbox__item"
+                                                        data-rowid={r.id}
+                                                        data-id={opt.id}
+                                                        data-name={opt.name}
+                                                        data-type={opt.type}
+                                                        onclick={handleSelectCsm}
+                                                    >
+                                                        <div class="slds-listbox__option slds-media slds-media_small">
+                                                            <span class="slds-media__body">
+                                                                <span class="slds-truncate">
+                                                                    {opt.name} - {opt.type}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </td>
+
+
+                            <td>{r.csmPropertyType}</td>
+
+                            <td class="slds-text-align_center">
+                                {r.autoMappingPropertySource}
+                            </td>
+
+                            <td class="slds-text-align_center">
+                                <lightning-input
+                                    type="checkbox"
+                                    checked={r.mandatory}
+                                    disabled>
+                                </lightning-input>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+       
+        </template>
+        <!-- TOP CONTEXT -->
+        
+    </lightning-card>
+</template>

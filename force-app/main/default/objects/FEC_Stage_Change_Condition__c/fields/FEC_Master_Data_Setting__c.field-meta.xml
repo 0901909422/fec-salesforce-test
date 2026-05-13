@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Master_Data_Setting__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Master Data Setting</label>
+    <referenceTo>FEC_Master_Data_Setting__c</referenceTo>
+    <relationshipLabel>Stage Change Conditions</relationshipLabel>
+    <relationshipName>FEC_Stage_Change_Conditions</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

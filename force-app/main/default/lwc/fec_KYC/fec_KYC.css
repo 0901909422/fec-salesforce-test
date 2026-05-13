@@ -1,0 +1,115 @@
+.slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px;
+}
+
+.edit-form {
+  flex: 1;
+}
+
+.option__item__confirmed {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.option__answer {
+  display: flex;
+  gap: 10px;
+}
+
+.option__answer__suggest {
+  background-color: #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  flex: 1;
+}
+
+.option__answer__action {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kyc-field__item {
+  display: flex;
+}
+
+.kyc-field__item .label {
+  width: 220px;
+  color: #6b6d70;
+  font-weight: 500;
+}
+
+/*  */
+.claim-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  line-clamp: 3;
+}
+
+/*  */
+.tri-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* hide real checkbox */
+.tri-checkbox input {
+  display: none;
+}
+
+/* square box */
+.inner-box {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+/* text beside */
+.label-text {
+  font-size: 14px;
+}
+
+/* empty */
+.inner-box::before {
+  content: "";
+}
+
+/* ✓ */
+.tri-checkbox input[data-state="true"] + .inner-box::before {
+  content: "✓";
+  color: #2e7d32;
+}
+
+/* ✕ */
+.tri-checkbox input[data-state="false"] + .inner-box::before {
+  content: "✕";
+  color: #c62828;
+}
+
+/* disabled look */
+.tri-checkbox input:disabled + .inner-box,
+.tri-checkbox input:disabled ~ .label-text {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}

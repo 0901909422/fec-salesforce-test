@@ -1,0 +1,411 @@
+public with sharing class FEC_AssignmentListHandler {
+    
+    @AuraEnabled
+    public static String getUserDepartment() {
+        
+        User u = [
+        SELECT UserRole.Name, Profile.Name, FEC_User_Group__c
+        FROM User
+        WHERE Id = :UserInfo.getUserId()
+        LIMIT 1
+    ];
+        
+        System.debug('=== USER === ' + u);
+        System.debug('=== FEC_User_Group__c === ' + u.FEC_User_Group__c);
+        
+        if (String.isBlank(u.FEC_User_Group__c)) {
+            System.debug('=== RETURN OTHER: group is blank ===');
+            return 'OTHER';
+        }
+        
+        if (
+            u.FEC_User_Group__c.contains('SP') ||
+            u.FEC_User_Group__c.contains('CC')
+        ) {
+            System.debug('=== RETURN CS ===');
+            return 'CS';
+        }
+        
+        System.debug('=== RETURN OTHER ===');
+        return 'OTHER';
+    }
+    
+    @AuraEnabled
+    public static List<FEC_Assignment__c> getAssignments(String caseId) {
+        
+        if (caseId == null) {
+            throw new AuraHandledException(System.Label.LBL_CaseIdRequired);
+        }
+        
+        try {
+            
+            if (!Schema.sObjectType.FEC_Assignment__c.isAccessible()) {
+                throw new AuraHandledException(
+                    System.Label.FEC_MSG_NO_ACCESS_ASSIGNMENT
+                    );
+            }
+            
+            List<FEC_Assignment__c> records = [
+            SELECT
+                Id,
+                Name,
+                FEC_Assignment_Owner__c,
+                FEC_Assignment_Owner__r.Name,
+                FEC_Assignment_Owner__r.Email,
+                FEC_Assignment_Status__c,
+                FEC_OwnerID__c, // tungnm37 thêm: Queue Id để LWC resolve queue name
+                FEC_Assignment_Type__c, // tungnm37 thêm: để phân biệt COF/GSR vs thường
+                FEC_Assignment_Owner_Text__c // tungnm37 thêm: formula field hiện đúng owner/queue/Unassigned
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+        ];
+            
+            return records;
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                LoggingLevel.ERROR,
+            'getAssignments error: ' + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+                );
+        }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<FEC_Case_Remarks__c> getAssignmentRemarks(String caseId, String assignmentId) {
+        
+        if (caseId == null) {
+            throw new AuraHandledException(System.Label.LBL_CaseIdRequired);
+        }
+        if (assignmentId == null) {
+            throw new AuraHandledException(System.Label.FEC_MSG_ASSIGNMENT_ID_REQUIRED);
+        }
+        try {
+            
+            if (!Schema.sObjectType.FEC_Case_Remarks__c.isAccessible()) {
+                throw new AuraHandledException(System.Label.FEC_MSG_NO_ACCESS_REMARK);
+            }
+            
+            List<FEC_Case_Remarks__c> records = [
+            SELECT
+                 Id, FEC_Case_Remarks__c, FEC_Stage_Name__c, FEC_User__c, FEC_User_Role__c,  CreatedDate
+            FROM FEC_Case_Remarks__c
+            WHERE FEC_Remark_Type__c = :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+              AND FEC_Case__c = :caseId AND FEC_Assignment__c = :assignmentId
+            ORDER BY CreatedDate DESC
+        ];
+            
+            return records;
+            
+        } catch (Exception e) {
+            System.debug(LoggingLevel.ERROR, 'getCaseRemarks error: ' + e.getMessage());
+            
+            throw new AuraHandledException(System.Label.FEC_MSG_LOAD_REMARK_FAILED);
+        }
+    }
+    
+    
+    public class SelectOptionWrapper {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
+        
+        public SelectOptionWrapper(String value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<SelectOptionWrapper> getUsersInGroup() {
+        
+        User currentUser = [
+        SELECT FEC_User_Group__c
+        FROM User
+        WHERE Id = :UserInfo.getUserId()
+    ];
+        
+        List<User> users = [
+        SELECT Id, Name
+        FROM User
+        WHERE FEC_User_Group__c = :currentUser.FEC_User_Group__c
+        AND IsActive = true
+    ];
+        
+        List<SelectOptionWrapper> result = new List<SelectOptionWrapper>();
+        
+        for (User u : users) {
+            result.add(new SelectOptionWrapper(u.Id, u.Name));
+        }
+        
+        return result;
+    }
+    
+    
+    @AuraEnabled(cacheable=true)
+    public static List<SelectOptionWrapper> getQueuesForUser() {
+        
+        Id userId = UserInfo.getUserId();
+        
+        // 1. tìm queue user thuộc
+        List<GroupMember> memberships = [
+        SELECT GroupId
+        FROM GroupMember
+        WHERE UserOrGroupId = :userId
+    ];
+        
+        Set<Id> queueIds = new Set<Id>();
+        for (GroupMember gm : memberships) {
+            queueIds.add(gm.GroupId);
+        }
+        
+        // 2. lấy queue info
+        List<Group> queues = [
+        SELECT Id, Name
+        FROM Group
+        WHERE Id IN :queueIds
+        AND Type = 'Queue'
+    ];
+        
+        List<SelectOptionWrapper> result = new List<SelectOptionWrapper>();
+        
+        for (Group g : queues) {
+            result.add(new SelectOptionWrapper(g.Id, g.Name));
+        }
+        
+        return result;
+    }
+    
+    // tungnm37 thêm: lấy queue name từ danh sách Queue Ids
+    @AuraEnabled(cacheable=true)
+    public static Map<String, String> getQueueNames(List<String> queueIds) {
+        Map<String, String> result = new Map<String, String>();
+        if (queueIds == null || queueIds.isEmpty()) return result;
+        Set<Id> ids = new Set<Id>();
+        for (String qid : queueIds) {
+            try { ids.add(Id.valueOf(qid)); } catch(Exception e) {}
+        }
+        for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :ids AND Type = 'Queue']) {
+            result.put(String.valueOf(g.Id), g.Name);
+        }
+        return result;
+    }
+    
+    
+    public class AssignmentViewResponse {
+        
+        @AuraEnabled public Integer totalCount;
+        
+        @AuraEnabled public List<AssignmentViewWrapper> assignments;
+        
+    }
+    
+    public class AssignmentViewWrapper {
+        
+        @AuraEnabled public Id id;
+        @AuraEnabled public String assignmentId;
+        @AuraEnabled public String assignmentName;
+        @AuraEnabled public String stageName;
+        @AuraEnabled public String assignmentType;
+        @AuraEnabled public String assignmentStatus;
+        @AuraEnabled public String user;
+        @AuraEnabled public String userRole;
+        @AuraEnabled public Datetime latestModifiedDateTime;
+        
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static AssignmentViewResponse getAssignmentsForView(
+        String caseId,
+    Integer pageSize,
+    Integer pageNumber
+    ) {
+        
+        if (String.isBlank(caseId)) {
+            
+            throw new AuraHandledException(
+                System.Label.LBL_CaseIdRequired
+                );
+        }
+        
+        try {
+            
+            // DEFAULT VALUES
+            pageSize =
+                (pageSize == null || pageSize <= 0)
+                ? 10
+                : pageSize;
+            
+            pageNumber =
+                (pageNumber == null || pageNumber <= 0)
+                ? 1
+                : pageNumber;
+            
+            Integer offsetValue =
+                (pageNumber - 1) * pageSize;
+            
+            AssignmentViewResponse response =
+                new AssignmentViewResponse();
+            
+            // TOTAL COUNT
+            response.totalCount = [
+
+            SELECT COUNT()
+
+            FROM FEC_Assignment__c
+
+            WHERE FEC_Case__c = :caseId
+        ];
+            
+            // PAGING QUERY
+            List<FEC_Assignment__c> assignments = [
+
+            SELECT
+                Id,
+                Name,
+                FEC_Assignment_Name__c,
+                CreatedDate,
+                CreatedBy.Email,
+                CreatedBy.UserRole.Name,
+                FEC_Assignment_Status__c,
+                FEC_OwnerID__c,
+                FEC_Assignment_Type__c
+
+            FROM FEC_Assignment__c
+
+            WHERE FEC_Case__c = :caseId
+
+            ORDER BY CreatedDate DESC
+
+            LIMIT :pageSize
+            OFFSET :offsetValue
+        ];
+            
+            Set<Id> assignmentIds =
+                new Set<Id>();
+            
+            for (FEC_Assignment__c item : assignments) {
+                
+                assignmentIds.add(item.Id);
+            }
+            
+            Map<Id, FEC_Case_Remarks__c> latestRemarkMap =
+                new Map<Id, FEC_Case_Remarks__c>();
+            
+            // QUERY REMARKS ONLY WHEN HAVE ASSIGNMENTS
+            if (!assignmentIds.isEmpty()) {
+                
+                List<FEC_Case_Remarks__c> remarks = [
+
+                SELECT
+                    Id,
+                    FEC_Assignment__c,
+                    FEC_Stage_Name__c,
+                    LastModifiedDate
+
+                FROM FEC_Case_Remarks__c
+
+                WHERE FEC_Remark_Type__c =
+                    :FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT
+
+                AND FEC_Case__c = :caseId
+
+                AND FEC_Assignment__c IN :assignmentIds
+
+                ORDER BY LastModifiedDate DESC
+            ];
+                
+                for (FEC_Case_Remarks__c remark : remarks) {
+                    
+                    // FIRST = LATEST
+                    if (!latestRemarkMap.containsKey(
+                        remark.FEC_Assignment__c
+                    )) {
+                        
+                        latestRemarkMap.put(
+                            remark.FEC_Assignment__c,
+                        remark
+                            );
+                    }
+                }
+            }
+            
+            response.assignments =
+                new List<AssignmentViewWrapper>();
+            
+            for (FEC_Assignment__c assignment : assignments) {
+                
+                AssignmentViewWrapper wrapper =
+                    new AssignmentViewWrapper();
+                
+                wrapper.id =
+                    assignment.Id;
+                
+                wrapper.assignmentId =
+                    assignment.Name;
+                
+                wrapper.assignmentType =
+                    assignment.FEC_Assignment_Type__c;
+                
+                wrapper.assignmentName =
+                    assignment.FEC_Assignment_Name__c;
+                
+                wrapper.assignmentStatus =
+                    assignment.FEC_Assignment_Status__c;
+                
+                wrapper.user =
+                    assignment.CreatedBy != null
+                    ? assignment.CreatedBy.Email
+                    : '';
+                
+                wrapper.userRole =
+                    assignment.CreatedBy != null &&
+                    assignment.CreatedBy.UserRole != null
+                    ? assignment.CreatedBy.UserRole.Name
+                    : 'No Role Assigned';
+                
+                wrapper.latestModifiedDateTime =
+                    assignment.CreatedDate;
+                
+                if (latestRemarkMap.containsKey(
+                    assignment.Id
+                )) {
+                    
+                    wrapper.stageName =
+                        latestRemarkMap.get(
+                        assignment.Id
+                        ).FEC_Stage_Name__c;
+                }
+                
+                response.assignments.add(wrapper);
+            }
+            
+            return response;
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                LoggingLevel.ERROR,
+            'getAssignmentsForView error: ' +
+                e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                System.Label.FEC_MSG_LOAD_ASSIGNMENT_FAILED
+                );
+        }
+    }
+    
+    @AuraEnabled
+    public static Integer countAssignments(String caseId) {
+        
+        return [
+        SELECT COUNT()
+        FROM FEC_Assignment__c
+        WHERE FEC_Case__c = :caseId
+    ];
+    }
+}

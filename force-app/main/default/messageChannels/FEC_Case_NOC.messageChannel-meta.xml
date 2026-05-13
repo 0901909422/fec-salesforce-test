@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Channel for switch mode Case</description>
+    <isExposed>true</isExposed>
+    <lightningMessageFields>
+        <description>Case Id — lọc tin khi nhiều tab Case (APPLICATION_SCOPE)</description>
+        <fieldName>caseId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Account / contract type (FEC_CaseBussiness)</description>
+        <fieldName>accountType</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Nature of Case record Id</description>
+        <fieldName>natureOfCaseId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Product Type Id</description>
+        <fieldName>productTypeId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Category Id</description>
+        <fieldName>categoryId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Sub Category Id</description>
+        <fieldName>subCategoryId</fieldName>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <description>Sub Code Id</description>
+        <fieldName>subCodeId</fieldName>
+    </lightningMessageFields>
+    <masterLabel>FEC Case NOC</masterLabel>
+</LightningMessageChannel>

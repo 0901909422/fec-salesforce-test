@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Mobile/ Phone</fullName>
+        <default>false</default>
+        <label>Mobile/ Phone</label>
+    </customValue>
+    <customValue>
+        <fullName>National ID/ Passport</fullName>
+        <default>false</default>
+        <label>National ID/ Passport</label>
+    </customValue>
+    <customValue>
+        <fullName>Currency</fullName>
+        <default>false</default>
+        <label>Currency</label>
+    </customValue>
+    <customValue>
+        <fullName>Date</fullName>
+        <default>false</default>
+        <label>Date</label>
+    </customValue>
+    <masterLabel>Masking Type</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>
