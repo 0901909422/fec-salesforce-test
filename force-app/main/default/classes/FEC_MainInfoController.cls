@@ -13,6 +13,10 @@
 
 public without sharing class FEC_MainInfoController {
 
+    /** Legacy: chỉ đọc khi bản ghi cũ còn dữ liệu trong FEC_Address__c (không ghi thêm). */
+    private static final String PENDING_ADDR_META_PREFIX = 'FEC_ADDR_META';
+    private static final String PENDING_ADDR_META_SEP = '\u001F';
+
     /* =====================================================
      * DTO
      * ===================================================== */
@@ -47,6 +51,8 @@ public without sharing class FEC_MainInfoController {
         @AuraEnabled public String addressType;
         @AuraEnabled public String address;
         @AuraEnabled public String mailingAddress;
+        /** Id bản ghi FEC_Address_Info__c (đồng bộ CIF, FEC_Case__c = null) — dùng làm FEC_Parent_Address__c khi lưu pending. */
+        @AuraEnabled public String addressInfoId;
         /** Tên quận/huyện từ FEC_District__r — hiển thị với nhãn "Ward" trên UI. */
         @AuraEnabled public String ward;
     }
@@ -1212,6 +1218,7 @@ public without sharing class FEC_MainInfoController {
               AND FEC_Case__c = null
         ]) {
             AddressDTO dto = new AddressDTO();
+            dto.addressInfoId = addr.Id != null ? String.valueOf(addr.Id) : null;
             dto.addressType = addr.FEC_Address_Type__c;
             String fullAddress = FEC_CommonUltils.removeTrailingComma(addr.FEC_Full_Address__c);
             dto.mailingAddress = addr.FEC_Mailing_Address__c == true
@@ -1287,8 +1294,127 @@ public without sharing class FEC_MainInfoController {
         return out;
     }
 
+    /** Trả về [cif, addressId, addressType] từ chuỗi meta cũ trong FEC_Address__c (read-only). */
+    public static List<String> unpackPendingAddressApiMeta(String raw) {
+        List<String> z = new List<String>{ '', '', '' };
+        if (String.isBlank(raw)) {
+            return z;
+        }
+        String head = PENDING_ADDR_META_PREFIX + PENDING_ADDR_META_SEP;
+        if (!raw.startsWith(head)) {
+            return z;
+        }
+        String body = raw.substring(head.length());
+        List<String> parts = body.split(Pattern.quote(PENDING_ADDR_META_SEP), -1);
+        for (Integer i = 0; i < 3; i++) {
+            z[i] = (i < parts.size()) ? parts[i] : '';
+        }
+        return z;
+    }
+
+    private static Id resolveProvinceIdFromFecCode(String provinceCode) {
+        if (String.isBlank(provinceCode)) {
+            return null;
+        }
+        String code = provinceCode.trim();
+        List<FEC_Province__c> lst = [
+            SELECT Id
+            FROM FEC_Province__c
+            WHERE FEC_Code__c = :code
+            LIMIT 1
+        ];
+        return lst.isEmpty() ? null : lst[0].Id;
+    }
+
+    private static Id resolveDistrictIdFromFecCode(String districtCode, Id provinceId) {
+        if (String.isBlank(districtCode)) {
+            return null;
+        }
+        String dc = districtCode.trim();
+        if (provinceId != null) {
+            List<FEC_District__c> lst = [
+                SELECT Id
+                FROM FEC_District__c
+                WHERE FEC_Code__c = :dc AND FEC_Province__c = :provinceId
+                LIMIT 1
+            ];
+            if (!lst.isEmpty()) {
+                return lst[0].Id;
+            }
+        }
+        List<FEC_District__c> lst2 = [
+            SELECT Id
+            FROM FEC_District__c
+            WHERE FEC_Code__c = :dc
+            LIMIT 1
+        ];
+        return lst2.isEmpty() ? null : lst2[0].Id;
+    }
+
+    private static Id resolveCountryIdFromProvinceId(Id provinceId) {
+        if (provinceId == null) {
+            return null;
+        }
+        List<FEC_Province__c> lst = [
+            SELECT FEC_Country__c
+            FROM FEC_Province__c
+            WHERE Id = :provinceId
+            LIMIT 1
+        ];
+        return lst.isEmpty() ? null : lst[0].FEC_Country__c;
+    }
+
+    private static String buildPendingJsonForLwc(FEC_Address_Info__c row, Id caseId) {
+        String rawMeta = row.FEC_Address__c;
+        if (String.isNotBlank(rawMeta) && rawMeta.trim().startsWith('{')) {
+            return rawMeta;
+        }
+        List<String> meta = unpackPendingAddressApiMeta(rawMeta);
+        String cif = meta[0];
+        String aid = meta[1];
+        String atyp = meta[2];
+        if (
+            caseId != null &&
+            String.isNotBlank(row.FEC_Address_Type__c) &&
+            (String.isBlank(cif) || String.isBlank(aid) || String.isBlank(atyp))
+        ) {
+            MailingAddressContextDTO ctx = getMailingAddressUpdateContext(
+                caseId,
+                row.FEC_Address_Type__c
+            );
+            if (ctx != null && ctx.found == true) {
+                if (String.isBlank(cif)) {
+                    cif = ctx.cifNumber;
+                }
+                if (String.isBlank(aid)) {
+                    aid = ctx.addressId;
+                }
+                if (String.isBlank(atyp)) {
+                    atyp = ctx.addressType;
+                }
+            }
+        }
+        Map<String, Object> m = new Map<String, Object>();
+        m.put('cifNumber', cif);
+        m.put('addressId', aid);
+        m.put('addressType', atyp);
+        m.put('number_x', row.FEC_Number__c);
+        m.put('building', row.FEC_Building__c);
+        m.put('street', row.FEC_Street__c);
+        m.put(
+            'district',
+            (row.FEC_District__r != null) ? row.FEC_District__r.FEC_Code__c : null
+        );
+        m.put(
+            'city',
+            (row.FEC_Province__r != null) ? row.FEC_Province__r.FEC_Code__c : null
+        );
+        m.put('isMailingAddress', row.FEC_Mailing_Address__c == true ? 'Y' : 'N');
+        return JSON.serialize(m);
+    }
+
     /**
-     * Map sfAddressType → JSON pending (dùng FEC_UpdateCustomerAddress.updateValue).
+     * Map sfAddressType → JSON pending cho LWC (từ các trường địa chỉ + getMailingAddressUpdateContext khi cần CIF).
      */
     public static Map<String, String> loadCasePendingAddressJsonMap(Id caseId) {
         Map<String, String> outMap = new Map<String, String>();
@@ -1296,14 +1422,22 @@ public without sharing class FEC_MainInfoController {
             return outMap;
         }
         for (FEC_Address_Info__c row : [
-            SELECT FEC_Address_Type__c, FEC_Address__c
+            SELECT
+                FEC_Address_Type__c,
+                FEC_Address__c,
+                FEC_Building__c,
+                FEC_Number__c,
+                FEC_Street__c,
+                FEC_Mailing_Address__c,
+                FEC_District__r.FEC_Code__c,
+                FEC_Province__r.FEC_Code__c
             FROM FEC_Address_Info__c
             WHERE FEC_Case__c = :caseId
         ]) {
             if (row == null || String.isBlank(row.FEC_Address_Type__c)) {
                 continue;
             }
-            outMap.put(row.FEC_Address_Type__c, row.FEC_Address__c);
+            outMap.put(row.FEC_Address_Type__c, buildPendingJsonForLwc(row, caseId));
         }
         return outMap;
     }
@@ -1323,12 +1457,23 @@ public without sharing class FEC_MainInfoController {
     }
 
     /**
-     * Lưu JSON payload địa chỉ pending: bản ghi FEC_Address_Info__c có FEC_Case__c = Case
-     * (tách khỏi bản đồng bộ CIF: FEC_Case__c = null). JSON lưu tại FEC_Address__c (tối đa 1024 ký tự).
+     * Lưu địa chỉ pending trên FEC_Address_Info__c (FEC_Case__c = Case): các trường địa chỉ + FEC_Parent_Address__c.
+     * Không ghi FEC_Address__c (để null / xóa nội dung cũ).
      * sfAddressType: "Permanent Address" | "Office Address" | "Current Address".
      */
     @AuraEnabled
-    public static void savePendingAddress(Id caseId, String sfAddressType, String jsonPayload) {
+    public static void savePendingAddress(
+        Id caseId,
+        String sfAddressType,
+        Boolean deletePending,
+        Id parentAddressInfoId,
+        String building,
+        String number_x,
+        String street,
+        String districtCode,
+        String provinceCode,
+        Boolean isMailingAddress
+    ) {
         if (caseId == null || String.isBlank(sfAddressType)) {
             throw new AuraHandledException('caseId and sfAddressType are required');
         }
@@ -1359,36 +1504,70 @@ public without sharing class FEC_MainInfoController {
             LIMIT 1
         ];
 
-        if (String.isBlank(jsonPayload)) {
+        if (deletePending == true) {
             if (!existing.isEmpty()) {
+                FEC_CaseTriggerHandler.isExecuting = true;
                 delete existing;
             }
             return;
         }
 
-        if (jsonPayload.length() > 1024) {
-            throw new AuraHandledException(
-                'Pending address JSON exceeds FEC_Address__c limit (1024). Shorten data or extend field length.'
-            );
+        if (parentAddressInfoId != null) {
+            List<FEC_Address_Info__c> par = [
+                SELECT Id, FEC_Customer_History__c, FEC_Case__c
+                FROM FEC_Address_Info__c
+                WHERE Id = :parentAddressInfoId
+                LIMIT 1
+            ];
+            if (
+                par.isEmpty() ||
+                par[0].FEC_Customer_History__c != c.FEC_Account_or_Contract__c ||
+                par[0].FEC_Case__c != null
+            ) {
+                throw new AuraHandledException('Invalid FEC_Parent_Address__c for this Case / Customer History');
+            }
         }
+
+        Id provId = resolveProvinceIdFromFecCode(provinceCode);
+        Id distId = resolveDistrictIdFromFecCode(districtCode, provId);
+        Id countryId = resolveCountryIdFromProvinceId(provId);
+
+        String nameVal = sfAddressType.left(80);
 
         if (!existing.isEmpty()) {
             FEC_Address_Info__c upd = new FEC_Address_Info__c(
                 Id = existing[0].Id,
-                FEC_Address__c = jsonPayload
+                Name = nameVal,
+                FEC_Address_Type__c = sfAddressType,
+                FEC_Building__c = building,
+                FEC_Number__c = number_x,
+                FEC_Street__c = street,
+                FEC_District__c = distId,
+                FEC_Province__c = provId,
+                FEC_Country__c = countryId,
+                FEC_Mailing_Address__c = (isMailingAddress == true),
+                FEC_Parent_Address__c = parentAddressInfoId,
+                FEC_Address__c = null
             );
             FEC_CaseTriggerHandler.isExecuting = true;
             update upd;
             return;
         }
 
-        String addrName = ('Pending: ' + sfAddressType).left(80);
         FEC_Address_Info__c ins = new FEC_Address_Info__c(
-            Name = addrName,
+            Name = nameVal,
             FEC_Customer_History__c = c.FEC_Account_or_Contract__c,
             FEC_Case__c = caseId,
             FEC_Address_Type__c = sfAddressType,
-            FEC_Address__c = jsonPayload
+            FEC_Building__c = building,
+            FEC_Number__c = number_x,
+            FEC_Street__c = street,
+            FEC_District__c = distId,
+            FEC_Province__c = provId,
+            FEC_Country__c = countryId,
+            FEC_Mailing_Address__c = (isMailingAddress == true),
+            FEC_Parent_Address__c = parentAddressInfoId,
+            FEC_Address__c = null
         );
         FEC_CaseTriggerHandler.isExecuting = true;
         insert ins;

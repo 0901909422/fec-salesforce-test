@@ -1872,6 +1872,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Address_Info__c.FEC_Parent_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Sensitive_Data__c.FEC_Section__c</field>
         <readable>true</readable>
     </fieldPermissions>

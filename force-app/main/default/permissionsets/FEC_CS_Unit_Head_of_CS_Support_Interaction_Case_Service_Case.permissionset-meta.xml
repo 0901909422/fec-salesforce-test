@@ -1797,6 +1797,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Address_Info__c.FEC_Parent_Address__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_KYC_Result__c.FEC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
