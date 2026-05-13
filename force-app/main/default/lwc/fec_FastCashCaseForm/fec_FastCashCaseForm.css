@@ -18,3 +18,12 @@
     padding-bottom: 0.25rem;
     min-height: 1.75rem;
 }
+.fec-fc-noti-below-title {
+    margin-bottom: 0.25rem;
+}
+.fec-fc-modal-title {
+    text-align: center;
+}
+.fec-fc-modal-body {
+    text-align: center;
+}

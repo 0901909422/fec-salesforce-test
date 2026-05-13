@@ -19,23 +19,23 @@
 
         </div>
 
-        <!-- DATATABLE -->
-        <div class="table-wrapper">
+        <template if:true={showTable}>
+            <div class="table-wrapper">
 
-            <lightning-datatable key-field="id" data={assignments} columns={columns} hide-checkbox-column
-                show-row-number-column is-loading={isLoading}>
-            </lightning-datatable>
+                <lightning-datatable key-field="id" data={assignments} columns={columns} hide-checkbox-column
+                    show-row-number-column is-loading={isLoading}>
+                </lightning-datatable>
 
-        </div>
-
-        <!-- FOOTER -->
-        <template if:true={showViewAll}>
-            <div class="assignment-footer" style="text-align: center;">
-                <a href="javascript:void(0)" onclick={handleViewAll}>
-                    {labels.LABEL_VIEW_ALL}
-                </a>
             </div>
-        </template>
 
+            <!-- FOOTER -->
+            <template if:true={showViewAll}>
+                <div class="assignment-footer" style="text-align: center;">
+                    <a href="javascript:void(0)" onclick={handleViewAll}>
+                        {labels.LABEL_VIEW_ALL}
+                    </a>
+                </div>
+            </template>
+        </template>
     </lightning-card>
 </template>
