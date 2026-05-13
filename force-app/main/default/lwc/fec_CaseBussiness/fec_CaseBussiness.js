@@ -2841,6 +2841,8 @@ export default class Fec_CaseBussiness extends LightningElement {
               actionId: actionId,
               //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
               routingActionValue: selectedAction?.value ?? "",
+//PhongBT: update bộ noc chọn ở updated khi revert về
+              natureOfCaseId: this.business.natureOfCase,
             },
           };
           break;

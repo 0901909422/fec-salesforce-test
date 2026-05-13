@@ -1930,6 +1930,9 @@ public without sharing class FEC_CaseBusinessService {
           String routingActionValue = params != null
             ? (String) params.get('routingActionValue')
             : null;
+          //PhongBT: update bộ noc chọn ở updated khi revert về
+          String revertNocId = (String) params.get('natureOfCaseId');
+          FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
           return null;
