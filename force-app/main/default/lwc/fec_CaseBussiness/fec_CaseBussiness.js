@@ -49,7 +49,7 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
-import FEC_MSG_Param_Must_Number from "@salesforce/label/c.FEC_MSG_Param_Must_Number";
+import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
 import FEC_Team_Label from "@salesforce/label/c.FEC_Team_Label";
@@ -494,10 +494,10 @@ function normalizeMasterDataLwcEntry(entry) {
     subSectionName: o.subSectionName ?? null,
     fecMasterDataSettingIsEdit:
       Object.prototype.hasOwnProperty.call(o, "fecMasterDataSettingIsEdit") &&
-      typeof o.fecMasterDataSettingIsEdit === "boolean"
+        typeof o.fecMasterDataSettingIsEdit === "boolean"
         ? o.fecMasterDataSettingIsEdit
         : true,
-hideSubSectionHeading: o.hideSubSectionHeading === true,
+    hideSubSectionHeading: o.hideSubSectionHeading === true,
   };
 }
 
@@ -742,7 +742,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   _fetchRdPaymentQueues() {
     return getRoutingConfig()
       .then((result) => {
-        this._rdPaymentQueueMap   = result?.queueMap   || {};
+        this._rdPaymentQueueMap = result?.queueMap || {};
         this._rdPaymentRoutingMap = result?.routingMap || {};
       })
       .catch((err) => {
@@ -820,7 +820,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   content;
 
   // Toannd61 — NOC Contract Closure RL16.02/RL16.03 — config từ Apex (không hardcode trong LWC)
-  _rdPaymentQueueMap   = {};
+  _rdPaymentQueueMap = {};
   _rdPaymentRoutingMap = {};
 
   get _isRdPaymentSubCode() {
@@ -922,14 +922,14 @@ export default class Fec_CaseBussiness extends LightningElement {
   _resolveRoutingMethodByAction(action) {
     const customActionLabel = action?.label?.trim();
     const KNOWN_ROUTING_METHODS = [
-        ACTION_ROUTE_TO,
-        ACTION_REVERT,
-        ACTION_TRANSFER,
-        ACTION_UPDATE,
-        ACTION_ESCALATE,
-        ACTION_REJECT,
-        ACTION_RESOLVE,
-        ACTION_CANCEL,
+      ACTION_ROUTE_TO,
+      ACTION_REVERT,
+      ACTION_TRANSFER,
+      ACTION_UPDATE,
+      ACTION_ESCALATE,
+      ACTION_REJECT,
+      ACTION_RESOLVE,
+      ACTION_CANCEL,
     ];
     // lightning-select value = Apex Action.value = custom label nếu có (vd "Route to"),
     // trong khi Action.code luôn là FEC_Code__c ("Revert", "Route to", ...).
@@ -1145,7 +1145,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business.hasRoutingAction =
       (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
       (Array.isArray(this.business.routingActionlst) &&
-      this.business.routingActionlst.length > 0);
+        this.business.routingActionlst.length > 0);
     this.business = { ...this.business };
   }
 
@@ -1253,8 +1253,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       // (fec_CaseEditNOC đã tự xử lý)
       return;
     }
-      //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-      //lưu bộ có subcode chứ không phải bộ không subcode định submit
+    //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
+    //lưu bộ có subcode chứ không phải bộ không subcode định submit
     const hasNocSelectionPayload =
       Object.prototype.hasOwnProperty.call(message, 'productTypeId') ||
       Object.prototype.hasOwnProperty.call(message, 'categoryId') ||
@@ -1427,7 +1427,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.business.hasRoutingAction =
           (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
           (Array.isArray(this.business.routingActionlst) &&
-          this.business.routingActionlst.length > 0);
+            this.business.routingActionlst.length > 0);
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -1499,20 +1499,20 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 // PhuongNT cmt, still process for field read only
                 // if (!field.readonly) {
-                  if (
-                    currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
-                    currentField === CASE_CS_D2C_RISK_LEVEL
-                  ) {
-                    field.isHidden =
-                      !assignmentType || assignmentType === TYPE_QUALIFIED || assignmentType === TYPE_QUALIFIED_VN;
-                  } else if (
-                    currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
-                  ) {
-                    field.isHidden =
-                      !assignmentType || assignmentType === TYPE_DISAGREE;
-                  } else {
-                    field.isHidden = false;
-                  }
+                if (
+                  currentField === CASE_CS_D2C_REQUIRED_CORRECTIVE_ACTION ||
+                  currentField === CASE_CS_D2C_RISK_LEVEL
+                ) {
+                  field.isHidden =
+                    !assignmentType || assignmentType === TYPE_QUALIFIED || assignmentType === TYPE_QUALIFIED_VN;
+                } else if (
+                  currentField === CASE_ACTIONS_TAKEN_D2C_ASSESMENT
+                ) {
+                  field.isHidden =
+                    !assignmentType || assignmentType === TYPE_DISAGREE;
+                } else {
+                  field.isHidden = false;
+                }
                 // }
 
                 if (!this.isEdit) {
@@ -1666,12 +1666,12 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
-            caseId: this.recordId,
-            productTypeId: productTypeId,
-            categoryId: categoryId,
-            subCategoryId: subCategoryId,
-            subCodeId: subCodeId,
-            stageId: res.stage
+          caseId: this.recordId,
+          productTypeId: productTypeId,
+          categoryId: categoryId,
+          subCategoryId: subCategoryId,
+          subCodeId: subCodeId,
+          stageId: res.stage
         });
       })
       .catch((err) => {
@@ -1727,8 +1727,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       })) || [],
     }));
 
-     this.business = { ...this.business };
-     console.log("🚀 ~ Fec_CaseBussiness ~ _applyInternalFieldVisibility ~ this.business:", JSON.stringify(this.business))
+    this.business = { ...this.business };
+    console.log("🚀 ~ Fec_CaseBussiness ~ _applyInternalFieldVisibility ~ this.business:", JSON.stringify(this.business))
   }
 
   /** Form Remove Phone: trong section Case Information, ngay dưới subsection Property Info (không tạo accordion riêng). */
@@ -1792,27 +1792,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     const fieldName = e.target.fieldName || e.target.dataset?.field;
     if (!fieldName) return;
-
-    // const objNameFromEl = e.target.dataset?.objName;
-    // if (objNameFromEl === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER) {
-    //   if (e.ctrlKey || e.metaKey) return;
-    //   const key = e.key;
-    //   const isDigit = key.length === 1 && /^\d$/.test(key);
-    //   const isControl =
-    //     key === "Backspace" ||
-    //     key === "Delete" ||
-    //     key === "Tab" ||
-    //     key === "Enter" ||
-    //     key === "Escape" ||
-    //     key === "ArrowLeft" ||
-    //     key === "ArrowRight" ||
-    //     key === "ArrowUp" ||
-    //     key === "ArrowDown" ||
-    //     key === "Home" ||
-    //     key === "End";
-    //   if (!isDigit && !isControl) e.preventDefault();
-    //   return;
-    // }
 
     if (e.ctrlKey || e.metaKey) return;
 
@@ -2063,10 +2042,12 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business = { ...this.business };
     }
     if (obj && obj.name === OBJ_FEC_ADDITIONAL_INFO && fieldName === FIELD_FEC_REF_NUMBER && field) {
-      const trimmed =
-        value == null || value === STR_EMPTY ? STR_EMPTY : String(value).trim();
+      const strVal = value == null || value === STR_EMPTY ? STR_EMPTY : String(value);
+      const maxRefLen = 255;
       field.customError =
-        trimmed === STR_EMPTY ? null : /^\d+$/.test(trimmed) ? null : FEC_MSG_Param_Must_Number.replace("{0}", field.label || FIELD_FEC_REF_NUMBER);
+        strVal.length > maxRefLen
+          ? FEC_MSG_Param_Maxlength.replace("{0}", field.label || FIELD_FEC_REF_NUMBER).replace("{1}", String(maxRefLen))
+          : null;
       field.editWrapperClass =
         "edit slds-m-around--small slds-p-around--x-small" +
         (field.customError ? " slds-has-error" : STR_EMPTY);
@@ -2825,7 +2806,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       }
     }
 
-     if (routeToEle) {
+    if (routeToEle) {
       // tungnm37 thêm: COF/GSR shortcut - chỉ chạy khi action là Route to, các action khác (Cancel, Escalate...) chạy bình thường
       if (this.isRoutingAssignmentMode && routeToEle.value === ACTION_ROUTE_TO) {
         await run({
@@ -2874,16 +2855,16 @@ export default class Fec_CaseBussiness extends LightningElement {
               },
             };
           } else {
-          params = {
-            ...params,
-            params: {
-              caseId: this.recordId,
-              queueId: this.business.nextQueue?.value,
-              natureOfCaseId: this.business.natureOfCase,
-              actionId: actionId,
-              fieldListJson: this._collectFieldListJson()
-            },
-          };
+            params = {
+              ...params,
+              params: {
+                caseId: this.recordId,
+                queueId: this.business.nextQueue?.value,
+                natureOfCaseId: this.business.natureOfCase,
+                actionId: actionId,
+                fieldListJson: this._collectFieldListJson()
+              },
+            };
           }
           break;
         case ACTION_REVERT:
@@ -2951,16 +2932,16 @@ export default class Fec_CaseBussiness extends LightningElement {
             },
           });
         } else {
-        await saveCaseNOC({
-          caseId: this.recordId,
-          natureOfCaseId: this.business.natureOfCase,
-        });
+          await saveCaseNOC({
+            caseId: this.recordId,
+            natureOfCaseId: this.business.natureOfCase,
+          });
           //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu
-        await markCaseSubmittedWithoutRoutingWithHistory({
-          caseId: this.recordId,
-          natureOfCaseId: this.business.natureOfCase || null,
-          fieldListJson: this._collectFieldListJson()
-        });
+          await markCaseSubmittedWithoutRoutingWithHistory({
+            caseId: this.recordId,
+            natureOfCaseId: this.business.natureOfCase || null,
+            fieldListJson: this._collectFieldListJson()
+          });
         }
       }
     }
@@ -3152,7 +3133,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       case ACTION_REPLACE_CARD:
         params = {
           caseId: this.recordId,
-           blockCode: this.newBlockCodeCardReplace,
+          blockCode: this.newBlockCodeCardReplace,
           replacementFee: this.cardReplacementFee,
           last4Digit: this.last4Digit,
         };
@@ -3579,7 +3560,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fecSubSectionOrder,
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
-hideSubSectionHeading: meta.hideSubSectionHeading === true,
+              hideSubSectionHeading: meta.hideSubSectionHeading === true,
               lwcColClassName,
             };
           })
@@ -3738,7 +3719,7 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
   }
   //Thangtv update logic only show routing action when mode = handling
   get showRoutingSection() {
-   return this.isEdit && this.business?.hasRoutingAction;
+    return this.isEdit && this.business?.hasRoutingAction;
   }
 
   // tungnm37 thêm: hiển thị Assignment List khi COF/GSR và Case đã submit
@@ -3788,17 +3769,17 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
     this.isProcessActionInfo = false;
     this.processActionMsg = '';
     checkProcessAction({ caseId: this.recordId })
-    .then((result) => {
-      if (result.isShowAction) {
-        this.showProcessAction = true;
-      } else {
-        this.isProcessActionInfo = true;
-        this.processActionMsg = result.strMsg;
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      .then((result) => {
+        if (result.isShowAction) {
+          this.showProcessAction = true;
+        } else {
+          this.isProcessActionInfo = true;
+          this.processActionMsg = result.strMsg;
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   // PhuongNT add check process action Card Block
@@ -3818,19 +3799,19 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
       currentBlockCode: this.currentBlockCode,
       newBlockCode: this.newBlockCode,
     })
-    .then((result) => {
-      this.processActionMsg = result.strMsg;
-      if (result.isShowAction) {
-        this.showProcessAction = true;
-      } else if (result.isCancel) {
-        this.isProcessActionFailed = true;
-      } else {
-        this.isProcessActionInfo = true;
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      .then((result) => {
+        this.processActionMsg = result.strMsg;
+        if (result.isShowAction) {
+          this.showProcessAction = true;
+        } else if (result.isCancel) {
+          this.isProcessActionFailed = true;
+        } else {
+          this.isProcessActionInfo = true;
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   // PhuongNT add handle set update field read only
@@ -3860,9 +3841,9 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
       const fieldName = el.dataset.field;
       const recordId = el.dataset.recordId;
       const value = el.dataset.value;
-      
+
       if (mapRecord.has(recordId)) {
-          mapRecord.get(recordId)[fieldName] = value;
+        mapRecord.get(recordId)[fieldName] = value;
       } else {
         let fields = {
           'Id': recordId,
@@ -3880,7 +3861,7 @@ hideSubSectionHeading: meta.hideSubSectionHeading === true,
       });
       await Promise.all(updatePromises);
       console.log('Record updated successfully!');
-    } catch(error) {
+    } catch (error) {
       console.error('Error updating record: ', error);
     }
   }
