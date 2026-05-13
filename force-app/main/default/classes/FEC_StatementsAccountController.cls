@@ -8,6 +8,7 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
+   1.1      2026-05-12     Agent                Billed tx: GetCardFinancialTransactions by statement period; VN column labels
  
 ****************************************************************************************/
 
@@ -57,6 +58,8 @@ public without sharing class FEC_StatementsAccountController {
         @AuraEnabled public String merchantCategoryCode;
         @AuraEnabled public String currencyCode;
         @AuraEnabled public String otpSent;
+        /** Sort key for LWC (epoch ms from TRNXDateAndTime / effective date). */
+        @AuraEnabled public Long effectiveSortEpoch;
     }
 
     /* =====================================================
@@ -330,51 +333,178 @@ public without sharing class FEC_StatementsAccountController {
     }
 
     /* =====================================================
-     BILLED TRANSACTIONS
+     BILLED TRANSACTIONS — GetCardFinancialTransactions (by statement period)
      ===================================================== */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static List<BilledTransactionDTO> getBilledTransactions(Id statementId) {
 
         if (statementId == null) {
             return new List<BilledTransactionDTO>();
         }
 
-        List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
-
-        for (FEC_Transaction__c t : [
+        FEC_Statement__c stmt = [
             SELECT Id,
-                FEC_Effective_Date__c,
-                FEC_Post_Date__c,
-                FEC_Transaction_Amount__c,
-                FEC_Merchant_Description__c,
-                FEC_Credit_Debit_Flag__c,
-                FEC_Transaction_Plan__c,
-                FEC_Transaction_Code__c,
-                FEC_Authorization_Code__c,
-                FEC_Merchant_Category_Code__c,
-                FEC_Currency_Code__c,
-                FEC_OTP_Sent__c
-            FROM FEC_Transaction__c
-            WHERE FEC_Statement__c = :statementId
-            ORDER BY FEC_Post_Date__c DESC
-        ]) {
-            BilledTransactionDTO dto = new BilledTransactionDTO();
-            dto.Id                   = t.Id;
-            dto.effectiveDate        = t.FEC_Effective_Date__c;
-            dto.postDate             = t.FEC_Post_Date__c;
-            dto.transactionAmount    = t.FEC_Transaction_Amount__c;
-            dto.merchantDescription  = t.FEC_Merchant_Description__c;
-            dto.creditDebitFlag      = t.FEC_Credit_Debit_Flag__c;
-            dto.transactionPlan      = t.FEC_Transaction_Plan__c;
-            dto.transactionCode      = t.FEC_Transaction_Code__c;
-            dto.authorizationCode    = t.FEC_Authorization_Code__c;
-            dto.merchantCategoryCode = t.FEC_Merchant_Category_Code__c;
-            dto.currencyCode         = t.FEC_Currency_Code__c;
-            dto.otpSent              = t.FEC_OTP_Sent__c;
+                FEC_Statement_Date__c,
+                FEC_Customer_History__c,
+                FEC_Customer_History__r.FEC_Account_Number__c,
+                FEC_Customer_History__r.FEC_Contract_Number__c
+            FROM FEC_Statement__c
+            WHERE Id = :statementId
+            LIMIT 1
+        ];
 
-            result.add(dto);
+        if (stmt.FEC_Statement_Date__c == null) {
+            return new List<BilledTransactionDTO>();
         }
 
-        return result;
+        String productTypeName = null;
+        List<Case> caseRows = [
+            SELECT FEC_Product_Type__r.Name
+            FROM Case
+            WHERE FEC_Account_or_Contract__c = :stmt.FEC_Customer_History__c
+            ORDER BY LastModifiedDate DESC
+            LIMIT 1
+        ];
+        if (!caseRows.isEmpty()) {
+            productTypeName = caseRows[0].FEC_Product_Type__r.Name;
+        }
+
+        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
+            productTypeName,
+            stmt.FEC_Customer_History__r.FEC_Account_Number__c,
+            stmt.FEC_Customer_History__r.FEC_Contract_Number__c
+        );
+
+        if (String.isBlank(accountNumber)) {
+            return new List<BilledTransactionDTO>();
+        }
+
+        Date stmtEnd = stmt.FEC_Statement_Date__c;
+        Date fromDate = computeFinancialTxnFromDate(
+            stmt.FEC_Customer_History__c,
+            stmtEnd
+        );
+
+        Map<String, String> helpTemplate =
+            FEC_CommonUltils.buildHelpTextMap(FEC_Transaction__c.SObjectType);
+
+        try {
+            FEC_GetCardFinancialTransactions.ResponseWrapper apiRes =
+                FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    accountNumber,
+                    fromDate,
+                    stmtEnd
+                );
+
+            List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
+            if (apiRes == null || apiRes.Transactions == null) {
+                return result;
+            }
+
+            for (
+                FEC_GetCardFinancialTransactions.FinancialTransaction ft : apiRes.Transactions
+            ) {
+                if (ft == null) {
+                    continue;
+                }
+                Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
+                if (postD != null && (postD < fromDate || postD > stmtEnd)) {
+                    continue;
+                }
+                Date effDate = effectiveDateFromFinancialTxn(ft);
+                if (postD == null && effDate != null
+                    && (effDate < fromDate || effDate > stmtEnd)) {
+                    continue;
+                }
+
+                BilledTransactionDTO dto = new BilledTransactionDTO();
+                dto.helpTexts = helpTemplate;
+                dto.Id = null;
+
+                dto.effectiveDate = effDate;
+                dto.postDate = postD;
+                dto.transactionAmount = ft.TRNXAmount;
+                dto.merchantDescription = ft.MerchantName;
+                dto.creditDebitFlag = ft.CreditDebitFlag;
+                dto.transactionPlan = ft.Plan;
+                dto.transactionCode = ft.TransactionCode;
+                dto.authorizationCode = ft.AuthCode;
+                dto.merchantCategoryCode = ft.MCC;
+                dto.currencyCode = ft.TRNXCurrencyCode;
+                dto.otpSent = formatOtpSent(ft.OTPSent);
+
+                dto.effectiveSortEpoch = effectiveSortEpochFromFinancialTxn(
+                    ft,
+                    effDate
+                );
+
+                result.add(dto);
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()})
+            );
+        }
+    }
+
+    private static Date computeFinancialTxnFromDate(Id customerHistoryId, Date stmtEnd) {
+        List<FEC_Statement__c> prev = [
+            SELECT FEC_Statement_Date__c
+            FROM FEC_Statement__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+                AND FEC_Statement_Date__c != null
+                AND FEC_Statement_Date__c < :stmtEnd
+            ORDER BY FEC_Statement_Date__c DESC
+            LIMIT 1
+        ];
+        if (!prev.isEmpty()) {
+            return prev[0].FEC_Statement_Date__c.addDays(1);
+        }
+        return stmtEnd.addMonths(-2);
+    }
+
+    private static Date effectiveDateFromFinancialTxn(
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft
+    ) {
+        if (ft == null) {
+            return null;
+        }
+        Datetime trnxDt = FEC_CommonUltils.parseDateTime(ft.TRNXDateAndTime);
+        if (trnxDt != null) {
+            return trnxDt.date();
+        }
+        return FEC_CommonUltils.parseDate(ft.TRNXDateAndTime);
+    }
+
+    private static Long effectiveSortEpochFromFinancialTxn(
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft,
+        Date effDateFallback
+    ) {
+        if (ft != null) {
+            Datetime trnxDt = FEC_CommonUltils.parseDateTime(ft.TRNXDateAndTime);
+            if (trnxDt != null) {
+                return trnxDt.getTime();
+            }
+        }
+        if (effDateFallback != null) {
+            return Datetime.newInstanceGmt(
+                    effDateFallback,
+                    Time.newInstance(0, 0, 0, 0)
+                )
+                .getTime();
+        }
+        return 0L;
+    }
+
+    private static String formatOtpSent(Integer otp) {
+        if (otp == null) {
+            return null;
+        }
+        return String.valueOf(otp);
     }
 }

@@ -66,6 +66,17 @@
         <members>FEC_UpdateDisb_Msg_Success</members>
         <members>FEC_UpdateDisb_Msg_InternalError</members>
         <members>FEC_UpdateDisb_Msg_AlreadyResolved</members>
+        <members>FEC_BilledTx_Col_Amount</members>
+        <members>FEC_BilledTx_Col_AuthCode</members>
+        <members>FEC_BilledTx_Col_Currency</members>
+        <members>FEC_BilledTx_Col_DebitCredit</members>
+        <members>FEC_BilledTx_Col_EffectiveDate</members>
+        <members>FEC_BilledTx_Col_MCC</members>
+        <members>FEC_BilledTx_Col_Merchant</members>
+        <members>FEC_BilledTx_Col_OTP</members>
+        <members>FEC_BilledTx_Col_Plan</members>
+        <members>FEC_BilledTx_Col_PostDate</members>
+        <members>FEC_BilledTx_Col_TxnCode</members>
         <name>CustomLabel</name>
     </types>
 

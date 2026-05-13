@@ -7,6 +7,7 @@
 * Ver      Date           Author              Modification
 * ===============================================================
    1.0      2025-12-16     Quangdv7             Create
+   1.1      2026-05-12     Agent                FinancialTransaction: MCC, TRNXCurrencyCode (+ XML fallbacks)
  
 ****************************************************************************************/
  
@@ -47,6 +48,10 @@ public with sharing class FEC_GetCardFinancialTransactions {
         public String IsCashTRNX;
         public Integer OTPSent;
         public String LOGIC_MOD;
+        /** Merchant category (sheet: MCC). */
+        public String MCC;
+        /** Currency on transaction (sheet: TRNXCurrencyCode). */
+        public String TRNXCurrencyCode;
     }
  
     // =========================================================================
@@ -315,12 +320,42 @@ public with sharing class FEC_GetCardFinancialTransactions {
             ft.IsCashTRNX = FEC_CommonUltils.getXmlValue(txnNode, 'IsCashTRNX');
             ft.OTPSent = FEC_CommonUltils.toInt(FEC_CommonUltils.getXmlValue(txnNode, 'OTPSent'));
             ft.LOGIC_MOD = FEC_CommonUltils.getXmlValue(txnNode, 'LOGIC_MOD');
- 
+            ft.MCC = firstNonBlankFin(
+                FEC_CommonUltils.getXmlValue(txnNode, 'MCC'),
+                FEC_CommonUltils.getXmlValue(txnNode, 'MerchantCategoryCode')
+            );
+            ft.TRNXCurrencyCode = firstNonBlankFin(
+                FEC_CommonUltils.getXmlValue(txnNode, 'TRNXCurrencyCode'),
+                FEC_CommonUltils.getXmlValue(txnNode, 'CurrencyCode'),
+                FEC_CommonUltils.getXmlValue(txnNode, 'TRNX_Currency_Code')
+            );
+
             result.Transactions.add(ft);
         }
  
         }
  
         return result;
+    }
+
+    private static String firstNonBlankFin(String a, String b) {
+        if (!String.isBlank(a)) {
+            return a.trim();
+        }
+        if (!String.isBlank(b)) {
+            return b.trim();
+        }
+        return null;
+    }
+
+    private static String firstNonBlankFin(String a, String b, String c) {
+        String ab = firstNonBlankFin(a, b);
+        if (!String.isBlank(ab)) {
+            return ab;
+        }
+        if (!String.isBlank(c)) {
+            return c.trim();
+        }
+        return null;
     }
 }
