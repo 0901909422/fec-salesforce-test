@@ -16,6 +16,273 @@ public with sharing class FEC_AssignmentExecuteService {
     
     
     @AuraEnabled
+    public static ExecuteVisibilityResult canExecuteAssignment(
+        Id caseId
+    ) {
+        
+        Id userId = UserInfo.getUserId();
+        
+        System.debug('==============================');
+        System.debug(
+            'START canExecuteAssignment'
+            );
+        System.debug('caseId = ' + caseId);
+        System.debug('userId = ' + userId);
+        System.debug('==============================');
+        
+        /*
+         * Query current user role
+         */
+        User currentUser = [
+        SELECT
+            Id,
+            UserRoleId,
+            UserRole.Name
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        System.debug(
+            'UserRoleId = '
+            + currentUser.UserRoleId
+            );
+        
+        /*
+         * Get queue ids
+         */
+        Set<Id> queueIds = new Set<Id>();
+        
+        for (
+            GroupMember gm : [
+            SELECT GroupId
+            FROM GroupMember
+            WHERE UserOrGroupId = :userId
+        ]
+        ) {
+            queueIds.add(gm.GroupId);
+        }
+        
+        System.debug(
+            'queueIds = '
+            + queueIds
+            );
+        
+        /*
+         * Assignment logic (OLD LOGIC)
+         */
+        Integer activeAssignmentCount = [
+        SELECT COUNT()
+        FROM FEC_Assignment__c
+        WHERE
+            FEC_Case__c = :caseId
+            AND FEC_Assignment_Status__c
+                NOT IN :CLOSED_STATUSES
+            AND (
+                FEC_Assignment_Owner__c = :userId
+                OR (
+                    FEC_Assignment_Owner__c = null
+                    AND FEC_OwnerID__c IN :queueIds
+                )
+            )
+    ];
+        
+        System.debug(
+            'activeAssignmentCount = '
+            + activeAssignmentCount
+            );
+        
+        Boolean canExecute =
+            activeAssignmentCount > 0;
+        
+        /*
+         * =================================================
+         * NEW LOGIC
+         * Check FEC_Assignment_Users__c
+         * =================================================
+         */
+        Case caseRecord = [
+        SELECT
+            Id,
+            FEC_Can_Execute_Assignment__c,
+            FEC_Assignment_Users__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        
+        System.debug(
+            'FEC_Assignment_Users__c = '
+            + caseRecord.FEC_Assignment_Users__c
+            );
+        
+        if (
+            !canExecute &&
+            !String.isBlank(
+            caseRecord.FEC_Assignment_Users__c
+            )
+        ) {
+            
+            /*
+             * Format:
+             * xxxx;yyyy;zzzz
+             */
+            Set<String> assignmentUsers =
+                new Set<String>();
+            
+            for (
+                String value :
+                caseRecord
+                .FEC_Assignment_Users__c
+                .split(';')
+            ) {
+                
+                if (!String.isBlank(value)) {
+                    
+                    assignmentUsers.add(
+                        value.trim()
+                        );
+                }
+            }
+            
+            System.debug(
+                'assignmentUsers = '
+                + assignmentUsers
+                );
+            
+            /*
+             * Match user id
+             */
+            Boolean matchedUser =
+                assignmentUsers.contains(
+                String.valueOf(userId)
+                );
+            
+            /*
+             * Match role id
+             */
+            Boolean matchedRole =
+                currentUser.UserRoleId != null
+                &&
+                assignmentUsers.contains(
+                String.valueOf(
+                currentUser.UserRoleId
+                )
+                );
+            
+            System.debug(
+                'matchedUser = '
+                + matchedUser
+                );
+            
+            System.debug(
+                'matchedRole = '
+                + matchedRole
+                );
+            
+            if (
+                matchedUser ||
+                matchedRole
+            ) {
+                
+                System.debug(
+                    'Assignment Users matched'
+                    );
+                
+                canExecute = true;
+            }
+        }
+        
+        System.debug(
+            'FINAL canExecute = '
+            + canExecute
+            );
+        
+        ExecuteVisibilityResult result =
+            new ExecuteVisibilityResult();
+        
+        result.value = canExecute;
+        
+        Boolean currentValue =
+            caseRecord
+            .FEC_Can_Execute_Assignment__c
+            == true;
+        
+        result.shouldUpdate =
+            currentValue != canExecute;
+        
+        System.debug(
+            'currentValue = '
+            + currentValue
+            );
+        
+        System.debug(
+            'newValue = '
+            + canExecute
+            );
+        
+        System.debug(
+            'shouldUpdate = '
+            + result.shouldUpdate
+            );
+        
+        /*
+         * IMPORTANT:
+         * Update Dynamic Action field
+         */
+        if (result.shouldUpdate) {
+            
+            try {
+                
+                System.debug(
+                    'START UPDATE CASE'
+                    );
+                
+                FEC_CaseTriggerHandler.isSystemUpdate = true;
+                
+                /*
+                 * UPDATE HERE
+                 */
+                update new Case(
+                    Id = caseId,
+                FEC_Can_Execute_Assignment__c =
+                    canExecute
+                    );
+                
+                System.debug(
+                    'Case updated successfully'
+                    );
+                
+            } catch (Exception e) {
+                
+                System.debug(
+                    'FEC_AssignmentExecuteService ERROR: '
+                    + e.getMessage()
+                    );
+                
+                System.debug(
+                    'STACK: '
+                    + e.getStackTraceString()
+                    );
+                
+                throw e;
+                
+            } finally {
+                
+                FEC_CaseTriggerHandler.isSystemUpdate = false;
+            }
+        } else {
+            
+            System.debug(
+                'SKIP UPDATE: value unchanged'
+                );
+        }
+        
+        return result;
+    }
+    
+    
+    @AuraEnabled
     public static void executeAssignment(
         Id caseId
     ) {
@@ -290,4 +557,5 @@ public with sharing class FEC_AssignmentExecuteService {
             }
         }
     }
+    
 }

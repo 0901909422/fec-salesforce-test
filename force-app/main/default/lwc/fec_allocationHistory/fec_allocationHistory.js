@@ -4,7 +4,7 @@ import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'light
 import COLLECTION_DATE_FILTER from '@salesforce/messageChannel/FEC_Collection_Date_Filter__c';
 import { STR_EMPTY } from 'c/fec_CommonConst';
 import { formatCurrency0 } from 'c/fec_CommonUtils';
-import { formatDateField } from 'c/fec_DateFormatter';
+import { formatDateField, sortByDefaultDateFieldDesc } from 'c/fec_DateFormatter';
 
 import CONTRACT_FIELD from '@salesforce/schema/Case.FEC_Contract_Number__c';
 import RT_NAME_FIELD from '@salesforce/schema/Case.RecordType.Name';
@@ -201,7 +201,8 @@ export default class Fec_allocationHistory extends LightningElement {
         if (!Array.isArray(this.allocationHistories)) {
             return [];
         }
-        return this.allocationHistories.map((row, idx) => ({
+        const sorted = sortByDefaultDateFieldDesc(this.allocationHistories, 'AllocationDate');
+        return sorted.map((row, idx) => ({
             Id: `ah-${idx}`,
             AgentID: row?.AgentID ?? STR_EMPTY,
             AgentName: row?.AgentName ?? STR_EMPTY,
