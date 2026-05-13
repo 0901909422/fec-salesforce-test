@@ -1,7 +1,8 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeSectionlst}>
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
@@ -109,7 +110,7 @@
                   <p class="sub-section">{row.dynCmp.subSectionName}</p>
                 </template>
                 <div data-fec-lwc={row.dynCmp.componentName}>
-                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode}
+                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
                     is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
                 </div>
               </template>
@@ -147,7 +148,7 @@
   <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
   <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
   <!--END: Hieutt74: Update ngày 12/5/2026-->
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeSectionlst}>
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
     <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>

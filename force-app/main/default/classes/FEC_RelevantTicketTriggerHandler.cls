@@ -19,9 +19,13 @@ public without sharing class FEC_RelevantTicketTriggerHandler {
             Case c = caseMap.get(rt.FEC_Interaction__c);
             if (c == null) continue;
             String currentStage = c.FEC_Current_Case_Stage__r?.FEC_Code__c;
-            // tungnm37 sửa: null stage_name (ticket cũ) hoặc khác stage hiện tại → chặn xóa
-            if (String.isBlank(rt.FEC_Stage_Name__c) || rt.FEC_Stage_Name__c != currentStage) {
-                rt.addError(System.Label.FEC_RelevantTicket_Cannot_Delete);
+            // Chỉ check stage khi Case có stage (có workflow)
+            // Nếu Case không có stage → cho phép xóa tự do
+            if (String.isNotBlank(currentStage)) {
+                // Case có stage: chặn nếu ticket null stage (ticket cũ) hoặc khác stage hiện tại
+                if (String.isBlank(rt.FEC_Stage_Name__c) || rt.FEC_Stage_Name__c != currentStage) {
+                    rt.addError(System.Label.FEC_RelevantTicket_Cannot_Delete);
+                }
             }
         }
     }
