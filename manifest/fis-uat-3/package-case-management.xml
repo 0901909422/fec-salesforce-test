@@ -39,6 +39,7 @@
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
         <members>FEC_SubProcessService</members>
+        <members>Fec_HoldCaseConfigurationController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -434,6 +435,7 @@
     <types>
         <members>FEC_Routing_Assignment__c</members>
         <members>FEC_BancaTabView</members>
+        <members>FEC_HoldCaseConfiguration</members>
         <name>CustomTab</name>
     </types>
 	<types>
@@ -515,6 +517,10 @@
         <members>fec_TransferCall</members>
         <members>fec_AssigmentListView</members>
         <members>fec_AssignmentViewAll</members>
+        <members>fec_CommonDetailView</members>
+        <members>fec_HoldCaseConfiguration</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_RelatedListPaging</members>
 		<name>LightningComponentBundle</name>
     </types>
 	<types>
@@ -744,6 +750,27 @@
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
 		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
+        <members>FEC_Auto</members>
+		<members>FEC_Changed_Status</members>
+		<members>FEC_Current_Status</members>
+		<members>FEC_Date</members>
+		<members>FEC_Detail_Information</members>
+		<members>FEC_Error_Manual</members>
+		<members>FEC_Error_MessageError_For_Hold_Case</members>
+		<members>FEC_Field</members>
+		<members>FEC_HCC_Name</members>
+		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Save_Success</members>
+		<members>FEC_Hold_Case_Type</members>
+		<members>FEC_List_Of_NFU_Code</members>
+		<members>FEC_Manual</members>
+		<members>FEC_NFU_Modal_Error</members>
+		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_NFU_Reason_VN</members>
+		<members>FEC_New_Hold_Case_Config</members>
+		<members>FEC_New_Value</members>
+		<members>FEC_Original_Value</members>
+		<members>FEC_Parent_Hold_Case_Config</members>
         <name>CustomLabel</name>
     </types>
 	<types>
