@@ -532,6 +532,7 @@
     </types>
     <types>
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
+        <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
