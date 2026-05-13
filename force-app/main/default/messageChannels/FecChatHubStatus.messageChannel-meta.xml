@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>FecChatHubStatus</masterLabel>
+    <isExposed>true</isExposed>
+    <description>Kênh đồng bộ trạng thái Agent giữa ChatHub và Utility Bar Dropdown</description>
+</LightningMessageChannel>

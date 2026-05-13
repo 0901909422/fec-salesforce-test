@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_KYC_Result__c</fullName>
+    <description>Trường lưu giá trị User đã chọn (Fail/Pass) để hiển thị lịch sử trong  màn Interaction Review</description>
+    <externalId>false</externalId>
+    <formula>IF( FEC_Status__c  = True, &apos;Pass&apos;,&apos;Fail&apos;)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>KYC Result</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

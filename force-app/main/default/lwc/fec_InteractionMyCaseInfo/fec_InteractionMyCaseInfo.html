@@ -1,0 +1,155 @@
+<template>
+    <lightning-accordion class="interaction-infor" allow-multiple-sections-open active-section-name={activeSections}>
+        <lightning-accordion-section name="interactionInfo" label={labels.interactionInformation}>
+
+            <!-- INTERACTION CASE -->
+            <template if:true={isInteractionCase}>
+                <div class="slds-p-horizontal_medium slds-p-vertical_small">
+
+                    <div class="interaction-grid">
+                        <!-- LEFT -->
+                        <div class="col">
+                            <div class="row">
+                                <span class="label">{labels.interactionPhone}</span>
+                                <span class="value">
+                                    <template if:true={hasPhone}>
+                                        {displayPhone}
+                                    </template>
+
+                                    <template if:false={hasPhone}>
+                                        <template if:true={isEditingPhone}>
+                                            <lightning-input type="tel" value={phoneDraft} onchange={handlePhoneChange}
+                                                variant="label-hidden">
+                                            </lightning-input>
+                                        </template>
+
+                                        <template if:false={isEditingPhone}>
+                                            <span class="empty">--</span>
+                                        </template>
+                                    </template>
+                                </span>
+
+                                <template if:true={hasPhone}>
+                                    <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon"
+                                        onclick={handleToggleMask}>
+                                    </lightning-icon>
+                                </template>
+
+                                <template if:false={hasPhone}>
+                                    <template if:false={isEditingPhone}>
+                                        <lightning-icon icon-name="utility:edit" size="x-small" class="eye-icon"
+                                            onclick={handleEditPhone}>
+                                        </lightning-icon>
+                                    </template>
+                                </template>
+
+                                <template if:true={isEditingPhone}>
+                                    <lightning-icon icon-name="utility:check" size="x-small" class="eye-icon save-icon"
+                                        onclick={handleSavePhone}>
+                                    </lightning-icon>
+                                </template>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.interactionCreatedOn}</span>
+                                <span class="value">{createdOn}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.outcomeCode}</span>
+                                <span class="value">{outcomeCode}</span>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="col">
+                            <div class="row">
+                                <span class="label">Interaction Email</span>
+                                <span class="value">{email}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.interactionCreatedBy}</span>
+                                <span class="value">{createdBy}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.remarks}</span>
+                                <span class="value">{interactionRemark}</span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </template>
+
+
+            <!-- CUSTOMER CASE -->
+            <template if:true={isCustomerCase}>
+                <div class="slds-p-horizontal_medium slds-p-vertical_small">
+
+                    <div class="interaction-grid">
+                        <!-- LEFT -->
+                        <div class="col">
+                            <div class="row">
+                                <span class="label">{labels.interactionPhone}</span>
+                                <span class="value">
+                                    <!-- Có phone -->
+                                    <template if:true={hasPhone}>
+                                        {displayPhone}
+                                    </template>
+                                </span>
+                                <!-- ICON -->
+                                <template if:true={hasPhone}>
+                                    <lightning-icon icon-name={eyeIcon} size="x-small" class="eye-icon"
+                                        onclick={handleToggleMask}>
+                                    </lightning-icon>
+                                </template>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.interactionCreatedOn}</span>
+                                <span class="value">{createdOn}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.outcomeCode}</span>
+                                <span class="value">{outcomeCode}</span>
+                                <span></span>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="col">
+                            <div class="row">
+                                <span class="label">Interaction Email</span>
+                                <span class="value">{email}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.interactionCreatedBy}</span>
+                                <span class="value">{createdBy}</span>
+                                <span></span>
+                            </div>
+
+                            <div class="row">
+                                <span class="label">{labels.remarks}</span>
+                                <span class="value">{interactionRemark}</span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </template>
+
+        </lightning-accordion-section>
+    </lightning-accordion>
+</template>

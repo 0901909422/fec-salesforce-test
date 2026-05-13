@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Physical</fullName>
+        <default>false</default>
+        <label>Physical</label>
+    </customValue>
+    <customValue>
+        <fullName>Digital</fullName>
+        <default>false</default>
+        <label>Digital</label>
+    </customValue>
+    <customValue>
+        <fullName>Other</fullName>
+        <default>false</default>
+        <label>Other</label>
+    </customValue>
+    <description>loại thẻ</description>
+    <masterLabel>Card Type</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

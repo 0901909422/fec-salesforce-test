@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Queue xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Default Queue</description>
+    <doesSendEmailToMembers>false</doesSendEmailToMembers>
+    <name>DQ - Internal Audit</name>
+    <queueMembers>
+        <roles>
+            <role>FEC_Unit_Head_Of_Internal_Audit_1</role>
+            <role>FEC_Unit_Head_Of_Internal_Audit_2</role>
+        </roles>
+    </queueMembers>
+    <queueSobject>
+        <sobjectType>Case</sobjectType>
+    </queueSobject>
+</Queue>

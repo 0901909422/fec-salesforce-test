@@ -30,6 +30,36 @@ global with sharing class FEC_IntegrationFraudCaseDetailController {
     }
 
     /**
+     * Returns the original snapshot data for a service case.
+     * Used when actionMode=ViewOriginal to display the initial state.
+     *
+     * @param serviceCaseId The service case ID
+     * @return Map containing case and infos from snapshot JSON
+     */
+    @AuraEnabled(cacheable = true)
+    public static Map<String, Object> getOriginalSnapshot(String serviceCaseId) {
+        if (String.isBlank(serviceCaseId)) {
+            return null;
+        }
+
+        List<FEC_Integration_Case_Snapshot__c> snapshots = [
+            SELECT FEC_Data__c, FEC_Type__c, FEC_Service_Case_Id__c, CreatedDate
+            FROM FEC_Integration_Case_Snapshot__c
+            WHERE FEC_Service_Case_Id__c = :serviceCaseId
+            AND FEC_Type__c = 'ORIGINAL'
+            LIMIT 1
+        ];
+
+        if (snapshots.isEmpty() || String.isBlank(snapshots[0].FEC_Data__c)) {
+            return null;
+        }
+
+        Map<String, Object> snapshotData = (Map<String, Object>) JSON.deserializeUntyped(snapshots[0].FEC_Data__c);
+        snapshotData.put('snapshotDate', FEC_IntegrationFraudCaseUtil.formatDateTime(snapshots[0].CreatedDate));
+        return snapshotData;
+    }
+
+    /**
      * Returns mapping between case prefix and integration case field name.
      * Used by frontend to determine case type (FH, BU, TK, etc.).
      */

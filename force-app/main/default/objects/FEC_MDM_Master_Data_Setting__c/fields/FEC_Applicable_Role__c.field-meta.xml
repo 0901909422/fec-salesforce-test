@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Applicable_Role__c</fullName>
+    <description>Đối tượng người dùng nằm trong giai đoạn (Stage) hỗ trợ</description>
+    <externalId>false</externalId>
+    <label>Applicable Role</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

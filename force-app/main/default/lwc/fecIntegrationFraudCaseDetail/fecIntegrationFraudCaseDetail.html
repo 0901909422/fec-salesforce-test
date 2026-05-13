@@ -15,6 +15,84 @@
 
         <!-- ================= CONTENT ================= -->
         <template if:false={loading}>
+
+            <!-- ================= VIEW ORIGINAL SNAPSHOT ================= -->
+            <template if:true={isViewOriginal}>
+                <template if:true={snapshotCase}>
+                    <div class="slds-p-around_medium slds-border_bottom">
+                        <div class="slds-text-heading_small slds-m-bottom_small">
+                            Original Snapshot — {snapshotDate}
+                        </div>
+                        <div class="slds-grid slds-wrap slds-text-title_bold">
+                            <div class="slds-col slds-size_1-of-6">{labels.fraudCaseId}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.caseStatus}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.creator}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.category}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCategory}</div>
+                            <div class="slds-col slds-size_1-of-6">{labels.subCode}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_x-small">
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_CaseID__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Case_Status__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Creator_Email__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Sub_Category__c}</div>
+                            <div class="slds-col slds-size_1-of-6">{snapshotCase.FEC_Sub_Code__c}</div>
+                        </div>
+
+                        <div class="slds-grid slds-wrap slds-m-top_small">
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.createTime}</b><br />
+                                {snapshotCase.CreatedDate}
+                            </div>
+                            <div class="slds-col slds-size_1-of-6">
+                                <b>{labels.updateTime}</b><br />
+                                {snapshotCase.LastModifiedDate}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== SNAPSHOT INFO COLUMNS ===== -->
+                    <div class="slds-grid slds-wrap slds-p-around_medium">
+                        <template for:each={snapshotLayoutColumns} for:item="col">
+                            <div key={col.key} class="slds-col slds-size_1-of-4 slds-p-horizontal_small">
+                                <template for:each={col.items} for:item="info">
+                                    <div key={info.id} class="slds-m-bottom_small">
+                                        <b>{info.displayName}</b><br />
+                                        {info.fileName} &nbsp;
+                                        <template if:true={info.isFileWithValue}>
+                                            <lightning-button
+                                                label={labels.downloadFile}
+                                                icon-name="utility:download"
+                                                variant="base"
+                                                data-base64={info.value}
+                                                onclick={handleFileDownload}>
+                                            </lightning-button>
+                                        </template>
+                                        <template if:false={info.isFile}>
+                                            {info.value}
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- REMARKS -->
+                    <template if:true={snapshotCase.FEC_CS_Remark__c}>
+                        <div class="slds-p-around_medium">
+                            <b>{labels.remarks}</b>
+                            <div class="slds-box slds-m-top_x-small slds-scrollable_y" style="max-height:200px">
+                                {snapshotCase.FEC_CS_Remark__c}
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+
+            <!-- ================= NORMAL VIEW ================= -->
+            <template if:false={isViewOriginal}>
             <template if:true={mainCase}>
 
                 <!-- ===== SINGLE CASE: show flat (as before) ===== -->
@@ -204,6 +282,7 @@
                         </table>
                     </div>
                 </template>
+            </template>
             </template>
         </template>
 

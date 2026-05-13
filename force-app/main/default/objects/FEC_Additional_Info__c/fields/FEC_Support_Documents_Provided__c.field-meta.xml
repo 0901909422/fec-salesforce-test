@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Support_Documents_Provided__c</fullName>
+    <description>Tình trạng chứng từ hỗ trợ khách hàng cung cấp</description>
+    <label>Support Documents Provided</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Đủ chứng từ</fullName>
+                <default>false</default>
+                <label>Đủ chứng từ</label>
+            </value>
+            <value>
+                <fullName>Thiếu chứng từ</fullName>
+                <default>false</default>
+                <label>Thiếu chứng từ</label>
+            </value>
+            <value>
+                <fullName>Không yêu cầu chứng từ</fullName>
+                <default>false</default>
+                <label>Không yêu cầu chứng từ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

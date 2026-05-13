@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_POS_Complaint_Issue_1__c</fullName>
+    <description>Vấn đề khiếu nại POS (1)</description>
+    <label>POS Complaint Issue 1</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Tổng khoản vay</fullName>
+                <default>false</default>
+                <label>Tổng khoản vay</label>
+            </value>
+            <value>
+                <fullName>Lãi suất</fullName>
+                <default>false</default>
+                <label>Lãi suất</label>
+            </value>
+            <value>
+                <fullName>Lịch thanh toán</fullName>
+                <default>false</default>
+                <label>Lịch thanh toán</label>
+            </value>
+            <value>
+                <fullName>Nợ quá hạn</fullName>
+                <default>false</default>
+                <label>Nợ quá hạn</label>
+            </value>
+            <value>
+                <fullName>Thanh lý HĐ</fullName>
+                <default>false</default>
+                <label>Thanh lý HĐ</label>
+            </value>
+            <value>
+                <fullName>Các loại phí, lãi phát sinh</fullName>
+                <default>false</default>
+                <label>Các loại phí, lãi phát sinh</label>
+            </value>
+            <value>
+                <fullName>Chương trình miễn giảm tiền</fullName>
+                <default>false</default>
+                <label>Chương trình miễn giảm tiền</label>
+            </value>
+            <value>
+                <fullName>Bảo hiểm khoản vay</fullName>
+                <default>false</default>
+                <label>Bảo hiểm khoản vay</label>
+            </value>
+            <value>
+                <fullName>Chương trình khuyến mãi</fullName>
+                <default>false</default>
+                <label>Chương trình khuyến mãi</label>
+            </value>
+            <value>
+                <fullName>Thủ tục giấy tờ</fullName>
+                <default>false</default>
+                <label>Thủ tục giấy tờ</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

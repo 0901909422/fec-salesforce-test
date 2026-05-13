@@ -1,0 +1,184 @@
+<template>
+    <div class="notification-history-root fec-section--bordered">
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
+
+            <lightning-accordion-section name="sms" label={labelTabSms}>
+                <div class={smsSectionClass}>
+                    <div class="slds-is-relative">
+                        <template lwc:if={smsHasRows}>
+                            <template lwc:if={smsLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <c-fec_-related-list-paging
+                                records={smsRows}
+                                columns={smsColumns}
+                                page-size={pageSizeDefault}
+                                page-size-options={pageSizeOptions}
+                                default-sorted-by="dateTime"
+                                default-sort-direction="desc"
+                                sorted-by-description={labelSortDateTime}
+                                hide-updated-time="true"
+                                column-count="3">
+                            </c-fec_-related-list-paging>
+                        </template>
+                        <template lwc:else>
+                            <template lwc:if={smsLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <div class={smsEmptyMsgClass}>{smsEmptyMessage}</div>
+                        </template>
+                    </div>
+                    <template lwc:if={smsInfoBanner}>
+                        <div class="channel-banner">{smsInfoBanner}</div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="zns" label={labelTabZns}>
+                <div class={znsSectionClass}>
+                    <template lwc:if={znsHasRows}>
+                        <c-fec_-related-list-paging
+                            records={znsRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={znsHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <!-- Bảng dựng tạm cho ZNS -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={znsEmptyMsgClass}>{znsEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="email" label={labelTabEmail}>
+                <div class={emailSectionClass}>
+                    <template lwc:if={emailHasRows}>
+                        <c-fec_-related-list-paging
+                            records={emailRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={emailHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <!-- Bảng dựng tạm cho Email -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={emailEmptyMsgClass}>{emailEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="mobileApp" label={labelTabMobileApp}>
+                <div class={mobileAppSectionClass}>
+                    <template lwc:if={mobileAppHasRows}>
+                        <c-fec_-related-list-paging
+                            records={mobileAppRows}
+                            columns={extendedColumns}
+                            page-size={pageSizeDefault}
+                            page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType"
+                            default-sort-direction="asc"
+                            hide-updated-time="true"
+                            column-count="9">
+                        </c-fec_-related-list-paging>
+                    </template>
+                    <template lwc:else>
+                        <div class="slds-is-relative">
+                            <template lwc:if={mobileAppHistoryLoading}>
+                                <div class="channel-spinner-overlay">
+                                    <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <!-- Bảng dựng tạm cho Mobile App -->
+                            <div class="nh-placeholder-table-container">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <template for:each={extendedColumns} for:item="col">
+                                                <th key={col.fieldName} scope="col">
+                                                    <div class="slds-truncate" title={col.label}>{col.label}</div>
+                                                </th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="9">
+                                                <div class={mobileAppEmptyMsgClass}>{mobileAppEmptyMessage}</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </lightning-accordion-section>
+
+        </lightning-accordion>
+    </div>
+</template>
