@@ -3371,7 +3371,7 @@ public without sharing class FEC_CaseBusinessService {
         List<PicklistOptionDto> options = new List<PicklistOptionDto>();
         for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
           if (entry.isActive()) {
-            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel()));
+            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel(), entry.isDefaultValue()));
           }
         }
         fieldToOptions.put(fieldName, options);
@@ -3986,6 +3986,8 @@ public without sharing class FEC_CaseBusinessService {
     public String value;
     @AuraEnabled
     public String label;
+    @AuraEnabled
+    public Boolean isDefault;
 
     public PicklistOptionDto() {
     }
@@ -3993,6 +3995,12 @@ public without sharing class FEC_CaseBusinessService {
     public PicklistOptionDto(String value, String label) {
       this.value = value;
       this.label = label;
+    }
+    
+    public PicklistOptionDto(String value, String label, Boolean isDefault) {
+      this.value = value;
+      this.label = label;
+      this.isDefault = isDefault;
     }
   }
 

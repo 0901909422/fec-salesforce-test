@@ -83,3 +83,7 @@ c-lwc-multi-lookup lightning-pill lightning-icon {
 c-lwc-multi-lookup lightning-input input {
   padding-left: 8px !important;
 }
+
+c-fec_-case-bussiness .hide-help-icon lightning-helptext {
+  display: none;
+}

@@ -62,12 +62,14 @@
                             </template>
                             <template if:false={field.isDate}>
                               <template if:false={field.isPhone}>
-                                <lightning-input-field data-section={section.id} data-sub={row.sub.name}
-                                  data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
-                                  variant="label-hidden" field-name={field.apiName} required={field.mandatory}
-                                  disabled={field.isInternalRequest} onchange={handleChangeInput}
-                                  onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
-                                </lightning-input-field>
+                                <div class="hide-help-icon">
+                                    <lightning-input-field data-section={section.id} data-sub={row.sub.name}
+                                      data-obj={obj.id} data-field={field.apiName} data-obj-name={obj.name}
+                                      variant="label-hidden" field-name={field.apiName} required={field.mandatory}
+                                      disabled={field.isInternalRequest} onchange={handleChangeInput}
+                                      onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
+                                    </lightning-input-field>
+                                </div>
                               </template>
                             </template>
                             <div if:true={field.customError}

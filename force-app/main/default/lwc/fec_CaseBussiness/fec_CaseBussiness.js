@@ -234,7 +234,7 @@ const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
 const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
 const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
-const VALUE_COMPLAINT_SOURCE = ['High Risk', 'Urgent'];
+const VALUE_COMPLAINT_SOURCE = ['High risk', 'Urgent'];
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1533,10 +1533,17 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 // Convert label to value for picklist fields
                 const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
-                if (picklistOptions?.length && field.value) {
-                  const opt = findPicklistOptionByRaw(picklistOptions, field.value);
-                  if (opt) {
-                    field.value = opt.value;
+                if (picklistOptions?.length) {
+                  if (field.value) {
+                    const opt = findPicklistOptionByRaw(picklistOptions, field.value);
+                    if (opt) {
+                      field.value = opt.value;
+                    }
+                  } else {
+                    const defaultOpt = picklistOptions.find(o => o.isDefaultValue);
+                    if (defaultOpt) {
+                      field.value = defaultOpt.value;
+                    }
                   }
                 }
 
