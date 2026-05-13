@@ -20,6 +20,8 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
+        <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_ApplicationListTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -116,6 +118,7 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
+        <members>FEC_ApplicationListTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
