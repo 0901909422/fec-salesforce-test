@@ -1886,7 +1886,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>  </editable>
+        <editable>true</editable>
         <field>FEC_Sales_Logic__c.FEC_TSA_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
