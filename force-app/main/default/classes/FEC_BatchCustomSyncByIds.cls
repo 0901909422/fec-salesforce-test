@@ -18,7 +18,7 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
     private Id customSyncId;
     private Set<Id> recordIds;
     private CustomSync__c cus;
-    private List<FEC_API_Log__c> logs = new List<FEC_API_Log__c>();
+    private List<FEC_integration_service_log__c> logs = new List<FEC_integration_service_log__c>();
 
     public FEC_BatchCustomSyncByIds(Id customSyncId, Set<Id> recordIds) {
         this.customSyncId = customSyncId;
@@ -27,7 +27,7 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
 
     global Database.QueryLocator start(Database.BatchableContext bc) {
         this.cus = [
-            SELECT Id, Name, WhatSync__c, TableName__c, TargetObject__c,
+            SELECT Id, Name, CaseBusinessCode__c, TableName__c, TargetObject__c,
                    RequestBodyMapping__c, MappingDataType__c, PkColumn__c,
                    ProcessingQuantity__c
             FROM CustomSync__c
@@ -41,7 +41,7 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
     }
 
     global void execute(Database.BatchableContext bc, List<sObject> scope) {
-        FEC_API_Log__c log = new FEC_API_Log__c();
+        FEC_integration_service_log__c log = new FEC_integration_service_log__c();
         log.FEC_Custom_Sync__c = cus.Id;
         try {
             if (scope == null || scope.isEmpty())  return;
@@ -50,9 +50,9 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
                 scopeIds.add(String.valueOf(reId));
             }
             log.Records__c = JSON.serialize(scopeIds);
-            List<FEC_API_Log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus, log, scope);
-            for (FEC_API_Log__c rLog : resultLogs) {
-                if (rLog.FEC_Is_Success__c ?? false) rLog.FEC_Error_Message__c = null;
+            List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus, log, scope);
+            for (FEC_integration_service_log__c rLog : resultLogs) {
+                if (rLog.FEC_Bix_Is_Success__c ?? false) rLog.FEC_Error_Message__c = null;
                 logs.add(rLog);
             } 
             return;

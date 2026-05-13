@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Custom_Sync__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Custom Sync</label>
+    <referenceTo>CustomSync__c</referenceTo>
+    <relationshipLabel>Integration Service Logs</relationshipLabel>
+    <relationshipName>Integration_Service_Logs</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

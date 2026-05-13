@@ -240,7 +240,7 @@ private class FEC_CustomSyncValidatorTest {
         return new CustomSync__c(
             Name = 'Test Sync',
             TableName__c = 'BIX_TEST',
-            WhatSync__c = 'Phone Update',
+            CaseBusinessCode__c = 'Phone Update',
             ProcessingQuantity__c = 10,
             Active__c = active,
             SyncTo__c = 'Bix',

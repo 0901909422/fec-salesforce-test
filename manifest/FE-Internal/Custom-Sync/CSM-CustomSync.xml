@@ -14,16 +14,21 @@
         <members>CustomSync__c.SyncSuccessFully__c</members>
         <members>CustomSync__c.SyncFailed__c</members>
         <members>CustomSync__c.ProcessingQuantity__c</members>
-        <members>CustomSync__c.WhatSync__c</members>
+        <members>CustomSync__c.CaseBusinessCode__c</members>
         <members>CustomSync__c.TargetObject__c</members> 
         <members>CustomSync__c.RequestBodyMapping__c</members>
         <members>CustomSync__c.TableName__c</members>
         <members>CustomSync__c.MappingDataType__c</members>
         <members>CustomSync__c.PkColumn__c</members>
 
-        <members>FEC_API_Log__c.FEC_Quantity_Call__c</members> 
-        <members>FEC_API_Log__c.FEC_Custom_Sync__c</members>
-        <members>FEC_API_Log__c.Records__c</members> 
+        <members>FEC_integration_service_log__c.FEC_Quantity_Call__c</members> 
+        <members>FEC_integration_service_log__c.FEC_Custom_Sync__c</members>
+        <members>FEC_integration_service_log__c.Records__c</members>
+        <members>FEC_integration_service_log__c.FEC_Endpoint__c</members>
+        <members>FEC_integration_service_log__c.FEC_Method__c</members>
+        <members>FEC_integration_service_log__c.FEC_Status_Code__c</members>
+        <members>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</members>
+        <members>FEC_integration_service_log__c.FEC_Error_Message__c</members> 
 
         <members>CustomSyncSetting__c.Endpoint__c</members> 
         <members>CustomSyncSetting__c.ApiKey__c</members>

@@ -55,7 +55,7 @@ private class FEC_BatchCustomSyncByIdsTest {
         CustomSync__c cus = new CustomSync__c(
             Name = 'Test Sync ByIds',
             TableName__c = 'BIX_TEST',
-            WhatSync__c = 'Phone Update',
+            CaseBusinessCode__c = 'Phone Update',
             ProcessingQuantity__c = 10,
             Active__c = true,
             SyncTo__c = 'Bix',
@@ -94,7 +94,7 @@ private class FEC_BatchCustomSyncByIdsTest {
         Test.stopTest();
 
         // Verify logs created
-        List<FEC_API_Log__c> logs = [SELECT Id, FEC_Is_Success__c, FEC_Custom_Sync__c FROM FEC_API_Log__c];
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c, FEC_Custom_Sync__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created');
         System.assertEquals(cus.Id, logs[0].FEC_Custom_Sync__c);
 
@@ -116,9 +116,9 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        List<FEC_API_Log__c> logs = [SELECT Id, FEC_Is_Success__c FROM FEC_API_Log__c];
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created even on failure');
-        System.assertEquals(false, logs[0].FEC_Is_Success__c);
+        System.assertEquals(false, logs[0].FEC_Bix_Is_Success__c);
     }
 
     @isTest
@@ -133,7 +133,7 @@ private class FEC_BatchCustomSyncByIdsTest {
         Database.executeBatch(batch, 10);
         Test.stopTest();
 
-        List<FEC_API_Log__c> logs = [SELECT Id, FEC_Is_Success__c FROM FEC_API_Log__c];
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Bix_Is_Success__c FROM FEC_integration_service_log__c];
         System.assert(!logs.isEmpty(), 'Logs should be created for partial fail');
     }
 
@@ -151,7 +151,7 @@ private class FEC_BatchCustomSyncByIdsTest {
         Test.stopTest();
 
         // No records matched so execute() never fires, no logs created
-        List<FEC_API_Log__c> logs = [SELECT Id FROM FEC_API_Log__c];
+        List<FEC_integration_service_log__c> logs = [SELECT Id FROM FEC_integration_service_log__c];
         System.assertEquals(0, logs.size(), 'No logs should be created when no records found');
     }
 
@@ -168,8 +168,8 @@ private class FEC_BatchCustomSyncByIdsTest {
         Test.stopTest();
 
         // Verify failed logs exist but no recall incremented beyond 1
-        List<FEC_API_Log__c> logs = [SELECT Id, FEC_Quantity_Call__c FROM FEC_API_Log__c WHERE FEC_Is_Success__c = false];
-        for (FEC_API_Log__c log : logs) {
+        List<FEC_integration_service_log__c> logs = [SELECT Id, FEC_Quantity_Call__c FROM FEC_integration_service_log__c WHERE FEC_Bix_Is_Success__c = false];
+        for (FEC_integration_service_log__c log : logs) {
             System.assertEquals(1, log.FEC_Quantity_Call__c, 'No recall should have been triggered');
         }
     }

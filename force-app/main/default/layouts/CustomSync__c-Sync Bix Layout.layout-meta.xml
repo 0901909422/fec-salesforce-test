@@ -46,8 +46,8 @@
         </layoutColumns>
         <layoutColumns>
             <layoutItems>
-                <behavior>Required</behavior>
-                <field>WhatSync__c</field>
+                <behavior>Edit</behavior>
+                <field>CaseBusinessCode__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
@@ -97,11 +97,12 @@
     <relatedLists>
         <fields>NAME</fields>
         <fields>CREATED_DATE</fields>
-        <fields>FEC_Is_Success__c</fields>
+        <fields>LAST_UPDATE</fields>
+        <fields>FEC_Bix_Is_Success__c</fields>
         <fields>FEC_Quantity_Call__c</fields>
-        <relatedList>FEC_API_Log__c.FEC_Custom_Sync__c</relatedList>
+        <relatedList>FEC_integration_service_log__c.FEC_Custom_Sync__c</relatedList>
         <sortField>CREATED_DATE</sortField>
-        <sortOrder>Desc</sortOrder>
+        <sortOrder>Asc</sortOrder>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>

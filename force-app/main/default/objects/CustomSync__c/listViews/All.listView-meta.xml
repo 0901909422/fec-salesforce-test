@@ -2,7 +2,7 @@
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>All</fullName>
     <columns>NAME</columns>
-    <columns>WhatSync__c</columns>
+    <columns>CaseType__c</columns>
     <columns>SyncTo__c</columns>
     <columns>StartAt__c</columns>
     <columns>EndAt__c</columns>

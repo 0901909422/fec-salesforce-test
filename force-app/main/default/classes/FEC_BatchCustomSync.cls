@@ -17,7 +17,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     private DateTime toDate ;
     private DateTime startTime ;
     private Boolean isEndJob = false ;
-    private List<FEC_API_Log__c> logs = new List<FEC_API_Log__c>();
+    private List<FEC_integration_service_log__c> logs = new List<FEC_integration_service_log__c>();
     public FEC_BatchCustomSync(CustomSync__c recordCustom,Boolean isEndd) { 
         this.cus = recordCustom;
         this.isEndJob = isEndd; // noti
@@ -36,11 +36,11 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
             0 
         );  
         startTime  = cus.EndAt__c ?? toDate.addHours(-1);
-        String whatName = cus.WhatSync__c; 
+        String whatName = cus.CaseBusinessCode__c; 
         return Database.getQueryLocator(getFields(cus));
     } 
     global void execute(Database.BatchableContext bc, List<sObject> scope) { 
-        FEC_API_Log__c log = new FEC_API_Log__c();  
+        FEC_integration_service_log__c log = new FEC_integration_service_log__c();  
         log.FEC_Custom_Sync__c = cus.id;
         try{
             totalSize = totalSize + scope.size();
@@ -52,9 +52,9 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
                     recordIDs.add(String.valueOf(reId));
                 }
                 log.Records__c = JSON.serialize(recordIDs);   
-                List<FEC_API_Log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,scope);  
-                for (FEC_API_Log__c rLog : resultLogs) {
-                    if (rLog.FEC_Is_Success__c ?? false) { 
+                List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,scope);  
+                for (FEC_integration_service_log__c rLog : resultLogs) {
+                    if (rLog.FEC_Bix_Is_Success__c ?? false) { 
                          countSuccess = countSuccess + countIdsFromJsonString(rLog.Records__c); 
                     } else {  
                          countFail = countFail + countIdsFromJsonString(rLog.Records__c); 
@@ -95,10 +95,10 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     public static String getFields(CustomSync__c cus) { 
         String fieldList = extractFieldsFromMapping(cus.RequestBodyMapping__c);
         if (Test.isRunningTest()) return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c; 
-
+        String caseType = cus.CaseBusinessCode__c != null  ? ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ' : '';
         String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                            ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
-                           ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ';  
+                           caseType;  
         return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c + wherePart;
     }
 

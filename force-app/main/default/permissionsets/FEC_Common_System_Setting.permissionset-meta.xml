@@ -963,7 +963,7 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
-        <object>FEC_API_Log__c</object>
+        <object>FEC_integration_service_log__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
@@ -1027,12 +1027,12 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Custom_Sync__c</field>
+        <field>FEC_integration_service_log__c.FEC_Custom_Sync__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Quantity_Call__c</field>
+        <field>FEC_integration_service_log__c.FEC_Quantity_Call__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1052,42 +1052,42 @@
     </fieldPermissions> 
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.Records__c</field>
+        <field>FEC_integration_service_log__c.Records__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Request_String__c</field>
+        <field>FEC_integration_service_log__c.FEC_Request_Data__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Response_String__c</field>
+        <field>FEC_integration_service_log__c.FEC_Response_Data__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Is_Success__c</field>
+        <field>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Error_Message__c</field>
+        <field>FEC_integration_service_log__c.FEC_Error_Message__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Endpoint__c</field>
+        <field>FEC_integration_service_log__c.FEC_Endpoint__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Method__c</field>
+        <field>FEC_integration_service_log__c.FEC_Method__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_API_Log__c.FEC_Status_Code__c</field>
+        <field>FEC_integration_service_log__c.FEC_Status_Code__c</field>
         <readable>true</readable>
     </fieldPermissions> 
     <fieldPermissions>

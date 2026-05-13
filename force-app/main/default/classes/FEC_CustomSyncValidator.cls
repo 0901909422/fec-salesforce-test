@@ -12,11 +12,11 @@ public class FEC_CustomSyncValidator {
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Custom_Sync_Bix');
         Boolean metadataMissing = apiConfig == null || String.isBlank(apiConfig.FEC_Endpoint__c);
 
-        // 3. Check WhatSync__c exists in FEC_Business_Process__c
+        // 3. Check CaseBusinessCode__c exists in FEC_Business_Process__c
         Set<String> whatSyncCodes = new Set<String>();
         for (CustomSync__c rec : records) {
-            if (String.isNotBlank(rec.WhatSync__c)) {
-                whatSyncCodes.add(rec.WhatSync__c);
+            if (String.isNotBlank(rec.CaseBusinessCode__c)) {
+                whatSyncCodes.add(rec.CaseBusinessCode__c);
             }
         }
         Set<String> validCodes = new Set<String>();
@@ -35,8 +35,11 @@ public class FEC_CustomSyncValidator {
             if (metadataMissing) {
                 rec.addError('Custom Metadata FEC_API_Config "FEC_Custom_Sync_Bix" is missing or has no Endpoint.');
             }
-            if (String.isNotBlank(rec.WhatSync__c) && !validCodes.contains(rec.WhatSync__c)) {
-                // rec.addError('What Sync "' + rec.WhatSync__c + '" does not exist in Business Process.');
+            if (String.isNotBlank(rec.CaseBusinessCode__c) && !validCodes.contains(rec.CaseBusinessCode__c)) {
+                // rec.addError('Case Business Code "' + rec.CaseBusinessCode__c + '" does not exist in Business Process.');
+            }
+            if (String.isNotBlank(rec.CaseBusinessCode__c) && rec.TargetObject__c != 'Case') {
+                rec.addError('CaseBusinessCode is only applicable when Target Object is Case.');
             }
 
             // 3. Compare keys between RequestBodyMapping__c and MappingDataType__c

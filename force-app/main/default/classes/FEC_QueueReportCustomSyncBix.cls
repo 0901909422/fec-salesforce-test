@@ -12,7 +12,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
 
     public void execute(QueueableContext context) { 
         List<CustomSync__c> records = [
-            SELECT name, WhatSync__c, StartAt__c, EndAt__c, SyncFailed__c,
+            SELECT name, CaseBusinessCode__c, StartAt__c, EndAt__c, SyncFailed__c,
                    SyncSuccessFully__c, TotalRecordSync__c, Active__c,ProcessingQuantity__c
             FROM CustomSync__c
             WHERE Active__c = true

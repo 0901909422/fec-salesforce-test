@@ -10,7 +10,7 @@ History
 global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
       
 	private Map<Id, CustomSync__c> mCus;  
-    private List<FEC_API_Log__c> uLog = new List<FEC_API_Log__c>();
+    private List<FEC_integration_service_log__c> uLog = new List<FEC_integration_service_log__c>();
     public FEC_BatchReCallCustomSync(  Map<Id, CustomSync__c> mCusSync) {  
         this.mCus = mCusSync; 
     }
@@ -19,16 +19,16 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
         CustomSyncSetting__c apiSetting = CustomSyncSetting__c.getOrgDefaults(); 
         return Database.getQueryLocator([
             Select id,Records__c,FEC_Custom_Sync__c,FEC_Quantity_Call__c
-            from FEC_API_Log__c
-            where FEC_Is_Success__c = false 
+            from FEC_integration_service_log__c
+            where FEC_Bix_Is_Success__c = false 
             and ( FEC_Quantity_Call__c < :apiSetting.LimitQuanitySync__c OR FEC_Quantity_Call__c = NULL)
             and FEC_Custom_Sync__c in :mCus.keyset() 
             and FEC_Custom_Sync__c != null
         ]);
     } 
-    global void execute(Database.BatchableContext bc, List<FEC_API_Log__c> scope) {   /// run 1 record  
+    global void execute(Database.BatchableContext bc, List<FEC_integration_service_log__c> scope) {   /// run 1 record  
         if(scope == null || scope.isEmpty() || scope[0].Records__c == null) return;
-        FEC_API_Log__c log = scope[0];  
+        FEC_integration_service_log__c log = scope[0];  
         try{ 
             CustomSync__c cus = mCus.get(log.FEC_Custom_Sync__c); 
               String fieldList = '';
@@ -41,18 +41,18 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
               recordIdObject = (List<String>) JSON.deserialize(cleanRecords, List<String>.class);
             }
             String queryString = 'Select ' + fieldList +
-             ' From ' + cus.TargetObject__c + 
+             ' From Case ' +  
              ' where id in :recordIdObject';  
             List<sObject> records = Database.query(queryString);  
-            List<FEC_API_Log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,records); 
-            for (FEC_API_Log__c rLog : resultLogs) {
-                if (rLog.FEC_Is_Success__c ?? false) rLog.FEC_Error_Message__c = null;
+            List<FEC_integration_service_log__c> resultLogs = FEC_CustomSyncCallout.sendRequest(cus,log,records); 
+            for (FEC_integration_service_log__c rLog : resultLogs) {
+                if (rLog.FEC_Bix_Is_Success__c ?? false) rLog.FEC_Error_Message__c = null;
                 uLog.add(rLog);
             }
             
         }Catch(Exception e){  
             log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
-            log.FEC_Is_Success__c = false;
+            log.FEC_Bix_Is_Success__c = false;
             log.FEC_Error_Message__c = 'Error FEC_BatchReCallCustomSync: Line '+e.getLinenumber() + ' - '+ e.getMessage();
             uLog.add(log);
         } 

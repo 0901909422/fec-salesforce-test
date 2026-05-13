@@ -23,7 +23,7 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                                         StartAt__c,
                                         EndAt__c,
                                         ProcessingQuantity__c,
-                                        WhatSync__c, 
+                                        CaseBusinessCode__c, 
                                         TableName__c,
                                         TotalRecordSync__c,
                                         TargetObject__c,
