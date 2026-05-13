@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Owner_In_Assignment_Users__c</field>
         <operation>equals</operation>
-        <value>true</value>
+        <value>1</value>
     </filters>
     <label>MRC Support</label>
     <queue>FEC_MRC_Support</queue>
