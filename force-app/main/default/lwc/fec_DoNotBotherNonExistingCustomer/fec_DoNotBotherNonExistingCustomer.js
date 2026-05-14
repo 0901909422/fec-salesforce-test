@@ -3,17 +3,17 @@ import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseNonExistingData"
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
 import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 
-import FEC_DNB_Has_Data_Question from '@salesforce/label/c.FEC_DNB_Has_Data_Question';
-import FEC_DNB_No_Data_Question from '@salesforce/label/c.FEC_DNB_No_Data_Question';
+import FEC_DNB_Has_Data_Question from "@salesforce/label/c.FEC_DNB_Has_Data_Question";
+import FEC_DNB_No_Data_Question from "@salesforce/label/c.FEC_DNB_No_Data_Question";
 
-import FEC_DNB_National_Id from '@salesforce/label/c.LBL_NationalID';
-import FEC_DNB_NID_Placeholder from '@salesforce/label/c.FEC_DNB_NID_Placeholder';
-import FEC_DNB_NID_Error from '@salesforce/label/c.FEC_MSG_National_ID_Invalid';
+import FEC_DNB_National_Id from "@salesforce/label/c.LBL_NationalID";
+import FEC_DNB_NID_Placeholder from "@salesforce/label/c.FEC_DNB_NID_Placeholder";
+import FEC_DNB_NID_Error from "@salesforce/label/c.FEC_MSG_National_ID_Invalid";
 
-import FEC_DNB_Update_Button from '@salesforce/label/c.FEC_DNB_Update_Button';
+import FEC_DNB_Update_Button from "@salesforce/label/c.FEC_DNB_Update_Button";
 
-import FEC_DNB_Modal_Title from '@salesforce/label/c.FEC_DNB_Modal_Title';
-import FEC_DNB_Modal_Message from '@salesforce/label/c.FEC_DNB_Modal_Message';
+import FEC_DNB_Modal_Title from "@salesforce/label/c.FEC_DNB_Modal_Title";
+import FEC_DNB_Modal_Message from "@salesforce/label/c.FEC_DNB_Modal_Message";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
@@ -69,6 +69,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     { label: "Expiry Date", fieldName: "expiry", type: "text" },
     { label: "Original Reason", fieldName: "originalReason", type: "text" },
     { label: "Update Reason", fieldName: "updateReason", type: "picklist" },
+    { label: "Remarks", fieldName: "remarks", type: "textarea" },
   ];
 
   async connectedCallback() {
@@ -115,7 +116,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   buildDNBData(res) {
     const channel = res.channel?.toLowerCase();
     const isCall = ["inbound", "outbound"].includes(channel);
-
+    const isEmail = channel === "email";
     const createRow = ({
       id,
       channel,
@@ -157,6 +158,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         hasContact,
 
         reasonOptionsFormatted: this.getReasonOptions(),
+        remarks: ""
       };
     };
 
@@ -167,6 +169,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         type: "Interaction Phone",
         contact: res.interactionPhoneNumber,
         maskedContact: res.interactionMaskedPhone,
+        disableAction: isEmail,
       }),
       createRow({
         id: "interaction-phone-sms",
@@ -174,6 +177,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         type: "Interaction Phone",
         contact: res.interactionPhoneNumber,
         maskedContact: res.interactionMaskedPhone,
+        disableAction: isEmail,
       }),
       createRow({
         id: "interaction-email",
