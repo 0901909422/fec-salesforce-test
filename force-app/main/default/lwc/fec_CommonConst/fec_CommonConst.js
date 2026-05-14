@@ -142,7 +142,8 @@ const CATEGORY = {
 
 const COMPLAINT_TYPE_TEXT = {
   HIGH_RISK: "High risk",
-  URGENT: "Urgent"
+  URGENT: "Urgent",
+  NORMAL: "Normal"
 };
  const COMPLAINT_SOURCE_LABEL = {
   SBV: "Ngân hàng Nhà nước Việt Nam",

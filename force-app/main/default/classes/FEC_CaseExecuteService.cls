@@ -6,6 +6,76 @@ public with sharing class FEC_CaseExecuteService {
     }
     
     @AuraEnabled
+    public static void forceShowExecute(
+        Id caseId
+    ) {
+        
+        try {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            
+            update new Case(
+                Id = caseId,
+            FEC_Can_Execute__c = true
+                );
+            
+            System.debug(
+                'FORCE UPDATE FEC_Can_Execute__c = true'
+                );
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                'forceShowExecute ERROR = '
+                + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
+            
+        } finally {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+    
+    @AuraEnabled
+    public static void forceHideExecute(
+        Id caseId
+    ) {
+        
+        try {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            
+            update new Case(
+                Id = caseId,
+            FEC_Can_Execute__c = false
+                );
+            
+            System.debug(
+                'FORCE UPDATE FEC_Can_Execute__c = false'
+                );
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                'forceHideExecute ERROR = '
+                + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
+            
+        } finally {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+    
+    @AuraEnabled
     public static ExecuteVisibilityResult canExecute(Id caseId) {
         
         Case c = [
@@ -34,19 +104,19 @@ public with sharing class FEC_CaseExecuteService {
         
         Boolean canExecute = false;
         
-        /*
-         * 1. Interaction mode check
-         */
-        if (
-            c.FEC_Interaction_View_Mode__c != FEC_ConstantCommon.INTERACTION_REVIEW_MODE
-        ) {
+        // /*
+        //  * 1. Interaction mode check
+        //  */
+        // if (
+        //     c.FEC_Interaction_View_Mode__c != 'review'
+        // ) {
             
-            System.debug(
-                'FAILED: Invalid interaction mode'
-                );
+        //     System.debug(
+        //         'FAILED: Invalid interaction mode'
+        //         );
             
-            return buildResult(c, false);
-        }
+        //     return buildResult(c, false);
+        // }
         
         /*
          * 2. Closed check
