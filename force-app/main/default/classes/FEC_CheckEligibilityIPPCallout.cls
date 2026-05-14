@@ -25,10 +25,26 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
         @AuraEnabled public String description { get; set; }
         @AuraEnabled public String accEligibility { get; set; } // "true"/"false" from Details.AccEligibility
         @AuraEnabled public String account { get; set; }
+        @AuraEnabled public Decimal eligibleAmount { get; set; }
+        @AuraEnabled public List<CampaignDetail> campaigns { get; set; }
         
         @AuraEnabled public Boolean success { get; set; }
         @AuraEnabled public String errorMessage { get; set; }
         @AuraEnabled public Integer httpStatus { get; set; }
+    }
+
+    public class CampaignDetail {
+        @AuraEnabled public String type { get; set; }
+        @AuraEnabled public Decimal interestRate { get; set; }
+        @AuraEnabled public Integer tenure { get; set; }
+        @AuraEnabled public String startDate { get; set; }
+        @AuraEnabled public String endDate { get; set; }
+        @AuraEnabled public Decimal smsRate { get; set; }
+        
+        // Placeholder for calculated fields or future API updates
+        @AuraEnabled public Decimal monthlyInstallment { get; set; }
+        @AuraEnabled public Decimal conversionFee { get; set; }
+        @AuraEnabled public Decimal registrationRate { get; set; }
     }
 
     public class ResponseLog {
@@ -112,7 +128,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
                 result = parseSoapResponse(res.getBody());
                 result.httpStatus = 200;
                 if (!result.success && String.isBlank(result.errorMessage)) {
-                    result.errorMessage = 'API Code: ' + result.code + ' | Description: ' + result.description + ' | Raw XML: ' + res.getBody();
+                    result.errorMessage = System.Label.FEC_LABEL_API_Code + result.code + ' | ' + System.Label.FEC_LABEL_Description + result.description;
                 }
             } else {
                 result.success = false;
@@ -217,8 +233,38 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
                 }
 
                 if (detailsNode != null) {
-                    result.accEligibility = FEC_CommonUltils.getXmlValue(detailsNode, 'AccEligibility');
+                    result.accEligibility = FEC_CommonUltils.getXmlValue(detailsNode, 'AcctEligibilty');
+                    if (String.isBlank(result.accEligibility)) {
+                        result.accEligibility = FEC_CommonUltils.getXmlValue(detailsNode, 'AccEligibility');
+                    }
                     result.account = FEC_CommonUltils.getXmlValue(detailsNode, 'Account');
+                    
+                    String amtStr = FEC_CommonUltils.getXmlValue(detailsNode, 'EligibleAmount');
+                    result.eligibleAmount = String.isNotBlank(amtStr) ? Decimal.valueOf(amtStr) : null;
+                    
+                    // Parse Campaigns
+                    result.campaigns = new List<CampaignDetail>();
+                    List<Dom.XmlNode> campaignNodes = detailsNode.getChildElements();
+                    for (Dom.XmlNode node : campaignNodes) {
+                        if (node.getName().equalsIgnoreCase('CampaignDetails')) {
+                            CampaignDetail detail = new CampaignDetail();
+                            detail.type = FEC_CommonUltils.getXmlValue(node, 'Type');
+                            
+                            String rateStr = FEC_CommonUltils.getXmlValue(node, 'InterestRate');
+                            detail.interestRate = String.isNotBlank(rateStr) ? Decimal.valueOf(rateStr) : null;
+                            
+                            String tenStr = FEC_CommonUltils.getXmlValue(node, 'Tenure');
+                            detail.tenure = String.isNotBlank(tenStr) ? Integer.valueOf(tenStr) : null;
+                            
+                            detail.startDate = FEC_CommonUltils.getXmlValue(node, 'StartDate');
+                            detail.endDate = FEC_CommonUltils.getXmlValue(node, 'EndDate');
+                            
+                            String smsStr = FEC_CommonUltils.getXmlValue(node, 'SMSRate');
+                            detail.smsRate = String.isNotBlank(smsStr) ? Decimal.valueOf(smsStr) : null;
+                            
+                            result.campaigns.add(detail);
+                        }
+                    }
                 }
 
                 // 0 hoặc 1 = thành công tùy spec ESB; Code khác (vd 2) = lỗi nghiệp vụ
@@ -229,7 +275,7 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
             }
         } catch (Exception e) {
             result.success = false;
-            result.errorMessage = 'Parsing Error: ' + e.getMessage();
+            result.errorMessage = System.Label.FEC_MSG_Parsing_Error + e.getMessage();
         }
         return result;
     }
