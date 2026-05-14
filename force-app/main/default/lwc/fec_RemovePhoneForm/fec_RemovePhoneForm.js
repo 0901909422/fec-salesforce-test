@@ -3,8 +3,6 @@ import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEl
 import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneController.saveRemovePhoneSelections';
 import loadRemovePhoneDraft from '@salesforce/apex/FEC_RemovePhoneController.loadRemovePhoneDraft';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
-import { getObjectInfo } from 'lightning/uiObjectInfoApi';
-import FEC_CONTRACT_LIST_REMOVE_PHONE_OBJECT from '@salesforce/schema/FEC_Contract_List_for_Remove_Phone__c';
 import CASE_FEC_IS_SUBMITED from '@salesforce/schema/Case.FEC_Is_Submited__c';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
@@ -27,24 +25,14 @@ import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 const DT_SELECT_ALL = 'selectallrows';
 const DT_DESELECT_ALL = 'deselectallrows';
 
-const DEFAULT_FEC_CHECK_REMOVE_PHONE_LABEL = 'Check Remove Phone';
-
-function buildRemovePhoneTableColumns(fecCheckRemovePhoneLabel) {
-    return [
-        {
-            label: fecCheckRemovePhoneLabel,
-            fieldName: 'checkRemovePhone',
-            type: 'boolean',
-            initialWidth: 130
-        },
-        { label: FEC_Customer_Name_Label, fieldName: 'customerName', type: 'text' },
-        { label: FEC_MainInfo_Contract_Number_Label, fieldName: 'contractNumber', type: 'text' },
-        { label: FEC_MainInfo_Contract_Status_Label, fieldName: 'contractStatus', type: 'text' },
-        { label: FEC_LBL_Remove_Phone_Phone_Type, fieldName: 'phoneType', type: 'text' },
-        { label: FEC_LBL_Remove_Phone_Removable, fieldName: 'removable', type: 'text' },
-        { label: FEC_Reason_Label, fieldName: 'reason', type: 'text' }
-    ];
-}
+const REMOVE_PHONE_TABLE_COLUMNS = [
+    { label: FEC_Customer_Name_Label, fieldName: 'customerName', type: 'text' },
+    { label: FEC_MainInfo_Contract_Number_Label, fieldName: 'contractNumber', type: 'text' },
+    { label: FEC_MainInfo_Contract_Status_Label, fieldName: 'contractStatus', type: 'text' },
+    { label: FEC_LBL_Remove_Phone_Phone_Type, fieldName: 'phoneType', type: 'text' },
+    { label: FEC_LBL_Remove_Phone_Removable, fieldName: 'removable', type: 'text' },
+    { label: FEC_Reason_Label, fieldName: 'reason', type: 'text' }
+];
 
 export default class Fec_RemovePhoneForm extends LightningElement {
 
@@ -109,14 +97,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     paginationNextLabel = FEC_Btn_Next;
 
-    @track columns = buildRemovePhoneTableColumns(DEFAULT_FEC_CHECK_REMOVE_PHONE_LABEL);
-
-    @wire(getObjectInfo, { objectApiName: FEC_CONTRACT_LIST_REMOVE_PHONE_OBJECT })
-    wiredFecContractListRemovePhoneObj({ data }) {
-        if (data && data.fields && data.fields.FEC_Check_Remove_Phone__c && data.fields.FEC_Check_Remove_Phone__c.label) {
-            this.columns = buildRemovePhoneTableColumns(data.fields.FEC_Check_Remove_Phone__c.label);
-        }
-    }
+    columns = REMOVE_PHONE_TABLE_COLUMNS;
 
     customLabel = {
         sectionTitle: FEC_LBL_Remove_Phone_Section_Title,
@@ -141,22 +122,36 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         return String(v).trim();
     }
 
+    _pickApiField(source, keys) {
+        if (!source || !keys || !keys.length) {
+            return null;
+        }
+        for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+            if (Object.prototype.hasOwnProperty.call(source, k) && source[k] !== undefined && source[k] !== null) {
+                return source[k];
+            }
+        }
+        return null;
+    }
+
     /**
-     * Table row shape matches RemovePhoneRowSaveDTO -> FEC_Contract_List_for_Remove_Phone__c (text fields + FEC_Check_Remove_Phone__c; FEC_Removed_Phone_Number__c set on save from Case phone).
+     * Table row shape matches RemovePhoneRowSaveDTO -> FEC_Contract_List_for_Remove_Phone__c text fields; FEC_Check_Remove_Phone__c is derived from row selection when saving (not shown in datatable).
      */
     _normalizeRemovePhoneRowForTable(source, index, checkRemovePhoneInitial) {
         if (!source) {
             return null;
         }
+        const cell = (keys) => this._removePhoneCellText(this._pickApiField(source, keys));
         return {
             id: String(index),
             checkRemovePhone: checkRemovePhoneInitial === true,
-            customerName: this._removePhoneCellText(source.customerName),
-            contractNumber: this._removePhoneCellText(source.contractNumber),
-            contractStatus: this._removePhoneCellText(source.contractStatus),
-            phoneType: this._removePhoneCellText(source.phoneType),
-            removable: this._removePhoneCellText(source.removable),
-            reason: this._removePhoneCellText(source.reason)
+            customerName: cell(['customerName', 'CustomerName', 'Customer_Name', 'CusName']),
+            contractNumber: cell(['contractNumber', 'ContractNumber', 'AccountNumber', 'Contract_No', 'ContractNo']),
+            contractStatus: cell(['contractStatus', 'ContractStatus', 'Status']),
+            phoneType: cell(['phoneType', 'PhoneType', 'Type']),
+            removable: cell(['removable', 'Removable', 'RemovableStatus']),
+            reason: cell(['reason', 'Reason', 'Description', 'Message'])
         };
     }
 
@@ -446,24 +441,24 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     @api saveDraftIfApplicable() {
-        return Promise.resolve().then(() => {
-            if (this.readOnlyRemovePhone) {
-                return Promise.resolve();
-            }
-            this._syncPhoneFromInput();
-            const phone = (this.phone || STR_EMPTY).trim();
-            if (!this._recordId || !phone || !(this.rows || []).length) {
-                return Promise.resolve();
-            }
-            const selected = this._collectSelectedIds();
-            const rowPayload = (this.rows || [])
-                .map((r) => this._mapTableRowToSaveDto(r, selected))
-                .filter((row) => row != null);
-            return saveRemovePhoneSelections({
-                caseId: this._recordId,
-                removedPhoneNumber: phone,
-                rows: rowPayload
-            });
+        if (this.readOnlyRemovePhone) {
+            return Promise.resolve();
+        }
+        this._syncPhoneFromInput();
+        const phone = (this.phone || STR_EMPTY).trim();
+        const recordId = this._recordId;
+        const rowSnapshot = (this.rows || []).map((r) => (r ? Object.assign({}, r) : r));
+        if (!recordId || !phone || !rowSnapshot.length) {
+            return Promise.resolve();
+        }
+        const selected = this._collectSelectedIds();
+        const rowPayload = rowSnapshot
+            .map((r) => this._mapTableRowToSaveDto(r, selected))
+            .filter((row) => row != null);
+        return saveRemovePhoneSelections({
+            caseId: recordId,
+            removedPhoneNumber: phone,
+            rows: rowPayload
         });
     }
 

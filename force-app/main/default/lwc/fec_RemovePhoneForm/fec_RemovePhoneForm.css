@@ -11,7 +11,8 @@
 }
 
 .input-row lightning-input {
-    flex: 1 1 auto;
+    flex: 0 1 16rem;
+    max-width: 16rem;
     min-width: 0;
 }
 
