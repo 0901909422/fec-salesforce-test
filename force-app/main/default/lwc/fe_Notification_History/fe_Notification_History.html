@@ -11,16 +11,10 @@
                                     <lightning-spinner alternative-text={labelLoading} size="small"></lightning-spinner>
                                 </div>
                             </template>
-                            <c-fec_-related-list-paging
-                                records={smsRows}
-                                columns={smsColumns}
-                                page-size={pageSizeDefault}
-                                page-size-options={pageSizeOptions}
-                                default-sorted-by="dateTime"
-                                default-sort-direction="desc"
-                                sorted-by-description={labelSortDateTime}
-                                hide-updated-time="true"
-                                column-count="3">
+                            <c-fec_-related-list-paging records={smsRows} columns={smsColumns}
+                                page-size={pageSizeDefault} page-size-options={pageSizeOptions}
+                                default-sorted-by="dateTime" default-sort-direction="desc"
+                                sorted-by-description={labelSortDateTime} hide-updated-time="true" column-count="3">
                             </c-fec_-related-list-paging>
                         </template>
                         <template lwc:else>
@@ -41,14 +35,9 @@
             <lightning-accordion-section name="zns" label={labelTabZns}>
                 <div class={znsSectionClass}>
                     <template lwc:if={znsHasRows}>
-                        <c-fec_-related-list-paging
-                            records={znsRows}
-                            columns={extendedColumns}
-                            page-size={pageSizeDefault}
-                            page-size-options={pageSizeOptions}
-                            default-sorted-by="notificationType"
-                            default-sort-direction="asc"
-                            hide-updated-time="true"
+                        <c-fec_-related-list-paging records={znsRows} columns={extendedColumns}
+                            page-size={pageSizeDefault} page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType" default-sort-direction="asc" hide-updated-time="true"
                             column-count="9">
                         </c-fec_-related-list-paging>
                     </template>
@@ -61,7 +50,8 @@
                             </template>
                             <!-- Bảng dựng tạm cho ZNS -->
                             <div class="nh-placeholder-table-container">
-                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                <table
+                                    class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
                                     <thead>
                                         <tr class="slds-line-height_reset">
                                             <template for:each={extendedColumns} for:item="col">
@@ -88,14 +78,9 @@
             <lightning-accordion-section name="email" label={labelTabEmail}>
                 <div class={emailSectionClass}>
                     <template lwc:if={emailHasRows}>
-                        <c-fec_-related-list-paging
-                            records={emailRows}
-                            columns={extendedColumns}
-                            page-size={pageSizeDefault}
-                            page-size-options={pageSizeOptions}
-                            default-sorted-by="notificationType"
-                            default-sort-direction="asc"
-                            hide-updated-time="true"
+                        <c-fec_-related-list-paging records={emailRows} columns={extendedColumns}
+                            page-size={pageSizeDefault} page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType" default-sort-direction="asc" hide-updated-time="true"
                             column-count="9">
                         </c-fec_-related-list-paging>
                     </template>
@@ -108,7 +93,8 @@
                             </template>
                             <!-- Bảng dựng tạm cho Email -->
                             <div class="nh-placeholder-table-container">
-                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                <table
+                                    class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
                                     <thead>
                                         <tr class="slds-line-height_reset">
                                             <template for:each={extendedColumns} for:item="col">
@@ -135,14 +121,9 @@
             <lightning-accordion-section name="mobileApp" label={labelTabMobileApp}>
                 <div class={mobileAppSectionClass}>
                     <template lwc:if={mobileAppHasRows}>
-                        <c-fec_-related-list-paging
-                            records={mobileAppRows}
-                            columns={extendedColumns}
-                            page-size={pageSizeDefault}
-                            page-size-options={pageSizeOptions}
-                            default-sorted-by="notificationType"
-                            default-sort-direction="asc"
-                            hide-updated-time="true"
+                        <c-fec_-related-list-paging records={mobileAppRows} columns={extendedColumns}
+                            page-size={pageSizeDefault} page-size-options={pageSizeOptions}
+                            default-sorted-by="notificationType" default-sort-direction="asc" hide-updated-time="true"
                             column-count="9">
                         </c-fec_-related-list-paging>
                     </template>
@@ -155,7 +136,8 @@
                             </template>
                             <!-- Bảng dựng tạm cho Mobile App -->
                             <div class="nh-placeholder-table-container">
-                                <table class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
+                                <table
+                                    class="slds-table slds-table_bordered slds-table_cell-buffer nh-placeholder-table">
                                     <thead>
                                         <tr class="slds-line-height_reset">
                                             <template for:each={extendedColumns} for:item="col">
