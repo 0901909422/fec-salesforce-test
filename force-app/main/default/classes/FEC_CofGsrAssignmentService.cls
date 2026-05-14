@@ -139,6 +139,24 @@ public without sharing class FEC_CofGsrAssignmentService {
         return result;
     }
 
+    // tungnm37 fix: check xem NOC có team nào khác CC/SP không
+    // true → có team khác → luồng tự động; false → chỉ CC/SP → luồng thủ công
+    public static Boolean hasNonCcSpTeam(Set<Id> nocIds) {
+        if (nocIds == null || nocIds.isEmpty()) return false;
+        List<FEC_Routing_Assignment__c> teams = [
+            SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
+            WHERE FEC_Nature_of_Cases__c IN :nocIds
+              AND FEC_Team__c != null
+              AND FEC_Active__c = true
+        ];
+        for (FEC_Routing_Assignment__c ra : teams) {
+            if (!'CC'.equals(ra.FEC_Team__c) && !'SP'.equals(ra.FEC_Team__c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -207,6 +225,18 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ));
             }
             insert assignments;
+
+            Datetime assignmentSubmitTs = System.now();
+            List<FEC_Assignment__c> submitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                submitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = assignmentSubmitTs
+                ));
+            }
+            if (!submitStamp.isEmpty()) {
+                update submitStamp;
+            }
 
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
             // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
@@ -339,6 +369,18 @@ public without sharing class FEC_CofGsrAssignmentService {
                 queueNameList.add(queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName); // tungnm37: lưu display name cho history
             }
             insert assignments;
+
+            Datetime manualSubmitTs = System.now();
+            List<FEC_Assignment__c> manualSubmitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                manualSubmitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = manualSubmitTs
+                ));
+            }
+            if (!manualSubmitStamp.isEmpty()) {
+                update manualSubmitStamp;
+            }
 
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
             // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
@@ -578,6 +620,11 @@ public without sharing class FEC_CofGsrAssignmentService {
                 if (!nextStages.isEmpty()) {
                     Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
                 }
+            }
+
+            // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
+            if (hasNonCcSpTeam(nocIds)) {
+                createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
             }
         } else {
             createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);

@@ -4,6 +4,7 @@ import { getRecord } from "lightning/uiRecordApi";
 import CASE_OBJECT from "@salesforce/schema/Case";
 import COMPLAINT_TYPE from "@salesforce/schema/Case.FEC_Complain_Type__c";
 import COMPLAINT_SOURCE from "@salesforce/schema/Case.FEC_Complaint_Source__c";
+import VIEW_MODE from "@salesforce/schema/Case.FEC_Interaction_View_Mode__c";
 import {
   subscribe,
   unsubscribe,
@@ -12,7 +13,8 @@ import {
 } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_ACTION_CHANNEL from "@salesforce/messageChannel/FEC_CaseAction__c";
-import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+// import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import getCaseInfo from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCaseInfo";
 import getCategory from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCategory";
 import updateCase from "@salesforce/apex/FEC_COFFraudRelatedHandler.updateCase";
 import {
@@ -25,14 +27,15 @@ const FIELDS = [
   "Case.RecordTypeId",
   "Case.FEC_Complain_Type__c",
   "Case.FEC_Complaint_Source__c",
+  "Case.FEC_Interaction_View_Mode__c",
 ];
 export default class Fec_COFFraudRelatedView extends LightningElement {
   @api recordId;
-
+  @api isEdit;
   @track complaintTypeOptions = [];
   @track complaintSourceOptions = [];
 
-  @track complaintTypeValue = null;
+  @track complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
   @track complaintSourceValue = null;
 
   productTypeId;
@@ -51,10 +54,12 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
   @wire(MessageContext)
   messageContext;
-  connectedCallback() {
+  async connectedCallback() {
     this.subscribeToMessageChannel();
     this.subscribeCaseActionChannel();
-    this.subscribeModeChannel();
+    // this.subscribeModeChannel();
+
+    await this.loadCaseData();
   }
 
   disconnectedCallback() {
@@ -91,16 +96,16 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
     );
   }
 
-  subscribeModeChannel() {
-    if (this.modeSubscription) return;
+  // subscribeModeChannel() {
+  //   if (this.modeSubscription) return;
 
-    this.modeSubscription = subscribe(
-      this.messageContext,
-      IS_MODE_EDIT,
-      (message) => this.handleModeMessage(message),
-      { scope: APPLICATION_SCOPE },
-    );
-  }
+  //   this.modeSubscription = subscribe(
+  //     this.messageContext,
+  //     IS_MODE_EDIT,
+  //     (message) => this.handleModeMessage(message),
+  //     { scope: APPLICATION_SCOPE },
+  //   );
+  // }
 
   // =====================
   // LMS Handler
@@ -142,6 +147,12 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
     // chỉ update khi có data
     if (!this.complaintTypeValue && !this.complaintSourceValue) return;
 
+    console.log("Updating case with Complaint Type:", this.complaintTypeValue);
+    console.log(
+      "Updating case with Complaint Source:",
+      this.complaintSourceValue,
+    );
+
     updateCase({
       recordId: this.recordId,
       complaintTypeValue: this.complaintTypeValue,
@@ -155,17 +166,17 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
       });
   }
 
-  handleModeMessage(message) {
-    console.log("MODE MESSAGE:", JSON.stringify(message));
+  // handleModeMessage(message) {
+  //   console.log("MODE MESSAGE:", JSON.stringify(message));
 
-    if (message?.caseId !== this.recordId) {
-      return;
-    }
+  //   if (message?.caseId !== this.recordId) {
+  //     return;
+  //   }
 
-    this.modeEditCase = message?.isModeEdit || false;
+  //   this.modeEditCase = message?.isModeEdit || false;
 
-    console.log("modeEditCase =", this.modeEditCase);
-  }
+  //   console.log("modeEditCase =", this.modeEditCase);
+  // }
   // Lấy metadata object
   // @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
   // objectInfo({ data, error }) {
@@ -174,29 +185,22 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   //   }
   // }
 
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: FIELDS,
-  })
-  wiredCase({ data, error }) {
-    if (data) {
-      this.recordTypeId = data.fields.RecordTypeId.value;
+  async loadCaseData() {
+    try {
+      const data = await getCaseInfo({
+        recordId: this.recordId,
+      });
 
-      // lấy trực tiếp từ DB
-      this.complaintTypeValue = getFieldValue(data, COMPLAINT_TYPE);
+      this.recordTypeId = data.RecordTypeId;
 
-      this.complaintSourceValue = getFieldValue(data, COMPLAINT_SOURCE);
+      this.complaintTypeValue =
+        data.FEC_Complain_Type__c || COMPLAINT_TYPE_TEXT.NORMAL;
 
-      if (!this.complaintTypeValue) {
-        this.complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
-      }
-      console.log("Complaint Type:", this.complaintTypeValue);
+      this.complaintSourceValue = data.FEC_Complaint_Source__c;
 
-      console.log("Complaint Source:", this.complaintSourceValue);
-    }
-
-    if (error) {
-      console.error("wiredCase error:", error);
+      this.modeEditCase = data.FEC_Interaction_View_Mode__c === "handling";
+    } catch (error) {
+      console.error("loadCaseData error:", error);
     }
   }
 
@@ -253,5 +257,9 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
   get helpText() {
     return COMPLAINT_SOURCE_LABEL[this.complaintSourceValue] || "";
+  }
+
+  get isReadOnly() {
+    return this.isEdit === false;
   }
 }

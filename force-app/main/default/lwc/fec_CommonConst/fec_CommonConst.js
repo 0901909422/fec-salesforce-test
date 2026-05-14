@@ -142,7 +142,8 @@ const CATEGORY = {
 
 const COMPLAINT_TYPE_TEXT = {
   HIGH_RISK: "High risk",
-  URGENT: "Urgent"
+  URGENT: "Urgent",
+  NORMAL: "Normal"
 };
  const COMPLAINT_SOURCE_LABEL = {
   SBV: "Ngân hàng Nhà nước Việt Nam",
@@ -218,7 +219,11 @@ const ACTIONS_REQUIRE_SUBDECISION_MAP = {
   Route_to: ["TEAM"],
 };
 
-const CUSTOMER_PHONE_NUMBER = 'FEC_Customer_Phone_Number__c';
+const PAGE_SIZE_OPTIONS_MAP = new Map([
+  [10, "10"],
+  [20, "20"],
+  [50, "50"]
+]);
 
 export { 
     AUTO_NOTIFICATION_HEADER_VI, 
@@ -327,5 +332,5 @@ export {
   DECISION_OPTIONS_MAP,
   ACTIONS_REQUIRE_DECISION,
   ACTIONS_REQUIRE_SUBDECISION_MAP,
-  CUSTOMER_PHONE_NUMBER
+  PAGE_SIZE_OPTIONS_MAP
 };
