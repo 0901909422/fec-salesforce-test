@@ -309,10 +309,7 @@ export default class Fe_Notification_History extends LightningElement {
                 return;
             }
             this.emailHistoryLoading = false;
-            this.emailRows = Array.isArray(data) ? data.map(item => ({
-                ...item,
-                sentDateTime: formatDateTimeVN(item.sentDateTime)
-            })) : [];
+            this.emailRows = Array.isArray(data) ? data : [];
             return;
         }
         if (channel === 'zns') {
