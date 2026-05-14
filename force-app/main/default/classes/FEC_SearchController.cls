@@ -56,9 +56,9 @@ public with sharing class FEC_SearchController {
     @AuraEnabled(cacheable=true)
     public static String getTestServiceErrorAccountNumber() {
         try {
-            FEC_Simulator_Service_Error_Config__mdt row = FEC_Simulator_Service_Error_Config__mdt.getInstance('FEC_Default');
-            return (row != null && String.isNotBlank(row.FEC_Account_Number__c))
-                ? row.FEC_Account_Number__c.trim()
+            FEC_API_Config__mdt row = FEC_API_Config__mdt.getInstance('FEC_Search_Test_Service_Error_Account');
+            return (row != null && String.isNotBlank(row.FEC_Account_Number_Hard_Code__c))
+                ? row.FEC_Account_Number_Hard_Code__c.trim()
                 : null;
         } catch (Exception e) {
             return null;

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Cấu hình custom metadata dùng để giả lập lỗi dịch vụ khi tìm kiếm khách hàng (Customer Search). Lưu số tài khoản kích hoạt luồng lỗi mô phỏng; với Case Interaction cần bật FEC_Is_Test_API__c, các luồng khác khớp số tài khoản theo quy tắc nghiệp vụ.</description>
-    <label>FEC Simulator Service Error Config</label>
-    <pluralLabel>FEC Simulator Service Error Configs</pluralLabel>
-    <visibility>Public</visibility>
-</CustomObject>
