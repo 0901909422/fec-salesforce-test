@@ -142,6 +142,7 @@ const FIELD_INVITED_PHONE = "FEC_Invited_Phone__c";
 const FIELD_ZALO_USED = "FEC_Zalo_Used__c";
 const FIELD_DEBT_COLLECTION_PHONE = "FEC_Debt_Collection_Phone__c";
 const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
+const FIELD_UNBLOCK_PHONE = "FEC_Unblock_Phone__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
@@ -150,6 +151,7 @@ const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_INVITED_PHONE,
   FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
+  FIELD_UNBLOCK_PHONE,
 ]);
 /** Case: input tel + validateUpdatedInfoPhone + giới hạn độ dài (0/84). */
 const PHONE_VALIDATED_FIELD_APIS = new Set([
@@ -161,6 +163,7 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_INVITED_PHONE,
   FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
+  FIELD_UNBLOCK_PHONE,
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -2908,6 +2911,8 @@ export default class Fec_CaseBussiness extends LightningElement {
               actionId: actionId,
               //Toannd61: action.value (label/value dropdown) cho Apex phân nhánh FEC_IsReverted__c + custom label history
               routingActionValue: selectedAction?.value ?? "",
+//PhongBT: update bộ noc chọn ở updated khi revert về
+              natureOfCaseId: this.business.natureOfCase,
             },
           };
           break;
