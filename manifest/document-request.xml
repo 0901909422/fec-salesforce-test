@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
+		<members>FEC_CaseBusinessService</members>
+		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_ClientPDFService</members>
 		<members>FEC_ClientPDFServiceTest</members>
+		<members>FEC_PaymentHistoryValidationService</members>
 		<members>FEC_PDFTemplateSelector</members>
 		<name>ApexClass</name>
 	</types>
 	<types>
+		<members>FEC_MSG_Can_Create_Card_Close_Certificate</members>
+		<members>FEC_MSG_Cannot_Request_Payment_History</members>
+		<members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
 		<members>FEC_PDF_DefaultFileName</members>
 		<members>FEC_PDF_Error_DataEmpty</members>
 		<members>FEC_PDF_Error_NoCreatePermission</members>
@@ -27,6 +33,7 @@
 	</types>
 	<types>
 		<members>fecPdfGenerator</members>
+		<members>fec_CaseBussiness</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
