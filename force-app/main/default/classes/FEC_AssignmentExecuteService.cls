@@ -94,7 +94,6 @@ public with sharing class FEC_AssignmentExecuteService {
         
         Boolean canExecute =
             activeAssignmentCount > 0;
-        
         /*
          * =================================================
          * NEW LOGIC
@@ -102,14 +101,14 @@ public with sharing class FEC_AssignmentExecuteService {
          * =================================================
          */
         Case caseRecord = [
-        SELECT
-            Id,
-            FEC_Can_Execute_Assignment__c,
-            FEC_Assignment_Users__c
-        FROM Case
-        WHERE Id = :caseId
-        LIMIT 1
-    ];
+            SELECT
+                Id,
+                FEC_Can_Execute_Assignment__c,
+                FEC_Assignment_Users__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
         
         System.debug(
             'FEC_Assignment_Users__c = '
@@ -127,7 +126,7 @@ public with sharing class FEC_AssignmentExecuteService {
              * Format:
              * xxxx;yyyy;zzzz
              */
-            Set<String> assignmentUsers =
+            Set<String> assignmentValues =
                 new Set<String>();
             
             for (
@@ -139,32 +138,36 @@ public with sharing class FEC_AssignmentExecuteService {
                 
                 if (!String.isBlank(value)) {
                     
-                    assignmentUsers.add(
+                    assignmentValues.add(
                         value.trim()
                         );
                 }
             }
             
             System.debug(
-                'assignmentUsers = '
-                + assignmentUsers
+                'assignmentValues = '
+                + assignmentValues
                 );
             
             /*
-             * Match user id
+             * ============================================
+             * 1. Direct user match
+             * ============================================
              */
             Boolean matchedUser =
-                assignmentUsers.contains(
+                assignmentValues.contains(
                 String.valueOf(userId)
                 );
             
             /*
-             * Match role id
+             * ============================================
+             * 2. Direct role match
+             * ============================================
              */
             Boolean matchedRole =
                 currentUser.UserRoleId != null
                 &&
-                assignmentUsers.contains(
+                assignmentValues.contains(
                 String.valueOf(
                 currentUser.UserRoleId
                 )
@@ -180,9 +183,135 @@ public with sharing class FEC_AssignmentExecuteService {
                 + matchedRole
                 );
             
+            /*
+             * ============================================
+             * 3. Queue logic
+             * ============================================
+             */
+            Boolean matchedQueue = false;
+            
+            if (
+                !matchedUser &&
+                !matchedRole
+            ) {
+                
+                /*
+                 * Get queues from assignment values
+                 */
+                Set<Id> queueIdsFromAssignment =
+                    new Set<Id>();
+                
+                for (String value : assignmentValues) {
+                    
+                    /*
+                     * Queue prefix = 00G
+                     */
+                    if (
+                        value.startsWith('00G')
+                    ) {
+                        queueIdsFromAssignment.add(
+                            (Id)value
+                            );
+                    }
+                }
+                
+                System.debug(
+                    'queueIdsFromAssignment = '
+                    + queueIdsFromAssignment
+                    );
+                
+                if (!queueIdsFromAssignment.isEmpty()) {
+                    
+                    /*
+                     * ====================================
+                     * 3.1 Check direct user in queue
+                     * ====================================
+                     */
+                    Integer directQueueMemberCount = [
+                SELECT COUNT()
+                FROM GroupMember
+                WHERE
+                    GroupId IN :queueIdsFromAssignment
+                    AND UserOrGroupId = :userId
+            ];
+                    
+                    System.debug(
+                        'directQueueMemberCount = '
+                        + directQueueMemberCount
+                        );
+                    
+                    matchedQueue =
+                        directQueueMemberCount > 0;
+                    
+                    /*
+                     * ====================================
+                     * 3.2 Check role in queue
+                     * ====================================
+                     */
+                    if (
+                        !matchedQueue &&
+                        currentUser.UserRoleId != null
+                    ) {
+                        
+                        /*
+                         * Get roles added into queue
+                         */
+                        Set<Id> roleIdsInQueue =
+                            new Set<Id>();
+                        
+                        for (
+                            GroupMember gm : [
+                        SELECT
+                            UserOrGroupId
+                        FROM GroupMember
+                        WHERE GroupId
+                            IN :queueIdsFromAssignment
+                    ]
+                        ) {
+                            
+                            Id memberId =
+                                gm.UserOrGroupId;
+                            
+                            /*
+                             * Role prefix = 00E
+                             */
+                            if (
+                                String.valueOf(memberId)
+                                .startsWith('00E')
+                            ) {
+                                
+                                roleIdsInQueue.add(
+                                    memberId
+                                    );
+                            }
+                        }
+                        
+                        System.debug(
+                            'roleIdsInQueue = '
+                            + roleIdsInQueue
+                            );
+                        
+                        /*
+                         * Current user role
+                         * belongs to queue role
+                         */
+                        matchedQueue =
+                            roleIdsInQueue.contains(
+                            currentUser.UserRoleId
+                            );
+                    }
+                }
+            }
+            
+            System.debug(
+                'matchedQueue = '
+                + matchedQueue
+                );
+            
             if (
                 matchedUser ||
-                matchedRole
+                matchedRole ||
+                matchedQueue
             ) {
                 
                 System.debug(
