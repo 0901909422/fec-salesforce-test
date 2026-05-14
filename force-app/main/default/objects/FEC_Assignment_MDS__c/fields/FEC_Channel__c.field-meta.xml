@@ -5,7 +5,7 @@
     <label>Channel</label>
     <referenceTo>FEC_Channel__c</referenceTo>
     <relationshipLabel>Assignments MDS</relationshipLabel>
-    <relationshipName>Assignments_MDS</relationshipName>
+    <relationshipName>Assignments_MDS_1</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
