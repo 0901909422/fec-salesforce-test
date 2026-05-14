@@ -93,6 +93,7 @@
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
+		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
         <name>CustomField</name>
     </types>
 	<types>
