@@ -123,5 +123,9 @@
 		<members>FEC_CommonCss</members>
 		<name>StaticResource</name>
 	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<name>Flow</name>
+	</types>
 	<version>66.0</version>
 </Package>
