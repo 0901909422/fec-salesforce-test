@@ -503,6 +503,7 @@ function normalizeMasterDataLwcEntry(entry) {
         ? o.fecMasterDataSettingIsEdit
         : true,
     hideSubSectionHeading: o.hideSubSectionHeading === true,
+    isCollapsible: o.isCollapsible === true,
   };
 }
 

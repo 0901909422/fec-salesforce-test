@@ -822,6 +822,9 @@ public without sharing class FEC_CaseBusinessService {
               ) {
                 lwcSlot.hideSubSectionHeading = true;
               }
+              if (isCOF && (subSectionNameTemp == FEC_ConstantCommon.ORIGINAL_INFO || subSectionNameTemp == FEC_ConstantCommon.UPDATED_INFO)) {
+                lwcSlot.isCollapsible = (checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_ONE) && isLatestRevertToCurrentStage) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_TWO) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_THREE);
+              }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
@@ -3788,6 +3791,8 @@ public without sharing class FEC_CaseBusinessService {
     /** true: không hiển thị dòng label subsection (vd Original Info + GSR trên NOC flow history). */
     @AuraEnabled
     public Boolean hideSubSectionHeading;
+    @AuraEnabled
+    public Boolean isCollapsible;
   }
 
   public class Section implements Comparable {
