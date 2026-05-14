@@ -4,13 +4,7 @@
     <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue. Ẩn khi là COF/GSR và đã có Assignment.</description>
     <externalId>false</externalId>
     <formula>IF(
-    AND(
-        OR(
-            LEFT(FEC_Business_Process__r.FEC_Code__c, 3) = "COF",
-            LEFT(FEC_Business_Process__r.FEC_Code__c, 3) = "GSR"
-        ),
-        FEC_Assignment_Count__c > 0
-    ),
+    FEC_Assignment_Count__c > 0,
     "",
     IF(
         OR(RecordType.Name = "Customer Case", RecordType.Name = "Internal Case"),
