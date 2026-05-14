@@ -1003,7 +1003,7 @@
         <name>PermissionSet</name>
     </types>
     <types>
-		<members>FEC_PSG_RD_IT_User</members>
+		<members>PSG_RD_IT_User</members>
         <members>FEC_PSG_CS_CS_Ecom_Officer</members>
         <members>FEC_PSG_CS_CS_Ecom_Specialist</members>
         <members>FEC_PSG_CS_CS_Ecom_Team_Leader</members>
