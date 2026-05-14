@@ -76,9 +76,10 @@ public without sharing class FEC_RemovePhoneController {
     }
 
     @AuraEnabled
-    public static void saveRemovePhoneSelections(Id caseId, String removedPhoneNumber, List<RemovePhoneRowSaveDTO> rows) {
+    public static void saveRemovePhoneSelections(Id caseId, String removedPhoneNumber, String rowsJson) {
+        List<RemovePhoneRowSaveDTO> rows = parseRemovePhoneRowsJson(rowsJson);
         if (caseId == null) {
-            if (rows == null || rows.isEmpty()) {
+            if (rows.isEmpty()) {
                 return;
             }
             throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
@@ -87,7 +88,7 @@ public without sharing class FEC_RemovePhoneController {
         String phoneNorm = String.isBlank(removedPhoneNumber) ? null : removedPhoneNumber.trim();
 
         List<FEC_Contract_List_for_Remove_Phone__c> toInsert = new List<FEC_Contract_List_for_Remove_Phone__c>();
-        if (!String.isBlank(phoneNorm) && rows != null) {
+        if (!String.isBlank(phoneNorm) && !rows.isEmpty()) {
             for (RemovePhoneRowSaveDTO dto : rows) {
                 if (dto == null) {
                     continue;
@@ -156,6 +157,94 @@ public without sharing class FEC_RemovePhoneController {
             out.rows.add(dto);
         }
         return out;
+    }
+
+    private static List<RemovePhoneRowSaveDTO> parseRemovePhoneRowsJson(String rowsJson) {
+        List<RemovePhoneRowSaveDTO> out = new List<RemovePhoneRowSaveDTO>();
+        if (String.isBlank(rowsJson)) {
+            return out;
+        }
+        try {
+            List<Object> arr = (List<Object>) JSON.deserializeUntyped(rowsJson);
+            if (arr == null) {
+                return out;
+            }
+            for (Object item : arr) {
+                if (item == null) {
+                    continue;
+                }
+                Map<String, Object> m = (Map<String, Object>) item;
+                RemovePhoneRowSaveDTO dto = new RemovePhoneRowSaveDTO();
+                dto.customerName = firstStringFromRowMap(m, new List<String>{
+                    'customerName', 'CustomerName', 'FEC_Customer_Name__c'
+                });
+                dto.contractNumber = firstStringFromRowMap(m, new List<String>{
+                    'contractNumber', 'ContractNumber', 'FEC_Account_Contract_Number__c'
+                });
+                dto.contractStatus = firstStringFromRowMap(m, new List<String>{
+                    'contractStatus', 'ContractStatus', 'FEC_Account_Contract_Status__c'
+                });
+                dto.phoneType = firstStringFromRowMap(m, new List<String>{
+                    'phoneType', 'PhoneType', 'FEC_Phone_Type__c'
+                });
+                dto.removable = firstStringFromRowMap(m, new List<String>{
+                    'removable', 'Removable', 'FEC_Removable__c'
+                });
+                dto.reason = firstStringFromRowMap(m, new List<String>{
+                    'reason', 'Reason', 'FEC_Reason__c'
+                });
+                dto.checkRemovePhone = firstBooleanFromRowMap(m, new List<String>{
+                    'checkRemovePhone', 'CheckRemovePhone', 'FEC_Check_Remove_Phone__c'
+                });
+                out.add(dto);
+            }
+        } catch (Exception ex) {
+            throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
+        }
+        return out;
+    }
+
+    private static String firstStringFromRowMap(Map<String, Object> m, List<String> keys) {
+        if (m == null || keys == null) {
+            return null;
+        }
+        for (String k : keys) {
+            if (!m.containsKey(k)) {
+                continue;
+            }
+            Object v = m.get(k);
+            if (v == null) {
+                continue;
+            }
+            String s = String.valueOf(v).trim();
+            if (s.length() > 0) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    private static Boolean firstBooleanFromRowMap(Map<String, Object> m, List<String> keys) {
+        if (m == null || keys == null) {
+            return false;
+        }
+        for (String k : keys) {
+            if (!m.containsKey(k)) {
+                continue;
+            }
+            Object v = m.get(k);
+            if (v == null) {
+                continue;
+            }
+            if (v instanceof Boolean) {
+                return (Boolean) v;
+            }
+            String s = String.valueOf(v).trim().toLowerCase();
+            if (s == 'true' || s == '1') {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String trimToNull(String s) {

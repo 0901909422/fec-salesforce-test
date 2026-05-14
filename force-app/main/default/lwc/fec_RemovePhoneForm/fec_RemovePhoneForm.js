@@ -173,7 +173,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             phoneType: toApexText(r.phoneType),
             removable: toApexText(r.removable),
             reason: toApexText(r.reason),
-            checkRemovePhone: selectedSet.has(String(r.id))
+            checkRemovePhone: selectedSet.has(String(r.id)) || r.checkRemovePhone === true
         };
     }
 
@@ -458,7 +458,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         return saveRemovePhoneSelections({
             caseId: recordId,
             removedPhoneNumber: phone,
-            rows: rowPayload
+            rowsJson: JSON.stringify(rowPayload)
         });
     }
 
