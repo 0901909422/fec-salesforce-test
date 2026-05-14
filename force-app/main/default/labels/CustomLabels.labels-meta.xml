@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>FEC_PDF_Error_DataEmpty</fullName>
@@ -15673,5 +15673,33 @@
         <protected>false</protected>
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_Months</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Months</shortDescription>
+        <value>Months</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_API_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>API Code</shortDescription>
+        <value>API Code: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description</shortDescription>
+        <value>Description: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Parsing_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parsing Error</shortDescription>
+        <value>Parsing Error: </value>
     </labels>
 </CustomLabels>
