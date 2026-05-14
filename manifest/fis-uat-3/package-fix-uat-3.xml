@@ -113,6 +113,7 @@
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
