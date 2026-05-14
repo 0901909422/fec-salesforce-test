@@ -30,6 +30,11 @@ public without sharing class FEC_RemovePhoneController {
         @AuraEnabled public Boolean checkRemovePhone;
     }
 
+    public class RemovePhoneDraftDTO {
+        @AuraEnabled public String phone;
+        @AuraEnabled public List<RemovePhoneRowSaveDTO> rows;
+    }
+
     @AuraEnabled
     public static CheckEligibilityResultDTO checkEligibility(String phone) {
         CheckEligibilityResultDTO dto = new CheckEligibilityResultDTO();
@@ -72,106 +77,93 @@ public without sharing class FEC_RemovePhoneController {
 
     @AuraEnabled
     public static void saveRemovePhoneSelections(Id caseId, String removedPhoneNumber, List<RemovePhoneRowSaveDTO> rows) {
-        if (rows == null || rows.isEmpty()) {
-            return;
-        }
         if (caseId == null) {
+            if (rows == null || rows.isEmpty()) {
+                return;
+            }
             throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
         }
-        List<Case> submittedGuard = [
-            SELECT Id, FEC_Is_Submited__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (submittedGuard.isEmpty() || submittedGuard[0].FEC_Is_Submited__c == true) {
-            return;
-        }
+
         String phoneNorm = String.isBlank(removedPhoneNumber) ? null : removedPhoneNumber.trim();
-        if (String.isBlank(phoneNorm)) {
-            return;
-        }
-
-        Map<String, Id> existingByKey = new Map<String, Id>();
-        for (FEC_Contract_List_for_Remove_Phone__c r : [
-            SELECT Id, FEC_Account_Contract_Number__c, FEC_Phone_Type__c
-            FROM FEC_Contract_List_for_Remove_Phone__c
-            WHERE FEC_Case__c = :caseId
-            AND FEC_Removed_Phone_Number__c = :phoneNorm
-        ]) {
-            existingByKey.put(buildRowKey(r.FEC_Account_Contract_Number__c, r.FEC_Phone_Type__c), r.Id);
-        }
-
-        Map<String, FEC_Contract_List_for_Remove_Phone__c> desiredByKey = new Map<String, FEC_Contract_List_for_Remove_Phone__c>();
-        for (RemovePhoneRowSaveDTO dto : rows) {
-            if (dto == null || dto.checkRemovePhone != true) {
-                continue;
-            }
-            String key = buildRowKey(dto.contractNumber, dto.phoneType);
-            FEC_Contract_List_for_Remove_Phone__c rec = new FEC_Contract_List_for_Remove_Phone__c();
-            rec.FEC_Case__c = caseId;
-            rec.FEC_Removed_Phone_Number__c = phoneNorm;
-            rec.FEC_Customer_Name__c = dto.customerName;
-            rec.FEC_Account_Contract_Number__c = dto.contractNumber;
-            rec.FEC_Account_Contract_Status__c = dto.contractStatus;
-            rec.FEC_Phone_Type__c = dto.phoneType;
-            rec.FEC_Removable__c = dto.removable;
-            rec.FEC_Reason__c = dto.reason;
-            rec.FEC_Check_Remove_Phone__c = dto.checkRemovePhone == true;
-            desiredByKey.put(key, rec);
-        }
-
-        if (desiredByKey.isEmpty()) {
-            List<FEC_Contract_List_for_Remove_Phone__c> wipe = new List<FEC_Contract_List_for_Remove_Phone__c>();
-            for (Id existingId : existingByKey.values()) {
-                wipe.add(new FEC_Contract_List_for_Remove_Phone__c(Id = existingId));
-            }
-            if (!wipe.isEmpty()) {
-                delete wipe;
-            }
-            return;
-        }
-
-        List<FEC_Contract_List_for_Remove_Phone__c> toDelete = new List<FEC_Contract_List_for_Remove_Phone__c>();
-        for (String key : existingByKey.keySet()) {
-            if (!desiredByKey.containsKey(key)) {
-                toDelete.add(new FEC_Contract_List_for_Remove_Phone__c(Id = existingByKey.get(key)));
-            }
-        }
 
         List<FEC_Contract_List_for_Remove_Phone__c> toInsert = new List<FEC_Contract_List_for_Remove_Phone__c>();
-        List<FEC_Contract_List_for_Remove_Phone__c> toUpdate = new List<FEC_Contract_List_for_Remove_Phone__c>();
-        for (String key : desiredByKey.keySet()) {
-            FEC_Contract_List_for_Remove_Phone__c rec = desiredByKey.get(key);
-            Id existingId = existingByKey.get(key);
-            if (existingId != null) {
-                rec.Id = existingId;
-                toUpdate.add(rec);
-            } else {
+        if (!String.isBlank(phoneNorm) && rows != null) {
+            for (RemovePhoneRowSaveDTO dto : rows) {
+                if (dto == null) {
+                    continue;
+                }
+                FEC_Contract_List_for_Remove_Phone__c rec = new FEC_Contract_List_for_Remove_Phone__c();
+                rec.FEC_Case__c = caseId;
+                rec.FEC_Removed_Phone_Number__c = phoneNorm;
+                rec.FEC_Customer_Name__c = trimToNull(dto.customerName);
+                rec.FEC_Account_Contract_Number__c = trimToNull(dto.contractNumber);
+                rec.FEC_Account_Contract_Status__c = trimToNull(dto.contractStatus);
+                rec.FEC_Phone_Type__c = trimToNull(dto.phoneType);
+                rec.FEC_Removable__c = trimToNull(dto.removable);
+                rec.FEC_Reason__c = trimToNull(dto.reason);
+                rec.FEC_Check_Remove_Phone__c = (dto.checkRemovePhone == true);
                 rec.Name = buildRemovePhoneListName(rec);
                 toInsert.add(rec);
             }
         }
 
+        List<FEC_Contract_List_for_Remove_Phone__c> existing = [
+            SELECT Id
+            FROM FEC_Contract_List_for_Remove_Phone__c
+            WHERE FEC_Case__c = :caseId
+        ];
+
         try {
-            if (!toDelete.isEmpty()) {
-                delete toDelete;
+            if (!existing.isEmpty()) {
+                delete existing;
             }
             if (!toInsert.isEmpty()) {
                 insert toInsert;
-            }
-            if (!toUpdate.isEmpty()) {
-                update toUpdate;
             }
         } catch (Exception ex) {
             throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
         }
     }
 
-    private static String buildRowKey(String contractNumber, String phoneType) {
-        String c = contractNumber == null ? '' : contractNumber.trim();
-        String p = phoneType == null ? '' : phoneType.trim();
-        return c + '\uffff' + p;
+    @AuraEnabled(cacheable=false)
+    public static RemovePhoneDraftDTO loadRemovePhoneDraft(Id caseId) {
+        RemovePhoneDraftDTO out = new RemovePhoneDraftDTO();
+        out.phone = '';
+        out.rows = new List<RemovePhoneRowSaveDTO>();
+        if (caseId == null) {
+            return out;
+        }
+        for (FEC_Contract_List_for_Remove_Phone__c r : [
+            SELECT FEC_Customer_Name__c, FEC_Account_Contract_Number__c,
+                   FEC_Account_Contract_Status__c, FEC_Phone_Type__c,
+                   FEC_Removable__c, FEC_Reason__c, FEC_Check_Remove_Phone__c,
+                   FEC_Removed_Phone_Number__c
+            FROM FEC_Contract_List_for_Remove_Phone__c
+            WHERE FEC_Case__c = :caseId
+            ORDER BY CreatedDate ASC
+        ]) {
+            if (String.isBlank(out.phone) && !String.isBlank(r.FEC_Removed_Phone_Number__c)) {
+                out.phone = r.FEC_Removed_Phone_Number__c;
+            }
+            RemovePhoneRowSaveDTO dto = new RemovePhoneRowSaveDTO();
+            dto.customerName = r.FEC_Customer_Name__c;
+            dto.contractNumber = r.FEC_Account_Contract_Number__c;
+            dto.contractStatus = r.FEC_Account_Contract_Status__c;
+            dto.phoneType = r.FEC_Phone_Type__c;
+            dto.removable = r.FEC_Removable__c;
+            dto.reason = r.FEC_Reason__c;
+            dto.checkRemovePhone = (r.FEC_Check_Remove_Phone__c == true);
+            out.rows.add(dto);
+        }
+        return out;
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        String t = s.trim();
+        return t.length() == 0 ? null : t;
     }
 
     private static String buildRemovePhoneListName(FEC_Contract_List_for_Remove_Phone__c rec) {

@@ -3,6 +3,8 @@ import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEl
 import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneController.saveRemovePhoneSelections';
 import loadRemovePhoneDraft from '@salesforce/apex/FEC_RemovePhoneController.loadRemovePhoneDraft';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { getObjectInfo } from 'lightning/uiObjectInfoApi';
+import FEC_CONTRACT_LIST_REMOVE_PHONE_OBJECT from '@salesforce/schema/FEC_Contract_List_for_Remove_Phone__c';
 import CASE_FEC_IS_SUBMITED from '@salesforce/schema/Case.FEC_Is_Submited__c';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
@@ -24,6 +26,25 @@ import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 
 const DT_SELECT_ALL = 'selectallrows';
 const DT_DESELECT_ALL = 'deselectallrows';
+
+const DEFAULT_FEC_CHECK_REMOVE_PHONE_LABEL = 'Check Remove Phone';
+
+function buildRemovePhoneTableColumns(fecCheckRemovePhoneLabel) {
+    return [
+        {
+            label: fecCheckRemovePhoneLabel,
+            fieldName: 'checkRemovePhone',
+            type: 'boolean',
+            initialWidth: 130
+        },
+        { label: FEC_Customer_Name_Label, fieldName: 'customerName', type: 'text' },
+        { label: FEC_MainInfo_Contract_Number_Label, fieldName: 'contractNumber', type: 'text' },
+        { label: FEC_MainInfo_Contract_Status_Label, fieldName: 'contractStatus', type: 'text' },
+        { label: FEC_LBL_Remove_Phone_Phone_Type, fieldName: 'phoneType', type: 'text' },
+        { label: FEC_LBL_Remove_Phone_Removable, fieldName: 'removable', type: 'text' },
+        { label: FEC_Reason_Label, fieldName: 'reason', type: 'text' }
+    ];
+}
 
 export default class Fec_RemovePhoneForm extends LightningElement {
 
@@ -88,14 +109,14 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     paginationNextLabel = FEC_Btn_Next;
 
-    columns = [
-        { label: FEC_Customer_Name_Label, fieldName: 'customerName', type: 'text' },
-        { label: FEC_MainInfo_Contract_Number_Label, fieldName: 'contractNumber', type: 'text' },
-        { label: FEC_MainInfo_Contract_Status_Label, fieldName: 'contractStatus', type: 'text' },
-        { label: FEC_LBL_Remove_Phone_Phone_Type, fieldName: 'phoneType', type: 'text' },
-        { label: FEC_LBL_Remove_Phone_Removable, fieldName: 'removable', type: 'text' },
-        { label: FEC_Reason_Label, fieldName: 'reason', type: 'text' }
-    ];
+    @track columns = buildRemovePhoneTableColumns(DEFAULT_FEC_CHECK_REMOVE_PHONE_LABEL);
+
+    @wire(getObjectInfo, { objectApiName: FEC_CONTRACT_LIST_REMOVE_PHONE_OBJECT })
+    wiredFecContractListRemovePhoneObj({ data }) {
+        if (data && data.fields && data.fields.FEC_Check_Remove_Phone__c && data.fields.FEC_Check_Remove_Phone__c.label) {
+            this.columns = buildRemovePhoneTableColumns(data.fields.FEC_Check_Remove_Phone__c.label);
+        }
+    }
 
     customLabel = {
         sectionTitle: FEC_LBL_Remove_Phone_Section_Title,
@@ -113,8 +134,69 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         this.phone = nextPhone;
     }
 
+    _removePhoneCellText(v) {
+        if (v === undefined || v === null) {
+            return STR_EMPTY;
+        }
+        return String(v).trim();
+    }
+
+    /**
+     * Table row shape matches RemovePhoneRowSaveDTO -> FEC_Contract_List_for_Remove_Phone__c (text fields + FEC_Check_Remove_Phone__c; FEC_Removed_Phone_Number__c set on save from Case phone).
+     */
+    _normalizeRemovePhoneRowForTable(source, index, checkRemovePhoneInitial) {
+        if (!source) {
+            return null;
+        }
+        return {
+            id: String(index),
+            checkRemovePhone: checkRemovePhoneInitial === true,
+            customerName: this._removePhoneCellText(source.customerName),
+            contractNumber: this._removePhoneCellText(source.contractNumber),
+            contractStatus: this._removePhoneCellText(source.contractStatus),
+            phoneType: this._removePhoneCellText(source.phoneType),
+            removable: this._removePhoneCellText(source.removable),
+            reason: this._removePhoneCellText(source.reason)
+        };
+    }
+
+    _mapTableRowToSaveDto(r, selectedSet) {
+        if (!r) {
+            return null;
+        }
+        const toApexText = (v) => {
+            if (v === undefined || v === null) {
+                return null;
+            }
+            const s = String(v).trim();
+            return s.length ? s : null;
+        };
+        return {
+            customerName: toApexText(r.customerName),
+            contractNumber: toApexText(r.contractNumber),
+            contractStatus: toApexText(r.contractStatus),
+            phoneType: toApexText(r.phoneType),
+            removable: toApexText(r.removable),
+            reason: toApexText(r.reason),
+            checkRemovePhone: selectedSet.has(String(r.id))
+        };
+    }
+
     _bumpTableKey() {
         this.tableKey = (this.tableKey || 0) + 1;
+    }
+
+    _syncCheckRemovePhoneFromSelection() {
+        const sel = new Set((this.selectedRowIds || []).map((id) => String(id)));
+        this.rows = (this.rows || []).map((r) => {
+            if (!r) {
+                return r;
+            }
+            const next = Object.assign({}, r);
+            next.checkRemovePhone = sel.has(String(next.id));
+            return next;
+        });
+        this._recomputePagedRows();
     }
 
     _loadRemovePhoneDraftFromServer() {
@@ -135,15 +217,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 if (!phone || !raw.length) {
                     return;
                 }
-                this.rows = raw.map((r, i) => ({
-                    customerName: r.customerName,
-                    contractNumber: r.contractNumber,
-                    contractStatus: r.contractStatus,
-                    phoneType: r.phoneType,
-                    removable: r.removable,
-                    reason: r.reason,
-                    id: String(i)
-                }));
+                this.rows = raw.map((r, i) => this._normalizeRemovePhoneRowForTable(r, i, r && r.checkRemovePhone === true)).filter((row) => row != null);
                 this.selectedRowIds = raw
                     .map((r, i) => (r && r.checkRemovePhone === true ? String(i) : null))
                     .filter((id) => id !== null);
@@ -203,34 +277,15 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         return p.length > 0 ? p : '—';
     }
 
-    get showEditableTable() {
-        return !this.readOnlyRemovePhone && this.rows && this.rows.length > 0;
+    get phoneInputDisplayValue() {
+        if (this.readOnlyRemovePhone) {
+            return this.phoneReadOnlyDisplay;
+        }
+        return this.phone;
     }
 
-    get showReadOnlySelections() {
-        return this.readOnlyRemovePhone && this.readOnlySelectedRows.length > 0;
-    }
-
-    get readOnlySelectedRows() {
-        const sel = new Set((this.selectedRowIds || []).map((id) => String(id)));
-        const src = (this.rows || []).filter((r) => r && sel.has(String(r.id)));
-        return src.map((r, i) => {
-            const cells = (this.columns || []).map((col) => {
-                const fn = col.fieldName;
-                const rawVal = r[fn];
-                const value =
-                    rawVal != null && rawVal !== STR_EMPTY ? String(rawVal) : STR_EMPTY;
-                return {
-                    ckey: String(fn) + '-' + String(r.id) + '-' + i,
-                    label: col.label,
-                    value: value.length > 0 ? value : '—'
-                };
-            });
-            return {
-                rowKey: 'rp-' + String(r.id) + '-' + i,
-                cells: cells
-            };
-        });
+    get showDataTable() {
+        return (this.rows || []).length > 0;
     }
 
     get datatableMountRows() {
@@ -291,6 +346,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 }
             });
             this.selectedRowIds = Array.from(merged);
+            this._syncCheckRemovePhoneFromSelection();
             return;
         }
         if (action === DT_DESELECT_ALL) {
@@ -301,6 +357,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 merged.delete(id);
             });
             this.selectedRowIds = Array.from(merged);
+            this._syncCheckRemovePhoneFromSelection();
             return;
         }
         const pageData = this.pagedRows || [];
@@ -314,6 +371,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             merged.add(id);
         });
         this.selectedRowIds = Array.from(merged);
+        this._syncCheckRemovePhoneFromSelection();
     }
 
     handlePrevPage() {
@@ -367,14 +425,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             .then((res) => {
                 if (res && res.success) {
                     const raw = res.rows || [];
-                    this.rows = raw.map((r, i) => {
-                        if (!r) {
-                            return r;
-                        }
-                        const row = Object.assign({}, r);
-                        row.id = String(i);
-                        return row;
-                    });
+                    this.rows = raw.map((r, i) => this._normalizeRemovePhoneRowForTable(r, i, false)).filter((row) => row != null);
                     this.lastCheckedPhone = (this.phone || STR_EMPTY).trim();
                     this.currentPage = 1;
                     this.resultMessage = STR_EMPTY;
@@ -401,20 +452,13 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             }
             this._syncPhoneFromInput();
             const phone = (this.phone || STR_EMPTY).trim();
-            const lastNorm = (this.lastCheckedPhone || STR_EMPTY).trim();
-            if (!this._recordId || !phone || phone !== lastNorm || !(this.rows || []).length) {
+            if (!this._recordId || !phone || !(this.rows || []).length) {
                 return Promise.resolve();
             }
             const selected = this._collectSelectedIds();
-            const rowPayload = this.rows.map((r) => ({
-                customerName: r.customerName,
-                contractNumber: r.contractNumber,
-                contractStatus: r.contractStatus,
-                phoneType: r.phoneType,
-                removable: r.removable,
-                reason: r.reason,
-                checkRemovePhone: selected.has(String(r.id))
-            }));
+            const rowPayload = (this.rows || [])
+                .map((r) => this._mapTableRowToSaveDto(r, selected))
+                .filter((row) => row != null);
             return saveRemovePhoneSelections({
                 caseId: this._recordId,
                 removedPhoneNumber: phone,

@@ -10,15 +10,11 @@
     align-items: end;
 }
 
-.remove-phone-readonly-value {
-    font-weight: 400;
-    color: #080707;
+.input-row lightning-input {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.remove-phone-readonly-row {
-    padding: 0.5rem 0.75rem;
-}
-
-.remove-phone-readonly-cell:last-child {
-    margin-bottom: 0;
+.button-wrap {
+    flex: 0 0 auto;
 }
