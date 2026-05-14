@@ -3911,6 +3911,11 @@
         <field>FEC_Additional_Info__c.FEC_Province_City__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Customer Experience Manager 3 - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
