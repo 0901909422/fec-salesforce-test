@@ -1137,12 +1137,13 @@ export default class Fec_CaseBussiness extends LightningElement {
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
+    const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = !this._isEdit;
-            field.editable = this._isEdit;
+            field.readonly = isCOFStage1Revert ? true : !this._isEdit;
+            field.editable = isCOFStage1Revert ? false : this._isEdit;
           });
         });
       });
