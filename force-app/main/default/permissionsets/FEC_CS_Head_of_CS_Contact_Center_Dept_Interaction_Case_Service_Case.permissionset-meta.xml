@@ -2405,6 +2405,7 @@
         <field>FEC_Sub_Code__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
+
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Active_Loan_Or_Disbursed__c</field>
@@ -3825,7 +3826,6 @@
         <field>Case.FEC_Complain_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_History__c.FEC_Sales_Channel__c</field>
@@ -3836,7 +3836,6 @@
         <field>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Application_ID_List__c</field>
@@ -3988,6 +3987,7 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>false</allowDelete>
