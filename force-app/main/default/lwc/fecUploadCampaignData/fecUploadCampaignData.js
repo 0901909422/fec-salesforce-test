@@ -63,7 +63,7 @@ export default class FecUploadCampaignData extends LightningElement {
     @track inProgressData = [];
     @track mappingOptions = [];
 
-    selectedMappingId = '';
+    @track selectedMappingId = '';
     rawMappingData = [];
     librariesLoaded = false;
     isLoading = false;
@@ -126,6 +126,8 @@ export default class FecUploadCampaignData extends LightningElement {
             
             this.inProgressCount = 0;
             this.inProgressData = null;
+            this.selectedMappingId = null;
+            await Promise.resolve();
             this.selectedMappingId = '';
             this.recordLifetime = null;
             return; 
