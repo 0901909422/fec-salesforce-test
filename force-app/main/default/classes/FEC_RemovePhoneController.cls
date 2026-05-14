@@ -104,7 +104,7 @@ public without sharing class FEC_RemovePhoneController {
 
         Map<String, FEC_Contract_List_for_Remove_Phone__c> desiredByKey = new Map<String, FEC_Contract_List_for_Remove_Phone__c>();
         for (RemovePhoneRowSaveDTO dto : rows) {
-            if (dto == null) {
+            if (dto == null || dto.checkRemovePhone != true) {
                 continue;
             }
             String key = buildRowKey(dto.contractNumber, dto.phoneType);
@@ -119,6 +119,24 @@ public without sharing class FEC_RemovePhoneController {
             rec.FEC_Reason__c = dto.reason;
             rec.FEC_Check_Remove_Phone__c = dto.checkRemovePhone == true;
             desiredByKey.put(key, rec);
+        }
+
+        if (desiredByKey.isEmpty()) {
+            List<FEC_Contract_List_for_Remove_Phone__c> wipe = new List<FEC_Contract_List_for_Remove_Phone__c>();
+            for (Id existingId : existingByKey.values()) {
+                wipe.add(new FEC_Contract_List_for_Remove_Phone__c(Id = existingId));
+            }
+            if (!wipe.isEmpty()) {
+                delete wipe;
+            }
+            return;
+        }
+
+        List<FEC_Contract_List_for_Remove_Phone__c> toDelete = new List<FEC_Contract_List_for_Remove_Phone__c>();
+        for (String key : existingByKey.keySet()) {
+            if (!desiredByKey.containsKey(key)) {
+                toDelete.add(new FEC_Contract_List_for_Remove_Phone__c(Id = existingByKey.get(key)));
+            }
         }
 
         List<FEC_Contract_List_for_Remove_Phone__c> toInsert = new List<FEC_Contract_List_for_Remove_Phone__c>();
@@ -136,6 +154,9 @@ public without sharing class FEC_RemovePhoneController {
         }
 
         try {
+            if (!toDelete.isEmpty()) {
+                delete toDelete;
+            }
             if (!toInsert.isEmpty()) {
                 insert toInsert;
             }

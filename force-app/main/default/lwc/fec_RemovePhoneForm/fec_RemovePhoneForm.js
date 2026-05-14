@@ -36,7 +36,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         }
     }
 
-    get isReadOnly() {
+    get formDisabled() {
         return this._caseIsSubmited === true;
     }
 
@@ -73,19 +73,11 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     };
 
     handlePhoneChange(event) {
-        if (this.isReadOnly) {
+        if (this.formDisabled) {
             return;
         }
         const nextPhone = (event.target.value || STR_EMPTY).trim();
         const currentPhone = this.phone;
-        if (
-            currentPhone !== nextPhone &&
-            currentPhone === this.lastCheckedPhone &&
-            this.rows &&
-            this.rows.length > 0
-        ) {
-            void this._persistDraftNow(currentPhone).catch(() => {});
-        }
         this.phone = nextPhone;
         const phoneInput = this.template.querySelector('lightning-input');
         if (phoneInput) {
@@ -100,7 +92,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get disableCheckButton() {
-        return this.isLoading || !this.phone || this.isReadOnly;
+        return this.isLoading || !this.phone || this.formDisabled;
     }
 
     get showTable() {
@@ -149,7 +141,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleRowSelection(event) {
-        if (this.isReadOnly) {
+        if (this.formDisabled) {
             return;
         }
         const config = event.detail.config || {};
@@ -162,7 +154,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 }
             });
             this.selectedRowIds = Array.from(merged);
-            void this._persistDraftNow().catch(() => {});
             return;
         }
         const pageData = this.pagedRows || [];
@@ -176,7 +167,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             merged.add(id);
         });
         this.selectedRowIds = Array.from(merged);
-        void this._persistDraftNow().catch(() => {});
     }
 
     handlePrevPage() {
@@ -194,7 +184,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleCheckEligibility() {
-        if (this.isReadOnly) {
+        if (this.formDisabled) {
             return;
         }
         const phoneErr = this.phone ? validateUpdatedInfoPhone(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
@@ -226,7 +216,8 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                     this.rows = res.rows || [];
                     this.lastCheckedPhone = this.phone;
                     this.currentPage = 1;
-                    return this._persistDraftNow().catch(() => {});
+                    this.resultMessage = STR_EMPTY;
+                    return;
                 }
                 this.resultMessage = (res && res.errorMessage) ? res.errorMessage : FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
@@ -245,7 +236,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     _persistDraftNow(phoneOverride) {
-        if (this.isReadOnly) {
+        if (this.formDisabled) {
             return Promise.resolve();
         }
         const phoneToUse =

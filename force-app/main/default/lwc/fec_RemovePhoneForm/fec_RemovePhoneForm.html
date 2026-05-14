@@ -8,7 +8,7 @@
         name="removedPhone"
         label={customLabel.removedPhoneLabel}
         value={phone}
-        disabled={isReadOnly}
+        disabled={formDisabled}
         onchange={handlePhoneChange}>
       </lightning-input>
       <div class="button-wrap">
@@ -36,7 +36,7 @@
         key-field="id"
         data={pagedRows}
         columns={columns}
-        hide-checkbox-column={isReadOnly}
+        hide-checkbox-column={formDisabled}
         selected-rows={selectedRowKeysOnPage}
         onrowselection={handleRowSelection}>
       </lightning-datatable>
