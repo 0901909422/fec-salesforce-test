@@ -93,12 +93,15 @@
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
+		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
         <name>CustomField</name>
     </types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Search_Case_Record_Page</members>
+        <members>FEC_Customer_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -110,6 +113,7 @@
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -117,11 +121,16 @@
         <members>RD_IT_User_System_Management</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Customer_360</members>
+        <members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
 	</types>
     <types>
 		<members>FEC_CommonCss</members>
 		<name>StaticResource</name>
+	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<name>Flow</name>
 	</types>
 	<version>66.0</version>
 </Package>
