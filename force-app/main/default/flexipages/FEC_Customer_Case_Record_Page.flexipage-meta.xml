@@ -105,7 +105,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9 AND 10</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -150,12 +150,17 @@
                                     <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
                                     <operator>EQUAL</operator>
                                 </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>0</rightValue>
+                                </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.FEC_Execute_Assigment</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -194,6 +199,11 @@
                                 <criteria>
                                     <leftValue>{!Record.ArchiveExternalId__c}</leftValue>
                                     <operator>EQUAL</operator>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
+                                    <operator>GT</operator>
+                                    <rightValue>0</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
