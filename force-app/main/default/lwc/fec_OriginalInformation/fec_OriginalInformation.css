@@ -1,0 +1,70 @@
+.value {
+    padding: 0;
+    min-height: 17px;
+}
+
+* {
+}
+
+.label {
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.label lightning-helptext {
+  position: relative;
+  top: -6px;
+}
+
+.label abbr {
+  color: red;
+  margin-left: 4px;
+}
+
+.sub-section {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.route-to-info__item {
+  display: flex;
+}
+
+.route-to-info__item * {
+  flex: 1;
+}
+
+.process-action-result {
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.process-action-result--error {
+  color: #e62e00;
+}
+
+.process-action-result--success {
+  color: #00cc00;
+}
+
+.process-action-result--info {
+  color: #0000ff;
+}
+
+.t-a-c {
+  text-align: center;
+}
+
+.error {
+  color: red;
+  font-weight: 500;
+}
+
+.error > p {
+  margin-bottom: 6px;
+}
+
+.phone-error {
+  color: var(--slds-g-color-error-1);
+  font-size: 0.75rem;
+}

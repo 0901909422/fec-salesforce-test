@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_CS_Check_Final_Product__c</fullName>
+    <description>Sản phẩm cuối cùng liên quan đến case sau khi CS xác định</description>
+    <label>CS Check - Final Product</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Card</fullName>
+                <default>false</default>
+                <label>Card</label>
+            </value>
+            <value>
+                <fullName>Loan</fullName>
+                <default>false</default>
+                <label>Loan</label>
+            </value>
+            <value>
+                <fullName>Insurance</fullName>
+                <default>false</default>
+                <label>Insurance</label>
+            </value>
+            <value>
+                <fullName>Banca</fullName>
+                <default>false</default>
+                <label>Banca</label>
+            </value>
+            <value>
+                <fullName>DC3</fullName>
+                <default>false</default>
+                <label>DC3</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

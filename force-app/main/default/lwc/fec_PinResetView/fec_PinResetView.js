@@ -72,6 +72,7 @@ export default class Fec_PinResetView extends LightningElement {
         this.nationalId = res.nationalId;
         this.mobile = res.mobile;
         this.processActionCount = res.processActionCount;
+        this.successReset = res.isPinResetSuccess;
       })
       .catch((err) => {
         this.showToast("Error", err.body.message, "error");
@@ -93,7 +94,7 @@ export default class Fec_PinResetView extends LightningElement {
 
   get hiddenButton() {
     return Boolean(this.successReset || this.processActionCount >= 3);
-  }
+}
 
   get message() {
     if (this.successReset) {

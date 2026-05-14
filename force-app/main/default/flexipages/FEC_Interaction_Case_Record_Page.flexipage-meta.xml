@@ -945,7 +945,7 @@
                 <componentName>fecCheckEligibleLoanSection</componentName>
                 <identifier>c_fecCheckEligibleLoanSection</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR 1</booleanFilter>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -953,7 +953,7 @@
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
-                        <operator>EQUAL</operator>
+                        <operator>CONTAINS</operator>
                         <rightValue>Card</rightValue>
                     </criteria>
                 </visibilityRule>
@@ -968,16 +968,16 @@
                 <componentName>fec_CardEligibilitySection</componentName>
                 <identifier>c_fec_CardEligibilitySection</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 AND 2) OR 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Loan</rightValue>
-                    </criteria>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -1102,6 +1102,16 @@
             </componentInstance>
         </itemInstances>
         <name>Facet-i9z6432zuwn</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -1284,6 +1294,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab27</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Insurance</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -1303,6 +1320,27 @@
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Banca</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab34</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

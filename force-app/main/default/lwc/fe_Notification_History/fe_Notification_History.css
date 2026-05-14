@@ -67,6 +67,32 @@
     vertical-align: middle;
 }
 
+.nh-placeholder-table-container {
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.nh-placeholder-table {
+    margin: 0;
+    border: none;
+}
+
+.nh-placeholder-table thead th {
+    background-color: #f3f3f2;
+    padding: 0.5rem;
+}
+
+.nh-placeholder-table tbody td {
+    padding: 2rem 1rem;
+    background: #fff;
+}
+
+.nh-placeholder-table .nh-empty-state-msg {
+    border: none;
+    padding: 0;
+}
+
 @media (max-width: 768px) {
     .nh-empty-state-msg--neutral,
     .nh-empty-state-msg--error {

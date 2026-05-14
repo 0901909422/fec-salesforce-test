@@ -23,6 +23,7 @@ import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_Proce
 // import getSubCodeIds from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodeIds";
 
 import getNatureOfCase from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCase";
+import getNatureOfCaseWithoutSubCode from "@salesforce/apex/FEC_CaseEditNOCController.getNatureOfCaseWithoutSubCode";
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
 import hasAutoRoutingAssignment from "@salesforce/apex/FEC_CaseEditNOCController.hasAutoRoutingAssignment";
 
@@ -34,6 +35,7 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 import { 
   ACTION_REOPEN, 
@@ -68,6 +70,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
+  originalNOCBusinessProcessCode;
 
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   get originalNOCFields() {
@@ -81,17 +84,30 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
-    return this.isSubmited === true;
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
+    return this.isSubmited === true && this.showUpdatedSection;
   }
 
-  // Khi isSubmited=true, Updated section luôn editable
-  // Không phụ thuộc viewMode hay modeEditCase — chỉ cần đã submit là được sửa NOC
+  // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
+  // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
+  // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
   get isUpdatedSectionEditable() {
-    return this.isSubmited === true;
+    if (!this.isSubmittedState) {
+      return false;
+    }
+    return this.modeEditCase === true;
   }
 
   get showUpdatedSection() {
-    return this.isSubmittedState && !this.hasAutoRoutingAssignment;
+    const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
+    const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -253,10 +269,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error:", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
 
@@ -517,10 +535,12 @@ export default class Fec_CaseEditNOC extends LightningElement {
           getOriginalNOCFromFlowHistory({ caseId: this.recordId })
             .then((nocData) => {
               this.originalNOC = nocData || null;
+              this.originalNOCBusinessProcessCode = nocData?.businessProcessCode || null;
             })
             .catch((err) => {
               console.error("getOriginalNOCFromFlowHistory error (reloadData):", err);
               this.originalNOC = null;
+              this.originalNOCBusinessProcessCode = null;
             });
         }
       })
@@ -726,8 +746,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeOptionlst = res;
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
-        //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-        //lưu bộ có subcode chứ không phải bộ không subcode định submit
+        // Không có option Sub-Code: resolve NOC không Sub-Code; getByCase (Apex) không fallback Sub-Code từ Case khi đã có Sub-Category từ UI.
         const triple =
           this.productTypeSelectedId &&
           this.categorySelectedId &&
@@ -756,6 +775,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ getSubCode ~ err:", err);
       });
+  }
+
+    syncSubCodeComboValue() {
+    const el = this.template.querySelector(`c-fec_-combo-box[data-id="sub-code"]`);
+    if (el) {
+      el.value = undefined;
+    }
   }
 
   handleRemoveProdType() {
@@ -797,9 +823,18 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.handleEnable("category");
   }
 
+  //linhdev fix section Account Info + Case Info
   handleChangeCategory(e) {
     this.categorySelectedId = e.detail.value;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
+    this.handleDisable("sub-category");
+    this.handleDisable("sub-code");
     this.handleEnable("sub-category");
+    if (this.productTypeSelectedId && this.categorySelectedId) {
+      this.handlePublishMessageChanel();
+    }
   }
 
   handleChangeSubCategory(e) {

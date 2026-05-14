@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title={cardTitle} icon-name="utility:database">
+    <lightning-card>
         <template if:true={loading}>
             <div class="slds-p-around_medium">
                 <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
@@ -22,12 +22,9 @@
                             medium-device-size="4"
                             large-device-size="4"
                         >
-                            <div class="slds-text-title_bold">{r.fieldLabel}</div>
                             <div class="fec-addl-body">
-                                <div class="slds-text-body_regular slds-text-color_weak slds-m-top_xx-small">{r.fieldValue}</div>
-                                <template if:true={r.showFile}>
-                                    <div class="slds-text-body_small slds-m-top_xx-small slds-text-color_weak">{r.sourceFileName}</div>
-                                </template>
+                                <span class="slds-text-title_bold">{r.fieldLabel}</span>
+                                <span class="slds-text-body_regular slds-text-color_weak">{r.fieldValue}</span>
                             </div>
                         </lightning-layout-item>
                     </template>

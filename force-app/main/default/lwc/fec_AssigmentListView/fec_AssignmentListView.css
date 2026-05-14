@@ -1,0 +1,29 @@
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* THÊM */
+.assignment-card {
+  width: 100%;
+}
+
+/* FOOTER */
+.assignment-footer {
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+
+  padding: 10px 0;
+
+  border-top: 1px solid #dddbda;
+  background: #fff;
+
+  text-align: center;
+}

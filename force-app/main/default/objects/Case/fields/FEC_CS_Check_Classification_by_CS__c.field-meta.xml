@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_CS_Check_Classification_by_CS__c</fullName>
+    <label>CS Check - Classification by CS</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>CS đã xử lý_Sales kiểm tra nội bộ</fullName>
+                <default>false</default>
+                <label>CS đã xử lý_Sales kiểm tra nội bộ</label>
+            </value>
+            <value>
+                <fullName>CS chuyển Sales xử lý</fullName>
+                <default>false</default>
+                <label>CS chuyển Sales xử lý</label>
+            </value>
+            <value>
+                <fullName>CS tự xử lý_Không chuyển Sales</fullName>
+                <default>false</default>
+                <label>CS tự xử lý_Không chuyển Sales</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

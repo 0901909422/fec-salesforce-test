@@ -1,0 +1,9 @@
+.remarks-cell {
+    width: 140px;
+    min-width: 140px;
+
+    white-space: pre-line;
+    word-break: break-word;
+
+    vertical-align: middle;
+}

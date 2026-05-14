@@ -317,11 +317,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -338,16 +333,6 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -538,6 +523,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Nature_of_Case__c.FEC_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -810,6 +800,11 @@
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+    <editable>false</editable>
+    <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
+    <readable>true</readable>
+</fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Outbound Team Leader - Master Data Management</label>
     <license>Salesforce</license>

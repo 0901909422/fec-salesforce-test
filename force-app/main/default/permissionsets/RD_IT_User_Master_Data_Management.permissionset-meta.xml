@@ -522,7 +522,22 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Cancel_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Channel__c.FEC_Self_Service_Flag__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Channel__c.FEC_Update_Case_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -602,11 +617,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -623,16 +633,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -973,6 +973,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Nature_of_Case__c.FEC_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1593,6 +1598,11 @@
         <field>FEC_MDM_Channel__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - IT User - Master Data Management</label>
     <license>Salesforce</license>
@@ -2099,7 +2109,7 @@
         <object>FEC_Decision_Table__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
+    
     <recordTypeVisibilities>
         <recordType>FEC_Notification__c.Auto_Notification</recordType>
         <visible>true</visible>
