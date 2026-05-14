@@ -1117,6 +1117,21 @@ public without sharing class FEC_CaseTriggerHandler {
         return tatBusinessHoursId;
     }
 
+    private static final Integer STATUS_BUCKET_3_MAX = 131072;
+    private static final List<String> STATUS_HISTORY_FIELDS = new List<String>{
+        'FEC_Case_Status_History_1__c',
+        'FEC_Case_Status_History_2__c',
+        'FEC_Case_Status_History_3__c'
+    };
+    private static final List<Integer> STATUS_BUCKET_LIMITS = new List<Integer>{
+        CASE_STATUS_HISTORY_MAX, CASE_STATUS_HISTORY_MAX, STATUS_BUCKET_3_MAX
+    };
+    private static final List<String> REMARK_FIELDS = new List<String>{
+        'FEC_Case_Remarks_1__c',
+        'FEC_Case_Remarks_2__c',
+        'FEC_Case_Remarks_3__c'
+    };
+
     @TestVisible
     private static void applyCaseStatusHistoryOnInsert(List<Case> records) {
         if (records == null || records.isEmpty()) {
@@ -1128,6 +1143,7 @@ public without sharing class FEC_CaseTriggerHandler {
                 continue;
             }
             c.FEC_Case_Status_History__c = appendCaseStatusHistory(null, statusVal);
+            c.FEC_Case_Status_History_1__c = buildStatusBucketEntry(null, statusVal, 1, CASE_STATUS_HISTORY_MAX);
         }
     }
 
@@ -1151,7 +1167,65 @@ public without sharing class FEC_CaseTriggerHandler {
                 baseHistory = oldCase.FEC_Case_Status_History__c;
             }
             c.FEC_Case_Status_History__c = appendCaseStatusHistory(baseHistory, newStatus);
+
+            Integer nextIndex = countCaseStatusHistoryEntries(baseHistory) + 1;
+            Integer bucketIdx = determineBucketForEntry(c, oldCase, nextIndex);
+            String bucketField = STATUS_HISTORY_FIELDS[bucketIdx];
+            Integer bucketLimit = STATUS_BUCKET_LIMITS[bucketIdx];
+            String baseBucket = (String) c.get(bucketField);
+            if (baseBucket == null) {
+                baseBucket = (String) oldCase.get(bucketField);
+            }
+            c.put(bucketField, buildStatusBucketEntry(baseBucket, newStatus, nextIndex, bucketLimit));
         }
+    }
+
+    @TestVisible
+    private static Integer determineBucketForEntry(Case newCase, Case oldCase, Integer entryIndex) {
+        Integer remarkCount1 = countFieldEntries(resolveField(newCase, oldCase, REMARK_FIELDS[0]));
+        Integer remarkCount2 = countFieldEntries(resolveField(newCase, oldCase, REMARK_FIELDS[1]));
+        if (remarkCount1 == 0 && remarkCount2 == 0) {
+            return 0;
+        }
+        if (entryIndex <= remarkCount1) {
+            return 0;
+        }
+        if (entryIndex <= remarkCount1 + remarkCount2) {
+            return 1;
+        }
+        return 2;
+    }
+
+    private static String resolveField(Case newCase, Case oldCase, String fieldName) {
+        String val = (String) newCase.get(fieldName);
+        if (val == null && oldCase != null) {
+            val = (String) oldCase.get(fieldName);
+        }
+        return val;
+    }
+
+    @TestVisible
+    private static Integer countFieldEntries(String fieldValue) {
+        if (String.isBlank(fieldValue)) {
+            return 0;
+        }
+        Integer cnt = 0;
+        Matcher m = Pattern.compile('#\\d+\\s*:').matcher(fieldValue);
+        while (m.find()) {
+            cnt++;
+        }
+        return cnt;
+    }
+
+    @TestVisible
+    private static String buildStatusBucketEntry(String existingBucket, String newStatus, Integer entryIndex, Integer maxLen) {
+        String normalizedStatus = newStatus.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ');
+        String segment = '#' + String.valueOf(entryIndex) + ': ' + normalizedStatus;
+        String combined = String.isBlank(existingBucket) ? segment : existingBucket + '\n' + segment;
+        if (combined.length() > maxLen) {
+            return combined.substring(0, maxLen);
+        }
+        return combined;
     }
 
     @TestVisible

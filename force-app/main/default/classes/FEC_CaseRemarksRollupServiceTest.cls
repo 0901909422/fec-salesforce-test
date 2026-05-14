@@ -41,7 +41,10 @@ private class FEC_CaseRemarksRollupServiceTest {
         FEC_Case_Remarks_3__c,
         FEC_Case_Remarks_Entered_By__c,
         FEC_Case_Remarks_Entered_By_Role__c,
-        FEC_Case_Remarks_Entered_On__c
+        FEC_Case_Remarks_Entered_On__c,
+        FEC_Case_Remarks_Entered_By_1__c,
+        FEC_Case_Remarks_Entered_By_2__c,
+        FEC_Case_Remarks_Entered_By_3__c
       FROM Case
       WHERE Id = :c.Id
     ];
@@ -78,6 +81,24 @@ private class FEC_CaseRemarksRollupServiceTest {
       null,
       updated.FEC_Case_Remarks_3__c,
       'Chưa cần bucket 3 trong ví dụ BA'
+    );
+
+    System.assert(
+      String.isNotBlank(updated.FEC_Case_Remarks_Entered_By_1__c) &&
+        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#1:') &&
+        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#2:') &&
+        updated.FEC_Case_Remarks_Entered_By_1__c.contains('#3:'),
+      'Entered By bucket 1 phai chua #1, #2, #3 tuong ung voi 3 remark dau'
+    );
+    System.assert(
+      String.isNotBlank(updated.FEC_Case_Remarks_Entered_By_2__c) &&
+        updated.FEC_Case_Remarks_Entered_By_2__c.contains('#4:'),
+      'Entered By bucket 2 phai chua #4 tuong ung voi remark thu 4'
+    );
+    System.assertEquals(
+      null,
+      updated.FEC_Case_Remarks_Entered_By_3__c,
+      'Entered By bucket 3 phai rong khi khong co remark o bucket 3'
     );
   }
 
@@ -119,6 +140,50 @@ private class FEC_CaseRemarksRollupServiceTest {
         updated.FEC_Case_Remarks_Entered_By__c.startsWith('#1:') &&
         !updated.FEC_Case_Remarks_Entered_By__c.contains('#2:'),
       'Meta Entered By chỉ còn #1 sau khi xóa remark 2'
+    );
+  }
+
+  @isTest
+  static void rollup_distributesStatusHistoryByRemarkBuckets() {
+    Case c = new Case(Subject = 'StatusHistory bucket');
+    insert c;
+
+    c = [SELECT Id, FEC_Case_Status_History__c FROM Case WHERE Id = :c.Id];
+    c.Status = 'Working';
+    update c;
+    c = [SELECT Id, FEC_Case_Status_History__c FROM Case WHERE Id = :c.Id];
+    c.Status = 'Escalated';
+    update c;
+    c = [SELECT Id, FEC_Case_Status_History__c FROM Case WHERE Id = :c.Id];
+
+    System.assert(
+      String.isNotBlank(c.FEC_Case_Status_History__c) &&
+        c.FEC_Case_Status_History__c.contains('#3:'),
+      'Case phai co 3 status entries truoc khi tao remark'
+    );
+
+    List<FEC_Case_Remarks__c> rows = new List<FEC_Case_Remarks__c>{
+      new FEC_Case_Remarks__c(FEC_Case__c = c.Id, FEC_Case_Remarks__c = strLen(50)),
+      new FEC_Case_Remarks__c(FEC_Case__c = c.Id, FEC_Case_Remarks__c = strLen(100)),
+      new FEC_Case_Remarks__c(FEC_Case__c = c.Id, FEC_Case_Remarks__c = strLen(50))
+    };
+    insert rows;
+
+    Case updated = [
+      SELECT
+        FEC_Case_Remarks_1__c,
+        FEC_Case_Remarks_2__c,
+        FEC_Case_Status_History_1__c,
+        FEC_Case_Status_History_2__c,
+        FEC_Case_Status_History_3__c
+      FROM Case
+      WHERE Id = :c.Id
+    ];
+
+    System.assert(
+      String.isNotBlank(updated.FEC_Case_Status_History_1__c) &&
+        updated.FEC_Case_Status_History_1__c.contains('#1:'),
+      'Status bucket 1 phai co it nhat entry #1'
     );
   }
 

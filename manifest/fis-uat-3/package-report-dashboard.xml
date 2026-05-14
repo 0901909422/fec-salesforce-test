@@ -7,6 +7,18 @@
 		<members>Case.FEC_Case_Remarks_Entered_By_Role__c</members>
 		<members>Case.FEC_Case_Remarks_Entered_By__c</members>
 		<members>Case.FEC_Case_Remarks_Entered_On__c</members>
+		<members>Case.FEC_Case_Status_History_1__c</members>
+		<members>Case.FEC_Case_Status_History_2__c</members>
+		<members>Case.FEC_Case_Status_History_3__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_1__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_2__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_3__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_Role_1__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_Role_2__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_Role_3__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_On_1__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_On_2__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_On_3__c</members>
 		<members>Case.FEC_TAT_Full_Process__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
 		<members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
@@ -15,6 +27,9 @@
 	</types>
 	<types>
 		<members>FEC_CaseTriggerHandler</members>
+		<members>FEC_CaseRemarksRollupService</members>
+		<members>FEC_CaseRemarksRollupServiceTest</members>
+		<members>FEC_CaseStatusHistoryServiceTest</members>
 		<name>ApexClass</name>
 	</types>
 	<version>66.0</version>
