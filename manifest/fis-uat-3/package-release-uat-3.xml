@@ -98,7 +98,7 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
-        <members>FEC_PointsRedemptionCaseController</members>
+        <!--<members>FEC_PointsRedemptionCaseController</members>-->
         <members>FEC_HoldCaseController</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
@@ -588,7 +588,7 @@
         <members>fec_Banca</members>
 		<members>fec_BancaTabView</members>
         <members>fec_RdPaymentRoutingUtils</members>
-		<members>fec_PointsRedemptionCaseForm</members>
+		<!--<members>fec_PointsRedemptionCaseForm</members>-->
 		<members>fec_ChannelConfig</members>
 		<members>fec_NocChannelConfig</members>
         <members>fec_SubProcessContainer</members>
