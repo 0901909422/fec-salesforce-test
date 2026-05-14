@@ -61,6 +61,14 @@
         <connector>
             <targetReference>FEC_Set_User_Role</targetReference>
         </connector>
+        <filterLogic>1</filterLogic>
+        <filters>
+            <field>FEC_User_Role__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
         <object>FEC_Assignment__c</object>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
