@@ -450,7 +450,10 @@ public without sharing class FEC_CaseBusinessService {
       );
 
       if (natureOfCaselst.isEmpty()) {
-        selectedCase.FEC_Current_Case_Stage__c = null;
+        //PhongBT 14/05/26: fix th mất case stage khi view bằng user k thuộc user group của noc -> không hiển thị master data
+        if (caseStageIdPreservedAtLoad != null) {
+          selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
+        }
         try { update selectedCase; } catch (DmlException e) {
           System.debug('Update case failed (no NOC): ' + e.getMessage());
         }
@@ -647,7 +650,10 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       if (stagelst.isEmpty()) {
-        selectedCase.FEC_Current_Case_Stage__c = null;
+        //PhongBT 14/05/26: fix th mất case stage khi view bằng user k thuộc user group của noc -> không hiển thị master data
+        if (caseStageIdPreservedAtLoad != null) {
+          selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
+        }
         try { update selectedCase; } catch (DmlException e) {
           System.debug('Update case failed (no stage): ' + e.getMessage());
         }
