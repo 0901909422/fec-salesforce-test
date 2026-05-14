@@ -1114,5 +1114,9 @@
 		<members>FEC_CommonCss</members>
 		<name>StaticResource</name>
 	</types>
+    <types>
+        <members>Case-en</members>
+        <name>CustomObjectTranslation</name>
+    </types>
 	<version>66.0</version>
 </Package>
