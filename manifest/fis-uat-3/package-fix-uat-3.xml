@@ -40,6 +40,7 @@
 	    <members>FEC_FastCashCaseController</members>
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_COFFraudRelatedHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -85,6 +86,7 @@
         <members>fec_CardClosureRefundForm</members>
         <members>fec_FastCashCaseForm</members>
         <members>maskedToggleDatatable</members>
+        <members>fec_CaseExecuteVisibility</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
