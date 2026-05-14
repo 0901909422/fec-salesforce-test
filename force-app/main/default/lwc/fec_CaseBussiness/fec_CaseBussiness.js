@@ -143,6 +143,7 @@ const FIELD_ZALO_USED = "FEC_Zalo_Used__c";
 const FIELD_DEBT_COLLECTION_PHONE = "FEC_Debt_Collection_Phone__c";
 const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const FIELD_UNBLOCK_PHONE = "FEC_Unblock_Phone__c";
+const CUSTOMER_PHONE_NUMBER_SUB = "FEC_Customer_Phone_Number__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
@@ -164,6 +165,7 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
+  CUSTOMER_PHONE_NUMBER_SUB,
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
