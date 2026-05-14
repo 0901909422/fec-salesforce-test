@@ -71,6 +71,50 @@ public with sharing class FEC_AssignmentExecuteService {
         return countAssignment > 0;
     }
     
+    // private static Boolean hasAssignmentUsersAccess(
+    // Case caseRecord, Id currentUserId) {
+        //     if (caseRecord == null || currentUserId == null
+        //     || String.isBlank(caseRecord.FEC_Assignment_Users__c)) {
+            //         return false;
+        //     }
+        
+        //     Set<String> assignmentValues =
+        //         parseAssignmentUsers(caseRecord.FEC_Assignment_Users__c);
+        
+        //     /*
+        //      * 1. User match
+        //      */
+        //     if (assignmentValues.contains(String.valueOf(currentUserId))) {
+            //         return true;
+        //     }
+        
+        //     /*
+        //      * 2. Role match
+        //      */
+        //     User currentUser =
+        //         [SELECT UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1];
+        
+        //     if (currentUser.UserRoleId != null
+        //     && assignmentValues.contains(String.valueOf(currentUser.UserRoleId))) {
+            //         return true;
+        //     }
+        
+        //     /*
+        //      * 3. Queue match
+        //      */
+        //     for (String value : assignmentValues) {
+            //         if (isQueueId(value)) {
+                //             Id memberId = (Id) value;
+                
+                //             if (isUserInQueue(currentUserId, memberId)) {
+                    //                 return true;
+                //             }
+            //         }
+        //     }
+        
+        //     return false;
+    // }
+    
     private static Boolean hasAssignmentUsersAccess(
     Case caseRecord, Id currentUserId) {
         if (caseRecord == null || currentUserId == null
@@ -82,33 +126,38 @@ public with sharing class FEC_AssignmentExecuteService {
             parseAssignmentUsers(caseRecord.FEC_Assignment_Users__c);
         
         /*
-         * 1. User match
+         * Current User Info
          */
-        if (assignmentValues.contains(String.valueOf(currentUserId))) {
+        User currentUser = [
+    SELECT Id, Name, UserRoleId,
+    UserRole.Name FROM User WHERE Id = : currentUserId LIMIT 1
+  ];
+        
+        /*
+         * 1. User Name match
+         */
+        if (assignmentValues.contains(currentUser.Name)) {
             return true;
         }
         
         /*
-         * 2. Role match
+         * 2. Role Name match
          */
-        User currentUser =
-            [SELECT UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1];
-        
         if (currentUser.UserRoleId != null
-        && assignmentValues.contains(String.valueOf(currentUser.UserRoleId))) {
+        && assignmentValues.contains(currentUser.UserRole.Name)) {
             return true;
         }
         
         /*
-         * 3. Queue match
+         * 3. Queue Name match
          */
-        for (String value : assignmentValues) {
-            if (isQueueId(value)) {
-                Id memberId = (Id) value;
-                
-                if (isUserInQueue(currentUserId, memberId)) {
-                    return true;
-                }
+        List<GroupMember> groupMembers = [
+    SELECT Group.Name FROM GroupMember WHERE UserOrGroupId = : currentUserId
+  ];
+        
+        for (GroupMember gm : groupMembers) {
+            if (gm.Group != null && assignmentValues.contains(gm.Group.Name)) {
+                return true;
             }
         }
         
