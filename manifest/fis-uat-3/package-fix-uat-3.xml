@@ -99,6 +99,7 @@
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Search_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
