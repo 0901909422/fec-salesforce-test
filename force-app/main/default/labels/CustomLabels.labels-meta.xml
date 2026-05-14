@@ -11851,6 +11851,14 @@
         <value>Chuyển đổi trả góp thành công.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_IPP_Noti_10</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Noti_10</shortDescription>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
         <categories>IPP Conversion LWC</categories>
         <language>en_US</language>
