@@ -2555,24 +2555,17 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveForSubmitIfApplicable();
   }
 
-  _getRemovePhoneFormEl() {
-    const host = this.template.querySelector("c-fec_-sub-process-container");
-    if (!host || !host.shadowRoot) {
-      return null;
-    }
-    const el = host.shadowRoot.querySelector("c-fec_-remove-phone-form");
-    if (!el || typeof el.saveDraftIfApplicable !== "function") {
-      return null;
-    }
-    return el;
-  }
-
   _saveRemovePhoneDraftIfApplicable() {
-    const el = this._getRemovePhoneFormEl();
-    if (!el) {
+    const host = this.template.querySelector("c-fec_-sub-process-container");
+    if (!host || typeof host.saveRemovePhoneDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
-    return el.saveDraftIfApplicable();
+    return host.saveRemovePhoneDraftIfApplicable();
+  }
+
+  //linhdev: Persist child data before case record form submit
+  _persistChildDataBeforeCaseRecordFormSubmit() {
+    return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
 
   /*Lấy element của form IPP Closure*/
@@ -2693,6 +2686,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
    */
   @api saveOnly() {
+    return this._persistChildDataBeforeCaseRecordFormSubmit().then(() => {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
     formlst?.forEach((item) => {
@@ -2713,7 +2707,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
         this._savePointsRedemptionDraftIfApplicable(),
-        this._saveRemovePhoneDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2749,6 +2742,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
       });
+    });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -2786,6 +2780,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     // Dữ liệu địa chỉ đã được lưu vào Case DB khi User A nhấn Save.
     // Không gọi API tại đây — API sẽ được user xử lý gọi qua Process Action "Address Update".
 
+    await this._persistChildDataBeforeCaseRecordFormSubmit();
     await this._submitFormsPromise();
     // DungLT — flush upload file trước các bước lưu khác khi Submit
     await this._uploadFecFileUploadCardsIfApplicable();
@@ -2801,7 +2796,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
-      this._saveRemovePhoneDraftIfApplicable(),
     ]);
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
