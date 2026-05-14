@@ -12,7 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
-import { isNegative, maskValue } from 'c/fec_CommonUtils';
+import { isNegative } from 'c/fec_CommonUtils';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 export default class Fec_RelatedListPaging extends LightningElement {
@@ -89,6 +89,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     get showTableSurface() {
         return this.hasRecords || this.renderEmptyTableChrome === true;
+    }
+
+    get emptyStateMessage() {
+        return FEC_Common_No_Results_Label;
     }
 
     /** Colspan: cột STT (nếu có) + số cột dữ liệu. */
@@ -329,6 +333,24 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         } else if (typeof col.cellAttributes.class === 'string') {
                             cellClass = col.cellAttributes.class;
                         }
+                    }
+                    /* ===== CHECKBOX TYPE ===== */
+                    if (col.type === 'checkbox') {
+                        return {
+                            key: col.fieldName,
+                            fieldName: col.fieldName,
+                            isCheckboxType: true,  
+                            isCheckbox: !row.isEmpty,  
+                            isLink: false,
+                            isEye: false,
+                            isHtml: false,
+                            value: row[col.fieldName] === true 
+                                || row[col.fieldName] === 'true' 
+                                || row[col.fieldName] === 'Yes'
+                                || row[col.fieldName] === 'yes'
+                                || row[col.fieldName] === 1 
+                                || row[col.fieldName] === '1'
+                        };
                     }
                     /* ===== ADD NEGATIVE CHECK ===== */
                     const isNeg = isNegative(row[col.fieldName]);
@@ -720,6 +742,26 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this.dispatchEvent(
             new CustomEvent('rowselect', {
                 detail: { recordId },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    /**
+     * Click dòng (không phải link/checkbox/icon): bắn cùng sự kiện rowselect để parent xử lý như IPP.
+     */
+    handleRowSelect(event) {
+        if (event.target.closest('button, a, lightning-input, lightning-button-icon, select, input')) {
+            return;
+        }
+        const rowId = event.currentTarget?.dataset?.id;
+        if (!rowId) {
+            return;
+        }
+        this.dispatchEvent(
+            new CustomEvent('rowselect', {
+                detail: { recordId: rowId },
                 bubbles: true,
                 composed: true
             })

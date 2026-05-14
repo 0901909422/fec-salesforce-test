@@ -76,7 +76,7 @@
                             </thead>
 
                             <tbody>
-                            <template if:true={hasRecords}>
+                                <template if:true={hasRecords}>
                                 <template for:each={displayRecords} for:item="row">
                                     <tr key={row.id} data-id={row.id} onclick={handleRowSelect} class={rowSelectionClass}>
                                         <template if:true={showCheckboxColumn}>
@@ -188,11 +188,26 @@
                                                     </div>
                                                 </template>
 
+                                               <!-- CHECKBOX TYPE -->
+                                                <template if:true={cell.isCheckbox}>
+                                                    <lightning-input
+                                                        type="checkbox"
+                                                        label="active"
+                                                        variant="label-hidden"
+                                                        checked={cell.value}
+                                                        disabled>
+                                                    </lightning-input>
+                                                </template>
+
                                                 <!-- REGULAR TEXT WITH DYNAMIC CLASS -->
                                                 <template if:false={cell.isLink}>
                                                     <template if:false={cell.isEye}>
                                                         <template if:false={cell.isHtml}>
-                                                            <span>{cell.value}</span>
+                                                            <template if:false={cell.isCheckboxType}>
+                                                                <template if:false={cell.isCheckbox}>
+                                                                    <span>{cell.value}</span>
+                                                                </template>
+                                                            </template>
                                                         </template>
                                                     </template>
                                                 </template>
@@ -203,10 +218,10 @@
                                     </tr>
                                 </template>
                             </template>
-                        </tbody>
+                            </tbody>
 
-                    </table>
-                </div>
+                        </table>
+                    </div>
 
                     <!-- ================= PAGINATION ================= -->
                     <div class="table-pagination">
