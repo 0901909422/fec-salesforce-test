@@ -7,10 +7,7 @@ public with sharing class FEC_CheckEligibleController {
     @AuraEnabled
     public static FEC_CheckEligibleCallout.CheckEligibleResponse checkCustomerEligibility(Id caseId) {
         if (caseId == null) {
-            return errResponse(
-                FEC_ConstantCommon.ERROR_CODE_VALIDATION,
-                String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' })
-            );
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
         List<Case> caseRows = [
             SELECT Id, FEC_Account_or_Contract__c
@@ -19,11 +16,11 @@ public with sharing class FEC_CheckEligibleController {
             LIMIT 1
         ];
         if (caseRows.isEmpty()) {
-            return errResponse(FEC_ConstantCommon.ERROR_CODE_VALIDATION, 'Case not found');
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
         Id chId = caseRows[0].FEC_Account_or_Contract__c;
         if (chId == null) {
-            return errMessageResponse(System.Label.FEC_MSG_CheckEligible_No_Matching_History);
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
 
         List<FEC_Customer_History__c> chList = [
@@ -34,13 +31,13 @@ public with sharing class FEC_CheckEligibleController {
         ];
 
         if (chList.isEmpty()) {
-            return errMessageResponse(System.Label.FEC_MSG_CheckEligible_No_Matching_History);
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
 
         FEC_Customer_History__c ch = chList[0];
         String nationalId = ch.FEC_National_ID_Passport_ID__c != null ? ch.FEC_National_ID_Passport_ID__c.trim() : null;
         if (String.isBlank(nationalId)) {
-            return errMessageResponse(System.Label.FEC_MSG_CheckEligible_No_Matching_History); // Used generic missing message or original label
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
         String phone = ch.FEC_Primary_Phone__c != null ? ch.FEC_Primary_Phone__c.trim() : null;
         if (String.isBlank(phone)) {
@@ -49,7 +46,7 @@ public with sharing class FEC_CheckEligibleController {
 
         String errId = validateIdParamForCallout(nationalId);
         if (errId != null) {
-            return errResponse(FEC_ConstantCommon.ERROR_CODE_VALIDATION, errId);
+            return errMessageResponse(System.Label.FEC_MSG_Error_API_Label);
         }
         // Chuẩn hóa trước khi gọi (callout không trim/validate)
         String idForCallout = nationalId.trim();
@@ -59,6 +56,9 @@ public with sharing class FEC_CheckEligibleController {
             idForCallout,
             phoneForCallout
         );
+        if (response != null && String.isNotBlank(response.errorCode)) {
+            response.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+        }
         FEC_CheckEligibleCallout.logApiResponse();
         return response;
     }
@@ -83,10 +83,7 @@ public with sharing class FEC_CheckEligibleController {
      */
     private static String validateIdParamForCallout(String value) {
         if (String.isBlank(value)) {
-            return String.format(
-                System.Label.FEC_MSG_Param_Required,
-                new List<String>{ 'ID_CARD_NUMBER' }
-            );
+            return System.Label.FEC_MSG_Error_API_Label;
         }
         String t = value.trim();
         // if (!Pattern.matches(FEC_ConstantCommon.PATTERN_NATIONAL_ID, t)) {
