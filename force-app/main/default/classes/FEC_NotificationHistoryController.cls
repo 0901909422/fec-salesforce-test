@@ -13,7 +13,7 @@ public with sharing class FEC_NotificationHistoryController {
     public class NotificationHistoryRow {
         @AuraEnabled public String id { get; set; }
         /** Formatted send time (cannot use "dateTime" — reserved in Apex). */
-        @AuraEnabled public String sentDateTime { get; set; }
+        @AuraEnabled public Datetime sentDateTime { get; set; }
         @AuraEnabled public String sentType { get; set; }
         @AuraEnabled public String notificationType { get; set; }
         @AuraEnabled public String notificationContent { get; set; }
@@ -58,13 +58,13 @@ public with sharing class FEC_NotificationHistoryController {
                     FEC_Send_Date_Time__c,
                     FEC_Send_Type__c,
                     FEC_Notification_Channel__c,
-                    FEC_Notification_Template__c,
-                    FEC_Notification_Content__c,
+                    FEC_Notification__r.Name, 
+                    FEC_Notification__r.FEC_Notification_Template__r.FEC_Body__c,
                     FEC_Send_System__c,
                     FEC_Send_User__r.Name,
                     FEC_Send_Status__c,
                     FEC_Failure_Reason__c,
-                    FEC_Case__c
+                    FEC_Case__r.FEC_ID_Search__c
                 FROM FEC_Notification_History__c
                 WHERE FEC_Notification_Channel__c IN :channelValues
                   AND FEC_Case__r.FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c = :nationalId
@@ -77,35 +77,32 @@ public with sharing class FEC_NotificationHistoryController {
                     FEC_Send_Date_Time__c,
                     FEC_Send_Type__c,
                     FEC_Notification_Channel__c,
-                    FEC_Notification_Template__c,
-                    FEC_Notification_Content__c,
+                    FEC_Notification__r.Name, 
+                    FEC_Notification__r.FEC_Notification_Template__r.FEC_Body__c,
                     FEC_Send_System__c,
                     FEC_Send_User__r.Name,
                     FEC_Send_Status__c,
                     FEC_Failure_Reason__c,
-                    FEC_Case__c
+                    FEC_Case__r.FEC_ID_Search__c
                 FROM FEC_Notification_History__c
                 WHERE FEC_Case__c = :caseId AND FEC_Notification_Channel__c IN :channelValues
                 ORDER BY FEC_Send_Date_Time__c DESC NULLS LAST
             ];
         }
 
-        String tz = UserInfo.getTimeZone().getID();
         for (FEC_Notification_History__c r : rows) {
             NotificationHistoryRow row = new NotificationHistoryRow();
             row.id = String.valueOf(r.Id);
-            row.sentDateTime = r.FEC_Send_Date_Time__c != null
-                ? r.FEC_Send_Date_Time__c.format(FEC_ConstantCommon.DATETIME_FORMAT_OUTPUT, tz)
-                : FEC_ConstantCommon.STR_EMPTY;
+            row.sentDateTime = r.FEC_Send_Date_Time__c;
             // Displays Manual/Auto as intended
             row.sentType = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_Type__c);
-            row.notificationType = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Template__c);
-            row.notificationContent = FEC_CommonUltils.defaultToEmpty(r.FEC_Notification_Content__c);
+            row.notificationType = r.FEC_Notification__r != null ? FEC_CommonUltils.defaultToEmpty(r.FEC_Notification__r.Name) : FEC_ConstantCommon.STR_EMPTY;
+            row.notificationContent = r.FEC_Notification__r?.FEC_Notification_Template__r != null ? FEC_CommonUltils.defaultToEmpty(r.FEC_Notification__r.FEC_Notification_Template__r.FEC_Body__c) : FEC_ConstantCommon.STR_EMPTY;
             row.sentSystem = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_System__c);
             row.user = r.FEC_Send_User__r != null ? FEC_CommonUltils.defaultToEmpty(r.FEC_Send_User__r.Name) : FEC_ConstantCommon.STR_EMPTY;
             row.sentStatus = FEC_CommonUltils.defaultToEmpty(r.FEC_Send_Status__c);
             row.failureReason = FEC_CommonUltils.defaultToEmpty(r.FEC_Failure_Reason__c);
-            row.caseId = r.FEC_Case__c != null ? String.valueOf(r.FEC_Case__c) : FEC_ConstantCommon.STR_EMPTY;
+            row.caseId = r.FEC_Case__r != null ? FEC_CommonUltils.defaultToEmpty(r.FEC_Case__r.FEC_ID_Search__c) : FEC_ConstantCommon.STR_EMPTY;
             out.add(row);
         }
         return out;
