@@ -76,6 +76,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
   @api showSkipButton = false;
+  @api isListView = false;
   activeSections = ["searchCriteria", "results"];
   nationalId;
   phoneNumber;
@@ -133,10 +134,14 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     return this.tabName === 'FEC_Account_Contract_Search'; // your tab's API name
   }
 
-  get isListView() {
+  get isCaseListView() {
     return this.pageRef?.type === 'standard__objectPage' &&
       this.pageRef?.attributes?.objectApiName === 'Case' &&
       !this.recordId;
+  }
+
+  get isListViewActual() {
+      return this.isListView || this.isCaseListView;
   }
 
   get isCreateCaseTab() {
@@ -1588,7 +1593,7 @@ hasAnySearchCriteria(params) {
         let searchProducts = categories.join(";");
         this.isLoaded = false;
         let customerName = row?.FullName;
-        let isListView = !this.recordId;
+        let isListViewActual = this.isListViewActual;
         if (action.label.fieldName === 'UserId') {
           if (categories.includes("Card") || categories.includes("Loan")) {
             this.isLoaded = true;
@@ -1607,7 +1612,7 @@ hasAnySearchCriteria(params) {
             customerName = this._customers[customerIndex].FullName;
           }
           // Align isListView for Insurance search tab to ensure Internal Case and navigation
-          isListView = !this.recordId;
+          isListViewActual = this.isListViewActual;
         }
 
         const resolvedPhone = (this.phoneNumber && normalizePhone(this.phoneNumber)) || null;
@@ -1622,7 +1627,7 @@ hasAnySearchCriteria(params) {
           phone: resolvedPhone,
           customerName: customerName,
           applicationId: row?.ApplicationID,
-          isListView: isListView,
+          isListView: isListViewActual,
           policyNumber: row?.PolicyNumber || '', // Only for Insurance
           buyerNID: (this.nationalId && String(this.nationalId).trim()) || '',
         })
