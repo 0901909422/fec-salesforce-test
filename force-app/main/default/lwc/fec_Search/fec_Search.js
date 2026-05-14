@@ -10,6 +10,9 @@ import { RefreshEvent } from "lightning/refresh";
 import { loadStyle } from "lightning/platformResourceLoader";
 import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getCase from "@salesforce/apex/FEC_SearchController.getCase";
+//linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+import getCaseSearchFlags from "@salesforce/apex/FEC_SearchController.getCaseSearchFlags";
+import getTestServiceErrorAccountNumber from "@salesforce/apex/FEC_SearchController.getTestServiceErrorAccountNumber";
 import createHistory from "@salesforce/apex/FEC_SearchController.createHistory";
 import getB2Contracts from "@salesforce/apex/FEC_SearchController.getB2Contracts";
 import searchByListNIDs from "@salesforce/apex/FEC_SearchByListNIDsServiceCallout.searchByListNIDs";
@@ -70,8 +73,6 @@ const FIELDS_TO_CHECK = [
     'FEC_Search_Customer_Number__c'
 ];
 
-const FEC_TEST_API_SERVICE_ERROR_ACCOUNT = "0001500010000005555";
-
 export default class Fec_Search extends NavigationMixin(LightningElement) {
   @api recordId;
   @api isLoaded = false;
@@ -94,7 +95,8 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
   isSkip;
   isTestApiCase = false;
   isSearchServiceError = false;
-  // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+  testServiceErrorAccountNumber = "";
   caseRecordTypeName;
   wiredCaseResult;
   fieldPermissions;
@@ -425,7 +427,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     if (data) {
       // Logic xử lý dữ liệu khi thành công (tương đương phần .then cũ)
       this.isSkip = this.showSkipButton || (data && data.RecordType?.Name === 'Internal Case');
-      // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+      //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
       this.caseRecordTypeName = data?.RecordType?.Name;
       this.isTestApiCase = data?.FEC_Is_Test_API__c === true;
       this.isDisplay =
@@ -453,12 +455,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
       } else {
         objectName = 'FEC_Customer_Search__c';
       }
+      //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+      const errAccRaw = await getTestServiceErrorAccountNumber();
+      this.testServiceErrorAccountNumber =
+        errAccRaw != null && errAccRaw !== undefined
+          ? String(errAccRaw).trim()
+          : "";
       this.fieldPermissions = await checkFieldEditPermissions({
         sObjectType: objectName,
         fieldNames: FIELDS_TO_CHECK
       })
       let result = await getCase({ caseId: this.recordId });
-      // linhdev: Fix jira FECREDIT_CSM_2025_KH-1243
+      //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
       this.caseRecordTypeName = result?.RecordType?.Name;
       this.isTestApiCase = result?.FEC_Is_Test_API__c === true;
       this.nationalId = this.fieldPermissions['FEC_Search_National_ID__c'] ? result.FEC_National_ID_Passport_ID__c : null;
@@ -779,15 +787,30 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.processSearch() 
   }
 
-  _isSimulatedTestApiServiceErrorSearch() {
-    if (!this.isTestApiCase) {
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+  _accountMatchesTestServiceErrorSetting() {
+    const configured = this.testServiceErrorAccountNumber
+      ? String(this.testServiceErrorAccountNumber).trim()
+      : "";
+    if (!configured) {
       return false;
     }
     const acc =
       this.accountNumber != null && this.accountNumber !== undefined
         ? String(this.accountNumber).trim()
         : "";
-    return acc === FEC_TEST_API_SERVICE_ERROR_ACCOUNT;
+    return acc.length > 0 && acc === configured;
+  }
+
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+  _isSimulatedTestApiServiceErrorSearch() {
+    if (!this._accountMatchesTestServiceErrorSetting()) {
+      return false;
+    }
+    if (this.caseRecordTypeName === "Interaction") {
+      return this.isTestApiCase === true;
+    }
+    return true;
   }
 
   async processSearch() {
@@ -805,6 +828,18 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
     this.ubankData = [];
 
     try {
+      //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+      if (this.recordId) {
+        try {
+          const flags = await getCaseSearchFlags({ caseId: this.recordId });
+          if (flags) {
+            this.caseRecordTypeName = flags.RecordType?.Name;
+            this.isTestApiCase = flags.FEC_Is_Test_API__c === true;
+          }
+        } catch (e) {
+          console.error("Error refreshing Case search flags:", e);
+        }
+      }
       const params = this.buildSearchParams();
 
       if (!this.hasAnySearchCriteria(params)) {
@@ -911,6 +946,7 @@ export default class Fec_Search extends NavigationMixin(LightningElement) {
         this.loanCash24Data.length > 0 ||
         this.insuranceData.length > 0;
 
+      //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
       if (this._isSimulatedTestApiServiceErrorSearch()) {
         this.cardData = [];
         this.loanData = [];
@@ -1708,6 +1744,7 @@ hasAnySearchCriteria(params) {
     return null;
   } 
 
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get isDisplayCreateCase() {
     return (
       (this.isCreateCaseTab ||
@@ -1718,6 +1755,7 @@ hasAnySearchCriteria(params) {
     );
   }
 
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get noCustomerFoundMessage() {
     if (this.isSearchServiceError) {
       return FEC_MSG_Service_Error_Label;
@@ -1725,6 +1763,7 @@ hasAnySearchCriteria(params) {
     return FEC_Common_No_Results_Label;
   }
 
+  //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
   get noCustomerFoundClass() {
     return "slds-text-align_center slds-text-body_regular slds-text-color_error slds-m-bottom_medium";
   }
