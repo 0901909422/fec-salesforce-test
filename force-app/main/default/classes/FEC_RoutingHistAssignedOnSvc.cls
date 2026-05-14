@@ -1,17 +1,106 @@
 /**
  * Report Dashboard — Routing Action History:
  * - FEC_Assigned_On__c (TH1/TH2 phần Assigned)
- * - FEC_Submitted_On__c (TH1 Case-level; TH2 từ Assignment.FEC_Submitted_On__c)
+ * - FEC_Submitted_On__c: TH1 (Case-level) = FEC_Date_Time__c; TH2 = submit Assignment
  */
 public without sharing class FEC_RoutingHistAssignedOnSvc {
-  /** Bỏ qua email / logic nặng trên after update khi chỉ chain Submitted On */
-  public static Boolean suppressAfterUpdateForChain = false;
-
   private static Boolean fecBhLookupDone = false;
   private static Id fecBusinessHoursId;
 
   /** Business Hours đặt trong Setup; name phải khớp org (kèm holidays trong cấu hình BH). */
   private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
+
+  /** Bản ghi RAH dùng để suy luận Assigned On (DB + các dòng cùng batch đã xử lý trước). */
+  private class PriorRah {
+    Id recordId;
+    Integer batchIndex;
+    Id caseId;
+    Id assignmentId;
+    Datetime submittedOn;
+    Datetime createdDate;
+
+    PriorRah(
+      Id recordId,
+      Integer batchIndex,
+      Id caseId,
+      Id assignmentId,
+      Datetime submittedOn,
+      Datetime createdDate
+    ) {
+      this.recordId = recordId;
+      this.batchIndex = batchIndex;
+      this.caseId = caseId;
+      this.assignmentId = assignmentId;
+      this.submittedOn = submittedOn;
+      this.createdDate = createdDate;
+    }
+  }
+
+  /** So sánh sort: FEC_Submitted_On__c DESC, CreatedDate DESC (TH2.2.2). */
+  private static Integer cmpSubmittedDescCreatedDesc(PriorRah a, PriorRah b) {
+    if (a.submittedOn > b.submittedOn) {
+      return 1;
+    }
+    if (a.submittedOn < b.submittedOn) {
+      return -1;
+    }
+    if (a.createdDate > b.createdDate) {
+      return 1;
+    }
+    if (a.createdDate < b.createdDate) {
+      return -1;
+    }
+    Integer ai = a.batchIndex != null ? a.batchIndex : -1;
+    Integer bi = b.batchIndex != null ? b.batchIndex : -1;
+    if (ai > bi) {
+      return 1;
+    }
+    if (ai < bi) {
+      return -1;
+    }
+    String sa = a.recordId != null ? String.valueOf(a.recordId) : '';
+    String sb = b.recordId != null ? String.valueOf(b.recordId) : '';
+    if (sa > sb) {
+      return 1;
+    }
+    if (sa < sb) {
+      return -1;
+    }
+    return 0;
+  }
+
+  private static PriorRah pickBest(List<PriorRah> rows) {
+    PriorRah best = null;
+    for (PriorRah p : rows) {
+      if (p.submittedOn == null) {
+        continue;
+      }
+      if (best == null) {
+        best = p;
+        continue;
+      }
+      Integer c = cmpSubmittedDescCreatedDesc(p, best);
+      if (c > 0) {
+        best = p;
+      }
+    }
+    return best;
+  }
+
+  private static List<PriorRah> mergeCaseCandidates(
+    Id caseId,
+    Map<Id, List<PriorRah>> dbByCase,
+    Map<Id, List<PriorRah>> batchByCase
+  ) {
+    List<PriorRah> out = new List<PriorRah>();
+    if (dbByCase != null && dbByCase.containsKey(caseId)) {
+      out.addAll(dbByCase.get(caseId));
+    }
+    if (batchByCase != null && batchByCase.containsKey(caseId)) {
+      out.addAll(batchByCase.get(caseId));
+    }
+    return out;
+  }
 
   public static void applyBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
     if (newRecords == null || newRecords.isEmpty()) {
@@ -36,19 +125,6 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
       [SELECT Id, FEC_Case_Created_On__c FROM Case WHERE Id IN :caseIds]
     );
 
-    Map<Id, Integer> historyCountByCase = new Map<Id, Integer>();
-    for (AggregateResult ar : [
-      SELECT FEC_Case__c caseId, COUNT(Id) rowCount
-      FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c IN :caseIds
-      GROUP BY FEC_Case__c
-    ]) {
-      historyCountByCase.put(
-        (Id) ar.get('caseId'),
-        (Integer) ar.get('rowCount')
-      );
-    }
-
     Map<Id, FEC_Assignment__c> assignmentsById = assignmentIds.isEmpty()
       ? new Map<Id, FEC_Assignment__c>()
       : new Map<Id, FEC_Assignment__c>(
@@ -59,7 +135,38 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
           ]
         );
 
+    Map<Id, List<PriorRah>> dbHistoryByCase = new Map<Id, List<PriorRah>>();
+    for (FEC_Routing_Action_History__c h : [
+      SELECT
+        Id,
+        FEC_Case__c,
+        FEC_Assignment__c,
+        FEC_Submitted_On__c,
+        CreatedDate
+      FROM FEC_Routing_Action_History__c
+      WHERE FEC_Case__c IN :caseIds
+    ]) {
+      if (h.FEC_Case__c == null) {
+        continue;
+      }
+      if (!dbHistoryByCase.containsKey(h.FEC_Case__c)) {
+        dbHistoryByCase.put(h.FEC_Case__c, new List<PriorRah>());
+      }
+      dbHistoryByCase.get(h.FEC_Case__c)
+        .add(
+          new PriorRah(
+            h.Id,
+            null,
+            h.FEC_Case__c,
+            h.FEC_Assignment__c,
+            h.FEC_Submitted_On__c,
+            h.CreatedDate
+          )
+        );
+    }
+
     Datetime nowTs = System.now();
+    Map<Id, List<PriorRah>> batchAccumulatedByCase = new Map<Id, List<PriorRah>>();
 
     for (Integer i = 0; i < newRecords.size(); i++) {
       FEC_Routing_Action_History__c r = newRecords[i];
@@ -73,41 +180,91 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
         continue;
       }
 
-      Integer priorSameCaseInBatch = 0;
-      for (Integer j = 0; j < i; j++) {
-        if (newRecords[j].FEC_Case__c == caseId) {
-          priorSameCaseInBatch++;
-        }
-      }
-
-      Integer dbCount = historyCountByCase.containsKey(caseId)
-        ? historyCountByCase.get(caseId)
-        : 0;
       Datetime caseCreatedOn = c.FEC_Case_Created_On__c != null
         ? c.FEC_Case_Created_On__c
         : nowTs;
 
-      Boolean hasPriorRouting = (dbCount + priorSameCaseInBatch) > 0;
+      applySubmittedOnBeforeInsertRow(r, assignmentsById, nowTs);
+
+      Datetime effectiveSubmitted = r.FEC_Submitted_On__c != null
+        ? r.FEC_Submitted_On__c
+        : nowTs;
 
       if (r.FEC_Assignment__c == null) {
-        r.FEC_Assigned_On__c = hasPriorRouting ? nowTs : caseCreatedOn;
+        List<PriorRah> pool = mergeCaseCandidates(
+          caseId,
+          dbHistoryByCase,
+          batchAccumulatedByCase
+        );
+        List<PriorRah> cand = new List<PriorRah>();
+        for (PriorRah p : pool) {
+          if (p.assignmentId != null) {
+            continue;
+          }
+          if (p.submittedOn == null) {
+            continue;
+          }
+          if (p.submittedOn < effectiveSubmitted) {
+            cand.add(p);
+          }
+        }
+        PriorRah best = pickBest(cand);
+        r.FEC_Assigned_On__c = best == null ? caseCreatedOn : best.submittedOn;
       } else {
         FEC_Assignment__c a = assignmentsById.get(r.FEC_Assignment__c);
-        if (a == null) {
+        List<PriorRah> pool = mergeCaseCandidates(
+          caseId,
+          dbHistoryByCase,
+          batchAccumulatedByCase
+        );
+        List<PriorRah> candSameAssign = new List<PriorRah>();
+        for (PriorRah p : pool) {
+          if (p.assignmentId != r.FEC_Assignment__c) {
+            continue;
+          }
+          if (p.submittedOn == null) {
+            continue;
+          }
+          if (p.submittedOn < effectiveSubmitted) {
+            candSameAssign.add(p);
+          }
+        }
+        PriorRah bestSame = pickBest(candSameAssign);
+        if (bestSame != null) {
+          r.FEC_Assigned_On__c = bestSame.submittedOn;
+        } else if (a == null || a.FEC_Manual__c != true) {
           r.FEC_Assigned_On__c = caseCreatedOn;
-        } else if (a.FEC_Manual__c == true) {
-          r.FEC_Assigned_On__c = nowTs;
         } else {
-          r.FEC_Assigned_On__c = caseCreatedOn;
+          List<PriorRah> candManual = new List<PriorRah>();
+          for (PriorRah p : pool) {
+            if (p.submittedOn == null) {
+              continue;
+            }
+            if (p.submittedOn <= effectiveSubmitted) {
+              candManual.add(p);  
+            }
+          }
+          PriorRah bestManual = pickBest(candManual);
+          r.FEC_Assigned_On__c = bestManual == null
+            ? caseCreatedOn
+            : bestManual.submittedOn;
         }
       }
 
-      applySubmittedOnBeforeInsertRow(
-        r,
-        hasPriorRouting,
-        assignmentsById,
-        nowTs
-      );
+      if (!batchAccumulatedByCase.containsKey(caseId)) {
+        batchAccumulatedByCase.put(caseId, new List<PriorRah>());
+      }
+      batchAccumulatedByCase.get(caseId)
+        .add(
+          new PriorRah(
+            r.Id,
+            i,
+            caseId,
+            r.FEC_Assignment__c,
+            effectiveSubmitted,
+            nowTs
+          )
+        );
     }
   }
 
@@ -164,13 +321,12 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
   }
 
   /**
-   * TH1 (Assignment null): bản ghi đầu Case = thời điểm tạo RAH; bản sau = Submitted chỉ khi
-   * đã có bước tiếp (xử lý trong chainCaseLevelSubmittedOnAfterInsert).
-   * TH2 (Assignment có): = FEC_Submitted_On__c của Assignment (submit), fallback now().
+   * TH1 (Case-level, Assignment null): FEC_Submitted_On__c = FEC_Date_Time__c (formula = CreatedDate trên metadata).
+   * Trước insert formula thường chưa có giá trị → fallback nowTs (cùng mốc “sinh” bản ghi).
+   * TH2 (Assignment có): FEC_Submitted_On__c = submit Assignment (field trên Assignment), fallback now.
    */
   private static void applySubmittedOnBeforeInsertRow(
     FEC_Routing_Action_History__c r,
-    Boolean hasPriorRouting,
     Map<Id, FEC_Assignment__c> assignmentsById,
     Datetime nowTs
   ) {
@@ -179,11 +335,6 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
     }
 
     if (r.FEC_Assignment__c == null) {
-      if (!hasPriorRouting) {
-        r.FEC_Submitted_On__c = nowTs;
-      } else {
-        r.FEC_Submitted_On__c = null;
-      }
       return;
     }
 
@@ -195,115 +346,34 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
     }
   }
 
-  /**
-   * TH1: bản ghi Case-level (Assignment null) không phải bước đầu tiên của Case
-   * → khi có bản ghi mới (bước sau), gán Submitted On bước trước = Assigned On của bước sau.
-   * Không ghi đè bước đầu tiên trên Case (index 0).
-   */
-  public static void chainCaseLevelSubmittedOnAfterInsert(
+  public static void syncSubmittedOnAfterInsert(
     List<FEC_Routing_Action_History__c> newRecords
   ) {
     if (newRecords == null || newRecords.isEmpty()) {
       return;
     }
 
-    Set<Id> caseIds = new Set<Id>();
+    List<FEC_Routing_Action_History__c> toUpdate = new List<FEC_Routing_Action_History__c>();
     for (FEC_Routing_Action_History__c r : newRecords) {
-      if (r.FEC_Case__c != null) {
-        caseIds.add(r.FEC_Case__c);
-      }
-    }
-    if (caseIds.isEmpty()) {
-      return;
-    }
-
-    List<FEC_Routing_Action_History__c> timeline = [
-      SELECT
-        Id,
-        FEC_Case__c,
-        CreatedDate,
-        FEC_Assignment__c,
-        FEC_Assigned_On__c,
-        FEC_Submitted_On__c
-      FROM FEC_Routing_Action_History__c
-      WHERE FEC_Case__c IN :caseIds
-      ORDER BY FEC_Case__c, CreatedDate ASC, Id ASC
-    ];
-
-    Map<Id, List<Integer>> caseIdToIndices = new Map<Id, List<Integer>>();
-    for (Integer k = 0; k < timeline.size(); k++) {
-      Id cid = timeline[k].FEC_Case__c;
-      if (cid == null) {
+      if (r.FEC_Case__c == null || r.FEC_Assignment__c != null) {
         continue;
       }
-      if (!caseIdToIndices.containsKey(cid)) {
-        caseIdToIndices.put(cid, new List<Integer>());
-      }
-      caseIdToIndices.get(cid).add(k);
-    }
-
-    Map<Id, FEC_Routing_Action_History__c> toUpdate = new Map<Id, FEC_Routing_Action_History__c>();
-
-    for (FEC_Routing_Action_History__c curr : newRecords) {
-      if (curr.Id == null || curr.FEC_Case__c == null) {
+      if (r.CreatedDate == null) {
         continue;
       }
-
-      List<Integer> idxList = caseIdToIndices.get(curr.FEC_Case__c);
-      if (idxList == null || idxList.isEmpty()) {
+      if (r.FEC_Submitted_On__c == r.CreatedDate) {
         continue;
       }
-
-      Integer pos = -1;
-      for (Integer idx : idxList) {
-        if (timeline[idx].Id == curr.Id) {
-          pos = idx;
-          break;
-        }
-      }
-      if (pos <= 0) {
-        continue;
-      }
-
-      FEC_Routing_Action_History__c prev = timeline[pos - 1];
-      if (prev.FEC_Case__c != curr.FEC_Case__c) {
-        continue;
-      }
-      if (prev.FEC_Assignment__c != null) {
-        continue;
-      }
-
-      Integer firstPos = idxList[0];
-      if (pos - 1 == firstPos) {
-        continue;
-      }
-
-      Datetime nextAssigned = curr.FEC_Assigned_On__c != null
-        ? curr.FEC_Assigned_On__c
-        : curr.CreatedDate;
-
-      if (prev.FEC_Submitted_On__c == nextAssigned) {
-        continue;
-      }
-
-      toUpdate.put(
-        prev.Id,
+      toUpdate.add(
         new FEC_Routing_Action_History__c(
-          Id = prev.Id,
-          FEC_Submitted_On__c = nextAssigned
+          Id = r.Id,
+          FEC_Submitted_On__c = r.CreatedDate
         )
       );
     }
 
-    if (toUpdate.isEmpty()) {
-      return;
-    }
-
-    try {
-      suppressAfterUpdateForChain = true;
-      Database.update(toUpdate.values(), AccessLevel.SYSTEM_MODE);
-    } finally {
-      suppressAfterUpdateForChain = false;
+    if (!toUpdate.isEmpty()) {
+      Database.update(toUpdate, AccessLevel.SYSTEM_MODE);
     }
   }
 }
