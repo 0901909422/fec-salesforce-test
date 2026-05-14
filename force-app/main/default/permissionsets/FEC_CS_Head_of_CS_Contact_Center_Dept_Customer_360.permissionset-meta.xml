@@ -2595,6 +2595,11 @@
         <field>FEC_Fast_Cash_Info__c.FEC_Tenure__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Head of CS Contact Center Dept - Customer 360</label>
     <license>Salesforce</license>
