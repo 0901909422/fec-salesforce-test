@@ -221,11 +221,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Address_Info__c.FEC_Parent_Address__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Clear_Session__c.FEC_Status__c</field>
         <readable>true</readable>
