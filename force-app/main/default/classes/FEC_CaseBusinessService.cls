@@ -747,7 +747,7 @@ public without sharing class FEC_CaseBusinessService {
               lwcSlot.fieldLayout = (Decimal) item.get(
                 'FEC_Sub_Section_Field_Layout__c'
               );
-              lwcSlot.subSectionName = isCOFStage1Revert ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
+              lwcSlot.subSectionName = (isCOFStage1Revert && isOriginalLwcCof) ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
               lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
                 item,
                 currentUser.FEC_User_Group__c,
