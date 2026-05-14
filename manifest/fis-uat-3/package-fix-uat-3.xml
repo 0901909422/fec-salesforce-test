@@ -41,6 +41,7 @@
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_RemovePhoneController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -87,6 +88,7 @@
         <members>fec_FastCashCaseForm</members>
         <members>maskedToggleDatatable</members>
         <members>fec_CaseExecuteVisibility</members>
+        <members>fec_RemovePhoneForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
