@@ -14,6 +14,7 @@ import FEC_LBL_Fast_Cash_Error_Description from "@salesforce/label/c.FEC_LBL_Fas
 import FEC_LBL_Fast_Cash_Requested_Amount from "@salesforce/label/c.FEC_LBL_Fast_Cash_Requested_Amount";
 import FEC_LBL_Fast_Cash_Max_Amount from "@salesforce/label/c.FEC_LBL_Fast_Cash_Max_Amount";
 import FEC_LBL_Fast_Cash_Block_Amount from "@salesforce/label/c.FEC_LBL_Fast_Cash_Block_Amount";
+import FEC_LBL_Fast_Cash_Status from "@salesforce/label/c.FEC_LBL_Fast_Cash_Status";
 import FEC_LBL_Fast_Cash_Status_Eligible from "@salesforce/label/c.FEC_LBL_Fast_Cash_Status_Eligible";
 import FEC_LBL_Fast_Cash_Btn_No from "@salesforce/label/c.FEC_LBL_Fast_Cash_Btn_No";
 import FEC_LBL_Fast_Cash_Btn_Yes from "@salesforce/label/c.FEC_LBL_Fast_Cash_Btn_Yes";
@@ -87,6 +88,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     customLabel = {
         lblErrorCode: FEC_LBL_Fast_Cash_Error_Code,
         lblErrorDescription: FEC_LBL_Fast_Cash_Error_Description,
+        lblFastCashStatus: FEC_LBL_Fast_Cash_Status,
         lblRequestedAmount: FEC_LBL_Fast_Cash_Requested_Amount,
         lblMaxAmount: FEC_LBL_Fast_Cash_Max_Amount,
         lblBlockAmount: FEC_LBL_Fast_Cash_Block_Amount,
@@ -116,6 +118,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
 
     @track displayErrorCode = STR_EMPTY;
     @track displayErrorDescription = STR_EMPTY;
+    @track displayFastCashStatus = STR_EMPTY;
 
     @track maxAmountDecimal = null;
     @track requestedAmountDigits = STR_EMPTY;
@@ -280,6 +283,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.eligibilityLoading = false;
         this.displayErrorCode = STR_EMPTY;
         this.displayErrorDescription = STR_EMPTY;
+        this.displayFastCashStatus = STR_EMPTY;
         this.maxAmountDecimal = null;
         this.clearBlockMessages();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -305,6 +309,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 if (!dto || !dto.callCompleted) {
                     this.notEligible = true;
                     this.displayErrorCode = STR_EMPTY;
+                    this.displayFastCashStatus = dto && dto.fastCashStatus ? dto.fastCashStatus : STR_EMPTY;
                     this.displayErrorDescription = dto && dto.technicalMessage ? dto.technicalMessage : STR_EMPTY;
                     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
                     this._notifyFastCashPropertyInfoVisibility(true);
@@ -315,6 +320,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                     this.notEligible = false;
                     this.displayErrorCode = STR_EMPTY;
                     this.displayErrorDescription = STR_EMPTY;
+                    this.displayFastCashStatus = STR_EMPTY;
                     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
                     this._notifyFastCashPropertyInfoVisibility(false);
                     if (dto.maxAmount != null) {
@@ -328,6 +334,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 }
                 this.notEligible = true;
                 this.eligible = false;
+                this.displayFastCashStatus = dto.fastCashStatus || STR_EMPTY;
                 this.displayErrorCode = dto.errorCode || STR_EMPTY;
                 this.displayErrorDescription = dto.errorDescription || STR_EMPTY;
                 //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -339,6 +346,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 this.eligible = false;
                 this.displayErrorCode = STR_EMPTY;
                 this.displayErrorDescription = STR_EMPTY;
+                this.displayFastCashStatus = STR_EMPTY;
                 //linhdev fix jira FECREDIT_CSM_2025_KH-1294
                 this._notifyFastCashPropertyInfoVisibility(true);
             });
