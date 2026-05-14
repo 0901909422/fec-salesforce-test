@@ -73,6 +73,7 @@
 
     <types>
         <members>Case.FEC_External_Interaction_ID__c</members>
+        <members>Case.FEC_Is_Chat_Automation__c</members>
         <name>CustomField</name>
     </types>
     

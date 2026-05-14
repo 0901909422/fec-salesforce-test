@@ -342,7 +342,8 @@ public with sharing class FEC_ChatHubCaseController {
             interactionCase.FEC_KYC_Method__c = dto.kycMethod;
             // interactionCase.FEC_KYC_Result__c = dto.kycResult;
 
-
+            // Mark as Chat Automation since case is created from ChatHub
+            interactionCase.FEC_Is_Chat_Automation__c = true;
 
             insert interactionCase;
 
