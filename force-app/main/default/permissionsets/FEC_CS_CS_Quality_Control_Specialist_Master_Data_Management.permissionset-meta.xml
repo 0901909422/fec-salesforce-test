@@ -895,6 +895,11 @@
     <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
     <readable>true</readable>
 </fieldPermissions>
+<fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Quality Control Specialist - Master Data Management</label>
     <license>Salesforce</license>
