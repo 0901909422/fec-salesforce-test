@@ -2556,7 +2556,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   }
 
   _saveRemovePhoneDraftIfApplicable() {
-    const host = this.template.querySelector("c-fec_-sub-process-container");
+    const host =
+      this.template.querySelector("c-fec_-sub-process-container") ||
+      this.template.querySelector("c-fec-sub-process-container");
     if (!host || typeof host.saveRemovePhoneDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
@@ -2721,7 +2723,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         .then(() => afterForms())
         .then(() => {
           this.handleSaveFieldReadOnly();
-        });
+        })
+        .then(() => this._saveRemovePhoneDraftIfApplicable());
     }
 
     return new Promise((resolve, reject) => {
@@ -2741,7 +2744,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then(() => {
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
-      });
+      })
+      .then(() => this._saveRemovePhoneDraftIfApplicable());
     });
   }
 
@@ -2797,6 +2801,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
+    await this._saveRemovePhoneDraftIfApplicable();
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;

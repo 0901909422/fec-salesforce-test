@@ -10,6 +10,15 @@
     align-items: end;
 }
 
-.button-wrap {
-    padding-bottom: 0.125rem;
+.remove-phone-readonly-value {
+    font-weight: 400;
+    color: #080707;
+}
+
+.remove-phone-readonly-row {
+    padding: 0.5rem 0.75rem;
+}
+
+.remove-phone-readonly-cell:last-child {
+    margin-bottom: 0;
 }

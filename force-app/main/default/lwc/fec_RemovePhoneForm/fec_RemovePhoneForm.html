@@ -1,17 +1,34 @@
 <template>
   <div class="slds-box slds-theme_shade">
     <h2 class="slds-text-heading_medium slds-m-bottom_small">{customLabel.sectionTitle}</h2>
-
-    <div class="input-row">
-      <lightning-input
-        type="text"
-        name="removedPhone"
-        label={customLabel.removedPhoneLabel}
-        value={phone}
-        disabled={formDisabled}
-        onchange={handlePhoneChange}>
-      </lightning-input>
-      <div class="button-wrap">
+    <template if:false={readOnlyRemovePhone}>
+      <div class="input-row">
+        <lightning-input
+          type="text"
+          name="removedPhone"
+          label={customLabel.removedPhoneLabel}
+          value={phone}
+          onchange={handlePhoneChange}
+          onblur={handlePhoneChange}>
+        </lightning-input>
+        <div class="button-wrap">
+          <lightning-button
+            label={customLabel.checkEligibility}
+            variant="brand"
+            onclick={handleCheckEligibility}
+            disabled={disableCheckButton}>
+          </lightning-button>
+        </div>
+      </div>
+    </template>
+    <template if:true={readOnlyRemovePhone}>
+      <div class="slds-form-element slds-m-bottom_small">
+        <label class="slds-form-element__label">{customLabel.removedPhoneLabel}</label>
+        <div class="slds-form-element__control">
+          <div class="slds-form-element__static remove-phone-readonly-value">{phoneReadOnlyDisplay}</div>
+        </div>
+      </div>
+      <div class="button-wrap slds-m-bottom_small">
         <lightning-button
           label={customLabel.checkEligibility}
           variant="brand"
@@ -19,27 +36,27 @@
           disabled={disableCheckButton}>
         </lightning-button>
       </div>
-    </div>
-
+    </template>
     <template if:true={isLoading}>
       <lightning-spinner alternative-text={customLabel.loading} size="small"></lightning-spinner>
     </template>
-
     <template if:true={resultMessage}>
       <p class={resultClass}>{resultMessage}</p>
     </template>
   </div>
-
-  <template if:true={showTable}>
+  <template if:true={showEditableTable}>
     <div class="slds-box slds-m-top_medium">
-      <lightning-datatable
-        key-field="id"
-        data={pagedRows}
-        columns={columns}
-        hide-checkbox-column={formDisabled}
-        selected-rows={selectedRowKeysOnPage}
-        onrowselection={handleRowSelection}>
-      </lightning-datatable>
+      <template for:each={datatableMountRows} for:item="mountRow">
+        <lightning-datatable
+          key={mountRow.mountKey}
+          key-field="id"
+          data={pagedRows}
+          columns={columns}
+          selected-rows={selectedRowIds}
+          hide-checkbox-column={readOnlyRemovePhone}
+          onrowselection={handleRowSelection}>
+        </lightning-datatable>
+      </template>
       <template if:true={showPagination}>
         <div class="remove-phone-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
           <span class="slds-text-body_small">{paginationPageOfText}</span>
@@ -57,6 +74,20 @@
               disabled={disableNextPage}>
             </lightning-button>
           </lightning-button-group>
+        </div>
+      </template>
+    </div>
+  </template>
+  <template if:true={showReadOnlySelections}>
+    <div class="slds-box slds-m-top_medium">
+      <template for:each={readOnlySelectedRows} for:item="rw">
+        <div key={rw.rowKey} class="remove-phone-readonly-row slds-box slds-theme_default slds-m-bottom_x-small">
+          <template for:each={rw.cells} for:item="cell">
+            <div key={cell.ckey} class="remove-phone-readonly-cell slds-grid slds-wrap slds-m-bottom_x-small">
+              <span class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-text-color_weak">{cell.label}</span>
+              <span class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12 remove-phone-readonly-value">{cell.value}</span>
+            </div>
+          </template>
         </div>
       </template>
     </div>
