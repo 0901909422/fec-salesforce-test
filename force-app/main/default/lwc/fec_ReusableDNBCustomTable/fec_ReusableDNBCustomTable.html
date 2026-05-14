@@ -1,5 +1,5 @@
 <template>
-    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered custom-table">
 
         <!-- HEADER -->
         <thead>
@@ -62,7 +62,7 @@
 
                                 <!-- EDITABLE -->
                                 <template if:false={cell.isDisabled}>
-                                    <lightning-combobox value={cell.value} options={cell.options}
+                                    <lightning-combobox value={cell.value} options={cell.options} required={cell.isRequired}
                                         placeholder="Select an Option" data-id={row.id} data-field={cell.fieldName}
                                         onchange={handlePicklistChange}>
                                     </lightning-combobox>
@@ -75,7 +75,7 @@
                                 </template>
                                 <template if:false={cell.isDisabledText}>
                                     <lightning-textarea value={cell.value} data-id={row.id} data-field={cell.fieldName}
-                                        onchange={handleTextareaChange}>
+                                        required={cell.isRequired} onchange={handleTextareaChange}>
                                     </lightning-textarea>
                                 </template>
                             </template>

@@ -214,6 +214,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     }
     
     async handleSelectQueue(event) {
+        this.template.querySelector('.users-in-queue-box')?.scrollIntoView({ behavior: 'smooth' });
         const qid = event.detail.queueId;
         const teamQueueRecordID = event.detail.teamQueueRecordID;
         const curentTeamId = event.detail.curentTeamId;
