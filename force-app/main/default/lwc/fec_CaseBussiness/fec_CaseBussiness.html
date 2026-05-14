@@ -8,9 +8,11 @@
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
         <div class="error" if:true={section.hasError}>
           <p>{section.error.label}</p>
+          <template if:true={section.error.errorPanellst.length}>
           <p>{customLabel.reasonLabel}:</p>
           <template for:each={section.error.errorPanellst} for:item="item">
             <p key={item.id}>{item.value}</p>
+          </template>
           </template>
         </div>
 
@@ -237,4 +239,5 @@
       <lightning-button variant="brand" label="Có" onclick={handleRun} class="slds-m-left_x-small"></lightning-button>
     </div>
   </c-fec_-modal>
+  <c-fec-pdf-generator></c-fec-pdf-generator>
 </template>

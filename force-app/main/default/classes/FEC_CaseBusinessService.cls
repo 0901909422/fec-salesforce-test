@@ -80,7 +80,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE,
     REPLACE_CARD,
     // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
-    ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -107,7 +109,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE => Method.PIN_REISSUE,
     REPLACE_CARD => Method.REPLACE_CARD,
     // tungnm37 thêm: COF/GSR route - không đổi owner
-    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST => Method.DOCUMENT_REQUEST
   };
 
   @AuraEnabled
@@ -516,6 +520,11 @@ public without sharing class FEC_CaseBusinessService {
 
       Error err = new Error();
 
+      //PhongBT 14/05/26: Document Request — gọi validate 1 lần, dùng cho cả error display và ẩn field
+      String docReqValidationMessage = DOCUMENT_REQUEST.equals(businessProcessCode)
+        ? FEC_PaymentHistoryValidationService.getValidationMessage(selectedCase.Id, subCodeId)
+        : null;
+
       try {
         switch on METHOD_MAP.get(businessProcessCode) {
           when PHONE_UPDATE {
@@ -553,6 +562,13 @@ public without sharing class FEC_CaseBusinessService {
           when IDENTIFICATION_UPDATE {
             if (selectedCase.FEC_Account_or_Contract__c != null) {
               identificationUpdate(selectedCase);
+            }
+          }
+          //PhongBT 14/05/26: Document Request hiển thị cảnh báo từ validation (chỉ label, không có reason)
+          when DOCUMENT_REQUEST {
+            if (String.isNotBlank(docReqValidationMessage)) {
+              err = new Error(docReqValidationMessage, new List<String>());
+              result.sectionlst.add(new Section('Case Information', err));
             }
           }
           when else {
@@ -687,10 +703,6 @@ public without sharing class FEC_CaseBusinessService {
         Decimal subSectionLayoutTemp;
         SObject objTemp;
 
-        //PhongBT 14/05/26: Document Request — gọi validate 1 lần trước vòng lặp để tránh SOQL trong loop
-        Boolean docReqHasValidationMessage = DOCUMENT_REQUEST.equals(businessProcessCode)
-          && FEC_PaymentHistoryValidationService.hasValidationMessage(selectedCase.Id, subCodeId);
-
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -705,7 +717,7 @@ public without sharing class FEC_CaseBusinessService {
           //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
           if(
             DOCUMENT_REQUEST.equals(businessProcessCode)
-            && docReqHasValidationMessage
+            && String.isNotBlank(docReqValidationMessage)
             && 'Case Information'.equals(sectionNameTemp)
             && !'Property Info'.equals(subSectionNameTemp)
           ){
@@ -4854,7 +4866,7 @@ public without sharing class FEC_CaseBusinessService {
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
    * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
-   * rồi cờ default; không dùng FEC_Order__c.
+   * rồi cờ default; cuối cùng mới lấy bản ghi đầu theo Name.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,

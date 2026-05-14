@@ -200,9 +200,85 @@ public with sharing class FEC_PaymentHistoryValidationService {
     return result;
   }
 
-  public static Boolean hasValidationMessage(String caseId, String subCodeId) {
+  public static String getValidationMessage(String caseId, String subCodeId) {
     PaymentHistoryRequestValidationResult validation =
       validatePaymentHistoryRequestForSubCode(caseId, subCodeId);
-    return String.isNotBlank(validation.message) || String.isNotBlank(validation.infoMessage);
+    if (String.isNotBlank(validation.message)) {
+      return validation.message;
+    }
+    if (String.isNotBlank(validation.infoMessage)) {
+      return validation.infoMessage;
+    }
+    return null;
+  }
+
+  @AuraEnabled
+  public static List<Map<String, Object>> getPaymentHistoryRows(String caseId) {
+    List<Map<String, Object>> rows = new List<Map<String, Object>>();
+    if (String.isBlank(caseId)) {
+      return rows;
+    }
+    List<Case> cases = [
+      SELECT FEC_Account_or_Contract__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
+      return rows;
+    }
+    Id customerHistoryId = cases[0].FEC_Account_or_Contract__c;
+    List<FEC_Payment_History__c> payments = [
+      SELECT FEC_Payment_No__c, FEC_Payment_Date__c, FEC_Payment_Amount__c
+      FROM FEC_Payment_History__c
+      WHERE FEC_Customer_History__c = :customerHistoryId
+      ORDER BY FEC_Payment_No__c ASC
+    ];
+    for (FEC_Payment_History__c p : payments) {
+      Map<String, Object> row = new Map<String, Object>();
+      row.put('RemovalNote', p.FEC_Payment_No__c);
+      row.put('BankAddress', p.FEC_Payment_Date__c != null
+        ? ((DateTime) p.FEC_Payment_Date__c).format('dd/MM/yyyy') : '');
+      row.put('PaymentAmount', p.FEC_Payment_Amount__c);
+      rows.add(row);
+    }
+    return rows;
+  }
+
+  @AuraEnabled
+  public static List<Map<String, Object>> getRepaymentScheduleRows(String caseId) {
+    List<Map<String, Object>> rows = new List<Map<String, Object>>();
+    if (String.isBlank(caseId)) {
+      return rows;
+    }
+    List<Case> cases = [
+      SELECT FEC_Account_or_Contract__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
+      return rows;
+    }
+    Id customerHistoryId = cases[0].FEC_Account_or_Contract__c;
+    List<FEC_Repayment_Schedule__c> schedules = [
+      SELECT FEC_Installment_Due_Date__c, FEC_Principal__c, FEC_Interest__c,
+             FEC_Closing_Principal__c, FEC_Repayment_Fee__c, FEC_Installment_Amount__c
+      FROM FEC_Repayment_Schedule__c
+      WHERE FEC_Customer_History__c = :customerHistoryId
+      ORDER BY FEC_Installment_Due_Date__c ASC
+    ];
+    for (FEC_Repayment_Schedule__c s : schedules) {
+      Map<String, Object> row = new Map<String, Object>();
+      row.put('InstallmentDueDate', s.FEC_Installment_Due_Date__c != null
+        ? ((DateTime) s.FEC_Installment_Due_Date__c).format('dd/MM/yyyy') : '');
+      row.put('Principal', s.FEC_Principal__c);
+      row.put('Interest', s.FEC_Interest__c);
+      row.put('ClosingPrincipal', s.FEC_Closing_Principal__c);
+      row.put('RepaymentFees', s.FEC_Repayment_Fee__c);
+      row.put('InstallmentAmount', s.FEC_Installment_Amount__c);
+      rows.add(row);
+    }
+    return rows;
   }
 }
