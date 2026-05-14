@@ -16815,4 +16815,12 @@
         <shortDescription>FEC_BCH_FooterOf</shortDescription>
         <value>of</value>
     </labels>
+    <labels>
+        <fullName>FEC_No_Data_Found</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Data Found</shortDescription>
+        <value>No data Found</value>
+    </labels>
 </CustomLabels>
