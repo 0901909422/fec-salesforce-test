@@ -234,7 +234,7 @@ const ACTIONS_TAKEN_D2C_ASSESMENT = "FEC_Actions_Taken_D2C_Assessment__c";
 const CONFIRM_CS_SP_ASSESMENT = "Case.FEC_Confirm_CS_SP_Assessment__c";
 const FIELD_COMPLAIN_TYPE = "FEC_Complain_Type__c";
 const FIELD_COMPLAINT_SOURCE = "FEC_Complaint_Source__c";
-const VALUE_COMPLAINT_SOURCE = ['High Risk', 'Urgent'];
+const VALUE_COMPLAINT_SOURCE = ['High risk', 'Urgent'];
 
 const TYPE_QUALIFIED = "Qualified";
 const TYPE_QUALIFIED_VN = "Hợp lệ";
@@ -1533,10 +1533,17 @@ export default class Fec_CaseBussiness extends LightningElement {
 
                 // Convert label to value for picklist fields
                 const picklistOptions = this.business.picklistOptionsMap?.[obj.name]?.[field.apiName];
-                if (picklistOptions?.length && field.value) {
-                  const opt = findPicklistOptionByRaw(picklistOptions, field.value);
-                  if (opt) {
-                    field.value = opt.value;
+                if (picklistOptions?.length) {
+                  if (field.value) {
+                    const opt = findPicklistOptionByRaw(picklistOptions, field.value);
+                    if (opt) {
+                      field.value = opt.value;
+                    }
+                  } else {
+                    const defaultOpt = picklistOptions.find(o => o.isDefaultValue);
+                    if (defaultOpt) {
+                      field.value = defaultOpt.value;
+                    }
                   }
                 }
 
@@ -2430,6 +2437,30 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveDraftIfApplicable();
   }
 
+  _getRemovePhoneFormEls() {
+    const out = [];
+    const wraps = this.template.querySelectorAll(
+      '[data-fec-lwc="fec_RemovePhoneForm"]',
+    );
+    wraps?.forEach((wrap) => {
+      const host = wrap && wrap.firstElementChild;
+      if (host && typeof host.saveDraftIfApplicable === "function") {
+        out.push(host);
+      }
+    });
+    return out;
+  }
+
+  _saveRemovePhoneDraftIfApplicable() {
+    const hosts = this._getRemovePhoneFormEls();
+    if (!hosts.length) {
+      return Promise.resolve();
+    }
+    return Promise.all(
+      hosts.map((el) => el.saveDraftIfApplicable()),
+    );
+  }
+
   _savePointsRedemptionDraftIfApplicable() {
     const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2703,6 +2734,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
         this._savePointsRedemptionDraftIfApplicable(),
+        this._saveRemovePhoneDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2733,8 +2765,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     })
       // DungLT — flush upload file sau khi submit record forms
       .then(() => this._uploadFecFileUploadCardsIfApplicable())
+      .then(() => afterForms())
       .then(() => {
-        afterForms();
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
       });
@@ -2790,6 +2822,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveRefundRequestIfApplicable(),
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
+      this._saveRemovePhoneDraftIfApplicable(),
     ]);
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {

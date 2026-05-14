@@ -523,6 +523,7 @@
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Incorrect_Payment_Info__c</members>
+        <members>FEC_Contract_List_for_Remove_Phone__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -531,6 +532,7 @@
     </types>
     <types>
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
+        <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
@@ -1039,6 +1041,10 @@
 	 	<members>Case.Customer_Case</members>
 	 	<members>Case.Internal_Case</members>
 		<name>RecordType</name>
+	</types>
+    <types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
 	</types>
 	<version>66.0</version>
 </Package>

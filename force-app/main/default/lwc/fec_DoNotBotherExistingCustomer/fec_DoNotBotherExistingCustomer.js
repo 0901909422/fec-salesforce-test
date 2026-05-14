@@ -118,8 +118,9 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
   buildDNBData(res) {
     const channel = res.channel?.toLowerCase();
+    console.log("CASE CHANNEL:", channel);
     const isCall = ["inbound", "outbound"].includes(channel);
-
+    const isEmail = channel === "email";
     const createRow = ({
       id,
       channel,
@@ -186,6 +187,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         type: "Interaction Phone",
         contact: res.interactionPhoneNumber,
         maskedContact: res.interactionMaskedPhone,
+        disableAction: isEmail,
       }),
       createRow({
         id: "interaction-phone-sms",
@@ -193,6 +195,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
         type: "Interaction Phone",
         contact: res.interactionPhoneNumber,
         maskedContact: res.interactionMaskedPhone,
+        disableAction: isEmail,
       }),
       createRow({
         id: "interaction-email",

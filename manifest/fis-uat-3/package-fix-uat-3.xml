@@ -40,6 +40,8 @@
 	    <members>FEC_FastCashCaseController</members>
         <members>FEC_RelevantTicketController</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_RemovePhoneController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -84,6 +86,9 @@
         <members>fecCheckEligibleLoanSection</members>
         <members>fec_CardClosureRefundForm</members>
         <members>fec_FastCashCaseForm</members>
+        <members>maskedToggleDatatable</members>
+        <members>fec_CaseExecuteVisibility</members>
+        <members>fec_RemovePhoneForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -113,6 +118,10 @@
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Customer_360</members>
 		<name>PermissionSet</name>
+	</types>
+    <types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
 	</types>
 	<version>66.0</version>
 </Package>
