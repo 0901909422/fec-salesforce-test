@@ -6,6 +6,76 @@ public with sharing class FEC_CaseExecuteService {
     }
     
     @AuraEnabled
+    public static void forceShowExecute(
+        Id caseId
+    ) {
+        
+        try {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            
+            update new Case(
+                Id = caseId,
+            FEC_Can_Execute__c = true
+                );
+            
+            System.debug(
+                'FORCE UPDATE FEC_Can_Execute__c = true'
+                );
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                'forceShowExecute ERROR = '
+                + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
+            
+        } finally {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+    
+    @AuraEnabled
+    public static void forceHideExecute(
+        Id caseId
+    ) {
+        
+        try {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            
+            update new Case(
+                Id = caseId,
+            FEC_Can_Execute__c = false
+                );
+            
+            System.debug(
+                'FORCE UPDATE FEC_Can_Execute__c = false'
+                );
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                'forceHideExecute ERROR = '
+                + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
+            
+        } finally {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
+    }
+    
+    @AuraEnabled
     public static ExecuteVisibilityResult canExecute(Id caseId) {
         
         Case c = [
@@ -23,105 +93,227 @@ public with sharing class FEC_CaseExecuteService {
         
         Id userId = UserInfo.getUserId();
         
-        System.debug('=== FEC_CaseExecuteService START ===');
-        System.debug('Case Id: ' + caseId);
-        System.debug('User Id: ' + userId);
-        
-        Boolean currentValue =
-            c.FEC_Can_Execute__c == true;
-        
-        /*
-         * Nếu đã TRUE rồi
-         * và owner hiện tại vẫn là user
-         * thì không recompute nữa
-         */
-        if (
-            currentValue &&
-            c.OwnerId == userId
-        ) {
-            
-            System.debug('SKIP: already TRUE and same owner');
-            
-            ExecuteVisibilityResult result =
-                new ExecuteVisibilityResult();
-            
-            result.value = true;
-            result.shouldUpdate = false;
-            
-            return result;
-        }
+        System.debug('==============================');
+        System.debug('FEC_CaseExecuteService START');
+        System.debug('Case Id = ' + caseId);
+        System.debug('User Id = ' + userId);
+        System.debug('Owner Id = ' + c.OwnerId);
+        System.debug('Current FEC_Can_Execute__c = '
+            + c.FEC_Can_Execute__c);
+        System.debug('==============================');
         
         Boolean canExecute = false;
         
-        // 1. View mode check
-        if (
-            c.FEC_Interaction_View_Mode__c !=
-            FEC_ConstantCommon.INTERACTION_REVIEW_MODE
-        ) {
+        // /*
+        //  * 1. Interaction mode check
+        //  */
+        // if (
+        //     c.FEC_Interaction_View_Mode__c != 'review'
+        // ) {
             
-            System.debug('FAILED: Invalid interaction mode');
+        //     System.debug(
+        //         'FAILED: Invalid interaction mode'
+        //         );
             
-            return buildResult(c, false);
-        }
+        //     return buildResult(c, false);
+        // }
         
-        // 2. Closed check
+        /*
+         * 2. Closed check
+         */
         if (c.IsClosed) {
             
-            System.debug('FAILED: Case is closed');
-            
-            return buildResult(c, false);
-        }
-        
-        Boolean isOwnerUser =
-            c.OwnerId == userId;
-        
-        Boolean isQueueMember = false;
-        
-        // 3. Queue member check
-        if (
-            c.OwnerId != null &&
-            String.valueOf(c.OwnerId)
-            .startsWith(FEC_ConstantCommon.QUEUE_ID_START)
-        ) {
-            
-            isQueueMember = [
-                SELECT COUNT()
-                FROM GroupMember
-                WHERE
-                    GroupId = :c.OwnerId
-                    AND UserOrGroupId = :userId
-            ] > 0;
-        }
-        
-        System.debug('isOwnerUser=' + isOwnerUser);
-        System.debug('isQueueMember=' + isQueueMember);
-        
-        if (!(isOwnerUser || isQueueMember)) {
-            
             System.debug(
-                'FAILED: User is not owner or queue member'
+                'FAILED: Case is closed'
                 );
             
             return buildResult(c, false);
         }
         
+        /*
+         * 3. Owner check
+         */
+        Boolean isOwnerUser =
+            c.OwnerId == userId;
+        
+        Boolean isQueueMember = false;
+        
+        System.debug(
+            'isOwnerUser = ' + isOwnerUser
+            );
+        
+        /*
+         * 4. Queue member check
+         */
+        if (
+            c.OwnerId != null &&
+            String.valueOf(c.OwnerId)
+            .startsWith(
+            FEC_ConstantCommon.QUEUE_ID_START
+            )
+        ) {
+            
+            System.debug(
+                'START Queue Membership Check'
+                );
+            
+            /*
+             * 4.1 Direct user in queue
+             */
+            Integer directUserCount = [
+                SELECT COUNT()
+                FROM GroupMember
+                WHERE
+                    GroupId = :c.OwnerId
+                    AND UserOrGroupId = :userId
+            ];
+            
+            System.debug(
+                'directUserCount = '
+                + directUserCount
+                );
+            
+            isQueueMember =
+                directUserCount > 0;
+            
+            /*
+             * 4.2 Role in queue
+             */
+            if (!isQueueMember) {
+                
+                User currentUser = [
+                    SELECT
+                        Id,
+                        UserRoleId,
+                        UserRole.Name
+                    FROM User
+                    WHERE Id = :userId
+                    LIMIT 1
+                ];
+                
+                System.debug(
+                    'Current User Role Id = '
+                    + currentUser.UserRoleId
+                    );
+                
+                System.debug(
+                    'Current User Role Name = '
+                    + currentUser.UserRole.Name
+                    );
+                
+                if (currentUser.UserRoleId != null) {
+                    
+                    List<Group> matchedGroups = [
+                        SELECT
+                            Id,
+                            Name,
+                            Type,
+                            RelatedId
+                        FROM Group
+                        WHERE
+                            Type IN (
+                                'Role',
+                                'RoleAndSubordinates',
+                                'RoleAndSubordinatesInternal'
+                            )
+                            AND RelatedId =
+                                :currentUser.UserRoleId
+                    ];
+                    
+                    System.debug(
+                        'matchedGroups = '
+                        + matchedGroups
+                        );
+                    
+                    Set<Id> roleGroupIds =
+                        new Set<Id>();
+                    
+                    for (Group g : matchedGroups) {
+                        
+                        roleGroupIds.add(g.Id);
+                        
+                        System.debug(
+                            'Role Group Found => '
+                            + 'Id=' + g.Id
+                            + ', Name=' + g.Name
+                            + ', Type=' + g.Type
+                            + ', RelatedId='
+                            + g.RelatedId
+                            );
+                    }
+                    
+                    Integer roleCount = [
+                        SELECT COUNT()
+                        FROM GroupMember
+                        WHERE
+                            GroupId = :c.OwnerId
+                            AND UserOrGroupId
+                                IN :roleGroupIds
+                    ];
+                    
+                    System.debug(
+                        'roleCount = '
+                        + roleCount
+                        );
+                    
+                    isQueueMember =
+                        roleCount > 0;
+                }
+            }
+        }
+        
+        System.debug(
+            'FINAL isQueueMember = '
+            + isQueueMember
+            );
+        
+        /*
+         * 5. User must be:
+         * - owner
+         * OR
+         * - queue member
+         */
+        if (!(isOwnerUser || isQueueMember)) {
+            
+            System.debug(
+                'FAILED: User is not owner '
+                + 'or queue member'
+                );
+            
+            return buildResult(c, false);
+        }
+        
+        /*
+         * 6. Assignment count check
+         */
         Integer assignmentCount =
             c.FEC_Assignment_Count__c == null
             ? 0
-            : Integer.valueOf(c.FEC_Assignment_Count__c);
-        
-        System.debug(
-            'assignmentCount=' + assignmentCount
+            : Integer.valueOf(
+            c.FEC_Assignment_Count__c
             );
         
-        // 4. No assignment
+        System.debug(
+            'assignmentCount = '
+            + assignmentCount
+            );
+        
+        /*
+         * 7. No assignment
+         */
         if (assignmentCount == 0) {
+            
+            System.debug(
+                'No assignment => canExecute = true'
+                );
             
             canExecute = true;
             
         } else {
             
-            // 5. Profile check
+            /*
+             * 8. Profile check
+             */
             String profileName = [
                 SELECT Profile.Name
                 FROM User
@@ -129,19 +321,19 @@ public with sharing class FEC_CaseExecuteService {
             ].Profile.Name;
             
             System.debug(
-                'profileName=' + profileName
+                'profileName = '
+                + profileName
                 );
             
             canExecute =
-                profileName ==
-                FEC_ConstantCommon.TEAM_CS_SUPPORT
+                profileName == FEC_ConstantCommon.TEAM_CS_SUPPORT
                 ||
-                profileName ==
-                FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
+                profileName == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
         }
         
         System.debug(
-            'FINAL canExecute=' + canExecute
+            'FINAL canExecute = '
+            + canExecute
             );
         
         return buildResult(c, canExecute);
@@ -163,33 +355,61 @@ public with sharing class FEC_CaseExecuteService {
         result.shouldUpdate =
             currentValue != canExecute;
         
+        System.debug('----------------------');
         System.debug(
-            'currentValue=' + currentValue
+            'currentValue = '
+            + currentValue
             );
         
         System.debug(
-            'shouldUpdate=' + result.shouldUpdate
+            'newValue = '
+            + canExecute
             );
         
+        System.debug(
+            'shouldUpdate = '
+            + result.shouldUpdate
+            );
+        System.debug('----------------------');
+        
+        /*
+         * IMPORTANT:
+         * Update field used by
+         * Dynamic Action visibility
+         */
         if (result.shouldUpdate) {
             
             try {
                 
+                System.debug(
+                    'START UPDATE CASE'
+                    );
+                
                 FEC_CaseTriggerHandler.isSystemUpdate = true;
                 
+                /*
+                 * UPDATE HERE
+                 */
                 update new Case(
                     Id = c.Id,
-                FEC_Can_Execute__c = canExecute
+                FEC_Can_Execute__c =
+                    canExecute
                     );
                 
                 System.debug(
                     'Case updated successfully'
                     );
                 
+                System.debug(
+                    'Updated FEC_Can_Execute__c = '
+                    + canExecute
+                    );
+                
             } catch (Exception e) {
                 
                 System.debug(
-                    'UPDATE ERROR: ' + e.getMessage()
+                    'UPDATE ERROR = '
+                    + e.getMessage()
                     );
                 
                 throw e;
@@ -197,10 +417,89 @@ public with sharing class FEC_CaseExecuteService {
             } finally {
                 
                 FEC_CaseTriggerHandler.isSystemUpdate = false;
+                
+                System.debug(
+                    'RESET isSystemUpdate flag'
+                    );
             }
+        } else {
+            
+            System.debug(
+                'SKIP UPDATE: value unchanged'
+                );
         }
         
         return result;
+    }
+    
+    @AuraEnabled
+    public static void executeCase(Id caseId) {
+        
+        Id userId = UserInfo.getUserId();
+        
+        System.debug('==============================');
+        System.debug('START executeCase');
+        System.debug('caseId = ' + caseId);
+        System.debug('userId = ' + userId);
+        System.debug('==============================');
+        
+        Case c = [
+        SELECT
+            Id,
+            OwnerId
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        
+        System.debug('OLD OwnerId = ' + c.OwnerId);
+        
+        /*
+         * STOP IF OWNER ALREADY CURRENT USER
+         */
+        if (c.OwnerId == userId) {
+            
+            System.debug(
+                'SKIP UPDATE: Owner already current user'
+                );
+            
+            return;
+        }
+        
+        /*
+         * UPDATE OWNER
+         */
+        try {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = true;
+            
+            update new Case(
+                Id = caseId,
+            OwnerId = userId
+                );
+            
+            System.debug(
+                'SUCCESS: Owner updated'
+                );
+            
+            System.debug(
+                'NEW OwnerId = ' + userId
+                );
+            
+        } catch (Exception e) {
+            
+            System.debug(
+                'ERROR executeCase = ' + e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
+            
+        } finally {
+            
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
     }
     
     /**
@@ -232,7 +531,7 @@ public with sharing class FEC_CaseExecuteService {
         ];
         
         
-        User oldOwner = [
+        List<User> oldOwner = [
             SELECT
                 Id,
                 Name,
@@ -243,18 +542,18 @@ public with sharing class FEC_CaseExecuteService {
             WHERE Name = :oldOwnerName
             LIMIT 1
         ];
+        User oldOwnerUser = oldOwner.isEmpty() ? null : oldOwner[0];
         
         
-        
-        Group oldOwnerGroup = [
+        List<Group> oldOwnerGroup = [
             SELECT Id, DeveloperName,Name,Type
             FROM Group
-            WHERE DeveloperName = :oldOwner.FEC_Main_Queue__c
+            WHERE DeveloperName = :oldOwnerUser.FEC_Main_Queue__c
             LIMIT 1
         ];
         
         
-        User newOwner = [
+        List<User> newOwner = [
             SELECT
                 Id,Name,
                 Email,
@@ -263,7 +562,7 @@ public with sharing class FEC_CaseExecuteService {
             WHERE Name = :newOwnerName
             LIMIT 1
         ];
-        
+        User newOwnerUser = newOwner.isEmpty() ? null : newOwner[0];
         
         FEC_Routing_Action_History__c history =
             new FEC_Routing_Action_History__c(
@@ -275,16 +574,16 @@ public with sharing class FEC_CaseExecuteService {
             'Case',
         
         FEC_Original_User_Queue__c =
-            oldOwnerGroup.Id,
+            oldOwnerGroup.isEmpty() ? null : oldOwnerGroup[0].Id,
         
         FEC_Original_User_Queue_ID__c =
-            oldOwnerGroup.Id,
+            oldOwnerGroup.isEmpty() ? null : oldOwnerGroup[0].Id,
         
         FEC_Updated_User_Queue__c =
-            emailLocalPart(newOwner.Email),
+            emailLocalPart(newOwnerUser.Email),
         
         FEC_Updated_User_Queue_ID__c =
-            newOwner.Id,
+            newOwnerUser.Id,
         
         FEC_User__c =
             emailLocalPart(currentUser.Email),

@@ -41,6 +41,8 @@ export default class Fec_RoutingAssignment extends LightningElement {
     return this.showAddForm && (this.formTeam || this.formQueue);
   }
   @track formRemark = '';
+  @track showValidationError = false;
+  @track validationErrorMsg = '';
 
   teamLabel = FEC_Team_Label;
   queueLabel = FEC_Queue_Label;
@@ -78,10 +80,11 @@ export default class Fec_RoutingAssignment extends LightningElement {
     return this.manualItems.length > 0;
   }
 
-  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c
+  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c, ẩn CC và SP (tự động xử lý)
   get teamOptions() {
     const seen = new Set();
     return this.allTeamQueueOptions
+      .filter(o => o.teamName !== 'CC' && o.teamName !== 'SP')
       .filter(o => { if (seen.has(o.teamName)) return false; seen.add(o.teamName); return true; })
       .map(o => ({ label: o.teamName, value: o.teamName }));
   }
@@ -148,6 +151,7 @@ export default class Fec_RoutingAssignment extends LightningElement {
 
   handleCancelForm() {
     this.showAddForm = false;
+    this.showValidationError = false;
   }
 
   handleTeamChange(e) {
@@ -164,8 +168,14 @@ export default class Fec_RoutingAssignment extends LightningElement {
   }
 
   handleConfirm() {
-    if (!this.formTeam || !this.formQueue || !this.formRemark) {
-      // validate
+    this.showValidationError = false;
+    const errors = [];
+    if (!this.formTeam) errors.push('Team');
+    if (!this.formQueue) errors.push('Queue');
+    if (!this.formRemark) errors.push('Assignment Remark');
+    if (errors.length > 0) {
+      this.showValidationError = true;
+      this.validationErrorMsg = errors.join(', ') + ' là bắt buộc.';
       return;
     }
     // tungnm37: check duplicate queue
@@ -195,6 +205,16 @@ export default class Fec_RoutingAssignment extends LightningElement {
     this.manualItems = this.manualItems.filter(i => i.key !== key);
     this.dispatchEvent(new CustomEvent('manualitemschange', {
       detail: { items: this.manualItems }
+    }));
+  }
+
+  // tungnm37: clear manual items sau khi submit thành công
+  @api clearManualItems() {
+    this.manualItems = [];
+    this.showAddForm = false;
+    this.showValidationError = false;
+    this.dispatchEvent(new CustomEvent('manualitemschange', {
+      detail: { items: [] }
     }));
   }
 }

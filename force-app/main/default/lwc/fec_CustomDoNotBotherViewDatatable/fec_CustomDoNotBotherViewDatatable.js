@@ -1,11 +1,18 @@
 import LightningDatatable from "lightning/datatable";
-import maskedContactTemplate from "c/fec_MaskedContactTemplate";
+import customTypeTemplate from "./fec_CustomDoNotBotherViewDatatable.html";
+
 export default class Fec_CustomDoNotBotherViewDatatable extends LightningDatatable {
-  static customTypes = {
-    maskedContact: {
-      template: maskedContactTemplate,
-      standardCellLayout: true,
-      typeAttributes: ["maskedValue", "rawValue", "isVisible", "rowId"],
-    },
-  };
+
+    static customTypes = {
+        maskedContact: {
+            template: customTypeTemplate,
+           standardCellLayout: false,
+            typeAttributes: [
+                "maskedValue",
+                "rawValue",
+                "isVisible",
+                "rowId"
+            ],
+        },
+    };
 }

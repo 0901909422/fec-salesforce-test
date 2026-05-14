@@ -1,12 +1,11 @@
 <template>
-    <div class="slds-grid slds-align_absolute-center">
-        <div class="slds-col">
+    <div class="mask-container">
+        <span class="value-text">
             {displayValue}
-        </div>
+        </span>
 
-        <div class="slds-col">
-            <lightning-button-icon icon-name={iconName} size="x-small" variant="bare" onclick={handleToggle}>
-            </lightning-button-icon>
-        </div>
+        <lightning-button-icon class="toggle-btn" icon-name={iconName} size="small" variant="bare"
+            onclick={handleToggle}>
+        </lightning-button-icon>
     </div>
 </template>

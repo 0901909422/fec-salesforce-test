@@ -35,6 +35,7 @@ import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCode
 import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
 import { 
   ACTION_REOPEN, 
@@ -62,6 +63,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
 
+//PhongBT: update bộ noc chọn ở updated khi revert về
+  _currentStageName = null;
+
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
@@ -83,22 +87,38 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
-  //PhongBT 07/05/26:  Khi đã submit: Updated section chỉ editable ở Handling hoặc khi bật mode edit (giống Creation NOC).
-  // Review mode → read only.
+  //PhongBT: update bộ noc chọn ở updated khi revert về
+  get _isStage1() {
+    return (this._currentStageName || '').includes('Stage 1');
+  }
+
+  // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
+  // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
+  // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
   get isUpdatedSectionEditable() {
     if (!this.isSubmittedState) {
       return false;
     }
-    return this.modeEditCase === true || this.interactionViewMode === VIEW_MODE_HANDLING;
+    //PhongBT: update bộ noc chọn ở updated khi revert về
+    // Stage 1 → readonly Updated NOC
+    if (this._isStage1) return false;
+    return this.modeEditCase === true;
   }
 
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -224,6 +244,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
+//PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -502,6 +524,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+//PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -737,8 +761,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCodeOptionlst = res;
 
         this.handleChangeOption("sub-code", this.subCodeOptionlst);
-        //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-        //lưu bộ có subcode chứ không phải bộ không subcode định submit
+        // Không có option Sub-Code: resolve NOC không Sub-Code; getByCase (Apex) không fallback Sub-Code từ Case khi đã có Sub-Category từ UI.
         const triple =
           this.productTypeSelectedId &&
           this.categorySelectedId &&
@@ -769,8 +792,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
-    //PhongBT 07/05/26: fix case nếu đang chọn bộ noc đủ subcode mà chuyển sang muốn submit bộ không có subcode thì lại
-    //lưu bộ có subcode chứ không phải bộ không subcode định submit
     syncSubCodeComboValue() {
     const el = this.template.querySelector(`c-fec_-combo-box[data-id="sub-code"]`);
     if (el) {
@@ -817,9 +838,18 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.handleEnable("category");
   }
 
+  //linhdev fix section Account Info + Case Info
   handleChangeCategory(e) {
     this.categorySelectedId = e.detail.value;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
+    this.handleDisable("sub-category");
+    this.handleDisable("sub-code");
     this.handleEnable("sub-category");
+    if (this.productTypeSelectedId && this.categorySelectedId) {
+      this.handlePublishMessageChanel();
+    }
   }
 
   handleChangeSubCategory(e) {
@@ -966,6 +996,38 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((res) => {
           this.subCodeOptionlst = res;
+
+          const noSubCodeOptions = !res || res.length === 0;
+          if (this.productTypeSelectedId && this.updatedCategoryId && this.updatedSubCategoryId && noSubCodeOptions) {
+            return getNatureOfCaseWithoutSubCode({
+              productTypeId: this.productTypeSelectedId,
+              categoryId: this.updatedCategoryId,
+              subCategoryId: this.updatedSubCategoryId
+            })
+              .then((noc) => {
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: noc?.Id ?? null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              })
+              .catch((err) => {
+                console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              });
+          }
         })
         .catch((err) => {
           console.error("getSubCodelst error (Updated section):", err);

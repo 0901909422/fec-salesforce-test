@@ -41,18 +41,14 @@ export default class FecCheckEligibleLoanSection extends LightningElement {
         });
     }
 
-    updatedCallback(changedProps) {
-        if (changedProps.has('recordId')) {
-            this._loadKey = null;
-        }
-    }
+    // Removed non-standard updatedCallback. Wire handles recordId changes.
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_WIRE_FIELDS })
     wiredCase({ data, error }) {
         this.error = false;
         this.errorMessage = '';
         if (data) {
-            this._runLoad();
+            this._runLoad(data);
         } else if (error) {
             console.error('Error loading Case for Check Eligible:', error);
             this.error = true;
@@ -60,11 +56,12 @@ export default class FecCheckEligibleLoanSection extends LightningElement {
         }
     }
 
-    _runLoad() {
-        if (!this.recordId) {
+    _runLoad(data) {
+        if (!this.recordId || !data) {
             return;
         }
-        const key = this.recordId;
+        const historyId = data.fields?.FEC_Account_or_Contract__c?.value;
+        const key = `${this.recordId}_${historyId || ''}`;
         if (key === this._loadKey) {
             return;
         }

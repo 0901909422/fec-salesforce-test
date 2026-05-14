@@ -139,6 +139,24 @@ public without sharing class FEC_CofGsrAssignmentService {
         return result;
     }
 
+    // tungnm37 fix: check xem NOC có team nào khác CC/SP không
+    // true → có team khác → luồng tự động; false → chỉ CC/SP → luồng thủ công
+    public static Boolean hasNonCcSpTeam(Set<Id> nocIds) {
+        if (nocIds == null || nocIds.isEmpty()) return false;
+        List<FEC_Routing_Assignment__c> teams = [
+            SELECT FEC_Team__c FROM FEC_Routing_Assignment__c
+            WHERE FEC_Nature_of_Cases__c IN :nocIds
+              AND FEC_Team__c != null
+              AND FEC_Active__c = true
+        ];
+        for (FEC_Routing_Assignment__c ra : teams) {
+            if (!'CC'.equals(ra.FEC_Team__c) && !'SP'.equals(ra.FEC_Team__c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void createAssignmentsOnRoute(
         String caseId, Set<Id> nocIds, User currentUser, Id historyId,
         String stageName, String remarkContentParam
@@ -208,6 +226,18 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             insert assignments;
 
+            Datetime assignmentSubmitTs = System.now();
+            List<FEC_Assignment__c> submitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                submitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = assignmentSubmitTs
+                ));
+            }
+            if (!submitStamp.isEmpty()) {
+                update submitStamp;
+            }
+
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
             // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
             // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
@@ -249,16 +279,11 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (!remarksToInsert.isEmpty()) insert remarksToInsert;
 
             List<FEC_Routing_Action_History__c> histories = new List<FEC_Routing_Action_History__c>();
-            // tungnm37: build reverse map Id->Name để tránh lỗi so sánh String vs Id
-            Map<String, String> queueIdToName = new Map<String, String>();
-            for (String qn : queueNameToId.keySet()) {
-                if (queueNameToId.get(qn) != null) {
-                    queueIdToName.put(String.valueOf(queueNameToId.get(qn)), qn);
-                }
-            }
             for (FEC_Assignment__c a : assignments) {
-                String queueId = a.FEC_OwnerID__c;
-                String queueName = queueIdToName.get(queueId);
+                // tungnm37 fix: FEC_OwnerID__c lưu Queue Name, cần lookup trực tiếp từ queueNameToId
+                String queueName = a.FEC_OwnerID__c; // đây là Queue Name
+                String queueId = queueNameToId.containsKey(queueName) 
+                    ? String.valueOf(queueNameToId.get(queueName)) : null;
                 histories.add(new FEC_Routing_Action_History__c(
                     FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
                     FEC_Case__c = caseId,
@@ -306,10 +331,16 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
 
             String userRoleName = currentUser.UserRole?.Name;
-            Case currentCase = [SELECT Id, OwnerId, Owner.Name, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
-            String originalOwnerLabel = resolveRoutingHistoryOwnerLabel(
-                currentCase.OwnerId, currentCase.Owner?.Name
-            );
+            Case currentCase = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
+            // tungnm37 fix: Stage 1 manual → Original = currentUser (người đang submit), không phải Case owner
+            // Stage 2 manual → Original = Case owner hiện tại (queue/user đang giữ case)
+            Boolean isStage1Check = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
+            String originalOwnerLabel = isStage1Check
+                ? emailLocalPart(currentUser.Email)
+                : resolveRoutingHistoryOwnerLabel(currentCase.OwnerId, currentCase.Owner?.Name);
+            String originalOwnerIdStr = isStage1Check
+                ? String.valueOf(currentUser.Id)
+                : (currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null);
 
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
@@ -339,12 +370,26 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             insert assignments;
 
+            Datetime manualSubmitTs = System.now();
+            List<FEC_Assignment__c> manualSubmitStamp = new List<FEC_Assignment__c>();
+            for (FEC_Assignment__c a : assignments) {
+                manualSubmitStamp.add(new FEC_Assignment__c(
+                    Id = a.Id,
+                    FEC_Submitted_On__c = manualSubmitTs
+                ));
+            }
+            if (!manualSubmitStamp.isEmpty()) {
+                update manualSubmitStamp;
+            }
+
             // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
             // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
             // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
             // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
+            // tungnm37: Chỉ set FEC_Assignment_Users__c từ Stage 2 trở đi (không set ở Stage 1 để Service Case Owner vẫn hiển thị)
+            Boolean isStage1 = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
             List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
-            if (!assignmentUsers.isEmpty()) {
+            if (!assignmentUsers.isEmpty() && !isStage1) {
                 try {
                     FEC_CaseTriggerHandler.isSystemUpdate = true; // tungnm37: đánh dấu đây là system update
                     Database.SaveResult sr = Database.update(new Case(
@@ -392,7 +437,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_User_Role__c = userRoleName,
                     FEC_Stage_Name__c = stageName,
                     FEC_Original_User_Queue__c = originalOwnerLabel,
-                    FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
+                    FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                     FEC_Updated_User_Queue__c = queueName,
                     FEC_Updated_User_Queue_ID__c = a.FEC_OwnerID__c,
                     FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
@@ -524,7 +569,8 @@ public without sharing class FEC_CofGsrAssignmentService {
             List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
             if (!targetQueues.isEmpty()) {
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
-                Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id, FEC_Assignment_Users__c = String.valueOf(targetQueues[0].Id)), AccessLevel.SYSTEM_MODE);
+                // tungnm37 fix: không set FEC_Assignment_Users__c cho CC/SP team để Service Case Owner vẫn hiển thị
+                Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
 
                 // tungnm37: tạo Routing Action History cho luồng CC/SP
                 try {
@@ -545,6 +591,20 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
                         FEC_Submitted_On__c = DateTime.now()
                     ));
+                    // tungnm37 fix: tạo Case Remark cho CC/SP team path
+                    if (String.isNotBlank(remarkContent)) {
+                        try {
+                            insert new FEC_Case_Remarks__c(
+                                FEC_Case__c = caseId,
+                                FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
+                                FEC_Case_Remarks__c = remarkContent,
+                                FEC_User__c = emailLocalPart(currentUser.Email),
+                                FEC_Stage_Name__c = stageName
+                            );
+                        } catch (Exception er) {
+                            System.debug('FEC_DEBUG createRemark CC/SP error: ' + er.getMessage());
+                        }
+                    }
                 } catch (Exception eh) {
                     System.debug('FEC_DEBUG createRoutingHistory CC/SP error: ' + eh.getMessage());
                 }
@@ -560,6 +620,11 @@ public without sharing class FEC_CofGsrAssignmentService {
                 if (!nextStages.isEmpty()) {
                     Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
                 }
+            }
+
+            // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
+            if (hasNonCcSpTeam(nocIds)) {
+                createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
             }
         } else {
             createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);

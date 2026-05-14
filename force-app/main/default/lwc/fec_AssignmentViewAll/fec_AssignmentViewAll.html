@@ -1,0 +1,124 @@
+<template>
+
+    <lightning-card>
+
+        <!-- HEADER -->
+        <div class="header">
+
+            <lightning-icon icon-name="standard:work_order" size="small" class="header-icon">
+            </lightning-icon>
+
+            <span class="header-title">
+                {labels.title}
+            </span>
+
+        </div>
+
+        <!-- BODY -->
+        <template if:true={hasRecords}>
+
+            <!-- SPINNER -->
+            <template if:true={isLoading}>
+
+                <lightning-spinner size="small">
+                </lightning-spinner>
+
+            </template>
+
+            <!-- TABLE -->
+            <div class="table-wrapper">
+
+                <lightning-datatable key-field="id" data={assignments} columns={columns} hide-checkbox-column
+                    show-row-number-column is-loading={isLoading} column-widths-mode="fixed" class="custom-datatable">
+                </lightning-datatable>
+
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="table-pagination
+                        slds-m-top_small
+                        slds-grid
+                        slds-grid_align-spread
+                        slds-grid_vertical-align-center">
+
+                <!-- PAGE SIZE -->
+                <div class="page-size
+                            slds-grid
+                            slds-grid_vertical-align-center">
+
+                    <span class="slds-m-right_x-small">
+                        {labels.pageSizeLabel}
+                    </span>
+
+                    <lightning-combobox value={pageSize} options={pageSizeOptions} onchange={handlePageSizeChange}
+                        variant="label-hidden">
+                    </lightning-combobox>
+
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="pagination-controls
+                            slds-grid
+                            slds-grid_vertical-align-center">
+
+                    <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous"
+                        onclick={handlePrevPage} disabled={isFirstPage}>
+                    </lightning-button-icon>
+
+                    <span class="slds-m-horizontal_small
+                                 slds-text-title_bold">
+
+                        {currentPage}
+
+                    </span>
+
+                    <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next"
+                        onclick={handleNextPage} disabled={isLastPage}>
+                    </lightning-button-icon>
+
+                </div>
+
+                <!-- GO TO PAGE -->
+                <div class="go-to-page
+                            slds-grid
+                            slds-grid_vertical-align-center">
+
+                    <span class="slds-m-right_x-small">
+                        {labels.goToPageLabel}
+                    </span>
+
+                    <lightning-input type="number" value={currentPage} min="1" max={totalPages} variant="label-hidden"
+                        class="page-input" onchange={handleGoToPageInput}>
+                    </lightning-input>
+
+                    <span class="slds-m-horizontal_x-small">
+
+                        of {totalPages}
+
+                    </span>
+
+                    <lightning-button label={labels.goBtnLabel} onclick={handleGoToPage} variant="brand">
+                    </lightning-button>
+
+                </div>
+
+            </div>
+
+        </template>
+
+        <!-- EMPTY -->
+        <template if:false={hasRecords}>
+
+            <div class="slds-align_absolute-center
+                        slds-text-color_weak
+                        slds-m-around_medium">
+
+                No assignment available
+
+            </div>
+
+        </template>
+
+    </lightning-card>
+
+</template>
