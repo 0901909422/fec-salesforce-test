@@ -26,6 +26,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  //PhongBT 14/05/26: Document Request
+  public static final String DOCUMENT_REQUEST = 'Document Request';
   // tungnm37 thêm: COF/GSR route string constant
   public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
@@ -556,6 +558,10 @@ public without sharing class FEC_CaseBusinessService {
         Decimal subSectionLayoutTemp;
         SObject objTemp;
 
+        //PhongBT 14/05/26: Document Request — gọi validate 1 lần trước vòng lặp để tránh SOQL trong loop
+        Boolean docReqHasValidationMessage = DOCUMENT_REQUEST.equals(businessProcessCode)
+          && FEC_PaymentHistoryValidationService.hasValidationMessage(selectedCase.Id, subCodeId);
+
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -566,6 +572,16 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          //PhongBT 14/05/26: Document Request
+          //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
+          if(
+            DOCUMENT_REQUEST.equals(businessProcessCode)
+            && docReqHasValidationMessage
+            && 'Case Information'.equals(sectionNameTemp)
+            && !'Property Info'.equals(subSectionNameTemp)
+          ){
+            continue;
+          }
 
           if (String.isNotBlank(cObjNameTemp)) {
             if (!objToFieldlstMap.containsKey(cObjNameTemp))
