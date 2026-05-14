@@ -42,6 +42,7 @@
         <members>FEC_RelevantTicketTriggerHandler</members>
         <members>FEC_COFFraudRelatedHandler</members>
         <members>FEC_RemovePhoneController</members>
+        <members>FEC_GetIPPDetailsCallout</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -114,6 +115,7 @@
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
+		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
