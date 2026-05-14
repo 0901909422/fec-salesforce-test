@@ -84,6 +84,7 @@
         <members>fecCheckEligibleLoanSection</members>
         <members>fec_CardClosureRefundForm</members>
         <members>fec_FastCashCaseForm</members>
+        <members>maskedToggleDatatable</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -113,6 +114,10 @@
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Customer_360</members>
 		<name>PermissionSet</name>
+	</types>
+    <types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
 	</types>
 	<version>66.0</version>
 </Package>
