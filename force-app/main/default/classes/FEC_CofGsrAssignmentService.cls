@@ -238,10 +238,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                 update submitStamp;
             }
 
-            // tungnm37: lưu owner ids vào Case.FEC_Assignment_Users__c, queue thì lưu Queue Id, user thì lưu User Id
-            // tungnm37: KHÔNG set OwnerId = null vì Salesforce không cho phép (INVALID_CROSS_REFERENCE_KEY)
-            // tungnm37: Chỉ dùng FEC_Assignment_Users__c để track assignments
-            // tungnm37: FEC_Service_Case_Owner__c sẽ tự động ẩn giá trị khi có assignment (formula field)
+            // tungnm37: lưu Queue Id vào Case.FEC_Assignment_Users__c để FEC_AssignmentExecuteService check quyền
+            // tungnm37: User → lưu User Id; Queue → lưu Queue Id (lookup từ queueNameToId)
             List<String> assignmentUsers = resolveAssignmentUsers(assignments, queueNameToId);
             if (!assignmentUsers.isEmpty()) {
                 try {
@@ -325,10 +323,12 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
             Map<String, Id> queueNameToId = new Map<String, Id>();
             Map<String, String> queueDevNameToDisplayName = new Map<String, String>(); // tungnm37: DeveloperName → display name
-            for (Group g : [SELECT Id, Name, DeveloperName FROM Group WHERE DeveloperName IN :queueNames AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
+            // tungnm37 fix: query theo cả Name và DeveloperName để tìm được Queue Id
+            for (Group g : [SELECT Id, Name, DeveloperName FROM Group WHERE (Name IN :queueNames OR DeveloperName IN :queueNames) AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
                 queueNameToId.put(g.DeveloperName, g.Id);
                 queueNameToId.put(g.Name, g.Id); // tungnm37: thêm map Name → Id để resolveAssignmentUsers tìm được ID
                 queueDevNameToDisplayName.put(g.DeveloperName, g.Name); 
+                queueDevNameToDisplayName.put(g.Name, g.Name);
             }
 
             String userRoleName = currentUser.UserRole?.Name;
@@ -455,16 +455,20 @@ public without sharing class FEC_CofGsrAssignmentService {
         }
     }
 
+    // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
+    // FEC_AssignmentExecuteService đã được update để hỗ trợ cả Queue Name lẫn Queue Id
     private static List<String> resolveAssignmentUsers(List<FEC_Assignment__c> assignments, Map<String, Id> queueNameToId) {
         List<String> assignmentUsers = new List<String>();
         for (FEC_Assignment__c assignmentItem : assignments) {
             if (assignmentItem.FEC_Assignment_Owner__c != null) {
+                // User → lưu User Id
                 assignmentUsers.add(String.valueOf(assignmentItem.FEC_Assignment_Owner__c));
                 continue;
             }
 
-            if (String.isNotBlank(assignmentItem.FEC_OwnerID__c) && queueNameToId.containsKey(assignmentItem.FEC_OwnerID__c)) {
-                assignmentUsers.add(String.valueOf(queueNameToId.get(assignmentItem.FEC_OwnerID__c)));
+            if (String.isNotBlank(assignmentItem.FEC_OwnerID__c)) {
+                // Queue → lưu Queue Name (FEC_OwnerID__c đang lưu Queue Name)
+                assignmentUsers.add(assignmentItem.FEC_OwnerID__c);
             }
         }
         return assignmentUsers;
