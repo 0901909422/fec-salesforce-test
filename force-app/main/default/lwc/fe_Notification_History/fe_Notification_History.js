@@ -309,7 +309,12 @@ export default class Fe_Notification_History extends LightningElement {
                 return;
             }
             this.emailHistoryLoading = false;
-            this.emailRows = Array.isArray(data) ? data : [];
+            const rawRows = Array.isArray(data) ? data : [];
+            this.emailRows = rawRows.map(row => ({
+                ...row,
+                sentDateTime: formatDateTimeVN(row.sentDateTime),
+                notificationContent: this._truncateContent(row.notificationContent)
+            }));
             return;
         }
         if (channel === 'zns') {
@@ -331,7 +336,12 @@ export default class Fe_Notification_History extends LightningElement {
                 return;
             }
             this.znsHistoryLoading = false;
-            this.znsRows = Array.isArray(data) ? data : [];
+            const rawRows = Array.isArray(data) ? data : [];
+            this.znsRows = rawRows.map(row => ({
+                ...row,
+                sentDateTime: formatDateTimeVN(row.sentDateTime),
+                notificationContent: this._truncateContent(row.notificationContent)
+            }));
             return;
         }
         if (channel === 'mobileApp') {
@@ -353,7 +363,12 @@ export default class Fe_Notification_History extends LightningElement {
                 return;
             }
             this.mobileAppHistoryLoading = false;
-            this.mobileAppRows = Array.isArray(data) ? data : [];
+            const rawRows = Array.isArray(data) ? data : [];
+            this.mobileAppRows = rawRows.map(row => ({
+                ...row,
+                sentDateTime: formatDateTimeVN(row.sentDateTime),
+                notificationContent: this._truncateContent(row.notificationContent)
+            }));
         }
     }
 
@@ -429,7 +444,7 @@ export default class Fe_Notification_History extends LightningElement {
                         id: seq++,
                         dateTime: formatDateTimeVN(String(dt).trim()),
                         notificationType: typeVal || lblEmptyDash,
-                        notificationContent: contentVal || lblEmptyDash
+                        notificationContent: this._truncateContent(contentVal) || lblEmptyDash
                     });
                 }
             }
@@ -453,5 +468,12 @@ export default class Fe_Notification_History extends LightningElement {
             return error.message;
         }
         return FEC_Toast_Error_Generic;
+    }
+
+    _truncateContent(content, limit = 255) {
+        if (!content || content.length <= limit) {
+            return content;
+        }
+        return content.substring(0, limit) + '...';
     }
 }
