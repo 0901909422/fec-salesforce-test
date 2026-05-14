@@ -266,6 +266,33 @@ public with sharing class DepartmentAdmin {
             return false;
         }
     }
+    /*------------------------------------------------------------
+    Author:        Ha Linh
+    Company:       Amaris
+    Description:   Check if the given queue is the main queue of the user by comparing with User.FEC_Main_Queue__c field
+    @param developerName The queue to check
+    @param userId The user ID to check
+    @return Boolean if the queue is the main queue of the user
+    Test Class:    
+    History
+    <Date>         <Authors Name>     <Brief Description of Change>
+    2026/04/22      Ha Linh          Init
+    ------------------------------------------------------------*/
+    @AuraEnabled
+    public static Boolean isMainQueueOfUser(Id userId, String developerName) {
+        try {
+            List<User> user = [
+                SELECT Id
+                FROM User
+                WHERE Id = :userId AND FEC_Main_Queue__c = :developerName
+                LIMIT 1
+            ];
+            System.debug('## isMainQueueOfUser user: ' + !user.isEmpty() + ' userId: ' + userId + ' developerName: ' + developerName);
+            return !user.isEmpty();
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 
     /*------------------------------------------------------------
     Author:        Ha Linh
@@ -327,39 +354,23 @@ public with sharing class DepartmentAdmin {
         if (String.isBlank(developerName) && queueId == null) {
             return null;
         }
-        
-        // Check by DeveloperName first if provided
-        if (developerName != null && !String.isBlank(developerName)) {
-            List<Group> queues = [
-                SELECT Id, Name
-                FROM Group
-                WHERE Type = :QUEUE_TYPE AND DeveloperName = :developerName
-                LIMIT 1
-            ];
-            if (!queues.isEmpty()) {
-                Group g = queues[0];
-                QueueDto dto = new QueueDto();
-                dto.id = g.Id;
-                dto.name = g.Name;
-                return dto;
-            }
+        String query = 'SELECT Id, Name, DeveloperName FROM Group WHERE Type =' + ' \'' + QUEUE_TYPE + '\'';
+        if (String.isNotBlank(developerName)) {
+            query += ' AND DeveloperName = ' + '\'' + String.escapeSingleQuotes(developerName) + '\'';
+        } else if (queueId != null) {
+            query += ' AND Id = ' + '\'' + queueId + '\'';
+        } else {
+            return null; 
         }
-        
-        // Check by QueueId if provided and DeveloperName wasn't found
-        if (queueId != null) {
-            List<Group> queues = [
-                SELECT Id, Name
-                FROM Group
-                WHERE Type = :QUEUE_TYPE AND Id = :queueId
-                LIMIT 1
-            ];
-            if (!queues.isEmpty()) {
-                Group g = queues[0];
-                QueueDto dto = new QueueDto();
-                dto.id = g.Id;
-                dto.name = g.Name;
-                return dto;
-            }
+        query += ' LIMIT 1';
+        List<Group> queues = Database.query(query);
+        if (!queues.isEmpty()) {
+            Group g = queues[0];
+            QueueDto dto = new QueueDto();
+            dto.id = g.Id;
+            dto.name = g.Name;
+            dto.devname = g.DeveloperName;
+            return dto;
         }
         
         return null;
