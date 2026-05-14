@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -15624,5 +15624,26 @@
         <protected>false</protected>
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Can_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Đủ điều kiện gợi ý tạo giấy xác nhận đóng thẻ</shortDescription>
+        <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện gửi yêu cầu lịch sử thanh toán</shortDescription>
+        <value>Không thể tạo yêu cầu gửi lịch sử thanh toán</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Cannot_Request_Repayment_Schedule</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
+        <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
     </labels>
 </CustomLabels>
