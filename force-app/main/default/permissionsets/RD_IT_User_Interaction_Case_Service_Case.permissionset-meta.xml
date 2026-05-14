@@ -4325,4 +4325,8 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <tabSettings>
+        <tab>FEC_HoldCaseConfiguration</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
