@@ -681,6 +681,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String COF_GENERAL_FLOW = 'COF - General Flow';
     public static final String STAGE_ONE = 'Stage 1';
     public static final String ORIGINAL_INFORMATION = 'Original Information';
+    public static final String ORIGINAL_INFO = 'Original Info';
+    public static final String UPDATED_INFO = 'Updated Info';
+    public static final String STAGE_TWO = 'Stage 2';
+    public static final String STAGE_THREE = 'Stage 3';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';

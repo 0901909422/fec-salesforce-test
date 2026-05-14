@@ -1040,5 +1040,9 @@
 	 	<members>Case.Internal_Case</members>
 		<name>RecordType</name>
 	</types>
+    <types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
+	</types>
 	<version>66.0</version>
 </Package>
