@@ -78,6 +78,15 @@ public without sharing class FEC_RemovePhoneController {
         if (caseId == null) {
             throw new AuraHandledException(System.Label.FEC_Toast_Save_Error_Message);
         }
+        List<Case> submittedGuard = [
+            SELECT Id, FEC_Is_Submited__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        if (submittedGuard.isEmpty() || submittedGuard[0].FEC_Is_Submited__c == true) {
+            return;
+        }
         String phoneNorm = String.isBlank(removedPhoneNumber) ? null : removedPhoneNumber.trim();
         if (String.isBlank(phoneNorm)) {
             return;

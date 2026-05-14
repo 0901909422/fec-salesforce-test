@@ -348,7 +348,6 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
-  fec_RemovePhoneForm: () => import('c/fec_RemovePhoneForm'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
@@ -1641,7 +1640,6 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
         this._applyCsSupportAssessmentRoutingActionSync();
         this._applyInternalFieldVisibility();
-        this._applyRemovePhonePlacement();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
         this._rebuildAllSectionSortedRows();
@@ -1739,25 +1737,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     this.business = { ...this.business };
     console.log("🚀 ~ Fec_CaseBussiness ~ _applyInternalFieldVisibility ~ this.business:", JSON.stringify(this.business))
-  }
-
-  /** Form Remove Phone: trong section Case Information, ngay dưới subsection Property Info (không tạo accordion riêng). */
-  //linhdev fix section Account Info + Case Info
-  _applyRemovePhonePlacement() {
-    const sections = this.business?.sectionlst;
-    if (!sections?.length) {
-      return;
-    }
-    const show = Boolean(this.business.showRemovePhone);
-    sections.forEach((section) => {
-      section.subSectionlst?.forEach((sub) => {
-        sub.showRemovePhoneAfter =
-          show &&
-          section.name === SECTION_NAME_CASE_INFORMATION &&
-          sub.name === SUBSECTION_NAME_PROPERTY_INFO;
-      });
-    });
-    this.business = { ...this.business };
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -2440,30 +2419,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveDraftIfApplicable();
   }
 
-  _getRemovePhoneFormEls() {
-    const out = [];
-    const wraps = this.template.querySelectorAll(
-      '[data-fec-lwc="fec_RemovePhoneForm"]',
-    );
-    wraps?.forEach((wrap) => {
-      const host = wrap && wrap.firstElementChild;
-      if (host && typeof host.saveDraftIfApplicable === "function") {
-        out.push(host);
-      }
-    });
-    return out;
-  }
-
-  _saveRemovePhoneDraftIfApplicable() {
-    const hosts = this._getRemovePhoneFormEls();
-    if (!hosts.length) {
-      return Promise.resolve();
-    }
-    return Promise.all(
-      hosts.map((el) => el.saveDraftIfApplicable()),
-    );
-  }
-
   _savePointsRedemptionDraftIfApplicable() {
     const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2599,6 +2554,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
     return el.saveForSubmitIfApplicable();
   }
+
+  _getRemovePhoneFormEl() {
+    const host = this.template.querySelector("c-fec_-sub-process-container");
+    if (!host || !host.shadowRoot) {
+      return null;
+    }
+    const el = host.shadowRoot.querySelector("c-fec_-remove-phone-form");
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return null;
+    }
+    return el;
+  }
+
+  _saveRemovePhoneDraftIfApplicable() {
+    const el = this._getRemovePhoneFormEl();
+    if (!el) {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
   /*Lấy element của form IPP Closure*/
   _getIppClosureFormEl() {
     const wrapper = this.template.querySelector(

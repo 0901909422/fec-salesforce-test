@@ -1,6 +1,8 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEligibility';
 import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneController.saveRemovePhoneSelections';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import CASE_FEC_IS_SUBMITED from '@salesforce/schema/Case.FEC_Is_Submited__c';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_MainInfo_Contract_Number_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Number_Label';
 import FEC_MainInfo_Contract_Status_Label from '@salesforce/label/c.FEC_MainInfo_Contract_Status_Label';
@@ -23,10 +25,19 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     @api recordId;
 
-    @api isEdit;
+    @track _caseIsSubmited = false;
+
+    @wire(getRecord, { recordId: '$recordId', fields: [CASE_FEC_IS_SUBMITED] })
+    wiredCaseForSubmitted({ data, error }) {
+        if (data) {
+            this._caseIsSubmited = getFieldValue(data, CASE_FEC_IS_SUBMITED) === true;
+        } else if (error) {
+            this._caseIsSubmited = false;
+        }
+    }
 
     get isReadOnly() {
-        return this.isEdit === false;
+        return this._caseIsSubmited === true;
     }
 
     @track phone = STR_EMPTY;
@@ -65,7 +76,17 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         if (this.isReadOnly) {
             return;
         }
-        this.phone = (event.target.value || STR_EMPTY).trim();
+        const nextPhone = (event.target.value || STR_EMPTY).trim();
+        const currentPhone = this.phone;
+        if (
+            currentPhone !== nextPhone &&
+            currentPhone === this.lastCheckedPhone &&
+            this.rows &&
+            this.rows.length > 0
+        ) {
+            void this._persistDraftNow(currentPhone).catch(() => {});
+        }
+        this.phone = nextPhone;
         const phoneInput = this.template.querySelector('lightning-input');
         if (phoneInput) {
             phoneInput.setCustomValidity('');
@@ -141,6 +162,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 }
             });
             this.selectedRowIds = Array.from(merged);
+            void this._persistDraftNow().catch(() => {});
             return;
         }
         const pageData = this.pagedRows || [];
@@ -154,6 +176,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             merged.add(id);
         });
         this.selectedRowIds = Array.from(merged);
+        void this._persistDraftNow().catch(() => {});
     }
 
     handlePrevPage() {
@@ -203,7 +226,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                     this.rows = res.rows || [];
                     this.lastCheckedPhone = this.phone;
                     this.currentPage = 1;
-                    return;
+                    return this._persistDraftNow().catch(() => {});
                 }
                 this.resultMessage = (res && res.errorMessage) ? res.errorMessage : FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
@@ -218,13 +241,21 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     @api saveDraftIfApplicable() {
+        return this._persistDraftNow();
+    }
+
+    _persistDraftNow(phoneOverride) {
         if (this.isReadOnly) {
             return Promise.resolve();
         }
-        if (!this.recordId || !this.phone || !this.rows || this.rows.length === 0) {
+        const phoneToUse =
+            phoneOverride !== undefined && phoneOverride !== null && phoneOverride !== STR_EMPTY
+                ? phoneOverride
+                : this.phone;
+        if (!this.recordId || !phoneToUse || !this.rows || this.rows.length === 0) {
             return Promise.resolve();
         }
-        if (this.phone !== this.lastCheckedPhone) {
+        if (phoneToUse !== this.lastCheckedPhone) {
             return Promise.resolve();
         }
         const selectedSet = new Set(this.selectedRowIds || []);
@@ -239,7 +270,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         }));
         return saveRemovePhoneSelections({
             caseId: this.recordId,
-            removedPhoneNumber: this.phone,
+            removedPhoneNumber: phoneToUse,
             rows: rowPayload
         });
     }
