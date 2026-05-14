@@ -44,6 +44,7 @@
         <members>FEC_RemovePhoneController</members>
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_CardEligibilityController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -112,6 +113,10 @@
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_LABEL_Months</members>
+        <members>FEC_LABEL_API_Code</members>
+        <members>FEC_LABEL_Description</members>
+        <members>FEC_MSG_Parsing_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
