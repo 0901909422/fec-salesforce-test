@@ -122,6 +122,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_CMS_Phone__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_CS_D2C_Assessment_Type__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -247,6 +252,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Contract_Processing_Assessment_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Correct_Contract_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -283,6 +293,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Current_Case_Stage__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Customer_Confirmation__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -616,6 +631,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_MRC_Request_Handling_Option__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Manager_ID_List__c</field>
         <readable>true</readable>
@@ -768,6 +788,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Recipient_Phone_Number__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Redeemed_Points__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

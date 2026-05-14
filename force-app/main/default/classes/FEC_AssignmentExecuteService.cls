@@ -200,6 +200,8 @@ public with sharing class FEC_AssignmentExecuteService {
                  */
                 Set<Id> queueIdsFromAssignment =
                     new Set<Id>();
+                Set<String> queueNamesFromAssignment =
+                    new Set<String>();
                 
                 for (String value : assignmentValues) {
                     
@@ -212,6 +214,16 @@ public with sharing class FEC_AssignmentExecuteService {
                         queueIdsFromAssignment.add(
                             (Id)value
                             );
+                    } else if (String.isNotBlank(value)) {
+                        // tungnm37 fix: hỗ trợ Queue Name (không phải Id)
+                        queueNamesFromAssignment.add(value);
+                    }
+                }
+                
+                // tungnm37 fix: lookup Queue Id từ Queue Name
+                if (!queueNamesFromAssignment.isEmpty()) {
+                    for (Group g : [SELECT Id FROM Group WHERE Name IN :queueNamesFromAssignment AND Type = 'Queue']) {
+                        queueIdsFromAssignment.add(g.Id);
                     }
                 }
                 
