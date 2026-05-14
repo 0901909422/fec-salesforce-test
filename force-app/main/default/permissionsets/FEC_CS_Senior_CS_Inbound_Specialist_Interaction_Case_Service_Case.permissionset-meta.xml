@@ -1757,6 +1757,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Assignment__c.FEC_Submitted_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Assignment__c.FEC_OwnerID__c</field>
         <readable>true</readable>
     </fieldPermissions>
