@@ -104,19 +104,19 @@ public with sharing class FEC_CaseExecuteService {
         
         Boolean canExecute = false;
         
-        /*
-         * 1. Interaction mode check
-         */
-        if (
-            c.FEC_Interaction_View_Mode__c != FEC_ConstantCommon.INTERACTION_REVIEW_MODE
-        ) {
+        // /*
+        //  * 1. Interaction mode check
+        //  */
+        // if (
+        //     c.FEC_Interaction_View_Mode__c != 'review'
+        // ) {
             
-            System.debug(
-                'FAILED: Invalid interaction mode'
-                );
+        //     System.debug(
+        //         'FAILED: Invalid interaction mode'
+        //         );
             
-            return buildResult(c, false);
-        }
+        //     return buildResult(c, false);
+        // }
         
         /*
          * 2. Closed check

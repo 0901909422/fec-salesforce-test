@@ -80,10 +80,11 @@ export default class Fec_RoutingAssignment extends LightningElement {
     return this.manualItems.length > 0;
   }
 
-  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c
+  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c, ẩn CC và SP (tự động xử lý)
   get teamOptions() {
     const seen = new Set();
     return this.allTeamQueueOptions
+      .filter(o => o.teamName !== 'CC' && o.teamName !== 'SP')
       .filter(o => { if (seen.has(o.teamName)) return false; seen.add(o.teamName); return true; })
       .map(o => ({ label: o.teamName, value: o.teamName }));
   }

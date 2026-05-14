@@ -429,12 +429,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         caseBusinessEle.remarkContent = caseRemarksEle.getRemarkValue();
       }
       const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode || this._isCofGsr;
-      // tungnm37: COF/GSR Stage 2 → Apex đã tạo Case Remark → LWC không gọi submitRemarkDirect
+      // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → LWC không gọi submitRemarkDirect
       // Stage 1 → Apex không tạo Case Remark → LWC phải gọi submitRemarkDirect
+      // tungnm37 fix: các action khác Route to (Escalate, Reject, Resolve...) → LWC phải gọi submitRemarkDirect dù ở stage nào
       const isStage1 = /stage\s*1/i.test(stageName);
-      // skipSubmitRemark: routing mode + không phải Stage 1 → Apex đã xử lý Case Remark
-      const skipSubmitRemark = isRoutingModeSubmit && !isStage1;
-      console.log('[FEC_DEBUG] handleSubmit stageName=' + stageName + ' isRoutingMode=' + isRoutingModeSubmit + ' isStage1=' + isStage1 + ' skipSubmitRemark=' + skipSubmitRemark);
+      const currentAction = caseBusinessEle?.getRoutingActionCode?.() ?? '';
+      const isRouteToAction = currentAction === 'Route_to' || currentAction === 'Route to';
+      // tungnm37 fix: skipSubmitRemark chỉ khi COF/GSR + Route to + Stage 2 (Apex đã xử lý remark)
+      const skipSubmitRemark = isRoutingModeSubmit && isRouteToAction && !isStage1;
+      console.log('[FEC_DEBUG] handleSubmit stageName=' + stageName + ' isRoutingMode=' + isRoutingModeSubmit + ' isStage1=' + isStage1 + ' action=' + currentAction + ' skipSubmitRemark=' + skipSubmitRemark);
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
@@ -448,7 +451,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37: COF/GSR Stage 2 → Apex đã tạo Case Remark → skip submitRemarkDirect
+      // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
+      // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark
       const hasManualItemsSubmit = skipSubmitRemark; // alias for clarity
       if (!skipSubmitRemark) {
         await caseRemarksEle.submitRemarkDirect(stageName);

@@ -445,6 +445,7 @@
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case__c</members>
