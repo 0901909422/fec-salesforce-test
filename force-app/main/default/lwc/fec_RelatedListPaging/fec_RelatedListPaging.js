@@ -230,6 +230,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                                         }))
                                     }))
                                     : [{
+                                        key: 'default-section',
                                         section: null,
                                         showSectionTitle: false,
                                         items: col.hoverFields.map(h => ({
