@@ -272,6 +272,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkContent,
                     FEC_User__c = emailLocalPart(remarkUserEmail), // tungnm37 sửa: lấy phần trước @
+                    FEC_User_Role__c = userRoleName, // tungnm37 fix: thêm User Role
                     FEC_Assignment__c = a.Id,
                     FEC_Stage_Name__c = stageName
                 ));
@@ -418,6 +419,7 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Remark_Type__c = FEC_ConstantCommon.REMARK_TYPE_ASSIGNMENT,
                     FEC_Case_Remarks__c = remarkList[i],
                     FEC_User__c = emailLocalPart(currentUser.Email), // tungnm37 sửa: lấy phần trước @
+                    FEC_User_Role__c = userRoleName, // tungnm37 fix: thêm User Role
                     FEC_Assignment__c = assignments[i].Id,
                     FEC_Stage_Name__c = stageName
                 ));
