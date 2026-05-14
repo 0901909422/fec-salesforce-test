@@ -826,6 +826,18 @@
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
 		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
+        <members>FEC_BilledTx_Col_Amount</members>
+		<members>FEC_BilledTx_Col_AuthCode</members>
+		<members>FEC_BilledTx_Col_Currency</members>
+		<members>FEC_BilledTx_Col_DebitCredit</members>
+		<members>FEC_BilledTx_Col_EffectiveDate</members>
+		<members>FEC_BilledTx_Col_MCC</members>
+		<members>FEC_BilledTx_Col_Merchant</members>
+		<members>FEC_BilledTx_Col_OTP</members>
+		<members>FEC_BilledTx_Col_Plan</members>
+		<members>FEC_BilledTx_Col_PostDate</members>
+		<members>FEC_BilledTx_Col_TxnCode</members>
+		<members>FEC_Billed_Transactions</members>
         <name>CustomLabel</name>
     </types>
 	<types>

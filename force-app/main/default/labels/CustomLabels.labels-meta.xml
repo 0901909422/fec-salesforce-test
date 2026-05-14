@@ -15585,4 +15585,81 @@
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
     </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Amount</shortDescription>
+        <value>Số tiền giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_AuthCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col AuthCode</shortDescription>
+        <value>Mã phê duyệt</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Currency</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Currency</shortDescription>
+        <value>Loại tiền tệ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_DebitCredit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col DebitCredit</shortDescription>
+        <value>Ghi có/ ghi nợ?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_EffectiveDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col EffectiveDate</shortDescription>
+        <value>Ngày giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_MCC</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col MCC</shortDescription>
+        <value>Mã ngành kinh doanh</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Merchant</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Merchant</shortDescription>
+        <value>Nơi giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_OTP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col OTP</shortDescription>
+        <value>Gửi OTP?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Plan</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Plan</shortDescription>
+        <value>Mã kế hoạch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_PostDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col PostDate</shortDescription>
+        <value>Ngày hạch toán</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_TxnCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col TxnCode</shortDescription>
+        <value>Mã giao dịch</value>
+    </labels>
 </CustomLabels>
