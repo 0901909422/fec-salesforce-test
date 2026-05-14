@@ -31,7 +31,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCfMAK</value>
+        <value>OB03</value>
     </filters>
     <label>OB03</label>
     <queue>FEC_OB03</queue>

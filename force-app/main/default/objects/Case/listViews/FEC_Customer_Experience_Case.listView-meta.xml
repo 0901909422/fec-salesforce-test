@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuBxMAK</value>
+        <value>Customer Experience</value>
     </filters>
     <label>Customer Experience</label>
     <queue>FEC_Customer_Experience</queue>

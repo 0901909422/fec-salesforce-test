@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuBtMAK</value>
+        <value>Care Mailbox</value>
     </filters>
     <label>Care Mailbox</label>
     <queue>FEC_Care_Mailbox</queue>

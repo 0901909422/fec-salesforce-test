@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCiMAK</value>
+        <value>Outgoing Payment</value>
     </filters>
     <label>Outgoing Payment</label>
     <queue>FEC_Outgoing_Payment</queue>

@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCAMA0</value>
+        <value>DQ - Card Operations</value>
     </filters>
     <label>DQ - Card Operations</label>
     <queue>FEC_DQ_Card_Operations</queue>

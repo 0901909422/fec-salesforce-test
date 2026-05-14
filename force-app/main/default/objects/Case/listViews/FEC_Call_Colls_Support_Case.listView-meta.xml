@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuBkMAK</value>
+        <value>Call Colls Support</value>
     </filters>
     <label>Call Colls Support</label>
     <queue>FEC_Call_Colls_Support</queue>

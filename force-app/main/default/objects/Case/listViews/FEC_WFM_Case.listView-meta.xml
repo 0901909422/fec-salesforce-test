@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCmMAK</value>
+        <value>WFM</value>
     </filters>
     <label>WFM</label>
     <queue>FEC_WFM</queue>

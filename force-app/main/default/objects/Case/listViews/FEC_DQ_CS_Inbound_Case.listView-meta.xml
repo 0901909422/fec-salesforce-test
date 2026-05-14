@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuC3MAK</value>
+        <value>DQ - CS Inbound</value>
     </filters>
     <label>DQ - CS Inbound</label>
     <queue>FEC_DQ_CS_Inbound</queue>

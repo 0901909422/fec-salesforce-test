@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCkMAK</value>
+        <value>Shared Task</value>
     </filters>
     <label>Shared Task</label>
     <queue>FEC_Shared_Task</queue>

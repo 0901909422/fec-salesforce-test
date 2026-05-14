@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCLMA0</value>
+        <value>Disbursal Document</value>
     </filters>
     <label>Disbursal Document</label>
     <queue>FEC_Disbursal_Document</queue>

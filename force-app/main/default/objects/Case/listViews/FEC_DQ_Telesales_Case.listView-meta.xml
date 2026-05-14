@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCJMA0</value>
+        <value>DQ - Telesales</value>
     </filters>
     <label>DQ - Telesales</label>
     <queue>FEC_DQ_Telesales</queue>

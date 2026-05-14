@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuC5MAK</value>
+        <value>DQ - CS Ops Management</value>
     </filters>
     <label>DQ - CS Ops Management</label>
     <queue>FEC_DQ_CS_Ops_Management</queue>

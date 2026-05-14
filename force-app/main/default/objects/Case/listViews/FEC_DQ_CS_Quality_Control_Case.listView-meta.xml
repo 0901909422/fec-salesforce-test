@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuC8MAK</value>
+        <value>DQ - CS Quality Control</value>
     </filters>
     <label>DQ - CS Quality Control</label>
     <queue>FEC_DQ_CS_Quality_Control</queue>

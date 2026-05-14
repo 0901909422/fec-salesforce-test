@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuBuMAK</value>
+        <value>Colls Complaint Handling</value>
     </filters>
     <label>Colls Complaint Handling</label>
     <queue>FEC_Colls_Complaint_Handling</queue>

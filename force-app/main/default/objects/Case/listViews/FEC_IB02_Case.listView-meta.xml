@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>00GAz000005JuCTMA0</value>
+        <value>IB02</value>
     </filters>
     <label>IB02</label>
     <queue>FEC_IB02</queue>
