@@ -1465,7 +1465,6 @@
         <field>FEC_Decision_Table__c.FEC_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1492,7 +1491,6 @@
         <field>FEC_MDM_Additional_Field__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1514,7 +1512,6 @@
         <field>FEC_MDM_Additional_Field_List_Value__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1581,7 +1578,6 @@
         <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Channel__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1970,7 +1966,6 @@
         <object>FEC_MDM_Additional_Field__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Permissions -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -1981,7 +1976,6 @@
         <object>FEC_MDM_Additional_Field_List_Value__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- Other MDM Objects -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -2109,7 +2103,6 @@
         <object>FEC_Decision_Table__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-    
     <recordTypeVisibilities>
         <recordType>FEC_Notification__c.Auto_Notification</recordType>
         <visible>true</visible>
