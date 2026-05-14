@@ -880,6 +880,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FE_Department_Admin</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Action_Button__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
@@ -1018,6 +1022,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Team__c.FEC_Team_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team__c.FEC_Team_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
 </PermissionSet>
