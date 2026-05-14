@@ -48,15 +48,29 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
             options: row.reasonOptionsFormatted || [],
             isDisabled: col.isPicklist ? !row.active : false,
             isDisabledText: col.isTextarea ? !row.active : false,
+            isRequired: row.active,
             checkboxLabel: col.checkboxLabel,
             hasContact: row.hasContact,
             isActionDisabled: row.isActionDisabled,
 
-            cellClass: col.cellClass || "",
+            cellClass: this.getCellClass(col),
           };
         }),
       };
     });
+  }
+
+  getCellClass(col) {
+    switch (col.fieldName) {
+      case "updateReason":
+        return "update-reason-cell";
+
+      case "remarks":
+        return "remarks-cell";
+
+      default:
+        return "";
+    }
   }
 
   handleCheckboxChange(event) {
