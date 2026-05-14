@@ -15,7 +15,13 @@ History
 global class FEC_ScheduledSyncDataToBix implements  Schedulable {
     global void execute(SchedulableContext sc) { 
         Try{
-             List<CustomSync__c> lst = [Select id, Name,
+             run();
+        }Catch(Exception e){
+            System.debug('Schedule Sync Data To bix Error: Line '+e.getLineNumber() + ' - ' + e.getMessage());
+        }
+    }
+    public static void run(){
+        List<CustomSync__c> lst = [Select id, Name,
                                         SyncFailed__c,
                                         SyncSuccessFully__c,
                                         SyncTo__c,
@@ -36,14 +42,11 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                 Map<Id, CustomSync__c> mapCustomSync = new Map<Id, CustomSync__c>(lst); // ReSync
                 // Sync New
                 FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(lst);  
-                System.enqueueJob(nextJob, 1);   
+                System.enqueueJob(nextJob);   
                 // ReSync
                 FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync);
                 Database.executeBatch(batch,1);
             }  
-        }Catch(Exception e){
-            System.debug('Schedule Sync Data To bix Error: Line '+e.getLineNumber() + ' - ' + e.getMessage());
-        }
     }
      
 }
