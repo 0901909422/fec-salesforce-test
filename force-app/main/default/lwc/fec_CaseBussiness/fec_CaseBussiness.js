@@ -633,6 +633,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   get draftStorageKey() {
     return this.recordId ? `fec_case_business_draft_${this.recordId}` : "fec_case_business_draft";
   }
+
   handleChange(event) {
     const fieldName = event.target.name;
     const value = event.detail.value;
