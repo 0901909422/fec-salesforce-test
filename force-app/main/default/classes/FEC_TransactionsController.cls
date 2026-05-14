@@ -22,6 +22,7 @@
    2.2      2026-05-12     Agent                Pending DTOs from same fasAuthRows as unbilled M_FAS call (FEC ACCT); remove duplicate Case-ACCT callout
    2.3      2026-05-12     Agent                Pending effective: prefer AUTH_GRP EFF_DATE (VMX_AUTH_DETAIL path); dual detail|AUTHS_TABLE
    2.4      2026-05-12     Agent                M_FAS ACCT: use Case-resolved account (same as BasicInfo); hardcode only when blank
+   2.5      2026-05-14     Agent                Currency display: TRNXCurrencyCode + GetCardFinancial + FEC_Currency_Code__c master (code-Name)
  
 ****************************************************************************************/
 
@@ -116,6 +117,24 @@ public without sharing class FEC_TransactionsController {
         List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> fasAuthRows =
             callMfasAuthsTableSafe(accNumber);
 
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> financial =
+            callFinancialSafe(accNumber);
+
+        Set<String> numericCodes = new Set<String>();
+        for (FEC_GetCardBasicInfo.TransactionInfo ti : basicTx) {
+            if (String.isNotBlank(ti.TRNXCurrencyCode)) {
+                numericCodes.add(ti.TRNXCurrencyCode.trim());
+            }
+        }
+        for (FEC_GetCardFinancialTransactions.FinancialTransaction f : financial) {
+            if (String.isNotBlank(f.TRNXCurrencyCode)) {
+                numericCodes.add(f.TRNXCurrencyCode.trim());
+            }
+        }
+        Map<String, String> currencyDisplayMap =
+            FEC_CurrencyCodeLookup.buildNumericCodeToDisplayMap(numericCodes);
+        Map<String, String> finTrnxCurrencyByKey = buildFinTrnxCurrencyByKey(financial);
+
         /* ===============================
            PENDING - CALL OUT
            =============================== */
@@ -125,7 +144,13 @@ public without sharing class FEC_TransactionsController {
            HISTORY
            =============================== */
         if (!basicTx.isEmpty() || !fasAuthRows.isEmpty()) {
-            upsertHistoryFromBasicInfoAndFas(ch.Id, basicTx, fasAuthRows);
+            upsertHistoryFromBasicInfoAndFas(
+                ch.Id,
+                basicTx,
+                fasAuthRows,
+                finTrnxCurrencyByKey,
+                currencyDisplayMap
+            );
             res.unbilledTransactions = loadHistoryForUI(ch.Id);
             augmentUnbilledDtosWithDualDisplay(
                 res.unbilledTransactions,
@@ -559,7 +584,9 @@ public without sharing class FEC_TransactionsController {
     private static void upsertHistoryFromBasicInfoAndFas(
         Id historyId,
         List<FEC_GetCardBasicInfo.TransactionInfo> basicList,
-        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> fasRows
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> fasRows,
+        Map<String, String> finTrnxCurrencyByKey,
+        Map<String, String> currencyDisplayMap
     ) {
         Map<String, FEC_Transaction__c> existed = loadExistingTxByCompositeKey(historyId);
 
@@ -621,11 +648,24 @@ public without sharing class FEC_TransactionsController {
                 firstNonBlankStr(authCodeByCompositeFromFas.get(key), ti.RRN)
             );
             rec.FEC_Merchant_Category_Code__c = ti.MCC;
-            /* Currency: store API value as returned; spec sample codes are not hardcoded here. */
-            rec.FEC_Currency_Code__c =
-                String.isNotBlank(ti.TRNXCurrencyCode)
-                    ? ti.TRNXCurrencyCode.trim()
-                    : null;
+
+            String rawCurr;
+            if (finTrnxCurrencyByKey != null && finTrnxCurrencyByKey.containsKey(key)) {
+                rawCurr = finTrnxCurrencyByKey.get(key);
+            } else {
+                rawCurr = null;
+            }
+            if (String.isBlank(rawCurr) && String.isNotBlank(ti.TRNXCurrencyCode)) {
+                rawCurr = ti.TRNXCurrencyCode.trim();
+            }
+            if (String.isBlank(rawCurr)) {
+                rec.FEC_Currency_Code__c = null;
+            } else if (currencyDisplayMap != null && currencyDisplayMap.containsKey(rawCurr)) {
+                rec.FEC_Currency_Code__c = currencyDisplayMap.get(rawCurr);
+            } else {
+                rec.FEC_Currency_Code__c = rawCurr;
+            }
+
             rec.FEC_OTP_Sent__c =
                 ti.OTPSent != null && ti.OTPSent == 1 ? 'Yes' : 'No';
 
@@ -927,6 +967,51 @@ public without sharing class FEC_TransactionsController {
             );
         }
         return new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+    }
+
+    private static List<FEC_GetCardFinancialTransactions.FinancialTransaction>
+    callFinancialSafe(String acc) {
+        try {
+            FEC_GetCardFinancialTransactions.ResponseWrapper res =
+                FEC_GetCardFinancialTransactions.callGetCardFinancialTransactions(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    acc,
+                    Date.today().addMonths(-3),
+                    Date.today()
+                );
+            return res != null && res.Transactions != null
+                ? res.Transactions
+                : new List<FEC_GetCardFinancialTransactions.FinancialTransaction>();
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'FEC_TransactionsController.callFinancialSafe: ' + e.getMessage()
+            );
+            return new List<FEC_GetCardFinancialTransactions.FinancialTransaction>();
+        }
+    }
+
+    private static Map<String, String> buildFinTrnxCurrencyByKey(
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> fList
+    ) {
+        Map<String, String> m = new Map<String, String>();
+        if (fList == null || fList.isEmpty()) {
+            return m;
+        }
+        for (FEC_GetCardFinancialTransactions.FinancialTransaction f : fList) {
+            Date postDate = FEC_CommonUltils.toDateStr(f.PostingDate);
+            if (postDate == null || f.TRNXAmount == null) {
+                continue;
+            }
+            String key = buildKey(postDate, f.TRNXAmount, f.CreditDebitFlag);
+            if (key == null || String.isBlank(f.TRNXCurrencyCode)) {
+                continue;
+            }
+            m.put(key, f.TRNXCurrencyCode.trim());
+        }
+        return m;
     }
 
     /* =====================================================
