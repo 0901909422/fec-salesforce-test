@@ -71,6 +71,11 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_Assignment_Count__c</field>
         <readable>true</readable>
@@ -3924,11 +3929,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Is_PIN_Reset_Success__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Assigment_Mode__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
