@@ -8,11 +8,6 @@ public without sharing class FEC_CaseTriggerHandler {
     // Trigger guard để tránh recursive
     public static Boolean isExecuting = false;
     public static Boolean isSystemUpdate = false;
-    private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
-    private static final Integer CASE_STATUS_HISTORY_MAX = 255;
-    private static final String CASE_STATUS_HISTORY_SEPARATOR = ' ';
-    private static Boolean tatBhLookupDone = false;
-    private static Id tatBusinessHoursId;
     
     /**
      * Method Description: Main entry point được gọi từ trigger
@@ -59,13 +54,11 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/29 - Added updateCaseParticipants for Customer Case / Internal Case
      */
     private void onBeforeInsert(List<Case> newCases) {
-        applyCaseStatusHistoryOnInsert(newCases);
-        setEmail2CaseChannelBeforeInsert(newCases);  
+        setEmail2CaseChannelBeforeInsert(newCases);
         syncChannelFromInteractionForCustomerCase(newCases);
         generateFECIdSearch(newCases);
         updateCaseParticipantsOnInsert(newCases);
         assignEntitlement(newCases);
-        applyTatFullProcessBeforeSave(newCases);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeInsert(newCases);
@@ -82,10 +75,8 @@ public without sharing class FEC_CaseTriggerHandler {
      * @created: 2026/02/02 Toannd61
      */
     private void onBeforeUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        applyCaseStatusHistoryOnUpdate(newCases, oldMap);
         updateCaseParticipantsOnUpdate(newCases, oldMap);
         syncChannelFromInteractionForCustomerCase(newCases);
-        applyTatFullProcessBeforeSave(newCases);
                 
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
@@ -1051,214 +1042,5 @@ public without sharing class FEC_CaseTriggerHandler {
         if (!caseUpdates.isEmpty()) {
             update caseUpdates;
         }
-    }
-
-    private static void applyTatFullProcessBeforeSave(List<Case> records) {
-        if (records == null || records.isEmpty()) {
-            return;
-        }
-
-        Id bhId = resolveTatBusinessHoursId();
-        Datetime nowTs = System.now();
-        for (Case c : records) {
-            if (bhId == null) {
-                c.FEC_TAT_Full_Process__c = null;
-                continue;
-            }
-
-            Datetime caseCreatedOn = c.FEC_Case_Created_On__c;
-            if (caseCreatedOn == null) {
-                c.FEC_TAT_Full_Process__c = null;
-                continue;
-            }
-
-            String caseStatus = String.isNotBlank(c.FEC_Case_Status__c) ? c.FEC_Case_Status__c : c.Status;
-            Datetime endTime;
-            if (String.isNotBlank(caseStatus) && caseStatus.startsWith(FEC_ConstantCommon.CASE_STATUS_PREFIX_RESOLVED)) {
-                endTime = c.FEC_Last_Updated_On__c;
-            } else if (String.isNotBlank(caseStatus) && caseStatus.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX)) {
-                endTime = nowTs;
-            } else {
-                c.FEC_TAT_Full_Process__c = null;
-                continue;
-            }
-
-            if (endTime == null) {
-                c.FEC_TAT_Full_Process__c = null;
-                continue;
-            }
-
-            Long millis = BusinessHours.diff(bhId, caseCreatedOn, endTime);
-            if (millis == null || millis < 0) {
-                c.FEC_TAT_Full_Process__c = null;
-                continue;
-            }
-
-            c.FEC_TAT_Full_Process__c = Decimal.valueOf(millis)
-                .divide(3600000, 12, System.RoundingMode.HALF_UP)
-                .setScale(2, System.RoundingMode.HALF_UP);
-        }
-    }
-
-    private static Id resolveTatBusinessHoursId() {
-        if (!tatBhLookupDone) {
-            tatBhLookupDone = true;
-            List<BusinessHours> rows = [
-                SELECT Id
-                FROM BusinessHours
-                WHERE Name = :FEC_BUSINESS_HOURS_NAME AND IsActive = TRUE
-                LIMIT 1
-            ];
-            tatBusinessHoursId = rows.isEmpty() ? null : rows[0].Id;
-        }
-        return tatBusinessHoursId;
-    }
-
-    private static final Integer STATUS_BUCKET_3_MAX = 131072;
-    private static final List<String> STATUS_HISTORY_FIELDS = new List<String>{
-        'FEC_Case_Status_History_1__c',
-        'FEC_Case_Status_History_2__c',
-        'FEC_Case_Status_History_3__c'
-    };
-    private static final List<Integer> STATUS_BUCKET_LIMITS = new List<Integer>{
-        CASE_STATUS_HISTORY_MAX, CASE_STATUS_HISTORY_MAX, STATUS_BUCKET_3_MAX
-    };
-    private static final List<String> REMARK_FIELDS = new List<String>{
-        'FEC_Case_Remarks_1__c',
-        'FEC_Case_Remarks_2__c',
-        'FEC_Case_Remarks_3__c'
-    };
-
-    @TestVisible
-    private static void applyCaseStatusHistoryOnInsert(List<Case> records) {
-        if (records == null || records.isEmpty()) {
-            return;
-        }
-        for (Case c : records) {
-            String statusVal = resolveCaseStatusValue(c);
-            if (String.isBlank(statusVal)) {
-                continue;
-            }
-            c.FEC_Case_Status_History__c = appendCaseStatusHistory(null, statusVal);
-            c.FEC_Case_Status_History_1__c = buildStatusBucketEntry(null, statusVal, 1, CASE_STATUS_HISTORY_MAX);
-        }
-    }
-
-    @TestVisible
-    private static void applyCaseStatusHistoryOnUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
-        if (newCases == null || newCases.isEmpty() || oldMap == null || oldMap.isEmpty()) {
-            return;
-        }
-        for (Case c : newCases) {
-            Case oldCase = oldMap.get(c.Id);
-            if (oldCase == null) {
-                continue;
-            }
-            String oldStatus = resolveCaseStatusValue(oldCase);
-            String newStatus = resolveCaseStatusValue(c);
-            if (String.isBlank(newStatus) || newStatus == oldStatus) {
-                continue;
-            }
-            String baseHistory = c.FEC_Case_Status_History__c;
-            if (baseHistory == null) {
-                baseHistory = oldCase.FEC_Case_Status_History__c;
-            }
-            c.FEC_Case_Status_History__c = appendCaseStatusHistory(baseHistory, newStatus);
-
-            Integer nextIndex = countCaseStatusHistoryEntries(baseHistory) + 1;
-            Integer bucketIdx = determineBucketForEntry(c, oldCase, nextIndex);
-            String bucketField = STATUS_HISTORY_FIELDS[bucketIdx];
-            Integer bucketLimit = STATUS_BUCKET_LIMITS[bucketIdx];
-            String baseBucket = (String) c.get(bucketField);
-            if (baseBucket == null) {
-                baseBucket = (String) oldCase.get(bucketField);
-            }
-            c.put(bucketField, buildStatusBucketEntry(baseBucket, newStatus, nextIndex, bucketLimit));
-        }
-    }
-
-    @TestVisible
-    private static Integer determineBucketForEntry(Case newCase, Case oldCase, Integer entryIndex) {
-        Integer remarkCount1 = countFieldEntries(resolveField(newCase, oldCase, REMARK_FIELDS[0]));
-        Integer remarkCount2 = countFieldEntries(resolveField(newCase, oldCase, REMARK_FIELDS[1]));
-        if (remarkCount1 == 0 && remarkCount2 == 0) {
-            return 0;
-        }
-        if (entryIndex <= remarkCount1) {
-            return 0;
-        }
-        if (entryIndex <= remarkCount1 + remarkCount2) {
-            return 1;
-        }
-        return 2;
-    }
-
-    private static String resolveField(Case newCase, Case oldCase, String fieldName) {
-        String val = (String) newCase.get(fieldName);
-        if (val == null && oldCase != null) {
-            val = (String) oldCase.get(fieldName);
-        }
-        return val;
-    }
-
-    @TestVisible
-    private static Integer countFieldEntries(String fieldValue) {
-        if (String.isBlank(fieldValue)) {
-            return 0;
-        }
-        Integer cnt = 0;
-        Matcher m = Pattern.compile('#\\d+\\s*:').matcher(fieldValue);
-        while (m.find()) {
-            cnt++;
-        }
-        return cnt;
-    }
-
-    @TestVisible
-    private static String buildStatusBucketEntry(String existingBucket, String newStatus, Integer entryIndex, Integer maxLen) {
-        String normalizedStatus = newStatus.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ');
-        String segment = '#' + String.valueOf(entryIndex) + ': ' + normalizedStatus;
-        String combined = String.isBlank(existingBucket) ? segment : existingBucket + '\n' + segment;
-        if (combined.length() > maxLen) {
-            return combined.substring(0, maxLen);
-        }
-        return combined;
-    }
-
-    @TestVisible
-    private static String resolveCaseStatusValue(Case c) {
-        if (c == null) {
-            return null;
-        }
-        return String.isNotBlank(c.FEC_Case_Status__c) ? c.FEC_Case_Status__c : c.Status;
-    }
-
-    @TestVisible
-    private static String appendCaseStatusHistory(String existingHistory, String newStatus) {
-        if (String.isBlank(newStatus)) {
-            return existingHistory;
-        }
-        Integer nextIndex = countCaseStatusHistoryEntries(existingHistory) + 1;
-        String normalizedStatus = newStatus.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ');
-        String nextSegment = '#' + String.valueOf(nextIndex) + ': ' + normalizedStatus;
-        String combined = String.isBlank(existingHistory)
-            ? nextSegment
-            : existingHistory + CASE_STATUS_HISTORY_SEPARATOR + nextSegment;
-        if (combined.length() > CASE_STATUS_HISTORY_MAX) {
-            return combined.substring(0, CASE_STATUS_HISTORY_MAX);
-        }
-        return combined;
-    }
-
-    private static Integer countCaseStatusHistoryEntries(String historyValue) {
-        if (String.isBlank(historyValue)) {
-            return 0;
-        }
-        Integer count = 0;
-        Matcher matcher = Pattern.compile('#\\d+\\s*:').matcher(historyValue);
-        while (matcher.find()) {
-            count++;
-        }
-        return count;
     }
 }

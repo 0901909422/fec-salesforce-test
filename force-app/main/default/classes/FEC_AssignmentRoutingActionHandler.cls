@@ -379,12 +379,6 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         FROM FEC_Assignment__c
         WHERE Id = :assignmentId
     ];
-
-        Datetime submitTs = System.now();
-        update new FEC_Assignment__c(
-            Id = assignmentId,
-            FEC_Submitted_On__c = submitTs
-        );
         
         Case c = [
         SELECT FEC_Current_Case_Stage__r.FEC_Code__c
