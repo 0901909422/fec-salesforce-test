@@ -96,16 +96,21 @@ public with sharing class FEC_SubProcessService {
                 noc.FEC_Transfer_Call_to_Collection__c;
             
             // ===== HOLD CASE =====
-            
+            // ===== HOLD CASE =====
+            // tungnm37: hiển thị khi có config Manual + Active + Stage != null
+            // Stage != null = đã config cho stage cụ thể → cho phép hiển thị
+            // Stage = null = chưa config stage → không hiển thị
             List<FEC_Hold_Case_Config__c> holdConfigs = [
                 SELECT Id
                 FROM FEC_Hold_Case_Config__c
                 WHERE FEC_Nature_of_Cases__c = :noc.Id
+                  AND Hold_Case_Type__c = 'Manual'
+                  AND FEC_Active__c = true
+                  AND FEC_Case_Stage__c != null
                 LIMIT 1
             ];
-            
-            result.showHoldCase =
-                !holdConfigs.isEmpty();
+
+            result.showHoldCase = !holdConfigs.isEmpty();
             
             return result;
             
