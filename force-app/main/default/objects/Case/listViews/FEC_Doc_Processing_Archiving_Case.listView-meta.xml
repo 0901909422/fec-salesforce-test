@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>Doc Processing &amp;amp; Archiving</value>
+        <value>Doc Processing &amp; Archiving</value>
     </filters>
     <label>Doc Processing &amp; Archiving</label>
     <queue>FEC_Doc_Processing_Archiving</queue>

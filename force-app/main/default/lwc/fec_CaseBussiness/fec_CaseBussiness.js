@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FIELD_CONTACT_CHANNEL } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -168,8 +168,7 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   CUSTOMER_PHONE_NUMBER_SUB,
   FIELD_FEOL_Phone__c,
   FIELD_CUSTOMER_PHONE_NUMBER,
-  FIELD_RECEIVING_PHONE_NUMBER,
-  FIELD_CONTACT_CHANNEL
+  FIELD_RECEIVING_PHONE_NUMBER
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -1553,7 +1552,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                       field.value = opt.value;
                     }
                   } else {
-                    const defaultOpt = picklistOptions.find(o => o.isDefaultValue);
+                    const defaultOpt = picklistOptions.find(o => o.isDefault);
                     if (defaultOpt) {
                       field.value = defaultOpt.value;
                     }
