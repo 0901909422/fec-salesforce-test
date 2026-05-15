@@ -7,5 +7,6 @@
     <permissionSets>FEC_CS_Customer_Experience_Manager_3_Master_Data_Management</permissionSets>
     <permissionSets>FEC_CS_Customer_Experience_Manager_3_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Customer_Experience_Manager_3_User_Management</permissionSets>
+    <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

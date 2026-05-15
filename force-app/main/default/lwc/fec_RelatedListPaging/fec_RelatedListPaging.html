@@ -29,6 +29,14 @@
                                 </button>
                             </div>
                         </template>
+
+                        <template if:true={showNewButton}>
+                            <div class="table-info-right">
+                                <button class="new-btn" onclick={handleNew}>
+                                    New
+                                </button>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- ================= TABLE ================= -->
@@ -36,6 +44,14 @@
                         <table class="address-table">
                             <thead>
                                 <tr>
+                                    <template if:true={showCheckboxColumn}>
+                                        <th class="col-checkbox">
+                                            <lightning-input
+                                                type="checkbox"
+                                                onchange={handleSelectAll}>
+                                            </lightning-input>
+                                        </th>
+                                    </template>
                                     <template if:false={hideRowNumber}>
                                         <th class="col-number"></th>
                                     </template>
@@ -60,8 +76,19 @@
                             </thead>
 
                             <tbody>
+                                <template if:true={hasRecords}>
                                 <template for:each={displayRecords} for:item="row">
-                                    <tr key={row.id}>
+                                    <tr key={row.id} data-id={row.id} onclick={handleRowSelect} class={rowSelectionClass}>
+                                        <template if:true={showCheckboxColumn}>
+                                            <td class="col-checkbox">
+                                                <lightning-input
+                                                    type="checkbox"
+                                                    data-id={row.id}
+                                                    checked={row.isSelected}
+                                                    onchange={handleRowCheckboxChange}>
+                                                </lightning-input>
+                                            </td>
+                                        </template>
                                         <template if:false={hideRowNumber}>
                                             <td class="col-number">{row.rowNumber}</td>
                                         </template>
@@ -107,7 +134,7 @@
                                                                         for:item="section"
                                                                     >
                                                                         <div
-                                                                            key={section.section}
+                                                                            key={section.key}
                                                                             class="hover-section"
                                                                         >
 
@@ -161,11 +188,26 @@
                                                     </div>
                                                 </template>
 
+                                               <!-- CHECKBOX TYPE -->
+                                                <template if:true={cell.isCheckbox}>
+                                                    <lightning-input
+                                                        type="checkbox"
+                                                        label="active"
+                                                        variant="label-hidden"
+                                                        checked={cell.value}
+                                                        disabled>
+                                                    </lightning-input>
+                                                </template>
+
                                                 <!-- REGULAR TEXT WITH DYNAMIC CLASS -->
                                                 <template if:false={cell.isLink}>
                                                     <template if:false={cell.isEye}>
                                                         <template if:false={cell.isHtml}>
-                                                            <span>{cell.value}</span>
+                                                            <template if:false={cell.isCheckboxType}>
+                                                                <template if:false={cell.isCheckbox}>
+                                                                    <span>{cell.value}</span>
+                                                                </template>
+                                                            </template>
                                                         </template>
                                                     </template>
                                                 </template>
@@ -175,6 +217,7 @@
 
                                     </tr>
                                 </template>
+                            </template>
                             </tbody>
 
                         </table>

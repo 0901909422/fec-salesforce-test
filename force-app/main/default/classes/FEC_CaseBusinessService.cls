@@ -470,7 +470,10 @@ public without sharing class FEC_CaseBusinessService {
       );
 
       if (natureOfCaselst.isEmpty()) {
-        selectedCase.FEC_Current_Case_Stage__c = null;
+        //PhongBT 14/05/26: fix th mất case stage khi view bằng user k thuộc user group của noc -> không hiển thị master data
+        if (caseStageIdPreservedAtLoad != null) {
+          selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
+        }
         try { update selectedCase; } catch (DmlException e) {
           System.debug('Update case failed (no NOC): ' + e.getMessage());
         }
@@ -559,18 +562,37 @@ public without sharing class FEC_CaseBusinessService {
       } catch (DmlException e) {
       }
 
+      //PhongBT: Fix cập nhật sai case stage
+      // FEC_Case_Stage__c.FEC_Nature_of_Cases__c lookup template FEC_Nature_of_Case__c.
+      // Khi COF/GSR dùng Actual NOC (useActualNatureAndSettingObj), Id trên selectedNatureOfCase
+      // là Actual — không dùng cho query stage; nếu không map sang template thì remap rỗng
+      // và fallback theo Id stage cũ giữ stage của NOC trước (vd A→B→A vẫn stage B).
+      Id templateNatureIdForCaseStages = resolveTemplateNatureOfCaseIdForCaseStages(
+        useActualNatureAndSettingObj,
+        selectedNatureOfCase,
+        caseBindMap,
+        rolelst
+      );
+
       // ================================= GET CASE STAGE ===========================
       selectedNatureOfCaseId = (String) selectedNatureOfCase.get('Id');
 
       List<FEC_Case_Stage__c> stagelst = new List<FEC_Case_Stage__c>();
-      if (
-        hasIncomingNocSelection &&
+      //PhongBT: Fix cập nhật sai case stage
+      // Remap stage theo NOC case hiện tại, giữ số stage (Stage 2 → Stage 2 NOC đúng):
+      // - Có payload NOC từ UI (đổi bộ NOC trên màn), hoặc
+      // - Mới vào màn (không payload) nhưng Case đã Submit: nếu FEC_Current_Case_Stage__c
+      //   thuộc NOC khác với bộ NOC trên Case thì resolveCaseStageForNewNatureOfCase đồng bộ lại.
+      Boolean shouldTryRemapStageToCaseNature =
         String.isNotBlank(caseStageIdPreservedAtLoad) &&
-        String.isNotBlank(selectedNatureOfCaseId)
-      ) {
+        //PhongBT: Fix cập nhật sai case stage
+        templateNatureIdForCaseStages != null &&
+        (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true);
+      if (shouldTryRemapStageToCaseNature) {
         FEC_Case_Stage__c remappedStageForNewNoc = resolveCaseStageForNewNatureOfCase(
           caseStageIdPreservedAtLoad,
-          (Id) selectedNatureOfCaseId
+          //PhongBT: Fix cập nhật sai case stage
+          templateNatureIdForCaseStages
         );
         if (remappedStageForNewNoc != null) {
           stagelst = [
@@ -583,6 +605,27 @@ public without sharing class FEC_CaseBusinessService {
       }
       if (stagelst.isEmpty()) {
         String selectedCaseStageId = selectedCase.FEC_Current_Case_Stage__c;
+        //PhongBT: Fix cập nhật sai case stage
+        // Tránh load stage theo Id khi Id trỏ NOC khác với bộ NOC đang chọn (UI) hoặc với NOC trên Case (đã submit, mở màn).
+        if (
+          hasIncomingNocSelection &&
+          templateNatureIdForCaseStages != null &&
+          String.isNotBlank(selectedCaseStageId) &&
+          (hasIncomingNocSelection || selectedCase.FEC_Is_Submited__c == true)
+        ) {
+          List<FEC_Case_Stage__c> stageNocCheck = [
+            SELECT FEC_Nature_of_Cases__c
+            FROM FEC_Case_Stage__c
+            WHERE Id = :selectedCaseStageId
+            LIMIT 1
+          ];
+          if (
+            !stageNocCheck.isEmpty() &&
+            stageNocCheck[0].FEC_Nature_of_Cases__c != templateNatureIdForCaseStages
+          ) {
+            selectedCaseStageId = null;
+          }
+        }
         String caseStageQuery;
         Map<String, Object> bindVars;
         if (String.isNotBlank(selectedCaseStageId)) {
@@ -597,10 +640,17 @@ public without sharing class FEC_CaseBusinessService {
             // '\')';
           bindVars = new Map<String, Object>{ 'id' => selectedCaseStageId };
         } else {
+          //PhongBT: Fix cập nhật sai case stage
+          Id nocIdForDefaultStageQuery = templateNatureIdForCaseStages != null
+            ? templateNatureIdForCaseStages
+            : (String.isNotBlank(selectedNatureOfCaseId)
+              ? (Id) selectedNatureOfCaseId
+              : null);
           caseStageQuery =
             'SELECT Id, Name, FEC_Business_Process__r.Name ' +
             'FROM FEC_Case_Stage__c ' +
-            'WHERE FEC_Nature_of_Cases__c = :selectedNatureOfCaseId ' +
+            //PhongBT: Fix cập nhật sai case stage
+            'WHERE FEC_Nature_of_Cases__c = :nocIdForDefaultStageQuery ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ';
             // +
@@ -608,7 +658,8 @@ public without sharing class FEC_CaseBusinessService {
             // String.join(new List<String>(rolelst), '\',\'') +
             // '\')';
           bindVars = new Map<String, Object>{
-            'selectedNatureOfCaseId' => selectedNatureOfCaseId
+            //PhongBT: Fix cập nhật sai case stage
+            'nocIdForDefaultStageQuery' => nocIdForDefaultStageQuery
           };
         }
           stagelst = (List<FEC_Case_Stage__c>) Database.queryWithBinds(
@@ -619,7 +670,10 @@ public without sharing class FEC_CaseBusinessService {
       }
 
       if (stagelst.isEmpty()) {
-        selectedCase.FEC_Current_Case_Stage__c = null;
+        //PhongBT 14/05/26: fix th mất case stage khi view bằng user k thuộc user group của noc -> không hiển thị master data
+        if (caseStageIdPreservedAtLoad != null) {
+          selectedCase.FEC_Current_Case_Stage__c = caseStageIdPreservedAtLoad;
+        }
         try { update selectedCase; } catch (DmlException e) {
           System.debug('Update case failed (no stage): ' + e.getMessage());
         }
@@ -1048,7 +1102,9 @@ public without sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
       // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
-      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 fix: khi Revert về Stage 1 (Default Stage) → isSubmited = false để hiện read-only display
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true
+          && result.lockApiLwcsAfterRevertToDefaultStage != true;
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
@@ -1920,6 +1976,9 @@ public without sharing class FEC_CaseBusinessService {
           String routingActionValue = params != null
             ? (String) params.get('routingActionValue')
             : null;
+          //PhongBT: update bộ noc chọn ở updated khi revert về
+          String revertNocId = (String) params.get('natureOfCaseId');
+          FEC_CofGsrRoutePrepareService.updateCaseNocFromSelection(caseId, revertNocId);
           markCaseSubmittedAndClearDrafts(caseId);
           revert(caseId, revertActionId, finalStatusBeforeSubmit, routingActionValue);
           return null;
@@ -2391,14 +2450,11 @@ public without sharing class FEC_CaseBusinessService {
         ' description=' + history.FEC_Description__c
       );
 
-      // tungnm37 thêm: tạo Assignment + Case Remarks khi Route to
-      // Bỏ qua khi nextTeam = CC hoặc SP (luồng Manual, user tự thêm qua nút Add Item)
-      String nextTeamForAssignment = selectedChange != null
-        ? [SELECT FEC_Team_User_Group__c FROM FEC_Stage_Change__c WHERE Id = :selectedChange.Id LIMIT 1]?.FEC_Team_User_Group__c
-        : null;
-      Boolean isManualTeam = ('CC'.equals(nextTeamForAssignment) || 'SP'.equals(nextTeamForAssignment));
-      if (!isManualTeam) {
-        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+      // tungnm37 fix: chỉ skip khi TẤT CẢ teams đều là CC/SP (thủ công - user thêm qua Add Item)
+      // Nếu có bất kỳ team nào khác CC/SP → tạo Assignment tự động cho tất cả team
+      Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+      Boolean hasNonCcSpTeam = FEC_CofGsrAssignmentService.hasNonCcSpTeam(nocIds);
+      if (hasNonCcSpTeam) {
         FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
       }
 
@@ -4853,6 +4909,43 @@ public without sharing class FEC_CaseBusinessService {
     main.subSectionlst.add(caseDetails);
 
     return main;
+  }
+
+  //PhongBT: Fix cập nhật sai case stage
+  /**
+   * Id FEC_Nature_of_Case__c (template) dùng cho FEC_Case_Stage__c.FEC_Nature_of_Cases__c.
+   * Khi đang đọc từ FEC_Actual_Nature_of_Case__c, tra lại template theo dimension trong caseBindMap.
+   */
+  private static Id resolveTemplateNatureOfCaseIdForCaseStages(
+    Boolean useActualNatureAndSettingObj,
+    SObject selectedNatureOfCase,
+    Map<String, Object> caseBindMap,
+    List<String> rolelst
+  ) {
+    if (selectedNatureOfCase == null) {
+      return null;
+    }
+    if (!useActualNatureAndSettingObj) {
+      return (Id) selectedNatureOfCase.get('Id');
+    }
+    String templateNocQuery =
+      'SELECT Id FROM FEC_Nature_of_Case__c ' +
+      'WHERE FEC_Product_Type__c = :productType ' +
+      'AND FEC_Category__c = :category ' +
+      'AND FEC_Sub_Category__c = :subCategory ' +
+      'AND FEC_Sub_Code__c = :subCode ' +
+      'AND FEC_Customer_Type__c = :customerType ' +
+      'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
+      'AND FEC_Active__c = TRUE ' +
+      'AND FEC_User_Group__c INCLUDES (\'' +
+      String.join(new List<String>(rolelst), '\',\'') +
+      '\')';
+    List<SObject> templateRows = Database.queryWithBinds(
+      templateNocQuery,
+      caseBindMap,
+      AccessLevel.USER_MODE
+    );
+    return templateRows.isEmpty() ? null : (Id) templateRows[0].get('Id');
   }
 
   /**
