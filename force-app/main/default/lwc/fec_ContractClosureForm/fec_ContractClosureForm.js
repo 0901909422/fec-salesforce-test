@@ -39,7 +39,7 @@ import FEC_MSG_ContractClosure_No_C360_Email from '@salesforce/label/c.FEC_MSG_C
 import FEC_Placeholder_ContractClosure_Select_Delivery from '@salesforce/label/c.FEC_Placeholder_ContractClosure_Select_Delivery';
 import FEC_Placeholder_ContractClosure_Select_Admin from '@salesforce/label/c.FEC_Placeholder_ContractClosure_Select_Admin';
 
-import getInitData from '@salesforce/apex/FEC_ContractClosureController.getInitData';
+import getClosureFormInitData from '@salesforce/apex/FEC_ContractClosureController.getClosureFormInitData';
 import validateForComplete from '@salesforce/apex/FEC_ContractClosureController.validateForComplete';
 import saveForm from '@salesforce/apex/FEC_ContractClosureController.saveForm';
 import saveFormDraft from '@salesforce/apex/FEC_ContractClosureController.saveFormDraft';
@@ -68,6 +68,10 @@ const CC_MSG_LOAD_FAILED = 'Load failed';
 
 export default class Fec_ContractClosureForm extends LightningElement {
     @api recordId;
+    /** Từ fec_CaseBussiness (MDM) — optional; dùng lọc MRC delivery (ẩn Email trừ RL05.03). */
+    @api subCategoryCode;
+    @api subCodeCode;
+
     /** Từ cha (vd. fec_CaseBussiness lwc:component is-edit). undefined = hiển thị như cũ (Record Page). */
     @api isEdit;
 
@@ -95,6 +99,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     deliveryEmailSelected = false;
     deliveryAddressSelected = false;
     deliveryOfficeSelected = false;
+    deliveryPosSelected = false;
 
     useExistingEmail = false;
     showTempEmailRow = false;
@@ -181,6 +186,17 @@ export default class Fec_ContractClosureForm extends LightningElement {
     resolvedEmailValue;
     resolvedAddressValue;
     resolvedOfficeValue;
+    /** Chỉ set khi picklist Case có entry POS; không fallback để tránh value lạ. */
+    resolvedPosValue;
+
+    get closureFormMode() {
+        const sc = (this.subCategoryCode || STR_EMPTY).toUpperCase();
+        return sc.includes('RL05') ? 'MRC' : null;
+    }
+
+    get closureSubCodeFilter() {
+        return (this.subCodeCode || STR_EMPTY).trim() || null;
+    }
 
     addressTypeTemporaryLabel = CONTRACT_CLOSURE_ADDRESS_TYPE_TEMPORARY;
 
@@ -281,7 +297,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
         this.addressSortAsc = !this.addressSortAsc;
     }
 
-    @wire(getInitData, { caseId: '$recordId' })
+    @wire(getClosureFormInitData, {
+        caseId: '$recordId',
+        formMode: '$closureFormMode',
+        subCodeFilter: '$closureSubCodeFilter'
+    })
     wiredInit(result) {
         this.wiredInitResult = result;
         this.loading = false;
@@ -328,9 +348,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
         const emailO = this.pickDeliveryMeta('EMAIL');
         const addrO = this.pickDeliveryMeta('ADDRESS');
         const offO = this.pickDeliveryMeta('OFFICE');
+        const posO = this.pickDeliveryMeta('POS');
         this.resolvedEmailValue = emailO ? emailO.value : this.customLabel.emailLabel;
         this.resolvedAddressValue = addrO ? addrO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_ADDRESS_DEFAULT;
         this.resolvedOfficeValue = offO ? offO.value : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
+        this.resolvedPosValue = posO ? posO.value : null;
     }
 
     pickDeliveryMeta(kind) {
@@ -356,6 +378,12 @@ export default class Fec_ContractClosureForm extends LightningElement {
                     /văn\s*phòng|van\s*phong/i.test((o.value || STR_EMPTY).toLowerCase())
             );
         }
+        if (kind === 'POS') {
+            return opts.find(
+                (o) =>
+                    /\bPOS\b/i.test(o.label || STR_EMPTY) || /^POS$/i.test((o.value || STR_EMPTY).trim())
+            );
+        }
         return undefined;
     }
 
@@ -375,6 +403,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
             if (this.resolvedOfficeValue && p === this.resolvedOfficeValue) {
                 this.deliveryOfficeSelected = true;
             }
+            if (this.resolvedPosValue && p === this.resolvedPosValue) {
+                this.deliveryPosSelected = true;
+            }
         });
     }
 
@@ -392,6 +423,10 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (ov) {
             rows.push({ label: this.labelOffice, value: ov });
         }
+        const pv = this.resolvedPosValue;
+        if (pv) {
+            rows.push({ label: this.labelPos, value: pv });
+        }
         return rows;
     }
 
@@ -406,6 +441,9 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.deliveryOfficeSelected && this.resolvedOfficeValue) {
             vals.push(this.resolvedOfficeValue);
         }
+        if (this.deliveryPosSelected && this.resolvedPosValue) {
+            vals.push(this.resolvedPosValue);
+        }
         return vals;
     }
 
@@ -416,23 +454,32 @@ export default class Fec_ContractClosureForm extends LightningElement {
         let ids = event.detail && event.detail.ids ? [...event.detail.ids] : [];
         const av = this.resolvedAddressValue;
         const ov = this.resolvedOfficeValue;
-        const hasA = av && ids.includes(av);
-        const hasO = ov && ids.includes(ov);
-        if (hasA && hasO) {
-            const hadA = this.deliveryAddressSelected;
-            const hadO = this.deliveryOfficeSelected;
-            if (hadA && !hadO) {
-                ids = ids.filter((v) => v !== av);
-            } else if (hadO && !hadA) {
-                ids = ids.filter((v) => v !== ov);
+        const pv = this.resolvedPosValue;
+        const physVals = [av, ov, pv].filter((v) => !!v);
+        const hadA = this.deliveryAddressSelected;
+        const hadO = this.deliveryOfficeSelected;
+        const hadP = this.deliveryPosSelected;
+        const hadByVal = {
+            ...(av ? { [av]: hadA } : {}),
+            ...(ov ? { [ov]: hadO } : {}),
+            ...(pv ? { [pv]: hadP } : {})
+        };
+        const inPhys = physVals.filter((v) => ids.includes(v));
+        if (inPhys.length > 1) {
+            const newlyOn = inPhys.filter((v) => ids.includes(v) && !hadByVal[v]);
+            let keep;
+            if (newlyOn.length >= 1) {
+                keep = newlyOn[newlyOn.length - 1];
             } else {
-                ids = ids.filter((v) => v !== ov);
+                keep = inPhys[0];
             }
+            ids = ids.filter((id) => !physVals.includes(id) || id === keep);
         }
         const ev = this.resolvedEmailValue;
         this.deliveryEmailSelected = !!(ev && ids.includes(ev));
         this.deliveryAddressSelected = !!(av && ids.includes(av));
         this.deliveryOfficeSelected = !!(ov && ids.includes(ov));
+        this.deliveryPosSelected = !!(pv && ids.includes(pv));
     }
 
     get labelEmail() {
@@ -448,6 +495,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
     get labelOffice() {
         const o = this.pickDeliveryMeta('OFFICE');
         return o ? o.label : CONTRACT_CLOSURE_DELIVERY_VALUE_OFFICE_DEFAULT;
+    }
+
+    get labelPos() {
+        const o = this.pickDeliveryMeta('POS');
+        return o ? o.label : 'POS';
     }
 
     get lockAddTempEmailBtn() {
@@ -470,7 +522,11 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     get showRecipientSection() {
-        return this.deliveryAddressSelected === true;
+        return (
+            this.deliveryAddressSelected === true ||
+            this.deliveryOfficeSelected === true ||
+            this.deliveryPosSelected === true
+        );
     }
 
     get showAddressSection() {
@@ -743,7 +799,8 @@ export default class Fec_ContractClosureForm extends LightningElement {
             ok =
                 this.deliveryEmailSelected === true ||
                 this.deliveryAddressSelected === true ||
-                this.deliveryOfficeSelected === true;
+                this.deliveryOfficeSelected === true ||
+                this.deliveryPosSelected === true;
         }
         if (!ok && this.isClosureEditable) {
             this.showToast(this.customLabel.errorTitle, this.validationLabels.deliveryRequired, 'error');
@@ -1126,11 +1183,15 @@ export default class Fec_ContractClosureForm extends LightningElement {
         if (this.deliveryOfficeSelected) {
             parts.push(this.resolvedOfficeValue);
         }
+        if (this.deliveryPosSelected && this.resolvedPosValue) {
+            parts.push(this.resolvedPosValue);
+        }
         return {
             deliveryOptionCombined: parts.join(';'),
             deliveryEmailSelected: this.deliveryEmailSelected,
             deliveryAddressSelected: this.deliveryAddressSelected,
             deliveryOfficeSelected: this.deliveryOfficeSelected,
+            deliveryPosSelected: this.deliveryPosSelected,
             useExistingEmail: this.useExistingEmail,
             emailDeliveryChannel: this.resolveEmailDeliveryChannel(),
             temporaryEmail: this.temporaryEmail,
@@ -1225,6 +1286,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
                 this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
                 this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                this.deliveryPosSelected = payload.deliveryPosSelected === true;
                 try {
                     if (this.wiredInitResult) {
                         await refreshApex(this.wiredInitResult);
@@ -1242,7 +1304,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
     }
 
     _shouldRunContractClosureDraftSave() {
-        if (this.deliveryEmailSelected || this.deliveryAddressSelected || this.deliveryOfficeSelected) {
+        if (this.deliveryEmailSelected || this.deliveryAddressSelected || this.deliveryOfficeSelected || this.deliveryPosSelected) {
             return true;
         }
         if ((this.recipientName || STR_EMPTY).trim()) {
@@ -1303,6 +1365,7 @@ export default class Fec_ContractClosureForm extends LightningElement {
                 this.deliveryEmailSelected = payload.deliveryEmailSelected === true;
                 this.deliveryAddressSelected = payload.deliveryAddressSelected === true;
                 this.deliveryOfficeSelected = payload.deliveryOfficeSelected === true;
+                this.deliveryPosSelected = payload.deliveryPosSelected === true;
                 try {
                     if (this.wiredInitResult) {
                         await refreshApex(this.wiredInitResult);
