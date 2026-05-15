@@ -910,48 +910,6 @@
         <value>Không đủ điều kiện cập nhật số điện thoại.</value>
     </labels>
     <labels>
-        <fullName>FEC_MRC_Return_Case_Info_Block_Title</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MRC Return — tiêu đề khi không hiển thị Case Information</shortDescription>
-        <value>Yêu cầu MRC Return không thể nhập Case Information trong trường hợp này.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MRC_Return_Msg_Product_Not_TW</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MRC Return — sản phẩm không phải TW</shortDescription>
-        <value>Yêu cầu liên quan MRC (RL05) chỉ áp dụng khi Product Code của hợp đồng là TW.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MRC Return RL05.03 — DPD từ 15 ngày</shortDescription>
-        <value>Hợp đồng có số ngày quá hạn (DPD) từ 15 trở lên: không được tiếp tục với Sub Code gửi mẫu đơn RL05.03.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MRC_RL0502_Dup_Banner</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>MRC RL05.02 — banner trùng Case RL05 cùng hợp đồng</shortDescription>
-        <value>Đã phát hiện yêu cầu MRC Return (RL05) đang xử lý trên cùng hợp đồng: Case trước {0}. Chọn &quot;MRC Request Handling Option&quot; và lưu để hệ thống tự động hủy đúng nhánh.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MRC_Dup_Remark_Cancel_Prev</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Remark khi chọn hủy yêu cầu cũ RL05.02</shortDescription>
-        <value>Tự động hủy (Resolved-AutoCancelled): hủy yêu cầu RL05 trước đó — giữ Case mới {0}.</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MRC_Dup_Remark_Cancel_New</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Remark khi chọn hủy Case mới RL05.02</shortDescription>
-        <value>Tự động hủy (Resolved-AutoCancelled): hủy Case mới — tiếp tục xử lý Case RL05 trước đó {0}.</value>
-    </labels>
-    <labels>
         <fullName>FEC_CaseID_Default_Prefix</fullName>
         <language>en_US</language>
         <protected>false</protected>

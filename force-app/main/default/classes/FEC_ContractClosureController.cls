@@ -103,8 +103,6 @@ public without sharing class FEC_ContractClosureController {
         public Boolean deliveryEmailSelected;
         public Boolean deliveryAddressSelected;
         public Boolean deliveryOfficeSelected;
-        /** MRC Return — giao tại POS */
-        public Boolean deliveryPosSelected;
         public Boolean useExistingEmail;
         public String temporaryEmail;
         public String recipientName;
@@ -133,7 +131,8 @@ public without sharing class FEC_ContractClosureController {
         public String provinceLabel;
     }
 
-    private static InitDataDTO getInitDataInternal(Id caseId, String formMode, String subCodeFilter) {
+    @AuraEnabled(cacheable=true)
+    public static InitDataDTO getInitData(Id caseId) {
         InitDataDTO out = new InitDataDTO();
         out.addresses = new List<AddressRowDTO>();
         out.deliveryOptions = new List<PicklistEntryDTO>();
@@ -219,8 +218,7 @@ public without sharing class FEC_ContractClosureController {
                     }
                 }
             }
-            List<PicklistEntryDTO> allDelivery = describePicklist(OBJ_CASE, FLD_DELIVERY);
-            out.deliveryOptions = buildDeliveryPicklistFiltered(allDelivery, formMode, subCodeFilter);
+            out.deliveryOptions = describePicklist(OBJ_CASE, FLD_DELIVERY);
             out.wardOptions = mergePicklistOptions(
                 describePicklist(OBJ_ADDRESS, 'FEC_Ward__c'),
                 describePicklist(OBJ_ADDRESS, 'FEC_Ward_Text__c')
@@ -283,42 +281,9 @@ public without sharing class FEC_ContractClosureController {
         return out;
     }
 
-    @AuraEnabled(cacheable=true)
-    public static InitDataDTO getInitData(Id caseId) {
-        return getInitDataInternal(caseId, null, null);
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static InitDataDTO getClosureFormInitData(Id caseId, String formMode, String subCodeFilter) {
-        return getInitDataInternal(caseId, formMode, subCodeFilter);
-    }
-
-    private static InitDataDTO getInitDataInternalForPersist(Id caseId) {
-        String fm = null;
-        String sf = null;
-        if (caseId != null) {
-            List<Case> cr = [
-                SELECT FEC_SubCategory__r.FEC_Code__c, FEC_SubCode__r.FEC_Code__c
-                FROM Case
-                WHERE Id = :caseId
-                LIMIT 1
-            ];
-            if (!cr.isEmpty()) {
-                sf = cr[0].FEC_SubCode__r == null ? null : cr[0].FEC_SubCode__r.FEC_Code__c;
-                String sc = cr[0].FEC_SubCategory__r == null
-                    ? null
-                    : cr[0].FEC_SubCategory__r.FEC_Code__c;
-                if (String.isNotBlank(sc) && sc.toUpperCase().contains('RL05')) {
-                    fm = 'MRC';
-                }
-            }
-        }
-        return getInitDataInternal(caseId, fm, sf);
-    }
-
     @AuraEnabled
     public static ValidationResultDTO validateForComplete(Id caseId, String payloadJson) {
-        InitDataDTO init = getInitDataInternalForPersist(caseId);
+        InitDataDTO init = getInitData(caseId);
         SavePayloadDTO p = parsePayload(payloadJson);
         return runValidation(init, p, true, true);
     }
@@ -326,7 +291,7 @@ public without sharing class FEC_ContractClosureController {
     @AuraEnabled
     public static ValidationResultDTO saveForm(Id caseId, String payloadJson) {
         ValidationResultDTO vr = new ValidationResultDTO();
-        InitDataDTO init = getInitDataInternalForPersist(caseId);
+        InitDataDTO init = getInitData(caseId);
         if (!init.success) {
             vr.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
             return vr;
@@ -342,7 +307,7 @@ public without sharing class FEC_ContractClosureController {
     @AuraEnabled
     public static ValidationResultDTO saveFormDraft(Id caseId, String payloadJson) {
         ValidationResultDTO vr = new ValidationResultDTO();
-        InitDataDTO init = getInitDataInternalForPersist(caseId);
+        InitDataDTO init = getInitData(caseId);
         if (!init.success) {
             vr.addFail(init.errorMessage != null ? init.errorMessage : System.Label.FEC_Cannot_Refresh_Data);
             return vr;
@@ -654,25 +619,26 @@ public without sharing class FEC_ContractClosureController {
         Boolean hasEmail = p.deliveryEmailSelected == true;
         Boolean hasAddr = p.deliveryAddressSelected == true;
         Boolean hasOffice = p.deliveryOfficeSelected == true;
-        Boolean hasPos = p.deliveryPosSelected == true;
-        Integer physicalExclusive = 0;
+        Integer cnt = 0;
+        if (hasEmail) {
+            cnt++;
+        }
         if (hasAddr) {
-            physicalExclusive++;
+            cnt++;
         }
         if (hasOffice) {
-            physicalExclusive++;
+            cnt++;
         }
-        if (hasPos) {
-            physicalExclusive++;
-        }
-        if (physicalExclusive > 1) {
-            r.addFail(MSG_NOTI_02);
-        }
-        Integer cnt = physicalExclusive + (hasEmail ? 1 : 0);
         if (cnt == 0) {
             if (forComplete || requireDelivery) {
                 r.addFail(MSG_NOTI_02);
             }
+        }
+        if (hasAddr && hasOffice) {
+            r.addFail(MSG_NOTI_02);
+        }
+        if (cnt > 2) {
+            r.addFail(MSG_NOTI_02);
         }
         if (hasEmail) {
             String channel = p.emailDeliveryChannel;
@@ -702,21 +668,6 @@ public without sharing class FEC_ContractClosureController {
                         r.addFail(MSG_NOTI_02);
                     }
                 }
-            }
-        }
-        if (hasOffice || hasPos) {
-            String rnPhy = p.recipientName != null ? p.recipientName.trim() : FEC_ConstantCommon.STR_EMPTY;
-            String rpPhy = p.recipientPhone != null
-                ? FEC_CommonUltils.normalizePhone(p.recipientPhone)
-                : FEC_ConstantCommon.STR_EMPTY;
-            if (forComplete && String.isBlank(rnPhy)) {
-                r.addFail(MSG_NOTI_01);
-            }
-            if (forComplete && String.isBlank(rpPhy)) {
-                r.addFail(MSG_NOTI_01);
-            }
-            if (String.isNotBlank(rpPhy) && !FEC_CommonUltils.isPhone(rpPhy)) {
-                r.addFail(MSG_NOTI_16);
             }
         }
         if (hasAddr) {
@@ -1082,39 +1033,6 @@ public without sharing class FEC_ContractClosureController {
 
     private static String flc(String api) {
         return api != null ? api.toLowerCase() : FEC_ConstantCommon.STR_EMPTY;
-    }
-
-    /** MRC Return: ẩn Email trên picklist trừ RL05.03; POS do metadata picklist. */
-    private static List<PicklistEntryDTO> buildDeliveryPicklistFiltered(
-        List<PicklistEntryDTO> describeAll,
-        String formMode,
-        String subCodeFilter
-    ) {
-        if (describeAll == null) {
-            return new List<PicklistEntryDTO>();
-        }
-        if (String.isBlank(formMode) || !'MRC'.equalsIgnoreCase(formMode.trim())) {
-            return describeAll;
-        }
-        Boolean includeEmail =
-            String.isNotBlank(subCodeFilter) && subCodeFilter.toUpperCase().contains('RL05.03');
-        List<PicklistEntryDTO> filtered = new List<PicklistEntryDTO>();
-        for (PicklistEntryDTO e : describeAll) {
-            if (e == null) {
-                continue;
-            }
-            String combo = (
-                (e.value != null ? e.value : FEC_ConstantCommon.STR_EMPTY) +
-                ' ' +
-                (e.label != null ? e.label : FEC_ConstantCommon.STR_EMPTY)
-            )
-                .toUpperCase();
-            if (combo.contains('EMAIL') && !includeEmail) {
-                continue;
-            }
-            filtered.add(e);
-        }
-        return filtered;
     }
 
     private static List<PicklistEntryDTO> describePicklist(String obj, String fieldApi) {

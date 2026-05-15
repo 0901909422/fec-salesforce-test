@@ -127,9 +127,6 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
         syncAssignmentUsersOnOwnerChange(newCases, oldMap);
-        if (!FEC_CaseTriggerHandler.isSystemUpdate) {
-            FEC_MrcDuplicateCaseService.applyHandlingOptionChanges(newCases, oldMap);
-        }
         isExecuting = false;
     }
 

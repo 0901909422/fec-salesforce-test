@@ -1,6 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
-import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
@@ -50,7 +49,6 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
-import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -515,7 +513,7 @@ function normalizeMasterDataLwcEntry(entry) {
   };
 }
 
-export default class Fec_CaseBussiness extends NavigationMixin(LightningElement) {
+export default class Fec_CaseBussiness extends LightningElement {
 
   @api recordId;
 
@@ -1022,33 +1020,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
-    confirmLabel: FEC_Confirm_Label,
-    mrcDupOpenCaseBtn: "Mở Case trước",
-  };
-
-  get showMrcRl0502DupBanner() {
-    const v = this.business?.mrcRl0502DuplicateOpenCaseId;
-    return typeof v === "string" && v.length >= 15;
-  }
-
-  get mrcRl0502DupBannerText() {
-    const num = this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY;
-    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
-  }
-
-  handleOpenMrcDupCase() {
-    const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
-    if (!rid) {
-      return;
-    }
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: rid,
-        objectApiName: "Case",
-        actionName: "view",
-      },
-    });
+    confirmLabel: FEC_Confirm_Label
   }
 
   @api getNatureOfCaseId() {
