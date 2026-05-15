@@ -1,5 +1,5 @@
 // tungnm37: Handler sync Case.FEC_Assignment_Users__c khi FEC_Assignment_Owner__c thay đổi
-// tungnm37 fix: chỉ cập nhật FEC_Assignment_Users__c cho Routing assignment (assignment mới tự động)
+// tungnm37 fix: cập nhật FEC_Assignment_Users__c cho tất cả Routing assignment (cả auto và manual)
 // tungnm37 fix: để null cho General assignment (thủ công) và khi submit ở stage 1
 public without sharing class FEC_AssignmentTriggerHandler {
 
@@ -7,25 +7,21 @@ public without sharing class FEC_AssignmentTriggerHandler {
         Set<Id> caseIds = new Set<Id>();
         for (FEC_Assignment__c assignment : newList) {
             FEC_Assignment__c oldAssignment = oldMap.get(assignment.Id);
-            // tungnm37 fix: chỉ trigger khi Routing assignment (auto) thay đổi owner
-            // tungnm37 fix: bỏ qua manual assignment (FEC_Manual__c = true)
+            // tungnm37 fix: trigger khi Assignment Owner thay đổi (cả auto và manual)
             if (assignment.FEC_Assignment_Owner__c != oldAssignment.FEC_Assignment_Owner__c 
-                && assignment.FEC_Case__c != null
-                && assignment.FEC_Assignment_Type__c == FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
-                && assignment.FEC_Manual__c != true) {
+                && assignment.FEC_Case__c != null) {
                 caseIds.add(assignment.FEC_Case__c);
             }
         }
 
         if (caseIds.isEmpty()) return;
 
-        // tungnm37 fix: query thêm FEC_Assignment_Type__c và FEC_Manual__c để filter
+        // tungnm37 fix: query thêm FEC_Assignment_Owner_Text__c để lấy tên owner
         Map<Id, List<FEC_Assignment__c>> caseToAssignments = new Map<Id, List<FEC_Assignment__c>>();
-        Set<Id> userIds = new Set<Id>();
         
         for (FEC_Assignment__c assignment : [
             SELECT Id, FEC_Case__c, FEC_Assignment_Owner__c, FEC_OwnerID__c, 
-                   FEC_Assignment_Type__c, FEC_Manual__c
+                   FEC_Assignment_Type__c, FEC_Manual__c, FEC_Assignment_Owner_Text__c
             FROM FEC_Assignment__c
             WHERE FEC_Case__c IN :caseIds
         ]) {
@@ -33,39 +29,6 @@ public without sharing class FEC_AssignmentTriggerHandler {
                 caseToAssignments.put(assignment.FEC_Case__c, new List<FEC_Assignment__c>());
             }
             caseToAssignments.get(assignment.FEC_Case__c).add(assignment);
-            
-            // tungnm37 fix: collect user IDs để query User Name
-            if (assignment.FEC_Assignment_Owner__c != null) {
-                userIds.add(assignment.FEC_Assignment_Owner__c);
-            }
-        }
-        
-        // tungnm37 fix: query User Names
-        Map<Id, String> userIdToName = new Map<Id, String>();
-        if (!userIds.isEmpty()) {
-            for (User u : [SELECT Id, Name FROM User WHERE Id IN :userIds]) {
-                userIdToName.put(u.Id, u.Name);
-            }
-        }
-
-        // tungnm37 fix: chỉ query queues cho auto Routing assignments (không phải manual)
-        Set<String> queueNamesNeeded = new Set<String>();
-        for (List<FEC_Assignment__c> aList : caseToAssignments.values()) {
-            for (FEC_Assignment__c a : aList) {
-                // tungnm37 fix: chỉ xử lý auto Routing assignment (không phải manual)
-                if (a.FEC_Assignment_Type__c == FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING 
-                    && a.FEC_Manual__c != true
-                    && String.isNotBlank(a.FEC_OwnerID__c) 
-                    && a.FEC_Assignment_Owner__c == null) {
-                    queueNamesNeeded.add(a.FEC_OwnerID__c);
-                }
-            }
-        }
-        Map<String, String> queueNameToDisplayName = new Map<String, String>();
-        if (!queueNamesNeeded.isEmpty()) {
-            for (Group g : [SELECT Id, Name FROM Group WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name IN :queueNamesNeeded]) {
-                queueNameToDisplayName.put(g.Name, g.Name); // tungnm37: lưu Queue Name (không phải ID)
-            }
         }
 
         List<Case> casesToUpdate = new List<Case>();
@@ -74,15 +37,12 @@ public without sharing class FEC_AssignmentTriggerHandler {
             Boolean hasRoutingAssignment = false;
             
             for (FEC_Assignment__c assignment : caseToAssignments.get(caseId)) {
-                // tungnm37 fix: chỉ xử lý auto Routing assignment (không phải manual)
-                if (assignment.FEC_Assignment_Type__c == FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING
-                    && assignment.FEC_Manual__c != true) {
+                // tungnm37 fix: xử lý tất cả Routing assignment (cả auto và manual)
+                if (assignment.FEC_Assignment_Type__c == FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING) {
                     hasRoutingAssignment = true;
-                    // tungnm37 fix: lưu User Name thay vì User ID
-                    if (assignment.FEC_Assignment_Owner__c != null && userIdToName.containsKey(assignment.FEC_Assignment_Owner__c)) {
-                        assignmentUserSet.add(userIdToName.get(assignment.FEC_Assignment_Owner__c));
-                    } else if (String.isNotBlank(assignment.FEC_OwnerID__c) && queueNameToDisplayName.containsKey(assignment.FEC_OwnerID__c)) {
-                        assignmentUserSet.add(queueNameToDisplayName.get(assignment.FEC_OwnerID__c));
+                    // tungnm37 fix: lưu FEC_Assignment_Owner_Text__c (formula field đã tính sẵn)
+                    if (String.isNotBlank(assignment.FEC_Assignment_Owner_Text__c)) {
+                        assignmentUserSet.add(assignment.FEC_Assignment_Owner_Text__c);
                     }
                 }
             }
