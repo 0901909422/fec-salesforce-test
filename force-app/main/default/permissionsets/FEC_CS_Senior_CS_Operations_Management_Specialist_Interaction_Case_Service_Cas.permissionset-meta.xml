@@ -3928,6 +3928,11 @@
         <field>Case.FEC_Assigment_Mode__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior CS Operations Management Specialist - Interaction Case &amp; Service Cas</label>
     <license>Salesforce</license>
@@ -4279,9 +4284,4 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
 </PermissionSet>
