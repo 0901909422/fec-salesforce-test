@@ -109,7 +109,7 @@
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
-        <!--<members>FEC_PointsRedemptionCaseController</members>-->
+        <members>FEC_PointsRedemptionCaseController</members>
         <members>FEC_HoldCaseController</members>
         <members>FEC_FullCustomerIntegrationJob</members>
         <members>FEC_SearchController</members>
@@ -120,7 +120,32 @@
 	    <members>FEC_AssignmentTriggerHandler</members>
 	    <members>FEC_NatureOfCaseTriggerHandler</members>
 	    <members>FEC_NocChannelConfigController</members>
+        <members>FEC_BatchCaseHandlingController</members>
+        <members>FEC_BatchCaseHandlingCaseFilter</members>
+        <members>FEC_BatchCaseHandlingTemplateHelper</members>
+        <members>FEC_BatchCaseHandlingSObjectUtil</members>
+        <members>FEC_BatchCaseHandlingZipResult</members>
+        <members>FEC_BatchCaseHandlingZipService</members>
+        <members>FEC_BatchCaseHandlingImportRow</members>
+        <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_SubProcessService</members>
+        <members>Fec_HoldCaseConfigurationController</members>
+        <members>FEC_ChannelFunctionService</members>
+	    <members>FEC_ChannelFunctionServiceTest</members>
+	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
+	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
+        <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_ApplicationListTriggerHandler</members>
+        <members>FEC_CMSRewardRedeemService</members>
+		<members>FEC_CMSRewardRedeemServiceTest</members>
+		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentConfigController</members>
+		<members>FEC_CaseAssignmentConflictService</members>
+		<members>FEC_CaseAssignmentConflictServiceTest</members>
+		<members>FEC_CaseAssignmentNOCDraftTest</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -128,6 +153,8 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
+        <members>FEC_ApplicationListTrigger</members>
+		<members>FEC_CaseAssignmentNOCTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -520,11 +547,16 @@
 		<members>Case.FEC_Redeemed_Points__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
+        <members>Case.FEC_Owner_In_Assignment_Users__c</members>
         <name>CustomField</name>
     </types>
     <types>
         <members>FEC_Routing_Assignment__c</members>
         <members>FEC_BancaTabView</members>
+        <members>FEC_Template_Import__c</members>
+        <members>FEC_HoldCaseConfiguration</members>
+		<members>FEC_Case_Assignment__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
@@ -547,10 +579,19 @@
         <members>FEC_Incorrect_Payment_Info__c</members>
         <members>FEC_Contract_List_for_Remove_Phone__c</members>
         <members>FEC_Assignment_MDS__c</members>
+        <members>FEC_Batch_Case_Handling__c</members>
+        <members>FEC_Template_Import__c</members>
+        <members>FEC_Hold_Case_Config__c</members>
+        <members>FEC_Sales_Logic__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c</members>
+		<members>FEC_Case_Assignment_Logs__c</members>
+		<members>FEC_Case_Assignment_NOC__c</members>
+		<members>FEC_Case_Assignment__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
+		<members>fecCaseAssignmentNewOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
@@ -558,6 +599,10 @@
         <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
         <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
+		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
+        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
+        <members>FEC_Case_Assignment_NOC__c-Case Assignmetn NOC Layout</members>
+		<members>FEC_Case_Assignment__c-Case Assignment Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
@@ -567,6 +612,10 @@
         <members>FEC_Assignment_Record_Page</members>
         <members>Channel_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Batch_Case_Handling</members>
+		<members>Template_Import_Record_Page</members>
+		<members>Hold_Case_Config_Record_Page</members>
+		<members>FEC_Case_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -608,16 +657,31 @@
         <members>fec_Banca</members>
 		<members>fec_BancaTabView</members>
         <members>fec_RdPaymentRoutingUtils</members>
-		<!--<members>fec_PointsRedemptionCaseForm</members>-->
+		<members>fec_PointsRedemptionCaseForm</members>
 		<members>fec_ChannelConfig</members>
 		<members>fec_NocChannelConfig</members>
+        <members>fec_BatchCaseHandling</members>
         <members>fec_SubProcessContainer</members>
         <members>fec_CustomDoNotBotherViewDatatable</members>
         <members>fec_MaskedContactTemplate</members>
         <members>fec_TransferCall</members>
         <members>fec_AssigmentListView</members>
         <members>fec_AssignmentViewAll</members>
+        <members>fec_CommonDetailView</members>
+        <members>fec_HoldCaseConfiguration</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_RelatedListPaging</members>
+        <members>fec_holdCaseManual</members>
+        <members>fecCaseAssignmentNewForm</members>
+		<members>fec_CaseAssignmentConfig</members>
+		<members>fec_CaseAssignmentDetailSummary</members>
+		<members>fec_CaseAssignmentNocConfig</members>
 		<name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>FEC_SheetJS</members>
+		<members>FEC_CommonCss</members>
+        <name>StaticResource</name>
     </types>
 	<types>
         <members>FEC_Collection_Date_Filter</members>
@@ -627,6 +691,7 @@
     </types>
     <types>
         <members>FEC_DNB_Reason</members>
+        <members>FEC_Status</members>
         <name>GlobalValueSet</name>
     </types>
     <types>
@@ -846,6 +911,163 @@
 		<members>FEC_Collections_Transfer_MaxFailed_Summary</members>
 		<members>FEC_TransferCall_Modal_RemarkRequired</members>
 		<members>CS_OrgChart_Table_UserTable_UserRole_Column</members>
+        <members>FEC_Batch_Case_Handling_Import_Row_Status_Failed</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Attachment_Data</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_Set_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Cases_In_Range</members>
+        <members>FEC_Batch_Case_Handling_Zip_Cases_No_Attachments</members>
+        <members>FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed</members>
+        <members>FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded</members>
+        <members>FEC_Batch_Case_Handling_Zip_Download_Success</members>
+        <members>FEC_Batch_Case_Handling_Zip_No_Files_To_Zip</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Zip_Case_No_Attachments</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Case_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Case_Id_Not_Found</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Case_Closed</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Duplicate_Case_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Id_Not_Found</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Closed</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Both_Routing_Actions</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Or_Assignment_Routing</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Routing_Action_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Resolve_Only</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Routing_Action</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Assignment_Routing_Without_Assignment_Id</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Routing_For_Process</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_No_Assignment_Id_For_Process</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Missing_Remark</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Remark_Too_Long</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Record_Id_Invalid</members>
+        <members>FEC_Batch_Case_Handling_Import_Err_Routing_Requires_Params</members>
+        <members>FEC_BCH_RequestTimeout</members>
+        <members>FEC_BCH_NoDataExport</members>
+        <members>FEC_BCH_NoDataFound</members>
+        <members>FEC_BCH_ExportSuccess</members>
+        <members>FEC_BCH_ExportFailed</members>
+        <members>FEC_BCH_ImportSuccess</members>
+        <members>FEC_BCH_ImportFailed</members>
+        <members>FEC_BCH_RequireFile</members>
+        <members>FEC_BCH_InvalidFileFormat</members>
+        <members>FEC_BCH_FileTooLarge</members>
+        <members>FEC_BCH_FileNoData</members>
+        <members>FEC_BCH_HeaderInvalid</members>
+        <members>FEC_BCH_BpRequired</members>
+        <members>FEC_BCH_NoBpFound</members>
+        <members>FEC_BCH_TooManyRows</members>
+        <members>FEC_BCH_ExportNo</members>
+        <members>FEC_BCH_ExportYes</members>
+        <members>FEC_BCH_AttachHas</members>
+        <members>FEC_BCH_AttachNo</members>
+        <members>FEC_BCH_ActionPickPlaceholder</members>
+        <members>FEC_BCH_ActionDownload</members>
+        <members>FEC_BCH_ActionExportAll</members>
+        <members>FEC_BCH_ActionExportSelected</members>
+        <members>FEC_BCH_ActionImportUpdate</members>
+        <members>FEC_BCH_ResultHdr_RoutingAction</members>
+        <members>FEC_BCH_ResultHdr_Remarks</members>
+        <members>FEC_BCH_ResultHdr_Status</members>
+        <members>FEC_BCH_ResultHdr_Errors</members>
+        <members>FEC_BCH_ResultHdr_AssignmentId</members>
+        <members>FEC_BCH_ResultHdr_AssignmentRouting</members>
+        <members>FEC_BCH_FilterPickProperty</members>
+        <members>FEC_BCH_FilterPickOperator</members>
+        <members>FEC_BCH_NoticeTitle</members>
+        <members>FEC_BCH_FilterMetaLoadFailed</members>
+        <members>FEC_BCH_SearchFailedTitle</members>
+        <members>FEC_BCH_DownloadFailedTitle</members>
+        <members>FEC_BCH_AttachmentDownloadFailedBody</members>
+        <members>FEC_BCH_ExportToastTitle</members>
+        <members>FEC_BCH_SelectAtLeastOneCase</members>
+        <members>FEC_BCH_DownloadToastTitle</members>
+        <members>FEC_BCH_CannotCreateExportFile</members>
+        <members>FEC_BCH_ZipCreatedSuccess</members>
+        <members>FEC_BCH_ZipCreateFailedBody</members>
+        <members>FEC_BCH_LoadFailedTitle</members>
+        <members>FEC_BCH_InvalidPageTitle</members>
+        <members>FEC_BCH_InvalidPageBody</members>
+        <members>FEC_BCH_UnexpectedError</members>
+        <members>FEC_BCH_ImportUnablePrefix</members>
+        <members>FEC_BCH_DataFileFallback</members>
+        <members>FEC_BCH_EmptyCasesHint</members>
+        <members>FEC_BCH_DocumentLinkLabel</members>
+        <members>FEC_BCH_BpItemSingular</members>
+        <members>FEC_BCH_BpItemPlural</members>
+        <members>FEC_BCH_BpItemsSortedSuffix</members>
+        <members>FEC_BCH_Section_FilterProperties</members>
+        <members>FEC_BCH_FilterHelpAnd</members>
+        <members>FEC_BCH_FilterResetHint</members>
+        <members>FEC_BCH_AddFilterRow</members>
+        <members>FEC_BCH_FilterData</members>
+        <members>FEC_BCH_Reset</members>
+        <members>FEC_BCH_FilterPropertyField</members>
+        <members>FEC_BCH_PropertyPlaceholder</members>
+        <members>FEC_BCH_OperatorField</members>
+        <members>FEC_BCH_ValueField</members>
+        <members>FEC_BCH_RemoveRow</members>
+        <members>FEC_BCH_Section_FilteredCases</members>
+        <members>FEC_BCH_SelectAll</members>
+        <members>FEC_BCH_Col_CustomerType</members>
+        <members>FEC_BCH_Col_CaseId</members>
+        <members>FEC_BCH_Col_Category</members>
+        <members>FEC_BCH_Col_SubCategory</members>
+        <members>FEC_BCH_Col_SubCode</members>
+        <members>FEC_BCH_Col_CaseStatus</members>
+        <members>FEC_BCH_Col_CaseCreatedOn</members>
+        <members>FEC_BCH_Col_LastUpdatedOn</members>
+        <members>FEC_BCH_Col_Attachments</members>
+        <members>FEC_BCH_Col_AttachmentDownloaded</members>
+        <members>FEC_BCH_PageSize</members>
+        <members>FEC_BCH_TotalPrefix</members>
+        <members>FEC_BCH_Section_Action</members>
+        <members>FEC_BCH_SelectActions</members>
+        <members>FEC_BCH_CaseSet</members>
+        <members>FEC_BCH_UploadFiles</members>
+        <members>FEC_BCH_SelectedCountPrefix</members>
+        <members>FEC_BCH_Err_SelectAction</members>
+        <members>FEC_BCH_Err_SelectCaseSet</members>
+        <members>FEC_BCH_Section_MyBulkActions</members>
+        <members>FEC_BCH_Col_FileName</members>
+        <members>FEC_BCH_Col_UploadedOn</members>
+        <members>FEC_BCH_Col_UploadedBy</members>
+        <members>FEC_BCH_Col_TotalRecords</members>
+        <members>FEC_BCH_Col_TotalSuccess</members>
+        <members>FEC_BCH_Col_TotalFailed</members>
+        <members>FEC_BCH_Col_Status</members>
+        <members>FEC_BCH_Col_FailureReason</members>
+        <members>FEC_BCH_Col_Result</members>
+        <members>FEC_BCH_NoRecordsFound</members>
+        <members>FEC_BCH_RemoveFile</members>
+        <members>FEC_BCH_SortAlt</members>
+        <members>FEC_BCH_SelectRow</members>
+        <members>FEC_BCH_Modal_BpSelectionTitle</members>
+        <members>FEC_BCH_Modal_BpColName</members>
+        <members>FEC_BCH_ExportWithAllProperties</members>
+        <members>FEC_BCH_FooterOf</members>
+        <members>FEC_Btn_Previous</members>
+        <members>FEC_Btn_Next</members>
+        <members>FEC_Auto</members>
+		<members>FEC_Changed_Status</members>
+		<members>FEC_Current_Status</members>
+		<members>FEC_Date</members>
+		<members>FEC_Detail_Information</members>
+		<members>FEC_Error_Manual</members>
+		<members>FEC_Error_MessageError_For_Hold_Case</members>
+		<members>FEC_Field</members>
+		<members>FEC_HCC_Name</members>
+		<members>FEC_Hold_Case_Config</members>
+		<members>FEC_Hold_Case_Save_Success</members>
+		<members>FEC_Hold_Case_Type</members>
+		<members>FEC_List_Of_NFU_Code</members>
+		<members>FEC_Manual</members>
+		<members>FEC_NFU_Modal_Error</members>
+		<members>FEC_NFU_Modal_Save_Error</members>
+		<members>FEC_NFU_Reason_VN</members>
+		<members>FEC_New_Hold_Case_Config</members>
+		<members>FEC_New_Value</members>
+		<members>FEC_Original_Value</members>
+        <members>FEC_No_Data_Found</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -1015,6 +1237,10 @@
         <members>FEC_RD_Payment_User_Customer_360</members>
         <members>FEC_RD_Telesales_User_1_Customer_360</members>
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
+        <!-- Batch Case Handling -->
+        <members>FEC_Batch_Case_Handling</members>
+        <!-- Case Assignment -->
+        <members>FEC_Case_Assignment_Management</members>
         <name>PermissionSet</name>
     </types>
     <types>
@@ -1125,13 +1351,95 @@
 	 	<members>Case.Internal_Case</members>
 		<name>RecordType</name>
 	</types>
-    <types>
-		<members>FEC_CommonCss</members>
-		<name>StaticResource</name>
-	</types>
 	<types>
         <members>Case-en_US</members>
         <name>CustomObjectTranslation</name>
     </types>
+    <types>
+        <members>Case.FEC_Analyst_Case</members>
+        <members>Case.FEC_Business_Admin_Case</members>
+        <members>Case.FEC_CSM_Mailbox_Case</members>
+        <members>Case.FEC_Call_Colls_Support_Case</members>
+        <members>Case.FEC_Call_Queue_Case</members>
+        <members>Case.FEC_Card_Dispute_Charge_Back_Case</members>
+        <members>Case.FEC_Card_Issuance_Case</members>
+        <members>Case.FEC_Card_Ops_Control_Support_Case</members>
+        <members>Case.FEC_Card_Risk_Monitoring_Case</members>
+        <members>Case.FEC_Card_Settlement_Case</members>
+        <members>Case.FEC_Card_Transaction_Case</members>
+        <members>Case.FEC_Care_Internal_Task_Case</members>
+        <members>Case.FEC_Care_Mailbox_Case</members>
+        <members>Case.FEC_Colls_Complaint_Handling_Case</members>
+        <members>Case.FEC_Colls_Coordination_Reporting_Case</members>
+        <members>Case.FEC_Colls_Training_Case</members>
+        <members>Case.FEC_Customer_Experience_Case</members>
+        <members>Case.FEC_DQ_CS_Center_Case</members>
+        <members>Case.FEC_DQ_CS_Contact_Center_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Case</members>
+        <members>Case.FEC_DQ_CS_Customer_Care_Dept_Case</members>
+        <members>Case.FEC_DQ_CS_Ecom_Case</members>
+        <members>Case.FEC_DQ_CS_Inbound_Case</members>
+        <members>Case.FEC_DQ_CS_Office_Based_Case</members>
+        <members>Case.FEC_DQ_CS_Ops_Management_Case</members>
+        <members>Case.FEC_DQ_CS_Outbound_Case</members>
+        <members>Case.FEC_DQ_CS_QC_OM_Case</members>
+        <members>Case.FEC_DQ_CS_Quality_Control_Case</members>
+        <members>Case.FEC_DQ_CS_Support_Case</members>
+        <members>Case.FEC_DQ_Card_Operations_Case</members>
+        <members>Case.FEC_DQ_Collections_Case</members>
+        <members>Case.FEC_DQ_Contract_Processing_Case</members>
+        <members>Case.FEC_DQ_Credit_Assessment_Case</members>
+        <members>Case.FEC_DQ_Direct_Sales_Case</members>
+        <members>Case.FEC_DQ_IT_Operations_Support_Case</members>
+        <members>Case.FEC_DQ_Internal_Audit_Case</members>
+        <members>Case.FEC_DQ_POS_Sales_Case</members>
+        <members>Case.FEC_DQ_Payment_Case</members>
+        <members>Case.FEC_DQ_Telesales_Case</members>
+        <members>Case.FEC_Day_2_Check_Case</members>
+        <members>Case.FEC_Disbursal_Document_Case</members>
+        <members>Case.FEC_Doc_Processing_Archiving_Case</members>
+        <members>Case.FEC_Document_Processing_Case</members>
+        <members>Case.FEC_EC01_Case</members>
+        <members>Case.FEC_EC02_Case</members>
+        <members>Case.FEC_Ecom_Mailbox_Case</members>
+        <members>Case.FEC_Handling_Case</members>
+        <members>Case.FEC_IB01_Case</members>
+        <members>Case.FEC_IB02_Case</members>
+        <members>Case.FEC_IB03_Case</members>
+        <members>Case.FEC_IB04_Case</members>
+        <members>Case.FEC_IB05_Case</members>
+        <members>Case.FEC_IB06_Case</members>
+        <members>Case.FEC_IB07_Case</members>
+        <members>Case.FEC_Incoming_Payment_Case</members>
+        <members>Case.FEC_LG_Case</members>
+        <members>Case.FEC_Loan_Management_Case</members>
+        <members>Case.FEC_MRC_Support_Case</members>
+        <members>Case.FEC_OB01_Case</members>
+        <members>Case.FEC_OB02_Case</members>
+        <members>Case.FEC_OB03_Case</members>
+        <members>Case.FEC_OM_Mailbox_Case</members>
+        <members>Case.FEC_Office_Based_Mailbox_Case</members>
+        <members>Case.FEC_Outgoing_Payment_Case</members>
+        <members>Case.FEC_Quality_Control_Mailbox_Case</members>
+        <members>Case.FEC_Shared_Task_Case</members>
+        <members>Case.FEC_Support_Mailbox_Case</members>
+        <members>Case.FEC_WFM_Case</members>
+        <members>Case.My_Pending_Cases</members>
+        <members>Case.My_Team</members>
+        <members>Case.X2_My_Follow_Up_Cases</members>
+        <members>Case.X3_My_Completed_Cases</members>
+        <name>ListView</name>
+    </types>
+    <types>
+		<members>FEC_API_Config.FEC_Generate_Cashback</members>
+		<members>FEC_API_Config.FEC_Generate_EVoucher</members>
+		<members>FEC_API_Config.FEC_Generate_MVoucher</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_Service_Resource_Absence__c.FEC_EndDate_Greater_Than_StartDate</members>
+		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
+		<name>ValidationRule</name>
+	</types>
 	<version>66.0</version>
 </Package>

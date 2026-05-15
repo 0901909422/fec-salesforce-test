@@ -1,0 +1,258 @@
+<template>
+  <div class="detail-root slds-p-around_small">
+    <!-- Case Assignment Information -->
+    <section class="accordion-block">
+      <button
+        type="button"
+        class="section-header"
+        onclick={toggleCaseSection}
+        aria-expanded={caseInfoExpanded}
+      >
+        <lightning-icon
+          icon-name={caseSectionChevron}
+          size="x-small"
+          class="section-chevron"
+          alternative-text=""
+        ></lightning-icon>
+        <span class="section-header-text">Case Assignment Information</span>
+      </button>
+      <template if:true={caseInfoExpanded}>
+        <div class="section-body">
+          <div class="detail-grid">
+            <div class="detail-cell">
+              <div class="detail-label">Case Assignment Name</div>
+              <div class="detail-value">{displayName}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">Owner</div>
+              <div class="detail-value">{displayOwner}</div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">Status</div>
+              <div class="detail-value-row">
+                <span class="detail-value">{displayStatus}</span>
+                <lightning-button-icon
+                  icon-name="utility:edit"
+                  alternative-text="Edit Status"
+                  variant="bare"
+                  class="edit-pencil"
+                  data-field="FEC_Status__c"
+                  onclick={handleFieldEditClick}
+                ></lightning-button-icon>
+              </div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">Business Hours</div>
+              <div class="detail-value-row">
+                <template if:true={businessHoursId}>
+                  <a href="#" class="hours-link" onclick={handleBusinessHoursNav}>{displayBusinessHours}</a>
+                </template>
+                <template if:false={businessHoursId}>
+                  <span class="detail-value">{displayBusinessHours}</span>
+                </template>
+                <lightning-button-icon
+                  icon-name="utility:edit"
+                  alternative-text="Edit Business Hours"
+                  variant="bare"
+                  class="edit-pencil"
+                  data-field="FEC_Business_Hours__c"
+                  onclick={handleFieldEditClick}
+                ></lightning-button-icon>
+              </div>
+            </div>
+            <div class="detail-cell">
+              <div class="detail-label">Assignment Method</div>
+              <div class="detail-value-row">
+                <span class="detail-value">{displayMethod}</span>
+                <lightning-button-icon
+                  icon-name="utility:edit"
+                  alternative-text="Edit Assignment Method"
+                  variant="bare"
+                  class="edit-pencil"
+                  data-field="FEC_Assignment_Method__c"
+                  onclick={handleFieldEditClick}
+                ></lightning-button-icon>
+              </div>
+            </div>
+            <template if:true={isContinuousMethod}>
+              <div class="detail-cell">
+                <div class="detail-label">Scheduled Time</div>
+                <div class="detail-value-row">
+                  <span class="detail-value">{displayScheduledTime}</span>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Scheduled Time"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="FEC_Scheduled_Time__c"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </div>
+              </div>
+            </template>
+            <template if:true={isTimeBasedMethod}>
+              <div class="detail-cell detail-cell-wide">
+                <div class="detail-label">Time Slots</div>
+                <div class="detail-value-row">
+                  <span class="detail-value">{displayTimeSlots}</span>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Time Slots"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="FEC_Time_Slots__c"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- Queues -->
+    <section class="accordion-block">
+      <button
+        type="button"
+        class="section-header"
+        onclick={toggleQueuesSection}
+        aria-expanded={queuesExpanded}
+      >
+        <lightning-icon
+          icon-name={queuesSectionChevron}
+          size="x-small"
+          class="section-chevron"
+          alternative-text=""
+        ></lightning-icon>
+        <span class="section-header-text">Queues Information</span>
+      </button>
+      <template if:true={queuesExpanded}>
+        <div class="section-body">
+          <div class="detail-label">Select Queues</div>
+          <template if:true={queuesIsEmpty}>
+            <div class="empty-hint">
+              Not configured yet. Use <strong>Edit</strong> on this record (field <strong>Select Queues</strong>) to add queues.
+            </div>
+          </template>
+          <template if:false={queuesIsEmpty}>
+            <div class="detail-value queues-value">{displayQueues}</div>
+          </template>
+        </div>
+      </template>
+    </section>
+
+    <!-- Receipt Case Information -->
+    <section class="accordion-block accordion-block-last">
+      <button
+        type="button"
+        class="section-header"
+        onclick={toggleReceiptSection}
+        aria-expanded={receiptExpanded}
+      >
+        <lightning-icon
+          icon-name={receiptSectionChevron}
+          size="x-small"
+          class="section-chevron"
+          alternative-text=""
+        ></lightning-icon>
+        <span class="section-header-text">Receipt Case Information</span>
+      </button>
+      <template if:true={receiptExpanded}>
+        <div class="section-body">
+          <template if:true={receiptIsEmpty}>
+            <div class="empty-hint">
+              Not configured yet. Use <strong>Edit</strong> on this record to set <strong>Role</strong> and <strong>Scale</strong>.
+            </div>
+          </template>
+          <table class="role-table slds-table slds-table_cell-buffer slds-table_bordered">
+            <thead>
+              <tr>
+                <th scope="col">Role</th>
+                <th scope="col">Scale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template if:true={hasRoleRows}>
+                <template for:each={roleScaleRows} for:item="row">
+                  <tr key={row.key}>
+                    <td>{row.role}</td>
+                    <td>{row.scale}</td>
+                  </tr>
+                </template>
+              </template>
+              <template if:false={hasRoleRows}>
+                <tr>
+                  <td colspan="2" class="empty-cell">-</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </section>
+
+    <!-- Single-field edit modal -->
+    <template if:true={isEditModalOpen}>
+      <section role="dialog" aria-modal="true" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeEditModal}>
+              <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse" size="small"></lightning-icon>
+            </button>
+            <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium">
+            <template if:true={isEditingBusinessHours}>
+              <lightning-combobox
+                name="fecBusinessHours"
+                label="Business Hours"
+                value={modalBusinessHoursValue}
+                options={businessHoursComboboxOptions}
+                placeholder="Select Business Hours..."
+                dropdown-alignment="auto"
+                disabled={isBusinessHoursSaving}
+                onchange={handleModalBusinessHoursChange}
+              ></lightning-combobox>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isBusinessHoursSaving}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveBusinessHours}
+                  disabled={isBusinessHoursSaving}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
+            <template if:false={isEditingBusinessHours}>
+              <lightning-record-edit-form
+                key={modalFormRenderKey}
+                record-id={recordId}
+                object-api-name={objectApiName}
+                onsuccess={handleEditSuccess}
+                onerror={handleEditError}
+              >
+                <lightning-messages></lightning-messages>
+                <lightning-input-field field-name={editingFieldName} variant="label-stacked"></lightning-input-field>
+                <div class="slds-m-top_medium slds-text-align_right">
+                  <lightning-button variant="neutral" label="Cancel" onclick={closeEditModal}></lightning-button>
+                  <lightning-button variant="brand" type="submit" label="Save" class="slds-m-left_x-small"></lightning-button>
+                </div>
+              </lightning-record-edit-form>
+            </template>
+          </div>        </div>
+      </section>
+      <div
+        role="presentation"
+        class="slds-backdrop slds-backdrop_open"
+        onclick={closeEditModal}
+      ></div>
+    </template>
+  </div>
+</template>
