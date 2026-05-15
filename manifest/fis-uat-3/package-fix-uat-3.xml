@@ -37,6 +37,16 @@
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
 	    <members>FEC_CardClosureRefundController</members>
+	    <members>FEC_FastCashCaseController</members>
+        <members>FEC_RelevantTicketController</members>
+        <members>FEC_RelevantTicketTriggerHandler</members>
+        <members>FEC_COFFraudRelatedHandler</members>
+        <members>FEC_RemovePhoneController</members>
+        <members>FEC_GetIPPDetailsCallout</members>
+        <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_CardEligibilityController</members>
+        <members>FEC_AssignmentTriggerHandler</members>
+        <members>FEC_BancaController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -81,16 +91,26 @@
         <members>fecCheckEligibleLoanSection</members>
         <members>fec_CardClosureRefundForm</members>
         <members>fec_FastCashCaseForm</members>
+        <members>maskedToggleDatatable</members>
+        <members>fec_CaseExecuteVisibility</members>
+        <members>fec_RemovePhoneForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
+        <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Complain_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
+        <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
+        <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
         <name>CustomField</name>
     </types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
+        <members>FEC_Search_Case_Record_Page</members>
+        <members>FEC_Customer_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -98,10 +118,16 @@
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_LABEL_Months</members>
+        <members>FEC_LABEL_API_Code</members>
+        <members>FEC_LABEL_Description</members>
+        <members>FEC_MSG_Parsing_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
+		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
+		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -109,7 +135,16 @@
         <members>RD_IT_User_System_Management</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Customer_360</members>
+        <members>RD_IT_User_Master_Data_Management</members>
 		<name>PermissionSet</name>
+	</types>
+    <types>
+		<members>FEC_CommonCss</members>
+		<name>StaticResource</name>
+	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<name>Flow</name>
 	</types>
 	<version>66.0</version>
 </Package>

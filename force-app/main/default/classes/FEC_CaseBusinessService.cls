@@ -26,6 +26,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FEC_Business_Process__r.FEC_Code__c (quy trình Fast Card / RC11…)
+  public static final String FAST_CARD = 'Fast Cash';
   // tungnm37 thêm: COF/GSR route string constant
   public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
@@ -316,6 +318,24 @@ public without sharing class FEC_CaseBusinessService {
           }
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
+        }
+      }
+
+      result.subCategoryCode = FEC_ConstantCommon.STR_EMPTY;
+      if (String.isNotBlank(subCategoryId)) {
+        try {
+          Id subCategoryRecordId = subCategoryId;
+          List<FEC_Sub_Category__c> subCategorylst = [
+            SELECT FEC_Code__c
+            FROM FEC_Sub_Category__c
+            WHERE Id = :subCategoryRecordId
+            LIMIT 1
+          ];
+          if (!subCategorylst.isEmpty() && subCategorylst[0].FEC_Code__c != null) {
+            result.subCategoryCode = subCategorylst[0].FEC_Code__c;
+          }
+        } catch (Exception e) {
+          System.debug('getByCase subCategoryCode: ' + e.getMessage());
         }
       }
 
@@ -613,7 +633,7 @@ public without sharing class FEC_CaseBusinessService {
             'SELECT Id, Name, FEC_Business_Process__r.Name ' +
             'FROM FEC_Case_Stage__c ' +
             'WHERE Id = :id ' +
-            'AND FEC_Active__c = TRUE '; 
+            'AND FEC_Active__c = TRUE ';
             // +
             // 'AND FEC_User_Group__c INCLUDES (\'' +
             // String.join(new List<String>(rolelst), '\',\'') +
@@ -633,7 +653,7 @@ public without sharing class FEC_CaseBusinessService {
             'WHERE FEC_Nature_of_Cases__c = :nocIdForDefaultStageQuery ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ';
-            // + 
+            // +
             // 'AND FEC_User_Group__c INCLUDES (\'' +
             // String.join(new List<String>(rolelst), '\',\'') +
             // '\')';
@@ -719,6 +739,10 @@ public without sharing class FEC_CaseBusinessService {
         Decimal subSectionLayoutTemp;
         SObject objTemp;
 
+        Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
+        Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
+        result.contextFlags.put('isCOFStage1Revert', isCOFStage1Revert);
+
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -730,11 +754,19 @@ public without sharing class FEC_CaseBusinessService {
           );
           String itemType = (String) item.get('FEC_Type__c');
 
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FAST_CARD: chỉ ẩn subsection C360 Info; section Account Information và subsection khác vẫn render.
+          if (
+            FAST_CARD.equals(businessProcessCode) &&
+            'C360 Info'.equals(subSectionNameTemp)
+          ) {
+            continue;
+          }
+
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
 
-              //Có khác: 
+              //Có khác:
               if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
                 continue;
               }
@@ -760,11 +792,11 @@ public without sharing class FEC_CaseBusinessService {
             sectionTemp = new Section(sectionNameTemp);
             result.sectionlst.add(sectionTemp);
           }
-
+          Boolean isCOFStage1NotRevert = !isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
-            Boolean isCOFStage1NotRevert = !isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
-            Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW && selectedStage.Name.contains(FEC_ConstantCommon.STAGE_ONE);
+            // COF General Flow Stage 1: chỉ ẩn / remap subsection cho LWC Original Info (ORIGINAL_LWC_COF); các LWC khác vẫn hiển thị bình thường.
+            Boolean isOriginalLwcCof = String.isNotBlank(lwcName) && FEC_ConstantCommon.ORIGINAL_LWC_COF.equalsIgnoreCase(lwcName);
             if (String.isNotBlank(lwcName) && !isCOFStage1NotRevert) {
               DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
               lwcSlot.componentName = lwcName;
@@ -772,7 +804,7 @@ public without sharing class FEC_CaseBusinessService {
               lwcSlot.fieldLayout = (Decimal) item.get(
                 'FEC_Sub_Section_Field_Layout__c'
               );
-              lwcSlot.subSectionName = isCOFStage1Revert ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
+              lwcSlot.subSectionName = (isCOFStage1Revert && isOriginalLwcCof) ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
               lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
                 item,
                 currentUser.FEC_User_Group__c,
@@ -789,6 +821,9 @@ public without sharing class FEC_CaseBusinessService {
                 'Original Info'.equals(subSectionNameTemp)
               ) {
                 lwcSlot.hideSubSectionHeading = true;
+              }
+              if (isCOF && (subSectionNameTemp == FEC_ConstantCommon.ORIGINAL_INFO || subSectionNameTemp == FEC_ConstantCommon.UPDATED_INFO)) {
+                lwcSlot.isCollapsible = (checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_ONE) && isLatestRevertToCurrentStage) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_TWO) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_THREE);
               }
               sectionTemp.componentlst.add(lwcSlot);
             }
@@ -818,6 +853,10 @@ public without sharing class FEC_CaseBusinessService {
                 subSectionTemp != null
               ) {
                 subSectionTemp.hideSubSectionHeading = true;
+              }
+
+              if (subSectionTemp != null && isCOF && (subSectionNameTemp == FEC_ConstantCommon.ORIGINAL_INFO || subSectionNameTemp == FEC_ConstantCommon.UPDATED_INFO)) {
+                subSectionTemp.isCollapsible = (checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_ONE) && isLatestRevertToCurrentStage) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_TWO) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_THREE);
               }
 
               cObjTemp = subSectionTemp.findObj(cObjNameTemp);
@@ -1067,7 +1106,9 @@ public without sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
       // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
-      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 fix: khi Revert về Stage 1 (Default Stage) → isSubmited = false để hiện read-only display
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true
+          && result.lockApiLwcsAfterRevertToDefaultStage != true;
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
@@ -1092,6 +1133,9 @@ public without sharing class FEC_CaseBusinessService {
     return result;
   }
 
+  private static Boolean checkStageName(String selectedStageName, String stageName){
+    return selectedStageName?.contains(stageName);
+  }
   @AuraEnabled
   public static void saveCaseNOC(String caseId, String natureOfCaseId) {
     if (String.isBlank(caseId) || String.isBlank(natureOfCaseId))
@@ -2410,14 +2454,11 @@ public without sharing class FEC_CaseBusinessService {
         ' description=' + history.FEC_Description__c
       );
 
-      // tungnm37 thêm: tạo Assignment + Case Remarks khi Route to
-      // Bỏ qua khi nextTeam = CC hoặc SP (luồng Manual, user tự thêm qua nút Add Item)
-      String nextTeamForAssignment = selectedChange != null
-        ? [SELECT FEC_Team_User_Group__c FROM FEC_Stage_Change__c WHERE Id = :selectedChange.Id LIMIT 1]?.FEC_Team_User_Group__c
-        : null;
-      Boolean isManualTeam = ('CC'.equals(nextTeamForAssignment) || 'SP'.equals(nextTeamForAssignment));
-      if (!isManualTeam) {
-        Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+      // tungnm37 fix: chỉ skip khi TẤT CẢ teams đều là CC/SP (thủ công - user thêm qua Add Item)
+      // Nếu có bất kỳ team nào khác CC/SP → tạo Assignment tự động cho tất cả team
+      Set<Id> nocIds = FEC_CofGsrAssignmentService.resolveToNocIds(natureOfCaseId);
+      Boolean hasNonCcSpTeam = FEC_CofGsrAssignmentService.hasNonCcSpTeam(nocIds);
+      if (hasNonCcSpTeam) {
         FEC_CofGsrAssignmentService.createAssignmentsOnRoute(caseId, nocIds, currentUser, history.Id, history.FEC_Stage_Name__c, null);
       }
 
@@ -3400,7 +3441,7 @@ public without sharing class FEC_CaseBusinessService {
         List<PicklistOptionDto> options = new List<PicklistOptionDto>();
         for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
           if (entry.isActive()) {
-            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel()));
+            options.add(new PicklistOptionDto(entry.getValue(), entry.getLabel(), entry.isDefaultValue()));
           }
         }
         fieldToOptions.put(fieldName, options);
@@ -3651,6 +3692,9 @@ public without sharing class FEC_CaseBusinessService {
     public String subCodeCode;
 
     @AuraEnabled
+    public String subCategoryCode;
+
+    @AuraEnabled
     public String stage;
 
     @AuraEnabled
@@ -3694,6 +3738,9 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
+    @AuraEnabled
+    public Map<String, Boolean> contextFlags;
+
     // @AuraEnabled
     // public FEC_CommonUltils.PicklistOption lastQueue;
 
@@ -3701,6 +3748,7 @@ public without sharing class FEC_CaseBusinessService {
       this.routingActionlst = new List<Action>();
       this.processActionlst = new List<Action>();
       this.sectionlst = new List<Section>();
+      this.contextFlags = new Map<String, Boolean>();
 
       // this.lastQueue = new FEC_CommonUltils.PicklistOption();
 
@@ -3745,6 +3793,8 @@ public without sharing class FEC_CaseBusinessService {
     /** true: không hiển thị dòng label subsection (vd Original Info + GSR trên NOC flow history). */
     @AuraEnabled
     public Boolean hideSubSectionHeading;
+    @AuraEnabled
+    public Boolean isCollapsible;
   }
 
   public class Section implements Comparable {
@@ -3772,6 +3822,9 @@ public without sharing class FEC_CaseBusinessService {
 
     @AuraEnabled
     public List<DynamicLwcComponent> componentlst;
+
+    @AuraEnabled
+    public Boolean isCollapsible;
 
     // Default constructor
     public Section() {
@@ -4012,6 +4065,8 @@ public without sharing class FEC_CaseBusinessService {
     public String value;
     @AuraEnabled
     public String label;
+    @AuraEnabled
+    public Boolean isDefault;
 
     public PicklistOptionDto() {
     }
@@ -4019,6 +4074,12 @@ public without sharing class FEC_CaseBusinessService {
     public PicklistOptionDto(String value, String label) {
       this.value = value;
       this.label = label;
+    }
+    
+    public PicklistOptionDto(String value, String label, Boolean isDefault) {
+      this.value = value;
+      this.label = label;
+      this.isDefault = isDefault;
     }
   }
 

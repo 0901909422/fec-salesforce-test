@@ -1,9 +1,31 @@
+.custom-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.custom-table td {
+    vertical-align: top;
+}
+
+/* REMARKS */
 .remarks-cell {
     width: 140px;
     min-width: 140px;
 
     white-space: pre-line;
     word-break: break-word;
+}
 
-    vertical-align: middle;
+.remarks-cell lightning-textarea {
+    width: 100%;
+}
+
+/* UPDATE REASON */
+.update-reason-cell {
+    width: 320px;
+    min-width: 320px;
+}
+
+.update-reason-cell lightning-combobox {
+    width: 100%;
 }
