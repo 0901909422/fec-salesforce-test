@@ -1,4 +1,5 @@
 public with sharing class FEC_AssignmentExecuteService {
+
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
         @AuraEnabled public Boolean shouldUpdate;
@@ -383,49 +384,7 @@ public with sharing class FEC_AssignmentExecuteService {
         /*
          * STEP 4
          * Find executable assignments
-         * tungnm37 fix: bulk hóa SOQL ra ngoài loop để tránh Too many SOQL queries
          */
-
-        // tungnm37: collect tất cả queue IDs cần check
-        Set<Id> allQueueIds = new Set<Id>();
-        for (Group g : queueByName.values()) {
-            allQueueIds.add(g.Id);
-        }
-
-        // tungnm37: bulk query GroupMember cho user trực tiếp
-        Set<Id> userDirectQueueIds = new Set<Id>();
-        if (!allQueueIds.isEmpty()) {
-            for (GroupMember gm : [
-                SELECT GroupId FROM GroupMember
-                WHERE GroupId IN :allQueueIds AND UserOrGroupId = :userId
-            ]) {
-                userDirectQueueIds.add(gm.GroupId);
-            }
-        }
-
-        // tungnm37: bulk query GroupMember cho role
-        Set<Id> roleQueueIds = new Set<Id>();
-        if (!allQueueIds.isEmpty() && currentUser.UserRoleId != null) {
-            Set<Id> roleGroupIds = new Set<Id>();
-            for (Group rg : [
-                SELECT Id FROM Group
-                WHERE Type IN ('Role', 'RoleAndSubordinates', 'RoleAndSubordinatesInternal')
-                  AND RelatedId = :currentUser.UserRoleId
-            ]) {
-                roleGroupIds.add(rg.Id);
-            }
-            if (!roleGroupIds.isEmpty()) {
-                for (GroupMember gm : [
-                    SELECT GroupId FROM GroupMember
-                    WHERE GroupId IN :allQueueIds AND UserOrGroupId IN :roleGroupIds
-                ]) {
-                    roleQueueIds.add(gm.GroupId);
-                }
-            }
-        }
-
-        System.debug('userDirectQueueIds = ' + userDirectQueueIds);
-        System.debug('roleQueueIds = ' + roleQueueIds);
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
         
         for (FEC_Assignment__c assignment : assignments) {
@@ -436,32 +395,49 @@ public with sharing class FEC_AssignmentExecuteService {
              */
             if (assignment.FEC_Assignment_Owner__c == userId) {
                 matched = true;
+                
                 System.debug('MATCH DIRECT OWNER => ' + assignment.Id);
             }
             
             /*
-             * QUEUE OWNER - tungnm37 fix: dùng pre-queried sets thay vì SOQL trong loop
+             * QUEUE OWNER
              */
-            if (
-                !matched
-                &&
-                assignment.FEC_Assignment_Owner__c == null
-                &&
-                queueByName.containsKey(assignment.FEC_OwnerID__c)
-            ) {
+            if (!matched && assignment.FEC_Assignment_Owner__c == null
+            && queueByName.containsKey(assignment.FEC_OwnerID__c)) {
                 Group queueGroup = queueByName.get(assignment.FEC_OwnerID__c);
+                
                 System.debug('CHECK QUEUE => ' + queueGroup.Name);
-
-                // tungnm37: check direct user in queue (bulk queried)
-                if (userDirectQueueIds.contains(queueGroup.Id)) {
+                
+                /*
+                 * direct user in queue
+                 */
+                Integer directUserCount =
+                    [SELECT COUNT() FROM GroupMember WHERE
+                GroupId = : queueGroup.Id AND UserOrGroupId = : userId];
+                
+                if (directUserCount > 0) {
                     matched = true;
+                    
                     System.debug('MATCH DIRECT QUEUE USER');
                 }
-
-                // tungnm37: check role in queue (bulk queried)
-                if (!matched && roleQueueIds.contains(queueGroup.Id)) {
-                    matched = true;
-                    System.debug('MATCH ROLE QUEUE');
+                
+                /*
+                 * role in queue
+                 */
+                if (!matched && currentUser.UserRoleId != null) {
+                    Integer roleCount =
+                        [SELECT COUNT() FROM GroupMember WHERE
+                  GroupId = : queueGroup.Id AND UserOrGroupId IN(
+                      SELECT Id FROM Group WHERE Type IN('Role',
+                          'RoleAndSubordinates', 'RoleAndSubordinatesInternal')
+                          AND RelatedId =
+                          : currentUser.UserRoleId)];
+                    
+                    if (roleCount > 0) {
+                        matched = true;
+                        
+                        System.debug('MATCH ROLE QUEUE');
+                    }
                 }
             }
             
@@ -470,6 +446,7 @@ public with sharing class FEC_AssignmentExecuteService {
              */
             if (matched) {
                 System.debug('TAKE ASSIGNMENT => ' + assignment.Id);
+                
                 assignment.FEC_Assignment_Owner__c = userId;
                 assignmentsToUpdate.add(assignment);
             }
@@ -664,3 +641,5 @@ public with sharing class FEC_AssignmentExecuteService {
         }
     }
 }
+
+///HieuTT Update
