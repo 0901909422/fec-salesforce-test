@@ -100,18 +100,6 @@ export default class FecCheckEligibleLoanSection extends LightningElement {
     }
 
     _extractErrorMsg(err) {
-        if (!err) {
-            return LBL_LOAD_ERROR;
-        }
-        if (Array.isArray(err?.body)) {
-            return err.body.map((e) => e.message).join(', ');
-        }
-        if (typeof err?.body?.message === 'string') {
-            return err.body.message;
-        }
-        if (typeof err?.message === 'string') {
-            return err.message;
-        }
         return LBL_LOAD_ERROR;
     }
 

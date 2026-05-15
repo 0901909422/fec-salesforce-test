@@ -256,6 +256,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                                         }))
                                     }))
                                     : [{
+                                        key: 'default-section',
                                         section: null,
                                         showSectionTitle: false,
                                         items: col.hoverFields.map(h => ({
@@ -338,6 +339,24 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         } else if (typeof col.cellAttributes.class === 'string') {
                             cellClass = col.cellAttributes.class;
                         }
+                    }
+                    /* ===== CHECKBOX TYPE ===== */
+                    if (col.type === 'checkbox') {
+                        return {
+                            key: col.fieldName,
+                            fieldName: col.fieldName,
+                            isCheckboxType: true,  
+                            isCheckbox: !row.isEmpty,  
+                            isLink: false,
+                            isEye: false,
+                            isHtml: false,
+                            value: row[col.fieldName] === true 
+                                || row[col.fieldName] === 'true' 
+                                || row[col.fieldName] === 'Yes'
+                                || row[col.fieldName] === 'yes'
+                                || row[col.fieldName] === 1 
+                                || row[col.fieldName] === '1'
+                        };
                     }
                     /* ===== ADD NEGATIVE CHECK ===== */
                     const isNeg = isNegative(row[col.fieldName]);

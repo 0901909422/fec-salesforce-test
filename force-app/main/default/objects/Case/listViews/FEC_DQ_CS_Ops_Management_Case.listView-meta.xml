@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ListView xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_DQ_CS_Ops_Management_Case</fullName>
     <booleanFilter>1 AND 2 AND (3 OR 4)</booleanFilter>
@@ -30,9 +30,9 @@
         <value>DQ - CS Ops Management</value>
     </filters>
     <filters>
-        <field>FEC_Owner_In_Assignment_Users__c</field>
-        <operation>equals</operation>
-        <value>1</value>
+        <field>FEC_Assignment_Users__c</field>
+        <operation>contains</operation>
+        <value>DQ - CS Ops Management</value>
     </filters>
     <label>DQ - CS Ops Management</label>
     <queue>FEC_DQ_CS_Ops_Management</queue>
