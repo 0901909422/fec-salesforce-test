@@ -1096,7 +1096,6 @@
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
         <!-- Customer Data Management -->
-        <members>FEC_Permission_Set_Customer_Data_Management</members>
         <members>FEC_Permission_Set_Customer_Data_Management_Admin</members>
 		<members>FEC_Permission_Set_Customer_Data_Management_User</members>
         <!-- Customer 360 -->
