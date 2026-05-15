@@ -1,4 +1,5 @@
 public with sharing class FEC_AssignmentExecuteService {
+
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
         @AuraEnabled public Boolean shouldUpdate;
@@ -640,3 +641,5 @@ public with sharing class FEC_AssignmentExecuteService {
         }
     }
 }
+
+///HieuTT Update
