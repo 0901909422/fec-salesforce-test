@@ -52,6 +52,8 @@
 	    <members>FEC_ChannelFunctionServiceTest</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
+        <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_ApplicationListTriggerHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -59,6 +61,7 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
+        <members>FEC_ApplicationListTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -473,6 +476,7 @@
         <members>FEC_Batch_Case_Handling__c</members>
         <members>FEC_Template_Import__c</members>
         <members>FEC_Hold_Case_Config__c</members>
+        <members>FEC_Sales_Logic__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -1161,6 +1165,7 @@
 	</types>
     <types>
 		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
+        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
 		<name>Layout</name>
 	</types>
     <types>

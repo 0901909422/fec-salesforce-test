@@ -20,8 +20,6 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
-        <members>FEC_SalesChannelFromApplicationService</members>
-        <members>FEC_ApplicationListTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -119,7 +117,6 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
-        <members>FEC_ApplicationListTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -535,7 +532,6 @@
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Incorrect_Payment_Info__c</members>
-        <members>FEC_Sales_Logic__c</members>
         <members>FEC_Contract_List_for_Remove_Phone__c</members>
         <members>FEC_Assignment_MDS__c</members>
 		<name>CustomObject</name>
@@ -546,7 +542,6 @@
     </types>
     <types>
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
-        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
         <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
         <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
 		<name>Layout</name>
