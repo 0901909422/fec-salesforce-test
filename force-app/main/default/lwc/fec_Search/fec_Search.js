@@ -968,11 +968,11 @@ async fetchBancaInsurance(ids) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
+      DateOfBirth: el.buyerDOB,
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
+      EffectiveDate: el.effectiveDate,
       Status: el.StatusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1007,11 +1007,11 @@ async fetchBancaInsuranceByPhone(phones) {
       UserId: el.userID,
       FullName: el.buyerName,
       BuyerNID: el.buyerNID,
-      DateOfBirth: formatDateFlexibleVN(el.buyerDOB),
+      DateOfBirth: el.buyerDOB,
       ProductName: el.productNameEn,
       PremiumFee: Number(el.collectedPremiumFee),
       PaymentId: el.paymentID,
-      EffectiveDate: formatDateFlexibleVN(el.effectiveDate),
+      EffectiveDate: el.effectiveDate,
       Status: el.statusDisplay,
       PolicyNumber: el.policyNumber,
       Phone: el.buyerPhone
@@ -1634,13 +1634,24 @@ hasAnySearchCriteria(params) {
                 await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
                 this.dispatchEvent(new RefreshEvent());
             } else {
-                // Navigate immediately
-                this.dispatchEvent(
-                  new CustomEvent('closerequest', {
-                    detail: { recordId: res }
-                  })
-                );
-            }
+                const devName = await getCaseRecordTypeDevName({ caseId: res });
+                if (devName === 'Internal_Case') {
+                    this.dispatchEvent(
+                        new CustomEvent('closerequest', {
+                            detail: { recordId: res }
+                        })
+                    );
+                  } else {
+                      this[NavigationMixin.Navigate]({
+                          type: "standard__recordPage",
+                          attributes: {
+                              recordId: res,
+                              objectApiName: "Case",
+                              actionName: "view"
+                          }
+                      });
+                  }
+              }
             //await this.refreshTab();
           })
           .catch((e) => {
@@ -1913,11 +1924,11 @@ hasAnySearchCriteria(params) {
                       UserId: element.userID,
                       FullName: element.buyerName,
                       BuyerNID: element.buyerNID,
-                      DateOfBirth: formatDateFlexibleVN(element.buyerDOB),
+                      DateOfBirth: element.buyerDOB,
                       ProductName: element.productNameEn,
                       PremiumFee: element.collectedPremiumFee,
                       PaymentId:  element.paymentID,
-                      EffectiveDate:  formatDateFlexibleVN(element.effectiveDate),
+                      EffectiveDate:  element.effectiveDate,
                       Status:  element.StatusDisplay,
                       PolicyNumber:  element.policyNumber,
                     })
