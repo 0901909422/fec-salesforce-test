@@ -11,5 +11,6 @@
     <permissionSets>RD_IT_User_User_Management</permissionSets>
     <permissionSets>FEC_Permission_Set_Customer_Data_Management_Admin</permissionSets>
     <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Batch_Case_Handling</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
