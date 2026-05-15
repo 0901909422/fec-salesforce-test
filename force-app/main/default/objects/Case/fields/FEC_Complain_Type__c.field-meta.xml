@@ -23,7 +23,7 @@
             </value>
             <value>
                 <fullName>Normal</fullName>
-                <default>false</default>
+                <default>true</default>
                 <label>Normal</label>
             </value>
             <value>

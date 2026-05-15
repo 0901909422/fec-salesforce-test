@@ -64,6 +64,9 @@ public with sharing class FEC_ConstantCommon {
 
     /** Case Assignment FEC_Status__c: only Draft allows inserting Case Assignment NOC lines. */
     public static final String FEC_CASE_ASSIGNMENT_STATUS_DRAFT = 'Draft';
+    /** Case Assignment FEC_Status__c: only NOC under Active rules join duplicate / queue-overlap check. */
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_ACTIVE = 'Active';
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_ARCHIVED = 'Archived';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
