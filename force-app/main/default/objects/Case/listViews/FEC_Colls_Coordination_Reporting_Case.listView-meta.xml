@@ -35,6 +35,7 @@
         <value>Colls Coordination &amp; Reporting</value>
     </filters>
     <label>Colls Coordination &amp; Reporting</label>
+    <queue>FEC_Colls_Coordination_Reporting</queue>
     <sharedTo>
         <role>FEC_Collections_Operations_Coordination_Reporting_Specialist</role>
         <role>FEC_Collections_Operations_Coordination_Reporting_Team_Leader</role>

@@ -35,6 +35,7 @@
         <value>Doc Processing &amp; Archiving</value>
     </filters>
     <label>Doc Processing &amp; Archiving</label>
+    <queue>FEC_Doc_Processing_Archiving</queue>
     <sharedTo>
         <role>FEC_Document_Processing_Archiving_Manager</role>
         <role>FEC_Document_Processing_Archiving_Officer</role>

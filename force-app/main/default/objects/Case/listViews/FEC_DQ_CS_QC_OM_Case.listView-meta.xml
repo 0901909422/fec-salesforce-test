@@ -35,6 +35,7 @@
         <value>DQ - CS QC &amp; OM</value>
     </filters>
     <label>DQ - CS QC &amp; OM</label>
+    <queue>FEC_DQ_CS_QC_OM</queue>
     <sharedTo>
         <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
     </sharedTo>
