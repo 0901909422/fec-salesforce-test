@@ -36,13 +36,13 @@ public with sharing class FEC_CustomSyncCallout {
             String resBody = response.getBody();
             String truncatedRes = resBody != null && resBody.length() > 32768 ? resBody.substring(0, 32768) : resBody;
             log.FEC_Response_Data__c = truncatedRes;
-            log.FEC_Bix_Is_Success__c = (response.getStatusCode() == 200);
-
             // Parse response to split success/failed records
             if (response.getStatusCode() == 200 && String.isNotBlank(resBody)) {
                 Map<String, Object> resMap = (Map<String, Object>) JSON.deserializeUntyped(resBody);
                 Map<String, Object> data = (Map<String, Object>) resMap.get('data');
                 if (data != null) {
+                    Integer totalSuccess = data.get('totalSuccess') != null ? Integer.valueOf(String.valueOf(data.get('totalSuccess'))) : 0;
+                    log.FEC_Bix_Is_Success__c = (totalSuccess != null && totalSuccess > 0);
                     Integer totalFailed = data.get('totalFailed') != null ? Integer.valueOf(String.valueOf(data.get('totalFailed'))) : 0;
                     
                     if (totalFailed > 0) {
@@ -110,24 +110,31 @@ public with sharing class FEC_CustomSyncCallout {
                                 resultLogs.add(successLog);
                             }
                         } else {
-                            // First call - giữ logic cũ
-                            // Log 1: Success records
-                            log.Records__c = JSON.serialize(successSfIds);
-                            log.FEC_Bix_Is_Success__c = true;
-                            resultLogs.add(log);
+                            // First call
+                            if (!successSfIds.isEmpty()) {
+                                // Log 1: Success records
+                                log.Records__c = JSON.serialize(successSfIds);
+                                log.FEC_Bix_Is_Success__c = true;
+                                resultLogs.add(log);
 
-                            // Log 2: Failed records
-                            FEC_integration_service_log__c failLog = new FEC_integration_service_log__c();
-                            failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
-                            failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
-                            failLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
-                            failLog.FEC_Method__c = log.FEC_Method__c;
-                            failLog.FEC_Request_Data__c = log.FEC_Request_Data__c;
-                            failLog.FEC_Response_Data__c = truncatedRes;
-                            failLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
-                            failLog.Records__c = JSON.serialize(failedSfIds);
-                            failLog.FEC_Bix_Is_Success__c = false;
-                            resultLogs.add(failLog);
+                                // Log 2: Failed records
+                                FEC_integration_service_log__c failLog = new FEC_integration_service_log__c();
+                                failLog.FEC_Custom_Sync__c = log.FEC_Custom_Sync__c;
+                                failLog.FEC_Quantity_Call__c = log.FEC_Quantity_Call__c;
+                                failLog.FEC_Endpoint__c = log.FEC_Endpoint__c;
+                                failLog.FEC_Method__c = log.FEC_Method__c;
+                                failLog.FEC_Request_Data__c = log.FEC_Request_Data__c;
+                                failLog.FEC_Response_Data__c = truncatedRes;
+                                failLog.FEC_Status_Code__c = log.FEC_Status_Code__c;
+                                failLog.Records__c = JSON.serialize(failedSfIds);
+                                failLog.FEC_Bix_Is_Success__c = false;
+                                resultLogs.add(failLog);
+                            } else {
+                                // Tất cả đều fail, không có success record nào
+                                log.Records__c = JSON.serialize(failedSfIds);
+                                log.FEC_Bix_Is_Success__c = false;
+                                resultLogs.add(log);
+                            }
                         }
 
                         return resultLogs;
@@ -137,7 +144,7 @@ public with sharing class FEC_CustomSyncCallout {
 
         } catch (Exception e) {   
             log.FEC_Status_Code__c = '500'; 
-            String errorMsg = 'Exception: Line: ' + e.getLineNumber() + ' - ' + e.getMessage();
+            String errorMsg = 'Exception: FEC_CustomSyncCallout Line: ' + e.getLineNumber() + ' - ' + e.getMessage();
             log.FEC_Error_Message__c = errorMsg.length() > 255 ? errorMsg.substring(0, 255) : errorMsg;
             System.debug(errorMsg);
         }
