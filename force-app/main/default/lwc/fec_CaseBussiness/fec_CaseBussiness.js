@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, CUSTOMER_PHONE_NUMBER } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FIELD_CONTACT_CHANNEL } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -161,13 +161,15 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
   FIELD_RECIPIENT_PHONE_NUMBER,
-  CUSTOMER_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
   FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
   CUSTOMER_PHONE_NUMBER_SUB,
   FIELD_FEOL_Phone__c,
+  FIELD_CUSTOMER_PHONE_NUMBER,
+  FIELD_RECEIVING_PHONE_NUMBER,
+  FIELD_CONTACT_CHANNEL
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -507,6 +509,7 @@ function normalizeMasterDataLwcEntry(entry) {
         ? o.fecMasterDataSettingIsEdit
         : true,
     hideSubSectionHeading: o.hideSubSectionHeading === true,
+    isCollapsible: o.isCollapsible === true,
   };
 }
 
@@ -1141,12 +1144,13 @@ export default class Fec_CaseBussiness extends LightningElement {
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
+    const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = !this._isEdit;
-            field.editable = this._isEdit;
+            field.readonly = isCOFStage1Revert ? true : !this._isEdit;
+            field.editable = isCOFStage1Revert ? false : this._isEdit;
           });
         });
       });

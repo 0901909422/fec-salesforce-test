@@ -1,0 +1,39 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading"></lightning-spinner>
+    </template>
+    <template if:true={record}>
+        <template if:true={sections}>
+            <c-fec_-common-detail-view
+                title="Hold Case Config"
+                sub-title={record.Name}
+                icon-name="standard:orders"
+                sections={sections}
+                ontoggle={handleToggle}
+                columns="2"
+                show-edit-button
+                onedit={handleEdit}>
+            </c-fec_-common-detail-view>
+            <div class="slds-m-top_medium">
+                <lightning-card>
+                     <lightning-accordion 
+                      active-section-name={activeSections}
+                        allow-multiple-sections-open
+                        class="history-accordion">
+                        <lightning-accordion-section
+                            name="holaCaseConfigHistory"
+                            label="Hold Case Config History">   
+                                <c-fec_-related-list-paging
+                                    records={historyRecords}
+                                    columns={holdCaseConfigHistoryColumns}
+                                    default-sorted-by="modifiedDate"
+                                    default-sort-direction="desc"
+                                    onrowselect={handleUserSelect}>
+                                </c-fec_-related-list-paging>
+                         </lightning-accordion-section>
+                     </lightning-accordion>
+                </lightning-card>
+            </div>
+        </template>
+    </template>
+</template>
