@@ -7,6 +7,7 @@
     <relationshipLabel>Hold Case Config</relationshipLabel>
     <relationshipName>Hold_Case_Config</relationshipName>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>
