@@ -544,6 +544,7 @@
         <members>fec_HoldCaseConfiguration</members>
         <members>fec_HoldCaseConfigurationTabView</members>
         <members>fec_RelatedListPaging</members>
+        <members>fec_holdCaseManual</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
