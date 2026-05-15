@@ -1552,7 +1552,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                       field.value = opt.value;
                     }
                   } else {
-                    const defaultOpt = picklistOptions.find(o => o.isDefaultValue);
+                    const defaultOpt = picklistOptions.find(o => o.isDefault);
                     if (defaultOpt) {
                       field.value = defaultOpt.value;
                     }
