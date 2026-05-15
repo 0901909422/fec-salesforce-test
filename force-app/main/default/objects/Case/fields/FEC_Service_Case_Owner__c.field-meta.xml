@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>FEC_Service_Case_Owner__c</fullName>
-    <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue.</description>
+    <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue. Ẩn khi là COF/GSR và đã có Assignment.</description>
     <externalId>false</externalId>
     <formula>IF(
-    Or(RecordType.Name = 'Customer Case', RecordType.Name = 'Internal Case'),
+    FEC_Assignment_Count__c > 0,
+    "",
     IF(
-        ISBLANK(Owner:Queue.Name),
-        IF(ISBLANK(Owner:User.Email), '', LEFT(Owner:User.Email, FIND("@", Owner:User.Email) - 1)),
-        Owner:Queue.Name
-    ),
-    ''
+        OR(RecordType.Name = "Customer Case", RecordType.Name = "Internal Case"),
+        IF(
+            ISBLANK(Owner:Queue.Name),
+            IF(ISBLANK(Owner:User.Email), "", LEFT(Owner:User.Email, FIND("@", Owner:User.Email) - 1)),
+            Owner:Queue.Name
+        ),
+        ""
+    )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Service Case Owner</label>
