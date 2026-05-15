@@ -26,14 +26,17 @@
 
             <template if:true={isExpanded}>
                 <template if:true={dataLogs.length}>
-                    <lightning-datatable
-                        key-field="Id"
-                        data={dataLogs}
-                        columns={columns}
-                        hide-checkbox-column
-                        show-row-number-column
-                        resize-column-disabled>
-                    </lightning-datatable>
+                    <div class="table-history-container slds-m-bottom_small">
+                        <lightning-datatable
+                            key-field="Id"
+                            data={dataLogs}
+                            columns={columns}
+                            hide-checkbox-column
+                            enable-infinite-loading
+                            show-row-number-column
+                            resize-column-disabled>
+                        </lightning-datatable>
+                    </div>
                 </template>
                 <template if:false={dataLogs.length}>
                     <div class="slds-text-align_center slds-m-vertical_small slds-text-color_weak">
