@@ -1106,7 +1106,9 @@ public without sharing class FEC_CaseBusinessService {
         ? null
         : selectedCase.FEC_Draft_Routing_Action_Code__c;
       // tungnm37 thêm: trả isSubmited để LWC kiểm tra Stage 2 (showManualAddItem)
-      result.isSubmited = selectedCase.FEC_Is_Submited__c == true;
+      // tungnm37 fix: khi Revert về Stage 1 (Default Stage) → isSubmited = false để hiện read-only display
+      result.isSubmited = selectedCase.FEC_Is_Submited__c == true
+          && result.lockApiLwcsAfterRevertToDefaultStage != true;
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
 
