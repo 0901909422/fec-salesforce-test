@@ -99,10 +99,32 @@ public with sharing class FEC_CaseExecuteService {
     
     /*
      * 4. Execute condition
+     *
+     * PRIORITY:
+     * If current user is case owner
+     * => always show Execute
      */
-    Boolean canExecute = assignmentCount == 0;
+    Boolean canExecute = false;
     
-    System.debug('FINAL canExecute = ' + canExecute);
+    /*
+     * Current user is owner
+     */
+    if (c.OwnerId == userId) {
+      
+      System.debug(
+        'Current user is case owner => FORCE TRUE'
+        );
+      
+      canExecute = true;
+    }
+    
+    /*
+     * Queue member logic
+     */
+    else {
+      
+      canExecute = assignmentCount == 0;
+    }
     
     return buildResult(c, canExecute);
   }

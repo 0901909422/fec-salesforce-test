@@ -146,7 +146,7 @@ public with sharing class FEC_AssignmentExecuteService {
             return values;
         }
         
-        for (String value : assignmentUsers.split(';')) {
+        for (String value : assignmentUsers.split(',')) {
             if (!String.isBlank(value)) {
                 values.add(value.trim());
             }
