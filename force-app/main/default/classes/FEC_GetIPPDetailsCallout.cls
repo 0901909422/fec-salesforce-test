@@ -152,11 +152,27 @@ public with sharing class FEC_GetIPPDetailsCallout {
             return errorResponse;
         }
 
-        // Step 3: Build and send request
-        Dom.Document doc = buildSoapRequestXml(reqData, transId, requestorId, dateTimeValue);
-
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_Get_IPP_Detail');
+
+        // Hard code toàn bộ payload khi môi trường Non-Production (chỉ combination dữ liệu này có response thật ở API mock/non-prod)
+        if (apiSetting?.FEC_Enviroment__c == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION
+            && String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+            reqData.accountNumber   = apiConfig.FEC_Account_Number_Hard_Code__c;
+            reqData.effectiveDate   = '2026-05-04';
+            reqData.amount          = 2250000;
+            reqData.planNumber      = '97102';
+            reqData.ippTerm         = 9;
+            reqData.referenceNumber = 'MT260840161000010000177';
+            reqData.transactionPlan = '60001';
+            reqData.postingDate     = '2026-05-04';
+            reqData.cardNumber      = '539146XXXXX04271';
+            reqData.cardSeq         = 1;
+            reqData.ippKey          = '1500001500060000003944000000001';
+        }
+
+        // Step 3: Build and send request
+        Dom.Document doc = buildSoapRequestXml(reqData, transId, requestorId, dateTimeValue);
 
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_IPP_DETAIL_ENDPOINT_MOCKUP
@@ -207,6 +223,7 @@ public with sharing class FEC_GetIPPDetailsCallout {
 
         // Required fields
         requestNode.addChildElement('AccountNumber', null, null).addTextNode(d.accountNumber);
+        system.debug('Account number: ' + d.accountNumber);
         requestNode.addChildElement('EffectiveDate', null, null).addTextNode(d.effectiveDate);
         requestNode.addChildElement('Amount', null, null).addTextNode(String.valueOf(d.amount));
 

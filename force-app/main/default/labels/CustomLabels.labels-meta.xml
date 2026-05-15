@@ -15646,4 +15646,32 @@
         <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
         <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
     </labels>
+    <labels>
+        <fullName>FEC_LABEL_Months</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Months</shortDescription>
+        <value>Months</value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_API_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>API Code</shortDescription>
+        <value>API Code: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_LABEL_Description</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Description</shortDescription>
+        <value>Description: </value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Parsing_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Parsing Error</shortDescription>
+        <value>Parsing Error: </value>
+    </labels>
 </CustomLabels>
