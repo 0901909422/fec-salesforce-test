@@ -132,7 +132,7 @@ public without sharing class FEC_PaymentHistoryController {
             Date paymentDate = FEC_CommonUltils.parseDate(ft.SettlementDate);
             Date bookingDate = FEC_CommonUltils.parseDate(ft.PostingDate);
             Decimal amount   = ft.TRNXAmount != null ? ft.TRNXAmount : 0;
-            String key       = String.valueOf(paymentDate) + '|' + ft.TransactionCode;
+            String key       = String.valueOf(paymentDate) + '|' + ft.RRN;
 
             FEC_Payment_History__c r =
                 existingMap.containsKey(key)
@@ -144,7 +144,7 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Payment_Date__c   = paymentDate;
             r.FEC_Booking_Date__c   = bookingDate;
             r.FEC_Payment_Amount__c = amount;
-            r.FEC_Particulars__c    = ft.TransactionCode;
+            r.FEC_Particulars__c    = ft.RRN;
 
             if (ft.TRNXAmount != null) totalAmount += ft.TRNXAmount;
             toUpsert.add(r);
