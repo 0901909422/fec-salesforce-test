@@ -107,6 +107,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
     //PhongBT: update bộ noc chọn ở updated khi revert về
     // Stage 1 → readonly Updated NOC
     if (this._isStage1) return false;
+    //PhongBT 15/06/26: Có Routing Assignment (hasAutoRoutingAssignment) → không cho edit Updated NOC
+    if (this.hasAutoRoutingAssignment) return false;
     return this.modeEditCase === true;
   }
 
