@@ -68,50 +68,71 @@ public without sharing class FEC_PaymentHistoryController {
     @AuraEnabled
     public static void syncPaymentHistory(Id caseId) {
 
+        String accountNumber;
         Id customerHistoryId;
         try {
-            customerHistoryId = getCustomerAccountNumber(caseId);
+            Case c = [
+                SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+            if (c.FEC_Account_or_Contract__c == null) return;
+
+            FEC_Customer_History__c ch = [
+                SELECT FEC_Account_Number__c, FEC_Contract_Number__c
+                FROM FEC_Customer_History__c
+                WHERE Id = :c.FEC_Account_or_Contract__c
+                LIMIT 1
+            ];
+
+            customerHistoryId = c.FEC_Account_or_Contract__c;
+            accountNumber = FEC_CommonUltils.resolveAccountNumber(
+                c.FEC_Product_Type__r.Name,
+                ch.FEC_Account_Number__c,
+                ch.FEC_Contract_Number__c
+            );
         } catch (Exception e) {
             return;
         }
 
-        /* ===== CALL API ===== */
-        FEC_GetBilledTransactions.ResponseWrapper apiRes;
+        FEC_GetCardSecInfo.ResponseWrapper cardSecRes;
         try {
-            apiRes = FEC_GetBilledTransactions.callGetBilledTransactions(
-                String.valueOf(UUID.randomUUID()),
-                FEC_ConstantCommon.REQUESTOR_CRM,
-                Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                String.valueOf(customerHistoryId),
-                Datetime.now().format(FEC_ConstantCommon.DATE_FORMAT_MMYYYY)
-            );
+            cardSecRes = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
         } catch (Exception e) {
-            apiRes = null; 
+            cardSecRes = null;
         }
 
-        if (apiRes == null || apiRes.Transactions == null) {
+        if (cardSecRes == null
+            || cardSecRes.CardSecInfo == null
+            || cardSecRes.CardSecInfo.FinancialTransactions == null
+            || cardSecRes.CardSecInfo.FinancialTransactions.isEmpty()) {
             return;
         }
 
         Map<String, FEC_Payment_History__c> existingMap = new Map<String, FEC_Payment_History__c>();
-
         for (FEC_Payment_History__c h : [
             SELECT Id, FEC_Payment_Date__c, FEC_Particulars__c
             FROM FEC_Payment_History__c
             WHERE FEC_Customer_History__c = :customerHistoryId
-              AND FEC_Payment_Channel__c = NULL
+            AND FEC_Payment_Channel__c = NULL
         ]) {
-            String key = h.FEC_Payment_Date__c + '|' + h.FEC_Particulars__c;
+            String key = String.valueOf(h.FEC_Payment_Date__c) + '|' + h.FEC_Particulars__c;
             existingMap.put(key, h);
         }
 
         List<FEC_Payment_History__c> toUpsert = new List<FEC_Payment_History__c>();
         Decimal totalAmount = 0;
 
-        for (FEC_GetBilledTransactions.TransactionRecord t : apiRes.Transactions) {
+        for (FEC_GetCardSecInfo.FinancialTransaction ft
+                : cardSecRes.CardSecInfo.FinancialTransactions) {
 
-            Date paymentDate = FEC_CommonUltils.parseDate(t.TransactionDate);
-            String key = paymentDate + '|' + t.ReferenceNumber;
+            if (ft.PaymentFlag != 'Y') continue;
+
+            Date paymentDate = FEC_CommonUltils.parseDate(ft.SettlementDate);
+            Date bookingDate = FEC_CommonUltils.parseDate(ft.PostingDate);
+            Decimal amount   = ft.TRNXAmount != null ? ft.TRNXAmount : 0;
+            String key       = String.valueOf(paymentDate) + '|' + ft.TransactionCode;
 
             FEC_Payment_History__c r =
                 existingMap.containsKey(key)
@@ -121,14 +142,11 @@ public without sharing class FEC_PaymentHistoryController {
                 );
 
             r.FEC_Payment_Date__c   = paymentDate;
-            r.FEC_Booking_Date__c   = FEC_CommonUltils.parseDate(t.PostingDate);
-            r.FEC_Payment_Amount__c = t.Amount;
-            r.FEC_Particulars__c    = t.ReferenceNumber;
+            r.FEC_Booking_Date__c   = bookingDate;
+            r.FEC_Payment_Amount__c = amount;
+            r.FEC_Particulars__c    = ft.TransactionCode;
 
-            if (t.Amount != null) {
-                totalAmount += t.Amount;
-            }
-
+            if (ft.TRNXAmount != null) totalAmount += ft.TRNXAmount;
             toUpsert.add(r);
         }
 
@@ -136,9 +154,7 @@ public without sharing class FEC_PaymentHistoryController {
             r.FEC_Total_Payment_Amount__c = totalAmount;
         }
 
-        if (!toUpsert.isEmpty()) {
-            upsert toUpsert;
-        }
+        if (!toUpsert.isEmpty()) upsert toUpsert;
     }
 
     /* =====================================================
