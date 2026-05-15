@@ -123,6 +123,8 @@
         <members>CS_OrgChart_Text_Save_Waning_Title</members>
         <members>CS_OrgChart_Table_UserTable_Page_Size</members>
         <members>CS_OrgChart_Text_RemoveUser_MainQueue_Warning</members>
+        <members>CS_OrgChart_Text_Add_User_To_Queue_Sucess</members>
+        <members>CS_OrgChart_Text_Remove_User_Sucess</members>
         <name>CustomLabel</name>
     </types>
     <types>
