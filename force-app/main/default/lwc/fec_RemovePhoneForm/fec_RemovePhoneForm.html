@@ -34,11 +34,31 @@
     <div class="slds-box slds-m-top_medium">
       <lightning-datatable
         key-field="id"
-        data={rows}
+        data={pagedRows}
         columns={columns}
         hide-checkbox-column={isReadOnly}
+        selected-rows={selectedRowKeysOnPage}
         onrowselection={handleRowSelection}>
       </lightning-datatable>
+      <template if:true={showPagination}>
+        <div class="remove-phone-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+          <span class="slds-text-body_small">{paginationPageOfText}</span>
+          <lightning-button-group>
+            <lightning-button
+              label={paginationPrevLabel}
+              variant="neutral"
+              onclick={handlePrevPage}
+              disabled={disablePrevPage}>
+            </lightning-button>
+            <lightning-button
+              label={paginationNextLabel}
+              variant="neutral"
+              onclick={handleNextPage}
+              disabled={disableNextPage}>
+            </lightning-button>
+          </lightning-button-group>
+        </div>
+      </template>
     </div>
   </template>
 </template>

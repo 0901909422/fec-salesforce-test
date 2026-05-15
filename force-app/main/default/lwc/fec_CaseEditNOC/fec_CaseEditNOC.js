@@ -63,6 +63,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
 
+//PhongBT: update bộ noc chọn ở updated khi revert về
+  _currentStageName = null;
+
 //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
@@ -89,6 +92,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
     return this.isSubmited === true && this.showUpdatedSection;
   }
 
+  //PhongBT: update bộ noc chọn ở updated khi revert về
+  get _isStage1() {
+    return (this._currentStageName || '').includes('Stage 1');
+  }
+
   // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
   // Không dùng interactionViewMode === handling — sau submit field Case có thể chưa kịp review
   // nên vẫn là handling và Updated NOC bị editable tới khi reload; chỉ còn modeEditCase là đúng UX.
@@ -96,6 +104,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (!this.isSubmittedState) {
       return false;
     }
+    //PhongBT: update bộ noc chọn ở updated khi revert về
+    // Stage 1 → readonly Updated NOC
+    if (this._isStage1) return false;
     return this.modeEditCase === true;
   }
 
@@ -233,6 +244,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
+//PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -511,6 +524,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+//PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -981,6 +996,38 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((res) => {
           this.subCodeOptionlst = res;
+
+          const noSubCodeOptions = !res || res.length === 0;
+          if (this.productTypeSelectedId && this.updatedCategoryId && this.updatedSubCategoryId && noSubCodeOptions) {
+            return getNatureOfCaseWithoutSubCode({
+              productTypeId: this.productTypeSelectedId,
+              categoryId: this.updatedCategoryId,
+              subCategoryId: this.updatedSubCategoryId
+            })
+              .then((noc) => {
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: noc?.Id ?? null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              })
+              .catch((err) => {
+                console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              });
+          }
         })
         .catch((err) => {
           console.error("getSubCodelst error (Updated section):", err);

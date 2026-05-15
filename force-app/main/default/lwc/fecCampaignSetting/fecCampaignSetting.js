@@ -1,7 +1,8 @@
 import { LightningElement, wire, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { refreshApex } from '@salesforce/apex';
-import { SUCCESS_TITLE, FAIL_TITLE, EDIT_ACTION, DELETE_ACTION } from 'c/fecUtils';
+import LightningConfirm from 'lightning/confirm';
+import { SUCCESS_TITLE, FAIL_TITLE, EDIT_ACTION, DELETE_ACTION, DELETE_CONFIRMATION_TITLE, DELETE_CONFIRMATION_MSG } from 'c/fecUtils';
 import getCampaignMappings from '@salesforce/apex/FEC_CampaignController.getCampaignMappings';
 import getCampaignConfigs from '@salesforce/apex/FEC_CampaignController.getCampaignConfigs';
 import saveMapping from '@salesforce/apex/FEC_CampaignController.saveMapping';
@@ -93,7 +94,7 @@ export default class FecCampaignSettings extends LightningElement {
         this.isModalOpen = false;
     }
 
-    handleRowAction(event) {
+    async handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
@@ -102,7 +103,15 @@ export default class FecCampaignSettings extends LightningElement {
             this.modalTitle = `${editModalTitle} ${row.Name}`;
             this.isModalOpen = true;
         } else if (actionName === DELETE_ACTION) {
-            this.handleDelete(row.Id);
+            const confirmed = await LightningConfirm.open({
+                message: DELETE_CONFIRMATION_MSG,
+                variant: 'header',
+                label: DELETE_CONFIRMATION_TITLE,
+                theme: 'warning'
+            });
+            if (confirmed) {
+                this.handleDelete(row.Id);
+            }
         }
     }
 

@@ -49,6 +49,7 @@ import endDateLessThanTodayMsg from '@salesforce/label/c.End_Date_Less_Than_Toda
 import endDateAfterOrEquealStartDateMsg from '@salesforce/label/c.End_Date_After_Or_Equal_Start_Date_Validation_Msg';
 import errorDuplicateKeyInFile from '@salesforce/label/c.FEC_Error_Duplicate_Key_In_File';
 import startDateLessThanTodayMsg from '@salesforce/label/c.FEC_Start_Date_Less_Than_Today';
+import errorBlankColumn from '@salesforce/label/c.FEC_Error_Blank_Column';
 
 export default class FecCustomerUpsertModal extends LightningElement {
     label = {
@@ -215,6 +216,42 @@ export default class FecCustomerUpsertModal extends LightningElement {
         }
     
         return true;
+    }
+
+    /**
+     * Hàm kiểm tra giá trị trống trong các cột bắt buộc của file Excel
+     * Chỉ validate row có ít nhất 1 cell non-blank. Row hoàn toàn trống sẽ bị skip.
+     * @param {Array} lstRows - Danh sách các dòng từ file Excel (row[0] là header)
+     * @returns {Array<string>} - Mảng các error messages cho các cell trống
+     */
+    validateBlankColumns(lstRows) {
+        const errors = [];
+        const keyId = this.localData.FEC_KeyIdentifier__c;
+        const fieldId = this.localData.FEC_FieldID__c;
+        const isActiveCol = lblIsActive;
+
+        for (let i = 1; i < lstRows.length; i++) {
+            const row = lstRows[i];
+            if (!row || row.length === 0) continue;
+
+            const hasAnyValue = row.some(cell => String(cell ?? '').trim() !== '');
+            if (!hasAnyValue) continue;
+
+            const keyValue = String(row[0] ?? '').trim();
+            const fieldValue = String(row[1] ?? '').trim();
+            const isActiveValue = String(row[2] ?? '').trim();
+
+            if (!keyValue) {
+                errors.push(formatString(errorBlankColumn, i + 1, keyId));
+            }
+            if (!fieldValue) {
+                errors.push(formatString(errorBlankColumn, i + 1, fieldId));
+            }
+            if (!isActiveValue) {
+                errors.push(formatString(errorBlankColumn, i + 1, isActiveCol));
+            }
+        }
+        return errors;
     }
 
     /**
@@ -397,6 +434,13 @@ export default class FecCustomerUpsertModal extends LightningElement {
                     // Validate Header — dùng localeCompare cho tiếng Việt
                     this.validateFileHeader(rawRows, file.name);
 
+                    // Validate blank column values
+                    const blankErrors = this.validateBlankColumns(rawRows);
+                    if (blankErrors.length > 0) {
+                        this.resetFileState();
+                        throw new Error(blankErrors.join('\n'));
+                    }
+
                     // Validate duplicate Key Identifier values
                     this.validateDuplicateKeys(rawRows);
 
@@ -441,7 +485,7 @@ export default class FecCustomerUpsertModal extends LightningElement {
                 : '<Field ID>';
 
             const wsData = [
-                [keyHeader, fieldHeader, 'Is Active'] 
+                [keyHeader, fieldHeader, lblIsActive] 
             ];
 
             // 3. Tạo Worksheet

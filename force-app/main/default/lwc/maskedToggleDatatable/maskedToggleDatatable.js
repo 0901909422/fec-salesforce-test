@@ -7,7 +7,7 @@ export default class MaskedToggleDatatable extends LightningDatatable {
         maskedToggle: {
             template: maskedTemplate,
             standardCellLayout: true,
-            typeAttributes: ['caseId']
+            typeAttributes: ['caseId', 'fieldLabel']
         },
         dblclickText: {
             template: dblclickTemplate,

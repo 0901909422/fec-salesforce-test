@@ -16,6 +16,8 @@ public with sharing class FEC_ConstantCommon {
 
     /** Chuỗi rỗng dùng chung (default khi value blank). */
     public static final String STR_EMPTY = '';
+    public static final String STR_PERCENT = '%';
+    public static final String STR_DASH = '-';
 
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
@@ -51,6 +53,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
     public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+    public static final String DATETIME_FORMAT_OUTPUT1 = 'dd/MM/yyyy, HH:mm:ss';
     public static final String DATETIME_FORMAT_LOG = 'yyyy-MM-dd HH:mm:ss';
 
     public static final String PAYMENT_PREFIX = 'pay_';
@@ -59,6 +62,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
     public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
+
+    /** Case Assignment FEC_Status__c: only Draft allows inserting Case Assignment NOC lines. */
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_DRAFT = 'Draft';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -242,14 +248,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String GROUP_TYPE_QUEUE = 'Queue';
     public static final String SOBJECT_USER = 'User';
     public static final String SOBJECT_GROUP = 'Group';
-    public static final String DELIMITER_SEMICOLON = ';';
-    public static final String DELIMITER_UNDERSCORE = '_';
 
     // tungnm37 thêm: Assignment constants cho COF/GSR
     public static final String ASSIGNMENT_NAME_CALL = 'Call';
     public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
+    public static final String DELIMITER_SEMICOLON = ';';
+    public static final String DELIMITER_UNDERSCORE = '_';
 
     // tungnm37 thêm: UpdateDisbursementStatus log constants
     public static final String DISB_LOG_CRMID    = 'CRMID=';
@@ -346,6 +352,7 @@ public with sharing class FEC_ConstantCommon {
     };
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
+    public static final String FEC_RAH_DESCRIPTION_AUTO_ASSIGNMENT = 'Auto Assignment';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
 
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
@@ -643,7 +650,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_PENDING_CIC = 'Pending-CICRelated';
     public static final String STATUS_PENDING_DOCUMENT = 'Pending-DocumentPreparation';
     public static final String STATUS_PENDING_TASK_REVIEW = 'Pending-TaskUnderReview';
-    
+    public static final String ORIGINAL_LWC_COF = 'fec_OriginalInformation';
     
     public static final Map<String, String> CASE_STATUS_MAP = new Map<String, String>{
         'PENDING_CS' => 'Pending-CSInternal',
@@ -682,6 +689,10 @@ public with sharing class FEC_ConstantCommon {
     public static final String COF_GENERAL_FLOW = 'COF - General Flow';
     public static final String STAGE_ONE = 'Stage 1';
     public static final String ORIGINAL_INFORMATION = 'Original Information';
+    public static final String ORIGINAL_INFO = 'Original Info';
+    public static final String UPDATED_INFO = 'Updated Info';
+    public static final String STAGE_TWO = 'Stage 2';
+    public static final String STAGE_THREE = 'Stage 3';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';
@@ -708,5 +719,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
     public static final String QUEUE_ID_START = '00G';
+    /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
+    public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
 
 }
