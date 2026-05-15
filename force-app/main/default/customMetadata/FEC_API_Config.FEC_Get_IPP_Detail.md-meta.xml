@@ -3,6 +3,10 @@
     <label>Get IPP Detail</label>
     <protected>false</protected>
     <values>
+        <field>FEC_Account_Number_Hard_Code__c</field>
+        <value xsi:type="xsd:string">0001500060000003944</value>
+    </values>
+    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/EStatementService</value>
     </values>

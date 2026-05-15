@@ -20,6 +20,7 @@ public with sharing class FEC_SearchController {
                  FEC_Search_Contract_Number__c, FEC_Search_Customer_Number__c,
                  FEC_Search_Email_Address__c, FEC_Search_National_ID__c,
                  FEC_Search_Phone_Number__c, FEC_Application_ID__c, FEC_Account_Number__c, FEC_Interaction_Email__c,
+                 //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
                  FEC_Is_Test_API__c,
                  (SELECT Id FROM Customer_Histories__r)
                 FROM Case
@@ -31,6 +32,37 @@ public with sharing class FEC_SearchController {
             return null;
         }
         return c;
+    }
+
+    //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+    @AuraEnabled
+    public static Case getCaseSearchFlags(Id caseId) {
+        if (caseId == null) {
+            return null;
+        }
+        try {
+            return [
+                SELECT Id, RecordType.Name, FEC_Is_Test_API__c
+                FROM Case
+                WHERE Id = :caseId
+                LIMIT 1
+            ];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    //linhdev Fix jira FECREDIT_CSM_2025_KH-1243
+    @AuraEnabled(cacheable=true)
+    public static String getTestServiceErrorAccountNumber() {
+        try {
+            FEC_API_Config__mdt row = FEC_API_Config__mdt.getInstance('FEC_Search_Test_Service_Error_Account');
+            return (row != null && String.isNotBlank(row.FEC_Account_Number_Hard_Code__c))
+                ? row.FEC_Account_Number_Hard_Code__c.trim()
+                : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @AuraEnabled
@@ -95,14 +127,9 @@ public with sharing class FEC_SearchController {
             objCase.FEC_Contract_Number__c = value;
         }
 
-        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case trước khi tạo History
-        // để các luồng Insurance/Card/Loan đều có nguồn dữ liệu thống nhất.
-        if (String.isNotBlank(phone)) {
-            objCase.FEC_Search_Phone_Number__c = phone;
-        }
-        if (String.isNotBlank(buyerNID)) {
-            objCase.FEC_Search_National_ID__c = buyerNID;
-        }
+        // [CHANGE][Author : LongNH76] Đồng bộ tiêu chí search vào Case từ khung search.
+        objCase.FEC_Search_Phone_Number__c = phone;
+        objCase.FEC_Search_National_ID__c = buyerNID;
 
         upsert objCase;
 
