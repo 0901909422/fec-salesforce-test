@@ -843,7 +843,6 @@
 		<members>FEC_BilledTx_Col_Plan</members>
 		<members>FEC_BilledTx_Col_PostDate</members>
 		<members>FEC_BilledTx_Col_TxnCode</members>
-		<members>FEC_Billed_Transactions</members>
         <name>CustomLabel</name>
     </types>
 	<types>
