@@ -757,6 +757,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Stage_Change__c.FEC_Next_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1129,10 +1134,6 @@
         <tab>Templates</tab>
         <visibility>Visible</visibility>
     </tabSettings>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
+
 
 </PermissionSet>
