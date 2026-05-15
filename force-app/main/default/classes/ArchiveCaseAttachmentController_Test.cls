@@ -14,7 +14,7 @@ private class ArchiveCaseAttachmentController_Test {
         // Create a Case with dummy JSON metadata in ArchiveAttachment__c
         String mockJson = '[' +
             '{' +
-                '"s3Key": "key123",' +
+                '"s3Path": "key123",' +
                 '"filename": "test_doc.pdf",' +
                 '"contentType": "application/pdf",' +
                 '"fileSize": 1024,' +

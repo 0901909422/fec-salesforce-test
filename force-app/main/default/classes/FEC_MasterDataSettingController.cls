@@ -68,6 +68,9 @@ public with sharing class FEC_MasterDataSettingController {
             baseQuery += isIntegration ? ' AND FEC_Data_Integration_Mapping__c != NULL ' : ' AND FEC_Data_Integration_Mapping__c = NULL ';
         }
 
+        // Exclude soft-deleted records
+        baseQuery += ' AND (Process_Change_Status__c = NULL OR Process_Change_Status__c != \'' + FEC_UIConstants.PROCESS_STATUS_DELETED + '\') ';
+
         String finalQuery = baseQuery + ' ORDER BY FEC_Field_Order_Display__c ASC NULLS LAST, Name ASC';
         
         List<FEC_MDM_Master_Data_Setting__c> settings = Database.query(finalQuery);
@@ -111,6 +114,26 @@ public with sharing class FEC_MasterDataSettingController {
                 }
                 if (orig.FEC_MDM_Channel__r != null) {
                     safe.FEC_MDM_Channel__r = orig.FEC_MDM_Channel__r;
+                }
+                // Restore Sub Section fields if stripped by FLS
+                if (orig.FEC_Sub_Section__c != null) {
+                    safe.FEC_Sub_Section__c = orig.FEC_Sub_Section__c;
+                }
+                if (orig.FEC_Sub_Section_Order__c != null) {
+                    safe.FEC_Sub_Section_Order__c = orig.FEC_Sub_Section_Order__c;
+                }
+                if (orig.FEC_Sub_Section_Layout__c != null) {
+                    safe.FEC_Sub_Section_Layout__c = orig.FEC_Sub_Section_Layout__c;
+                }
+                if (orig.FEC_Sub_Section_Field_Layout__c != null) {
+                    safe.FEC_Sub_Section_Field_Layout__c = orig.FEC_Sub_Section_Field_Layout__c;
+                }
+                // Restore Editable fields if stripped by FLS
+                if (orig.FEC_Field_Editable__c != null) {
+                    safe.FEC_Field_Editable__c = orig.FEC_Field_Editable__c;
+                }
+                if (orig.FEC_Editable_Role__c != null) {
+                    safe.FEC_Editable_Role__c = orig.FEC_Editable_Role__c;
                 }
                 // Restore Integration Mapping lookup if stripped by FLS
                 if (isIntegration != null && isIntegration) {
@@ -354,6 +377,16 @@ public with sharing class FEC_MasterDataSettingController {
             // if the running user's profile lacks FLS edit access, even though they have object-level access)
             Id preservedChannelId = recordToSave.FEC_MDM_Channel__c;
             Id preservedIntegrationMappingId = recordToSave.FEC_Data_Integration_Mapping__c;
+            Id preservedNocId = recordToSave.FEC_Nature_Of_Case__c;
+            Id preservedStageId = recordToSave.FEC_Stage_Name__c;
+            // Preserve Sub Section fields before FLS strip
+            String preservedSubSection = recordToSave.FEC_Sub_Section__c;
+            Decimal preservedSubSectionOrder = recordToSave.FEC_Sub_Section_Order__c;
+            Decimal preservedSubSectionLayout = recordToSave.FEC_Sub_Section_Layout__c;
+            Decimal preservedSubSectionFieldLayout = recordToSave.FEC_Sub_Section_Field_Layout__c;
+            // Preserve Editable fields before FLS strip
+            Boolean preservedFieldEditable = recordToSave.FEC_Field_Editable__c;
+            String preservedEditableRole = recordToSave.FEC_Editable_Role__c;
             
             // FLS: strip inaccessible fields before DML
             SObjectAccessDecision decision = Security.stripInaccessible(
@@ -374,6 +407,39 @@ public with sharing class FEC_MasterDataSettingController {
             if (removedFields.containsKey(sObjName) && removedFields.get(sObjName).contains('FEC_Data_Integration_Mapping__c')) {
                 if (preservedIntegrationMappingId != null) {
                     sanitizedRecord.FEC_Data_Integration_Mapping__c = preservedIntegrationMappingId;
+                }
+            }
+            // Restore NOC and Stage lookup fields if stripped by FLS
+            if (removedFields.containsKey(sObjName) && removedFields.get(sObjName).contains('FEC_Nature_Of_Case__c')) {
+                if (preservedNocId != null) {
+                    sanitizedRecord.FEC_Nature_Of_Case__c = preservedNocId;
+                }
+            }
+            if (removedFields.containsKey(sObjName) && removedFields.get(sObjName).contains('FEC_Stage_Name__c')) {
+                if (preservedStageId != null) {
+                    sanitizedRecord.FEC_Stage_Name__c = preservedStageId;
+                }
+            }
+            // Restore Sub Section fields if stripped by FLS
+            if (removedFields.containsKey(sObjName)) {
+                Set<String> removed = removedFields.get(sObjName);
+                if (removed.contains('FEC_Sub_Section__c') && preservedSubSection != null) {
+                    sanitizedRecord.FEC_Sub_Section__c = preservedSubSection;
+                }
+                if (removed.contains('FEC_Sub_Section_Order__c') && preservedSubSectionOrder != null) {
+                    sanitizedRecord.FEC_Sub_Section_Order__c = preservedSubSectionOrder;
+                }
+                if (removed.contains('FEC_Sub_Section_Layout__c') && preservedSubSectionLayout != null) {
+                    sanitizedRecord.FEC_Sub_Section_Layout__c = preservedSubSectionLayout;
+                }
+                if (removed.contains('FEC_Sub_Section_Field_Layout__c') && preservedSubSectionFieldLayout != null) {
+                    sanitizedRecord.FEC_Sub_Section_Field_Layout__c = preservedSubSectionFieldLayout;
+                }
+                if (removed.contains('FEC_Field_Editable__c') && preservedFieldEditable != null) {
+                    sanitizedRecord.FEC_Field_Editable__c = preservedFieldEditable;
+                }
+                if (removed.contains('FEC_Editable_Role__c') && preservedEditableRole != null) {
+                    sanitizedRecord.FEC_Editable_Role__c = preservedEditableRole;
                 }
             }
             
@@ -456,7 +522,6 @@ public with sharing class FEC_MasterDataSettingController {
                 Name = name,
                 FEC_Name_VN__c = nameVN,
                 FEC_Alias__c = alias,
-                FEC_Status__c = status,
                 FEC_Active__c = active,
                 FEC_Default_Stage__c = defaultStage != null ? defaultStage : false,
                 FEC_End_Stage__c = endStage != null ? endStage : false,
@@ -507,7 +572,6 @@ public with sharing class FEC_MasterDataSettingController {
                 FEC_Code__c = code,
                 FEC_Business_Process__c = businessProcessId,
                 FEC_Name_VN__c = nameVN,
-                FEC_Status__c = status,
                 FEC_Active__c = active != null ? active : false,
                 FEC_Alias__c = alias,
                 FEC_Order__c = posOrder,
@@ -561,7 +625,7 @@ public with sharing class FEC_MasterDataSettingController {
     @AuraEnabled
     public static Map<String, String> getCaseStageDetail(Id stageId) {
         List<FEC_MDM_Case_Stage__c> stages = [
-            SELECT Id, Name, FEC_Name_VN__c, FEC_Alias__c, FEC_Status__c, FEC_Active__c,
+            SELECT Id, Name, FEC_Name_VN__c, FEC_Alias__c, FEC_Active__c,
                    FEC_Default_Stage__c, FEC_End_Stage__c, FEC_Nature_of_Cases__c, FEC_User_Group__c,
                    FEC_Order__c, FEC_Status_Name__c
             FROM FEC_MDM_Case_Stage__c
@@ -578,7 +642,7 @@ public with sharing class FEC_MasterDataSettingController {
         result.put('name', stage.Name);
         result.put('nameVN', stage.FEC_Name_VN__c != null ? stage.FEC_Name_VN__c : '');
         result.put('alias', stage.FEC_Alias__c != null ? stage.FEC_Alias__c : '');
-        result.put('status', String.valueOf(stage.FEC_Status__c));
+        result.put('status', String.valueOf(stage.FEC_Active__c));
         result.put('active', String.valueOf(stage.FEC_Active__c));
         result.put('defaultStage', String.valueOf(stage.FEC_Default_Stage__c));
         result.put('endStage', populated.containsKey('FEC_End_Stage__c') ? String.valueOf(stage.FEC_End_Stage__c) : 'false');
@@ -617,10 +681,15 @@ public with sharing class FEC_MasterDataSettingController {
         
         List<SObject> safe = Security.stripInaccessible(AccessType.READABLE, fields).getRecords();
         for (FEC_MDM_Additional_Field__c field : (List<FEC_MDM_Additional_Field__c>) safe) {
+            // Use getPopulatedFieldsAsMap() to safely access fields that may have been
+            // stripped by stripInaccessible (avoids SObjectException when FLS denies read)
+            Map<String, Object> populated = field.getPopulatedFieldsAsMap();
+            String apiName = populated.containsKey('Field_API_Name__c') 
+                ? (String) populated.get('Field_API_Name__c') : '';
             options.add(new Map<String, String>{
                 FEC_UIConstants.MAP_LABEL => field.Name,
                 FEC_UIConstants.MAP_VALUE => field.Id,
-                FEC_UIConstants.MAP_FIELD_API_NAME => field.Field_API_Name__c != null ? field.Field_API_Name__c : ''
+                FEC_UIConstants.MAP_FIELD_API_NAME => apiName != null ? apiName : ''
             });
         }
         return options;
@@ -685,9 +754,9 @@ public with sharing class FEC_MasterDataSettingController {
                 throw new IllegalArgumentException('Record ID cannot be empty');
             }
 
-            // Verify record exists and user has delete access
+            // Verify record exists and user has update access
             List<FEC_MDM_Master_Data_Setting__c> records = [
-                SELECT Id, Name 
+                SELECT Id, Name, Process_Change_Status__c
                 FROM FEC_MDM_Master_Data_Setting__c 
                 WHERE Id = :recordId 
                 LIMIT 1
@@ -697,8 +766,14 @@ public with sharing class FEC_MasterDataSettingController {
                 throw new IllegalArgumentException('Record not found');
             }
 
-            // Delete the record
-            delete records[0];
+            // If status is 'New' (never pushed to Live), hard delete immediately
+            // Otherwise soft delete: mark as 'Deleted' so Push batch will delete Live record
+            if (records[0].Process_Change_Status__c == FEC_UIConstants.PROCESS_STATUS_NEW) {
+                delete records[0];
+            } else {
+                records[0].Process_Change_Status__c = FEC_UIConstants.PROCESS_STATUS_DELETED;
+                update records[0];
+            }
         } catch (DmlException e) {
             System.debug('DML Error: ' + e.getMessage());
             throw new AuraHandledException(System.Label.FEC_Error_Delete_Record_Prefix + ' ' + e.getMessage());
@@ -1145,5 +1220,28 @@ public with sharing class FEC_MasterDataSettingController {
             System.debug('checkParentDuplicateProperty error: ' + e.getMessage());
             throw new AuraHandledException('Error checking parent duplicate: ' + e.getMessage());
         }
+    }
+
+    /**
+     * @description Lấy distinct Sub Section + Sub Section Order từ Live data để auto-fill.
+     * @return Map<String, Decimal> Key = SubSection name, Value = SubSection order
+     */
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Decimal> getSubSectionOrderMap() {
+        Map<String, Decimal> result = new Map<String, Decimal>();
+        List<AggregateResult> aggs = [
+            SELECT FEC_Sub_Section__c subSec, MAX(FEC_Sub_Section_Order__c) subOrder
+            FROM FEC_Master_Data_Setting__c
+            WHERE FEC_Sub_Section__c != null AND FEC_Field_Status__c = true
+            GROUP BY FEC_Sub_Section__c
+        ];
+        for (AggregateResult ag : aggs) {
+            String subSec = (String) ag.get('subSec');
+            Decimal subOrder = (Decimal) ag.get('subOrder');
+            if (String.isNotBlank(subSec)) {
+                result.put(subSec, subOrder);
+            }
+        }
+        return result;
     }
 }

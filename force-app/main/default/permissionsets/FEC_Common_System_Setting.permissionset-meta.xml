@@ -1136,6 +1136,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.ArchiveAccOrContract__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.FEC_Last_Updated_By__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1147,6 +1152,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Customer_History__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.ArchiveExternalId__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
