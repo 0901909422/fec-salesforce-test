@@ -1172,6 +1172,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Additional_Info__c.FEC_Adjustment_Method__c</field>
         <readable>true</readable>
     </fieldPermissions>
