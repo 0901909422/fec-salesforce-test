@@ -100,6 +100,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
       /*
        * Enable edit mode
        */
+    
       await this.handlePublishMessageChanel();
 
       /*
@@ -115,6 +116,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
 
   async handlePublishMessageChanel() {
     const payload = {
+      caseId: this.recordId,
       isModeEdit: true,
     };
 
