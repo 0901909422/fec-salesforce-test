@@ -2321,4 +2321,10 @@
         <tab>Templates</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+
 </PermissionSet>
