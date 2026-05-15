@@ -145,12 +145,51 @@ public with sharing class FEC_BancaController {
         /* =====================================================
          * SAVE DB
          * ===================================================== */
-        List<FEC_Insurance_Info__c> savedRecords =
-            saveInsuranceInfo(
-                cs.FEC_Account_or_Contract__c,
-                mapData.values()
-            );
+        // List<FEC_Insurance_Info__c> savedRecords =
+        //     saveInsuranceInfo(
+        //         cs.FEC_Account_or_Contract__c,
+        //         mapData.values()
+        //     );
 
+        // ========= Mock data =======>
+        saveInsuranceInfo(
+            cs.FEC_Account_or_Contract__c,
+            mapData.values()
+        );
+
+        List<FEC_Insurance_Info__c> savedRecords = [
+        SELECT
+            Id,
+            FEC_User_ID__c,
+            FEC_Buyer_Name__c,
+            FEC_Buyer_DOB__c,
+            FEC_Buyer_NID__c,
+            FEC_Product_Name__c,
+            FEC_Premium_Fee__c,
+            FEC_Status__c,
+
+            FEC_Buyer_Gender__c,
+            FEC_Sale_Channel__c,
+            FEC_Insurer_Company__c,
+            FEC_Sub_Channel__c,
+
+            FEC_Policy_Number__c,
+            FEC_Agent_Code__c,
+            FEC_Phone_Number__c,
+            FEC_Agent_Name__c,
+
+            FEC_Expiry_Date__c,
+            FEC_Payment_ID__c,
+            FEC_Cancel_Date__c,
+            FEC_Effective_Date__c
+
+        FROM FEC_Insurance_Info__c
+        WHERE FEC_Customer_History__c =
+            :cs.FEC_Account_or_Contract__c
+
+        ORDER BY CreatedDate DESC
+    ];
+            
         /* =====================================================
          * RETURN DTO
          * ===================================================== */
@@ -442,15 +481,15 @@ public with sharing class FEC_BancaController {
         /* =====================================================
          * DELETE OLD DATA
          * ===================================================== */
-        List<FEC_Insurance_Info__c> oldData = [
-            SELECT Id
-            FROM FEC_Insurance_Info__c
-            WHERE FEC_Customer_History__c = :customerHistoryId
-        ];
+        // List<FEC_Insurance_Info__c> oldData = [
+        //     SELECT Id
+        //     FROM FEC_Insurance_Info__c
+        //     WHERE FEC_Customer_History__c = :customerHistoryId
+        // ];
 
-        if (!oldData.isEmpty()) {
-            delete oldData;
-        }
+        // if (!oldData.isEmpty()) {
+        //     delete oldData;
+        // }
 
         /* =====================================================
          * INSERT NEW DATA
