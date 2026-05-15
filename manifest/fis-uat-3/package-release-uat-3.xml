@@ -497,6 +497,7 @@
         <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
         <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
         <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
+        <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
@@ -508,6 +509,7 @@
 		<members>Case.FEC_Redeemed_Points__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Complain_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -1115,7 +1117,7 @@
 		<members>FEC_CommonCss</members>
 		<name>StaticResource</name>
 	</types>
-    <types>
+	<types>
         <members>Case-en_US</members>
         <name>CustomObjectTranslation</name>
     </types>

@@ -4231,4 +4231,9 @@
         <tab>standard-ServiceResource</tab>
         <visibility>Visible</visibility>
     </tabSettings>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
 </PermissionSet>
