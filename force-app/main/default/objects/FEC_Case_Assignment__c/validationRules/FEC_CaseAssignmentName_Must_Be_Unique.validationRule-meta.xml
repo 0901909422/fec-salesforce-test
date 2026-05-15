@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_CaseAssignmentName_Must_Be_Unique</fullName>
+    <active>true</active>
+    <description>Prevent duplicate Case Assignment Name values.</description>
+    <errorConditionFormula>AND(
+NOT(ISBLANK(Name)),
+NOT(ISBLANK(VLOOKUP(
+$ObjectType.FEC_Case_Assignment__c.Fields.Id,
+$ObjectType.FEC_Case_Assignment__c.Fields.Name,
+Name
+))),
+VLOOKUP(
+$ObjectType.FEC_Case_Assignment__c.Fields.Id,
+$ObjectType.FEC_Case_Assignment__c.Fields.Name,
+Name
+) &lt;&gt; Id
+)</errorConditionFormula>
+    <errorMessage>Case Assignment Name đã tồn tại.</errorMessage>
+</ValidationRule>

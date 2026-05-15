@@ -297,6 +297,37 @@
     cursor: pointer;
 }
 
+.new-btn {
+    background: white;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    color: #0176d3;
+    font-size: 12px;
+    line-height: 1.875rem;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 32px;
+}
+
+.new-btn:hover {
+    background: #f3f3f3;
+    border-color: #c9c9c9;
+}
+
+.new-btn:active {
+    background: #ecebea;
+}
+
+.new-btn:focus {
+    outline: none;
+    box-shadow: 0 0 3px #0176d3;
+}
+
+.new-btn:hover {
+    background: #014486;
+}
+
 .refresh-btn:hover {
     background-color: #014486;
 }
