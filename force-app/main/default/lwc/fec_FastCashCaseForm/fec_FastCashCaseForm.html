@@ -1,12 +1,6 @@
 <template>
   <lightning-layout multiple-rows>
     <template if:true={showBody}>
-      <template if:true={eligibilityLoading}>
-        <lightning-layout-item size="12" padding="around-small">
-          <lightning-spinner alternative-text={customLabel.spinnerLoading} size="small"></lightning-spinner>
-        </lightning-layout-item>
-      </template>
-      <template if:false={eligibilityLoading}>
         <template if:true={showNotEligible}>
           <lightning-layout-item size="12" padding="around-small">
             <p class="fec-fc-noti fec-fc-noti-below-title validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
@@ -72,7 +66,6 @@
             </template>
           </lightning-layout-item>
         </template>
-      </template>
     </template>
   </lightning-layout>
   <template if:true={blockLoading}>

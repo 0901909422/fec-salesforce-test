@@ -1747,6 +1747,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     this._applyFastCashPropertyInfoVisibility();
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1367
+  handleFastCashBlockConfirmed() {
+    this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
+  }
+
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _applyFastCashPropertyInfoVisibility() {
     if (!this.business?.sectionlst) {

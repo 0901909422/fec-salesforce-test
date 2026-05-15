@@ -301,12 +301,11 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return Promise.resolve();
         }
         this.eligibilityLoading = true;
-        this.notEligible = false;
-        this.eligible = false;
         return checkFastCashEligibility({ caseId: this.recordId })
             .then((dto) => {
                 this.eligibilityLoading = false;
                 if (!dto || !dto.callCompleted) {
+                    this.eligible = false;
                     this.notEligible = true;
                     this.displayErrorCode = STR_EMPTY;
                     this.displayFastCashStatus = dto && dto.fastCashStatus ? dto.fastCashStatus : STR_EMPTY;
@@ -497,6 +496,14 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     handleConfirmYes() {
         this.showConfirmModal = false;
         this.applyNocLockAfterModal();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1367
+        this.dispatchEvent(
+            new CustomEvent("fecfastcashblockconfirmed", {
+                bubbles: true,
+                composed: true,
+                detail: { recordId: this.recordId }
+            })
+        );
         this.executeBlock();
     }
 
