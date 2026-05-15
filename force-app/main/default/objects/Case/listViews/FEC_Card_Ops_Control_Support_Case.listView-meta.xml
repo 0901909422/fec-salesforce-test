@@ -32,10 +32,9 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>Card Ops Control &amp;amp; Support</value>
+        <value>Card Ops Control &amp; Support</value>
     </filters>
     <label>Card Ops Control &amp; Support</label>
-    <queue>FEC_Card_Ops_Control_Support</queue>
     <sharedTo>
         <role>FEC_Card_Operations_Control_Support_Expert</role>
         <role>FEC_Head_Of_Card_Operations_Department</role>

@@ -32,10 +32,9 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>Card Dispute &amp;amp; Charge Back</value>
+        <value>Card Dispute &amp; Charge Back</value>
     </filters>
     <label>Card Dispute &amp; Charge Back</label>
-    <queue>FEC_Card_Dispute_Charge_Back</queue>
     <sharedTo>
         <role>FEC_Card_Dispute_Charge_Back_Specialist</role>
         <role>FEC_Senior_Card_Dispute_Charge_Back_Specialist</role>
