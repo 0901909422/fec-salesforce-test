@@ -95,6 +95,8 @@ import CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected from '@salesf
 import CS_OrgChart_Text_Save_Waning_Title from '@salesforce/label/c.CS_OrgChart_Text_Save_Waning_Title';
 import CS_OrgChart_Table_UserTable_Page_Size from '@salesforce/label/c.CS_OrgChart_Table_UserTable_Page_Size';
 import CS_OrgChart_Text_RemoveUser_MainQueue_Warning from '@salesforce/label/c.CS_OrgChart_Text_RemoveUser_MainQueue_Warning';
+import CS_OrgChart_Text_Add_User_To_Queue_Sucess from '@salesforce/label/c.CS_OrgChart_Text_Add_User_To_Queue_Sucess';
+import CS_OrgChart_Text_Remove_User_Sucess from '@salesforce/label/c.CS_OrgChart_Text_Remove_User_Sucess';
 
 export const customLabels = {
     CS_OrgChart_Text_header,
@@ -193,5 +195,7 @@ export const customLabels = {
     CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected,
     CS_OrgChart_Text_Save_Waning_Title,
     CS_OrgChart_Table_UserTable_Page_Size,
-    CS_OrgChart_Text_RemoveUser_MainQueue_Warning
+    CS_OrgChart_Text_RemoveUser_MainQueue_Warning,
+    CS_OrgChart_Text_Add_User_To_Queue_Sucess,
+    CS_OrgChart_Text_Remove_User_Sucess
 };

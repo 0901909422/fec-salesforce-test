@@ -306,7 +306,7 @@ public with sharing class DepartmentAdmin {
     2026/03/31      Ha Linh          Init
     ------------------------------------------------------------*/
     @AuraEnabled
-    public static List<UserDto> searchActiveUsers(String searchTerm) {
+    public static List<UserDto> searchActiveUsers(String searchTerm, List<Id> excludedIds) {
         if (String.isBlank(searchTerm)) {
             return new List<UserDto>();
         }
@@ -315,7 +315,7 @@ public with sharing class DepartmentAdmin {
         List<User> users = [
             SELECT Id, Name, Email, UserRole.Name
             FROM User
-            WHERE IsActive = true 
+            WHERE IsActive = true AND Id NOT IN :excludedIds
             AND (Name LIKE :('%' + searchTerm + '%') OR Email LIKE :('%' + searchTerm + '%'))
             ORDER BY Name
             LIMIT 100
