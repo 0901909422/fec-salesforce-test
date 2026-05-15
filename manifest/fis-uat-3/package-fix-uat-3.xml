@@ -47,6 +47,7 @@
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
+		<members>FEC_HoldCaseInheritanceService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
