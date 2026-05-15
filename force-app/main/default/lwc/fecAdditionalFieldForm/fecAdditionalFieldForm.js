@@ -201,10 +201,10 @@ export default class FecAdditionalFieldForm extends LightningElement {
             return;
         }
 
-        // Validate Unique ID: chỉ cho phép chữ, số, gạch ngang, gạch dưới
+        // Validate Unique ID: phải bắt đầu bằng chữ Latin, cho phép chữ, số, gạch dưới, dấu chấm, gạch ngang
         if (this.isNewMode) {
             const uniqueId = fields[this.FIELD_FEC_UNIQUE_ID];
-            if (uniqueId && !/^[a-zA-Z0-9_-]+$/.test(uniqueId)) {
+            if (uniqueId && !/^[a-zA-Z][a-zA-Z0-9_.\-]*$/.test(uniqueId)) {
                 this.dispatchEvent(new ShowToastEvent({
                     title: LABEL_ERROR_TITLE,
                     message: LABEL_ERROR_SPECIAL_CHARS_ID,

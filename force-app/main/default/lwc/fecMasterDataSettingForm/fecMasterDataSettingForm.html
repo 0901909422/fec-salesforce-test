@@ -5,38 +5,90 @@
             <div class="slds-grid slds-wrap slds-p-around_medium edit-form">
                 <lightning-messages></lightning-messages>
 
-                <!-- Additional Field (Editable in Edit Mode) -->
+                <!-- Additional Field (search dropdown - Edit Mode) -->
                 <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
                     <label class="slds-form-element__label">
                         <span class="slds-required">*</span> Additional Field
                     </label>
-                    <lightning-combobox data-field-name="FEC_Additional_Field__c" options={additionalFieldOptions}
-                        value={formData.additionalField} placeholder="-- Select Additional Field --" onchange={handleInputChange}></lightning-combobox>
+                    <div class="slds-combobox_container" style="position:relative;">
+                        <lightning-input type="search" placeholder="Search Additional Field..."
+                            value={additionalFieldSearchTerm}
+                            onchange={handleAdditionalFieldSearch}
+                            onfocus={handleAdditionalFieldFocus}
+                            onblur={handleAdditionalFieldBlur}
+                            variant="label-hidden">
+                        </lightning-input>
+                        <template if:true={isAdditionalFieldDropdownOpen}>
+                            <div class="search-dropdown">
+                                <template for:each={filteredAdditionalFieldOptions} for:item="opt">
+                                    <div key={opt.value} data-value={opt.value} data-label={opt.label}
+                                        onclick={handleSelectAdditionalField}
+                                        onmouseenter={handleDropdownItemHover}
+                                        class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                     <div class="slds-text-color_weak slds-text-body_small slds-m-top_xx-small">
                         Choose from active Additional Fields only
                     </div>
                 </div>
 
-                <!-- FEC Channel (Single-select Lookup) -->
+                <!-- FEC Channel (search dropdown - Edit Mode) -->
                 <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <lightning-combobox
-                        label="Channel"
-                        value={selectedChannel}
-                        options={channelOptions}
-                        placeholder="-- Select Channel --"
-                        onchange={handleChannelChange}>
-                    </lightning-combobox>
+                    <label class="slds-form-element__label">Channel</label>
+                    <div class="slds-combobox_container" style="position:relative;">
+                        <lightning-input type="search" placeholder="Search Channel..."
+                            value={channelSearchTerm}
+                            onchange={handleChannelSearch}
+                            onfocus={handleChannelFocus}
+                            onblur={handleChannelBlur}
+                            variant="label-hidden">
+                        </lightning-input>
+                        <template if:true={isChannelDropdownOpen}>
+                            <div class="search-dropdown">
+                                <template for:each={filteredChannelOptions} for:item="opt">
+                                    <div key={opt.value} data-value={opt.value} data-label={opt.label}
+                                        onclick={handleSelectChannel}
+                                        onmouseenter={handleDropdownItemHover}
+                                        class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
-                <!-- Applicable Roles (Multi-select) -->
+                <!-- Applicable Roles (Multi-select search dropdown - Edit Mode) -->
                 <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
                     <label class="slds-form-element__label">
                         <span class="slds-required">*</span> {labelApplicableRoles}
                     </label>
-                    <lightning-combobox data-name={dataNameRoles} options={roleOptions}
-                        placeholder="-- Select Roles --" onchange={handleSelectCustom}>
-                    </lightning-combobox>
-                    <div class="pills-container">
+                    <div class="slds-combobox_container" style="position:relative;">
+                        <lightning-input type="search" placeholder="Search Roles..."
+                            value={roleSearchTerm}
+                            onchange={handleRoleSearch}
+                            onfocus={handleRoleFocus}
+                            onblur={handleRoleBlur}
+                            variant="label-hidden">
+                        </lightning-input>
+                        <template if:true={isRoleDropdownOpen}>
+                            <div class="search-dropdown">
+                                <template for:each={filteredRoleOptions} for:item="opt">
+                                    <div key={opt.value} data-value={opt.value}
+                                        onclick={handleSelectRoleFromList}
+                                        onmouseenter={handleDropdownItemHover}
+                                        class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="pills-container slds-m-top_xx-small">
                         <template for:each={selectedRoles} for:item="val">
                             <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
                                 onremove={handleRemoveCustom}></lightning-pill>
@@ -44,104 +96,130 @@
                     </div>
                 </div>
 
-                <!-- Editable User Group (Multi-select) -->
-                <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Editable User Group</label>
-                    <lightning-combobox data-name={dataNameEditableUserGroups} options={editableUserGroupOptions}
-                        placeholder="-- Select Editable User Groups --" onchange={handleSelectCustom}>
-                    </lightning-combobox>
-                    <div class="pills-container">
-                        <template for:each={selectedEditableUserGroups} for:item="val">
-                            <lightning-pill key={val} label={val} name={val} data-name={dataNameEditableUserGroups}
-                                onremove={handleRemoveCustom}></lightning-pill>
-                        </template>
-                    </div>
-                </div>
+                <!-- Editable User Group: auto-filled from NOC User Group, hidden -->
 
                 <!-- Field Object Name, API Name, Label Name — auto-filled from Property, hidden -->
 
-                <!-- Section & Field Order - Below Roles -->
-                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                <!-- Section & Field Order -->
+                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_small">
                     <label class="slds-form-element__label">Section</label>
-                    <lightning-input type="text" data-field-name="FEC_Section__c" value={formData.section}
+                    <template if:false={isCustomSection}>
+                        <lightning-combobox value={formData.section} options={sectionOptions}
+                            placeholder="-- Select Section --" onchange={handleSectionChange}></lightning-combobox>
+                    </template>
+                    <template if:true={isCustomSection}>
+                        <lightning-input type="text" value={formData.section} variant="label-hidden"
+                            onchange={handleCustomSectionInput} placeholder="Nhập tên Section mới"></lightning-input>
+                    </template>
+                </div>
+
+                <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_small">
+                    <lightning-input type="number" label="Field Order" data-field-name="FEC_Field_Order_Display__c" value={displayOrder}
                         onchange={handleInputChange}></lightning-input>
                 </div>
 
-                <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Order</label>
-                    <lightning-input type="number" data-field-name="FEC_Field_Order_Display__c" value={displayOrder}
-                        onchange={handleInputChange}></lightning-input>
-                </div>
-
-                <!-- Sub Section -->
-                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                <!-- Sub Section & Sub Section Order -->
+                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_small">
                     <label class="slds-form-element__label">Sub Section</label>
-                    <lightning-input type="text" data-field-name="FEC_Sub_Section__c" value={formData.subSection}
-                        onchange={handleInputChange}></lightning-input>
+                    <template if:false={isCustomSubSection}>
+                        <lightning-combobox value={formData.subSection} options={subSectionOptions}
+                            placeholder="-- Select Sub Section --" onchange={handleSubSectionChange}></lightning-combobox>
+                    </template>
+                    <template if:true={isCustomSubSection}>
+                        <lightning-input type="text" value={formData.subSection} variant="label-hidden"
+                            onchange={handleCustomSubSectionInput} placeholder="Nhập tên Sub Section mới"></lightning-input>
+                    </template>
                 </div>
 
-                <!-- Sub Section Field Layout, Sub Section Layout, Sub Section Order -->
-                <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Sub Section Field Layout</label>
-                    <lightning-input type="number" data-field-name="FEC_Sub_Section_Field_Layout__c" value={formData.subSectionFieldLayout}
-                        onchange={handleInputChange}></lightning-input>
-                </div>
+                <template if:true={showSubSectionOrder}>
+                    <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_small">
+                        <lightning-input type="number" label="Sub Section Order" data-field-name="FEC_Sub_Section_Order__c" value={formData.subSectionOrder}
+                            onchange={handleInputChange}></lightning-input>
+                    </div>
+                </template>
 
-                <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Sub Section Layout</label>
-                    <lightning-input type="number" data-field-name="FEC_Sub_Section_Layout__c" value={formData.subSectionLayout}
-                        onchange={handleInputChange}></lightning-input>
-                </div>
-
-                <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Sub Section Order</label>
-                    <lightning-input type="number" data-field-name="FEC_Sub_Section_Order__c" value={formData.subSectionOrder}
-                        onchange={handleInputChange}></lightning-input>
+                <!-- Số cột hiển thị -->
+                <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_small">
+                    <lightning-combobox label="Số cột hiển thị" value={selectedColumnCount} options={columnCountOptions}
+                        placeholder="-- Chọn số cột --" onchange={handleColumnCountChange}></lightning-combobox>
                 </div>
 
                 <!-- Checkboxes Row -->
                 <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
                     <div class="slds-grid slds-gap_medium checkbox-row">
                         <div class="slds-col">
-                            <lightning-input type="checkbox" label="Status" data-field-name="FEC_Field_Status__c"
+                            <lightning-input type="checkbox" label="Field Status" data-field-name="FEC_Field_Status__c"
                                 checked={formData.fieldStatus} onchange={handleInputChange}></lightning-input>
                         </div>
-                        <div class="slds-col">
-                            <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
-                                checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
-                        </div>
-                        <div class="slds-col">
-                            <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
-                                checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
-                        </div>
-                        <div class="slds-col">
-                            <lightning-input type="checkbox" label="Field Masking" data-field-name="FEC_Field_Masking__c"
-                                checked={formData.fieldMasking} onchange={handleInputChange}></lightning-input>
-                        </div>
-                        <div class="slds-col">
-                            <lightning-input type="checkbox" label="Field Reverted" data-field-name="FEC_Field_Reverted__c"
-                                checked={formData.fieldReverted} onchange={handleInputChange}></lightning-input>
-                        </div>
-                        <div class="slds-col">
-                            <lightning-input type="checkbox" label="Editable" data-field-name="FEC_Field_Editable__c"
-                                checked={formData.fieldEditable} onchange={handleInputChange}></lightning-input>
-                        </div>
+                        <template if:true={isFieldActive}>
+                            <div class="slds-col">
+                                <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
+                                    checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col">
+                                <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
+                                    checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col">
+                                <lightning-input type="checkbox" label="Field Masking" data-field-name="FEC_Field_Masking__c"
+                                    checked={formData.fieldMasking} onchange={handleInputChange}></lightning-input>
+                            </div>
+                            <template if:true={showFieldReverted}>
+                                <div class="slds-col">
+                                    <lightning-input type="checkbox" label="Field Reverted" data-field-name="FEC_Field_Reverted__c"
+                                        checked={formData.fieldReverted} onchange={handleInputChange}></lightning-input>
+                                </div>
+                            </template>
+                            <div class="slds-col">
+                                <lightning-input type="checkbox" label="Editable" data-field-name="FEC_Field_Editable__c"
+                                    checked={formData.fieldEditable} onchange={handleInputChange}></lightning-input>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
-                <!-- Masking Type -->
-                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Masking Type</label>
-                    <lightning-combobox data-field-name="FEC_Masking_Type__c" options={maskingTypeOptions}
-                        value={formData.maskingType} placeholder="-- Select Masking Type --" onchange={handleInputChange}></lightning-combobox>
-                </div>
+                <!-- Masking Type: only show when Field Masking = true -->
+                <template if:true={showMaskingType}>
+                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">Masking Type</label>
+                        <lightning-combobox data-field-name="FEC_Masking_Type__c" options={maskingTypeOptions}
+                            value={formData.maskingType} placeholder="-- Select Masking Type --" onchange={handleInputChange}></lightning-combobox>
+                    </div>
+                </template>
 
-                <!-- Editable Role -->
-                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                    <label class="slds-form-element__label">Editable Role</label>
-                    <lightning-input type="text" data-field-name="FEC_Editable_Role__c" value={formData.editableRole}
-                        onchange={handleInputChange} placeholder="e.g. Admin, Manager"></lightning-input>
-                </div>
+                <!-- Editable Role: only show when Editable = true (search dropdown - Edit Mode) -->
+                <template if:true={showEditableRole}>
+                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                        <label class="slds-form-element__label">Editable Role</label>
+                        <div class="slds-combobox_container" style="position:relative;">
+                            <lightning-input type="search" placeholder="Search Editable Roles..."
+                                value={editableRoleSearchTerm}
+                                onchange={handleEditableRoleSearch}
+                                onfocus={handleEditableRoleFocus}
+                                onblur={handleEditableRoleBlur}
+                                variant="label-hidden">
+                            </lightning-input>
+                            <template if:true={isEditableRoleDropdownOpen}>
+                                <div class="search-dropdown">
+                                    <template for:each={filteredEditableRoleOptions} for:item="opt">
+                                        <div key={opt.value} data-value={opt.value}
+                                            onclick={handleSelectEditableRoleFromList}
+                                            onmouseenter={handleDropdownItemHover}
+                                            class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                            {opt.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="pills-container slds-m-top_xx-small">
+                            <template for:each={selectedEditableRoles} for:item="val">
+                                <lightning-pill key={val} label={val} name={val}
+                                    onremove={handleRemoveEditableRole}></lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+                </template>
             </div>
         </template>
 
@@ -200,38 +278,90 @@
 
                 <!-- Normal Mode: Show all fields -->
                 <template lwc:if={isCreateMode}>
-                    <!-- Additional Field (from FEC_MDM_Additional_Field__c with status = true) -->
+                    <!-- Additional Field (search dropdown) -->
                     <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
                         <label class="slds-form-element__label">
                             <span class="slds-required">*</span> Additional Field
                         </label>
-                        <lightning-combobox data-field-name="FEC_Additional_Field__c" options={additionalFieldOptions}
-                            placeholder="-- Select Additional Field --" onchange={handleInputChange}></lightning-combobox>
+                        <div class="slds-combobox_container" style="position:relative;">
+                            <lightning-input type="search" placeholder="Search Additional Field..."
+                                value={additionalFieldSearchTerm}
+                                onchange={handleAdditionalFieldSearch}
+                                onfocus={handleAdditionalFieldFocus}
+                                onblur={handleAdditionalFieldBlur}
+                                variant="label-hidden">
+                            </lightning-input>
+                            <template if:true={isAdditionalFieldDropdownOpen}>
+                                <div class="search-dropdown">
+                                    <template for:each={filteredAdditionalFieldOptions} for:item="opt">
+                                        <div key={opt.value} data-value={opt.value} data-label={opt.label}
+                                            onclick={handleSelectAdditionalField}
+                                            onmouseenter={handleDropdownItemHover}
+                                            class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                            {opt.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
                         <div class="slds-text-color_weak slds-text-body_small slds-m-top_xx-small">
                             Choose from active Additional Fields only
                         </div>
                     </div>
 
-                    <!-- FEC Channel (Single-select Lookup) -->
+                    <!-- FEC Channel (search dropdown - Create Mode) -->
                     <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-combobox
-                            label="Channel"
-                            value={selectedChannel}
-                            options={channelOptions}
-                            placeholder="-- Select Channel --"
-                            onchange={handleChannelChange}>
-                        </lightning-combobox>
+                        <label class="slds-form-element__label">Channel</label>
+                        <div class="slds-combobox_container" style="position:relative;">
+                            <lightning-input type="search" placeholder="Search Channel..."
+                                value={channelSearchTerm}
+                                onchange={handleChannelSearch}
+                                onfocus={handleChannelFocus}
+                                onblur={handleChannelBlur}
+                                variant="label-hidden">
+                            </lightning-input>
+                            <template if:true={isChannelDropdownOpen}>
+                                <div class="search-dropdown">
+                                    <template for:each={filteredChannelOptions} for:item="opt">
+                                        <div key={opt.value} data-value={opt.value} data-label={opt.label}
+                                            onclick={handleSelectChannel}
+                                            onmouseenter={handleDropdownItemHover}
+                                            class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                            {opt.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
                     </div>
 
-                    <!-- Applicable Roles (Multi-select) -->
+                    <!-- Applicable Roles (Multi-select search dropdown) -->
                     <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
                         <label class="slds-form-element__label">
                             <span class="slds-required">*</span> {labelApplicableRoles}
                         </label>
-                        <lightning-combobox data-name={dataNameRoles} options={roleOptions} placeholder="-- Select Roles --"
-                            onchange={handleSelectCustom}>
-                        </lightning-combobox>
-                        <div class="pills-container">
+                        <div class="slds-combobox_container" style="position:relative;">
+                            <lightning-input type="search" placeholder="Search Roles..."
+                                value={roleSearchTerm}
+                                onchange={handleRoleSearch}
+                                onfocus={handleRoleFocus}
+                                onblur={handleRoleBlur}
+                                variant="label-hidden">
+                            </lightning-input>
+                            <template if:true={isRoleDropdownOpen}>
+                                <div class="search-dropdown">
+                                    <template for:each={filteredRoleOptions} for:item="opt">
+                                        <div key={opt.value} data-value={opt.value}
+                                            onclick={handleSelectRoleFromList}
+                                            onmouseenter={handleDropdownItemHover}
+                                            class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                            {opt.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="pills-container slds-m-top_xx-small">
                             <template for:each={selectedRoles} for:item="val">
                                 <lightning-pill key={val} label={val} name={val} data-name={dataNameRoles}
                                     onremove={handleRemoveCustom}></lightning-pill>
@@ -239,53 +369,52 @@
                         </div>
                     </div>
 
-                    <!-- Editable User Group (Multi-select) -->
-                    <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <label class="slds-form-element__label">Editable User Group</label>
-                        <lightning-combobox data-name={dataNameEditableUserGroups} options={editableUserGroupOptions}
-                            placeholder="-- Select Editable User Groups --" onchange={handleSelectCustom}>
-                        </lightning-combobox>
-                        <div class="pills-container">
-                            <template for:each={selectedEditableUserGroups} for:item="val">
-                                <lightning-pill key={val} label={val} name={val} data-name={dataNameEditableUserGroups}
-                                    onremove={handleRemoveCustom}></lightning-pill>
-                            </template>
-                        </div>
-                    </div>
+                    <!-- Editable User Group: auto-filled from NOC User Group, hidden in create mode -->
 
                     <!-- Field Object Name, API Name, Label Name — auto-filled from Property, hidden -->
 
-                    <!-- Section & Field Order - Below Roles -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="text" label="Section" data-field-name="FEC_Section__c"
-                            value={formData.section} onchange={handleInputChange}></lightning-input>
+                    <!-- Section & Field Order -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_small">
+                        <label class="slds-form-element__label">Section</label>
+                        <template if:false={isCustomSection}>
+                            <lightning-combobox value={formData.section} options={sectionOptions}
+                                placeholder="-- Select Section --" onchange={handleSectionChange}></lightning-combobox>
+                        </template>
+                        <template if:true={isCustomSection}>
+                            <lightning-input type="text" value={formData.section} variant="label-hidden"
+                                onchange={handleCustomSectionInput} placeholder="Nhập tên Section mới"></lightning-input>
+                        </template>
                     </div>
 
-                    <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                    <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_small">
                         <lightning-input type="number" label="Field Order" data-field-name="FEC_Field_Order_Display__c"
                             value={displayOrder} onchange={handleInputChange}></lightning-input>
                     </div>
 
-                    <!-- Sub Section -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="text" label="Sub Section" data-field-name="FEC_Sub_Section__c"
-                            value={formData.subSection} onchange={handleInputChange}></lightning-input>
+                    <!-- Sub Section & Sub Section Order -->
+                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_small">
+                        <label class="slds-form-element__label">Sub Section</label>
+                        <template if:false={isCustomSubSection}>
+                            <lightning-combobox value={formData.subSection} options={subSectionOptions}
+                                placeholder="-- Select Sub Section --" onchange={handleSubSectionChange}></lightning-combobox>
+                        </template>
+                        <template if:true={isCustomSubSection}>
+                            <lightning-input type="text" value={formData.subSection} variant="label-hidden"
+                                onchange={handleCustomSubSectionInput} placeholder="Nhập tên Sub Section mới"></lightning-input>
+                        </template>
                     </div>
 
-                    <!-- Sub Section Field Layout, Sub Section Layout, Sub Section Order -->
-                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="number" label="Sub Section Field Layout" data-field-name="FEC_Sub_Section_Field_Layout__c"
-                            value={formData.subSectionFieldLayout} onchange={handleInputChange}></lightning-input>
-                    </div>
+                    <template if:true={showSubSectionOrder}>
+                        <div class="slds-col slds-size_1-of-4 slds-p-horizontal_x-small slds-p-vertical_small">
+                            <lightning-input type="number" label="Sub Section Order" data-field-name="FEC_Sub_Section_Order__c"
+                                value={formData.subSectionOrder} onchange={handleInputChange}></lightning-input>
+                        </div>
+                    </template>
 
-                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="number" label="Sub Section Layout" data-field-name="FEC_Sub_Section_Layout__c"
-                            value={formData.subSectionLayout} onchange={handleInputChange}></lightning-input>
-                    </div>
-
-                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="number" label="Sub Section Order" data-field-name="FEC_Sub_Section_Order__c"
-                            value={formData.subSectionOrder} onchange={handleInputChange}></lightning-input>
+                    <!-- Số cột hiển thị -->
+                    <div class="slds-col slds-size_1-of-3 slds-p-horizontal_x-small slds-p-vertical_small">
+                        <lightning-combobox label="Số cột hiển thị" value={selectedColumnCount} options={columnCountOptions}
+                            placeholder="-- Chọn số cột --" onchange={handleColumnCountChange}></lightning-combobox>
                     </div>
 
                     <!-- Checkboxes Row -->
@@ -295,42 +424,75 @@
                                 <lightning-input type="checkbox" label="Field Status" data-field-name="FEC_Field_Status__c"
                                     checked={formData.fieldStatus} onchange={handleInputChange}></lightning-input>
                             </div>
-                            <div class="slds-col">
-                                <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
-                                    checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
-                            </div>
-                            <div class="slds-col">
-                                <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
-                                    checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
-                            </div>
-                            <div class="slds-col">
-                                <lightning-input type="checkbox" label="Field Masking" data-field-name="FEC_Field_Masking__c"
-                                    checked={formData.fieldMasking} onchange={handleInputChange}></lightning-input>
-                            </div>
-                            <div class="slds-col">
-                                <lightning-input type="checkbox" label="Field Reverted" data-field-name="FEC_Field_Reverted__c"
-                                    checked={formData.fieldReverted} onchange={handleInputChange}></lightning-input>
-                            </div>
-                            <div class="slds-col">
-                                <lightning-input type="checkbox" label="Editable" data-field-name="FEC_Field_Editable__c"
-                                    checked={formData.fieldEditable} onchange={handleInputChange}></lightning-input>
-                            </div>
+                            <template if:true={isFieldActive}>
+                                <div class="slds-col">
+                                    <lightning-input type="checkbox" label="Read Only" data-field-name="FEC_Field_ReadOnly__c"
+                                        checked={formData.fieldReadOnly} onchange={handleInputChange}></lightning-input>
+                                </div>
+                                <div class="slds-col">
+                                    <lightning-input type="checkbox" label="Mandatory" data-field-name="FEC_Field_Mandatory__c"
+                                        checked={formData.fieldMandatory} onchange={handleInputChange}></lightning-input>
+                                </div>
+                                <div class="slds-col">
+                                    <lightning-input type="checkbox" label="Field Masking" data-field-name="FEC_Field_Masking__c"
+                                        checked={formData.fieldMasking} onchange={handleInputChange}></lightning-input>
+                                </div>
+                                <template if:true={showFieldReverted}>
+                                    <div class="slds-col">
+                                        <lightning-input type="checkbox" label="Field Reverted" data-field-name="FEC_Field_Reverted__c"
+                                            checked={formData.fieldReverted} onchange={handleInputChange}></lightning-input>
+                                    </div>
+                                </template>
+                                <div class="slds-col">
+                                    <lightning-input type="checkbox" label="Editable" data-field-name="FEC_Field_Editable__c"
+                                        checked={formData.fieldEditable} onchange={handleInputChange}></lightning-input>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
-                    <!-- Masking Type -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <label class="slds-form-element__label">Masking Type</label>
-                        <lightning-combobox data-field-name="FEC_Masking_Type__c" options={maskingTypeOptions}
-                            value={formData.maskingType} placeholder="-- Select Masking Type --" onchange={handleInputChange}></lightning-combobox>
-                    </div>
+                    <!-- Masking Type: only show when Field Masking = true -->
+                    <template if:true={showMaskingType}>
+                        <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                            <label class="slds-form-element__label">Masking Type</label>
+                            <lightning-combobox data-field-name="FEC_Masking_Type__c" options={maskingTypeOptions}
+                                value={formData.maskingType} placeholder="-- Select Masking Type --" onchange={handleInputChange}></lightning-combobox>
+                        </div>
+                    </template>
 
-                    <!-- Editable Role -->
-                    <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small slds-p-vertical_xx-small">
-                        <lightning-input type="text" label="Editable Role" data-field-name="FEC_Editable_Role__c"
-                            value={formData.editableRole} onchange={handleInputChange}
-                            placeholder="e.g. Admin, Manager"></lightning-input>
-                    </div>
+                    <!-- Editable Role: only show when Editable = true (search dropdown - Create Mode) -->
+                    <template if:true={showEditableRole}>
+                        <div class="slds-col slds-size_1-of-1 slds-p-horizontal_x-small slds-p-vertical_xx-small">
+                            <label class="slds-form-element__label">Editable Role</label>
+                            <div class="slds-combobox_container" style="position:relative;">
+                                <lightning-input type="search" placeholder="Search Editable Roles..."
+                                    value={editableRoleSearchTerm}
+                                    onchange={handleEditableRoleSearch}
+                                    onfocus={handleEditableRoleFocus}
+                                    onblur={handleEditableRoleBlur}
+                                    variant="label-hidden">
+                                </lightning-input>
+                                <template if:true={isEditableRoleDropdownOpen}>
+                                    <div class="search-dropdown">
+                                        <template for:each={filteredEditableRoleOptions} for:item="opt">
+                                            <div key={opt.value} data-value={opt.value}
+                                                onclick={handleSelectEditableRoleFromList}
+                                                onmouseenter={handleDropdownItemHover}
+                                                class="slds-p-horizontal_small slds-p-vertical_xx-small search-dropdown-item">
+                                                {opt.label}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="pills-container slds-m-top_xx-small">
+                                <template for:each={selectedEditableRoles} for:item="val">
+                                    <lightning-pill key={val} label={val} name={val}
+                                        onremove={handleRemoveEditableRole}></lightning-pill>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
                 </template>
             </div>
         </template>
