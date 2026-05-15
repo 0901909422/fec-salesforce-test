@@ -16851,4 +16851,84 @@
         <shortDescription>No Data Found</shortDescription>
         <value>No data Found</value>
     </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Details_Title</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề section Call Transfer Details</shortDescription>
+        <value>Call Transfer Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferDataToCollections</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Data to Collections</shortDescription>
+        <value>Transfer Data to Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferTime</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Time</shortDescription>
+        <value>Transfer Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferStatus</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Status</shortDescription>
+        <value>Transfer Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_FailureReason</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Failure Reason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollActionCode</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Action Code</shortDescription>
+        <value>Coll Action Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollSubActionCode</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Sub-Action Code</shortDescription>
+        <value>Coll Sub-Action Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollRemarks</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Remarks</shortDescription>
+        <value>Coll Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollActionDate</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Action Date</shortDescription>
+        <value>Coll Action Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollAgent</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Agent</shortDescription>
+        <value>Coll Agent</value>
+    </labels>
 </CustomLabels>
