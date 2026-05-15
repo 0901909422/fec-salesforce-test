@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Generate EVoucher</label>
+    <protected>false</protected>
+    <values>
+        <field>FEC_Account_Number_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_Consumer_Name__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_Endpoint__c</field>
+        <value xsi:type="xsd:string">/esb/cms/CMS_RewardWS</value>
+    </values>
+    <values>
+        <field>FEC_FromDate_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_Last_4_Digit_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_Mobile_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_National_Id_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>FEC_SOAP_Action__c</field>
+        <value xsi:type="xsd:string">http://esbservice.fecredit.org/CMS_RewardWS/GenerateEvoucher</value>
+    </values>
+    <values>
+        <field>FEC_ToDate_Hard_Code__c</field>
+        <value xsi:nil="true"/>
+    </values>
+</CustomMetadata>
