@@ -4351,6 +4351,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_BancaTabView</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_HoldCaseConfiguration</tab>
         <visibility>Visible</visibility>
     </tabSettings>

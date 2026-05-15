@@ -3908,6 +3908,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
