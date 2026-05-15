@@ -289,6 +289,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         if (!this.selectedQueueId) return;
         this.isLoadingUsers = true;
         this.usersError = undefined;
+        this.userIdExcludeFromSearch = [];
 
         const container = this.template.querySelector('.table-user-container');
 
