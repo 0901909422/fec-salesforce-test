@@ -9,7 +9,7 @@ import {
 
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
-import getCase from "@salesforce/apex/FEC_SubProcessService.getCase";
+import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
 
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
@@ -101,24 +101,19 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   async initializeCase() {
     try {
-      this.isSubmitted = await getCase({
+      const result = await getSubmittedSubProcesses({
         caseId: this.recordId,
       });
 
-      console.log("isSubmitted = ", this.isSubmitted);
+      console.log("submitted subprocesses = ", JSON.stringify(result));
 
-      /*
-       * Force show all subprocesses
-       */
-      if (this.isSubmitted) {
-        this.showHoldCase = true;
+      this.showHoldCase = !!result.showHoldCase;
 
-        this.showRemovePhone = true;
+      this.showRemovePhone = !!result.showRemovePhone;
 
-        this.showDoNotBother = true;
+      this.showDoNotBother = !!result.showDNB;
 
-        this.showTransferCall = true;
-      }
+      this.showTransferCall = !!result.showTransferCall;
     } catch (error) {
       console.error("[initializeCase] ERROR", error);
     }
