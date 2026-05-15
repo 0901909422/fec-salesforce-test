@@ -7,10 +7,6 @@
         <value xsi:nil="true"/>
     </values>
     <values>
-        <field>FEC_Consumer_Name__c</field>
-        <value xsi:nil="true"/>
-    </values>
-    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/CMS_RewardWS</value>
     </values>
