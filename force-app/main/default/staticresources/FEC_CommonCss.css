@@ -170,6 +170,10 @@ c-lwc-multi-lookup lightning-input input {
   padding-left: 8px !important;
 }
 
+c-fec_-case-bussiness .hide-help-icon lightning-helptext {
+  display: none;
+}
+
 /* fec_FileUploadCard: cursor tay trên vùng lightning-file-upload (SLDS trong shadow; CSS LWC scoped không tới được) */
 c-fec_-file-upload-card
   lightning-file-upload:not([disabled]):not([aria-disabled="true"])
