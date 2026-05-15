@@ -14,6 +14,7 @@ import {
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_ACTION_CHANNEL from "@salesforce/messageChannel/FEC_CaseAction__c";
 // import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+import getCaseInfo from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCaseInfo";
 import getCategory from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCategory";
 import updateCase from "@salesforce/apex/FEC_COFFraudRelatedHandler.updateCase";
 import {
@@ -34,7 +35,7 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   @track complaintTypeOptions = [];
   @track complaintSourceOptions = [];
 
-  @track complaintTypeValue = null;
+  @track complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
   @track complaintSourceValue = null;
 
   productTypeId;
@@ -53,10 +54,12 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
 
   @wire(MessageContext)
   messageContext;
-  connectedCallback() {
+  async connectedCallback() {
     this.subscribeToMessageChannel();
     this.subscribeCaseActionChannel();
     // this.subscribeModeChannel();
+
+    await this.loadCaseData();
   }
 
   disconnectedCallback() {
@@ -144,6 +147,12 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
     // chỉ update khi có data
     if (!this.complaintTypeValue && !this.complaintSourceValue) return;
 
+    console.log("Updating case with Complaint Type:", this.complaintTypeValue);
+    console.log(
+      "Updating case with Complaint Source:",
+      this.complaintSourceValue,
+    );
+
     updateCase({
       recordId: this.recordId,
       complaintTypeValue: this.complaintTypeValue,
@@ -176,31 +185,22 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
   //   }
   // }
 
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: FIELDS,
-  })
-  wiredCase({ data, error }) {
-    if (data) {
-      this.recordTypeId = data.fields.RecordTypeId.value;
+  async loadCaseData() {
+    try {
+      const data = await getCaseInfo({
+        recordId: this.recordId,
+      });
 
-      // lấy trực tiếp từ DB
-      this.complaintTypeValue = getFieldValue(data, COMPLAINT_TYPE);
+      this.recordTypeId = data.RecordTypeId;
 
-      this.complaintSourceValue = getFieldValue(data, COMPLAINT_SOURCE);
+      this.complaintTypeValue =
+        data.FEC_Complain_Type__c || COMPLAINT_TYPE_TEXT.NORMAL;
 
-      this.modeEditCase = getFieldValue(data, VIEW_MODE) === "handling";
+      this.complaintSourceValue = data.FEC_Complaint_Source__c;
 
-      if (!this.complaintTypeValue) {
-        this.complaintTypeValue = COMPLAINT_TYPE_TEXT.NORMAL;
-      }
-      console.log("Complaint Type:", this.complaintTypeValue);
-
-      console.log("Complaint Source:", this.complaintSourceValue);
-    }
-
-    if (error) {
-      console.error("wiredCase error:", error);
+      this.modeEditCase = data.FEC_Interaction_View_Mode__c === "handling";
+    } catch (error) {
+      console.error("loadCaseData error:", error);
     }
   }
 
@@ -259,7 +259,7 @@ export default class Fec_COFFraudRelatedView extends LightningElement {
     return COMPLAINT_SOURCE_LABEL[this.complaintSourceValue] || "";
   }
 
-   get isReadOnly() {
-        return this.isEdit === false;
-    }
+  get isReadOnly() {
+    return this.isEdit === false;
+  }
 }

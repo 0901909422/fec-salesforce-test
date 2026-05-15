@@ -1,29 +1,86 @@
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding:
+        0.75rem
+        1rem
+        0.75rem
+        1rem;
+}
+
+.header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #181818;
+    line-height: 1.25;
+}
+
+.header-icon {
+    flex-shrink: 0;
+
+    --slds-c-icon-color-foreground-default: #0176d3;
+}
+
+/* TABLE */
 .table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 
-  -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* THÊM */
-.assignment-card {
-  width: 100%;
+.custom-datatable {
+    min-width: 100%;
 }
 
-/* FOOTER */
-.assignment-footer {
-  
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* PAGINATION */
+.table-pagination {
+    padding:
+        0.75rem
+        1rem;
 
-  width: 100%;
+    border-top: 1px solid #dddbda;
+    background: #fff;
 
-  padding: 10px 0;
+    gap: 12px;
 
-  border-top: 1px solid #dddbda;
-  background: #fff;
+    flex-wrap: wrap;
+}
 
-  text-align: center;
+/* PAGE SIZE */
+.page-size {
+    gap: 8px;
+}
+
+.page-size lightning-combobox {
+    width: 90px;
+    min-width: 90px;
+}
+
+/* PAGE INPUT */
+.page-input {
+    width: 70px;
+    min-width: 70px;
+}
+
+/* GO TO PAGE */
+.go-to-page {
+    gap: 8px;
+}
+
+/* MOBILE */
+@media screen and (max-width: 768px) {
+
+    .table-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pagination-controls {
+        width: 100%;
+        justify-content: center;
+    }
 }

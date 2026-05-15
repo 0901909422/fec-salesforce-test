@@ -48,6 +48,7 @@ import FEC_Error_Manual from '@salesforce/label/c.FEC_Error_Manual';
 import FEC_Hold_Case_Config from '@salesforce/label/c.FEC_Hold_Case_Config'; 
 import FEC_New_Hold_Case_Config from '@salesforce/label/c.FEC_New_Hold_Case_Config';
 import FEC_List_Of_NFU_Code from '@salesforce/label/c.FEC_List_Of_NFU_Code'; 
+import FEC_No_Data_Found from '@salesforce/label/c.FEC_No_Data_Found';
 
 export default class Fec_HoldCaseConfiguration extends NavigationMixin(LightningElement) {
 
@@ -111,7 +112,8 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         newHoldCaseConfig: FEC_New_Hold_Case_Config,
         requiredInformation: FEC_Required_Information,
         information: FEC_Information,
-        listOfNFUCode: FEC_List_Of_NFU_Code
+        listOfNFUCode: FEC_List_Of_NFU_Code,
+        noDataFound: FEC_No_Data_Found
     }
 
     // ================= TABLE COLUMNS =================
@@ -124,7 +126,9 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         { label: this.customLabel.changedStatus, fieldName: 'changedStatus' },
         { label: this.customLabel.nfuCode, fieldName: 'nfuCode' },
         { label: this.customLabel.caseStage, fieldName: 'caseStage' },
-        { label: this.customLabel.active, fieldName: 'active' }
+        { label: this.customLabel.active, fieldName: 'active', type: 'checkbox' },
+        { label: 'Last Modified Date', fieldName: 'lastModifiedDate' },
+        { label: 'Last Modified By', fieldName: 'lastModifiedBy' }
     ];
 
     nfuCodeColumns = [
@@ -225,10 +229,10 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     get changedStatusError() { return this.errors.changedStatus; }
     get nfuError() { return this.errors.nfuCode; }
 
-    get holdCaseDisplay() {
-        return this.holdCase && this.holdCase.length > 0
-            ? this.holdCase
-            : [{}];
+   get holdCaseDisplay() {
+    return this.holdCase && this.holdCase.length > 0
+        ? this.holdCase
+        : [{ isEmpty: true, name: STR_EMPTY,changedStatus: this.customLabel.noDataFound }];
     }
 
     // ================= LOAD DATA =================

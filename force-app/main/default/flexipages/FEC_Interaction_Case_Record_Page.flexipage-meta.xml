@@ -945,7 +945,7 @@
                 <componentName>fecCheckEligibleLoanSection</componentName>
                 <identifier>c_fecCheckEligibleLoanSection</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR 2</booleanFilter>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -955,6 +955,11 @@
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>CONTAINS</operator>
                         <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -968,7 +973,7 @@
                 <componentName>fec_CardEligibilitySection</componentName>
                 <identifier>c_fec_CardEligibilitySection</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR 2</booleanFilter>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -978,6 +983,11 @@
                         <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
                         <operator>CONTAINS</operator>
                         <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Card</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

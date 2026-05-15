@@ -182,3 +182,7 @@ c-fec_-file-upload-card
   .slds-file-selector__text {
   cursor: pointer !important;
 }
+
+c-fec_-case-bussiness .hide-help-icon lightning-helptext {
+  display: none;
+}
