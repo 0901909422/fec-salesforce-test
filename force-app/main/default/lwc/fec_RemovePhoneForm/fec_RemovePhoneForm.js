@@ -328,6 +328,10 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     handleRowSelection(event) {
         if (this.readOnlyRemovePhone) {
+            const ids = (this.rows || [])
+                .filter((r) => r && r.checkRemovePhone === true)
+                .map((r) => String(r.id));
+            this.selectedRowIds = [...ids];
             return;
         }
         const config = event.detail.config || {};
