@@ -4,7 +4,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { formatDate } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
-import FEC_SUBCODE_ID from '@salesforce/schema/Case.FEC_Sub_Code__c';
+import FEC_SUBCODE_ID from '@salesforce/schema/Case.FEC_SubCode__c';
 import FEC_SUBCODE_CODE_FIELD from '@salesforce/schema/FEC_Sub_Code__c.FEC_Code__c';
 
 import FEC_Original_MRC from '@salesforce/label/c.FEC_Original_MRC';
