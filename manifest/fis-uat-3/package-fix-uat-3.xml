@@ -45,6 +45,7 @@
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_CardEligibilityController</members>
+        <members>FEC_AssignmentTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
