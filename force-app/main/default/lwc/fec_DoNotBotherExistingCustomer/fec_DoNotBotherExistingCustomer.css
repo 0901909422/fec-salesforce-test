@@ -103,3 +103,9 @@
 .btn-wrapper {
     padding-top: 16px;
 }
+
+.dnb-success {
+    color: #2e844a;
+    font-weight: 700;
+    font-size: 14px;
+}
