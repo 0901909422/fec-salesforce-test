@@ -537,7 +537,15 @@ global with sharing class ArchiveCaseController_Test {
                 '    "FEC_Assignment_Count__c": 0,' +
                 '    "FEC_Is_Call_API_Success__c": false,' +
                 '    "MilestoneStatus": ""' +
-                '  }' +
+                '  },' +
+                '  "FEC_Case_Attachments": [' +
+                '    {' +
+                '      "s3Path": "a0Q8500000Hn9d4EAB",' +
+                '      "filename": "contract.pdf",' +
+                '      "contentType": "application.pdf",' +
+                '      "uploadedAt": "2026-03-01T08:00:00Z"' +
+                '    }' +
+                '  ]' +
                 '}';
             
             res.setBody(body);
