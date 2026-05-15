@@ -183,7 +183,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
         checkboxLabel: hasDNB ? "Extend" : "Active",
 
-        expiry: dnb?.expiry || "",
+        expiry: dnb?.exclude_time || "",
 
         active: false,
 
