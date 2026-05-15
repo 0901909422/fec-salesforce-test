@@ -207,9 +207,16 @@ public with sharing class FEC_StageTransitionEngine {
         if (String.isBlank(rangeValue) || String.isBlank(actualValue)) return false;
         try {
             List<String> parts = rangeValue.split(',');
-            if (parts.size() != 2) return false;
+            if (parts.size() != 2) {
+                System.debug(LoggingLevel.WARN, 'FEC_StageTransitionEngine.evaluateBetween: invalid range format (expected "start,end") -> ' + rangeValue);
+                return false;
+            }
             String startPart = parts[0].trim();
             String endPart = parts[1].trim();
+            if (String.isBlank(startPart) || String.isBlank(endPart)) {
+                System.debug(LoggingLevel.WARN, 'FEC_StageTransitionEngine.evaluateBetween: incomplete range pair -> ' + rangeValue);
+                return false;
+            }
             String startOp; Decimal startVal;
             if (startPart.startsWith('>=')) { startOp = '>='; startVal = Decimal.valueOf(startPart.substring(2).trim()); }
             else if (startPart.startsWith('>')) { startOp = '>'; startVal = Decimal.valueOf(startPart.substring(1).trim()); }
@@ -218,11 +225,18 @@ public with sharing class FEC_StageTransitionEngine {
             if (endPart.startsWith('<=')) { endOp = '<='; endVal = Decimal.valueOf(endPart.substring(2).trim()); }
             else if (endPart.startsWith('<')) { endOp = '<'; endVal = Decimal.valueOf(endPart.substring(1).trim()); }
             else { endOp = '<='; endVal = Decimal.valueOf(endPart); }
+            if (startVal > endVal) {
+                System.debug(LoggingLevel.WARN, 'FEC_StageTransitionEngine.evaluateBetween: start > end (rule will never match) -> start=' + startVal + ', end=' + endVal);
+                return false;
+            }
             Decimal actual = Decimal.valueOf(actualValue.trim());
             Boolean startOk = (startOp == '>=') ? actual >= startVal : actual > startVal;
             Boolean endOk = (endOp == '<=') ? actual <= endVal : actual < endVal;
             return startOk && endOk;
-        } catch (Exception e) { return false; }
+        } catch (Exception e) {
+            System.debug(LoggingLevel.WARN, 'FEC_StageTransitionEngine.evaluateBetween: parse error -> rangeValue=' + rangeValue + ', actual=' + actualValue + ', err=' + e.getMessage());
+            return false;
+        }
     }
 
     private static Boolean evaluateRuleConditions(List<FEC_Decision_Condition__c> conditions, Map<String, Object> caseData) {
@@ -263,6 +277,7 @@ public with sharing class FEC_StageTransitionEngine {
     /**
      * Build match result from Action-type Condition rows.
      * Reads Action rows by Label to populate Next Stage, Next Queue, Available Decisions, etc.
+     * 'Next Stage' is stored as FEC_Code__c (immutable) — looked up to display Name in response.
      */
     private static Map<String, Object> buildMatchResult(Id ruleId, String ruleName, List<FEC_Decision_Condition__c> ruleConditions) {
         Map<String, Object> result = new Map<String, Object>{
@@ -275,7 +290,8 @@ public with sharing class FEC_StageTransitionEngine {
                 String label = cond.FEC_Label__c;
                 String value = cond.FEC_Value__c;
                 if (label == 'Next Stage') {
-                    result.put('nextStageName', value);
+                    result.put('nextStageName', resolveStageNameFromCode(value));
+                    result.put('nextStageCode', value);
                 } else if (label == 'Next Queue') {
                     result.put('nextQueue', value);
                 } else if (label == 'Available Decisions') {
@@ -288,6 +304,25 @@ public with sharing class FEC_StageTransitionEngine {
             }
         }
         return result;
+    }
+
+    /**
+     * Resolve a Stage Code to its display Name. Returns the input unchanged if it doesn't look
+     * like a valid Code (e.g., legacy data still stored as Name) or no matching Stage is found.
+     * Cached per transaction to avoid repeated SOQL.
+     */
+    private static Map<String, String> stageNameCache = new Map<String, String>();
+    private static Boolean stageCacheLoaded = false;
+    private static String resolveStageNameFromCode(String stageCodeOrName) {
+        if (String.isBlank(stageCodeOrName)) return stageCodeOrName;
+        if (!stageCacheLoaded) {
+            for (FEC_Case_Stage__c s : [SELECT Name, FEC_Code__c FROM FEC_Case_Stage__c WHERE FEC_Code__c != null]) {
+                stageNameCache.put(s.FEC_Code__c, s.Name);
+            }
+            stageCacheLoaded = true;
+        }
+        String resolved = stageNameCache.get(stageCodeOrName);
+        return resolved != null ? resolved : stageCodeOrName;
     }
 
     // ════════════════════════════════════════════════════════
@@ -356,13 +391,20 @@ public with sharing class FEC_StageTransitionEngine {
 
     /**
      * Helper: check if a rule has a Condition row with a given Label matching a given value.
+     * Accepts up to 2 candidate values (Code preferred, Name fallback) for backward-compatibility
+     * with rules saved before the Code-based migration. Pass null for unused candidate.
      */
     private static Boolean hasConditionRowMatching(List<FEC_Decision_Condition__c> ruleConditions, String targetLabel, String expectedValue) {
+        return hasConditionRowMatching(ruleConditions, targetLabel, expectedValue, null);
+    }
+
+    private static Boolean hasConditionRowMatching(List<FEC_Decision_Condition__c> ruleConditions, String targetLabel, String expectedCode, String expectedName) {
         if (ruleConditions == null || ruleConditions.isEmpty()) return false;
         for (FEC_Decision_Condition__c cond : ruleConditions) {
-            if (cond.FEC_Type__c == 'Condition' && cond.FEC_Label__c == targetLabel && cond.FEC_Value__c == expectedValue) {
-                return true;
-            }
+            if (cond.FEC_Type__c != 'Condition' || cond.FEC_Label__c != targetLabel) continue;
+            String storedValue = cond.FEC_Value__c;
+            if (String.isNotBlank(expectedCode) && expectedCode == storedValue) return true;
+            if (String.isNotBlank(expectedName) && expectedName == storedValue) return true;
         }
         return false;
     }
@@ -374,10 +416,14 @@ public with sharing class FEC_StageTransitionEngine {
             }
             if (String.isBlank(tableKey)) tableKey = TABLE_KEY_STAGE_TRANSITION;
 
-            // Query current stage name for Previous Stage filtering
+            // Query current stage Code (preferred) and Name (fallback) for Previous/Current Stage filtering
+            String currentStageCode = '';
             String currentStageName = '';
-            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
-            if (!stages.isEmpty()) currentStageName = stages[0].Name;
+            List<FEC_Case_Stage__c> stages = [SELECT Name, FEC_Code__c FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                currentStageName = stages[0].Name;
+                currentStageCode = stages[0].FEC_Code__c;
+            }
 
             List<FEC_Decision_Rule__c> allRules = queryRulesByTableKey(tableKey);
             if (allRules.isEmpty()) {
@@ -392,12 +438,12 @@ public with sharing class FEC_StageTransitionEngine {
 
             Map<Id, List<FEC_Decision_Condition__c>> conditionsByRule = queryConditionsForRules(ruleIds);
 
-            // Filter rules by "Previous Stage" or "Current Stage" Condition row matching current stage name
+            // Filter rules by "Previous Stage" or "Current Stage" Condition row matching current stage (Code preferred, Name fallback)
             List<FEC_Decision_Rule__c> rules = new List<FEC_Decision_Rule__c>();
             for (FEC_Decision_Rule__c rule : allRules) {
                 List<FEC_Decision_Condition__c> ruleConds = conditionsByRule.get(rule.Id);
-                if (hasConditionRowMatching(ruleConds, 'Previous Stage', currentStageName)
-                    || hasConditionRowMatching(ruleConds, 'Current Stage', currentStageName)) {
+                if (hasConditionRowMatching(ruleConds, 'Previous Stage', currentStageCode, currentStageName)
+                    || hasConditionRowMatching(ruleConds, 'Current Stage', currentStageCode, currentStageName)) {
                     rules.add(rule);
                 }
             }
@@ -492,10 +538,14 @@ public with sharing class FEC_StageTransitionEngine {
             }
             if (String.isBlank(tableKey)) tableKey = TABLE_KEY_STAGE_TRANSITION;
 
-            // Query current stage name for Previous Stage filtering
+            // Query current stage Code (preferred) and Name (fallback) for Previous/Current Stage filtering
+            String currentStageCode = '';
             String currentStageName = '';
-            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
-            if (!stages.isEmpty()) currentStageName = stages[0].Name;
+            List<FEC_Case_Stage__c> stages = [SELECT Name, FEC_Code__c FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                currentStageName = stages[0].Name;
+                currentStageCode = stages[0].FEC_Code__c;
+            }
 
             // Query action button name for Action Button filtering
             String actionButtonName = '';
@@ -512,12 +562,12 @@ public with sharing class FEC_StageTransitionEngine {
 
             Map<Id, List<FEC_Decision_Condition__c>> conditionsByRule = queryConditionsForRules(ruleIds);
 
-            // Filter rules by "Previous Stage"/"Current Stage" and "Action Button" Condition rows
+            // Filter rules by "Previous Stage"/"Current Stage" (Code preferred, Name fallback) and "Action Button" Condition rows
             List<FEC_Decision_Rule__c> rules = new List<FEC_Decision_Rule__c>();
             for (FEC_Decision_Rule__c rule : allRules) {
                 List<FEC_Decision_Condition__c> ruleConds = conditionsByRule.get(rule.Id);
-                if ((hasConditionRowMatching(ruleConds, 'Previous Stage', currentStageName)
-                    || hasConditionRowMatching(ruleConds, 'Current Stage', currentStageName))
+                if ((hasConditionRowMatching(ruleConds, 'Previous Stage', currentStageCode, currentStageName)
+                    || hasConditionRowMatching(ruleConds, 'Current Stage', currentStageCode, currentStageName))
                     && hasConditionRowMatching(ruleConds, 'Action Button', actionButtonName)) {
                     rules.add(rule);
                 }
@@ -554,7 +604,7 @@ public with sharing class FEC_StageTransitionEngine {
     // ════════════════════════════════════════════════════════
 
     private static Map<String, Object> buildMatchResultFromConditions(Id ruleId, String ruleName, List<FEC_MDM_Decision_Condition__c> ruleConds) {
-        String nextStageName = null;
+        String nextStageCode = null;
         String nextQueue = null;
         String teamUserGroup = null;
         String availableDecisions = null;
@@ -565,7 +615,7 @@ public with sharing class FEC_StageTransitionEngine {
                 if (condType != 'Action') continue;
                 String condLabel = cond.FEC_Label__c;
                 if (condLabel == 'Next Stage') {
-                    nextStageName = cond.FEC_Value__c;
+                    nextStageCode = cond.FEC_Value__c;
                 } else if (condLabel == 'Next Queue') {
                     nextQueue = cond.FEC_Value__c;
                 } else if (condLabel == 'Team User Group') {
@@ -578,7 +628,8 @@ public with sharing class FEC_StageTransitionEngine {
 
         return new Map<String, Object>{
             'ruleId'             => ruleId,
-            'nextStageName'      => nextStageName,
+            'nextStageName'      => resolveStageNameFromCode(nextStageCode),
+            'nextStageCode'      => nextStageCode,
             'nextQueue'          => nextQueue,
             'teamUserGroup'      => teamUserGroup,
             'availableDecisions' => availableDecisions
@@ -784,13 +835,20 @@ public with sharing class FEC_StageTransitionEngine {
 
     /**
      * Check if an MDM rule has a Condition row with a given Label matching a given value.
+     * Accepts up to 2 candidate values (Code preferred, Name fallback) for backward-compatibility.
      */
     private static Boolean hasMDMConditionRowMatching(List<FEC_MDM_Decision_Condition__c> ruleConditions, String targetLabel, String expectedValue) {
+        return hasMDMConditionRowMatching(ruleConditions, targetLabel, expectedValue, null);
+    }
+
+    private static Boolean hasMDMConditionRowMatching(List<FEC_MDM_Decision_Condition__c> ruleConditions, String targetLabel, String expectedCode, String expectedName) {
         if (ruleConditions == null || ruleConditions.isEmpty()) return false;
         for (FEC_MDM_Decision_Condition__c cond : ruleConditions) {
-            if (cond.FEC_Type__c == 'Condition' && cond.FEC_Label__c == targetLabel && cond.FEC_Value__c == expectedValue) {
-                return true;
-            }
+            String condType = cond.FEC_Type__c != null ? cond.FEC_Type__c : 'Condition';
+            if (condType != 'Condition' || cond.FEC_Label__c != targetLabel) continue;
+            String storedValue = cond.FEC_Value__c;
+            if (String.isNotBlank(expectedCode) && expectedCode == storedValue) return true;
+            if (String.isNotBlank(expectedName) && expectedName == storedValue) return true;
         }
         return false;
     }
@@ -818,10 +876,14 @@ public with sharing class FEC_StageTransitionEngine {
             }
             if (String.isBlank(tableKey)) tableKey = TABLE_KEY_STAGE_TRANSITION;
 
-            // Query current stage name for Previous Stage filtering
+            // Query current stage Code (preferred) and Name (fallback) for Previous/Current Stage filtering
+            String currentStageCode = '';
             String currentStageName = '';
-            List<FEC_Case_Stage__c> stages = [SELECT Name FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
-            if (!stages.isEmpty()) currentStageName = stages[0].Name;
+            List<FEC_Case_Stage__c> stages = [SELECT Name, FEC_Code__c FROM FEC_Case_Stage__c WHERE Id = :currentStageId LIMIT 1];
+            if (!stages.isEmpty()) {
+                currentStageName = stages[0].Name;
+                currentStageCode = stages[0].FEC_Code__c;
+            }
 
             List<FEC_MDM_Decision_Rule__c> allRules = queryMDMRulesByTableKey(tableKey);
             if (allRules.isEmpty()) {
@@ -836,12 +898,12 @@ public with sharing class FEC_StageTransitionEngine {
 
             Map<Id, List<FEC_MDM_Decision_Condition__c>> conditionsByRule = queryMDMConditionsForRules(ruleIds);
 
-            // Filter rules by "Previous Stage" or "Current Stage" Condition row matching current stage name
+            // Filter rules by "Previous Stage" or "Current Stage" Condition row matching current stage (Code preferred, Name fallback)
             List<FEC_MDM_Decision_Rule__c> rules = new List<FEC_MDM_Decision_Rule__c>();
             for (FEC_MDM_Decision_Rule__c rule : allRules) {
                 List<FEC_MDM_Decision_Condition__c> ruleConds = conditionsByRule.get(rule.Id);
-                if (hasMDMConditionRowMatching(ruleConds, 'Previous Stage', currentStageName)
-                    || hasMDMConditionRowMatching(ruleConds, 'Current Stage', currentStageName)) {
+                if (hasMDMConditionRowMatching(ruleConds, 'Previous Stage', currentStageCode, currentStageName)
+                    || hasMDMConditionRowMatching(ruleConds, 'Current Stage', currentStageCode, currentStageName)) {
                     rules.add(rule);
                 }
             }
@@ -1175,6 +1237,32 @@ public with sharing class FEC_StageTransitionEngine {
             throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
         }
         delete [SELECT Id FROM FEC_MDM_Decision_Rule__c WHERE Id = :ruleId];
+    }
+
+    /**
+     * @description Xoá toàn bộ Decision Rules + Conditions của 1 Business Process / Table Key.
+     *              Dùng khi admin muốn reset bảng về trạng thái rỗng (chỉ áp dụng MDM, chưa sync Live).
+     *              Conditions sẽ bị cascade delete vì là Master-Detail.
+     */
+    @AuraEnabled
+    public static Integer deleteAllRulesByBP(Id businessProcessId, String tableKey) {
+        if (!FEC_MDM_Decision_Rule__c.SObjectType.getDescribe().isDeletable()) {
+            throw new AuraHandledException(System.Label.FEC_Error_No_Delete_Permission);
+        }
+        if (businessProcessId == null) {
+            throw new AuraHandledException(System.Label.FEC_Error_Required_Fields);
+        }
+        if (String.isBlank(tableKey)) tableKey = TABLE_KEY_STAGE_TRANSITION;
+
+        List<FEC_MDM_Decision_Rule__c> rulesToDelete = [
+            SELECT Id
+            FROM FEC_MDM_Decision_Rule__c
+            WHERE FEC_Key_ID__c = :String.valueOf(businessProcessId)
+            AND FEC_Table_Key__c = :tableKey
+        ];
+        Integer count = rulesToDelete.size();
+        if (count > 0) delete rulesToDelete;
+        return count;
     }
 
     @AuraEnabled

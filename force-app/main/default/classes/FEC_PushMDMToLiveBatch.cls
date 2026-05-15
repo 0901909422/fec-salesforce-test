@@ -1,390 +1,17 @@
 public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<String>, Database.Stateful {
     
-    // Constants - aliases for FEC_Constants used in this class
-    private static final String FIELD_CODE                     = FEC_FieldConstants.FIELD_CODE;
-    private static final String FIELD_NAME                     = FEC_FieldConstants.FIELD_NAME;
-    private static final String FIELD_PROCESS_CHANGE_STATUS    = FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS;
-    private static final String FIELD_ALIAS                    = FEC_FieldConstants.FIELD_ALIAS;
-    private static final String FIELD_NAME_VN                  = FEC_FieldConstants.FIELD_NAME_VN;
-    private static final String FIELD_STATUS                   = FEC_FieldConstants.FIELD_STATUS;
-    private static final String FIELD_ACTIVE                   = FEC_FieldConstants.FIELD_ACTIVE;
-    private static final String FIELD_POS_ORDER                = FEC_FieldConstants.FIELD_POS_ORDER;
-    private static final String FIELD_FEC_UNIQUE_ID            = FEC_FieldConstants.FIELD_FEC_UNIQUE_ID;
-    private static final String FIELD_FEC_TYPE                 = FEC_FieldConstants.FIELD_FEC_TYPE;
-    private static final String FIELD_FEC_ORDER                = FEC_FieldConstants.FIELD_FEC_ORDER;
-    private static final String FIELD_FIELD_MANDATORY          = FEC_FieldConstants.FIELD_FIELD_MANDATORY;
-    private static final String FIELD_FIELD_STATUS             = FEC_FieldConstants.FIELD_FIELD_STATUS;
-    private static final String FIELD_FIELD_READONLY           = FEC_FieldConstants.FIELD_FIELD_READONLY;
-    private static final String FIELD_FIELD_OBJECT_NAME        = FEC_FieldConstants.FIELD_FIELD_OBJECT_NAME;
-    private static final String FIELD_FIELD_ORDER_DISPLAY      = FEC_FieldConstants.FIELD_FIELD_ORDER_DISPLAY;
-    private static final String FIELD_PROPERTY_REFERENCE       = FEC_FieldConstants.FIELD_PROPERTY_REFERENCE;
-    private static final String FIELD_SECTION                  = FEC_FieldConstants.FIELD_SECTION;
-    private static final String FIELD_APPLICABLE_ROLE          = FEC_FieldConstants.FIELD_APPLICABLE_ROLE;
-    private static final String FIELD_DATA_INTEGRATION_MAPPING = FEC_FieldConstants.FIELD_DATA_INTEGRATION_MAPPING;
-    private static final String FIELD_CHANNEL_ID               = FEC_FieldConstants.FIELD_CHANNEL_ID;
-    private static final String FIELD_CHANNEL_STATUS           = FEC_FieldConstants.FIELD_CHANNEL_STATUS;
-    private static final String FIELD_CHANNEL_VI_NAME          = FEC_FieldConstants.FIELD_CHANNEL_VI_NAME;
-    private static final String FIELD_SELF_SERVICE_FLAG        = FEC_FieldConstants.FIELD_SELF_SERVICE_FLAG;
-    private static final String FIELD_CHANNEL                  = FEC_FieldConstants.FIELD_CHANNEL;
-    private static final String FIELD_EXTERNAL_ID              = FEC_FieldConstants.FIELD_EXTERNAL_ID;
-    private static final String FIELD_NATURE_OF_CASE           = FEC_FieldConstants.FIELD_NATURE_OF_CASE;
-    private static final String FIELD_CUSTOMER_TYPE            = FEC_FieldConstants.FIELD_CUSTOMER_TYPE;
-    private static final String FIELD_BUSINESS_PROCESS         = FEC_FieldConstants.FIELD_BUSINESS_PROCESS;
-    private static final String FIELD_PRODUCT_TYPE             = FEC_FieldConstants.FIELD_PRODUCT_TYPE;
-    private static final String FIELD_PRODUCT_TYPE_STATUS      = FEC_FieldConstants.FIELD_PRODUCT_TYPE_STATUS;
-    private static final String FIELD_CATEGORY                 = FEC_FieldConstants.FIELD_CATEGORY;
-    private static final String FIELD_CATEGORY_STATUS          = FEC_FieldConstants.FIELD_CATEGORY_STATUS;
-    private static final String FIELD_SUB_CATEGORY             = FEC_FieldConstants.FIELD_SUB_CATEGORY;
-    private static final String FIELD_SUB_CATEGORY_STATUS      = FEC_FieldConstants.FIELD_SUB_CATEGORY_STATUS;
-    private static final String FIELD_SUB_CODE                 = FEC_FieldConstants.FIELD_SUB_CODE;
-    private static final String FIELD_SUB_CODE_STATUS          = FEC_FieldConstants.FIELD_SUB_CODE_STATUS;
-    private static final String FIELD_USER_GROUP               = FEC_FieldConstants.FIELD_USER_GROUP;
-    private static final String FIELD_ROLE_NAMES               = FEC_FieldConstants.FIELD_ROLE_NAMES;
-    private static final String FIELD_DEFAULT_STAGE            = FEC_FieldConstants.FIELD_DEFAULT_STAGE;
-    private static final String FIELD_STATUS_NAME              = FEC_FieldConstants.FIELD_STATUS_NAME;
-    private static final String FIELD_NATURE_OF_CASES          = FEC_FieldConstants.FIELD_NATURE_OF_CASES;
-    private static final String FIELD_STAGE_NAME               = FEC_FieldConstants.FIELD_STAGE_NAME;
-    private static final String FIELD_ADDITIONAL_FIELD         = FEC_FieldConstants.FIELD_ADDITIONAL_FIELD;
-    private static final String FIELD_FIELD_MASKING            = FEC_FieldConstants.FIELD_FIELD_MASKING;
-    private static final String FIELD_MASKING_TYPE             = FEC_FieldConstants.FIELD_MASKING_TYPE;
-    private static final String FIELD_FIELD_REVERTED           = FEC_FieldConstants.FIELD_FIELD_REVERTED;
-    private static final String FIELD_SUB_SECTION              = FEC_FieldConstants.FIELD_SUB_SECTION;
-    private static final String FIELD_SUB_SECTION_FIELD_LAYOUT = FEC_FieldConstants.FIELD_SUB_SECTION_FIELD_LAYOUT;
-    private static final String FIELD_SUB_SECTION_LAYOUT       = FEC_FieldConstants.FIELD_SUB_SECTION_LAYOUT;
-    private static final String FIELD_SUB_SECTION_ORDER        = FEC_FieldConstants.FIELD_SUB_SECTION_ORDER;
-    private static final String FIELD_EDITABLE_USER_GROUP      = FEC_FieldConstants.FIELD_EDITABLE_USER_GROUP;
-    private static final String FIELD_FIELD_EDITABLE           = FEC_FieldConstants.FIELD_FIELD_EDITABLE;
-    private static final String FIELD_EDITABLE_ROLE            = FEC_FieldConstants.FIELD_EDITABLE_ROLE;
-    
-    // Khai báo bổ sung trường bị thiếu gây lỗi Upsert
-    private static final String FIELD_FIELD_API_NAME           = 'Field_API_Name__c';
-
-    // Danh sách email admin được quản lý qua Custom Label FEC_MDM_Sync_Admin_Emails
+    // Push-only: email notification
     private static final String SYNC_ADMIN_EMAILS = System.Label.FEC_MDM_Sync_Admin_Emails;
 
-    private static final String PROCESS_STATUS_NEW             = FEC_UIConstants.PROCESS_STATUS_NEW;
-    private static final String PROCESS_STATUS_UPDATE          = FEC_UIConstants.PROCESS_STATUS_UPDATE;
-    private static final String PROCESS_STATUS_SYNCED          = FEC_UIConstants.PROCESS_STATUS_SYNCED;
-    
-    private static final String OBJ_MDM_PRODUCT_TYPE                = FEC_ObjectConstants.OBJ_MDM_PRODUCT_TYPE;
-    private static final String OBJ_MDM_BUSINESS_PROCESS            = FEC_ObjectConstants.OBJ_MDM_BUSINESS_PROCESS;
-    private static final String OBJ_MDM_CATEGORY                    = FEC_ObjectConstants.OBJ_MDM_CATEGORY;
-    private static final String OBJ_MDM_SUB_CATEGORY                = FEC_ObjectConstants.OBJ_MDM_SUB_CATEGORY;
-    private static final String OBJ_MDM_SUB_CODE                    = FEC_ObjectConstants.OBJ_MDM_SUB_CODE;
-    private static final String OBJ_MDM_NATURE_OF_CASE              = FEC_ObjectConstants.OBJ_MDM_NATURE_OF_CASE;
-    private static final String OBJ_MDM_CHANNEL                     = FEC_ObjectConstants.OBJ_MDM_CHANNEL;
-    private static final String OBJ_MDM_CASE_STAGE                  = FEC_ObjectConstants.OBJ_MDM_CASE_STAGE;
-    private static final String OBJ_MDM_ADDITIONAL_FIELD            = FEC_ObjectConstants.OBJ_MDM_ADDITIONAL_FIELD;
-    private static final String OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE = FEC_ObjectConstants.OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE;
-    private static final String OBJ_MDM_MASTER_DATA_SETTING         = FEC_ObjectConstants.OBJ_MDM_MASTER_DATA_SETTING;
-    
-    // Stage Change objects
-    private static final String OBJ_MDM_ACTION_BUTTON              = FEC_ObjectConstants.OBJ_MDM_ACTION_BUTTON;
-    private static final String OBJ_ACTION_BUTTON                   = FEC_ObjectConstants.OBJ_ACTION_BUTTON;
-    private static final String OBJ_MDM_STAGE_CHANGE                = FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE;
-    private static final String OBJ_STAGE_CHANGE                    = FEC_ObjectConstants.OBJ_STAGE_CHANGE;
-    private static final String OBJ_MDM_STAGE_CHANGE_CONDITION      = FEC_ObjectConstants.OBJ_MDM_STAGE_CHANGE_CONDITION;
-    private static final String OBJ_STAGE_CHANGE_CONDITION           = FEC_ObjectConstants.OBJ_STAGE_CHANGE_CONDITION;
-
-    // Stage Change field constants
-    private static final String FIELD_PREVIOUS_STAGE                = FEC_FieldConstants.FIELD_PREVIOUS_STAGE;
-    private static final String FIELD_ACTION_BUTTON                 = FEC_FieldConstants.FIELD_ACTION_BUTTON;
-    private static final String FIELD_NEXT_STAGE                    = FEC_FieldConstants.FIELD_NEXT_STAGE;
-    private static final String FIELD_NEXT_QUEUE                    = FEC_FieldConstants.FIELD_NEXT_QUEUE;
-    private static final String FIELD_TEAM_USER_GROUP               = FEC_FieldConstants.FIELD_TEAM_USER_GROUP;
-    private static final String FIELD_FIELD_LABEL_NAME              = FEC_FieldConstants.FIELD_FIELD_LABEL_NAME;
-
-    // Stage Change Condition field constants
-    private static final String FIELD_STAGE_CHANGE                  = FEC_FieldConstants.FIELD_STAGE_CHANGE;
-    private static final String FIELD_MASTER_DATA_SETTING           = FEC_FieldConstants.FIELD_MASTER_DATA_SETTING;
-    private static final String FIELD_OPERATOR                      = FEC_FieldConstants.FIELD_OPERATOR;
-    private static final String FIELD_VALUE                         = FEC_FieldConstants.FIELD_VALUE;
-    private static final String FIELD_VALUE_TYPE                    = FEC_FieldConstants.FIELD_VALUE_TYPE;
-
-    // Decision Rule/Condition objects
-    private static final String OBJ_MDM_DECISION_RULE              = FEC_ObjectConstants.OBJ_MDM_DECISION_RULE;
-    private static final String OBJ_DECISION_RULE                  = FEC_ObjectConstants.OBJ_DECISION_RULE;
-    private static final String OBJ_MDM_DECISION_CONDITION         = FEC_ObjectConstants.OBJ_MDM_DECISION_CONDITION;
-    private static final String OBJ_DECISION_CONDITION             = FEC_ObjectConstants.OBJ_DECISION_CONDITION;
-
-    // Decision Rule/Condition field constants
-    private static final String FIELD_PRIORITY                     = FEC_FieldConstants.FIELD_PRIORITY;
-    private static final String FIELD_TABLE_KEY                    = FEC_FieldConstants.FIELD_TABLE_KEY;
-    private static final String FIELD_KEY_ID                       = FEC_FieldConstants.FIELD_KEY_ID;
-    private static final String FIELD_DECISION_RULE                = FEC_FieldConstants.FIELD_DECISION_RULE;
-    private static final String FIELD_LABEL                        = FEC_FieldConstants.FIELD_LABEL;
-    private static final String FIELD_EXPRESSION                   = FEC_FieldConstants.FIELD_EXPRESSION;
-
-    private static final String OBJ_PRODUCT_TYPE                = FEC_ObjectConstants.OBJ_PRODUCT_TYPE;
-    private static final String OBJ_BUSINESS_PROCESS            = FEC_ObjectConstants.OBJ_BUSINESS_PROCESS;
-    private static final String OBJ_CATEGORY                    = FEC_ObjectConstants.OBJ_CATEGORY;
-    private static final String OBJ_SUB_CATEGORY                = FEC_ObjectConstants.OBJ_SUB_CATEGORY;
-    private static final String OBJ_SUB_CODE                    = FEC_ObjectConstants.OBJ_SUB_CODE;
-    private static final String OBJ_NATURE_OF_CASE              = FEC_ObjectConstants.OBJ_NATURE_OF_CASE;
-    private static final String OBJ_CHANNEL                     = FEC_ObjectConstants.OBJ_CHANNEL;
-    private static final String OBJ_CASE_STAGE                  = FEC_ObjectConstants.OBJ_CASE_STAGE;
-    private static final String OBJ_ADDITIONAL_FIELD            = FEC_ObjectConstants.OBJ_ADDITIONAL_FIELD;
-    private static final String OBJ_ADDITIONAL_FIELD_LIST_VALUE = FEC_ObjectConstants.OBJ_ADDITIONAL_FIELD_LIST_VALUE;
-    private static final String OBJ_MASTER_DATA_SETTING         = FEC_ObjectConstants.OBJ_MASTER_DATA_SETTING;
-    
-    private static final String REL_NATURE_OF_CASE       = FEC_FieldConstants.REL_NATURE_OF_CASE;
-    private static final String REL_ADDITIONAL_FIELD     = FEC_FieldConstants.REL_ADDITIONAL_FIELD;
-    private static final String REL_STAGE_NAME           = FEC_FieldConstants.REL_STAGE_NAME;
-    private static final String REL_PRODUCT_TYPE_NAME    = FEC_FieldConstants.REL_PRODUCT_TYPE_NAME;
-    private static final String REL_BUSINESS_PROCESS_NAME= FEC_FieldConstants.REL_BUSINESS_PROCESS_NAME;
-    private static final String REL_CATEGORY_NAME        = FEC_FieldConstants.REL_CATEGORY_NAME;
-    private static final String REL_SUB_CATEGORY_NAME    = FEC_FieldConstants.REL_SUB_CATEGORY_NAME;
-    private static final String REL_SUB_CODE_NAME        = FEC_FieldConstants.REL_SUB_CODE_NAME;
-    
-    // Map key constants
-    private static final String MDM_FIELD_KEY = 'mdmField';
-    private static final String MDM_OBJ_KEY = 'mdmObj';
-    
-    // Map of: source lookup field => { mdmField, mdmObjectName }
-    private static final Map<String, Map<String, String>> LOOKUP_FIELD_MDM_MAP = new Map<String, Map<String, String>>{
-        // Nature of Case lookups
-        FIELD_BUSINESS_PROCESS => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_BUSINESS_PROCESS,
-            MDM_OBJ_KEY   => OBJ_MDM_BUSINESS_PROCESS
-        },
-        FIELD_PRODUCT_TYPE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_PRODUCT_TYPE,
-            MDM_OBJ_KEY   => OBJ_MDM_PRODUCT_TYPE
-        },
-        FIELD_CATEGORY => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_CATEGORY,
-            MDM_OBJ_KEY   => OBJ_MDM_CATEGORY
-        },
-        FIELD_SUB_CATEGORY => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_SUB_CATEGORY,
-            MDM_OBJ_KEY   => OBJ_MDM_SUB_CATEGORY
-        },
-        FIELD_SUB_CODE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_SUB_CODE,
-            MDM_OBJ_KEY   => OBJ_MDM_SUB_CODE
-        },
-        // Additional Field List Value lookups
-        FIELD_ADDITIONAL_FIELD => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_ADDITIONAL_FIELD,
-            MDM_OBJ_KEY   => OBJ_MDM_ADDITIONAL_FIELD
-        },
-        // Master Data Setting lookups
-        FIELD_STAGE_NAME => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_STAGE_NAME,
-            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
-        },
-        FIELD_NATURE_OF_CASE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_NATURE_OF_CASE,
-            MDM_OBJ_KEY   => OBJ_MDM_NATURE_OF_CASE
-        },
-        FIELD_NATURE_OF_CASES => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_NATURE_OF_CASES,
-            MDM_OBJ_KEY   => OBJ_MDM_NATURE_OF_CASE
-        },
-        FIELD_CHANNEL => new Map<String, String>{
-            MDM_FIELD_KEY => 'FEC_MDM_Channel__c',
-            MDM_OBJ_KEY   => OBJ_MDM_CHANNEL
-        },
-        // Stage Change lookups
-        FIELD_PREVIOUS_STAGE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_PREVIOUS_STAGE,
-            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
-        },
-        FIELD_ACTION_BUTTON => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_ACTION_BUTTON,
-            MDM_OBJ_KEY   => OBJ_MDM_ACTION_BUTTON
-        },
-        FIELD_NEXT_STAGE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_NEXT_STAGE,
-            MDM_OBJ_KEY   => OBJ_MDM_CASE_STAGE
-        },
-        // Stage Change Condition lookups
-        FIELD_STAGE_CHANGE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_STAGE_CHANGE,
-            MDM_OBJ_KEY   => OBJ_MDM_STAGE_CHANGE
-        },
-        FIELD_MASTER_DATA_SETTING => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_MASTER_DATA_SETTING,
-            MDM_OBJ_KEY   => OBJ_MDM_MASTER_DATA_SETTING
-        },
-        // Decision Condition lookups
-        FIELD_DECISION_RULE => new Map<String, String>{
-            MDM_FIELD_KEY => FIELD_DECISION_RULE,
-            MDM_OBJ_KEY   => OBJ_MDM_DECISION_RULE
-        }
-    };
-    
-    // Map object-specific lookup fields that need remapping
-    private static final Map<String, List<String>> OBJECT_LOOKUP_FIELDS = new Map<String, List<String>>{
-        OBJ_MDM_NATURE_OF_CASE => new List<String>{
-            FIELD_BUSINESS_PROCESS, FIELD_PRODUCT_TYPE, FIELD_CATEGORY,
-            FIELD_SUB_CATEGORY, FIELD_SUB_CODE
-        },
-        OBJ_MDM_CASE_STAGE => new List<String>{
-            FIELD_BUSINESS_PROCESS, FIELD_NATURE_OF_CASES
-        },
-        OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE => new List<String>{
-            FIELD_ADDITIONAL_FIELD
-        },
-        OBJ_MDM_MASTER_DATA_SETTING => new List<String>{
-            FIELD_STAGE_NAME,
-            FIELD_NATURE_OF_CASE,
-            FIELD_ADDITIONAL_FIELD,
-            FIELD_CHANNEL
-        },
-        OBJ_MDM_STAGE_CHANGE => new List<String>{
-            FIELD_PREVIOUS_STAGE, FIELD_ACTION_BUTTON, FIELD_NEXT_STAGE
-        },
-        OBJ_MDM_STAGE_CHANGE_CONDITION => new List<String>{
-            FIELD_STAGE_CHANGE, FIELD_MASTER_DATA_SETTING
-        },
-        OBJ_MDM_DECISION_CONDITION => new List<String>{
-            FIELD_DECISION_RULE
-        }
-    };
-    
-    // Map object types that have special handling (lookups that need remapping)
-    private static final Set<String> OBJECTS_WITH_LOOKUP_REMAPPING = new Set<String>{
-        OBJ_MDM_NATURE_OF_CASE,
-        OBJ_MDM_CASE_STAGE,
-        OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_MASTER_DATA_SETTING,
-        OBJ_MDM_STAGE_CHANGE,
-        OBJ_MDM_STAGE_CHANGE_CONDITION,
-        OBJ_MDM_DECISION_CONDITION
-    };
-    
-    // Objects whose Name field is auto-number (not editable) - skip Name when copying
-    private static final Set<String> OBJECTS_WITH_AUTONUMBER_NAME = new Set<String>{
-        OBJ_MDM_MASTER_DATA_SETTING,
-        OBJ_MDM_NATURE_OF_CASE,
-        OBJ_MDM_STAGE_CHANGE,
-        OBJ_MDM_STAGE_CHANGE_CONDITION,
-        OBJ_MDM_DECISION_RULE,
-        OBJ_MDM_DECISION_CONDITION
-    };
-    
     private Set<String> uniqueErrors = new Set<String>();
     
-    private List<String> executionOrder = new List<String>{
-        OBJ_MDM_BUSINESS_PROCESS,
-        OBJ_MDM_ADDITIONAL_FIELD,
-        OBJ_MDM_PRODUCT_TYPE,
-        OBJ_MDM_CATEGORY,
-        OBJ_MDM_SUB_CATEGORY,
-        OBJ_MDM_SUB_CODE,
-        OBJ_MDM_CHANNEL,
-        OBJ_MDM_CASE_STAGE,
-        OBJ_MDM_NATURE_OF_CASE,
-        OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_MASTER_DATA_SETTING,
-        OBJ_MDM_ACTION_BUTTON,
-        OBJ_MDM_STAGE_CHANGE,
-        OBJ_MDM_STAGE_CHANGE_CONDITION,
-        OBJ_MDM_DECISION_RULE,
-        OBJ_MDM_DECISION_CONDITION
-    };
-    
-    private Map<String, String> mdmToOriginalMap = new Map<String, String>{
-        OBJ_MDM_PRODUCT_TYPE                => OBJ_PRODUCT_TYPE,
-        OBJ_MDM_BUSINESS_PROCESS            => OBJ_BUSINESS_PROCESS,
-        OBJ_MDM_CATEGORY                    => OBJ_CATEGORY,
-        OBJ_MDM_SUB_CATEGORY                => OBJ_SUB_CATEGORY,
-        OBJ_MDM_SUB_CODE                    => OBJ_SUB_CODE,
-        OBJ_MDM_CASE_STAGE                  => OBJ_CASE_STAGE,
-        OBJ_MDM_NATURE_OF_CASE              => OBJ_NATURE_OF_CASE,
-        OBJ_MDM_CHANNEL                     => OBJ_CHANNEL,
-        OBJ_MDM_MASTER_DATA_SETTING         => OBJ_MASTER_DATA_SETTING,
-        OBJ_MDM_ADDITIONAL_FIELD            => OBJ_ADDITIONAL_FIELD,
-        OBJ_MDM_ADDITIONAL_FIELD_LIST_VALUE => OBJ_ADDITIONAL_FIELD_LIST_VALUE,
-        OBJ_MDM_ACTION_BUTTON              => OBJ_ACTION_BUTTON,
-        OBJ_MDM_STAGE_CHANGE               => OBJ_STAGE_CHANGE,
-        OBJ_MDM_STAGE_CHANGE_CONDITION     => OBJ_STAGE_CHANGE_CONDITION,
-        OBJ_MDM_DECISION_RULE             => OBJ_DECISION_RULE,
-        OBJ_MDM_DECISION_CONDITION        => OBJ_DECISION_CONDITION
-    };
-    
-    private Map<String, String> commonFieldMap = new Map<String, String>{
-        //Common Fields
-        FIELD_NAME                  => FIELD_NAME,
-        FIELD_CODE                  => FIELD_CODE,
-        //Additional Field Fields
-        FIELD_FEC_UNIQUE_ID         => FIELD_FEC_UNIQUE_ID,
-        FIELD_FEC_TYPE              => FIELD_FEC_TYPE,
-        FIELD_FIELD_MANDATORY       => FIELD_FIELD_MANDATORY,
-        FIELD_FIELD_STATUS          => FIELD_FIELD_STATUS,
-        FIELD_FIELD_API_NAME        => FIELD_FIELD_API_NAME, // Đã bổ sung mapping Field_API_Name__c
-        //Additional Field Fields List Value
-        FIELD_FEC_ORDER             => FIELD_FEC_ORDER,
-        //Channel Fields
-        FIELD_CHANNEL_ID            => FIELD_CHANNEL_ID,
-        FIELD_CHANNEL_STATUS        => FIELD_CHANNEL_STATUS,
-        FIELD_CHANNEL_VI_NAME       => FIELD_CHANNEL_VI_NAME,
-        FIELD_SELF_SERVICE_FLAG     => FIELD_SELF_SERVICE_FLAG,
-        //FEC_MDM_Master_Data_Setting__c Fields
-        FIELD_APPLICABLE_ROLE       => FIELD_APPLICABLE_ROLE,
-        FIELD_FIELD_OBJECT_NAME     => FIELD_FIELD_OBJECT_NAME,
-        FIELD_FIELD_ORDER_DISPLAY   => FIELD_FIELD_ORDER_DISPLAY,
-        FIELD_FIELD_READONLY        => FIELD_FIELD_READONLY,
-        FIELD_PROPERTY_REFERENCE    => FIELD_PROPERTY_REFERENCE,
-        FIELD_SECTION               => FIELD_SECTION,
-        // FIELD_CHANNEL               => FIELD_CHANNEL,
-        FIELD_DATA_INTEGRATION_MAPPING => FIELD_DATA_INTEGRATION_MAPPING,
-        // Missing Fields (Push)
-        FIELD_FIELD_MASKING            => FIELD_FIELD_MASKING,
-        FIELD_MASKING_TYPE             => FIELD_MASKING_TYPE,
-        FIELD_FIELD_REVERTED           => FIELD_FIELD_REVERTED,
-        FIELD_SUB_SECTION              => FIELD_SUB_SECTION,
-        FIELD_SUB_SECTION_FIELD_LAYOUT => FIELD_SUB_SECTION_FIELD_LAYOUT,
-        FIELD_SUB_SECTION_LAYOUT       => FIELD_SUB_SECTION_LAYOUT,
-        FIELD_SUB_SECTION_ORDER        => FIELD_SUB_SECTION_ORDER,
-        FIELD_EDITABLE_USER_GROUP      => FIELD_EDITABLE_USER_GROUP,
-        FIELD_FIELD_EDITABLE           => FIELD_FIELD_EDITABLE,
-        FIELD_EDITABLE_ROLE            => FIELD_EDITABLE_ROLE,
-        //NOC Lookup Fields
-        FIELD_ALIAS                 => FIELD_ALIAS,
-        FIELD_NAME_VN               => FIELD_NAME_VN,
-        FIELD_POS_ORDER             => FIELD_POS_ORDER,
-        FIELD_STATUS                => FIELD_STATUS,
-        FIELD_ACTIVE                => FIELD_ACTIVE,
-        //Nature of Case Fields
-        FIELD_CUSTOMER_TYPE         => FIELD_CUSTOMER_TYPE,
-        FIELD_BUSINESS_PROCESS      => FIELD_BUSINESS_PROCESS,
-        FIELD_PRODUCT_TYPE          => FIELD_PRODUCT_TYPE,
-        FIELD_CATEGORY              => FIELD_CATEGORY,
-        FIELD_SUB_CATEGORY          => FIELD_SUB_CATEGORY,
-        FIELD_SUB_CODE              => FIELD_SUB_CODE,
-        FIELD_USER_GROUP            => FIELD_USER_GROUP,
-        FIELD_ROLE_NAMES            => FIELD_ROLE_NAMES,
-        FIELD_DEFAULT_STAGE         => FIELD_DEFAULT_STAGE,
-        FIELD_STATUS_NAME           => FIELD_STATUS_NAME,
-        FIELD_STAGE_NAME            => FIELD_STAGE_NAME,
-        // Missing MDS/NOC fields
-        FIELD_FIELD_LABEL_NAME     => FIELD_FIELD_LABEL_NAME,
-        FEC_FieldConstants.FIELD_FIELD_API_NAME => FEC_FieldConstants.FIELD_FIELD_API_NAME,
-        // Stage Change fields
-        FIELD_NEXT_QUEUE           => FIELD_NEXT_QUEUE,
-        FIELD_TEAM_USER_GROUP      => FIELD_TEAM_USER_GROUP,
-        // Stage Change Condition fields
-        FIELD_OPERATOR             => FIELD_OPERATOR,
-        FIELD_VALUE                => FIELD_VALUE,
-        FIELD_VALUE_TYPE           => FIELD_VALUE_TYPE,
-        // Decision Rule fields
-        FIELD_PRIORITY             => FIELD_PRIORITY,
-        FIELD_TABLE_KEY            => FIELD_TABLE_KEY,
-        FIELD_KEY_ID               => FIELD_KEY_ID,
-        // Decision Condition fields
-        FIELD_LABEL                => FIELD_LABEL,
-        FIELD_EXPRESSION           => FIELD_EXPRESSION
-    };
-    
     public Iterable<String> start(Database.BatchableContext bc) {
-        return executionOrder;
+        return FEC_MDMBatchConfig.EXECUTION_ORDER;
     }
     
     public void execute(Database.BatchableContext bc, List<String> scope) {
         String mdmObjName = scope[0];
-        String targetObjName = mdmToOriginalMap.get(mdmObjName);
+        String targetObjName = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmObjName);
         
         Map<String, Schema.SObjectType> gd = Schema.getGlobalDescribe();
         if (!gd.containsKey(mdmObjName) || !gd.containsKey(targetObjName)) return;
@@ -395,25 +22,33 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             Map<String, Schema.SObjectField> mdmFieldsMap = gd.get(mdmObjName).getDescribe().fields.getMap();
             Set<String> validQueryFields = new Set<String>();
             validQueryFields.add('Id');
-            validQueryFields.add(FIELD_PROCESS_CHANGE_STATUS);
+            validQueryFields.add(FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS);
+            validQueryFields.add(FEC_MDMBatchConfig.FIELD_CODE);
+            validQueryFields.add(FEC_MDMBatchConfig.FIELD_NAME);
             
             // Build filtered field map - only fields that exist on both objects
+            // and are updateable on the target (skip formula/calculated fields)
             Map<String, String> filteredFieldMap = new Map<String, String>();
-            for (String liveField : commonFieldMap.keySet()) {
-                String mdmField = commonFieldMap.get(liveField);
+            for (String liveField : FEC_MDMBatchConfig.COMMON_FIELD_MAP.keySet()) {
+                String mdmField = FEC_MDMBatchConfig.COMMON_FIELD_MAP.get(liveField);
                 if (targetFields.containsKey(liveField) && mdmFieldsMap.containsKey(mdmField)) {
+                    // Skip formula/non-updateable fields on target object
+                    Schema.DescribeFieldResult targetFieldDesc = targetFields.get(liveField).getDescribe();
+                    if (!targetFieldDesc.isUpdateable() && !targetFieldDesc.isCreateable()) {
+                        continue;
+                    }
                     validQueryFields.add(mdmField);
                     filteredFieldMap.put(mdmField, liveField); // Reverse mapping: MDM -> Live
                 }
             }
             
             // Also query MDM lookup fields so we can remap them
-            if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
-                List<String> objLookupFields = OBJECT_LOOKUP_FIELDS.get(mdmObjName);
+            if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
+                List<String> objLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName);
                 if (objLookupFields != null) {
                     for (String srcLookupField : objLookupFields) {
                         if (targetFields.containsKey(srcLookupField)) {
-                            String mdmLookupField = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_FIELD_KEY);
+                            String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
                             if (mdmFieldsMap.containsKey(mdmLookupField)) {
                                 validQueryFields.add(mdmLookupField);
                             }
@@ -423,9 +58,15 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             }
             
             // STEP 2: Query MDM records
-            String query = 'SELECT ' + String.join(new List<String>(validQueryFields), ', ')
+            // Normalize field names to lowercase to prevent SOQL duplicate field errors
+            // (Apex Set<String> is case-sensitive but SOQL field names are case-insensitive)
+            Set<String> normalizedFields = new Set<String>();
+            for (String f : validQueryFields) {
+                normalizedFields.add(f.toLowerCase());
+            }
+            String query = 'SELECT ' + String.join(new List<String>(normalizedFields), ', ')
                 + ' FROM ' + mdmObjName
-                + ' WHERE ' + FIELD_PROCESS_CHANGE_STATUS + ' != \'' + PROCESS_STATUS_SYNCED + '\'';
+                + ' WHERE ' + FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS + ' != \'' + FEC_MDMBatchConfig.PROCESS_STATUS_SYNCED + '\'';
             List<SObject> mdmRecords = Database.query(query);
             if (mdmRecords.isEmpty()) return;
             
@@ -433,19 +74,22 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             
             // STEP 3: Build lookup remap maps (MDM -> Live)
             Map<String, Map<Id, Id>> lookupRemapMaps = new Map<String, Map<Id, Id>>();
-            if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
+            if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
                 buildLookupRemapMaps(mdmObjName, mdmRecords, targetFields, lookupRemapMaps, gd);
             }
             
-            // STEP 4: Split NEW vs UPDATE
+            // STEP 4: Split NEW vs UPDATE vs DELETED
             List<SObject> mdmNew    = new List<SObject>();
             List<SObject> mdmUpdate = new List<SObject>();
+            List<SObject> mdmDeleted = new List<SObject>();
             for (SObject mdm : mdmRecords) {
-                String status = (String) mdm.get(FIELD_PROCESS_CHANGE_STATUS);
-                if (status == PROCESS_STATUS_NEW) {
+                String status = (String) mdm.get(FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS);
+                if (status == FEC_MDMBatchConfig.PROCESS_STATUS_NEW) {
                     mdmNew.add(mdm);
-                } else if (status == PROCESS_STATUS_UPDATE) {
+                } else if (status == FEC_MDMBatchConfig.PROCESS_STATUS_UPDATE) {
                     mdmUpdate.add(mdm);
+                } else if (status == FEC_MDMBatchConfig.PROCESS_STATUS_DELETED) {
+                    mdmDeleted.add(mdm);
                 }
             }
             
@@ -453,7 +97,7 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             List<SObject> insertList = buildTargetList(mdmNew, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, gd);
             List<SObject> updateList = buildTargetList(mdmUpdate, mdmObjName, targetObjName, filteredFieldMap, lookupRemapMaps, gd);
             
-            Schema.SObjectField extIdField = targetFields.get(FIELD_CODE);
+            Schema.SObjectField extIdField = targetFields.get(FEC_MDMBatchConfig.FIELD_CODE);
             
             // STEP 6: UPSERT records to Live
             if (!insertList.isEmpty()) {
@@ -461,6 +105,11 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             }
             if (!updateList.isEmpty()) {
                 processUpsert(updateList, mdmUpdate, extIdField, targetObjName);
+            }
+            
+            // STEP 7: DELETE Live records for soft-deleted MDM records, then delete MDM records
+            if (!mdmDeleted.isEmpty()) {
+                processDelete(mdmDeleted, targetObjName, gd);
             }
             
         } catch (Exception e) {
@@ -476,7 +125,7 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             List<SObject> mdmToUpdate = new List<SObject>();
             for (Integer i = 0; i < results.size(); i++) {
                 if (results[i].isSuccess()) {
-                    mdmRecords[i].put(FIELD_PROCESS_CHANGE_STATUS, PROCESS_STATUS_SYNCED);
+                    mdmRecords[i].put(FEC_MDMBatchConfig.FIELD_PROCESS_CHANGE_STATUS, FEC_MDMBatchConfig.PROCESS_STATUS_SYNCED);
                     mdmToUpdate.add(mdmRecords[i]);
                 } else {
                     uniqueErrors.add('[' + targetObjName + ' Upsert Error] ' + results[i].getErrors()[0].getMessage());
@@ -488,14 +137,57 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
         }
     }
     
+    /**
+     * @description Process soft-deleted MDM records: delete corresponding Live records
+     * (matched via FEC_Code__c), then delete the MDM records themselves.
+     */
+    private void processDelete(List<SObject> mdmDeleted, String targetObjName, Map<String, Schema.SObjectType> gd) {
+        FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = false;
+        try {
+            // Collect FEC_Code__c values from MDM records to find Live counterparts
+            Set<String> codes = new Set<String>();
+            for (SObject mdm : mdmDeleted) {
+                String code = (String) mdm.get(FEC_MDMBatchConfig.FIELD_CODE);
+                if (String.isNotBlank(code)) {
+                    codes.add(code);
+                }
+            }
+            
+            // Delete Live records matching FEC_Code__c
+            if (!codes.isEmpty() && gd.containsKey(targetObjName)) {
+                List<SObject> liveRecords = Database.query(
+                    'SELECT Id FROM ' + targetObjName + ' WHERE ' + FEC_MDMBatchConfig.FIELD_CODE + ' IN :codes'
+                );
+                if (!liveRecords.isEmpty()) {
+                    Database.DeleteResult[] delResults = Database.delete(liveRecords, false);
+                    for (Database.DeleteResult dr : delResults) {
+                        if (!dr.isSuccess()) {
+                            uniqueErrors.add('[' + targetObjName + ' Delete Error] ' + dr.getErrors()[0].getMessage());
+                        }
+                    }
+                }
+            }
+            
+            // Delete MDM records
+            Database.DeleteResult[] mdmDelResults = Database.delete(mdmDeleted, false);
+            for (Database.DeleteResult dr : mdmDelResults) {
+                if (!dr.isSuccess()) {
+                    uniqueErrors.add('[MDM Delete Error] ' + dr.getErrors()[0].getMessage());
+                }
+            }
+        } finally {
+            FEC_ProcessChangeStatusTriggerHandler.isTriggerEnabled = true;
+        }
+    }
+    
     private void populateMissingCodes(List<SObject> records, String objectName) {
         List<SObject> recordsToUpdate = new List<SObject>();
         for (SObject record : records) {
-            String code = (String) record.get(FIELD_CODE);
+            String code = (String) record.get(FEC_MDMBatchConfig.FIELD_CODE);
             if (String.isBlank(code)) {
-                String name = (String) record.get(FIELD_NAME);
+                String name = (String) record.get(FEC_MDMBatchConfig.FIELD_NAME);
                 if (String.isNotBlank(name)) {
-                    record.put(FIELD_CODE, name);
+                    record.put(FEC_MDMBatchConfig.FIELD_CODE, name);
                     recordsToUpdate.add(record);
                 }
             }
@@ -516,25 +208,25 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
     Map<String, Schema.SObjectType> gd
     ) {
         List<SObject> targetList = new List<SObject>();
-        List<String> thisObjLookupFields = OBJECT_LOOKUP_FIELDS.containsKey(mdmObjName)
-            ? OBJECT_LOOKUP_FIELDS.get(mdmObjName)
+        List<String> thisObjLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.containsKey(mdmObjName)
+            ? FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName)
             : new List<String>();
-        Boolean skipName = OBJECTS_WITH_AUTONUMBER_NAME.contains(mdmObjName);
+        Boolean skipName = FEC_MDMBatchConfig.OBJECTS_WITH_AUTONUMBER_NAME.contains(mdmObjName);
         
         for (SObject mdm : mdmRecords) {
             SObject target = gd.get(targetObjName).newSObject();
             
             // Copy Code field
-            String codeValue = (String)mdm.get(FIELD_CODE);
+            String codeValue = (String)mdm.get(FEC_MDMBatchConfig.FIELD_CODE);
             if (String.isNotBlank(codeValue)) {
-                target.put(FIELD_CODE, codeValue);
+                target.put(FEC_MDMBatchConfig.FIELD_CODE, codeValue);
             }
             
             // Copy normal fields
             for (String mdmField : filteredFieldMap.keySet()) {
                 String liveField = filteredFieldMap.get(mdmField);
                 if (thisObjLookupFields.contains(liveField)) continue;
-                if (skipName && liveField == FIELD_NAME) continue;
+                if (skipName && liveField == FEC_MDMBatchConfig.FIELD_NAME) continue;
                 
                 if (mdm.get(mdmField) != null) {
                     target.put(liveField, mdm.get(mdmField));
@@ -542,7 +234,7 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             }
             
             // Remap lookup fields
-            if (OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
+            if (FEC_MDMBatchConfig.OBJECTS_WITH_LOOKUP_REMAPPING.contains(mdmObjName)) {
                 remapLookupFields(mdm, target, lookupRemapMaps, mdmObjName);
             }
             
@@ -556,7 +248,7 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
     Map<String, Map<Id, Id>> lookupRemapMaps,
     Map<String, Schema.SObjectType> gd) {
         
-        List<String> objectLookupFields = OBJECT_LOOKUP_FIELDS.get(mdmObjName);
+        List<String> objectLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName);
         if (objectLookupFields == null || objectLookupFields.isEmpty()) return;
         
         for (String srcLookupField : objectLookupFields) {
@@ -564,15 +256,15 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
                 lookupRemapMaps.put(srcLookupField, new Map<Id, Id>());
                 continue;
             }
-            String mdmLookupObj = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_OBJ_KEY);
-            String mdmLookupField = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_FIELD_KEY);
+            String mdmLookupObj = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_OBJ_KEY);
+            String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
             
             if (!gd.containsKey(mdmLookupObj)) {
                 lookupRemapMaps.put(srcLookupField, new Map<Id, Id>());
                 continue;
             }
-            String srcObjName = mdmToOriginalMap.containsKey(mdmLookupObj)
-                ? mdmToOriginalMap.get(mdmLookupObj)
+            String srcObjName = FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.containsKey(mdmLookupObj)
+                ? FEC_MDMBatchConfig.MDM_TO_LIVE_MAP.get(mdmLookupObj)
                 : null;
             
             Map<Id, Id> mdmToSrcIdMap = new Map<Id, Id>();
@@ -586,17 +278,17 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
                 if (!usedMdmIds.isEmpty()) {
                     Map<Id, String> mdmIdToCode = new Map<Id, String>();
                     for (SObject mdmLookupRecord : Database.query(
-                        'SELECT Id, ' + FIELD_CODE + ' FROM ' + mdmLookupObj + ' WHERE Id IN :usedMdmIds'
+                        'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + mdmLookupObj + ' WHERE Id IN :usedMdmIds'
                     )) {
-                        String code = (String)mdmLookupRecord.get(FIELD_CODE);
+                        String code = (String)mdmLookupRecord.get(FEC_MDMBatchConfig.FIELD_CODE);
                         if (String.isNotBlank(code)) mdmIdToCode.put(mdmLookupRecord.Id, code);
                     }
                     
                     Map<String, Id> srcCodeToId = new Map<String, Id>();
                     for (SObject srcLookupRecord : Database.query(
-                        'SELECT Id, ' + FIELD_CODE + ' FROM ' + srcObjName
+                        'SELECT Id, ' + FEC_MDMBatchConfig.FIELD_CODE + ' FROM ' + srcObjName
                     )) {
-                        String code = (String)srcLookupRecord.get(FIELD_CODE);
+                        String code = (String)srcLookupRecord.get(FEC_MDMBatchConfig.FIELD_CODE);
                         if (String.isNotBlank(code)) srcCodeToId.put(code, srcLookupRecord.Id);
                     }
                     
@@ -616,11 +308,11 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
     Map<String, Map<Id, Id>> lookupRemapMaps,
     String mdmObjName) {
         
-        List<String> objectLookupFields = OBJECT_LOOKUP_FIELDS.get(mdmObjName);
+        List<String> objectLookupFields = FEC_MDMBatchConfig.OBJECT_LOOKUP_FIELDS.get(mdmObjName);
         if (objectLookupFields == null || objectLookupFields.isEmpty()) return;
         
         for (String srcLookupField : objectLookupFields) {
-            String mdmLookupField = LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(MDM_FIELD_KEY);
+            String mdmLookupField = FEC_MDMBatchConfig.LOOKUP_FIELD_MDM_MAP.get(srcLookupField).get(FEC_MDMBatchConfig.MDM_FIELD_KEY);
             Id mdmId = (Id)mdm.get(mdmLookupField);
             if (mdmId == null) continue;
             
@@ -703,6 +395,8 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             LIMIT 1
         ];
         
+        String envPrefix = getEnvironmentPrefix();
+
         if (!templates.isEmpty() && batchLog.Id != null) {
             // Bypass giới hạn WhatId đối với UserId bằng tính năng render template
             Messaging.SingleEmailMessage renderedEmail = Messaging.renderStoredEmailTemplate(
@@ -712,12 +406,12 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
             );
             
             mail.setToAddresses(toAddresses);
-            mail.setSubject(renderedEmail.getSubject());
+            mail.setSubject(envPrefix + renderedEmail.getSubject());
             mail.setHtmlBody(renderedEmail.getHtmlBody());
             mail.setSaveAsActivity(false); 
         } else {
             mail.setToAddresses(toAddresses);
-            mail.setSubject('[FEC MDM Sync] Fallback: Đồng bộ MDM hoàn tất - ' + batchStatus);
+            mail.setSubject(envPrefix + '[FEC MDM Sync] Fallback: Đồng bộ MDM hoàn tất - ' + batchStatus);
             mail.setPlainTextBody('Batch Job: FEC_PushMDMToLiveBatch\nStatus: ' + batchStatus + '\nErrors: ' + totalErrors + '\nLog ID: ' + batchLog.Id);
         }
         
@@ -731,5 +425,24 @@ public with sharing class FEC_PushMDMToLiveBatch implements Database.Batchable<S
         }
         
         System.debug('[finish] RETURN: ' + batchStatus);
+    }
+
+    /**
+     * @description Trả về prefix môi trường để prepend vào email subject.
+     *              Ví dụ: "Sandbox [SGP2S]: " hoặc "Production [AP16]: "
+     *              Dùng Organization.IsSandbox + InstanceName để xác định môi trường.
+     * @return      String prefix kết thúc bằng ": " (hoặc empty nếu query fail)
+     */
+    @TestVisible
+    private static String getEnvironmentPrefix() {
+        try {
+            Organization org = [SELECT IsSandbox, InstanceName FROM Organization LIMIT 1];
+            String envType = org.IsSandbox ? 'Sandbox' : 'Production';
+            String instance = String.isNotBlank(org.InstanceName) ? ' [' + org.InstanceName + ']' : '';
+            return envType + instance + ': ';
+        } catch (Exception ex) {
+            System.debug('[getEnvironmentPrefix] Error: ' + ex.getMessage());
+            return '';
+        }
     }
 }

@@ -317,16 +317,24 @@ public with sharing class FEC_BusinessProcessService {
         return options;
     }
 
-    /** Get MDM Stage options for a given Business Process (used in modal combobox) */
+    /**
+     * Get MDM Stage options for a given Business Process (used in modal combobox).
+     * IMPORTANT: value = FEC_Code__c (immutable, validation rule locked) instead of Id/Name.
+     *           This makes Decision Rules survive Stage rename and cross-environment deployment.
+     */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getMDMStageOptions(Id businessProcessId) {
         List<Map<String, String>> options = new List<Map<String, String>>();
         for (FEC_MDM_Case_Stage__c stage : [
-            SELECT Id, Name FROM FEC_MDM_Case_Stage__c
+            SELECT Id, Name, FEC_Code__c FROM FEC_MDM_Case_Stage__c
             WHERE FEC_Business_Process__c = :businessProcessId
+              AND FEC_Code__c != null
             ORDER BY Name
         ]) {
-            options.add(new Map<String, String>{ 'label' => stage.Name, 'value' => stage.Id });
+            options.add(new Map<String, String>{
+                'label' => stage.Name,
+                'value' => stage.FEC_Code__c
+            });
         }
         return options;
     }
@@ -341,6 +349,28 @@ public with sharing class FEC_BusinessProcessService {
             ORDER BY Name
         ]) {
             options.add(new Map<String, String>{ 'label' => ab.Name, 'value' => ab.Id });
+        }
+        return options;
+    }
+
+    /**
+     * @description Lấy danh sách Queue (Group WHERE Type = 'Queue') để dùng làm dropdown
+     *              cho cột "Next Queue" trong Decision Table.
+     *              Trả về DeveloperName làm value để bền vững khi rename queue label.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, String>> getQueueOptions() {
+        List<Map<String, String>> options = new List<Map<String, String>>();
+        for (Group q : [
+            SELECT Id, Name, DeveloperName
+            FROM Group
+            WHERE Type = 'Queue'
+            ORDER BY Name
+        ]) {
+            options.add(new Map<String, String>{
+                'label' => q.Name,
+                'value' => q.DeveloperName
+            });
         }
         return options;
     }

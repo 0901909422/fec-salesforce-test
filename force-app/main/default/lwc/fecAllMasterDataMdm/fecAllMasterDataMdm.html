@@ -18,15 +18,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedProductType}
                         columns={columnsBasic} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="ProductType" onclick={handleFirst} disabled={isPrevDisabledProductType} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="ProductType" onclick={handlePrev} disabled={isPrevDisabledProductType} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="ProductType" onclick={handleNext} disabled={isNextDisabledProductType} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="ProductType" onclick={handleLast} disabled={isNextDisabledProductType} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoProductType}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageProductType}
+                        total-records={totalRecordsProductType}
+                        page-size={pageSize}
+                        data-tab="ProductType"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Business Process -->
@@ -37,15 +36,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedBusinessProcess}
                         columns={columnsBasic} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="BusinessProcess" onclick={handleFirst} disabled={isPrevDisabledBusinessProcess} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="BusinessProcess" onclick={handlePrev} disabled={isPrevDisabledBusinessProcess} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="BusinessProcess" onclick={handleNext} disabled={isNextDisabledBusinessProcess} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="BusinessProcess" onclick={handleLast} disabled={isNextDisabledBusinessProcess} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoBusinessProcess}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageBusinessProcess}
+                        total-records={totalRecordsBusinessProcess}
+                        page-size={pageSize}
+                        data-tab="BusinessProcess"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Category -->
@@ -56,15 +54,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedCategory}
                         columns={columnsBasic} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="Category" onclick={handleFirst} disabled={isPrevDisabledCategory} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="Category" onclick={handlePrev} disabled={isPrevDisabledCategory} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="Category" onclick={handleNext} disabled={isNextDisabledCategory} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="Category" onclick={handleLast} disabled={isNextDisabledCategory} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoCategory}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageCategory}
+                        total-records={totalRecordsCategory}
+                        page-size={pageSize}
+                        data-tab="Category"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Sub Category -->
@@ -75,15 +72,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedSubCategory}
                         columns={columnsBasic} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="SubCategory" onclick={handleFirst} disabled={isPrevDisabledSubCategory} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="SubCategory" onclick={handlePrev} disabled={isPrevDisabledSubCategory} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="SubCategory" onclick={handleNext} disabled={isNextDisabledSubCategory} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="SubCategory" onclick={handleLast} disabled={isNextDisabledSubCategory} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoSubCategory}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageSubCategory}
+                        total-records={totalRecordsSubCategory}
+                        page-size={pageSize}
+                        data-tab="SubCategory"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Sub Code -->
@@ -94,15 +90,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedSubCode}
                         columns={columnsBasic} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="SubCode" onclick={handleFirst} disabled={isPrevDisabledSubCode} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="SubCode" onclick={handlePrev} disabled={isPrevDisabledSubCode} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="SubCode" onclick={handleNext} disabled={isNextDisabledSubCode} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="SubCode" onclick={handleLast} disabled={isNextDisabledSubCode} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoSubCode}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageSubCode}
+                        total-records={totalRecordsSubCode}
+                        page-size={pageSize}
+                        data-tab="SubCode"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Master Setting -->
@@ -113,15 +108,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedMasterSetting}
                         columns={columnsMsSetting} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="MasterSetting" onclick={handleFirst} disabled={isPrevDisabledMasterSetting} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="MasterSetting" onclick={handlePrev} disabled={isPrevDisabledMasterSetting} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="MasterSetting" onclick={handleNext} disabled={isNextDisabledMasterSetting} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="MasterSetting" onclick={handleLast} disabled={isNextDisabledMasterSetting} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoMasterSetting}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageMasterSetting}
+                        total-records={totalRecordsMasterSetting}
+                        page-size={pageSize}
+                        data-tab="MasterSetting"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Channel -->
@@ -132,15 +126,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedChannel}
                         columns={columnsSetting} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="Channel" onclick={handleFirst} disabled={isPrevDisabledChannel} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="Channel" onclick={handlePrev} disabled={isPrevDisabledChannel} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="Channel" onclick={handleNext} disabled={isNextDisabledChannel} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="Channel" onclick={handleLast} disabled={isNextDisabledChannel} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoChannel}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageChannel}
+                        total-records={totalRecordsChannel}
+                        page-size={pageSize}
+                        data-tab="Channel"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Nature of Case -->
@@ -151,15 +144,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedNatureOfCase}
                         columns={columnsNOC} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="NatureOfCase" onclick={handleFirst} disabled={isPrevDisabledNatureOfCase} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="NatureOfCase" onclick={handlePrev} disabled={isPrevDisabledNatureOfCase} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="NatureOfCase" onclick={handleNext} disabled={isNextDisabledNatureOfCase} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="NatureOfCase" onclick={handleLast} disabled={isNextDisabledNatureOfCase} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoNatureOfCase}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageNatureOfCase}
+                        total-records={totalRecordsNatureOfCase}
+                        page-size={pageSize}
+                        data-tab="NatureOfCase"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Additional Field -->
@@ -170,15 +162,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedAdditionalField}
                         columns={columnsField} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="AdditionalField" onclick={handleFirst} disabled={isPrevDisabledAdditionalField} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="AdditionalField" onclick={handlePrev} disabled={isPrevDisabledAdditionalField} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="AdditionalField" onclick={handleNext} disabled={isNextDisabledAdditionalField} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="AdditionalField" onclick={handleLast} disabled={isNextDisabledAdditionalField} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoAdditionalField}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageAdditionalField}
+                        total-records={totalRecordsAdditionalField}
+                        page-size={pageSize}
+                        data-tab="AdditionalField"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Additional Field List -->
@@ -189,15 +180,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedAdditionalFieldList}
                         columns={columnsSetting} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="AdditionalFieldList" onclick={handleFirst} disabled={isPrevDisabledAdditionalFieldList} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="AdditionalFieldList" onclick={handlePrev} disabled={isPrevDisabledAdditionalFieldList} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="AdditionalFieldList" onclick={handleNext} disabled={isNextDisabledAdditionalFieldList} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="AdditionalFieldList" onclick={handleLast} disabled={isNextDisabledAdditionalFieldList} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoAdditionalFieldList}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageAdditionalFieldList}
+                        total-records={totalRecordsAdditionalFieldList}
+                        page-size={pageSize}
+                        data-tab="AdditionalFieldList"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Case Stage -->
@@ -208,15 +198,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedCaseStage}
                         columns={columnsStage} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="CaseStage" onclick={handleFirst} disabled={isPrevDisabledCaseStage} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="CaseStage" onclick={handlePrev} disabled={isPrevDisabledCaseStage} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="CaseStage" onclick={handleNext} disabled={isNextDisabledCaseStage} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="CaseStage" onclick={handleLast} disabled={isNextDisabledCaseStage} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoCaseStage}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageCaseStage}
+                        total-records={totalRecordsCaseStage}
+                        page-size={pageSize}
+                        data-tab="CaseStage"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Action Button -->
@@ -227,15 +216,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedActionButton}
                         columns={columnsActionButton} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="ActionButton" onclick={handleFirst} disabled={isPrevDisabledActionButton} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="ActionButton" onclick={handlePrev} disabled={isPrevDisabledActionButton} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="ActionButton" onclick={handleNext} disabled={isNextDisabledActionButton} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="ActionButton" onclick={handleLast} disabled={isNextDisabledActionButton} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoActionButton}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageActionButton}
+                        total-records={totalRecordsActionButton}
+                        page-size={pageSize}
+                        data-tab="ActionButton"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
                 <!-- Stage Change -->
@@ -246,15 +234,14 @@
                     </div>
                     <lightning-datatable key-field="Id" data={pagedStageChange}
                         columns={columnsStageChange} hide-checkbox-column></lightning-datatable>
-                    <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                        <lightning-button-group>
-                            <lightning-button label="First" data-tab="StageChange" onclick={handleFirst} disabled={isPrevDisabledStageChange} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronleft" data-tab="StageChange" onclick={handlePrev} disabled={isPrevDisabledStageChange} variant="neutral"></lightning-button>
-                            <lightning-button icon-name="utility:chevronright" data-tab="StageChange" onclick={handleNext} disabled={isNextDisabledStageChange} variant="neutral"></lightning-button>
-                            <lightning-button label="Last" data-tab="StageChange" onclick={handleLast} disabled={isNextDisabledStageChange} variant="neutral"></lightning-button>
-                        </lightning-button-group>
-                        <span class="slds-p-left_small slds-align-middle page-info">{pageInfoStageChange}</span>
-                    </div>
+                    <c-fec-pagination
+                        current-page={currentPageStageChange}
+                        total-records={totalRecordsStageChange}
+                        page-size={pageSize}
+                        data-tab="StageChange"
+                        onpagechange={handleTabPageChange}
+                        onpagesizechange={handleTabPageSizeChange}>
+                    </c-fec-pagination>
                 </lightning-tab>
 
             </lightning-tabset>

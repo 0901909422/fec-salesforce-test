@@ -30,15 +30,13 @@
             </lightning-datatable>
 
             <!-- Pagination -->
-            <div class="slds-grid slds-grid_align-center slds-p-top_x-small">
-                <lightning-button-group>
-                    <lightning-button label="First" onclick={handleFirst} disabled={isPrevDisabled} variant="neutral"></lightning-button>
-                    <lightning-button icon-name="utility:chevronleft" onclick={handlePrev} disabled={isPrevDisabled} variant="neutral"></lightning-button>
-                    <lightning-button icon-name="utility:chevronright" onclick={handleNext} disabled={isNextDisabled} variant="neutral"></lightning-button>
-                    <lightning-button label="Last" onclick={handleLast} disabled={isNextDisabled} variant="neutral"></lightning-button>
-                </lightning-button-group>
-                <span class="slds-p-left_small slds-align-middle page-info">{pageInfo}</span>
-            </div>
+            <c-fec-pagination
+                current-page={currentPage}
+                total-records={totalFilteredRecords}
+                page-size={pageSize}
+                onpagechange={handlePageChange}
+                onpagesizechange={handlePageSizeChange}>
+            </c-fec-pagination>
         </div>
     </lightning-card>
 

@@ -24,6 +24,8 @@ public class FEC_ObjectConstants {
     public static final String OBJ_STAGE_CHANGE_CONDITION = 'FEC_Stage_Change_Condition__c';
     public static final String OBJ_DECISION_RULE = 'FEC_Decision_Rule__c';
     public static final String OBJ_DECISION_CONDITION = 'FEC_Decision_Condition__c';
+    public static final String OBJ_HOLD_CASE_CONFIG = 'FEC_Hold_Case_Config__c';
+    public static final String OBJ_NFU_CODE = 'FEC_NFU_Code__c';
 
     // MDM Object API names
     public static final String OBJ_MDM_PRODUCT_TYPE = 'FEC_MDM_Product_Type__c';
@@ -42,6 +44,8 @@ public class FEC_ObjectConstants {
     public static final String OBJ_MDM_STAGE_CHANGE_CONDITION = 'FEC_MDM_Stage_Change_Condition__c';
     public static final String OBJ_MDM_DECISION_RULE = 'FEC_MDM_Decision_Rule__c';
     public static final String OBJ_MDM_DECISION_CONDITION = 'FEC_MDM_Decision_Condition__c';
+    public static final String OBJ_MDM_HOLD_CASE_CONFIG = 'FEC_MDM_Hold_Case_Config__c';
+    public static final String OBJ_MDM_NFU_CODE = 'FEC_MDM_NFU_Code__c';
 
     // Uppercase keys (used when mapping uses uppercase API names)
     public static final String KEY_MDM_PRODUCT_TYPE = 'FEC_MDM_PRODUCT_TYPE__C';

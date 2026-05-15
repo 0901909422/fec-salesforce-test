@@ -11,6 +11,7 @@
     <columns>FEC_User_Group__c</columns>
     <columns>LAST_UPDATE</columns>
     <columns>UPDATEDBY_USER</columns>
+    <columns>FEC_Nature_of_Cases__c</columns>
     <filterScope>Everything</filterScope>
     <label>All Case Stages</label>
 </ListView>
