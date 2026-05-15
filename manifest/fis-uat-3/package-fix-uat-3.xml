@@ -108,6 +108,9 @@
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
 		<members>FEC_Stage_Change__c.FEC_Code__c</members>
 		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
+        <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
+		<members>FEC_Template__c.FEC_Preview_ZNS_Url__c</members>
+		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
