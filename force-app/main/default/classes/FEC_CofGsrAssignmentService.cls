@@ -631,10 +631,43 @@ public without sharing class FEC_CofGsrAssignmentService {
             // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
             if (hasNonCcSpTeam(nocIds)) {
                 createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+                // tungnm37 15/05/2026: chuyển sang stage tiếp theo sau khi tạo assignment tự động
+                moveToNextStage(caseId, nocIds);
             }
         } else {
             createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+            // tungnm37 15/05/2026: chuyển sang stage tiếp theo sau khi tạo assignment tự động
+            moveToNextStage(caseId, nocIds);
         }
         return null;
+    }
+
+    // tungnm37 15/05/2026: chuyển Case sang stage tiếp theo
+    private static void moveToNextStage(String caseId, Set<Id> nocIds) {
+        try {
+            if (nocIds == null || nocIds.isEmpty()) return;
+            List<Case> cases = [SELECT Id, FEC_Current_Case_Stage__c FROM Case WHERE Id = :caseId LIMIT 1];
+            if (cases.isEmpty()) return;
+            Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
+
+            // tungnm37: lấy stage không phải default (stage 2+) theo NOC
+            List<FEC_Case_Stage__c> nextStages = [
+                SELECT Id FROM FEC_Case_Stage__c
+                WHERE FEC_Nature_of_Cases__c IN :nocIds
+                  AND FEC_Default_Stage__c = false
+                  AND FEC_Active__c = true
+                ORDER BY Name ASC LIMIT 1
+            ];
+            if (!nextStages.isEmpty() && nextStages[0].Id != currentStageId) {
+                FEC_CaseTriggerHandler.isSystemUpdate = true;
+                try {
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                } finally {
+                    FEC_CaseTriggerHandler.isSystemUpdate = false;
+                }
+            }
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG moveToNextStage error: ' + e.getMessage());
+        }
     }
 }
