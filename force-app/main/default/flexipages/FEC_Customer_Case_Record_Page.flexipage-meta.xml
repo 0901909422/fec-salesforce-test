@@ -1638,16 +1638,6 @@
         <name>sidebar</name>
         <type>Region</type>
     </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>c:fec_NocChannelConfig</componentName>
-                <identifier>fec_NocChannelConfig</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>nocChannelConfigTabContent</name>
-        <type>Facet</type>
-    </flexiPageRegions>
     <masterLabel>FEC Customer Case Record Page</masterLabel>
     <sobjectType>Case</sobjectType>
     <template>
