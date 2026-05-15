@@ -509,7 +509,6 @@
 		<members>Case.FEC_Redeemed_Points__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
-        <members>Case.FEC_Complain_Type__c</members>
         <name>CustomField</name>
     </types>
     <types>
