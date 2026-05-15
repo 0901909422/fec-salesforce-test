@@ -27,7 +27,7 @@ public without sharing class FEC_CaseTriggerHandler {
             List<Case> newCases = (List<Case>) Trigger.new;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onBeforeInsert(listCase);
+            if (!listCase.isEmpty()) handler.onBeforeInsert(listCase);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
@@ -35,14 +35,14 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onBeforeUpdate(listCase, oldMap);
+            if (!listCase.isEmpty()) handler.onBeforeUpdate(listCase, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onAfterInsert(listCase);
+            if (!listCase.isEmpty()) handler.onAfterInsert(listCase);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
@@ -50,7 +50,7 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onAfterUpdate(listCase, oldMap);
+            if (!listCase.isEmpty()) handler.onAfterUpdate(listCase, oldMap);
         }
     }
 
