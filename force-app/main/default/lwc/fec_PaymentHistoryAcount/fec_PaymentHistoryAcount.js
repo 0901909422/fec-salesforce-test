@@ -102,15 +102,15 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
             console.warn('Billing API failed', e);
         }
 
-        try {
-            await syncRealtimePayment({ caseId: this._recordId });
-        } catch (e) {
-            console.warn('Realtime API failed', e);
-        }
+        // try {
+        //     await syncRealtimePayment({ caseId: this._recordId });
+        // } catch (e) {
+        //     console.warn('Realtime API failed', e);
+        // }
 
         await Promise.all([
             this.loadBilling(),
-            this.loadRealtime()
+           // this.loadRealtime()
         ]);
 
         this.isLoading = false;
