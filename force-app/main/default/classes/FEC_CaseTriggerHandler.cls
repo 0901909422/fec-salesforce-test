@@ -145,11 +145,8 @@ public without sharing class FEC_CaseTriggerHandler {
         for (Case c : newCases) {
             Case oldCase = oldMap.get(c.Id);
             if (c.OwnerId != null && c.OwnerId != oldCase.OwnerId) {
-                // tungnm37 fix: khi owner đổi về User → clear FEC_Assignment_Users__c để Service Case Owner hiển thị
-                // khi owner đổi về Queue → set = Queue Id để formula ẩn (COF/GSR auto routing)
-                String newAssignmentUsers = c.OwnerId.getSObjectType() == User.SObjectType
-                    ? null
-                    : String.valueOf(c.OwnerId);
+                // tungnm37: set FEC_Assignment_Users__c = OwnerId mới (User ID hoặc Queue ID)
+                String newAssignmentUsers = String.valueOf(c.OwnerId);
                 toUpdate.add(new Case(Id = c.Id, FEC_Assignment_Users__c = newAssignmentUsers));
             }
         }

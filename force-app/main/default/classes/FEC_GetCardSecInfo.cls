@@ -201,7 +201,7 @@ public with sharing class FEC_GetCardSecInfo {
         String requestorId = FEC_ConstantCommon.REQUESTOR_CRM;
         String dateTimeStr = Datetime.now().format(FEC_ConstantCommon.DATETIME_FORMAT);
         
-        return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber);
+        return callGetCardSecInfo(transId, requestorId, dateTimeStr, accountNumber, false);
     }
   
     // =========================================================================
@@ -247,10 +247,20 @@ public with sharing class FEC_GetCardSecInfo {
         String transID,
         String requestorId,
         String dateTimeStr,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ) {
   
-        validateRequest(transID, requestorId, dateTimeStr, accountNumber);
+        validateRequest(transID, requestorId, dateTimeStr, accountNumber, isTestApi);
+
+        if (isTestApi) {
+            throw new CalloutException(
+                String.format(
+                    System.Label.FEC_MSG_API_Error,
+                    new List<String>{ 'API Fail' }
+                )
+            );
+        }
         
         // Build SOAP request using Dom.XmlNode
         Dom.Document doc = new Dom.Document();
@@ -609,7 +619,8 @@ public with sharing class FEC_GetCardSecInfo {
         String transID,
         String requestorId,
         String dateTimeStr,
-        String accountNumber
+        String accountNumber,
+        Boolean isTestApi
     ) {
   
         if (String.isBlank(transID) || transID.length() > 36) {

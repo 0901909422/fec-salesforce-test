@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Customer Confirmation --></label>
+    <name>FEC_Customer_Confirmation__c</name>
+    <picklistValues>
+        <masterLabel>Customer has not received MRC</masterLabel>
+        <translation>Khách hàng đã xác nhận MRC</translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Customer received MRC</masterLabel>
+        <translation>Khách hàng chưa xác nhận MRC</translation>
+    </picklistValues>
+</CustomFieldTranslation>

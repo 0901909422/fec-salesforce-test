@@ -203,6 +203,27 @@ public with sharing class FEC_UpdateCustomerAddress {
     return updateCustomerAddress(info);
   }
 
+  private static List<FEC_Address_Info__c> sortPendingCaseAddresses(
+    List<FEC_Address_Info__c> rows
+  ) {
+    List<FEC_Address_Info__c> out = new List<FEC_Address_Info__c>();
+    if (rows == null || rows.isEmpty()) {
+      return out;
+    }
+    for (String t : new List<String>{
+      'Permanent Address',
+      'Office Address',
+      'Current Address'
+    }) {
+      for (FEC_Address_Info__c r : rows) {
+        if (r != null && r.FEC_Address_Type__c == t) {
+          out.add(r);
+        }
+      }
+    }
+    return out;
+  }
+
   public static UpdateResult updateValue(
     String caseId,
     Map<String, String> params,
@@ -226,36 +247,78 @@ public with sharing class FEC_UpdateCustomerAddress {
     }
 
     Case selectedCase = caselst[0];
-    Map<String, String> pendingFieldBySfType =
-      FEC_MainInfoController.loadCasePendingAddressJsonMap(selectedCase.Id);
+    List<FEC_Address_Info__c> pendingRows = [
+      SELECT
+        Id,
+        FEC_Address_Type__c,
+        FEC_Address__c,
+        FEC_Building__c,
+        FEC_Number__c,
+        FEC_Street__c,
+        FEC_Mailing_Address__c,
+        FEC_District__r.FEC_Code__c,
+        FEC_Province__r.FEC_Code__c
+      FROM FEC_Address_Info__c
+      WHERE FEC_Case__c = :selectedCase.Id
+    ];
+    List<FEC_Address_Info__c> sortedPending = sortPendingCaseAddresses(pendingRows);
 
     UpdateResult result;
-    for (String sfType : new List<String>{ 'Permanent Address', 'Office Address', 'Current Address' }) {
-      String pendingJson = pendingFieldBySfType.get(sfType);
-      if (String.isBlank(pendingJson)) {
+    for (FEC_Address_Info__c row : sortedPending) {
+      if (row == null || String.isBlank(row.FEC_Address_Type__c)) {
         continue;
       }
+      String addrStored = row.FEC_Address__c;
       try {
-        Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
-        result = updateCustomerAddressParams(
-          caseId,
-          sfType,
-          (String) data.get('cifNumber'),
-          (String) data.get('addressId'),
-          (String) data.get('addressType'),
-          (String) data.get('number_x'),
-          (String) data.get('building'),
-          (String) data.get('street'),
-          (String) data.get('district'),
-          (String) data.get('city'),
-          (String) data.get('propertyStatus'),
-          (String) data.get('years'),
-          (String) data.get('months'),
-          (String) data.get('isMailingAddress'),
-          (String) data.get('isPrimary'),
-          (String) data.get('receiveStatement'),
-          (String) data.get('cardDelivery')
-        );
+        if (String.isNotBlank(addrStored) && addrStored.trim().startsWith('{')) {
+          Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(addrStored);
+          result = updateCustomerAddressParams(
+            caseId,
+            row.FEC_Address_Type__c,
+            (String) data.get('cifNumber'),
+            (String) data.get('addressId'),
+            (String) data.get('addressType'),
+            (String) data.get('number_x'),
+            (String) data.get('building'),
+            (String) data.get('street'),
+            (String) data.get('district'),
+            (String) data.get('city'),
+            (String) data.get('propertyStatus'),
+            (String) data.get('years'),
+            (String) data.get('months'),
+            (String) data.get('isMailingAddress'),
+            (String) data.get('isPrimary'),
+            (String) data.get('receiveStatement'),
+            (String) data.get('cardDelivery')
+          );
+        } else {
+          List<String> meta = FEC_MainInfoController.unpackPendingAddressApiMeta(addrStored);
+          String districtCode = (row.FEC_District__r != null)
+            ? row.FEC_District__r.FEC_Code__c
+            : null;
+          String provinceCode = (row.FEC_Province__r != null)
+            ? row.FEC_Province__r.FEC_Code__c
+            : null;
+          result = updateCustomerAddressParams(
+            caseId,
+            row.FEC_Address_Type__c,
+            meta[0],
+            meta[1],
+            meta[2],
+            row.FEC_Number__c,
+            row.FEC_Building__c,
+            row.FEC_Street__c,
+            districtCode,
+            provinceCode,
+            '',
+            '',
+            '',
+            row.FEC_Mailing_Address__c == true ? 'Y' : 'N',
+            '',
+            '',
+            ''
+          );
+        }
       } finally {
         logApiResponse();
       }
@@ -267,24 +330,11 @@ public with sharing class FEC_UpdateCustomerAddress {
     if (result != null && result.success == true) {
       selectedCase.FEC_Process_Action_Count__c = -1;
 
-      // Sync FEC_Mailing_Address__c trong FEC_Address_Info__c dựa trên isMailingAddress trong pending JSON
-      // vì API GetAddressesList không trả cờ mailing, nên phải sync trước khi xóa pending fields
       String selectedMailingSfType = null;
-      for (String sfType : new List<String>{
-        'Permanent Address',
-        'Office Address',
-        'Current Address'
-      }) {
-        String pendingJson = pendingFieldBySfType.get(sfType);
-        if (String.isBlank(pendingJson)) continue;
-        try {
-          Map<String, Object> d = (Map<String, Object>) JSON.deserializeUntyped(pendingJson);
-          if ('Y'.equals((String) d.get('isMailingAddress'))) {
-            selectedMailingSfType = sfType;
-            break;
-          }
-        } catch (Exception ex) {
-          System.debug('### syncMailing parse error: ' + ex.getMessage());
+      for (FEC_Address_Info__c row : pendingRows) {
+        if (row != null && row.FEC_Mailing_Address__c == true) {
+          selectedMailingSfType = row.FEC_Address_Type__c;
+          break;
         }
       }
       FEC_MainInfoController.syncLocalMailingAddressSelection(caseId, selectedMailingSfType);

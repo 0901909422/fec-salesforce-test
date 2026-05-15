@@ -1,4 +1,4 @@
-public with sharing class FEC_FastCashCaseController {
+public without sharing class FEC_FastCashCaseController {
 
     private static final Integer DEFAULT_FAST_CASH_TENURE = 1;
 
@@ -30,13 +30,10 @@ public with sharing class FEC_FastCashCaseController {
         @AuraEnabled public String errorMessage;
     }
 
-    /**
-     * Đọc trạng thái Fast Cash trên Case (NOC, số tiền, Application ID).
-     */
     @AuraEnabled(cacheable=false)
     public static CaseFastCashStateDTO getCaseFastCashState(Id caseId) {
         CaseFastCashStateDTO dto = new CaseFastCashStateDTO();
-        if (caseId == null || !Schema.sObjectType.Case.isAccessible()) {
+        if (caseId == null) {
             return dto;
         }
         List<Case> rows = [
@@ -48,7 +45,6 @@ public with sharing class FEC_FastCashCaseController {
             WHERE Id = :caseId
             LIMIT 1
         ];
-        rows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, rows).getRecords();
         if (rows.isEmpty()) {
             return dto;
         }
@@ -60,9 +56,6 @@ public with sharing class FEC_FastCashCaseController {
         return dto;
     }
 
-    /**
-     * Kiểm tra điều kiện Fast Cash / hạn mức tối đa — cùng luồng dữ liệu thẻ với GetCardSecInfo (C360 / Card).
-     */
     @AuraEnabled(cacheable=false)
     public static FastCashEligibilityDTO checkFastCashEligibility(Id caseId) {
         FastCashEligibilityDTO outDto = new FastCashEligibilityDTO();
@@ -74,59 +67,29 @@ public with sharing class FEC_FastCashCaseController {
             );
             return outDto;
         }
-        if (!Schema.sObjectType.Case.isAccessible()) {
-            outDto.technicalMessage = System.Label.FEC_MSG_Insufficient_Access;
-            return outDto;
-        }
         List<Case> caseRows = queryCaseForFastCash(caseId);
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             outDto.technicalMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
             return outDto;
         }
         Case c = caseRows[0];
-        String productTypeName = c.FEC_Product_Type__c != null ? c.FEC_Product_Type__r.Name : null;
-        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
-            productTypeName,
-            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null,
-            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null
-        );
+        String accountNumber = resolveAccountNumberForCase(c);
         if (String.isBlank(accountNumber)) {
-            accountNumber = c.FEC_Account_Number__c;
+            return notEligibleNoAccount(outDto);
         }
-        if (String.isBlank(accountNumber)) {
-            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
-            outDto.errorCode = 'NO_ACCOUNT';
-            outDto.errorDescription = System.Label.FEC_MSG_AccountNumber_Invalid;
+        FEC_CheckEligibilityIPPCallout.CheckEligibilityResult ipp =
+            FEC_CheckEligibilityIPPCallout.checkAccountEligibility(accountNumber);
+        if (!ipp.success) {
+            return notEligibleFromIppFailure(outDto, ipp);
+        }
+        if (!isAccEligibilityTrue(ipp.accEligibility)) {
             outDto.callCompleted = true;
+            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
+            outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : '';
+            outDto.errorDescription = resolveIppUserDescription(ipp);
             return outDto;
         }
-        FEC_GetCardSecInfo.ResponseWrapper sec;
-        try {
-            sec = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
-        } catch (Exception e) {
-            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
-            outDto.errorCode = 'API';
-            outDto.errorDescription = e.getMessage();
-            outDto.callCompleted = true;
-            return outDto;
-        }
-        Decimal remainingCash = null;
-        if (sec != null
-            && sec.CardSecInfo != null
-            && sec.CardSecInfo.MainCardBalance != null) {
-            remainingCash = sec.CardSecInfo.MainCardBalance.RemainingCashLimit;
-        }
-        if (remainingCash != null && remainingCash > 0) {
-            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Eligible;
-            outDto.maxAmount = remainingCash;
-        } else {
-            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
-            outDto.errorCode = 'LIMIT';
-            outDto.errorDescription = System.Label.FEC_MSG_API_Error;
-        }
-        outDto.callCompleted = true;
-        return outDto;
+        return loadMaxFromCardSecAndFinish(outDto, accountNumber);
     }
 
     @AuraEnabled
@@ -137,10 +100,6 @@ public with sharing class FEC_FastCashCaseController {
             res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return res;
         }
-        if (!Schema.sObjectType.Case.isUpdateable()) {
-            res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
-            return res;
-        }
         Case toUpd = new Case(Id = caseId);
         if (requestedAmount != null) {
             toUpd.FEC_Requested_Amount__c = requestedAmount;
@@ -148,14 +107,8 @@ public with sharing class FEC_FastCashCaseController {
         if (maxAmount != null) {
             toUpd.FEC_Max_Amount__c = maxAmount;
         }
-        SObjectAccessDecision dec = Security.stripInaccessible(AccessType.UPDATABLE, new List<SObject>{ toUpd });
-        List<SObject> safe = dec.getRecords();
-        if (safe.isEmpty()) {
-            res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
-            return res;
-        }
         try {
-            update safe;
+            update toUpd;
         } catch (Exception e) {
             res.errorMessage = System.Label.FEC_Unknown_Error;
             return res;
@@ -172,26 +125,13 @@ public with sharing class FEC_FastCashCaseController {
             res.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case / Amount' });
             return res;
         }
-        if (!Schema.sObjectType.Case.isAccessible()) {
-            res.errorMessage = System.Label.FEC_MSG_Insufficient_Access;
-            return res;
-        }
         List<Case> caseRows = queryCaseForFastCash(caseId);
-        caseRows = (List<Case>) Security.stripInaccessible(AccessType.READABLE, caseRows).getRecords();
         if (caseRows.isEmpty()) {
             res.errorMessage = String.format(System.Label.FEC_MSG_Not_Found, new List<String>{ 'Case' });
             return res;
         }
         Case c = caseRows[0];
-        String productTypeName = c.FEC_Product_Type__c != null ? c.FEC_Product_Type__r.Name : null;
-        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
-            productTypeName,
-            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null,
-            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null
-        );
-        if (String.isBlank(accountNumber)) {
-            accountNumber = c.FEC_Account_Number__c;
-        }
+        String accountNumber = resolveAccountNumberForCase(c);
         if (String.isBlank(accountNumber)) {
             res.errorMessage = System.Label.FEC_MSG_AccountNumber_Invalid;
             return res;
@@ -243,6 +183,89 @@ public with sharing class FEC_FastCashCaseController {
                 : System.Label.FEC_Unknown_Error;
         }
         return res;
+    }
+
+    private static FastCashEligibilityDTO notEligibleNoAccount(FastCashEligibilityDTO outDto) {
+        outDto.callCompleted = true;
+        outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
+        outDto.errorCode = 'NO_ACCOUNT';
+        outDto.errorDescription = System.Label.FEC_MSG_AccountNumber_Invalid;
+        return outDto;
+    }
+
+    private static FastCashEligibilityDTO notEligibleFromIppFailure(
+        FastCashEligibilityDTO outDto,
+        FEC_CheckEligibilityIPPCallout.CheckEligibilityResult ipp
+    ) {
+        outDto.callCompleted = true;
+        outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
+        outDto.errorCode = String.isNotBlank(ipp.code) ? ipp.code : 'API';
+        outDto.errorDescription = resolveIppUserDescription(ipp);
+        return outDto;
+    }
+
+    private static String resolveIppUserDescription(FEC_CheckEligibilityIPPCallout.CheckEligibilityResult ipp) {
+        if (String.isNotBlank(ipp.description)) {
+            return ipp.description;
+        }
+        if (String.isNotBlank(ipp.errorMessage)) {
+            return ipp.errorMessage;
+        }
+        return System.Label.FEC_MSG_API_Error;
+    }
+
+    private static Boolean isAccEligibilityTrue(String accEligibility) {
+        if (String.isBlank(accEligibility)) {
+            return false;
+        }
+        String e = accEligibility.trim();
+        return 'true'.equalsIgnoreCase(e) || 'eligible'.equalsIgnoreCase(e) || '1'.equals(e);
+    }
+
+    private static FastCashEligibilityDTO loadMaxFromCardSecAndFinish(FastCashEligibilityDTO outDto, String accountNumber) {
+        FEC_GetCardSecInfo.ResponseWrapper sec;
+        try {
+            sec = FEC_GetCardSecInfo.getCardSecInfo(accountNumber);
+        } catch (Exception e) {
+            outDto.callCompleted = true;
+            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
+            outDto.errorCode = 'CARD_SEC';
+            outDto.errorDescription = System.Label.FEC_MSG_API_Error;
+            return outDto;
+        }
+        Decimal remainingCash = null;
+        if (sec != null
+            && sec.CardSecInfo != null
+            && sec.CardSecInfo.MainCardBalance != null) {
+            remainingCash = sec.CardSecInfo.MainCardBalance.RemainingCashLimit;
+        }
+        if (remainingCash != null && remainingCash > 0) {
+            outDto.callCompleted = true;
+            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Eligible;
+            outDto.maxAmount = remainingCash;
+        } else {
+            outDto.callCompleted = true;
+            outDto.fastCashStatus = System.Label.FEC_LBL_Fast_Cash_Status_Not_Eligible;
+            outDto.errorCode = 'LIMIT';
+            outDto.errorDescription = System.Label.FEC_MSG_API_Error;
+        }
+        return outDto;
+    }
+
+    private static String resolveAccountNumberForCase(Case c) {
+        if (c == null) {
+            return null;
+        }
+        String productTypeName = c.FEC_Product_Type__c != null ? c.FEC_Product_Type__r.Name : null;
+        String accountNumber = FEC_CommonUltils.resolveAccountNumber(
+            productTypeName,
+            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Account_Number__c : null,
+            c.FEC_Account_or_Contract__r != null ? c.FEC_Account_or_Contract__r.FEC_Contract_Number__c : null
+        );
+        if (String.isBlank(accountNumber)) {
+            accountNumber = c.FEC_Account_Number__c;
+        }
+        return accountNumber;
     }
 
     private static List<Case> queryCaseForFastCash(Id caseId) {
