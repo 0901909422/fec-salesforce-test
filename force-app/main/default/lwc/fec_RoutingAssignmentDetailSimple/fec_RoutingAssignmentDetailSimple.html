@@ -1,17 +1,12 @@
 <template>
     <article class="slds-card">
-        <div class="slds-card__header slds-grid">
-            <header class="slds-media slds-media_center slds-has-flexi-truncate">
-                <div class="slds-media__body">
-                    <h2 class="slds-card__header-title"><span>Detail Information</span></h2>
-                </div>
-            </header>
-        </div>
         <div class="slds-card__body">
-            <template if:true={isLoaded}>
-                <!-- VIEW MODE -->
-                <template if:false={_isEditMode}>
-                    <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-vertical_small">
+            <lightning-accordion allow-multiple-sections-open active-section-name="detailInfo">
+                <lightning-accordion-section name="detailInfo" label="Detail Information">
+                    <template if:true={isLoaded}>
+                        <!-- VIEW MODE -->
+                        <template if:false={_isEditMode}>
+                            <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-vertical_small">
                         <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
                             <div class="row-item">
                                 <span class="row-label">RA Name</span>
@@ -124,6 +119,8 @@
             <template if:false={isLoaded}>
                 <lightning-spinner size="small"></lightning-spinner>
             </template>
+                </lightning-accordion-section>
+            </lightning-accordion>
         </div>
     </article>
 </template>

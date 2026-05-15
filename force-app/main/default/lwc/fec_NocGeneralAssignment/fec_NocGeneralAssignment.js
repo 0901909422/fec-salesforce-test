@@ -329,14 +329,12 @@ export default class Fec_NocGeneralAssignment extends NavigationMixin(LightningE
         const row = event.detail.row;
         
         if (actionName === 'view_detail') {
-            // Navigate to Aura component with 6 fields + history
+            // tungnm37: dùng standard__recordPage (LWC) thay vì Aura component
             this[NavigationMixin.Navigate]({
-                type: 'standard__component',
+                type: 'standard__recordPage',
                 attributes: {
-                    componentName: 'c__fecGeneralAssignmentDetailFromNOC'
-                },
-                state: {
-                    c__recordId: row.Id
+                    recordId: row.Id,
+                    actionName: 'view'
                 }
             });
         }

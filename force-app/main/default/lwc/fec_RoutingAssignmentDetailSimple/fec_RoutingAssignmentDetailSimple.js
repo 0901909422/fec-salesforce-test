@@ -1,6 +1,8 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { loadStyle } from 'lightning/platformResourceLoader';
+import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
+import FEC_RA_EDIT_MODE from '@salesforce/messageChannel/FEC_RA_Edit_Mode__c';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
 import updateRoutingAssignment from '@salesforce/apex/FEC_NocRoutingAssignmentController.updateRoutingAssignment';
 import getTeamOptions from '@salesforce/apex/FEC_NocRoutingAssignmentController.getTeamOptions';
@@ -46,6 +48,9 @@ export default class Fec_RoutingAssignmentDetailSimple extends LightningElement 
     @track queueOptions = [];
     @track channelOptions = [];
 
+    @wire(MessageContext) messageContext;
+    _subscription = null;
+
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredRecord({ data, error }) {
         if (data) {
@@ -68,6 +73,20 @@ export default class Fec_RoutingAssignmentDetailSimple extends LightningElement 
         loadStyle(this, FEC_CommonCss);
         getTeamOptions().then(d => { this.teamOptions = d || []; });
         getChannelOptions().then(d => { this.channelOptions = d || []; });
+        // tungnm37: subscribe message channel từ fec_RoutingAssignmentActions
+        this._subscription = subscribe(this.messageContext, FEC_RA_EDIT_MODE, (msg) => {
+            if (msg.recordId === this.recordId) {
+                this._isEditMode = true;
+                if (this.record.Name) this._initEditForm();
+            }
+        }, { scope: APPLICATION_SCOPE });
+    }
+
+    disconnectedCallback() {
+        if (this._subscription) {
+            unsubscribe(this._subscription);
+            this._subscription = null;
+        }
     }
 
     _initEditForm() {
@@ -122,6 +141,12 @@ export default class Fec_RoutingAssignmentDetailSimple extends LightningElement 
     handleChannelRemove(e) {
         const val = e.target.name;
         this.editChannelIds = this.editChannelIds.filter(v => v !== val);
+    }
+
+    // tungnm37: nút Edit trong header
+    handleEdit() {
+        this._isEditMode = true;
+        if (this.record.Name) this._initEditForm();
     }
 
     handleCancel() {

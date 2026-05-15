@@ -1,3 +1,17 @@
+.section-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #181818;
+    line-height: 1.5;
+}
+
+/* tungnm37: style header giống NOC accordion */
+:host .slds-card__header {
+    background-color: #f3f3f3;
+    border-radius: 4px 4px 0 0;
+    padding: 0.5rem 0.75rem;
+}
+
 .row-item {
     display: flex;
     align-items: flex-start;

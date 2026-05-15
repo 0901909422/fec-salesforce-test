@@ -16,7 +16,7 @@ import getRoutingAssignmentHistory from '@salesforce/apex/FEC_NocRoutingAssignme
 import LABEL_NEW from '@salesforce/label/c.FEC_Btn_Add_New';
 import LABEL_PREVIOUS from '@salesforce/label/c.FEC_Previous_Btn_Label';
 import LABEL_NEXT from '@salesforce/label/c.FEC_Next_Btn_Label';
-import LABEL_PAGE_OF from '@salesforce/label/c.Pagination_Page_Of_Label';
+import LABEL_PAGE_OF from '@salesforce/label/c.Pagination_Page_Of_Label';``
 import LABEL_SUCCESS from '@salesforce/label/c.FEC_RA_Save_Success';
 import LABEL_CREATE_SUCCESS from '@salesforce/label/c.FEC_RA_Create_Success';
 import LABEL_UPDATE_SUCCESS from '@salesforce/label/c.FEC_RA_Update_Success';
@@ -409,13 +409,12 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
         const actionName = event.detail.action.name;
         const row = event.detail.row;
         if (actionName === 'view_detail') {
+            // tungnm37: dùng standard__recordPage (LWC) thay vì Aura component
             this[NavigationMixin.Navigate]({
-                type: 'standard__component',
+                type: 'standard__recordPage',
                 attributes: {
-                    componentName: 'c__fecRoutingAssignmentDetailFromNOC'
-                },
-                state: {
-                    c__recordId: row.id
+                    recordId: row.id,
+                    actionName: 'view'
                 }
             });
         }

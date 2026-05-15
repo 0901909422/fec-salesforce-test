@@ -57,6 +57,16 @@ c-fec_-noc-general-assignment .slds-card__header {
   border-radius: 4px 4px 0 0;
 }
 
+c-fec_-routing-assignment-detail-simple .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 4px 4px 0 0;
+}
+
+c-fec_-routing-assignment-detail-simple .slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px;
+}
+
 c-fec_-general-assignment-history .slds-card {
   border-radius: 0.5rem;
   border: 1px solid #dddbda;
