@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>Colls Coordination &amp;amp; Reporting</value>
+        <value>Colls Coordination &amp; Reporting</value>
     </filters>
     <label>Colls Coordination &amp; Reporting</label>
     <queue>FEC_Colls_Coordination_Reporting</queue>
