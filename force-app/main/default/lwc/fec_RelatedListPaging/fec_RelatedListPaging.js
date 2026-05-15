@@ -22,6 +22,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api sortedBy;
     @api pageSize = 10;
     @api showRefresh = false;
+    @api showNewButton = false;
     @api updatedTime; // Timestamp or Date object
     @api hideRowNumber = false; // Hide row number column
     @api hideUpdatedTime = false; // Hide updated time display
@@ -32,12 +33,14 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api pageSizeOptions = [10, 20, 30, 40, 50];
     @api columnCount = 2;
     @api compactColumns = false;
-    /** Khi không có dòng dữ liệu; component cha có thể truyền empty-state-message khác (vd. fec_AppInfo). */
-    @api emptyStateMessage = FEC_Common_No_Results_Label;
+    @api renderEmptyTableChrome = false;
+    @api selectionMode = 'multiple'; 
+    @api enableCheckboxColumn = false;
 
     /* ================= STATE ================= */
     _records = [];
     @track currentPage = 1;
+    @track selectedRecordIds = new Set();
     _gotoPage;
 
     // Sorting state - single column sort
@@ -93,6 +96,19 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return this._records.length > 0;
     }
 
+    get showTableSurface() {
+        return this.hasRecords || this.renderEmptyTableChrome === true;
+    }
+
+    /** Colspan: cột STT (nếu có) + số cột dữ liệu. */
+    get emptyBodyColspan() {
+        let n = Array.isArray(this.columns) ? this.columns.length : 1;
+        if (!this.hideRowNumber) {
+            n += 1;
+        }
+        return n;
+    }
+
     get recordCount() {
         return this._records.length;
     }
@@ -113,6 +129,9 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return this.currentPage === this.totalPages;
     }
 
+    get showCheckboxColumn() {
+        return this.enableCheckboxColumn;
+    }
     /* ================= SORTED BY LABEL ================= */
     /**
      * Get the label of the currently sorted field for display in header.
@@ -204,6 +223,12 @@ export default class Fec_RelatedListPaging extends LightningElement {
         return true;
     }
 
+    get rowSelectionClass() {
+        return this.selectionMode === 'single'
+            ? 'row-single'
+            : 'row-multiple';
+    }
+
     /* ================= DISPLAY RECORDS ================= */
     get displayRecords() {
         return this.pagedRecords.map((row, index) => {
@@ -212,6 +237,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
             return {
                 id: row.Id || `${this.currentPage}-${index}`,
+                isSelected: this.selectedRecordIds.has(row.Id),
                 rowNumber: rowIndex + 1,
                 cells: this.columns.map(col => {
 
@@ -313,6 +339,24 @@ export default class Fec_RelatedListPaging extends LightningElement {
                         } else if (typeof col.cellAttributes.class === 'string') {
                             cellClass = col.cellAttributes.class;
                         }
+                    }
+                    /* ===== CHECKBOX TYPE ===== */
+                    if (col.type === 'checkbox') {
+                        return {
+                            key: col.fieldName,
+                            fieldName: col.fieldName,
+                            isCheckboxType: true,  
+                            isCheckbox: !row.isEmpty,  
+                            isLink: false,
+                            isEye: false,
+                            isHtml: false,
+                            value: row[col.fieldName] === true 
+                                || row[col.fieldName] === 'true' 
+                                || row[col.fieldName] === 'Yes'
+                                || row[col.fieldName] === 'yes'
+                                || row[col.fieldName] === 1 
+                                || row[col.fieldName] === '1'
+                        };
                     }
                     /* ===== ADD NEGATIVE CHECK ===== */
                     const isNeg = isNegative(row[col.fieldName]);
@@ -634,6 +678,74 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     handleRefresh() {
         this.dispatchEvent(new CustomEvent('refresh'));
+    }
+
+    handleNew() {
+        this.dispatchEvent( new CustomEvent('new'));
+    }
+
+    handleSelectAll(event) {
+        const checked = event.target.checked;
+
+        const visibleIds = this.pagedRecords
+            .map(r => r.Id)
+            .filter(Boolean);
+
+        const newSet = new Set(this.selectedRecordIds);
+
+        if (this.selectionMode === 'single') {
+            this.selectedRecordIds = checked && visibleIds.length
+                ? new Set([visibleIds[0]])
+                : new Set();
+            return;
+        }
+
+        if (checked) {
+            visibleIds.forEach(id => newSet.add(id));
+        } else {
+            visibleIds.forEach(id => newSet.delete(id));
+        }
+
+        this.selectedRecordIds = newSet;
+
+        this.dispatchEvent(
+            new CustomEvent('rowselectionchange', {
+                detail: {
+                    selectedRecordIds: Array.from(this.selectedRecordIds)
+                },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    handleRowCheckboxChange(event) {
+        const id = event.currentTarget.dataset.id;
+        const checked = event.target.checked;
+
+
+        if (this.selectionMode === 'single') {
+            this.selectedRecordIds = checked ? new Set([id]) : new Set();
+        } else {
+            const newSet = new Set(this.selectedRecordIds);
+
+            if (checked) {
+                newSet.add(id);
+            } else {
+                newSet.delete(id);
+            }
+
+            this.selectedRecordIds = newSet;
+        }
+        this.dispatchEvent(
+            new CustomEvent('rowselectionchange', {
+                detail: {
+                    selectedRecordIds: Array.from(this.selectedRecordIds)
+                },
+                bubbles: true,
+                composed: true
+            })
+        );
     }
 
     handleLinkClick(event) {

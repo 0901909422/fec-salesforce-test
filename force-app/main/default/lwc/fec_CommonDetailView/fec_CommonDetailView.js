@@ -23,6 +23,8 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
 
     @api forceTwoColumn = false;
     @api columns;
+    @api showEditButton = false;
+    @api editLabel = 'Edit';
 
     /* ================= INTERNAL STATE ================= */
     _sections = [];
@@ -115,6 +117,16 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
         this.dispatchEvent(
             new CustomEvent('toggle', {
                 detail: { fieldName, sectionName },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    handleEdit() {
+
+        this.dispatchEvent(
+            new CustomEvent('edit', {
                 bubbles: true,
                 composed: true
             })

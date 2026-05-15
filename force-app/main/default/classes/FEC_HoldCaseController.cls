@@ -61,36 +61,133 @@ public with sharing class FEC_HoldCaseController {
 
     // ─────────────────────────────────────────────────────
     // METHOD: getNFUReasons
+    // tungnm37 fix: nhận caseId + optional NOC IDs (khi Case chưa save NOC)
     // ─────────────────────────────────────────────────────
-    @AuraEnabled(cacheable=true)
-    public static List<NFUReasonModel> getNFUReasons(String subCode) {
+    @AuraEnabled
+    public static List<NFUReasonModel> getNFUReasons(
+        String caseId,
+        Id productTypeId,
+        Id categoryId,
+        Id subCategoryId,
+        Id subCodeId
+    ) {
 
-        if (String.isBlank(subCode)) {
-            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'subCode'}));
+        if (String.isBlank(caseId)) {
+            throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{'caseId'}));
         }
 
         try {
-            // 1. Query Config → lấy NFU Codes + metadata
-            List<FEC_Hold_Case_Config__c> configs = [
-                SELECT FEC_NFU_Code__c,
-                       FEC_Active__c,
-                       Hold_Case_Type__c	
-                FROM FEC_Hold_Case_Config__c
-                WHERE FEC_Nature_of_Cases__r.FEC_Sub_Code__c = :subCode
-                AND   FEC_Active__c   = true
-                WITH SECURITY_ENFORCED
-            ];
+            Id nocId;
 
-            if (configs.isEmpty()) {
+            // tungnm37: nếu có NOC IDs từ LWC (Case chưa save) → dùng trực tiếp
+            if (productTypeId != null && categoryId != null && subCategoryId != null) {
+                List<FEC_Nature_of_Case__c> nocs;
+                if (subCodeId != null) {
+                    nocs = [
+                        SELECT Id FROM FEC_Nature_of_Case__c
+                        WHERE FEC_Product_Type__c = :productTypeId
+                          AND FEC_Category__c     = :categoryId
+                          AND FEC_Sub_Category__c = :subCategoryId
+                          AND FEC_Sub_Code__c     = :subCodeId
+                        WITH SECURITY_ENFORCED LIMIT 1
+                    ];
+                } else {
+                    nocs = [
+                        SELECT Id FROM FEC_Nature_of_Case__c
+                        WHERE FEC_Product_Type__c = :productTypeId
+                          AND FEC_Category__c     = :categoryId
+                          AND FEC_Sub_Category__c = :subCategoryId
+                          AND FEC_Sub_Code__c     = null
+                        WITH SECURITY_ENFORCED LIMIT 1
+                    ];
+                }
+                if (!nocs.isEmpty()) nocId = nocs[0].Id;
+            }
+
+            // tungnm37: fallback → lấy NOC từ Case record (Case đã save)
+            if (nocId == null) {
+                List<Case> cases = [
+                    SELECT FEC_Product_Type__c, FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                           FEC_Current_Case_Stage__c
+                    FROM Case WHERE Id = :caseId WITH SECURITY_ENFORCED LIMIT 1
+                ];
+                if (!cases.isEmpty() && cases[0].FEC_Product_Type__c != null) {
+                    Case c = cases[0];
+                    List<FEC_Nature_of_Case__c> nocs = [
+                        SELECT Id FROM FEC_Nature_of_Case__c
+                        WHERE FEC_Product_Type__c = :c.FEC_Product_Type__c
+                          AND FEC_Category__c     = :c.FEC_Category__c
+                          AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+                          AND FEC_Sub_Code__c     = :c.FEC_SubCode__c
+                        WITH SECURITY_ENFORCED LIMIT 1
+                    ];
+                    if (!nocs.isEmpty()) nocId = nocs[0].Id;
+                }
+            }
+
+            // tungnm37: lấy Current Stage từ Case để filter config
+            Id currentStageId = null;
+            List<Case> caseForStage = [SELECT FEC_Current_Case_Stage__c FROM Case WHERE Id = :caseId LIMIT 1];
+            if (!caseForStage.isEmpty()) currentStageId = caseForStage[0].FEC_Current_Case_Stage__c;
+
+            // tungnm37: fallback 3 → lấy NOC từ Case Stage (khi Case chưa save NOC nhưng đã có Stage)
+            if (nocId == null && currentStageId != null) {
+                List<FEC_Case_Stage__c> stages = [
+                    SELECT FEC_Nature_of_Cases__c FROM FEC_Case_Stage__c
+                    WHERE Id = :currentStageId LIMIT 1
+                ];
+                if (!stages.isEmpty() && stages[0].FEC_Nature_of_Cases__c != null) {
+                    nocId = stages[0].FEC_Nature_of_Cases__c;
+                }
+            }
+
+            // tungnm37: fallback 4 → query config trực tiếp theo Stage (không cần nocId)
+            // Trường hợp: Case chưa save NOC, Stage chưa gắn NOC, nhưng button đã hiện
+            // → tìm config theo Stage để lấy NFU codes
+            List<FEC_Hold_Case_Config__c> configs;
+            if (nocId != null) {
+                if (currentStageId != null) {
+                    configs = [
+                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
+                        FROM FEC_Hold_Case_Config__c
+                        WHERE FEC_Nature_of_Cases__c = :nocId
+                          AND FEC_Active__c = true
+                          AND Hold_Case_Type__c = 'Manual'
+                          AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
+                        WITH SECURITY_ENFORCED
+                    ];
+                } else {
+                    configs = [
+                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
+                        FROM FEC_Hold_Case_Config__c
+                        WHERE FEC_Nature_of_Cases__c = :nocId
+                          AND FEC_Active__c = true
+                          AND Hold_Case_Type__c = 'Manual'
+                        WITH SECURITY_ENFORCED
+                    ];
+                }
+            } else if (currentStageId != null) {
+                // tungnm37: fallback 4 - query theo Stage khi không có nocId
+                // include cả config không gắn stage cụ thể (FEC_Case_Stage__c = null)
+                configs = [
+                    SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
+                    FROM FEC_Hold_Case_Config__c
+                    WHERE FEC_Active__c = true
+                      AND Hold_Case_Type__c = 'Manual'
+                      AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
+                    WITH SECURITY_ENFORCED
+                ];
+            } else {
                 return new List<NFUReasonModel>();
             }
+
+            if (configs.isEmpty()) return new List<NFUReasonModel>();
 
             Map<String, FEC_Hold_Case_Config__c> configMap = new Map<String, FEC_Hold_Case_Config__c>();
             Set<String> nfuCodes = new Set<String>();
 
             for (FEC_Hold_Case_Config__c cfg : configs) {
                 if (String.isBlank(cfg.FEC_NFU_Code__c)) continue;
-
                 for (String code : cfg.FEC_NFU_Code__c.split(',')) {
                     String trimmed = code.trim();
                     if (!String.isBlank(trimmed)) {
@@ -100,41 +197,29 @@ public with sharing class FEC_HoldCaseController {
                 }
             }
 
-            if (nfuCodes.isEmpty()) {
-                return new List<NFUReasonModel>();
-            }
+            if (nfuCodes.isEmpty()) return new List<NFUReasonModel>();
 
             List<FEC_Hold_Case__c> holdCases = [
-                SELECT FEC_NFU_Code__c,
-                       FEC_NFU_Reason_VN__c,
-                       FEC_NFU_Reason_EN__c,
-                       FEC_NFU_Duration__c
+                SELECT FEC_NFU_Code__c, FEC_NFU_Reason_VN__c, FEC_NFU_Reason_EN__c, FEC_NFU_Duration__c
                 FROM FEC_Hold_Case__c
                 WHERE FEC_NFU_Code__c IN :nfuCodes
                 WITH SECURITY_ENFORCED
             ];
 
-            if (holdCases.isEmpty()) {
-                return new List<NFUReasonModel>();
-            }
+            if (holdCases.isEmpty()) return new List<NFUReasonModel>();
 
             List<NFUReasonModel> result = new List<NFUReasonModel>();
-
             for (FEC_Hold_Case__c hc : holdCases) {
                 FEC_Hold_Case_Config__c cfg = configMap.get(hc.FEC_NFU_Code__c);
-
-                NFUReasonModel m  = new NFUReasonModel();
-                m.nfuCode         = hc.FEC_NFU_Code__c;
-                m.nfuDuration     = hc.FEC_NFU_Duration__c;
-                m.nfuReasonVN     = hc.FEC_NFU_Reason_VN__c;
-                m.nfuReasonEN     = hc.FEC_NFU_Reason_EN__c;
-                m.isActive        = cfg != null ? cfg.FEC_Active__c         : false;
-                m.holdCaseType    = cfg != null ? cfg.Hold_Case_Type__c	 : '';
-                m.subCode         = subCode;
-
+                NFUReasonModel m = new NFUReasonModel();
+                m.nfuCode      = hc.FEC_NFU_Code__c;
+                m.nfuDuration  = hc.FEC_NFU_Duration__c;
+                m.nfuReasonVN  = hc.FEC_NFU_Reason_VN__c;
+                m.nfuReasonEN  = hc.FEC_NFU_Reason_EN__c;
+                m.isActive     = cfg != null ? cfg.FEC_Active__c : false;
+                m.holdCaseType = cfg != null ? cfg.Hold_Case_Type__c : '';
                 result.add(m);
             }
-
             return result;
 
         } catch (Exception e) {
@@ -251,6 +336,7 @@ public with sharing class FEC_HoldCaseController {
 
     // ─────────────────────────────────────────────────────
     // METHOD: saveHoldCase
+    // tungnm37: gọi API MarkNFU trước, sau đó mới DML (không dùng Savepoint vì callout)
     // ─────────────────────────────────────────────────────
     @AuraEnabled
     public static ResponseModel saveHoldCase(
@@ -267,23 +353,57 @@ public with sharing class FEC_HoldCaseController {
 
         validateModel(model);
 
-        Savepoint sp = Database.setSavepoint();
-
         try {
+            // tungnm37: query Case lấy ContractNumber
             Case c = [
-                SELECT Id, Status
+                SELECT Id, Status, FEC_Account_Contract_Number_Text__c
                 FROM Case
                 WHERE Id = :model.caseId
+                WITH SECURITY_ENFORCED
                 LIMIT 1
             ];
 
-            c.Status = FEC_ConstantCommon.CASE_STATUS_ON_HOLD;
-            update c;
+            // tungnm37: lấy email user hiện tại
+            String userEmail = [SELECT Email FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1].Email;
 
-            return new ResponseModel().success(c.Id, System.Label.FEC_Succes_Hold_Case);
+            // tungnm37: gọi API MarkNFU TRƯỚC khi DML (callout không được sau savepoint/DML)
+            FEC_MarkNFU.MarkNFURequest req = new FEC_MarkNFU.MarkNFURequest();
+            req.ContractNumber = c.FEC_Account_Contract_Number_Text__c;
+            req.NFUReasonCode  = model.nfuCode;
+            req.NFUUpdatedBy   = userEmail;
+
+            FEC_MarkNFU.MarkNFUResult markResult = FEC_MarkNFU.markNFU(req);
+            System.debug('[saveHoldCase] MarkNFU result: ' + JSON.serialize(markResult));
+
+            ResponseModel resp = new ResponseModel();
+
+            // tungnm37: TH1 - Contract đã được mark NFU trước đó (code 203)
+            if (markResult.code == FEC_ConstantCommon.SUCCESS_CODE_203) {
+                resp.status    = 'ALREADY_MARKED';
+                resp.message   = markResult.description;
+                resp.isSuccess = true;
+                resp.recordId  = c.Id;
+                return resp;
+            }
+
+            // tungnm37: TH2 - Thành công → update Case Status = On Hold
+            if (markResult.success) {
+                c.Status = FEC_ConstantCommon.CASE_STATUS_ON_HOLD;
+                update c;
+                resp.status    = 'SUCCESS';
+                resp.message   = System.Label.FEC_Succes_Hold_Case;
+                resp.isSuccess = true;
+                resp.recordId  = c.Id;
+                return resp;
+            }
+
+            // tungnm37: TH3 - API lỗi → trả về error (không cần rollback vì chưa DML)
+            resp.status    = 'ERROR';
+            resp.message   = markResult.errorMessage;
+            resp.isSuccess = false;
+            return resp;
 
         } catch (Exception e) {
-            Database.rollback(sp);
             return new ResponseModel().error(e.getMessage());
         }
     }
