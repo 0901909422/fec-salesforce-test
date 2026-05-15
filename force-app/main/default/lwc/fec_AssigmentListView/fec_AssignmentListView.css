@@ -1,92 +1,86 @@
-:host {
-  display: block;
+.header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding:
+        0.75rem
+        1rem
+        0.75rem
+        1rem;
 }
 
-.assignment-card {
-  border-radius: 12px;
+.header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #181818;
+    line-height: 1.25;
 }
 
-/* HEADER */
 .header-icon {
-  --slds-c-icon-color-foreground-default: #0176d3;
-}
+    flex-shrink: 0;
 
-.title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #181818;
+    --slds-c-icon-color-foreground-default: #0176d3;
 }
 
 /* TABLE */
 .table-wrapper {
-  width: 100%;
-  overflow-x: auto;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
 }
 
-.custom-table {
-  width: 100%;
-  background: #fff;
+.custom-datatable {
+    min-width: 100%;
 }
 
-.custom-table thead th {
-  background: #f3f3f3;
-  font-size: 12px;
-  font-weight: 700;
-  color: #444;
+/* PAGINATION */
+.table-pagination {
+    padding:
+        0.75rem
+        1rem;
+
+    border-top: 1px solid #dddbda;
+    background: #fff;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
 }
 
-.custom-table tbody td {
-  font-size: 13px;
-  color: #181818;
+/* PAGE SIZE */
+.page-size {
+    gap: 8px;
 }
 
-/* ROW HOVER */
-.custom-table tbody tr:hover > td {
-  background: #f8f8f8;
+.page-size lightning-combobox {
+    width: 90px;
+    min-width: 90px;
 }
 
-/* LINK */
-.custom-table a {
-  color: #0176d3;
-  text-decoration: none;
+/* PAGE INPUT */
+.page-input {
+    width: 70px;
+    min-width: 70px;
 }
 
-.custom-table a:hover {
-  text-decoration: underline;
+/* GO TO PAGE */
+.go-to-page {
+    gap: 8px;
 }
 
-/* INDEX */
-.index-col {
-  width: 48px;
-  text-align: center;
-  color: #706e6b;
-}
+/* MOBILE */
+@media screen and (max-width: 768px) {
 
-/* FOOTER */
-.assignment-footer {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
+    .table-pagination {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-  width: 100%;
-  padding: 10px 0;
-
-  border-top: 1px solid #dddbda;
-  background: #fff;
-}
-
-.assignment-card .slds-card__body,
-.assignment-card .slds-card__body_inner {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.assignment-footer a {
-  color: #0176d3;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.assignment-footer a:hover {
-  text-decoration: underline;
+    .pagination-controls {
+        width: 100%;
+        justify-content: center;
+    }
 }

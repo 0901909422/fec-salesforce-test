@@ -1,5 +1,5 @@
 <template>
-    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered custom-table">
 
         <!-- HEADER -->
         <thead>
@@ -18,7 +18,7 @@
                 <tr key={row.id}>
 
                     <template for:each={row.cells} for:item="cell">
-                        <td key={cell.fieldName}>
+                        <td key={cell.fieldName} class={cell.cellClass}>
 
                             <!-- TEXT -->
                             <template if:true={cell.isText}>
@@ -47,7 +47,7 @@
                                     </span>
                                     <template if:true={cell.hasContact}>
                                         <lightning-button-icon icon-name={cell.iconName} alternative-text="Toggle"
-                                            class="slds-m-left_x-small" data-id={row.id} onclick={handleToggleContact}>
+                                            size="small" variant="bare" data-id={row.id} onclick={handleToggleContact}>
                                         </lightning-button-icon>
                                     </template>
                                 </div>
@@ -62,10 +62,21 @@
 
                                 <!-- EDITABLE -->
                                 <template if:false={cell.isDisabled}>
-                                    <lightning-combobox value={cell.value} options={cell.options}
+                                    <lightning-combobox value={cell.value} options={cell.options} required={cell.isRequired}
                                         placeholder="Select an Option" data-id={row.id} data-field={cell.fieldName}
                                         onchange={handlePicklistChange}>
                                     </lightning-combobox>
+                                </template>
+                            </template>
+
+                            <template if:true={cell.isTextarea}>
+                                <template if:true={cell.isDisabledText}>
+                                    <span>-</span>
+                                </template>
+                                <template if:false={cell.isDisabledText}>
+                                    <lightning-textarea value={cell.value} data-id={row.id} data-field={cell.fieldName}
+                                        required={cell.isRequired} onchange={handleTextareaChange}>
+                                    </lightning-textarea>
                                 </template>
                             </template>
 

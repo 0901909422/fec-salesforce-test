@@ -3,7 +3,7 @@
         <div class="slds-grid slds-gutters form-row">
 
             <!-- EDIT MODE -->
-            <template if:true={modeEditCase}>
+            <!-- <template if:true={isEdit}> -->
 
                 <!-- Complaint Type -->
                 <div class="slds-col slds-size_3-of-12">
@@ -13,6 +13,7 @@
                         options={complaintTypeOptions}
                         onchange={handleComplaintTypeChange}
                         required
+                        disabled={isReadOnly}
                         class="custom-combobox">
                     </lightning-combobox>
                 </div>
@@ -37,19 +38,20 @@
                             options={complaintSourceOptions}
                             onchange={handleComplaintSourceChange}
                             required
+                            disabled={isReadOnly}
                             class="custom-combobox">
                         </lightning-combobox>
 
                     </div>
                 </template>
 
-            </template>
+            <!-- </template> -->
 
             <!-- VIEW MODE -->
-            <template if:false={modeEditCase}>
+            <!-- <template if:false={modeEditCase}> -->
 
                 <!-- Complaint Type -->
-                <template if:true={complaintTypeValue}>
+                <!-- <template if:true={complaintTypeValue}>
                     <div class="slds-col slds-size_3-of-12">
                         <label class="slds-form-element__label">
                             Complaint Type
@@ -59,10 +61,10 @@
                             {complaintTypeValue}
                         </div>
                     </div>
-                </template>
+                </template> -->
 
                 <!-- Complaint Source -->
-                <template if:true={complaintSourceValue}>
+                <!-- <template if:true={complaintSourceValue}>
                     <div class="slds-col slds-size_3-of-12">
 
                         <label class="slds-form-element__label">
@@ -79,9 +81,9 @@
                         </div>
 
                     </div>
-                </template>
+                </template> -->
 
-            </template>
+            <!-- </template> -->
 
         </div>
     </div>
