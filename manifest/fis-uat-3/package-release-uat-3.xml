@@ -550,6 +550,7 @@
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
         <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
         <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
+        <members>FEC_Currency_Code__c-Currency Code Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
