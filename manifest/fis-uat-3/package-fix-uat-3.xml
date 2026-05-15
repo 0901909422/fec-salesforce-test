@@ -47,6 +47,8 @@
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
+        <members>FEC_DNBHandler</members>
+        <members>FEC_GetCSCaseStatusService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
