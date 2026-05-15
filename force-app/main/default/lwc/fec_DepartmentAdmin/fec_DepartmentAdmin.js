@@ -31,6 +31,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track showSelectedUsersTable = false;
     @track isSearching = false;
     @track isAddingToQueue = false;
+    @track userIdExcludeFromSearch = [];
 
     // Multi-select for suggestions
     selectedSuggestionIds = new Set();
@@ -288,9 +289,9 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         if (!this.selectedQueueId) return;
         this.isLoadingUsers = true;
         this.usersError = undefined;
+        this.userIdExcludeFromSearch = [];
 
         const container = this.template.querySelector('.table-user-container');
-        const scrollTop = container ? container.scrollTop : 0;
 
         try {
             const res = await getQueueMembers({
@@ -302,6 +303,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             // Append for infinite scroll only when rows exist
             if (rows.length > 0) {
                 this.users = [...this.users, ...rows];
+                this.userIdExcludeFromSearch = this.users.map(u => u.id);
                 // Update cursor using the last row's id
                 this.lastUserId = rows[rows.length - 1].id;
             }
@@ -336,7 +338,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         if (!this.searchTerm.trim()) return;
         this.isSearching = true;
         try {
-            const results = await searchActiveUsers({ searchTerm: this.searchTerm });
+            const results = await searchActiveUsers({ searchTerm: this.searchTerm, excludedIds: this.userIdExcludeFromSearch });
             const incoming = Array.isArray(results) ? results : [];
             const keep = new Set();
             // add UI flag isSelected for checkbox binding
@@ -460,6 +462,14 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             const userIds = this.selectedUsersToAdd.map(user => user.id);
             const success = await addUsersToQueue({ queueId: this.selectedQueueId, userIds });
             if (success) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: this.customLabels.CS_OrgChart_Text_Save_Success_Title,
+                        message: this.customLabels.CS_OrgChart_Text_Add_User_To_Queue_Sucess,
+                        variant: 'success',
+                        mode: 'dismissable'
+                    })
+                );
                 // Refresh the user list after adding
                 await this.handleRefresh();
                 // Ask child component to reload history logs
@@ -512,6 +522,14 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             });
 
             if (result) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: this.customLabels.CS_OrgChart_Text_Save_Success_Title,
+                        message: this.customLabels.CS_OrgChart_Text_Remove_User_Sucess,
+                        variant: 'success',
+                        mode: 'dismissable'
+                    })
+                );
                 // Refresh the user list to reflect the removal
                 await this.handleRefresh();
                 // Ask child component to reload history logs
