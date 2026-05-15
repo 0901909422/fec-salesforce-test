@@ -301,11 +301,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return Promise.resolve();
         }
         this.eligibilityLoading = true;
+        this.notEligible = false;
+        this.eligible = false;
         return checkFastCashEligibility({ caseId: this.recordId })
             .then((dto) => {
                 this.eligibilityLoading = false;
                 if (!dto || !dto.callCompleted) {
-                    this.eligible = false;
                     this.notEligible = true;
                     this.displayErrorCode = STR_EMPTY;
                     this.displayFastCashStatus = dto && dto.fastCashStatus ? dto.fastCashStatus : STR_EMPTY;
