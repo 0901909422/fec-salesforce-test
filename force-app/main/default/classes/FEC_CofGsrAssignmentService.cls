@@ -658,6 +658,19 @@ public without sharing class FEC_CofGsrAssignmentService {
             }
         } else {
             createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+            //PhongBT 15/05/26: update case_stage cho trường hợp route to không đến CC/SP (VD RL06.03)
+            if (!nocIds.isEmpty()) {
+                List<FEC_Case_Stage__c> nextStages = [
+                    SELECT Id FROM FEC_Case_Stage__c
+                    WHERE FEC_Nature_of_Cases__c IN :nocIds
+                      AND FEC_Default_Stage__c = false
+                      AND FEC_Active__c = true
+                    ORDER BY Name ASC LIMIT 1
+                ];
+                if (!nextStages.isEmpty()) {
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                }
+            }
         }
         return null;
     }
