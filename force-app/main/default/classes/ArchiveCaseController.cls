@@ -19,30 +19,33 @@ public with sharing class ArchiveCaseController {
     // and for inserting child records after Case creation
     private static final Map<String, String> CHILD_OBJECT_CASE_FIELD = new Map<String, String>{
         // Master-Detail relationships
-        'FEC_Watcher__c' => 'FEC_Case__c',
-        'FEC_Case_Remarks__c' => 'FEC_Case__c',
-        'FEC_Case_Flow_History__c' => 'FEC_Case__c',
         'FEC_Additional_Info__c' => 'FEC_Case__c',
-        'FEC_Sensitive_Data__c' => 'FEC_Case__c',
-        'FEC_Routing_Action_History__c' => 'FEC_Case__c',
-        'FEC_RePayment_Schedule__c' => 'FEC_Case__c',
-        'FEC_Process_Action_History__c' => 'FEC_Case__c',
-        'FEC_Pending_Disbursement__c' => 'FEC_Case__c',
-        'FEC_Notification_History__c' => 'FEC_Case__c',
-        'FEC_Do_Not_Bother__c' => 'FEC_Case__c',
-        'FEC_ChatHistory__c' => 'FEC_Case__c',
-        'FEC_Case_Refund_Details__c' => 'FEC_Case__c',
-        'FEC_Card_Delivery__c' => 'FEC_Case__c',
         'FEC_Assignment__c' => 'FEC_Case__c',
-        'FEC_Asset__c' => 'FEC_Case__c',
-        'FEC_Application_History__c' => 'FEC_Case__c',
-        'FEC_KYC_Result__c' => 'FEC_Case__c',
+        'FEC_Case_Flow_History__c' => 'FEC_Case__c',
+        'FEC_Case_Refund_Details__c' => 'FEC_Case__c',
+        'FEC_Case_Remarks__c' => 'FEC_Case__c',
         'FEC_Customer_History__c' => 'FEC_Case__c',
+        'FEC_KYC_Result__c' => 'FEC_Case_Interaction__c',
+        'FEC_Incorrect_Payment_Info__c' => 'FEC_Case__c',
+        'FEC_Pending_Disbursement__c' => 'FEC_Case__c',
+        'FEC_Process_Action_History__c' => 'Case__c',
+        'FEC_Relevant_Ticket__c' => 'FEC_Interaction__c',
+        'FEC_Routing_Action_History__c' => 'FEC_Case__c',
+        'FEC_Sensitive_Data__c' => 'FEC_Case__c',
+        'FEC_Watcher__c' => 'FEC_Case__c',
+        
+        // FIS does not list these objects
+        // 'FEC_RePayment_Schedule__c' => 'FEC_Case__c',
+        // 'FEC_Notification_History__c' => 'FEC_Case__c',
+        // 'FEC_Do_Not_Bother__c' => 'FEC_Case__c',
+        // 'FEC_ChatHistory__c' => 'FEC_Case__c',
+        // 'FEC_Card_Delivery__c' => 'FEC_Case__c',
+        // 'FEC_Asset__c' => 'FEC_Case__c',
+        // 'FEC_Application_History__c' => 'FEC_Case__c',
+        
         // Lookup relationships to Case
-        'FEC_Address_Info__c' => 'FEC_Case__c',
         'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
         'FEC_Card_Payment__c' => 'FEC_Case__c',
-        'FEC_Relevant_Ticket__c' => 'FEC_Related_To__c',
         'FEC_Process_Action__c' => 'FEC_Linked_Case__c',
         'FEC_Integration_Case__c' => 'FEC_Integrate_Case_ID__c'
     };
@@ -51,8 +54,7 @@ public with sharing class ArchiveCaseController {
         this.athenaCaseRecord = (AthenaCases__x) stdController.getRecord();
         hasError = false;
     }
-    // public String errorMessage { get; set; }
-    // public Boolean hasError { get; set; }
+    
     // public Account athenaCaseRecord;
     // public ArchiveCaseController(ApexPages.StandardController stdController) {
     //     this.athenaCaseRecord = (Account) stdController.getRecord();
@@ -86,10 +88,15 @@ public with sharing class ArchiveCaseController {
     //         if (!cases.isEmpty()) caseId = cases[0].Id;
     //         else caseId = getCaseDetailAndCreateCaseTemp(archiveExternalId);
 
-    //         PageReference pageRef = new PageReference('/' + caseId);
-    //         pageRef.setRedirect(true);
-    //         return pageRef;
-            
+    //         if (caseId != null) {
+    //             PageReference pageRef = new PageReference('/' + caseId);
+    //             pageRef.setRedirect(true);
+    //             return pageRef;
+    //         } else {
+    //             hasError = true;
+    //             errorMessage = label.FEC_Toast_Error_Generic;
+    //             return null;
+    //         }
     //     } catch (Exception ex) {
     //         hasError = true;
     //         errorMessage = 'Error: ' + ex.getMessage();
@@ -183,8 +190,9 @@ public with sharing class ArchiveCaseController {
         String methodOfApi = FEC_ConstantCommon.API_METHOD_GET;
         String recTypeName = label.TECH_CASE_RECORDTYPE_NAME_CUSTOMER_CASE;
         String archieveExternalId = archiveCaseIns.case_id__c;
-        //String archieveExternalId = archiveExternalId;
         String migrationSource = archiveCaseIns.migration_source__c;
+        // String archieveExternalId = archiveExternalId;
+        // String migrationSource = 'SF';
         List<String> listOfAttIgnored = label.TECH_LIST_ATT_IGNORED.split(',');
         String attachmentStr = '';
         String resBody = '';
@@ -195,6 +203,12 @@ public with sharing class ArchiveCaseController {
         String s3Patch = archiveCaseIns.s3_path__c.containsIgnoreCase(s3PatchPrefix) 
                             ? archiveCaseIns.s3_path__c.substringAfter(s3PatchPrefix) 
                             : archiveCaseIns.s3_path__c;
+        String specialArchiveFieldSt = Label.TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT;
+        Map<String, String> mapSpecialArchiveField = (Map<String, String>) JSON.deserialize(specialArchiveFieldSt, Map<String, String>.class);
+        Map<String, String> mapSpecialArchiveFieldAndValue = new Map<String, String>();
+        Map<String, Map<String, Object>> mapRelationshipObjects = new Map<String, Map<String, Object>>();
+        Map<String, List<Map<String, Object>>> mapChildRecords = new Map<String, List<Map<String, Object>>>();
+        List<Map<String, Object>> attachmentsList = new List<Map<String, Object>>();
 
         //resStatusCode = '201';
         //resBody = jsonOfResponse();
@@ -220,11 +234,6 @@ public with sharing class ArchiveCaseController {
 
         FEC_IntegrationFraudCaseUtil.logIntegrationService(serviceName, '', '', '', 
                                                             endpoint, resBody, resStatusCode, '', '');
-
-        // Collect relationship objects separately for lookup resolution
-        Map<String, Map<String, Object>> mapRelationshipObjects = new Map<String, Map<String, Object>>();
-        Map<String, List<Map<String, Object>>> mapChildRecords = new Map<String, List<Map<String, Object>>>();
-        List<Map<String, Object>> attachmentsList = new List<Map<String, Object>>();
 
         if (resStatusCode.equals('200') || resStatusCode.equals('201')) {
             Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(resBody);
@@ -308,6 +317,8 @@ public with sharing class ArchiveCaseController {
                 if (listOfAttIgnored.contains(keyOfAtt)) continue;
                 if (keyOfAtt == attrString) continue;
                 mapOfFieldAndValue.put(keyOfAtt.toLowerCase(), jsonDetailCase.get(keyOfAtt));
+
+                if (mapSpecialArchiveField.get(keyOfAtt) != null) mapSpecialArchiveFieldAndValue.put(keyOfAtt, (String) jsonDetailCase.get(keyOfAtt));
             }
         }
 
@@ -343,10 +354,13 @@ public with sharing class ArchiveCaseController {
                 Id interactionRtId = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
 
                 if (!mapChildRecords.isEmpty()) insertChildRecords(caseId, mapChildRecords, 
-                                                                recTypeIdOfThisRecord, interactionRtId);
+                                                                recTypeIdOfThisRecord, interactionRtId, 
+                                                                mapSpecialArchiveField.values());
 
-                Id interactionCaseId = getInteractionCaseId(archieveExternalId, interactionRtId);
-                updatesSpecialValueForCases(interactionCaseId, interactionRtId);
+                Id interactionCaseId = getInteractionCaseId(caseIns.ArchiveInteractionId__c, interactionRtId);
+                updatesSpecialValueForCases(caseId, interactionCaseId, interactionRtId, 
+                                            mapSpecialArchiveFieldAndValue, 
+                                            mapSpecialArchiveField);
             }
         }
 
@@ -424,24 +438,6 @@ public with sharing class ArchiveCaseController {
         resolveByCode(mapOfFieldAndValue, mapRelationshipObjects,
             businessProcessAPIName, businessProcessAPIName.toLowerCase(),
             businessProcessAPIName, codeFiled);
-
-        // --- FEC_Interaction__c → Case matched by ArchiveExternalId__c ---
-        // In new JSON format, the key might be "FEC_Interaction__c" as an object
-        // but typically it's just an Id in the Case fields, so skip if not present as object
-
-        // --- Owner/User → User matched by Username ---
-        // if (mapRelationshipObjects.containsKey('User')) {
-        //     Map<String, Object> relObj = mapRelationshipObjects.get('User');
-        //     String username = (String) relObj.get('Username');
-        //     if (String.isNotBlank(username)) {
-        //         List<User> matches = [SELECT Id FROM User WHERE Username = :username AND IsActive = true LIMIT 1];
-        //         if (!matches.isEmpty()) {
-        //             mapOfFieldAndValue.put('ownerid', matches[0].Id);
-        //         } else {
-        //             mapOfFieldAndValue.put('ownerid', UserInfo.getUserId());
-        //         }
-        //     }
-        // }
 
         // --- FEC_Actual_Nature_of_Case__c → composite match ---
         resolveActualNatureOfCase(mapOfFieldAndValue, mapRelationshipObjects);
@@ -877,12 +873,11 @@ public with sharing class ArchiveCaseController {
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
     private static void insertChildRecords(Id caseId, Map<String, List<Map<String, Object>>> mapChildRecords, 
-                                            Id recTypeIdOfThisRecord, Id interactionRtId) {
+                                            Id recTypeIdOfThisRecord, Id interactionRtId, 
+                                            List<String> listSpecialArchiveObject) {
 
         for (String childKey : mapChildRecords.keySet()) {
             String sObjectApiName = childKey;
-            if (sObjectApiName == 'FEC_Customer_History__c' 
-                && recTypeIdOfThisRecord != interactionRtId) continue;
 
             String caseFieldName = CHILD_OBJECT_CASE_FIELD.get(sObjectApiName);
             if (String.isBlank(caseFieldName)) {
@@ -894,7 +889,9 @@ public with sharing class ArchiveCaseController {
             if (childDataList == null || childDataList.isEmpty()) continue;
 
             try {
-                List<SObject> recordsToInsert = buildChildSObjects(sObjectApiName, caseFieldName, caseId, childDataList);
+                List<SObject> recordsToInsert = buildChildSObjects(sObjectApiName, caseFieldName, 
+                                                                    caseId, childDataList, 
+                                                                    listSpecialArchiveObject);
                 if (!recordsToInsert.isEmpty()) {
                     insert recordsToInsert;
                     System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
@@ -917,7 +914,8 @@ public with sharing class ArchiveCaseController {
     2026/05/07      Thanh Van           Init
     ------------------------------------------------------------*/
     private static List<SObject> buildChildSObjects(String sObjectApiName, String caseFieldName, 
-                                                     Id caseId, List<Map<String, Object>> childDataList) {
+                                                     Id caseId, List<Map<String, Object>> childDataList, 
+                                                     List<String> listSpecialArchiveObject) {
         List<SObject> records = new List<SObject>();
         Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(sObjectApiName);
         if (sObjType == null) {
@@ -949,12 +947,16 @@ public with sharing class ArchiveCaseController {
             rec.put(caseFieldName, caseId);
 
             for (String key : childData.keySet()) {
+                Object val = childData.get(key);
+                if (val == null) continue;
+
+                if (key == 'Id' 
+                    && listSpecialArchiveObject.contains(sObjectApiName)) rec.put('ArchiveExternalId__c', String.valueOf(val));
+
                 if (key == 'attributes' || key == 'Id') continue;
                 // Skip the Case lookup field — already set above
                 if (key == caseFieldName) continue;
 
-                Object val = childData.get(key);
-                if (val == null) continue;
                 // Skip nested objects (sub-relationships)
                 if (val instanceof Map<String, Object> || val instanceof List<Object>) continue;
 
@@ -1052,11 +1054,13 @@ public with sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2025/04/01      Thanh Van           Init
     ------------------------------------------------------------*/
-    public static Id getInteractionCaseId(String archieveExternalId, Id interactionRtId) {
+    public static Id getInteractionCaseId(String archieveInteractionId, Id interactionRtId) {
         Id interactionCaseId;
         List<Case> interractionCases = [SELECT Id FROM Case 
-                                        WHERE ArchiveExternalId__c = :archieveExternalId 
-                                        AND RecordTypeId = :interactionRtId
+                                        WHERE ArchiveExternalId__c = :archieveInteractionId 
+                                        AND RecordTypeId = :interactionRtId 
+                                        AND ArchiveExternalId__c != NULL 
+                                        AND ArchiveExternalId__c != '' 
                                         LIMIT 1];
 
         interactionCaseId = !interractionCases.isEmpty() ? interractionCases[0].Id : null;
@@ -1072,8 +1076,35 @@ public with sharing class ArchiveCaseController {
     <Date>          <Authors Name>      <Brief Description of Change>
     2025/04/01      Thanh Van           Init
     ------------------------------------------------------------*/
-    public static void updatesSpecialValueForCases(Id interactionCaseId, Id interactionRtId) {
+    public static void updatesSpecialValueForCases(Id caseId, 
+                                            Id interactionCaseId, Id interactionRtId, 
+                                            Map<String, String> mapSpecialArchiveFieldAndValue, 
+                                            Map<String, String> mapSpecialArchiveField) {
+
         List<Case> listCaseUpdated = new List<Case>();
+        Map<String, String> mapIdRecOfSpecialObj = new Map<String, String>();
+        getIdRecOfSpecialObject(mapSpecialArchiveFieldAndValue, mapSpecialArchiveField, 
+                                mapIdRecOfSpecialObj);
+        for (Case caseIns : [SELECT Id, FEC_Interaction__c, RecordTypeId, 
+                            FEC_Account_or_Contract__c, FEC_Selected_Address__c 
+                            FROM Case 
+                            WHERE Id = :caseId]) {
+
+            if (interactionCaseId != null && caseIns.RecordTypeId != interactionRtId 
+                && String.isBlank(caseIns.FEC_Interaction__c)) 
+                caseIns.FEC_Interaction__c = interactionCaseId;
+
+            for (String specialFieldName : mapIdRecOfSpecialObj.keySet()) {
+                if (String.isBlank((String) caseIns.get(specialFieldName))) {
+                    caseIns.put(specialFieldName, mapIdRecOfSpecialObj.get(specialFieldName));
+                }
+            }
+
+            listCaseUpdated.add(caseIns);
+        }
+
+        // Query all Customer Case to update FEC_Interaction__c
+        // Except the current case (caseId variable)
         List<Case> interactionCase = [SELECT Id, ArchiveInteractionId__c 
                                         FROM Case 
                                         WHERE Id = :interactionCaseId 
@@ -1082,465 +1113,614 @@ public with sharing class ArchiveCaseController {
         if (!interactionCase.isEmpty()) {
             Case interactionIns = interactionCase[0];
             String archiveInteractionId = interactionIns.ArchiveInteractionId__c;
-
-            List<FEC_Customer_History__c> newHistoryInserted = [SELECT Id 
-                                                                FROM FEC_Customer_History__c 
-                                                                WHERE FEC_Case__c = :interactionCaseId 
-                                                                LIMIT 1];
-            FEC_Customer_History__c customerHis = !newHistoryInserted.isEmpty() 
-                                                    ? newHistoryInserted[0] : null;
-            System.debug('customerHis ' + customerHis);
+            List<Case> listAllCases = new List<Case>();
+            List<String> listArchiveAccOrContract = new List<String>();
+            Map<String, String> mapCusHistoryAndId = new Map<String, String>();
+            String cusHistoryId = '';
 
             for (Case caseIns : [SELECT Id, FEC_Interaction__c, RecordTypeId, 
-                                FEC_Account_or_Contract__c 
-                                FROM CASE 
-                                WHERE ArchiveInteractionId__c = :archiveInteractionId]) {
+                                FEC_Account_or_Contract__c, FEC_Selected_Address__c, 
+                                ArchiveAccOrContract__c 
+                                FROM Case 
+                                WHERE ArchiveInteractionId__c = :archiveInteractionId 
+                                AND Id != :caseId]) {
 
-                if (caseIns.RecordTypeId != interactionRtId && String.isNotBlank(caseIns.FEC_Interaction__c))
+                listAllCases.add(caseIns);
+                listArchiveAccOrContract.add(caseIns.ArchiveAccOrContract__c);
+            }
+
+            mapCusHistoryAndId = getMapCusHistoryArchiveId(listArchiveAccOrContract);
+
+            for (Case caseIns : listAllCases) {
+                if (caseIns.RecordTypeId != interactionRtId 
+                    && String.isBlank(caseIns.FEC_Interaction__c)) 
                     caseIns.FEC_Interaction__c = interactionCaseId;
 
-                if (customerHis != null && String.isNotBlank(caseIns.FEC_Account_or_Contract__c))
-                    caseIns.FEC_Account_or_Contract__c = customerHis.Id;
-                
+                cusHistoryId = mapCusHistoryAndId.get(caseIns.ArchiveAccOrContract__c);
+                if (String.isNotBlank(cusHistoryId)) 
+                    caseIns.FEC_Account_or_Contract__c = cusHistoryId;
+
                 listCaseUpdated.add(caseIns);
             }
-            
-            System.debug('listCaseUpdated ' + listCaseUpdated);
-            if (!listCaseUpdated.isEmpty()) update listCaseUpdated;
         }
+
+        System.debug('listCaseUpdated ' + listCaseUpdated);
+        if (!listCaseUpdated.isEmpty()) update listCaseUpdated;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Id Record Of Special Object
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static void getIdRecOfSpecialObject(Map<String, String> mapSpecialArchiveFieldAndValue, 
+                                            Map<String, String> mapSpecialArchiveField, 
+                                            Map<String, String> mapIdRecOfSpecialObj) {
+
+        for (String archiveField : mapSpecialArchiveFieldAndValue.keySet()) {
+            String valueOfArchiveFiled = mapSpecialArchiveFieldAndValue.get(archiveField);
+            // Ex: specialObj = FEC_Customer_History__c or FEC_Address_Info__c
+            String specialObj = mapSpecialArchiveField.get(archiveField);
+            
+            // Need to put the query in the loop.
+            // The mapIdRecOfSpecialObj just have some object
+            if (specialObj != null && valueOfArchiveFiled != null) {
+                String queryStr = 'SELECT Id FROM ' + specialObj 
+                                + ' WHERE ArchiveExternalId__c =' 
+                                + ' :valueOfArchiveFiled LIMIT 1';
+                List<SObject> recOfspecialObjs = Database.query(queryStr);
+
+                if (!recOfspecialObjs.isEmpty()) mapIdRecOfSpecialObj.put(archiveField, recOfspecialObjs[0].Id);
+            }
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Map Customer History Archive Id
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Map<String, String> getMapCusHistoryArchiveId(List<String> listArchiveAccOrContract) {
+        Map<String, String> mapCusHistoryAndId = new Map<String, String>();
+        for (FEC_Customer_History__c cusHisIns : [SELECT Id, ArchiveExternalId__c 
+                                                FROM FEC_Customer_History__c 
+                                                WHERE ArchiveExternalId__c IN :listArchiveAccOrContract]) {
+            mapCusHistoryAndId.put(cusHisIns.ArchiveExternalId__c, cusHisIns.Id);
+        }
+
+        return mapCusHistoryAndId;
     }
 
     // public static String jsonOfResponse() {
     //     String res = '{' +
-    //         '\"attributes\": {' +
-    //             '\"type\": \"Case\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/Case/5008600000EfFe9AAF\"' +
-    //         '},' +
-    //         '\"Id\": \"5008600000EfFe9AAF\",' +
-    //         '\"CaseNumber\": \"00001094\",' +
-    //         '\"Status\": \"Pending\",' +
-    //         '\"CreatedById\": \"00586000002D4FxAAK\",' +
-    //         '\"LastModifiedById\": \"00586000002CXNMAA4\",' +
-    //         '\"OwnerId\": \"00586000002CXNFAA4\",' +
-    //         '\"ParentId\": null,' +
-    //         '\"FEC_External_Interaction_ID__c\": null,' +
-    //         '\"FEC_Channel__c\": \"Inbound\",' +
-    //         '\"FEC_Case_Channel__c\": null,' +
-    //         '\"FEC_Created_by__c\": null,' +
-    //         '\"FEC_Created_On__c\": null,' +
-    //         '\"FEC_Interaction_Start_On__c\": null,' +
-    //         '\"FEC_Interaction_End_On__c\": null,' +
-    //         '\"FEC_Interaction_Duration__c\": null,' +
-    //         '\"FEC_Interaction_Resolved_By__c\": null,' +
-    //         '\"FEC_Phone_Number__c\": null,' +
-    //         '\"FEC_Transcription__c\": null,' +
-    //         '\"FEC_KYC_Method__c\": null,' +
-    //         '\"FEC_Interaction_Subchannel__c\": null,' +
-    //         '\"FEC_Other_Subchannel__c\": null,' +
-    //         '\"FEC_Customer_Name__c\": null,' +
-    //         '\"FEC_Genesys_Campaign_Name__c\": null,' +
-    //         '\"FEC_Routing_Action__c\": null,' +
-    //         '\"FEC_Interaction__c\": \"5008600000EfEbgAAF\",' +
-    //         '\"FEC_Interaction_Remarks__c\": null,' +
-    //         '\"FEC_Interaction_Resolved_By__r\": null,' +
-    //         '\"FEC_Customer_Type__c\": \"Existing\",' +
-    //         '\"FEC_Phone_Type__c\": null,' +
-    //         '\"FEC_Updated_Info_Phone_Type__c\": \"Primary Phone\",' +
-    //         '\"FEC_Interaction_Email__c\": null,' +
-    //         '\"FEC_Account_Number__c\": null,' +
-    //         '\"FEC_Contract_Number__c\": null,' +
-    //         '\"FEC_National_ID_Passport_ID__c\": null,' +
-    //         '\"FEC_Email_From__c\": null,' +
-    //         '\"FEC_Email_CC__c\": null,' +
-    //         '\"FEC_Account_or_Contract__c\": \"a0I86000000R4NhEAK\",' +
-    //         '\"FEC_CIF_Number__c\": null,' +
-    //         '\"FEC_Case_Email__c\": null,' +
-    //         '\"FEC_Account_or_Contract__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Customer_History__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Customer_History__c/a0I86000000R4NhEAK\"' +
-    //             '},' +
-    //             '\"Id\": \"a0I86000000R4NhEAK\",' +
-    //             '\"Name\": \"0001500040006525520\",' +
-    //             '\"CreatedById\": \"00586000002D4FxAAK\",' +
-    //             '\"LastModifiedById\": \"00586000002D4FxAAK\",' +
-    //             '\"FEC_Account_Close_Date__c\": null,' +
-    //             '\"FEC_Account_Number__c\": \"0001500040006525520\",' +
-    //             '\"FEC_Account_Open_Date__c\": null,' +
-    //             '\"FEC_Account_Status__c\": null,' +
-    //             '\"FEC_Account_Status_Change_Date__c\": null,' +
-    //             '\"FEC_Address__c\": null,' +
-    //             '\"FEC_Address_Type__c\": null,' +
-    //             '\"FEC_Agent_Code__c\": null,' +
-    //             '\"FEC_Agent_Name__c\": null,' +
-    //             '\"FEC_Agreement_Date__c\": null,' +
-    //             '\"FEC_Annual_Fee__c\": null,' +
-    //             '\"FEC_API_Cache__c\": null,' +
-    //             '\"FEC_API_Cache_Secondary_Demo__c\": null,' +
-    //             '\"FEC_Application_ID__c\": null,' +
-    //             '\"FEC_Available_Cash_Limit__c\": null,' +
-    //             '\"FEC_Available_Points__c\": null,' +
-    //             '\"FEC_Bank_Name__c\": null,' +
-    //             '\"FEC_Billing_Cycle__c\": null,' +
-    //             '\"FEC_Block_Code__c\": null,' +
-    //             '\"FEC_Block_Code_1__c\": null,' +
-    //             '\"FEC_Block_Code_2__c\": null,' +
-    //             '\"FEC_Block_Date__c\": null,' +
-    //             '\"FEC_Block_Date_1__c\": null,' +
-    //             '\"FEC_Block_Date_2__c\": null,' +
-    //             '\"FEC_Blocked_By__c\": null,' +
-    //             '\"FEC_Branch_Name__c\": null,' +
-    //             '\"FEC_Buyer_DOB__c\": null,' +
-    //             '\"FEC_Buyer_Gender__c\": null,' +
-    //             '\"FEC_Buyer_Name__c\": null,' +
-    //             '\"FEC_Buyer_NID__c\": null,' +
-    //             '\"FEC_Cancel_Date__c\": null,' +
-    //             '\"FEC_Card_Activation_Date__c\": null,' +
-    //             '\"FEC_Card_Activation_Status__c\": null,' +
-    //             '\"FEC_Card_Number__c\": null,' +
-    //             '\"FEC_Card_Type__c\": null,' +
-    //             '\"FEC_Case__c\": \"5008600000EfEbgAAF\",' +
-    //             '\"FEC_CC_Code__c\": null,' +
-    //             '\"FEC_CC_Name__c\": null,' +
-    //             '\"FEC_Charge_Off_Date__c\": null,' +
-    //             '\"FEC_CIF_Number__c\": null,' +
-    //             '\"Close_Fee_Amount__c\": null,' +
-    //             '\"FEC_Company_Name__c\": null,' +
-    //             '\"FEC_Contract_Number__c\": null,' +
-    //             '\"FEC_Contract_Status__c\": null,' +
-    //             '\"FEC_Contract_Type__c\": null,' +
-    //             '\"FEC_Credit_Limit__c\": null,' +
-    //             '\"FEC_Current_Balance__c\": null,' +
-    //             '\"FEC_Customer_Name__c\": null,' +
-    //             '\"FEC_Customer_Segment__c\": null,' +
-    //             '\"FEC_Customer_Type__c\": \"Existing\",' +
-    //             '\"FEC_Daily_Cash_Limit__c\": null,' +
-    //             '\"FEC_Daily_Cash_Number__c\": null,' +
-    //             '\"FEC_Daily_Ecommerce_Limit__c\": null,' +
-    //             '\"FEC_Daily_Ecommerce_Number__c\": null,' +
-    //             '\"FEC_Daily_Retail_Limit__c\": null,' +
-    //             '\"FEC_Daily_Retail_Number__c\": null,' +
-    //             '\"FEC_Date_Assigned__c\": null,' +
-    //             '\"FEC_Date_of_Birth__c\": null,' +
-    //             '\"FEC_Date_of_Issue__c\": null,' +
-    //             '\"FEC_Days_Past_Due__c\": null,' +
-    //             '\"FEC_Debt_Sale_Type__c\": null,' +
-    //             '\"FEC_Delinquency_Date__c\": null,' +
-    //             '\"FEC_Digital_Card_ID__c\": null,' +
-    //             '\"FEC_Disbursement_Channel__c\": null,' +
-    //             '\"FEC_Disbursement_Date__c\": null,' +
-    //             '\"FEC_DSA_Code__c\": null,' +
-    //             '\"FEC_DSA_Name__c\": null,' +
-    //             '\"FEC_E_Commerce_Status__c\": null,' +
-    //             '\"FEC_E_sign_Status__c\": null,' +
-    //             '\"FEC_Effective_Date__c\": null,' +
-    //             '\"FEC_Email__c\": null,' +
-    //             '\"FEC_Embossing_Name__c\": null,' +
-    //             '\"FEC_EMI__c\": null,' +
-    //             '\"FEC_Expiry_Date__c\": null,' +
-    //             '\"FEC_First_Effective_Date__c\": null,' +
-    //             '\"FEC_First_Name__c\": null,' +
-    //             '\"FEC_First_Payment_Date__c\": null,' +
-    //             '\"FEC_First_Transaction_Amount__c\": null,' +
-    //             '\"FEC_Fraud_Monitor_Date__c\": null,' +
-    //             '\"FEC_Fraud_Monitor_Flag__c\": null,' +
-    //             '\"FEC_Full_IPP_Payment_Amount__c\": null,' +
-    //             '\"FEC_Full_Payment_Amount__c\": null,' +
-    //             '\"FEC_Full_Payment_Without_IPP__c\": null,' +
-    //             '\"FEC_Gender__c\": \"Male\",' +
-    //             '\"FEC_Hold_Amount__c\": null,' +
-    //             '\"FEC_Installments_Remaining__c\": null,' +
-    //             '\"FEC_Insurance_Amount__c\": null,' +
-    //             '\"FEC_Insurance_Flag__c\": null,' +
-    //             '\"FEC_Interest_Sold__c\": null,' +
-    //             '\"FEC_Is_Top_Up_Account__c\": null,' +
-    //             '\"FEC_Last_Advance_Amount__c\": null,' +
-    //             '\"FEC_Last_Advance_Date__c\": null,' +
-    //             '\"FEC_Last_AF_Date__c\": null,' +
-    //             '\"FEC_Last_Credit_Limit__c\": null,' +
-    //             '\"FEC_Last_Credit_Limit_Date__c\": null,' +
-    //             '\"FEC_Last_Effective_Date__c\": null,' +
-    //             '\"FEC_Last_Name__c\": null,' +
-    //             '\"FEC_Last_Payment_Amount__c\": null,' +
-    //             '\"FEC_Last_Payment_Date__c\": null,' +
-    //             '\"FEC_Last_PIN_Action_Date__c\": null,' +
-    //             '\"FEC_Last_PIN_Status__c\": null,' +
-    //             '\"FEC_Last_Statement_Date__c\": null,' +
-    //             '\"FEC_Last_Transaction_Amount__c\": null,' +
-    //             '\"FEC_Loan_Amount__c\": null,' +
-    //             '\"FEC_Local_Use__c\": null,' +
-    //             '\"FEC_Mailing_Address__c\": null,' +
-    //             '\"FEC_Marital_Status__c\": null,' +
-    //             '\"FEC_Memorable_Question__c\": null,' +
-    //             '\"FEC_Middle_Name__c\": null,' +
-    //             '\"FEC_Minimum_Payment_Due__c\": null,' +
-    //             '\"FEC_Mobile_App_Account__c\": null,' +
-    //             '\"FEC_National_ID_Passport_ID__c\": null,' +
-    //             '\"FEC_Next_Due_Date__c\": null,' +
-    //             '\"FEC_Next_Statement_Date__c\": null,' +
-    //             '\"FEC_One_Time_Cash_Limit__c\": null,' +
-    //             '\"FEC_One_Time_Ecommerce_Limit__c\": null,' +
-    //             '\"FEC_One_Time_Retail_Limit__c\": null,' +
-    //             '\"FEC_OTB__c\": null,' +
-    //             '\"FEC_Payment_Due_Date__c\": null,' +
-    //             '\"FEC_Payment_ID__c\": null,' +
-    //             '\"FEC_PID_Number__c\": null,' +
-    //             '\"FEC_Place_of_Issue__c\": null,' +
-    //             '\"FEC_Plan_Payment_Amount__c\": null,' +
-    //             '\"FEC_Plastic_ID__c\": null,' +
-    //             '\"FEC_Policy_Number__c\": null,' +
-    //             '\"FEC_Premium_Fee__c\": null,' +
-    //             '\"FEC_Primary_Phone__c\": null,' +
-    //             '\"FEC_Principal_Sold__c\": null,' +
-    //             '\"FEC_Product_Association__c\": \"Not defined\",' +
-    //             '\"FEC_Product_Code__c\": null,' +
-    //             '\"FEC_Rate__c\": null,' +
-    //             '\"FEC_Reason_1__c\": null,' +
-    //             '\"FEC_Reason_2__c\": null,' +
-    //             '\"FEC_Remark__c\": null,' +
-    //             '\"FEC_Responsible_Person__c\": null,' +
-    //             '\"FEC_Responsible_Unit__c\": null,' +
-    //             '\"FEC_Sale_Channel__c\": null,' +
-    //             '\"FEC_Scheme_Desc__c\": null,' +
-    //             '\"FEC_Scheme_ID__c\": null,' +
-    //             '\"FEC_Sold_Amount__c\": null,' +
-    //             '\"FEC_Sold_Date__c\": null,' +
-    //             '\"FEC_Sold_Note__c\": null,' +
-    //             '\"FEC_Statement_Notification_Type__c\": null,' +
-    //             '\"FEC_Status__c\": null,' +
-    //             '\"FEC_Sub_Channel__c\": null,' +
-    //             '\"FEC_Tenure__c\": null,' +
-    //             '\"FEC_Top_Up_Loan_Amount_Requested__c\": null,' +
-    //             '\"FEC_Top_Up_Old_Account_App_ID__c\": null,' +
-    //             '\"FEC_Top_Up_Old_A_c_Outstanding__c\": 0,' +
-    //             '\"FEC_Total_Accrued_Interest__c\": 0,' +
-    //             '\"FEC_Total_Balance__c\": null,' +
-    //             '\"FEC_Total_Close_Fee_Amount__c\": 0,' +
-    //             '\"FEC_Total_Current_Balance__c\": 0,' +
-    //             '\"FEC_Total_Deferred_Interest__c\": 0,' +
-    //             '\"FEC_Total_IPP_Accrued_Interest__c\": 0,' +
-    //             '\"FEC_Total_IPP_Balance__c\": 0,' +
-    //             '\"FEC_Total_IPP_Current_Balance__c\": 0,' +
-    //             '\"FEC_Total_Payment_Amount__c\": 0,' +
-    //             '\"FEC_Total_Payment_Due__c\": null,' +
-    //             '\"FEC_Total_Per_Diem__c\": 0,' +
-    //             '\"FEC_Total_Plan_Payment_Amount__c\": 0,' +
-    //             '\"FEC_TSA_Code__c\": null,' +
-    //             '\"FEC_TSA_Name__c\": null,' +
-    //             '\"FEC_User_ID__c\": null,' +
-    //             '\"FEC_Warning_Code__c\": null,' +
-    //             '\"FEC_Website_Account__c\": null,' +
-    //             '\"FEC_Work_Phone__c\": null,' +
-    //             '\"FEC_Zalo_Follower__c\": null' +
-    //         '},' +
-    //         '\"FEC_Product_Type__c\": \"a0a8600000CBiV4AAL\",' +
-    //         '\"FEC_Category__c\": \"a0E86000000T4ugEAC\",' +
-    //         '\"FEC_SubCategory__c\": \"a0j86000001EJF3AAO\",' +
-    //         '\"FEC_SubCode__c\": \"a0k86000002Xf8ZAAS\",' +
-    //         '\"FEC_New_Category__c\": null,' +
-    //         '\"FEC_New_SubCategory__c\": null,' +
-    //         '\"FEC_New_SubCode__c\": null,' +
-    //         '\"FEC_Stage_Name__c\": \"Phone Update - Card - Stage 2\",' +
-    //         '\"FEC_Complain_Type__c\": null,' +
-    //         '\"FEC_Original_Info_Phone_Type__c\": \"Primary Phone\",' +
-    //         '\"FEC_Actual_Nature_of_Case__c\": \"a0486000000G8rFAAS\",' +
-    //         '\"FEC_Product_Type__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Product_Type__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Product_Type__c/a0a8600000CBiV4AAL\"' +
-    //             '},' +
-    //             '\"Id\": \"a0a8600000CBiV4AAL\",' +
-    //             '\"Name\": \"Card\",' +
-    //             '\"FEC_Code__c\": \"Card\",' +
-    //             '\"FEC_Name_VN__c\": \"Card\",' +
-    //             '\"FEC_Alias__c\": \"Card\",' +
-    //             '\"FEC_Order__c\": null' +
-    //         '},' +
-    //         '\"FEC_Category__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Category__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Category__c/a0E86000000T4ugEAC\"' +
-    //             '},' +
-    //             '\"Id\": \"a0E86000000T4ugEAC\",' +
-    //             '\"Name\": \"Request\",' +
-    //             '\"FEC_Code__c\": \"Request\",' +
-    //             '\"FEC_Name_VN__c\": \"Request\",' +
-    //             '\"FEC_Alias__c\": \"Request\",' +
-    //             '\"FEC_Order__c\": null' +
-    //         '},' +
-    //         '\"FEC_SubCategory__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Sub_Category__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Sub_Category__c/a0j86000001EJF3AAO\"' +
-    //             '},' +
-    //             '\"Id\": \"a0j86000001EJF3AAO\",' +
-    //             '\"Name\": \"RC09-Cập nhật thông tin\",' +
-    //             '\"FEC_Code__c\": \"RC09\",' +
-    //             '\"FEC_Alias__c\": \"RC09\",' +
-    //             '\"FEC_Name_VN__c\": \"RC09-Cập nhật thông tin\",' +
-    //             '\"FEC_Order__c\": null' +
-    //         '},' +
-    //         '\"FEC_SubCode__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Sub_Code__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Sub_Code__c/a0k86000002Xf8ZAAS\"' +
-    //             '},' +
-    //             '\"Id\": \"a0k86000002Xf8ZAAS\",' +
-    //             '\"Name\": \"RC09.01-Cập nhật số điện thoại\",' +
-    //             '\"FEC_Code__c\": \"RC09.01\",' +
-    //             '\"FEC_Name_VN__c\": \"RC09.01-Cập nhật số điện thoại\",' +
-    //             '\"FEC_Alias__c\": \"RC09.01\",' +
-    //             '\"FEC_Order__c\": null' +
-    //         '},' +
-    //         '\"FEC_New_Category__r\": null,' +
-    //         '\"FEC_New_SubCategory__r\": null,' +
-    //         '\"FEC_New_SubCode__r\": null,' +
-    //         '\"FEC_Actual_Nature_of_Case__r\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"FEC_Actual_Nature_of_Case__c\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/FEC_Actual_Nature_of_Case__c/a0486000000G8rFAAS\"' +
-    //             '},' +
-    //             '\"Id\": \"a0486000000G8rFAAS\",' +
-    //             '\"Name\": \"a0486000000G8rF\",' +
-    //             '\"FEC_Customer_Type__c\": \"Existing\",' +
-    //             '\"FEC_User_Group__c\": \"CC;EC;F2F;IB;OB;QC;SP\",' +
-    //             '\"FEC_Business_Process__c\": \"a0986000002fPPeAAM\",' +
-    //             '\"FEC_Business_Process__r\": {' +
-    //             '\"attributes\": {' +
-    //                 '\"type\": \"FEC_Business_Process__c\",' +
-    //                 '\"url\": \"/services/data/v66.0/sobjects/FEC_Business_Process__c/a0986000002fPPeAAM\"' +
-    //             '},' +
-    //             '\"Id\": \"a0986000002fPPeAAM\",' +
-    //             '\"Name\": \"Phone Update\",' +
-    //             '\"FEC_Code__c\": \"Phone Update\",' +
-    //             '\"FEC_Alias__c\": \"Phone Update\",' +
-    //             '\"FEC_Name_VN__c\": null,' +
-    //             '\"FEC_Order__c\": null' +
-    //             '},' +
-    //             '\"FEC_Product_Type__r\": {' +
-    //             '\"attributes\": {' +
-    //                 '\"type\": \"FEC_Product_Type__c\",' +
-    //                 '\"url\": \"/services/data/v66.0/sobjects/FEC_Product_Type__c/a0a8600000CBiV4AAL\"' +
-    //             '},' +
-    //             '\"Id\": \"a0a8600000CBiV4AAL\",' +
-    //             '\"Name\": \"Card\",' +
-    //             '\"FEC_Code__c\": \"Card\",' +
-    //             '\"FEC_Alias__c\": \"Card\",' +
-    //             '\"FEC_Name_VN__c\": \"Card\",' +
-    //             '\"FEC_Order__c\": null' +
-    //             '},' +
-    //             '\"FEC_Category__r\": {' +
-    //             '\"attributes\": {' +
-    //                 '\"type\": \"FEC_Category__c\",' +
-    //                 '\"url\": \"/services/data/v66.0/sobjects/FEC_Category__c/a0E86000000T4ugEAC\"' +
-    //             '},' +
-    //             '\"Id\": \"a0E86000000T4ugEAC\",' +
-    //             '\"Name\": \"Request\",' +
-    //             '\"FEC_Code__c\": \"Request\",' +
-    //             '\"FEC_Alias__c\": \"Request\",' +
-    //             '\"FEC_Name_VN__c\": \"Request\",' +
-    //             '\"FEC_Order__c\": null' +
-    //             '},' +
-    //             '\"FEC_Sub_Category__r\": {' +
-    //             '\"attributes\": {' +
-    //                 '\"type\": \"FEC_Sub_Category__c\",' +
-    //                 '\"url\": \"/services/data/v66.0/sobjects/FEC_Sub_Category__c/a0j86000001EJF3AAO\"' +
-    //             '},' +
-    //             '\"Id\": \"a0j86000001EJF3AAO\",' +
-    //             '\"Name\": \"RC09-Cập nhật thông tin\",' +
-    //             '\"FEC_Code__c\": \"RC09\",' +
-    //             '\"FEC_Alias__c\": \"RC09\",' +
-    //             '\"FEC_Name_VN__c\": \"RC09-Cập nhật thông tin\",' +
-    //             '\"FEC_Order__c\": null' +
-    //             '},' +
-    //             '\"FEC_Sub_Code__r\": {' +
-    //             '\"attributes\": {' +
-    //                 '\"type\": \"FEC_Sub_Code__c\",' +
-    //                 '\"url\": \"/services/data/v66.0/sobjects/FEC_Sub_Code__c/a0k86000002Xf8ZAAS\"' +
-    //             '},' +
-    //             '\"Id\": \"a0k86000002Xf8ZAAS\",' +
-    //             '\"Name\": \"RC09.01-Cập nhật số điện thoại\",' +
-    //             '\"FEC_Code__c\": \"RC09.01\",' +
-    //             '\"FEC_Alias__c\": \"RC09.01\",' +
-    //             '\"FEC_Name_VN__c\": \"RC09.01-Cập nhật số điện thoại\",' +
-    //             '\"FEC_Order__c\": null' +
-    //             '}' +
-    //         '},' +
-    //         '\"FEC_Service_Case_Owner__c\": \"thanh.vu.5\",' +
-    //         '\"FEC_Final_Status__c\": \"Pending - CSOperations \",' +
-    //         '\"FEC_Task__c\": null,' +
-    //         '\"FEC_Remarks__c\": null,' +
-    //         '\"FEC_Team__c\": \"CSOperations \",' +
-    //         '\"FEC_Completed_User__c\": null,' +
-    //         '\"FEC_Follow_Up_User__c\": \"00586000002D4FxAAK|R;00586000002CXNMAA4|R;00586000002CXNFAA4|R\",' +
-    //         '\"FEC_Is_My_Follow_Up__c\": false,' +
-    //         '\"FEC_Is_Submited__c\": true,' +
-    //         '\"FEC_Is_Save_Closed__c\": false,' +
-    //         '\"FEC_Draft_Remarks__c\": null,' +
-    //         '\"FEC_SLA_Notification_1__c\": null,' +
-    //         '\"FEC_SLA_Notification_2__c\": null,' +
-    //         '\"FEC_SLA_Notification_3__c\": null,' +
-    //         '\"FEC_FCR__c\": false,' +
-    //         '\"FEC_Case_Created_On__c\": \"2026-03-03T15:50:55.000+0000\",' +
-    //         '\"FEC_Case_Created_By__c\": \"trangll2\",' +
-    //         '\"FEC_Last_Updated_On__c\": \"2026-03-27T03:00:13.000+0000\",' +
-    //         '\"FEC_Last_Updated_By__c\": \"huyen.nguyen.7\",' +
-    //         '\"CreatedDate\": \"2026-03-03T15:50:55.000+0000\",' +
-    //         '\"LastModifiedDate\": \"2026-03-27T03:00:13.000+0000\",' +
-    //         '\"ClosedDate\": null,' +
-    //         '\"FEC_Link_ID__c\": \"<a href=\\\"/5008600000EfFe9\\\" target=\\\"_self\\\">S-0032</a>\",' +
-    //         '\"FEC_Interaction_Status__c\": \"Auto-Closed\",' +
-    //         '\"FEC_Case_ID__c\": \"<a href=\\\"/5008600000EfFe9\\\" target=\\\"_self\\\">S-0032</a>\",' +
-    //         '\"FEC_Interaction_ID__c\": \"<a href=\\\"/5008600000EfEbg\\\" target=\\\"_self\\\">I-0016</a>\",' +
-    //         '\"FEC_Customer_Username__c\": null,' +
-    //         '\"FEC_Interaction_Owner__c\": null,' +
-    //         '\"FEC_Original_Info_Phone_Number__c\": null,' +
-    //         '\"FEC_Updated_Info_Phone_Number__c\": \"0987654332\",' +
-    //         '\"FEC_Correct_Contract_Number__c\": null,' +
-    //         '\"FEC_User_Email_ID__c\": null,' +
-    //         '\"FEC_Is_In_Create_new_mode__c\": false,' +
-    //         '\"FEC_Show_Action__c\": true,' +
-    //         '\"FEC_Has_Account_or_Contract__c\": true,' +
-    //         '\"EntitlementId\": null,' +
-    //         '\"FEC_Business_Process__c\": null,' +
-    //         '\"FEC_Business_Process__r\": null,' +
-    //         '\"FEC_SLA_Violating_Warning__c\": null,' +
-    //         '\"FEC_SLA_Warning__c\": null,' +
-    //         '\"FEC_Genesys_Campaign__c\": null,' +
-    //         '\"FEC_CS_D2C_Assessment_Type__c\": null,' +
-    //         '\"FEC_CS_D2C_Risk_Level__c\": null,' +
-    //         '\"FEC_Outcome_Code__c\": null,' +
-    //         '\"FEC_Application_ID__c\": null,' +
-    //         '\"FEC_ID_Search__c\": \"S-0032\",' +
-    //         '\"FEC_Interaction_Masked_Phone__c\": null,' +
-    //         '\"FEC_Case_Phone_Number__c\": null,' +
-    //         '\"FEC_Account_Contract_Number_Text__c\": \"0001500040006525520\",' +
-    //         '\"RecordTypeId\": \"012860000008vYzAAI\",' +
-    //         '\"RecordType\": {' +
-    //             '\"attributes\": {' +
-    //             '\"type\": \"RecordType\",' +
-    //             '\"url\": \"/services/data/v66.0/sobjects/RecordType/012860000008vYzAAI\"' +
-    //             '},' +
-    //             '\"Name\": \"Customer Case\"' +
-    //         '},' +
-    //         '\"Attachments\": [' +
-    //             '{' +
-    //             '\"s3Key\": \"cases/CASE-999/attachments/a1-b2-c3_contract.pdf\",' +
-    //             '\"filename\": \"contract.pdf\",' +
-    //             '\"contentType\": \"application/pdf\",' +
-    //             '\"fileSize\": 25600,' +
-    //             '\"uploadedAt\": \"2026-03-01T08:00:00Z\",' +
-    //             '\"uploadedBy\": \"system_bot\"' +
-    //             '},' +
-    //             '{' +
-    //             '\"s3Key\": \"cases/CASE-999/attachments/d4-e5-f6_signature.png\",' +
-    //             '\"filename\": \"signature.png\",' +
-    //             '\"contentType\": \"image/png\",' +
-    //             '\"fileSize\": 512000,' +
-    //             '\"uploadedAt\": \"2026-03-02T15:30:45Z\",' +
-    //             '\"uploadedBy\": \"agent_07\"' +
-    //             '}' +
-    //         ']' +
+    //         '  "FEC_District__c": null,' +
+    //         '  "FEC_Country__c": null,' +
+    //         '  "FEC_Case_Stage__c": null,' +
+    //         '  "FEC_Actual_Nature_of_Case__c": null,' +
+    //         '  "FEC_Business_Process__c": null,' +
+    //         '  "ServiceContract": null,' +
+    //         '  "Group": null,' +
+    //         '  "SvcCatalogRequest": null,' +
+    //         '  "SocialPost": null,' +
+    //         '  "ResidentialLoanApplication": null,' +
+    //         '  "PublicComplaint": null,' +
+    //         '  "PersonLifeEvent": null,' +
+    //         '  "InsurancePolicy": null,' +
+    //         '  "EmailMessage": null,' +
+    //         '  "BusinessMilestone": null,' +
+    //         '  "Entitlement": null,' +
+    //         '  "Product2": null,' +
+    //         '  "Asset": null,' +
+    //         '  "Account": null,' +
+    //         '  "Contact": null,' +
+    //         '  "FEC_Sub_Code__c": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "FEC_Sub_Code__c",' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Sub_Code__c/a0g850000010LNrAAM"' +
+    //         '    },' +
+    //         '    "Id": "a0g850000010LNrAAM",' +
+    //         '    "OwnerId": "005850000058LHMAA2",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "Name": "RC09.07-Cập nhật giới tính",' +
+    //         '    "CreatedDate": "2026-02-11T07:24:59.000+0000",' +
+    //         '    "CreatedById": "005850000058LHMAA2",' +
+    //         '    "LastModifiedDate": "2026-02-24T07:31:06.000+0000",' +
+    //         '    "LastModifiedById": "005850000058LHMAA2",' +
+    //         '    "SystemModstamp": "2026-02-24T07:31:06.000+0000",' +
+    //         '    "FEC_Code__c": "RC09.07",' +
+    //         '    "FEC_Do_Not_Bother__c": false' +
+    //         '  },' +
+    //         '  "FEC_Sub_Category__c": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "FEC_Sub_Category__c",' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Sub_Category__c/a0f85000001HD6hAAG"' +
+    //         '    },' +
+    //         '    "Id": "a0f85000001HD6hAAG",' +
+    //         '    "OwnerId": "005850000058LHMAA2",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "Name": "RC09-Cập nhật thông tin",' +
+    //         '    "CreatedDate": "2026-02-11T07:23:50.000+0000",' +
+    //         '    "CreatedById": "005850000058LHMAA2",' +
+    //         '    "LastModifiedDate": "2026-02-24T07:30:12.000+0000",' +
+    //         '    "LastModifiedById": "005850000058LHMAA2",' +
+    //         '    "SystemModstamp": "2026-02-24T07:30:12.000+0000",' +
+    //         '    "FEC_Code__c": "RC09",' +
+    //         '    "FEC_Do_Not_Bother__c": false' +
+    //         '  },' +
+    //         '  "FEC_Product_Type__c": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "FEC_Product_Type__c",' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Product_Type__c/a0a8500000ByciRAAR"' +
+    //         '    },' +
+    //         '    "Id": "a0a8500000ByciRAAR",' +
+    //         '    "OwnerId": "005850000058LHMAA2",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "Name": "Card",' +
+    //         '    "CreatedDate": "2026-02-11T07:20:53.000+0000",' +
+    //         '    "CreatedById": "005850000058LHMAA2",' +
+    //         '    "LastModifiedDate": "2026-03-02T07:59:59.000+0000",' +
+    //         '    "LastModifiedById": "005850000058LHMAA2",' +
+    //         '    "SystemModstamp": "2026-03-02T07:59:59.000+0000",' +
+    //         '    "FEC_Code__c": "Card"' +
+    //         '  },' +
+    //         '  "FEC_Category__c": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "FEC_Category__c",' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Category__c/a0T85000004BTHYEA4"' +
+    //         '    },' +
+    //         '    "Id": "a0T85000004BTHYEA4",' +
+    //         '    "OwnerId": "005850000058LHMAA2",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "Name": "Request",' +
+    //         '    "CreatedDate": "2026-02-11T07:22:04.000+0000",' +
+    //         '    "CreatedById": "005850000058LHMAA2",' +
+    //         '    "LastModifiedDate": "2026-02-24T07:29:34.000+0000",' +
+    //         '    "LastModifiedById": "005850000058LHMAA2",' +
+    //         '    "SystemModstamp": "2026-02-24T07:29:34.000+0000",' +
+    //         '    "FEC_Code__c": "Request",' +
+    //         '    "FEC_Do_Not_Bother__c": false' +
+    //         '  },' +
+    //         '  "User": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "User",' +
+    //         '      "url": "/services/data/v66.0/sobjects/User/005d50000049NeDAAU"' +
+    //         '    },' +
+    //         '    "Id": "005d50000049NeDAAU",' +
+    //         '    "Username": "long.nguyen.50@fecredit.com.vn.fecsit",' +
+    //         '    "LastName": "Nguyễn",' +
+    //         '    "FirstName": "Long",' +
+    //         '    "MiddleName": "Thành",' +
+    //         '    "Name": "Long Nguyễn",' +
+    //         '    "Address": null,' +
+    //         '    "Email": "long.nguyen.50@fecredit.com.vn",' +
+    //         '    "EmailPreferencesAutoBcc": true,' +
+    //         '    "EmailPreferencesAutoBccStayInTouch": false,' +
+    //         '    "EmailPreferencesStayInTouchReminder": true,' +
+    //         '    "Alias": "LongNT",' +
+    //         '    "CommunityNickname": "User17627455558156872938",' +
+    //         '    "IsActive": true,' +
+    //         '    "TimeZoneSidKey": "Asia/Ho_Chi_Minh",' +
+    //         '    "UserRoleId": "00E8500000319xVEAQ",' +
+    //         '    "LocaleSidKey": "en_SG",' +
+    //         '    "ReceivesInfoEmails": true,' +
+    //         '    "ReceivesAdminInfoEmails": true,' +
+    //         '    "EmailEncodingKey": "UTF-8",' +
+    //         '    "ProfileId": "00ed5000003xNbbAAE",' +
+    //         '    "UserType": "Standard",' +
+    //         '    "StartDay": "8",' +
+    //         '    "EndDay": "18",' +
+    //         '    "LanguageLocaleKey": "en_US",' +
+    //         '    "LastLoginDate": "2026-05-06T07:29:15.000+0000",' +
+    //         '    "LastPasswordChangeDate": "2026-03-03T07:20:26.000+0000",' +
+    //         '    "CreatedDate": "2025-11-10T03:34:37.000+0000",' +
+    //         '    "CreatedById": "005d50000047h4LAAQ",' +
+    //         '    "LastModifiedDate": "2026-05-06T04:59:50.000+0000",' +
+    //         '    "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '    "SystemModstamp": "2026-05-06T04:59:50.000+0000",' +
+    //         '    "PasswordExpirationDate": "2026-06-01T07:20:26.000+0000",' +
+    //         '    "NumberOfFailedLogins": 0,' +
+    //         '    "UserPermissionsMarketingUser": false,' +
+    //         '    "UserPermissionsOfflineUser": false,' +
+    //         '    "UserPermissionsAvantgoUser": false,' +
+    //         '    "UserPermissionsCallCenterAutoLogin": false,' +
+    //         '    "UserPermissionsSFContentUser": false,' +
+    //         '    "UserPermissionsKnowledgeUser": false,' +
+    //         '    "UserPermissionsInteractionUser": true,' +
+    //         '    "UserPermissionsSupportUser": true,' +
+    //         '    "ForecastEnabled": false,' +
+    //         '    "UserPreferencesActivityRemindersPopup": true,' +
+    //         '    "UserPreferencesEventRemindersCheckboxDefault": true,' +
+    //         '    "UserPreferencesTaskRemindersCheckboxDefault": true,' +
+    //         '    "UserPreferencesReminderSoundOff": false,' +
+    //         '    "UserPreferencesDisableAllFeedsEmail": false,' +
+    //         '    "UserPreferencesDisableFollowersEmail": false,' +
+    //         '    "UserPreferencesDisableProfilePostEmail": false,' +
+    //         '    "UserPreferencesDisableChangeCommentEmail": false,' +
+    //         '    "UserPreferencesDisableLaterCommentEmail": false,' +
+    //         '    "UserPreferencesDisProfPostCommentEmail": false,' +
+    //         '    "UserPreferencesApexPagesDeveloperMode": false,' +
+    //         '    "UserPreferencesReceiveNoNotificationsAsApprover": false,' +
+    //         '    "UserPreferencesReceiveNotificationsAsDelegatedApprover": false,' +
+    //         '    "UserPreferencesHideCSNGetChatterMobileTask": false,' +
+    //         '    "UserPreferencesDisableMentionsPostEmail": false,' +
+    //         '    "UserPreferencesDisMentionsCommentEmail": false,' +
+    //         '    "UserPreferencesHideCSNDesktopTask": false,' +
+    //         '    "UserPreferencesHideChatterOnboardingSplash": false,' +
+    //         '    "UserPreferencesHideSecondChatterOnboardingSplash": false,' +
+    //         '    "UserPreferencesDisCommentAfterLikeEmail": false,' +
+    //         '    "UserPreferencesDisableLikeEmail": true,' +
+    //         '    "UserPreferencesSortFeedByComment": true,' +
+    //         '    "UserPreferencesDisableMessageEmail": false,' +
+    //         '    "UserPreferencesDisableBookmarkEmail": false,' +
+    //         '    "UserPreferencesDisableSharePostEmail": false,' +
+    //         '    "UserPreferencesEnableAutoSubForFeeds": false,' +
+    //         '    "UserPreferencesDisableFileShareNotificationsForApi": false,' +
+    //         '    "UserPreferencesShowTitleToExternalUsers": true,' +
+    //         '    "UserPreferencesShowManagerToExternalUsers": false,' +
+    //         '    "UserPreferencesShowEmailToExternalUsers": false,' +
+    //         '    "UserPreferencesShowWorkPhoneToExternalUsers": false,' +
+    //         '    "UserPreferencesShowMobilePhoneToExternalUsers": false,' +
+    //         '    "UserPreferencesShowFaxToExternalUsers": false,' +
+    //         '    "UserPreferencesShowStreetAddressToExternalUsers": false,' +
+    //         '    "UserPreferencesShowCityToExternalUsers": false,' +
+    //         '    "UserPreferencesShowStateToExternalUsers": false,' +
+    //         '    "UserPreferencesShowPostalCodeToExternalUsers": false,' +
+    //         '    "UserPreferencesShowCountryToExternalUsers": false,' +
+    //         '    "UserPreferencesShowProfilePicToGuestUsers": false,' +
+    //         '    "UserPreferencesShowTitleToGuestUsers": false,' +
+    //         '    "UserPreferencesShowCityToGuestUsers": false,' +
+    //         '    "UserPreferencesShowStateToGuestUsers": false,' +
+    //         '    "UserPreferencesShowPostalCodeToGuestUsers": false,' +
+    //         '    "UserPreferencesShowCountryToGuestUsers": false,' +
+    //         '    "UserPreferencesShowForecastingChangeSignals": false,' +
+    //         '    "UserPreferencesLiveAgentMiawSetupDeflection": false,' +
+    //         '    "UserPreferencesHideS1BrowserUI": true,' +
+    //         '    "UserPreferencesDisableEndorsementEmail": false,' +
+    //         '    "UserPreferencesPathAssistantCollapsed": false,' +
+    //         '    "UserPreferencesCacheDiagnostics": false,' +
+    //         '    "UserPreferencesShowEmailToGuestUsers": false,' +
+    //         '    "UserPreferencesShowManagerToGuestUsers": false,' +
+    //         '    "UserPreferencesShowWorkPhoneToGuestUsers": false,' +
+    //         '    "UserPreferencesShowMobilePhoneToGuestUsers": false,' +
+    //         '    "UserPreferencesShowFaxToGuestUsers": false,' +
+    //         '    "UserPreferencesShowStreetAddressToGuestUsers": false,' +
+    //         '    "UserPreferencesLightningExperiencePreferred": true,' +
+    //         '    "UserPreferencesPreviewLightning": false,' +
+    //         '    "UserPreferencesHideEndUserOnboardingAssistantModal": false,' +
+    //         '    "UserPreferencesHideLightningMigrationModal": false,' +
+    //         '    "UserPreferencesHideSfxWelcomeMat": true,' +
+    //         '    "UserPreferencesHideBiggerPhotoCallout": false,' +
+    //         '    "UserPreferencesGlobalNavBarWTShown": false,' +
+    //         '    "UserPreferencesGlobalNavGridMenuWTShown": false,' +
+    //         '    "UserPreferencesCreateLEXAppsWTShown": false,' +
+    //         '    "UserPreferencesFavoritesWTShown": false,' +
+    //         '    "UserPreferencesRecordHomeSectionCollapseWTShown": false,' +
+    //         '    "UserPreferencesRecordHomeReservedWTShown": false,' +
+    //         '    "UserPreferencesFavoritesShowTopFavorites": false,' +
+    //         '    "UserPreferencesExcludeMailAppAttachments": false,' +
+    //         '    "UserPreferencesSuppressTaskSFXReminders": false,' +
+    //         '    "UserPreferencesSuppressEventSFXReminders": false,' +
+    //         '    "UserPreferencesPreviewCustomTheme": false,' +
+    //         '    "UserPreferencesHasCelebrationBadge": false,' +
+    //         '    "UserPreferencesUserDebugModePref": false,' +
+    //         '    "UserPreferencesSRHOverrideActivities": false,' +
+    //         '    "UserPreferencesNewLightningReportRunPageEnabled": false,' +
+    //         '    "UserPreferencesReverseOpenActivitiesView": false,' +
+    //         '    "UserPreferencesHasSentWarningEmail": false,' +
+    //         '    "UserPreferencesHasSentWarningEmail238": false,' +
+    //         '    "UserPreferencesHasSentWarningEmail240": false,' +
+    //         '    "UserPreferencesNativeEmailClient": false,' +
+    //         '    "UserPreferencesHideBrowseProductRedirectConfirmation": false,' +
+    //         '    "UserPreferencesHideOnlineSalesAppTabVisibilityRequirementsModal": false,' +
+    //         '    "UserPreferencesHideOnlineSalesAppWelcomeMat": true,' +
+    //         '    "UserPreferencesShowForecastingRoundedAmounts": false,' +
+    //         '    "FullPhotoUrl": "https://fecredit123--fecsit.sandbox.file.force.com/profilephoto/005/F",' +
+    //         '    "SmallPhotoUrl": "https://fecredit123--fecsit.sandbox.file.force.com/profilephoto/005/T",' +
+    //         '    "IsExtIndicatorVisible": false,' +
+    //         '    "MediumPhotoUrl": "https://fecredit123--fecsit.sandbox.file.force.com/profilephoto/005/M",' +
+    //         '    "DigestFrequency": "D",' +
+    //         '    "DefaultGroupNotificationFrequency": "N",' +
+    //         '    "LastViewedDate": "2026-05-06T02:11:36.000+0000",' +
+    //         '    "LastReferencedDate": "2026-05-06T02:11:36.000+0000",' +
+    //         '    "BannerPhotoUrl": "/profilephoto/005/B",' +
+    //         '    "SmallBannerPhotoUrl": "/profilephoto/005/D",' +
+    //         '    "MediumBannerPhotoUrl": "/profilephoto/005/E",' +
+    //         '    "IsProfilePhotoActive": false,' +
+    //         '    "FEC_Main_Queue__c": "FEC_DQ_CS_Support",' +
+    //         '    "CompanyName": null,' +
+    //         '    "OutOfOfficeMessage": "",' +
+    //         '    "BadgeText": ""' +
+    //         '  },' +
+    //         '  "RecordType": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "RecordType",' +
+    //         '      "url": "/services/data/v66.0/sobjects/RecordType/01285000000CMMXAA4"' +
+    //         '    },' +
+    //         '    "Id": "01285000000CMMXAA4",' +
+    //         '    "Name": "Customer Case",' +
+    //         '    "DeveloperName": "Customer_Case",' +
+    //         '    "BusinessProcessId": "01985000001LjkjAAC",' +
+    //         '    "SobjectType": "Case",' +
+    //         '    "IsActive": true,' +
+    //         '    "CreatedById": "005d5000004AWabAAG",' +
+    //         '    "CreatedDate": "2026-02-09T04:03:07.000+0000",' +
+    //         '    "LastModifiedById": "005d5000004AWabAAG",' +
+    //         '    "LastModifiedDate": "2026-05-06T03:14:24.000+0000",' +
+    //         '    "SystemModstamp": "2026-05-06T03:14:24.000+0000"' +
+    //         '  },' +
+    //         '  "BusinessHours": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "BusinessHours",' +
+    //         '      "url": "/services/data/v66.0/sobjects/BusinessHours/01md5000000siQfAAI"' +
+    //         '    },' +
+    //         '    "Id": "01md5000000siQfAAI",' +
+    //         '    "Name": "Default",' +
+    //         '    "IsActive": true,' +
+    //         '    "IsDefault": true,' +
+    //         '    "SundayStartTime": "00:00:00.000Z",' +
+    //         '    "SundayEndTime": "00:00:00.000Z",' +
+    //         '    "MondayStartTime": "00:00:00.000Z",' +
+    //         '    "MondayEndTime": "00:00:00.000Z",' +
+    //         '    "TuesdayStartTime": "00:00:00.000Z",' +
+    //         '    "TuesdayEndTime": "00:00:00.000Z",' +
+    //         '    "WednesdayStartTime": "00:00:00.000Z",' +
+    //         '    "WednesdayEndTime": "00:00:00.000Z",' +
+    //         '    "ThursdayStartTime": "00:00:00.000Z",' +
+    //         '    "ThursdayEndTime": "00:00:00.000Z",' +
+    //         '    "FridayStartTime": "00:00:00.000Z",' +
+    //         '    "FridayEndTime": "00:00:00.000Z",' +
+    //         '    "SaturdayStartTime": "00:00:00.000Z",' +
+    //         '    "SaturdayEndTime": "00:00:00.000Z",' +
+    //         '    "TimeZoneSidKey": "America/Los_Angeles",' +
+    //         '    "SystemModstamp": "2025-10-13T01:19:03.000+0000",' +
+    //         '    "CreatedDate": "2025-10-13T01:19:03.000+0000",' +
+    //         '    "CreatedById": "005d5000003ieODAAY",' +
+    //         '    "LastModifiedDate": "2025-10-13T01:19:03.000+0000",' +
+    //         '    "LastModifiedById": "005d5000003ieODAAY"' +
+    //         '  },' +
+    //         '  "FEC_Watcher__c": [' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Watcher__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Watcher__c/a1685000001hy0PAAQ"' +
+    //         '      },' +
+    //         '      "Id": "a1685000001hy0PAAQ",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "A-00000558",' +
+    //         '      "CreatedDate": "2026-05-06T05:03:47.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:03:47.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:03:47.000+0000",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '      "FEC_Active__c": true,' +
+    //         '      "FEC_Follow_up_Type__c": "Until Case is Resolved",' +
+    //         '      "FEC_User_Role__c": "Customer Service Support Manager",' +
+    //         '      "FEC_User__c": "long.nguyen.50@fecredit.com.vn",' +
+    //         '      "FEC_Watcher_User__c": "005d50000049NeDAAU"' +
+    //         '    }' +
+    //         '  ],' +
+    //         '  "FEC_Stage_History__c": null,' +
+    //         '  "FEC_Sensitive_Data__c": null,' +
+    //         '  "FEC_Routing_Action_History__c": null,' +
+    //         '  "FEC_Relevant_Ticket__c": null,' +
+    //         '  "FEC_RePayment_Schedule__c": null,' +
+    //         '  "FEC_Process_Action__c": null,' +
+    //         '  "FEC_Process_Action_History__c": null,' +
+    //         '  "FEC_Pending_Disbursement__c": null,' +
+    //         '  "FEC_Notification_History__c": null,' +
+    //         '  "FEC_KYC_Result__c": null,' +
+    //         '  "FEC_Integration_Case__c": null,' +
+    //         '  "FEC_IPP__c": null,' +
+    //         '  "FEC_Do_Not_Bother__c": null,' +
+    //         '  "FEC_Customer_History__c": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "FEC_Customer_History__c",' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Customer_History__c/a0h85000002dAOAAA2"' +
+    //         '    },' +
+    //         '    "Id": "a0h85000002dAOAAA2",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "Name": "0001500010000005476",' +
+    //         '    "CreatedDate": "2026-05-06T03:16:33.000+0000",' +
+    //         '    "CreatedById": "00585000004yJVKAA2",' +
+    //         '    "LastModifiedDate": "2026-05-06T06:06:00.000+0000",' +
+    //         '    "LastModifiedById": "00585000004yJVKAA2",' +
+    //         '    "SystemModstamp": "2026-05-06T06:06:00.000+0000",' +
+    //         '    "FEC_Case__c": "5008500000HiXjLAAV"' +
+    //         '  },' +
+    //         '  "FEC_ChatHistory__c": null,' +
+    //         '  "FEC_Case_Remarks__c": [' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Case_Remarks__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Case_Remarks__c/a0u85000003LYxqAAG"' +
+    //         '      },' +
+    //         '      "Id": "a0u85000003LYxqAAG",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "CR-0052",' +
+    //         '      "CreatedDate": "2026-05-06T05:06:23.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:06:23.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:06:23.000+0000",' +
+    //         '      "FEC_Case_Remarks__c": "sdefrgthj",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '      "FEC_User_Role__c": "Customer Service Support Manager",' +
+    //         '      "FEC_User__c": "long.nguyen.50",' +
+    //         '      "FEC_Remark_Type__c": "Case"' +
+    //         '    },' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Case_Remarks__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Case_Remarks__c/a0u85000003LZVhAAO"' +
+    //         '      },' +
+    //         '      "Id": "a0u85000003LZVhAAO",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "CR-0053",' +
+    //         '      "CreatedDate": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "FEC_Case_Remarks__c": "dfghj",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '      "FEC_User_Role__c": "Customer Service Support Manager",' +
+    //         '      "FEC_User__c": "long.nguyen.50",' +
+    //         '      "FEC_Remark_Type__c": "Case"' +
+    //         '    }' +
+    //         '  ],' +
+    //         '  "FEC_Case_Refund_Details__c": null,' +
+    //         '  "FEC_Case_Flow_History__c": [' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Case_Flow_History__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Case_Flow_History__c/a23850000068P93AAE"' +
+    //         '      },' +
+    //         '      "Id": "a23850000068P93AAE",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "CFH-3",' +
+    //         '      "CreatedDate": "2026-05-06T05:06:22.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:06:22.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:06:22.000+0000",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '      "FEC_Field_List__c": "[]",' +
+    //         '      "FEC_Nature_of_Cases__c": "a0W85000000HGYIEA4"' +
+    //         '    },' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Case_Flow_History__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Case_Flow_History__c/a23850000068PAfAAM"' +
+    //         '      },' +
+    //         '      "Id": "a23850000068PAfAAM",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "CFH-4",' +
+    //         '      "CreatedDate": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:07:15.000+0000",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '      "FEC_Field_List__c": "[]",' +
+    //         '      "FEC_Nature_of_Cases__c": "a0W85000000HGYIEA4"' +
+    //         '    }' +
+    //         '  ],' +
+    //         '  "FEC_Card_Payment__c": null,' +
+    //         '  "FEC_Card_Delivery__c": null,' +
+    //         '  "FEC_Assignment__c": null,' +
+    //         '  "FEC_Asset__c": null,' +
+    //         '  "FEC_Application_History__c": null,' +
+    //         '  "FEC_Address_Info__c": null,' +
+    //         '  "FEC_Additional_Info__c": [' +
+    //         '    {' +
+    //         '      "attributes": {' +
+    //         '        "type": "FEC_Additional_Info__c",' +
+    //         '        "url": "/services/data/v66.0/sobjects/FEC_Additional_Info__c/a0Q8500000Hn9d4EAB"' +
+    //         '      },' +
+    //         '      "Id": "a0Q8500000Hn9d4EAB",' +
+    //         '      "IsDeleted": false,' +
+    //         '      "Name": "Additional Info - 221",' +
+    //         '      "CreatedDate": "2026-05-06T05:03:48.000+0000",' +
+    //         '      "CreatedById": "005d50000049NeDAAU",' +
+    //         '      "LastModifiedDate": "2026-05-06T05:03:48.000+0000",' +
+    //         '      "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '      "SystemModstamp": "2026-05-06T05:03:48.000+0000",' +
+    //         '      "FEC_Case__c": "5008500000HigGOAAZ"' +
+    //         '    }' +
+    //         '  ],' +
+    //         '  "Case": {' +
+    //         '    "attributes": {' +
+    //         '      "type": "Case",' +
+    //         '      "url": "/services/data/v66.0/sobjects/Case/5008500000HigGOAAZ"' +
+    //         '    },' +
+    //         '    "Id": "5008500000HigGOAAZ",' +
+    //         '    "IsDeleted": false,' +
+    //         '    "CaseNumber": "00001639",' +
+    //         '    "BusinessHoursId": "01md5000000siQfAAI",' +
+    //         '    "RecordTypeId": "01285000000CMMXAA4",' +
+    //         '    "Status": "Pending",' +
+    //         '    "Origin": "Web",' +
+    //         '    "Priority": "Medium",' +
+    //         '    "IsClosed": false,' +
+    //         '    "IsEscalated": false,' +
+    //         '    "OwnerId": "005d50000049NeDAAU",' +
+    //         '    "IsClosedOnCreate": false,' +
+    //         '    "IsStopped": false,' +
+    //         '    "CreatedDate": "2026-05-06T05:03:47.000+0000",' +
+    //         '    "CreatedById": "005d50000049NeDAAU",' +
+    //         '    "LastModifiedDate": "2026-05-06T06:29:45.000+0000",' +
+    //         '    "LastModifiedById": "005d50000049NeDAAU",' +
+    //         '    "SystemModstamp": "2026-05-06T06:29:45.000+0000",' +
+    //         '    "FEC_Account_Number__c": "0001500010000005476",' +
+    //         '    "FEC_Account_or_Contract__c": "a0h85000002dAOAAA2",' +
+    //         '    "FEC_CS_Support__c": false,' +
+    //         '    "FEC_Category__c": "a0T85000004BTHYEA4",' +
+    //         '    "FEC_Channel__c": "Outbound",' +
+    //         '    "FEC_Customer_Type__c": "Existing",' +
+    //         '    "FEC_Global_Search__c": "O-0028",' +
+    //         '    "FEC_Follow_Up_User__c": "005d50000049NeDAAU|U",' +
+    //         '    "FEC_ID_Search__c": "S-79587",' +
+    //         '    "FEC_Interaction_View_Mode__c": "review",' +
+    //         '    "FEC_Interaction__c": "5008500000HiXjLAAV",' +
+    //         '    "FEC_Is_CS_Customer_Care__c": false,' +
+    //         '    "FEC_Is_In_Create_new_mode__c": false,' +
+    //         '    "FEC_Last_Updated_By__c": "long.nguyen.50",' +
+    //         '    "FEC_Last_Updated_On__c": "2026-05-06T06:29:45.000+0000",' +
+    //         '    "FEC_Product_Type__c": "a0a8500000ByciRAAR",' +
+    //         '    "FEC_Service_Case_Owner__c": "long.nguyen.50",' +
+    //         '    "FEC_Skip_Search_Internal_Case__c": false,' +
+    //         '    "FEC_SubCategory__c": "a0f85000001HD6hAAG",' +
+    //         '    "FEC_SubCode__c": "a0g850000010LNrAAM",' +
+    //         '    "FEC_Account_Contract_Number_Text__c": "0001500010000005476",' +
+    //         '    "FEC_Case_Created_By__c": "long.nguyen.50",' +
+    //         '    "FEC_Case_Created_On__c": "2026-05-06T05:03:47.000+0000",' +
+    //         '    "FEC_Case_ID__c": "<a href=\\"/5008500000HigGO\\" target=\\"_self\\">S-79587</a>",' +
+    //         '    "FEC_Has_Account_or_Contract__c": true,' +
+    //         '    "FEC_Interaction_ID__c": "<a href=\\"/5008500000HiXjL\\" target=\\"_self\\">O-0028</a>",' +
+    //         '    "FEC_Interaction_Status__c": "Open",' +
+    //         '    "FEC_Is_My_Follow_Up__c": false,' +
+    //         '    "FEC_Link_ID__c": "<a href=\\"/5008500000HigGO\\" target=\\"_self\\">S-79587</a>",' +
+    //         '    "FEC_Updated_Info_Gender__c": "M",' +
+    //         '    "FEC_First_Access__c": false,' +
+    //         '    "FEC_Is_Owner__c": false,' +
+    //         '    "FEC_Is_Submited__c": true,' +
+    //         '    "FEC_Search_Products__c": "Card",' +
+    //         '    "FEC_CIF_Number__c": "16605715",' +
+    //         '    "FEC_Case_Participants__c": "005d50000049NeDAAU",' +
+    //         '    "FEC_FCR__c": false,' +
+    //         '    "FEC_Is_Reply_Interaction_email__c": false,' +
+    //         '    "FEC_Is_Save_Closed__c": false,' +
+    //         '    "FEC_On_Hold__c": false,' +
+    //         '    "FEC_Original_Info_Gender__c": "M",' +
+    //         '    "FEC_Original_Info_Phone_Type__c": "Primary Phone",' +
+    //         '    "FEC_Show_Action__c": true,' +
+    //         '    "FEC_Updated_Info_Phone_Type__c": "Primary Phone",' +
+    //         '    "FEC_Case_Status__c": "Pending -",' +
+    //         '    "FEC_Final_Status__c": "Pending -",' +
+    //         '    "FEC_Is_Case_Participants__c": false,' +
+    //         '    "FEC_Get_Next_Work__c": false,' +
+    //         '    "FEC_Is_Created_From_Search__c": false,' +
+    //         '    "FEC_Is_Manager_For_Cur_User__c": false,' +
+    //         '    "FEC_Owner_Is_User__c": true,' +
+    //         '    "FEC_Show_Unfollow__c": false,' +
+    //         '    "FEC_Parent_ID__c": "<a href=\\"/5008500000HigGO\\" target=\\"_self\\"> </a>",' +
+    //         '    "FEC_Is_MyCaseAPI_Interaction__c": false,' +
+    //         '    "FEC_Is_Test_API__c": false,' +
+    //         '    "FEC_Last_Updated_By_View__c": "long.nguyen.50",' +
+    //         '    "FEC_Last_Updated_On_View__c": "2026-05-06T06:29:45.000+0000",' +
+    //         '    "FEC_Assignment_Count__c": 0,' +
+    //         '    "FEC_Is_Call_API_Success__c": false,' +
+    //         '    "MilestoneStatus": ""' +
+    //         '  }' +
     //         '}';
     //     return res;
     // }

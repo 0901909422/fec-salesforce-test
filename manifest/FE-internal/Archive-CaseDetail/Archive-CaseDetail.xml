@@ -19,6 +19,7 @@
         <members>Case.ArchiveMigrationSource__c</members>
         <members>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</members>
         <members>FEC_Customer_History__c.IsArchiveTemp__c</members>
+        <members>FEC_Customer_History__c.ArchiveExternalId__c</members>
         <members>FEC_Product_Type__c.IsArchiveTemp__c</members>
         <members>FEC_Category__c.IsArchiveTemp__c</members>
         <members>FEC_Sub_Category__c.IsArchiveTemp__c</members>
@@ -65,6 +66,7 @@
         <members>CS_TYPE_OF_ATTACHMENT</members>
         <members>CS_DOWNLOAD_ATTACHMENT</members>
         <members>CS_NO_ARCHIVE_ATTACHMENT</members>
+        <members>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</members>
         <name>CustomLabel</name>
     </types>
 

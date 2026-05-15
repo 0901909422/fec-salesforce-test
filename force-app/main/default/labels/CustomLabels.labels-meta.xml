@@ -14099,7 +14099,8 @@
   &quot;FEC_Interaction_ID__c&quot;: &quot;ArchiveInteractionId__c&quot;,
   &quot;FEC_Service_Case_Owner__c&quot;: &quot;ArchiveServiceCaseOwner__c&quot;,
   &quot;FEC_Case_Created_By__c&quot;: &quot;ArchiveCaseCreatedBy__c&quot;,
-  &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;
+  &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;,
+  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;
 }</value>
     </labels>
     <labels>
@@ -15462,5 +15463,15 @@
         <protected>false</protected>
         <shortDescription>TECH_ATTACHMENT_ARCHIVE_PREFIX</shortDescription>
         <value>Att_Archive_</value>
+    </labels>
+    <labels>
+        <fullName>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</shortDescription>
+        <value>{
+  &quot;FEC_Account_or_Contract__c&quot;: &quot;FEC_Customer_History__c&quot;,
+  &quot;FEC_Selected_Address__c&quot;: &quot;FEC_Address_Info__c&quot;
+}</value>
     </labels>
 </CustomLabels>
