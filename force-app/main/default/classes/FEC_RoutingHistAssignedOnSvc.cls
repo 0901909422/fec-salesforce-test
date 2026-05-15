@@ -1,6 +1,8 @@
 /**
  * Report Dashboard — Routing Action History:
  * - FEC_Assigned_On__c (TH1/TH2 phần Assigned)
+ * - TH2.2.2 (Assignment.FEC_Manual__c = true, không prior cùng Assignment): Assigned On = Submitted On của RAH
+ *   cùng Case, Assignment null, Id khác hiện tại, Submitted On <= hiện tại, sort Submitted DESC + Created DESC.
  * - FEC_Submitted_On__c: TH1 (Case-level) = FEC_Date_Time__c; TH2 = submit Assignment
  */
 public without sharing class FEC_RoutingHistAssignedOnSvc {
@@ -235,14 +237,24 @@ public without sharing class FEC_RoutingHistAssignedOnSvc {
         } else if (a == null || a.FEC_Manual__c != true) {
           r.FEC_Assigned_On__c = caseCreatedOn;
         } else {
+          // TH 2.2.2: Assignment.FEC_Manual__c = true — không có prior cùng Assignment.
+          // Chỉ xét RAH cùng Case, FEC_Assignment__c = null, Id khác bản ghi hiện tại,
+          // FEC_Submitted_On__c <= Submitted On bản ghi hiện tại; sort Submitted DESC, CreatedDate DESC (Limit 1).
           List<PriorRah> candManual = new List<PriorRah>();
           for (PriorRah p : pool) {
+            if (p.assignmentId != null) {
+              continue;
+            }
+            if (p.recordId != null && r.Id != null && p.recordId == r.Id) {
+              continue;
+            }
             if (p.submittedOn == null) {
               continue;
             }
-            if (p.submittedOn <= effectiveSubmitted) {
-              candManual.add(p);  
+            if (p.submittedOn > effectiveSubmitted) {
+              continue;
             }
+            candManual.add(p);
           }
           PriorRah bestManual = pickBest(candManual);
           r.FEC_Assigned_On__c = bestManual == null

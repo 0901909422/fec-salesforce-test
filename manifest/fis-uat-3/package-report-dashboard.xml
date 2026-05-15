@@ -30,6 +30,7 @@
 		<members>FEC_CaseRemarksRollupService</members>
 		<members>FEC_CaseRemarksRollupServiceTest</members>
 		<members>FEC_CaseStatusHistoryServiceTest</members>
+		<members>FEC_RoutingHistAssignedOnSvc</members>
 		<name>ApexClass</name>
 	</types>
 	<version>66.0</version>
