@@ -1,0 +1,74 @@
+.hold-case-wrapper {
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: 0.5rem;
+}
+
+.hold-case-title {
+    text-align: center;
+    margin-bottom: 0.75rem;
+}
+
+.hold-case-title h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #032d60;
+}
+
+.hold-case-divider {
+    border: none;
+    border-top: 1px solid #dddbda;
+    margin: 0 0 1rem 0;
+}
+
+.hold-case-body {
+    padding: 0 0.5rem;
+}
+
+.hold-case-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    min-height: 2rem;
+}
+
+.hold-case-label {
+    width: 200px;
+    min-width: 200px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #3e3e3c;
+}
+
+.hold-case-value {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #3e3e3c;
+}
+
+.hold-case-value lightning-combobox {
+    width: 100%;
+}
+
+.hold-case-message {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.hold-case-message--success {
+    color: #2e844a;
+}
+
+.hold-case-message--error {
+    color: #c23934;
+}
+
+.hold-case-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #dddbda;
+}
