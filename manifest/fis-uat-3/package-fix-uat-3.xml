@@ -46,6 +46,7 @@
         <members>FEC_UpdateCustomerAddress</members>
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
+        <members>FEC_BancaController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
