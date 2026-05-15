@@ -2862,6 +2862,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this.showToast(FEC_Error_Title, FEC_Confirm_Before_Submit, 'error');
         return false;
       }
+      // tungnm37: validate phải add ít nhất 1 item khi nút Add Item đang hiển thị
+      if (routingComp && routingComp.requiresManualItemButEmpty && routeToEle && routeToEle.value === ACTION_ROUTE_TO) {
+        this.showToast(FEC_Error_Title, FEC_Confirm_Before_Submit, 'error');
+        return false;
+      }
     }
 
     if (routeToEle) {
