@@ -15663,7 +15663,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hold Case Save Success</shortDescription>
-        <value>Hold Case Config created successfully</value>
+        <value>Hold Case Config created</value>
     </labels>
     <labels>
         <fullName>FEC_Hold_Case_Type</fullName>
