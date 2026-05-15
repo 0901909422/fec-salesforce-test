@@ -24,10 +24,20 @@ public without sharing class FEC_AssignmentTriggerHandler {
             caseToAssignments.get(assignment.FEC_Case__c).add(assignment);
         }
 
-        List<Group> queues = [SELECT Id, Name FROM Group WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE];
+        // tungnm37 fix: chỉ query queues có tên trong assignments thay vì tất cả queues
+        Set<String> queueNamesNeeded = new Set<String>();
+        for (List<FEC_Assignment__c> aList : caseToAssignments.values()) {
+            for (FEC_Assignment__c a : aList) {
+                if (String.isNotBlank(a.FEC_OwnerID__c) && a.FEC_Assignment_Owner__c == null) {
+                    queueNamesNeeded.add(a.FEC_OwnerID__c);
+                }
+            }
+        }
         Map<String, Id> queueNameToId = new Map<String, Id>();
-        for (Group g : queues) {
-            queueNameToId.put(g.Name, g.Id);
+        if (!queueNamesNeeded.isEmpty()) {
+            for (Group g : [SELECT Id, Name FROM Group WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE AND Name IN :queueNamesNeeded]) {
+                queueNameToId.put(g.Name, g.Id);
+            }
         }
 
         List<Case> casesToUpdate = new List<Case>();
