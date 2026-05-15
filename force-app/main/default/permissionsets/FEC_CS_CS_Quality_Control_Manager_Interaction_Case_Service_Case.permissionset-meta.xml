@@ -3887,6 +3887,51 @@
     <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
     <readable>true</readable>
 </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Original_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Original_Sub_Category__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Original_Sub_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Case_Remarks_1__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Case_Remarks_2__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Case_Remarks_3__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_Assigned_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_TAT_Full_Process__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Quality Control Manager - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
