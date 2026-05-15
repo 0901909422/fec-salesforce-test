@@ -2583,6 +2583,8 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Currency_Code__c.FEC_Customer_History__c</field>
+        <editable>true</editable>
+        <field>Case.FEC_Assigment_Mode__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>

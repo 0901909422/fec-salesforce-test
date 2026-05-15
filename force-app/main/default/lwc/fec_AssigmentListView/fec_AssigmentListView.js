@@ -1,4 +1,4 @@
-import { LightningElement, api, wire, track } from "lwc";
+import { LightningElement, api } from "lwc";
 
 import getAssignmentsForView from "@salesforce/apex/FEC_AssignmentListHandler.getAssignmentsForView";
 
@@ -14,8 +14,6 @@ import {
   setTabLabel,
 } from "lightning/platformWorkspaceApi";
 
-import { urlCmpWithRecordId } from "c/fec_CommonUtils";
-
 // Custom labels
 import LABEL_ASSIGNMENT_LIST from "@salesforce/label/c.FEC_Assignment_List";
 import LABEL_ASSIGNMENT_ID from "@salesforce/label/c.FEC_Assignment_Id";
@@ -27,16 +25,32 @@ import LABEL_DATE_TIME from "@salesforce/label/c.FEC_Notification_History_Sort_D
 import LABEL_VIEW_ALL from "@salesforce/label/c.FEC_View_All_Btn_Label";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
 
+import LABEL_RECORDS_PER_PAGE from "@salesforce/label/c.FEC_Record_per_Page";
+
+import LABEL_GO_TO_PAGE from "@salesforce/label/c.FEC_Go_to_page_label";
+
+import LABEL_GO from "@salesforce/label/c.FEC_Go_Button_Label";
+
 export default class Fec_AssigmentListView extends NavigationMixin(
   LightningElement,
 ) {
   @api recordId;
 
-  @track assignments = [];
+  assignments = [];
 
   totalAssignmentCount = 0;
 
   isLoading = false;
+
+  pageSize = 10;
+
+  currentPage = 1;
+
+  totalRecords = 0;
+
+  totalPages = 1;
+
+  goToPageValue = 1;
 
   labels = {
     LABEL_ASSIGNMENT_LIST,
@@ -47,6 +61,9 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     LABEL_USER_ROLE,
     LABEL_DATE_TIME,
     LABEL_VIEW_ALL,
+    pageSizeLabel: LABEL_RECORDS_PER_PAGE,
+    goToPageLabel: LABEL_GO_TO_PAGE,
+    goBtnLabel: LABEL_GO,
   };
 
   columns = [
@@ -98,24 +115,37 @@ export default class Fec_AssigmentListView extends NavigationMixin(
     },
   ];
 
-  @wire(getAssignmentsForView, {
-    caseId: "$recordId",
-    pageSize: 10,
-    pageNumber: 1,
-  })
-  wiredAssignments({ data, error }) {
+  connectedCallback() {
+    this.loadPage();
+  }
+
+  async loadPage() {
     this.isLoading = true;
 
-    if (data) {
-      this.totalAssignmentCount = data.totalCount || 0;
+    try {
+      const result = await getAssignmentsForView({
+        caseId: this.recordId,
+        pageSize: this.pageSize,
+        pageNumber: this.currentPage,
+      });
 
-      this.assignments = (data.assignments || []).map((item) => {
+      this.totalAssignmentCount = result.totalCount || 0;
+
+      this.totalRecords = result.totalCount || 0;
+
+      this.totalPages = Math.max(
+        1,
+        Math.ceil(this.totalRecords / this.pageSize),
+      );
+
+      this.assignments = (result.assignments || []).map((item) => {
         return {
           id: item.id,
 
           assignmentId: item.assignmentId,
 
-          assignmentUrl: `/lightning/r/FEC_Assignment__c/${item.id}/view`,
+          assignmentUrl:
+            `/lightning/r/FEC_Assignment__c/${item.id}/view`,
 
           assignmentName: item.assignmentName,
 
@@ -125,25 +155,30 @@ export default class Fec_AssigmentListView extends NavigationMixin(
 
           assignmentStatus: item.assignmentStatus,
 
-          user: getUsernameBeforeAt(item.user),
+          user: item.user
+            ? getUsernameBeforeAt(item.user)
+            : "",
 
           userRole: item.userRole,
 
-          dateTime: formatDateTime(item.latestModifiedDateTime),
+          dateTime: formatDateTime(
+            item.latestModifiedDateTime,
+          ),
         };
       });
-
-      this.isLoading = false;
-    } else if (error) {
-      this.isLoading = false;
-
-      console.error("getAssignmentsForView error", JSON.stringify(error));
+    } catch (error) {
+      console.error(
+        "getAssignmentsForView error",
+        JSON.stringify(error),
+      );
 
       this.showToast(
         FEC_Error_Title,
         "Failed to load assignment list",
         "error",
       );
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -155,9 +190,75 @@ export default class Fec_AssigmentListView extends NavigationMixin(
   get showTable() {
     return this.totalAssignmentCount > 0;
   }
-  // SHOW VIEW ALL
-  get showViewAll() {
-    return true;
+
+  get pageSizeOptions() {
+    return [
+      { label: "10", value: 10 },
+      { label: "20", value: 20 },
+      { label: "30", value: 30 },
+      { label: "40", value: 40 },
+      { label: "50", value: 50 },
+    ];
+  }
+
+  get isFirstPage() {
+    return this.currentPage === 1;
+  }
+
+  get isLastPage() {
+    return this.currentPage >= this.totalPages;
+  }
+
+  async handlePageSizeChange(event) {
+    this.pageSize = Number(event.detail.value);
+
+    this.currentPage = 1;
+
+    this.goToPageValue = 1;
+
+    await this.loadPage();
+  }
+
+  async handlePrevPage() {
+    if (this.isFirstPage) {
+      return;
+    }
+
+    this.currentPage--;
+
+    this.goToPageValue = this.currentPage;
+
+    await this.loadPage();
+  }
+
+  async handleNextPage() {
+    if (this.isLastPage) {
+      return;
+    }
+
+    this.currentPage++;
+
+    this.goToPageValue = this.currentPage;
+
+    await this.loadPage();
+  }
+
+  handleGoToPageInput(event) {
+    this.goToPageValue = Number(event.target.value);
+  }
+
+  async handleGoToPage() {
+    if (
+      !this.goToPageValue ||
+      this.goToPageValue < 1 ||
+      this.goToPageValue > this.totalPages
+    ) {
+      return;
+    }
+
+    this.currentPage = this.goToPageValue;
+
+    await this.loadPage();
   }
 
   async handleViewAll() {

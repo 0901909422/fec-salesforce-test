@@ -16,6 +16,8 @@ public with sharing class FEC_ConstantCommon {
 
     /** Chuỗi rỗng dùng chung (default khi value blank). */
     public static final String STR_EMPTY = '';
+    public static final String STR_PERCENT = '%';
+    public static final String STR_DASH = '-';
 
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';

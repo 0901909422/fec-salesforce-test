@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, CUSTOMER_PHONE_NUMBER } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FIELD_CONTACT_CHANNEL } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -143,6 +143,8 @@ const FIELD_ZALO_USED = "FEC_Zalo_Used__c";
 const FIELD_DEBT_COLLECTION_PHONE = "FEC_Debt_Collection_Phone__c";
 const FIELD_RECIPIENT_PHONE_NUMBER = "FEC_Recipient_Phone_Number__c";
 const FIELD_UNBLOCK_PHONE = "FEC_Unblock_Phone__c";
+const CUSTOMER_PHONE_NUMBER_SUB = "FEC_Customer_Phone_Number__c";
+const FIELD_FEOL_Phone__c = "FEC_FEOL_Phone__c";
 const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_ORIGINAL_INFO_PHONE_NUMBER,
   FIELD_UPDATED_INFO_PHONE_NUMBER,
@@ -159,11 +161,15 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
   FIELD_RECIPIENT_PHONE_NUMBER,
-  CUSTOMER_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
   FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
+  CUSTOMER_PHONE_NUMBER_SUB,
+  FIELD_FEOL_Phone__c,
+  FIELD_CUSTOMER_PHONE_NUMBER,
+  FIELD_RECEIVING_PHONE_NUMBER,
+  FIELD_CONTACT_CHANNEL
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -190,6 +196,8 @@ const FIELD_OLD_CITIZEN_ID_NUMBER = "FEC_Old_Citizen_ID_Number__c";
 const FIELD_ORIGINAL_INFO_NATIONAL_ID = "FEC_Original_Info_National_ID__c";
 const FIELD_UPDATED_INFO_NATIONAL_ID = "FEC_Updated_Info_National_ID__c";
 const FIELD_NATIONAL_ID_PASSPORT_ID = "FEC_National_ID_Passport_ID__c";
+const FIELD_NATIONAL_ID = "FEC_National_ID__c";
+const FIELD_FEOL_ID = "FEC_FEOL_ID__c";
 const OBJ_FEC_ADDITIONAL_INFO = "FEC_Additional_Info__c";
 const FIELD_FEC_REF_NUMBER = "FEC_REF_Number__c";
 const NATIONAL_ID_PASSPORT_FIELDS = new Set([
@@ -501,6 +509,7 @@ function normalizeMasterDataLwcEntry(entry) {
         ? o.fecMasterDataSettingIsEdit
         : true,
     hideSubSectionHeading: o.hideSubSectionHeading === true,
+    isCollapsible: o.isCollapsible === true,
   };
 }
 
@@ -1135,12 +1144,13 @@ export default class Fec_CaseBussiness extends LightningElement {
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
+    const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = !this._isEdit;
-            field.editable = this._isEdit;
+            field.readonly = isCOFStage1Revert ? true : !this._isEdit;
+            field.editable = isCOFStage1Revert ? false : this._isEdit;
           });
         });
       });
@@ -1797,6 +1807,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     const nationalIdOnlyFields = [
       FIELD_NEW_CITIZEN_ID_NUMBER,
       FIELD_OLD_CITIZEN_ID_NUMBER,
+      FIELD_NATIONAL_ID,
+      FIELD_FEOL_ID,
     ];
     const nationalIdOrPassportFields = [FIELD_UPDATED_INFO_NATIONAL_ID];
 
@@ -2015,6 +2027,17 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business = { ...this.business };
     }
     if (fieldName === FIELD_OLD_CITIZEN_ID_NUMBER && field) {
+      const trimmed =
+        value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
+      const idResult = validateNationalId(value);
+      field.customError =
+        trimmed === STR_EMPTY ? null : idResult.isValid ? null : idResult.message;
+      field.editWrapperClass =
+        "edit slds-m-around--small slds-p-around--x-small" +
+        (field.customError ? " slds-has-error" : STR_EMPTY);
+      this.business = { ...this.business };
+    }
+    if ((fieldName === FIELD_NATIONAL_ID || fieldName === FIELD_FEOL_ID) && field) {
       const trimmed =
         value != null && typeof value === "string" ? value.trim() : STR_EMPTY;
       const idResult = validateNationalId(value);

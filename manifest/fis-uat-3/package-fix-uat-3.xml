@@ -44,6 +44,9 @@
         <members>FEC_RemovePhoneController</members>
         <members>FEC_GetIPPDetailsCallout</members>
         <members>FEC_UpdateCustomerAddress</members>
+        <members>FEC_CardEligibilityController</members>
+        <members>FEC_AssignmentTriggerHandler</members>
+        <members>FEC_BancaController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -95,8 +98,11 @@
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
+        <members>Case.FEC_Assigment_Mode__c</members>
+        <members>Case.FEC_Complain_Type__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
+        <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -112,6 +118,10 @@
         <members>FEC_MSG_Service_Error_Label</members>
         <members>FEC_UpdateDisb_Msg_DisbDT_Required</members>
         <members>FEC_Assignment_Remark_Label</members>
+		<members>FEC_LABEL_Months</members>
+        <members>FEC_LABEL_API_Code</members>
+        <members>FEC_LABEL_Description</members>
+        <members>FEC_MSG_Parsing_Error</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
