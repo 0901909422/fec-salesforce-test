@@ -137,6 +137,7 @@ public without sharing class FEC_CaseBusinessService {
             List<Case> caselst = [
         SELECT
           Id,
+          CreatedDate,
           FEC_Product_Type__c,
           FEC_Category__c,
           FEC_SubCategory__c,
@@ -189,6 +190,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Case_Phone_Number__c,
           FEC_Case_Email__c,
           FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+          FEC_Account_or_Contract__r.FEC_Product_Code__c,
+          FEC_Account_or_Contract__r.FEC_Days_Past_Due__c,
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
@@ -557,6 +560,22 @@ public without sharing class FEC_CaseBusinessService {
             }
           }
           when else {
+          }
+        }
+        // MRC Return (Batch 7): SubCategory có mã RL05 — chặn Case Information theo Product TW / DPD (không phụ thuộc map Business Process).
+        if (
+          err.errorlst.isEmpty() &&
+          String.isNotBlank(result.subCategoryCode) &&
+          result.subCategoryCode.toUpperCase().contains('RL05')
+        ) {
+          Error mrcErr = mrcReturnCaseInformationValidate(
+            selectedCase,
+            result.subCategoryCode,
+            result.subCodeCode
+          );
+          if (!mrcErr.errorlst.isEmpty()) {
+            err = mrcErr;
+            result.sectionlst.add(new Section('Case Information', err));
           }
         }
       } catch (DmlException e) {
@@ -1050,6 +1069,8 @@ public without sharing class FEC_CaseBusinessService {
         }
       }
 
+      // RL05: định tuyến hiển thị / Route to theo bản ghi FEC_Stage_Change__c (resolveRouteToDisplayInfo + route).
+      // Data admin: tạo Stage Change đúng Previous Stage + Action Route to + Queue/Team — không hardcode SP/OM tại đây.
       FEC_BlockCodeRoutingService.applyToBusinessIfApplicable(
         selectedCase,
         result,
@@ -1111,6 +1132,25 @@ public without sharing class FEC_CaseBusinessService {
           && result.lockApiLwcsAfterRevertToDefaultStage != true;
       // tungnm37 thêm: trả customerType để LWC fec_RoutingAssignment query đúng
       result.customerType = selectedCase.FEC_Customer_Type__c;
+
+      try {
+        FEC_MrcDuplicateCaseService.OpenDupInfo mrcDupInfo = FEC_MrcDuplicateCaseService.findOlderOpenRl05DuplicateInfo(
+          selectedCase.Id,
+          selectedCase.FEC_Account_or_Contract__c,
+          selectedCase.CreatedDate,
+          result.subCategoryCode,
+          result.subCodeCode
+        );
+        if (mrcDupInfo != null) {
+          result.mrcRl0502DuplicateOpenCaseId = mrcDupInfo.caseIdStr;
+          result.mrcRl0502DuplicateCaseNumber = mrcDupInfo.caseNumber;
+        }
+      } catch (Exception mrcDupEx) {
+        System.debug(
+          LoggingLevel.WARN,
+          'getByCase MRC RL05.02 duplicate banner: ' + mrcDupEx.getMessage()
+        );
+      }
 
       if (Schema.sObjectType.Case.isUpdateable()) {
         try {
@@ -3735,6 +3775,14 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public String code;
 
+    /** RL05.02 — Id Case RL05 cũ hơn cùng hợp đồng (mở); null nếu không có. */
+    @AuraEnabled
+    public String mrcRl0502DuplicateOpenCaseId;
+
+    /** Số Case (CaseNumber) của bản trùng RL05.02. */
+    @AuraEnabled
+    public String mrcRl0502DuplicateCaseNumber;
+
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
@@ -4386,6 +4434,53 @@ public without sharing class FEC_CaseBusinessService {
     } catch (DmlException e) {
       throw new AuraHandledException(e.getMessage());
     }
+  }
+
+  /**
+   * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
+   * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
+   */
+  public static Error mrcReturnCaseInformationValidate(
+    Case selectedCase,
+    String subCategoryCode,
+    String subCodeCode
+  ) {
+    List<String> errorlst = new List<String>();
+
+    if (String.isBlank(subCategoryCode)) {
+      return new Error();
+    }
+    Boolean isMrcRl05Branch = subCategoryCode.toUpperCase().contains('RL05');
+    if (!isMrcRl05Branch) {
+      return new Error();
+    }
+
+    if (
+      selectedCase == null ||
+      selectedCase.FEC_Account_or_Contract__c == null ||
+      selectedCase.FEC_Account_or_Contract__r == null
+    ) {
+      return new Error();
+    }
+
+    String productCode = selectedCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+    if (String.isNotBlank(productCode)) {
+      if (!'TW'.equalsIgnoreCase(productCode.trim())) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_Product_Not_TW);
+      }
+    }
+
+    if (String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RL05.03')) {
+      Decimal dpd = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (dpd != null && dpd >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
+
+    if (errorlst.isEmpty()) {
+      return new Error();
+    }
+    return new Error(System.Label.FEC_MRC_Return_Case_Info_Block_Title, errorlst);
   }
 
   public static Error phoneUpdateValidate(Id cHistoryId) {

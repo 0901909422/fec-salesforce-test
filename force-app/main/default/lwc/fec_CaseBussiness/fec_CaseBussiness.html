@@ -1,6 +1,23 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
+  <template if:true={businessLoaded}>
+    <template if:true={showMrcRl0502DupBanner}>
+      <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-around_small" role="alert">
+        <span class="slds-assistive-text">warning</span>
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+          <div class="slds-col">
+            <h2 class="slds-text-heading_small">{mrcRl0502DupBannerText}</h2>
+          </div>
+          <div class="slds-col slds-no-flex">
+            <lightning-button variant="neutral" label={customLabel.mrcDupOpenCaseBtn} onclick={handleOpenMrcDupCase}>
+            </lightning-button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility}>
     <!-- section -->
