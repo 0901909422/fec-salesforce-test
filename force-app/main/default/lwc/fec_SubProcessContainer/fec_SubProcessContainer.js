@@ -9,6 +9,7 @@ import {
 
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
+import getCase from "@salesforce/apex/FEC_SubProcessService.getCase";
 
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
@@ -18,7 +19,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   subscription = null;
   params;
-
+  isSubmitted = false;
   showHoldCase = false;
   showRemovePhone = false;
   showDoNotBother = false;
@@ -26,6 +27,8 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   connectedCallback() {
     this.subscribeToMessageChannel();
+
+    this.initializeCase();
   }
 
   disconnectedCallback() {
@@ -41,7 +44,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
       this.messageContext,
       CASE_NOC,
       (message) => this.handleMessage(message),
-      { scope: APPLICATION_SCOPE }
+      { scope: APPLICATION_SCOPE },
     );
   }
 
@@ -95,6 +98,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
       console.error("[fec_SubProcessContainer] wire error", error);
     }
   }
+
   //linhdev: Save remove phone draft if applicable
   @api saveRemovePhoneDraftIfApplicable() {
     const el =
@@ -104,5 +108,30 @@ export default class Fec_SubProcessContainer extends LightningElement {
       return Promise.resolve();
     }
     return el.saveDraftIfApplicable();
+  }
+
+  async initializeCase() {
+    try {
+      this.isSubmitted = await getCase({
+        caseId: this.recordId,
+      });
+
+      console.log("isSubmitted = ", this.isSubmitted);
+
+      /*
+       * Force show all subprocesses
+       */
+      if (this.isSubmitted) {
+        this.showHoldCase = true;
+
+        this.showRemovePhone = true;
+
+        this.showDoNotBother = true;
+
+        this.showTransferCall = true;
+      }
+    } catch (error) {
+      console.error("[initializeCase] ERROR", error);
+    }
   }
 }
