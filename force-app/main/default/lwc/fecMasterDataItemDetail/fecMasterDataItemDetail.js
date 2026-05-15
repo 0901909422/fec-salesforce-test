@@ -1,6 +1,8 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import fetchAllMasterDataMappings from '@salesforce/apex/FEC_NatureOfCaseTreeService.fetchAllMasterDataMappings';
 import updateNode from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNode';
+import getNocDetail from '@salesforce/apex/FEC_NatureOfCaseTreeController.getNocDetail';
+import updateNocFields from '@salesforce/apex/FEC_NatureOfCaseTreeController.updateNocFields';
 import { showLog } from 'c/fecMDMUtils';
 import LABEL_ALIAS from '@salesforce/label/c.FEC_Label_Alias';
 import LABEL_NAME_EN from '@salesforce/label/c.FEC_Label_Name_EN';
@@ -25,7 +27,22 @@ import LABEL_NAME_VN_DISPLAY from '@salesforce/label/c.FEC_Label_Name_VN_Display
 import LABEL_TYPE_DISPLAY from '@salesforce/label/c.FEC_Label_Type_Display';
 import LABEL_UPDATED_SUCCESS from '@salesforce/label/c.FEC_Updated_Success';
 import LABEL_PLEASE_FILL_ALL from '@salesforce/label/c.FEC_Please_Fill_All';
-import { VARIANT_SUCCESS, VARIANT_ERROR, ICON_MAP, ICON_FALLBACK, TYPE_TEXT, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, PREFIX_SCAT, PREFIX_SC, OBJECT_MAP } from 'c/fecConstants';
+// NOC section labels
+import LABEL_SECTION_NODE_INFO from '@salesforce/label/c.FEC_Section_Node_Info';
+import LABEL_SECTION_NOC from '@salesforce/label/c.FEC_Section_Nature_Of_Case';
+import LABEL_NOC_CODE from '@salesforce/label/c.FEC_Label_NOC_Code';
+import LABEL_CUSTOMER_TYPE from '@salesforce/label/c.FEC_Label_Customer_Type';
+import LABEL_USER_GROUP from '@salesforce/label/c.FEC_Label_User_Group';
+import LABEL_NOC_ACTIVE from '@salesforce/label/c.FEC_Label_NOC_Active';
+import LABEL_ERROR_LOAD_NOC from '@salesforce/label/c.FEC_Error_Load_NOC';
+import LABEL_BUTTON_SAVE_NODE_DETAILS from '@salesforce/label/c.FEC_Button_Save_Node_Details';
+import LABEL_TOAST_SUCCESS from '@salesforce/label/c.FEC_Toast_Success';
+import LABEL_SUB_PROCESSES from '@salesforce/label/c.FEC_Label_Sub_Processes';
+import LABEL_DO_NOT_BOTHER from '@salesforce/label/c.FEC_Label_Do_Not_Bother';
+import LABEL_TRANSFER_CALL from '@salesforce/label/c.FEC_Label_Transfer_Call';
+import LABEL_REMOVE_PHONE from '@salesforce/label/c.FEC_Label_Remove_Phone';
+import LABEL_NOTHING_TO_SAVE from '@salesforce/label/c.FEC_Toast_Nothing_To_Save';
+import { VARIANT_SUCCESS, VARIANT_ERROR, VARIANT_INFO, ICON_MAP, ICON_FALLBACK, TYPE_TEXT, OBJ_PRODUCT_TYPE, OBJ_BUSINESS_PROCESS, OBJ_CATEGORY, OBJ_SUB_CATEGORY, OBJ_SUB_CODE, PREFIX_PT, PREFIX_BP, PREFIX_CAT, PREFIX_SCAT, PREFIX_SC, OBJECT_MAP } from 'c/fecConstants';
 
 const NODE_PRODUCT_LINE = 'Product_Line';
 const NODE_SERVICE_TYPE = 'Service_Type';
@@ -33,19 +50,64 @@ const NODE_CATEGORY = 'Category';
 const NODE_SUB_CATEGORY = 'Sub_Category';
 const NODE_ACTION = 'Action';
 
+const CUSTOMER_TYPE_OPTIONS = [
+    { label: 'All', value: 'All' },
+    { label: 'Existing', value: 'Existing' },
+    { label: 'Non-existing', value: 'Non-existing' }
+];
+
+// User Group options matching Global Value Set "User_Group" (same as Live object)
+const USER_GROUP_OPTIONS = [
+    { label: 'CA', value: 'CA' },
+    { label: 'CC', value: 'CC' },
+    { label: 'CL', value: 'CL' },
+    { label: 'CO', value: 'CO' },
+    { label: 'CP', value: 'CP' },
+    { label: 'CX', value: 'CX' },
+    { label: 'DS', value: 'DS' },
+    { label: 'EC', value: 'EC' },
+    { label: 'F2F', value: 'F2F' },
+    { label: 'IA', value: 'IA' },
+    { label: 'IB', value: 'IB' },
+    { label: 'IT', value: 'IT' },
+    { label: 'OB', value: 'OB' },
+    { label: 'OM', value: 'OM' },
+    { label: 'PM', value: 'PM' },
+    { label: 'QC', value: 'QC' },
+    { label: 'SP', value: 'SP' },
+    { label: 'TS', value: 'TS' }
+];
+
 export default class FecMasterDataItemDetail extends LightningElement {
     @track editedItem = {};
     @track loading = false;
     @track isDirty = false;
 
-    // ==========================================================
-    // KHỐI CODE BỔ SUNG CHO HISTORY
-    // ==========================================================
-    @track isHistoryVisible = false;
+    // ── NOC Section State ──────────────────────────────────────
+    @track nocData = {};
+    @track nocOriginal = {};
+    @track nocLoading = false;
+    nocError = null;
+    customerTypeOptions = CUSTOMER_TYPE_OPTIONS;
+    userGroupOptions = USER_GROUP_OPTIONS;
+    // Tab default
 
-    get mainPanelSize() { return this.isHistoryVisible ? 9 : 12; }
-    get toggleHistoryIcon() { return this.isHistoryVisible ? 'utility:close' : 'utility:history'; }
-    get toggleHistoryLabel() { return this.isHistoryVisible ? 'Đóng Lịch sử' : 'Xem Lịch sử'; }
+    // NOC labels
+    labelSectionNodeInfo = LABEL_SECTION_NODE_INFO;
+    labelSectionNoc = LABEL_SECTION_NOC;
+    labelNocCode = LABEL_NOC_CODE;
+    labelCustomerType = LABEL_CUSTOMER_TYPE;
+    labelUserGroup = LABEL_USER_GROUP;
+    labelNocActive = LABEL_NOC_ACTIVE;
+    labelSaveNodeDetails = LABEL_BUTTON_SAVE_NODE_DETAILS;
+    labelSubProcesses = LABEL_SUB_PROCESSES;
+    labelDoNotBother = LABEL_DO_NOT_BOTHER;
+    labelTransferCall = LABEL_TRANSFER_CALL;
+    labelRemovePhone = LABEL_REMOVE_PHONE;
+
+    // ==========================================================
+    // HISTORY (inline collapsible per tab)
+    // ==========================================================
 
     // Tính toán động Object API Name để truyền xuống History Component
     get historyObjectApiName() {
@@ -66,31 +128,62 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return '';
     }
 
-    handleToggleHistory() {
-        this.isHistoryVisible = !this.isHistoryVisible;
+    get nocHistoryObjectApiName() {
+        return 'FEC_MDM_Nature_Of_Case__c';
+    }
+
+    get nocRecordId() {
+        return this.item?.id || '';
+    }
+
+    get hasNocData() {
+        return this.nocData && this.nocData.id;
+    }
+
+    get isNocDirty() {
+        if (!this.nocData || !this.nocOriginal) return false;
+        return this.nocData.customerType !== this.nocOriginal.customerType
+            || this.nocData.userGroup !== this.nocOriginal.userGroup
+            || String(this.nocData.active) !== String(this.nocOriginal.active)
+            || String(this.nocData.doNotBother) !== String(this.nocOriginal.doNotBother)
+            || String(this.nocData.transferCallToCollection) !== String(this.nocOriginal.transferCallToCollection)
+            || String(this.nocData.removePhone) !== String(this.nocOriginal.removePhone);
+    }
+
+    // Convert semicolon-separated userGroup string to array for dual-listbox
+    get selectedUserGroups() {
+        const ug = this.nocData?.userGroup;
+        if (!ug) return [];
+        return ug.split(';').map(v => v.trim()).filter(v => v);
     }
 
     refreshHistoryPanel() {
         const historyComp = this.template.querySelector('[data-id="historyComponent"]');
-        if (historyComp) {
+        if (historyComp && historyComp.refreshData) {
             historyComp.refreshData();
-        } else {
-            this._pendingHistoryRefresh = true;
+        }
+        const nocHistoryComp = this.template.querySelector('[data-id="nocHistoryComponent"]');
+        if (nocHistoryComp && nocHistoryComp.refreshData) {
+            nocHistoryComp.refreshData();
         }
     }
 
     // THÊM MỚI: Expose hàm này ra để Component Cha (Container) có thể gọi được
     @api
     refreshHistory() {
-        if (this.isHistoryVisible) {
-            this.refreshHistoryPanel();
-        }
+        this.refreshHistoryPanel();
     }
     // ==========================================================
 
     get isUndoDisabled() {
-        console.log('[DEBUG][isUndoDisabled getter] called, isDirty:', this.isDirty, '-> returns:', !this.isDirty);
-        return !this.isDirty;
+        return !this.isDirty && !this.isNocDirty;
+    }
+
+    /**
+     * Save button enabled only when there is something to save on this tab
+     */
+    get isSaveDisabled() {
+        return !this.isDirty && !this.isNocDirty;
     }
     error = null;
 
@@ -117,6 +210,12 @@ export default class FecMasterDataItemDetail extends LightningElement {
 
     get nodeType() {
         return this.item?.type;
+    }
+
+    /** Customer Type chỉ cho sửa khi node là Product Type (root) */
+    get isCustomerTypeDisabled() {
+        const t = this.nodeType;
+        return t !== NODE_PRODUCT_LINE && t !== OBJ_PRODUCT_TYPE && t !== 'Product Type';
     }
 
     @wire(fetchAllMasterDataMappings)
@@ -238,6 +337,9 @@ export default class FecMasterDataItemDetail extends LightningElement {
         const name = this.editedItem?.name || '';
         const parts = name ? name.split('_') : [];
         this.selectedNodePrefix = parts.length > 1 ? parts[0] : null;
+
+        // Load NOC data for the new node
+        this.loadNocData();
     }
 
     get item() {
@@ -426,10 +528,91 @@ export default class FecMasterDataItemDetail extends LightningElement {
         return label || nodeType;
     }
 
+    // ── NOC Data Methods ──────────────────────────────────────
+    async loadNocData() {
+        const nocId = this._item?.id;
+        if (!nocId) {
+            this.nocData = {};
+            this.nocOriginal = {};
+            return;
+        }
+        this.nocLoading = true;
+        this.nocError = null;
+        try {
+            const result = await getNocDetail({ nocId });
+            this.nocData = {
+                ...result,
+                active: result.active === 'true',
+                doNotBother: result.doNotBother === 'true',
+                transferCallToCollection: result.transferCallToCollection === 'true',
+                removePhone: result.removePhone === 'true'
+            };
+            this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
+        } catch (error) {
+            this.nocError = error;
+            this.nocData = {};
+            this.nocOriginal = {};
+            console.error('[loadNocData] ERROR:', error);
+            this.showToast(LABEL_ERROR, LABEL_ERROR_LOAD_NOC, VARIANT_ERROR);
+        } finally {
+            this.nocLoading = false;
+        }
+    }
+
+    handleNocInputChange(event) {
+        const field = event.target.dataset.nocField;
+        let value;
+        if (event.target.type === 'checkbox' || event.target.type === 'toggle') {
+            value = event.target.checked;
+        } else if (field === 'userGroup') {
+            // dual-listbox returns array — join with semicolon to match Salesforce multi-select format
+            value = event.detail.value.join(';');
+        } else {
+            value = event.target.value;
+        }
+
+        this.nocData = { ...this.nocData, [field]: value };
+
+        // Dispatch buffer change so parent tracks NOC dirty state too
+        this.dispatchEvent(new CustomEvent('nodebufferchange', {
+            detail: { ...this.editedItem, _nocData: this.nocData },
+            bubbles: true,
+            composed: true
+        }));
+    }
+
+    /**
+     * @description Save NOC fields independently (called by Save All flow from parent)
+     */
+    @api
+    async saveNocFields() {
+        if (!this.isNocDirty || !this.nocData.id) return;
+        try {
+            await updateNocFields({
+                nocId: this.nocData.id,
+                customerType: this.nocData.customerType || '',
+                userGroup: this.nocData.userGroup || '',
+                isActive: this.nocData.active,
+                doNotBother: this.nocData.doNotBother,
+                transferCallToCollection: this.nocData.transferCallToCollection,
+                removePhone: this.nocData.removePhone,
+                nodeId: this.editedItem?.idType || null,
+                nodeType: this.editedItem?.type || null
+            });
+            // Update original to match saved state
+            this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
+        } catch (error) {
+            throw error; // Let parent handle the error
+        }
+    }
+
     handleRefresh() {
         // 1. Tự Component Con khôi phục về bản gốc (A1)
         this.editedItem = JSON.parse(JSON.stringify(this._originalItem));
         this.isDirty = false;
+
+        // Reset NOC data to original
+        this.nocData = JSON.parse(JSON.stringify(this.nocOriginal));
 
         // 2. Chỉ báo cho Cha biết idType để Cha xóa dòng đó khỏi pendingChanges
         this.dispatchEvent(new CustomEvent('nodebufferreset', {
@@ -453,12 +636,63 @@ export default class FecMasterDataItemDetail extends LightningElement {
         // Lấy dữ liệu vừa edit đè lên dữ liệu gốc để xác nhận đã lưu
         const updatedItem = { ...this._item, ...this.editedItem };
         this._originalItem = JSON.parse(JSON.stringify(updatedItem));
-        this._item = JSON.parse(JSON.stringify(updatedItem)); // Sync _item too
+        this._item = JSON.parse(JSON.stringify(updatedItem));
         this.editedItem = JSON.parse(JSON.stringify(updatedItem));
+
+        // Mark NOC as saved too
+        if (this.nocData && this.nocData.id) {
+            this.nocOriginal = JSON.parse(JSON.stringify(this.nocData));
+        }
 
         // Tắt trạng thái thay đổi -> Nút Undo sẽ lập tức bị Disable
         this.isDirty = false;
         showLog('markAsSaved', 'Đã cập nhật bản gốc và disable nút Undo');
+    }
+
+    /**
+     * Save BOTH Node fields and NOC fields (Sub-Processes, User Group, etc.)
+     * in this tab at once. Triggered by the local "Save Node Details" button.
+     */
+    async handleSaveNodeDetails() {
+        if (!this.isDirty && !this.isNocDirty) {
+            this.showToast('', LABEL_NOTHING_TO_SAVE, VARIANT_INFO);
+            return;
+        }
+        if (!this.validateForm()) {
+            this.showToast(LABEL_ERROR, LABEL_PLEASE_FILL_ALL, VARIANT_ERROR);
+            return;
+        }
+        this.loading = true;
+        try {
+            // 1. Save node-level fields (Alias/NameEN/NameVN/PosOrder/Status) if dirty
+            if (this.isDirty) {
+                await updateNode({ updateData: { ...this.editedItem } });
+            }
+            // 2. Save NOC-level fields (Customer Type / Active / Sub-Processes / User Group) if dirty
+            if (this.isNocDirty && this.nocData && this.nocData.id) {
+                await updateNocFields({
+                    nocId: this.nocData.id,
+                    customerType: this.nocData.customerType || '',
+                    userGroup: this.nocData.userGroup || '',
+                    isActive: this.nocData.active,
+                    doNotBother: this.nocData.doNotBother,
+                    transferCallToCollection: this.nocData.transferCallToCollection,
+                    removePhone: this.nocData.removePhone,
+                    nodeId: this.editedItem?.idType || null,
+                    nodeType: this.editedItem?.type || null
+                });
+            }
+            this.showToast(LABEL_TOAST_SUCCESS, LABEL_UPDATED_SUCCESS, VARIANT_SUCCESS);
+            this.markAsSaved();
+            // Notify parent so tree / pending changes are refreshed
+            this.dispatchEvent(new CustomEvent('save', { bubbles: true, composed: true }));
+            this.refreshHistoryPanel();
+        } catch (error) {
+            this.showToast(LABEL_ERROR, error.body?.message || error.message, VARIANT_ERROR);
+            showLog('handleSaveNodeDetails ERROR', error);
+        } finally {
+            this.loading = false;
+        }
     }
 
     connectedCallback() {

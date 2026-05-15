@@ -10,12 +10,6 @@
                         node-data={item}></c-fec-flow-configuration>
                 </div>
 
-                <div class="slds-grid slds-grid_align-end slds-m-bottom_small">
-                    <lightning-button label={toggleHistoryLabel} icon-name={toggleHistoryIcon}
-                        variant={toggleButtonVariant} onclick={handleToggleHistory}>
-                    </lightning-button>
-                </div>
-
                 <lightning-tabset variant="scoped">
                     <lightning-tab label="Property Configuration">
                         <lightning-card title={labelCardTitle} icon-name="standard:settings">
@@ -76,15 +70,12 @@
                                             size="xx-small"></lightning-icon>
                                     </span>
                                 </div>
+                                <div class="slds-col">{labelColEditableRole}</div>
                                 <div class="slds-col" onclick={handleSort} data-field="FEC_Sub_Section_Order__c"
                                     style="text-align: center;">
                                     {labelColSubSecOrder}
                                 </div>
-                                <div class="slds-col" style="text-align: center;">{labelColSubSecLayout}</div>
-                                <div class="slds-col" style="text-align: center;">{labelColSubSecField}</div>
-                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Status__c"
-                                    style="text-align: center;">{labelColStatus}</div>
-                                <div class="slds-col">{labelColEditableRole}</div>
+                                <div class="slds-col" style="text-align: center;">Số cột</div>
                                 <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Order_Display__c"
                                     style="text-align: center;">
                                     {labelColOrder}
@@ -93,6 +84,8 @@
                                             size="xx-small"></lightning-icon>
                                     </span>
                                 </div>
+                                <div class="slds-col" onclick={handleSort} data-field="FEC_Field_Status__c"
+                                    style="text-align: center;">{labelColStatus}</div>
                                 <div class="slds-col" style="text-align: center;">{labelColProcessStatus}</div>
                                 <div class="slds-col" style="text-align: center;">{labelAction}</div>
                             </div>
@@ -126,22 +119,20 @@
                                                 title={row.FEC_Section__c}>{row.FEC_Section__c}</div>
                                             <div class="slds-col slds-truncate"
                                                 title={row.FEC_Sub_Section__c}>{row.FEC_Sub_Section__c}</div>
+                                            <div class="slds-col slds-truncate"
+                                                title={row.FEC_Editable_Role__c}>{row.FEC_Editable_Role__c}</div>
                                             <div class="slds-col" style="text-align: center;">
                                                 {row.FEC_Sub_Section_Order__c}</div>
                                             <div class="slds-col" style="text-align: center;">
-                                                {row.FEC_Sub_Section_Layout__c}</div>
+                                                {row.computedColumnCount}</div>
                                             <div class="slds-col" style="text-align: center;">
-                                                {row.FEC_Sub_Section_Field_Layout__c}</div>
+                                                {row.FEC_Field_Order_Display__c}</div>
 
                                             <div class="slds-col" style="text-align: center;">
                                                 <lightning-icon if:true={row.FEC_Field_Status__c}
                                                     icon-name="utility:check" variant="success"
                                                     size="xx-small"></lightning-icon>
                                             </div>
-                                            <div class="slds-col slds-truncate"
-                                                title={row.FEC_Editable_Role__c}>{row.FEC_Editable_Role__c}</div>
-                                            <div class="slds-col" style="text-align: center;">
-                                                {row.FEC_Field_Order_Display__c}</div>
 
                                             <div class="slds-col slds-truncate"
                                                 style="text-align: center;"
@@ -162,6 +153,14 @@
                             </template>
                           </div>
                         </div>
+                        <template if:true={hasPropertyData}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ Lịch sử</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-setting-history-by-noc data-id="propertyHistory" noc-id={currentNatureOfCaseId} is-integration={isPropertyIntegration}></c-fec-setting-history-by-noc>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
                     <lightning-tab label={labelTabFraudIntegration}>
@@ -232,9 +231,29 @@
 
                                             <div class="slds-m-bottom_medium">
                                                 <label class="slds-form-element__label">Settings</label>
-                                                <div class="slds-grid slds-gap_medium">
+                                                <div class="slds-grid slds-wrap slds-gutters">
+                                                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                                                        <lightning-combobox
+                                                            label="Section"
+                                                            value={integrationFormData.section}
+                                                            options={integrationSectionOptions}
+                                                            onchange={handleInputChange}
+                                                            data-field="section"
+                                                            disabled>
+                                                        </lightning-combobox>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                                                        <lightning-combobox
+                                                            label="Sub Section"
+                                                            value={integrationFormData.subSection}
+                                                            options={integrationSubSectionOptions}
+                                                            onchange={handleInputChange}
+                                                            data-field="subSection"
+                                                            disabled>
+                                                        </lightning-combobox>
+                                                    </div>
                                                     <div class="slds-col slds-size_1-of-3">
-                                                        <lightning-input type="checkbox" label="Status"
+                                                        <lightning-input type="checkbox" label="Field Status"
                                                             checked={integrationFormData.fieldStatus}
                                                             onchange={handleCheckboxChange} data-field="fieldStatus">
                                                         </lightning-input>
@@ -244,7 +263,9 @@
                                         </div>
 
                                         <div class="slds-m-bottom_large">
-                                            <c-fec-integration-mapping onsuccessintegration={handleSuccessIntegration}
+                                            <c-fec-integration-mapping
+                                                data-mapping-mode="add"
+                                                onsuccessintegration={handleSuccessIntegration}
                                                 oncancelintegration={handleCancelIntegration}
                                                 mapping-id={selectedMappingId} user-type-name={userTypeName}
                                                 channel-filter={defaultChannelCode}>
@@ -257,7 +278,7 @@
                             <template if:false={isIntegrationAdd}>
                                 <template if:true={hasFraudData}>
                                     <div
-                                        class="custom-table-grid slds-theme_shade slds-text-title_caps slds-border_bottom">
+                                        class="custom-table-grid fraud-grid slds-theme_shade slds-text-title_caps slds-border_bottom">
                                         <div class="slds-col" style="text-align: center; grid-column: span 2;"></div>
                                         <div class="slds-col" style="text-align: center; grid-column: span 1;">Channel
                                         </div>
@@ -279,7 +300,7 @@
 
                                     <template for:each={processedDataFraud} for:item="row">
                                         <div key={row.Id} class="slds-border_bottom">
-                                            <div class="custom-table-grid">
+                                            <div class="custom-table-grid fraud-grid">
                                                 <div class="slds-col" style="text-align: center; grid-column: span 2;">
                                                     <lightning-button-icon icon-name={row.expandIcon} variant="bare"
                                                         onclick={toggleExpand} data-id={row.Id} size="small">
@@ -396,15 +417,34 @@
 
                                                             <div class="slds-m-bottom_medium">
                                                                 <label class="slds-form-element__label">Settings</label>
-                                                                <div class="slds-grid slds-gap_medium">
+                                                                <div class="slds-grid slds-wrap slds-gutters">
+                                                                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                                                                        <lightning-combobox
+                                                                            label="Section"
+                                                                            value={integrationFormData.section}
+                                                                            options={integrationSectionOptions}
+                                                                            onchange={handleInputChange}
+                                                                            data-field="section"
+                                                                            disabled>
+                                                                        </lightning-combobox>
+                                                                    </div>
+                                                                    <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
+                                                                        <lightning-combobox
+                                                                            label="Sub Section"
+                                                                            value={integrationFormData.subSection}
+                                                                            options={integrationSubSectionOptions}
+                                                                            onchange={handleInputChange}
+                                                                            data-field="subSection"
+                                                                            disabled>
+                                                                        </lightning-combobox>
+                                                                    </div>
                                                                     <div class="slds-col slds-size_1-of-3">
-                                                                        <lightning-input type="checkbox" label="Status"
+                                                                        <lightning-input type="checkbox" label="Field Status"
                                                                             checked={integrationFormData.fieldStatus}
                                                                             onchange={handleCheckboxChange}
                                                                             data-field="fieldStatus">
                                                                         </lightning-input>
                                                                     </div>
-
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -413,6 +453,8 @@
                                                             <h3 class="slds-text-heading_small slds-m-bottom_medium">
                                                                 Integration</h3>
                                                             <c-fec-integration-mapping
+                                                                data-mapping-mode="edit"
+                                                                data-mapping-row={row.Id}
                                                                 mapping-id={row.FEC_Data_Integration_Mapping__c}
                                                                 onsuccessintegration={handleSuccessIntegration}
                                                                 oncancelintegration={toggleExpand} data-id={row.Id}
@@ -434,6 +476,14 @@
                                 </template>
                             </template>
                         </div>
+                        <template if:true={hasFraudData}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ Lịch sử</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-setting-history-by-noc data-id="fraudHistory" noc-id={currentNatureOfCaseId} is-integration={isFraudIntegration}></c-fec-setting-history-by-noc>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
                     <!-- Flow Control Data View tab removed — replaced by Decision Table Stage -->
@@ -445,14 +495,34 @@
                         <c-fec-decision-table-stage-view item={item}></c-fec-decision-table-stage-view>
                     </lightning-tab> -->
 
-                    <lightning-tab label="Decision Engine">
+                    <lightning-tab label="Decision Engine" ondatachanged={handleDecisionEngineChanged}>
                         <c-fec-decision-table-stage item={item}></c-fec-decision-table-stage>
+                        <template if:true={currentBusinessProcessId}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ Lịch sử</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-decision-engine-history data-id="decisionEngineHistory" business-process-id={currentBusinessProcessId}></c-fec-decision-engine-history>
+                                </div>
+                            </details>
+                        </template>
                     </lightning-tab>
 
-                    <lightning-tab label="Properties Mapping">
+                    <lightning-tab label="Properties Mapping" ondatachanged={handlePropertiesMappingChanged}>
                         <c-fec-map-a-properties-to-master-data-item
                             nature-of-case-code={currentNatureOfCaseCode}>
                         </c-fec-map-a-properties-to-master-data-item>
+                        <template if:true={currentNatureOfCaseCode}>
+                            <details class="slds-m-top_medium slds-m-horizontal_small slds-box slds-theme_default">
+                                <summary class="slds-p-around_small" style="cursor:pointer; font-weight:600">▶ Lịch sử</summary>
+                                <div class="slds-p-horizontal_small slds-p-bottom_small">
+                                    <c-fec-properties-mapping-history data-id="propertiesMappingHistory" nature-of-case-code={currentNatureOfCaseCode}></c-fec-properties-mapping-history>
+                                </div>
+                            </details>
+                        </template>
+                    </lightning-tab>
+
+                    <lightning-tab label="Hold Case Config">
+                        <c-fec-hold-case-config-list noc-id={currentNatureOfCaseId} stage-id={stageId}></c-fec-hold-case-config-list>
                     </lightning-tab>
                 </lightning-tabset>
 
@@ -472,6 +542,7 @@
                             <div class="slds-modal__content slds-p-around_medium">
                                 <c-fec-master-data-setting-form record-id={recordIdForEdit} record-data={selectedRecord}
                                     nature-of-case-id={currentNatureOfCaseId} stage-id={stageId}
+                                    noc-user-group={nocUserGroup}
                                     onsuccess={handleSuccess} next-order={nextOrder} oncancel={closeModal}>
                                 </c-fec-master-data-setting-form>
                             </div>
@@ -481,16 +552,6 @@
                 </template>
 
             </lightning-layout-item>
-
-            <template if:true={isHistoryVisible}>
-                <lightning-layout-item size="12" large-device-size="3" class="history-panel">
-                    <div class="history-content slds-scrollable_y">
-                        <c-fec-config-history data-id="historyComponent"
-                            object-api-name="FEC_MDM_Master_Data_Setting__c" record-id="">
-                        </c-fec-config-history>
-                    </div>
-                </lightning-layout-item>
-            </template>
 
         </lightning-layout>
     </template>

@@ -642,7 +642,7 @@ public with sharing class FEC_LiveDataViewController {
         try {
             masterDataMap.put(FEC_ObjectConstants.KEY_PRODUCT_TYPE,
                 Security.stripInaccessible(AccessType.READABLE,
-                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Status__c, Process_Change_Status__c, FEC_Active__c
+                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, Process_Change_Status__c, FEC_Active__c
                      FROM FEC_MDM_Product_Type__c  ORDER BY Name]
                 ).getRecords());
 
@@ -654,19 +654,19 @@ public with sharing class FEC_LiveDataViewController {
 
             masterDataMap.put(FEC_ObjectConstants.KEY_CATEGORY,
                 Security.stripInaccessible(AccessType.READABLE,
-                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Status__c, Process_Change_Status__c, FEC_Active__c
+                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, Process_Change_Status__c, FEC_Active__c
                      FROM FEC_MDM_Category__c  ORDER BY Name]
                 ).getRecords());
 
             masterDataMap.put(FEC_ObjectConstants.KEY_SUB_CATEGORY,
                 Security.stripInaccessible(AccessType.READABLE,
-                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Status__c, Process_Change_Status__c, FEC_Active__c
+                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, Process_Change_Status__c, FEC_Active__c
                      FROM FEC_MDM_Sub_Category__c  ORDER BY Name]
                 ).getRecords());
 
             masterDataMap.put(FEC_ObjectConstants.KEY_SUB_CODE,
                 Security.stripInaccessible(AccessType.READABLE,
-                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, FEC_Status__c, Process_Change_Status__c, FEC_Active__c
+                    [SELECT Id, Name, FEC_Alias__c, FEC_Code__c, FEC_Name_VN__c, Process_Change_Status__c, FEC_Active__c
                      FROM FEC_MDM_Sub_Code__c  ORDER BY Name]
                 ).getRecords());
 

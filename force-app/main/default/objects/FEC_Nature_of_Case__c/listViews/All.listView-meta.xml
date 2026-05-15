@@ -13,5 +13,10 @@
     <columns>LAST_UPDATE</columns>
     <columns>UPDATEDBY_USER</columns>
     <filterScope>Everything</filterScope>
+    <filters>
+        <field>FEC_Category__c</field>
+        <operation>equals</operation>
+        <value>Request</value>
+    </filters>
     <label>All Nature of Cases</label>
 </ListView>

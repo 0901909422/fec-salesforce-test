@@ -4265,7 +4265,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Other Card Label</shortDescription>
-        <value>Other Cards</value>
+        <value>Other Card</value>
     </labels>
     <labels>
         <fullName>FEC_Outcome_Code_Label</fullName>
@@ -8517,7 +8517,7 @@
         <language>vi</language>
         <protected>false</protected>
         <shortDescription>Email Section - Danh xung label</shortDescription>
-        <value>Title</value>
+        <value>Danh xưng</value>
     </labels>
     <labels>
         <fullName>FEC_Email_Option_Anh_Chi</fullName>
@@ -8872,7 +8872,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Card_Block_Fail_Retry</shortDescription>
-        <value>Khoá thẻ thất bại. Vui lòng thử lại</value>
+        <value>Khoá thẻ thất bại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Card_Block_Fail_Disable</fullName>
@@ -11004,14 +11004,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Send Manual Notification</shortDescription>
-        <value>Send Notification</value>
+        <value>Send Manual Notification</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Email</fullName>
         <language>en_US</language>
         <protected>false</protected>
-        <shortDescription>Email</shortDescription>
-        <value>Email</value>
+        <shortDescription>Target Email</shortDescription>
+        <value>Target Email</value>
     </labels>
     <labels>
         <fullName>FEC_Target_Group</fullName>
@@ -11349,7 +11349,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Lbl_Updated_At</shortDescription>
-        <value>Modified on</value>
+        <value>Updated At</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Page_Info</fullName>
@@ -12364,7 +12364,6 @@
         <shortDescription>Promised Repayment Amount</shortDescription>
         <value>Promised Repayment Amount</value>
     </labels>
-
     <labels>
         <fullName>FEC_CustomerInfo_Null_Or_ChatSession_Null</fullName>
         <categories>Label</categories>
@@ -12829,14 +12828,14 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Special characters not allowed for Channel ID</shortDescription>
-        <value>Special characters are not allowed for Channel ID.</value>
+        <value>Channel ID must start with a letter and can only contain Latin letters, numbers, underscores (_), dots (.), and hyphens (-). Vietnamese characters and special characters (?, /, (, ), etc.) are not allowed.</value>
     </labels>
     <labels>
         <fullName>FEC_Error_Special_Characters_ID</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Special characters not allowed for ID field</shortDescription>
-        <value>Special characters are not allowed for ID field.</value>
+        <value>ID must start with a letter and can only contain Latin letters, numbers, underscores (_), dots (.), and hyphens (-). Vietnamese characters and special characters (?, /, (, ), etc.) are not allowed.</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Auto_Field_Creator_Title</fullName>
@@ -13522,13 +13521,6 @@
         <value>Remark</value>
     </labels>
     <labels>
-        <fullName>FEC_Col_Team_User_Group</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>FEC Col Team User Group</shortDescription>
-        <value>Team/User Group</value>
-    </labels>
-    <labels>
         <fullName>FEC_Uploaded_File_Contains_Error_Message</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -13617,7 +13609,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>No Template Question</shortDescription>
-        <value>Don't have the template?</value>
+        <value>Don&apos;t have the template?</value>
     </labels>
     <labels>
         <fullName>FEC_Lbl_Campaign_Configuration</fullName>
@@ -13645,7 +13637,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Number of Inprogress records</shortDescription>
-        <value>No. of Inprogress records: </value>
+        <value>No. of Inprogress records:</value>
     </labels>
     <labels>
         <fullName>FEC_Btn_Download_Excel</fullName>
@@ -13789,7 +13781,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation Campaign ID Mismatch</shortDescription>
-        <value>Row {0}: Field ''Campaign ID'' - value does not match expected campaign code ''{1}''</value>
+        <value>Row {0}: Field &apos;&apos;Campaign ID&apos;&apos; - value does not match expected campaign code &apos;&apos;{1}&apos;&apos;</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_FieldBlank</fullName>
@@ -13797,7 +13789,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation Field Blank</shortDescription>
-        <value>Row {0}: Field ''{1}'' - must not be blank</value>
+        <value>Row {0}: Field &apos;&apos;{1}&apos;&apos; - must not be blank</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_FieldExceedsMaxLength</fullName>
@@ -13805,7 +13797,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation Field Exceeds Max Length</shortDescription>
-        <value>Row {0}: Field ''{1}'' - exceeds max length of {2} characters</value>
+        <value>Row {0}: Field &apos;&apos;{1}&apos;&apos; - exceeds max length of {2} characters</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_ProductLineInvalid</fullName>
@@ -13813,7 +13805,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation ProductLine Invalid</shortDescription>
-        <value>Row {0}: Field ''ProductLine'' - value ''{1}'' is invalid, only ''Loan'' or ''Card'' accepted</value>
+        <value>Row {0}: Field &apos;&apos;ProductLine&apos;&apos; - value &apos;&apos;{1}&apos;&apos; is invalid, only &apos;&apos;Loan&apos;&apos; or &apos;&apos;Card&apos;&apos; accepted</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_AtLeastOneRequired</fullName>
@@ -13821,7 +13813,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation At Least One Required</shortDescription>
-        <value>Row {0}: At least one of ''App ID'' or ''Account or Contract number'' must not be blank</value>
+        <value>Row {0}: At least one of &apos;&apos;App ID&apos;&apos; or &apos;&apos;Account or Contract number&apos;&apos; must not be blank</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_InvalidNumber</fullName>
@@ -13829,7 +13821,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation Invalid Number</shortDescription>
-        <value>Row {0}: Field ''{1}'' - value ''{2}'' is not a valid number</value>
+        <value>Row {0}: Field &apos;&apos;{1}&apos;&apos; - value &apos;&apos;{2}&apos;&apos; is not a valid number</value>
     </labels>
     <labels>
         <fullName>FEC_Campaign_Validation_DuplicateKey</fullName>
@@ -13837,7 +13829,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Campaign Validation Duplicate Key</shortDescription>
-        <value>Row {0}: Duplicate composite key ''{1}''</value>
+        <value>Row {0}: Duplicate composite key &apos;&apos;{1}&apos;&apos;</value>
     </labels>
     <labels>
         <fullName>FEC_Saving_Error_Message</fullName>
@@ -13845,7 +13837,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Saving Error Message</shortDescription>
-        <value>Lỗi khi lưu dữ liệu: </value>
+        <value>Lỗi khi lưu dữ liệu:</value>
     </labels>
     <labels>
         <fullName>FEC_Contract_Number_Is_Null</fullName>
@@ -14054,7 +14046,7 @@
         <shortDescription>FEC_Assignment_Id</shortDescription>
         <value>Assignment ID</value>
     </labels>
-	<labels>
+    <labels>
         <fullName>TECH_LIST_ATT_IGNORED</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -14117,7 +14109,6 @@
         <shortDescription>TECH_API_GET_ARCHIVE_ATTACHMENT</shortDescription>
         <value>FEC_Get_Archive_Attachment</value>
     </labels>
-    <!-- tungnm37 thêm: UpdateDisbursementStatus API messages -->
     <labels>
         <fullName>FEC_UpdateDisb_Msg_InvalidRequest</fullName>
         <language>en_US</language>
@@ -14241,14 +14232,6 @@
         <protected>false</protected>
         <shortDescription>IPP/CMS code and description for eligibility errors</shortDescription>
         <value>Code: {0} | Description: {1}</value>
-    </labels>
-    <labels>
-        <fullName>FEC_MSG_Unknown_Sys_Code</fullName>
-        <categories>API</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Unrecognized Sys.Code in SOAP response</shortDescription>
-        <value>Unknown system response code: {0}</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Status_Eligible</fullName>
@@ -14490,7 +14473,6 @@
         <shortDescription>Unexpected error for extractErrorMsg fallback</shortDescription>
         <value>An unexpected error occurred.</value>
     </labels>
-
     <labels>
         <fullName>FEC_MSG_CheckEligible_Card_Not_Found</fullName>
         <categories>Check Eligible Loan LWC</categories>
@@ -14738,7 +14720,6 @@
         <shortDescription>CS_NO_ARCHIVE_ATTACHMENT</shortDescription>
         <value>No archive files</value>
     </labels>
-    <!-- tungnm37 thêm: Channel Config labels -->
     <labels>
         <fullName>FEC_Confirm_Before_Submit</fullName>
         <language>en_US</language>
@@ -14836,13 +14817,6 @@
         <value>Cancel Date</value>
     </labels>
     <labels>
-        <fullName>FEC_Effective_Date</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Effective Date</shortDescription>
-        <value>Effective Date</value>
-    </labels>
-    <labels>
         <fullName>FEC_Expiry_Date</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -14930,22 +14904,6 @@
         <value>DISB_DT is required</value>
     </labels>
     <labels>
-        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
-        <categories>Label</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
-        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
-        <categories>Label</categories>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
-        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
-    </labels>
-    <labels>
         <fullName>FEC_TransferCall_Btn_Cancel</fullName>
         <categories>Label</categories>
         <language>en_US</language>
@@ -15026,13 +14984,6 @@
         <value>Vui lòng nhập Remark for Collections.</value>
     </labels>
     <labels>
-        <fullName>CS_OrgChart_Table_UserTable_UserRole_Column</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Table</shortDescription>
-        <value>User Role</value>
-    </labels>
-    <labels>
         <fullName>FEC_Error_Blank_Column</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -15051,20 +15002,465 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>API Code</shortDescription>
-        <value>API Code: </value>
+        <value>API Code:</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_Description</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Description</shortDescription>
-        <value>Description: </value>
+        <value>Description:</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Parsing_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Parsing Error</shortDescription>
-        <value>Parsing Error: </value>
+        <value>Parsing Error:</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Discard</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Discard</shortDescription>
+        <value>Discard</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Button_Save_Node_Details</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Button Save Node Details</shortDescription>
+        <value>Save Node Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_AddColLeft</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Add Column Left</shortDescription>
+        <value>Add Column Left</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_AddColRight</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Add Column Right</shortDescription>
+        <value>Add Column Right</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_AddRowAbove</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Add Row Above</shortDescription>
+        <value>Add Row Above</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_AddRowBelow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Add Row Below</shortDescription>
+        <value>Add Row Below</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_ClearAll</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Clear All Rules</shortDescription>
+        <value>Clear All Rules</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_CreateNew</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Create New Decision Table</shortDescription>
+        <value>+ Create New Decision Table</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_DeleteCol</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Delete Column</shortDescription>
+        <value>Delete Column</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Btn_DeleteRow</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Delete Row</shortDescription>
+        <value>Delete Row</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Confirm_ClearAll_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Confirm Clear All Message</shortDescription>
+        <value>Are you sure you want to delete ALL rules in this table? This action cannot be undone.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Confirm_ClearAll_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Confirm Clear All Title</shortDescription>
+        <value>Confirm Clear All</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Empty_DefaultColsHint</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Default Columns Hint</shortDescription>
+        <value>Click below to create a table with default columns: Current Stage, Available Decisions, Next Stage, Next Queue, Team User Group.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Empty_NoNode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Empty No Node Selected</shortDescription>
+        <value>Please select a node to view the Decision Table</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Empty_NoTable</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Empty No Table Yet</shortDescription>
+        <value>No Decision Table for this Business Process yet.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Msg_ClearedCount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Cleared Count Message (use {0} placeholder)</shortDescription>
+        <value>Deleted {0} rules</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Msg_Created</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Created Successfully</shortDescription>
+        <value>Decision Table created with default columns</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Search_Placeholder</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Search Placeholder</shortDescription>
+        <value>Search...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Title_DecisionTable</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Panel Title</shortDescription>
+        <value>Decision Table</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Toast_Title_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Toast Error Title</shortDescription>
+        <value>Error</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Toast_Title_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Toast Success Title</shortDescription>
+        <value>Success</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Validate_Range_Incomplete</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Range pair incomplete (use {0} for column name)</shortDescription>
+        <value>&quot;{0}&quot;: Both Start and End values are required for a range</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Validate_Range_NotNumeric</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Range value not a number (use {0} for column name)</shortDescription>
+        <value>&quot;{0}&quot;: Range values must be numeric</value>
+    </labels>
+    <labels>
+        <fullName>FEC_DT_Validate_Range_StartGtEnd</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Decision Table - Range start greater than end (use {0} for column name)</shortDescription>
+        <value>&quot;{0}&quot;: Start value must be less than or equal to End value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Error_Load_NOC</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Error_Load_NOC</shortDescription>
+        <value>Error loading Nature of Case details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Get_Archive_Attachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Get_Archive_Attachment</shortDescription>
+        <value>FEC_Get_Archive_Attachment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Add_NFU_Button</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Add NFU Code Button</shortDescription>
+        <value>+ Add NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Delete_Confirm</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Confirm delete Hold Case Config</shortDescription>
+        <value>Are you sure you want to delete this Hold Case Config?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Delete_Not_Allowed</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Cannot delete synced Hold Case Config</shortDescription>
+        <value>Cannot delete. Only configs with Process Change Status = New can be deleted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Delete_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Config deleted</shortDescription>
+        <value>Hold Case Config deleted successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_History_Section</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>History section toggle</shortDescription>
+        <value>▶ History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_NFU_Modal_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>List of NFU Code Modal Title</shortDescription>
+        <value>List of NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_No_NFU_Added</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No NFU codes added</shortDescription>
+        <value>No NFU codes added.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_No_Node_Selected</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Select a node to view Hold Case Configs</shortDescription>
+        <value>Select a node to view Hold Case Configs.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Config saved</shortDescription>
+        <value>Hold Case Config saved successfully.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Search_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search channel placeholder</shortDescription>
+        <value>Search Channels...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Validation_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel required validation</shortDescription>
+        <value>At least one Channel must be selected.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Validation_NFU</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Code required validation for Manual</shortDescription>
+        <value>For Manual type, at least one NFU Code must be selected.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_HoldCase_Validation_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required field validation for Hold Case</shortDescription>
+        <value>Please fill in all required fields before saving.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Changed_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Changed Status</shortDescription>
+        <value>Changed Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Channel_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Channel required label</shortDescription>
+        <value>Channel *</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Current_Status</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Current Status</shortDescription>
+        <value>Current Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_Customer_Type</shortDescription>
+        <value>Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Do_Not_Bother</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Do Not Bother checkbox</shortDescription>
+        <value>Do Not Bother</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_HoldCaseType</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hold Case Type</shortDescription>
+        <value>Hold Case Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NFU_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Code</shortDescription>
+        <value>NFU Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NFU_Codes</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Codes</shortDescription>
+        <value>NFU Codes</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NFU_Reason</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>NFU Reason VN</shortDescription>
+        <value>NFU Reason VN</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NOC_Active</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_NOC_Active</shortDescription>
+        <value>Active</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_NOC_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_NOC_Code</shortDescription>
+        <value>NOC Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Remove_Phone</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remove Phone checkbox</shortDescription>
+        <value>Remove Phone</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Role_Names</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_Role_Names</shortDescription>
+        <value>Role Names</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Sub_Processes</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Sub-Processes section label</shortDescription>
+        <value>Sub-Processes</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Transfer_Call</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Call To Collection checkbox</shortDescription>
+        <value>Transfer Call To Collection</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_User_Group</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Label_User_Group</shortDescription>
+        <value>User Group</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Repay_No_Data_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data (Repayment Schedule / Payment History)</shortDescription>
+        <value>No data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Section_Nature_Of_Case</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Section_Nature_Of_Case</shortDescription>
+        <value>Nature of Case</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Section_Node_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Section_Node_Info</shortDescription>
+        <value>Node Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_Field_Repayment_Fee_Overdue_Label</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Repayment Fee Overdue (Overdue)</shortDescription>
+        <value>Repayment Fee Overdue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No data message</shortDescription>
+        <value>No data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Termination_No_Fee_Charge_Data</fullName>
+        <categories>Account Info</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No fee charge data message</shortDescription>
+        <value>No fee charge data</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Toast_Nothing_To_Save</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Nothing to save toast</shortDescription>
+        <value>There are no changes to save.</value>
+    </labels>
+    <labels>
+        <fullName>TECH_ATTACHMENT_ARCHIVE_PREFIX</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_ATTACHMENT_ARCHIVE_PREFIX</shortDescription>
+        <value>Att_Archive_</value>
     </labels>
 </CustomLabels>

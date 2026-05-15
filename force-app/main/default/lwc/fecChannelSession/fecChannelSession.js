@@ -182,23 +182,17 @@ export default class FecChannelSession extends LightningElement {
         this.filteredChannels = this.allFilteredChannels.slice(start, end);
     }
 
-    handlePreviousPage() {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-            this.updatePaginatedData();
-        }
+    handlePageChange(event) {
+        this.currentPage = event.detail.page;
+        this.updatePaginatedData();
     }
 
-    handleNextPage() {
-        if (this.currentPage < this.totalPages) {
-            this.currentPage++;
-            this.updatePaginatedData();
-        }
+    handlePageSizeChange(event) {
+        this.pageSize = event.detail.pageSize;
+        this.currentPage = 1;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize) || 1;
+        this.updatePaginatedData();
     }
-
-    get isFirstPage() { return this.currentPage <= 1; }
-    get isLastPage() { return this.currentPage >= this.totalPages; }
-    get paginationInfo() { return `${this.currentPage} / ${this.totalPages} (${this.totalRecords} records)`; }
 
     handleRowAction(event) {
         const actionName = event.detail.action.name;
@@ -284,10 +278,10 @@ export default class FecChannelSession extends LightningElement {
             return;
         }
 
-        // Validate Channel ID: chỉ cho phép chữ, số, dấu gạch ngang, gạch dưới
+        // Validate Channel ID: phải bắt đầu bằng chữ Latin, cho phép chữ, số, gạch dưới, dấu chấm, gạch ngang
         if (!this.selectedId) {
             const channelId = fields[this.fieldChannelId];
-            if (channelId && !/^[a-zA-Z0-9_-]+$/.test(channelId)) {
+            if (channelId && !/^[a-zA-Z][a-zA-Z0-9_.\-]*$/.test(channelId)) {
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Error',
                     message: LABEL_ERROR_SPECIAL_CHARS_CHANNEL_ID,
