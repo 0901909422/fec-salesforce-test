@@ -1074,6 +1074,7 @@
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
         <members>FEC_Billed_Transactions</members>
+        <members>FEC_MSG_IPP_Noti_10</members>
         <name>CustomLabel</name>
     </types>
 	<types>
