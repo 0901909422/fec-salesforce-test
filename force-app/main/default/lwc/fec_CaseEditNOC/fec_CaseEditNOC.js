@@ -281,8 +281,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
   async connectedCallback() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — phục hồi lock trước resetViewMode để isEdit không rơi output-field khi reload
     this._restoreFastCashNocLockFromStorage();
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — sau Có/Không Block Amount: không ép review (giữ handling / combo disable)
-    if (!this._isFastCashBlockModalConfirmedInStorage()) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — sau Có/Không Block Amount: giữ handling, không ép review
+    if (this._isFastCashBlockModalConfirmedInStorage()) {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_HANDLING,
+      });
+    } else {
       await resetViewMode({
         recordId: this.recordId,
         viewMode: VIEW_MODE_REVIEW,

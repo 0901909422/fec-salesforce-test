@@ -380,12 +380,15 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }).catch(() => undefined);
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — block fail không đổi Interaction sang review
-    _publishHandlingModeAfterBlockFailure() {
-        if (!this.messageContext) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không & block fail: giữ handling (Save/Submit, remark, routing)
+    _ensureHandlingModeAfterBlockModal() {
+        if (!this.messageContext || !this.recordId) {
             return;
         }
-        publish(this.messageContext, IS_MODE_EDIT, { isModeEdit: true });
+        publish(this.messageContext, IS_MODE_EDIT, {
+            caseId: this.recordId,
+            isModeEdit: true
+        });
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — đổi NOC / rời RC35: reset toàn bộ state Fast Cash
@@ -690,17 +693,18 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
         this._saveRequestedAmountToStorage();
-        if (this.messageContext && this.recordId) {
-            publish(this.messageContext, CASE_NOC, {
-                caseId: this.recordId,
-                fastCashNocLocked: true
-            });
-        }
         try {
             sessionStorage.setItem(this._storageModalConfirmedKey(), "1");
             sessionStorage.setItem(this._storageNocKey(), "1");
         } catch (e) {
             /* ignore */
+        }
+        this._ensureHandlingModeAfterBlockModal();
+        if (this.messageContext && this.recordId) {
+            publish(this.messageContext, CASE_NOC, {
+                caseId: this.recordId,
+                fastCashNocLocked: true
+            });
         }
         this._ensureLockedSnapshotLoaded();
     }
@@ -771,7 +775,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         } else {
             this.showNoti09 = true;
         }
-        this._publishHandlingModeAfterBlockFailure();
+        this._ensureHandlingModeAfterBlockModal();
     }
 
     navigateToCase() {

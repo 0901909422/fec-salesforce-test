@@ -183,8 +183,17 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   async connectedCallback() {
     try {
-      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Fast Cash sau Có/Không: không ép review khi remount/refresh
-      if (!isFastCashBlockModalConfirmed(this.recordId)) {
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Fast Cash sau Có/Không: giữ handling (Save/Submit, remark, routing)
+      if (isFastCashBlockModalConfirmed(this.recordId)) {
+        this.modeEditCase = true;
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: VIEW_MODE_HANDLING,
+        });
+        if (!this.activeSections.includes("case-remark")) {
+          this.activeSections = [...this.activeSections, "case-remark"];
+        }
+      } else {
         await resetViewMode({
           recordId: this.recordId,
           viewMode: VIEW_MODE_REVIEW,
