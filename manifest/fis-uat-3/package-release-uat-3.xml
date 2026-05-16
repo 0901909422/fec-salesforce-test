@@ -1057,7 +1057,7 @@
 		<members>FEC_New_Hold_Case_Config</members>
 		<members>FEC_New_Value</members>
 		<members>FEC_Original_Value</members>
-        <members>FEC_No_Data_Found</members>
+        <members>FEC_No_Data_Found_Hold_Case</members>
         <name>CustomLabel</name>
     </types>
 	<types>

@@ -96,6 +96,7 @@
         <members>maskedToggleDatatable</members>
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_RemovePhoneForm</members>
+        <members>fec_HoldCaseConfiguration</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -130,6 +131,7 @@
         <members>FEC_LABEL_API_Code</members>
         <members>FEC_LABEL_Description</members>
         <members>FEC_MSG_Parsing_Error</members>
+        <members>FEC_No_Data_Found_Hold_Case</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
