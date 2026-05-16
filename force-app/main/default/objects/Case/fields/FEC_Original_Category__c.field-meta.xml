@@ -6,7 +6,7 @@
     <label>Original Category</label>
     <referenceTo>FEC_Category__c</referenceTo>
     <relationshipLabel>Cases (New Category)</relationshipLabel>
-    <relationshipName>Cases1</relationshipName>
+    <relationshipName>Cases2</relationshipName>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
