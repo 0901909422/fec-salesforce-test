@@ -1,4 +1,7 @@
 import { LightningElement, api, wire } from "lwc";
+import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { refreshApex } from "@salesforce/apex";
+import FEC_AUTO_HOLD_CASE_RESULT from "@salesforce/schema/Case.FEC_Auto_Hold_Case_Result__c";
 
 import {
   subscribe,
@@ -17,17 +20,31 @@ export default class Fec_SubProcessContainer extends LightningElement {
   @wire(MessageContext)
   messageContext;
 
+  wiredCaseAutoResultWire;
+
+  @wire(getRecord, { recordId: "$recordId", fields: [FEC_AUTO_HOLD_CASE_RESULT] })
+  wiredCaseAutoResult(result) {
+    this.wiredCaseAutoResultWire = result;
+    const resultVal = getFieldValue(result.data, FEC_AUTO_HOLD_CASE_RESULT);
+    if (resultVal) {
+      this.showHoldCaseAuto = true;
+      this.showHoldCase = true;
+    }
+  }
+
   subscription = null;
   params;
   isSubmitted = false;
   showHoldCase = false;
+  showHoldCaseManual = false;
+  showHoldCaseAuto = false;
   showRemovePhone = false;
   showDoNotBother = false;
   showTransferCall = false;
 
   connectedCallback() {
+    this.params = { recordId: this.recordId };
     this.subscribeToMessageChannel();
-
     this.initializeCase();
   }
 
@@ -69,26 +86,29 @@ export default class Fec_SubProcessContainer extends LightningElement {
       subCategoryId,
       subCodeId,
     };
+
+    // tungnm37: lưu NOC IDs vào sessionStorage để fec_holdCaseManual đọc được
+    // (holdCaseManual mount sau khi message đã publish nên không nhận được message)
+    try {
+      const key = 'fec_case_noc_' + this.recordId;
+      sessionStorage.setItem(key, JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }));
+    } catch (e) {
+      // ignore
+    }
   }
 
   @wire(getSubProcesses, {
-    recordId: "$params.recordId",
+    recordId: "$recordId",
     productTypeId: "$params.productTypeId",
     categoryId: "$params.categoryId",
     subCategoryId: "$params.subCategoryId",
     subCodeId: "$params.subCodeId",
   })
   wiredSubProcesses({ data, error }) {
-    if (
-      !this.params?.productTypeId ||
-      !this.params?.categoryId ||
-      !this.params?.subCategoryId
-    ) {
-      return;
-    }
-
     if (data) {
       this.showHoldCase = !!data.showHoldCase;
+      this.showHoldCaseManual = !!data.showHoldCaseManual;
+      this.showHoldCaseAuto = !!data.showHoldCaseAuto;
       this.showRemovePhone = !!data.showRemovePhone;
       this.showDoNotBother = !!data.showDNB;
       this.showTransferCall = !!data.showTransferCall;
@@ -97,6 +117,17 @@ export default class Fec_SubProcessContainer extends LightningElement {
     if (error) {
       console.error("[fec_SubProcessContainer] wire error", error);
     }
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366: Save remove phone draft if applicable
+  @api saveRemovePhoneDraftIfApplicable() {
+    const el =
+      this.template.querySelector("c-fec_-remove-phone-form") ||
+      this.template.querySelector("c-fec-remove-phone-form");
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
   }
 
   async initializeCase() {
@@ -108,11 +139,10 @@ export default class Fec_SubProcessContainer extends LightningElement {
       console.log("isSubmitted = ", this.isSubmitted);
 
       /*
-       * Force show all subprocesses
+       * Force show all subprocesses except Hold Case (Hold Case depends on config)
+       * tungnm37: bỏ force showHoldCase, để wire getSubProcesses quyết định
        */
       if (this.isSubmitted) {
-        this.showHoldCase = true;
-
         this.showRemovePhone = true;
 
         this.showDoNotBother = true;
@@ -122,5 +152,19 @@ export default class Fec_SubProcessContainer extends LightningElement {
     } catch (error) {
       console.error("[initializeCase] ERROR", error);
     }
+  }
+
+  /** Gọi từ fec_CaseBussiness sau Submit để refresh kết quả Auto Hold Case. */
+  @api
+  refreshAutoHoldCase() {
+    const promises = [];
+    if (this.wiredCaseAutoResultWire) {
+      promises.push(refreshApex(this.wiredCaseAutoResultWire));
+    }
+    const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+    if (autoCmp?.refresh) {
+      promises.push(autoCmp.refresh());
+    }
+    return Promise.all(promises);
   }
 }

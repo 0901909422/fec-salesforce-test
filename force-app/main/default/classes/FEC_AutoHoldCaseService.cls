@@ -1,0 +1,268 @@
+/**
+ * Auto Hold Case: sau khi tạo Routing Action History, match NOC → Hold Case Config (Auto)
+ * → gọi Mark NFU API (retry tối đa 3 lần) → cập nhật Case + FEC_Auto_Hold_Case_Result__c.
+ */
+public with sharing class FEC_AutoHoldCaseService {
+    public static final String RESULT_PENDING = 'PENDING';
+    public static final String RESULT_ALREADY_MARKED = 'ALREADY_MARKED';
+    public static final String RESULT_SUCCESS = 'SUCCESS';
+    public static final String RESULT_ERROR = 'ERROR';
+
+    private static final Integer MAX_ATTEMPTS = 3;
+    private static final String NFU_STATUS_YES = 'Yes';
+    private static final String HOLD_CASE_TYPE_AUTO = 'Auto';
+
+    public static void enqueueAfterRoutingHistory(Id routingHistoryId) {
+        if (routingHistoryId == null) {
+            return;
+        }
+        System.enqueueJob(new FEC_AutoHoldCaseQueueable(routingHistoryId));
+    }
+
+    public static void processAutoHoldCase(Id routingHistoryId) {
+        if (routingHistoryId == null) {
+            return;
+        }
+
+        List<FEC_Routing_Action_History__c> histories = [
+            SELECT
+                Id,
+                FEC_Current_Status__c,
+                FEC_Changed_Status__c,
+                FEC_Case__c,
+                FEC_Case__r.FEC_Product_Type__c,
+                FEC_Case__r.FEC_Category__c,
+                FEC_Case__r.FEC_SubCategory__c,
+                FEC_Case__r.FEC_SubCode__c,
+                FEC_Case__r.FEC_Current_Case_Stage__c,
+                FEC_Case__r.FEC_Account_Contract_Number_Text__c
+            FROM FEC_Routing_Action_History__c
+            WHERE Id = :routingHistoryId
+            LIMIT 1
+        ];
+        if (histories.isEmpty() || histories[0].FEC_Case__c == null) {
+            return;
+        }
+
+        FEC_Routing_Action_History__c history = histories[0];
+        Case relatedCase = history.FEC_Case__r;
+        if (
+            relatedCase.FEC_Product_Type__c == null ||
+            relatedCase.FEC_Category__c == null ||
+            relatedCase.FEC_SubCategory__c == null
+        ) {
+            return;
+        }
+
+        Id nocId = resolveNatureOfCaseId(relatedCase);
+        if (nocId == null) {
+            return;
+        }
+
+        FEC_Hold_Case_Config__c config = findMatchingAutoConfig(
+            nocId,
+            relatedCase.FEC_Current_Case_Stage__c,
+            history.FEC_Current_Status__c,
+            history.FEC_Changed_Status__c
+        );
+        if (config == null || String.isBlank(config.FEC_NFU_Code__c)) {
+            return;
+        }
+
+        String nfuCode = config.FEC_NFU_Code__c.trim();
+        FEC_Hold_Case__c holdCaseMaster = findHoldCaseMaster(nfuCode);
+        if (holdCaseMaster == null) {
+            return;
+        }
+
+        Id caseId = history.FEC_Case__c;
+        markCasePending(caseId);
+
+        String userEmail = [
+            SELECT Email
+            FROM User
+            WHERE Id = :UserInfo.getUserId()
+            LIMIT 1
+        ].Email;
+
+        FEC_MarkNFU.MarkNFURequest req = new FEC_MarkNFU.MarkNFURequest();
+        req.ContractNumber = relatedCase.FEC_Account_Contract_Number_Text__c;
+        req.NFUReasonCode = nfuCode;
+        req.NFUUpdatedBy = userEmail;
+
+        FEC_MarkNFU.MarkNFUResult lastResult;
+        for (Integer attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            lastResult = FEC_MarkNFU.markNFU(req);
+
+            if (lastResult != null && lastResult.code == FEC_ConstantCommon.SUCCESS_CODE_203) {
+                updateCaseAfterApi(
+                    caseId,
+                    RESULT_ALREADY_MARKED,
+                    nfuCode,
+                    holdCaseMaster.FEC_NFU_Reason_VN__c,
+                    null,
+                    parseNfuTillDate(lastResult.nfuTillDate)
+                );
+                return;
+            }
+
+            if (lastResult != null && lastResult.success) {
+                updateCaseAfterApi(
+                    caseId,
+                    RESULT_SUCCESS,
+                    nfuCode,
+                    holdCaseMaster.FEC_NFU_Reason_VN__c,
+                    DateTime.now(),
+                    parseNfuTillDate(lastResult.nfuTillDate)
+                );
+                return;
+            }
+        }
+
+        updateCaseAfterApi(caseId, RESULT_ERROR, null, null, null, null);
+    }
+
+    @TestVisible
+    private static Id resolveNatureOfCaseId(Case c) {
+        List<FEC_Nature_of_Case__c> nocs;
+        if (c.FEC_SubCode__c != null) {
+            nocs = [
+                SELECT Id
+                FROM FEC_Nature_of_Case__c
+                WHERE FEC_Product_Type__c = :c.FEC_Product_Type__c
+                  AND FEC_Category__c = :c.FEC_Category__c
+                  AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+                  AND FEC_Sub_Code__c = :c.FEC_SubCode__c
+                LIMIT 1
+            ];
+        } else {
+            nocs = [
+                SELECT Id
+                FROM FEC_Nature_of_Case__c
+                WHERE FEC_Product_Type__c = :c.FEC_Product_Type__c
+                  AND FEC_Category__c = :c.FEC_Category__c
+                  AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+                  AND FEC_Sub_Code__c = NULL
+                LIMIT 1
+            ];
+        }
+        return nocs.isEmpty() ? null : nocs[0].Id;
+    }
+
+    @TestVisible
+    private static FEC_Hold_Case_Config__c findMatchingAutoConfig(
+        Id nocId,
+        Id caseStageId,
+        String currentStatus,
+        String changedStatus
+    ) {
+        if (nocId == null || caseStageId == null) {
+            return null;
+        }
+
+        List<FEC_Hold_Case_Config__c> configs = [
+            SELECT
+                Id,
+                FEC_NFU_Code__c,
+                FEC_Case_Stage__c,
+                FEC_Current_Status__c,
+                FEC_Changed_Status__c
+            FROM FEC_Hold_Case_Config__c
+            WHERE FEC_Nature_of_Cases__c = :nocId
+              AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
+              AND FEC_Active__c = TRUE
+              AND FEC_Case_Stage__c = :caseStageId
+        ];
+
+        for (FEC_Hold_Case_Config__c cfg : configs) {
+            if (
+                statusConfigContains(cfg.FEC_Current_Status__c, currentStatus) &&
+                statusConfigContains(cfg.FEC_Changed_Status__c, changedStatus)
+            ) {
+                return cfg;
+            }
+        }
+        return null;
+    }
+
+    @TestVisible
+    private static Boolean statusConfigContains(String configValue, String historyValue) {
+        if (String.isBlank(configValue) || String.isBlank(historyValue)) {
+            return false;
+        }
+        String cleaned = historyValue.replaceAll(
+            FEC_ConstantCommon.PATTERN_CLEAN_TEXT,
+            ''
+        );
+        return configValue.contains(cleaned);
+    }
+
+    @TestVisible
+    private static FEC_Hold_Case__c findHoldCaseMaster(String nfuCode) {
+        List<FEC_Hold_Case__c> rows = [
+            SELECT FEC_NFU_Code__c, FEC_NFU_Reason_VN__c
+            FROM FEC_Hold_Case__c
+            WHERE FEC_NFU_Code__c = :nfuCode
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0];
+    }
+
+    private static void markCasePending(Id caseId) {
+        Database.update(
+            new Case(
+                Id = caseId,
+                FEC_Auto_Hold_Case_Result__c = RESULT_PENDING
+            ),
+            AccessLevel.SYSTEM_MODE
+        );
+    }
+
+    @TestVisible
+    private static void updateCaseAfterApi(
+        Id caseId,
+        String resultType,
+        String nfuCode,
+        String nfuReason,
+        DateTime startedDate,
+        DateTime expiryDate
+    ) {
+        Case patch = new Case(
+            Id = caseId,
+            FEC_Auto_Hold_Case_Result__c = resultType
+        );
+
+        if (resultType == RESULT_ERROR) {
+            Database.update(patch, AccessLevel.SYSTEM_MODE);
+            return;
+        }
+
+        patch.FEC_NFU_Status__c = NFU_STATUS_YES;
+        patch.FEC_NFU_Code__c = nfuCode;
+        patch.FEC_NFU_Reason__c = nfuReason;
+        patch.FEC_NFU_Started_Date__c = startedDate;
+        patch.FEC_NFU_Expiry_Date__c = expiryDate;
+        Database.update(patch, AccessLevel.SYSTEM_MODE);
+    }
+
+    @TestVisible
+    private static DateTime parseNfuTillDate(String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        try {
+            String normalized = raw.replace('T', ' ').replace('Z', '');
+            Integer dotIdx = normalized.indexOf('.');
+            if (dotIdx > 0) {
+                normalized = normalized.substring(0, dotIdx);
+            }
+            if (normalized.length() > 19) {
+                normalized = normalized.substring(0, 19);
+            }
+            return DateTime.valueOfGmt(normalized);
+        } catch (Exception ex) {
+            System.debug('[FEC_AutoHoldCaseService] parseNfuTillDate failed: ' + ex.getMessage());
+            return null;
+        }
+    }
+}
