@@ -162,7 +162,6 @@
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
-        <members>Case.FEC_Chat_History__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
@@ -559,6 +558,9 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -1460,6 +1462,29 @@
     <types>
 		<members>FEC_Case_NOC</members>
 		<name>LightningMessageChannel</name>
+    </types>
+		<members>CA_Credit_Assessment</members>
+		<members>CL_Collections</members>
+		<members>CO_Card_Operations</members>
+		<members>CP_Contract_Processing</members>
+		<members>FS_Direct_Sales</members>
+		<members>IA_Internal_Audit</members>
+		<members>IT_IT_Operations_Support</members>
+		<members>PM_Payment</members>
+		<members>TS_Telesales</members>
+		<name>Group</name>
+	</types>
+	<types>
+		<members>Case.CA_Credit_Assessment</members>
+		<members>Case.CL_Collections</members>
+		<members>Case.CO_Card_Operations</members>
+		<members>Case.CP_Contract_Processing</members>
+		<members>Case.FS_Direct_Sales</members>
+		<members>Case.IA_Internal_Audit</members>
+		<members>Case.IT_IT_Operations_Support</members>
+		<members>Case.PM_Payment</members>
+		<members>Case.TS_Telesales</members>
+		<name>SharingCriteriaRule</name>
 	</types>
 	<version>66.0</version>
 </Package>

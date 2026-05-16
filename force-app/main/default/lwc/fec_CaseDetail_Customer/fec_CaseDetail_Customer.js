@@ -544,6 +544,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
+      if (typeof caseBusinessEle?.refreshAutoHoldCase === "function") {
+        caseBusinessEle.refreshAutoHoldCase();
+      }
       // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
       // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark
       const hasManualItemsSubmit = skipSubmitRemark; // alias for clarity

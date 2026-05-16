@@ -56,6 +56,13 @@
 		<members>FEC_PaymentHistoryController</members>
 		<members>FEC_IPPConversionController</members>
 		<members>FEC_AssignmentRoutingActionHandler</members>
+		<members>FEC_CurrencyCodeLookup</members>
+		<members>FEC_GetCardBasicInfo</members>
+		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_StatementsAccountController</members>
+		<members>FEC_TransactionsController</members>
+		<members>FEC_InteractionInforHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -109,6 +116,10 @@
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CaseNote</members>
         <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_StatementsAccountTabView</members>
+        <members>fec_TransactionsAccount</members>
+        <members>fec_TransactionsAccountTabView</members>
+        <members>fecInteractionChatConversations</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -129,8 +140,15 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <name>CustomField</name>
     </types>
+    <types>
+		<members>FEC_Currency_Code__c</members>
+		<name>CustomObject</name>
+	</types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
@@ -151,6 +169,17 @@
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_Hold_Case_Save_Success</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+        <members>FEC_BilledTx_Col_Amount</members>
+        <members>FEC_BilledTx_Col_AuthCode</members>
+        <members>FEC_BilledTx_Col_Currency</members>
+        <members>FEC_BilledTx_Col_DebitCredit</members>
+        <members>FEC_BilledTx_Col_EffectiveDate</members>
+        <members>FEC_BilledTx_Col_MCC</members>
+        <members>FEC_BilledTx_Col_Merchant</members>
+        <members>FEC_BilledTx_Col_OTP</members>
+        <members>FEC_BilledTx_Col_Plan</members>
+        <members>FEC_BilledTx_Col_PostDate</members>
+        <members>FEC_BilledTx_Col_TxnCode</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -228,6 +257,34 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
+	</types>
+    <types>
+        <members>FEC_Currency_Code__c-Currency Code Layout</members>
+		<name>Layout</name>
+	</types>
+	<types>
+		<members>CA_Credit_Assessment</members>
+		<members>CL_Collections</members>
+		<members>CO_Card_Operations</members>
+		<members>CP_Contract_Processing</members>
+		<members>FS_Direct_Sales</members>
+		<members>IA_Internal_Audit</members>
+		<members>IT_IT_Operations_Support</members>
+		<members>PM_Payment</members>
+		<members>TS_Telesales</members>
+		<name>Group</name>
+	</types>
+	<types>
+		<members>Case.CA_Credit_Assessment</members>
+		<members>Case.CL_Collections</members>
+		<members>Case.CO_Card_Operations</members>
+		<members>Case.CP_Contract_Processing</members>
+		<members>Case.FS_Direct_Sales</members>
+		<members>Case.IA_Internal_Audit</members>
+		<members>Case.IT_IT_Operations_Support</members>
+		<members>Case.PM_Payment</members>
+		<members>Case.TS_Telesales</members>
+		<name>SharingCriteriaRule</name>
 	</types>
 	<version>66.0</version>
 </Package>
