@@ -2334,6 +2334,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       isAllValid = false;
     }
 
+    if (!this._validateRemovePhoneForSubmit()) {
+      isAllValid = false;
+    }
+
     const contractClosureEl = this._getContractClosureFormEl();
     if (
       contractClosureEl &&
@@ -2603,17 +2607,41 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveForSubmitIfApplicable();
   }
 
-  _saveRemovePhoneDraftIfApplicable() {
-    const host =
+  _getSubProcessContainerEl() {
+    return (
       this.template.querySelector("c-fec_-sub-process-container") ||
-      this.template.querySelector("c-fec-sub-process-container");
+      this.template.querySelector("c-fec-sub-process-container")
+    );
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _validateRemovePhoneForSubmit() {
+    const host = this._getSubProcessContainerEl();
+    if (!host || typeof host.validateRemovePhoneForSubmit !== "function") {
+      return true;
+    }
+    return host.validateRemovePhoneForSubmit();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _saveRemovePhoneDraftIfApplicable() {
+    const host = this._getSubProcessContainerEl();
     if (!host || typeof host.saveRemovePhoneDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
     return host.saveRemovePhoneDraftIfApplicable();
   }
 
-  //linhdev: Persist child data before case record form submit
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _saveRemovePhoneForSubmitIfApplicable() {
+    const host = this._getSubProcessContainerEl();
+    if (!host || typeof host.saveRemovePhoneForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return host.saveRemovePhoneForSubmitIfApplicable();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
@@ -2736,6 +2764,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
    */
   @api saveOnly() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     return this._persistChildDataBeforeCaseRecordFormSubmit().then(() => {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
@@ -2757,6 +2786,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
         this._savePointsRedemptionDraftIfApplicable(),
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+        this._saveRemovePhoneDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2767,12 +2798,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (total === 0) {
       // DungLT — flush upload file trước khi lưu form
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1368
       return this._uploadFecFileUploadCardsIfApplicable()
         .then(() => afterForms())
-        .then(() => {
-          this.handleSaveFieldReadOnly();
-        })
-        .then(() => this._saveRemovePhoneDraftIfApplicable());
+        .then(() => this.handleSaveFieldReadOnly());
     }
 
     return new Promise((resolve, reject) => {
@@ -2792,8 +2821,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then(() => {
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
-      })
-      .then(() => this._saveRemovePhoneDraftIfApplicable());
+      });
     });
   }
 
@@ -2849,7 +2877,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
-    await this._saveRemovePhoneDraftIfApplicable();
+    await this._saveRemovePhoneForSubmitIfApplicable();
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
