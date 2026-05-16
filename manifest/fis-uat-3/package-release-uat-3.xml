@@ -547,6 +547,9 @@
         <members>Case.FEC_Original_Category__c</members>
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
