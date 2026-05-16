@@ -1752,6 +1752,18 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  handleFastCashNocLocked(event) {
+    const rid = event.detail && event.detail.recordId;
+    if (rid && this.recordId && rid !== this.recordId) {
+      return;
+    }
+    const nocEl = this.template.querySelector("c-fec_-case-edit-n-o-c");
+    if (nocEl && typeof nocEl.applyFastCashBlockNocLock === "function") {
+      nocEl.applyFastCashBlockNocLock();
+    }
+  }
+
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _applyFastCashPropertyInfoVisibility() {
     if (!this.business?.sectionlst) {

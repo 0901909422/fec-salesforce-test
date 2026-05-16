@@ -2,7 +2,8 @@
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed}>
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1366-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecfastcashnoclocked={handleFastCashNocLocked}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>

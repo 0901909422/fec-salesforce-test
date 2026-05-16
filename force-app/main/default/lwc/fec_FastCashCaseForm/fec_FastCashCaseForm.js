@@ -473,6 +473,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.showConfirmModal = true;
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
         try {
@@ -497,7 +498,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     handleConfirmYes() {
         this.showConfirmModal = false;
         this.applyNocLockAfterModal();
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1367
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366
         this.dispatchEvent(
             new CustomEvent("fecfastcashblockconfirmed", {
                 bubbles: true,
