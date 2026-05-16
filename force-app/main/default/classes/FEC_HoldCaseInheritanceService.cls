@@ -98,8 +98,6 @@ public with sharing class FEC_HoldCaseInheritanceService {
 
             if (existingConfigs.containsKey(child.Id)) continue;
 
-            if (child.FEC_Sub_Code__c != null) continue;
-
             if (sourceIsSubCode) {
                 Boolean isCategory    = child.FEC_Category__c != null
                                      && child.FEC_Sub_Category__c == null;
@@ -126,7 +124,9 @@ public with sharing class FEC_HoldCaseInheritanceService {
          * CONTINUE RECURSIVE
          * ========================================= */
         for (FEC_Nature_of_Case__c node : nextNodes) {
-            processNode(node, sourceConfig, sourceIsSubCode);
+            if (node.FEC_Sub_Code__c == null) {
+                processNode(node, sourceConfig, sourceIsSubCode);
+            }
         }
     }
 
@@ -207,10 +207,9 @@ public with sharing class FEC_HoldCaseInheritanceService {
                 FROM FEC_Nature_of_Case__c
                 WHERE
                     Id != :node.Id
-                    AND FEC_Product_Type__c  = :node.FEC_Product_Type__c
-                    AND FEC_Category__c      = :node.FEC_Category__c
-                    AND FEC_Sub_Category__c  = :node.FEC_Sub_Category__c
-                    AND FEC_Sub_Code__c     = null
+                    AND FEC_Product_Type__c = :node.FEC_Product_Type__c
+                    AND FEC_Category__c     = :node.FEC_Category__c
+                    AND FEC_Sub_Category__c = :node.FEC_Sub_Category__c
             ];
         }
 
