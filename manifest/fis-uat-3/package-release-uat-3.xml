@@ -689,6 +689,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_RemovePhoneForm</members>
+        <members>fec_IPPConversionRetailForm</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
