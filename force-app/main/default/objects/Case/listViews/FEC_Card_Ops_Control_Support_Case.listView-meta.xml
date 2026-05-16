@@ -32,7 +32,7 @@
     <filters>
         <field>FEC_Assignment_Users__c</field>
         <operation>contains</operation>
-        <value>Card Ops Control &amp;amp; Support</value>
+        <value>Card Ops Control &amp; Support</value>
     </filters>
     <label>Card Ops Control &amp; Support</label>
     <queue>FEC_Card_Ops_Control_Support</queue>

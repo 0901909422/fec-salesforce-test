@@ -130,6 +130,9 @@ public without sharing class FEC_CaseTriggerHandler {
         if (!FEC_CaseTriggerHandler.isSystemUpdate) {
             FEC_MrcDuplicateCaseService.applyHandlingOptionChanges(newCases, oldMap);
         }
+        // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
+        // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
+        // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         isExecuting = false;
     }
 
