@@ -28,6 +28,7 @@ import FEC_Col_Active from '@salesforce/label/c.FEC_Col_Active';
 import FEC_Tab_Case_Stage from '@salesforce/label/c.FEC_Tab_Case_Stage';
 import FEC_LABEL_USER from '@salesforce/label/c.FEC_LABEL_USER';
 import LBL_Channel_Col from '@salesforce/label/c.LBL_Channel_Col';
+import FEC_NFU_Code from '@salesforce/label/c.FEC_NFU_Code';
 
 import FEC_Date from '@salesforce/label/c.FEC_Date'; 
 import FEC_Field from '@salesforce/label/c.FEC_Field';

@@ -1534,7 +1534,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
                 // }
 
-                if (!this.isEdit) {
+                const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
+                if (!this.isEdit || isCOFStage1Revert) {
                   field.readonly = true;
                   field.editable = false;
                 }
@@ -3658,6 +3659,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
               hideSubSectionHeading: meta.hideSubSectionHeading === true,
+              isCollapsible: meta.isCollapsible === true,
               lwcColClassName,
             };
           })
