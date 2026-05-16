@@ -4439,6 +4439,14 @@
         <value>Xác nhận đổi điểm</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redemption_Available_Points_Below_Min</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Available_Points_Below_Min</shortDescription>
+        <value>Available Points &lt; 100,000</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
