@@ -115,6 +115,26 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         this.phone = nextPhone;
     }
 
+    _getPhoneValidationError(phoneValue) {
+        const p = (phoneValue != null ? String(phoneValue) : (this.phone || STR_EMPTY)).trim();
+        if (!p) {
+            return null;
+        }
+        return validateUpdatedInfoPhone(p) || null;
+    }
+
+    _applyPhoneInputValidity(reportNow) {
+        const phoneInput = this.template.querySelector('lightning-input');
+        if (!phoneInput) {
+            return;
+        }
+        const err = this._getPhoneValidationError(this.phone);
+        phoneInput.setCustomValidity(err || '');
+        if (reportNow) {
+            phoneInput.reportValidity();
+        }
+    }
+
     _removePhoneCellText(v) {
         if (v === undefined || v === null) {
             return STR_EMPTY;
@@ -250,10 +270,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         }
         const nextPhone = (event.target.value || STR_EMPTY).trim();
         this.phone = nextPhone;
-        const phoneInput = this.template.querySelector('lightning-input');
-        if (phoneInput) {
-            phoneInput.setCustomValidity('');
-        }
+        this._applyPhoneInputValidity(true);
         if (this.phone !== this.lastCheckedPhone) {
             this.rows = [];
             this.selectedRowIds = [];
@@ -264,7 +281,20 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get disableCheckButton() {
-        return this.isLoading || !this.phone || this.readOnlyRemovePhone;
+        if (this.isLoading || this.readOnlyRemovePhone || !this.phone) {
+            return true;
+        }
+        if (this._getPhoneValidationError(this.phone)) {
+            return true;
+        }
+        return this.isEligibilityChecked;
+    }
+
+    get isEligibilityChecked() {
+        const p = (this.phone || STR_EMPTY).trim();
+        return p.length > 0
+            && p === (this.lastCheckedPhone || STR_EMPTY).trim()
+            && (this.rows || []).length > 0;
     }
 
     get phoneReadOnlyDisplay() {
@@ -395,13 +425,9 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         if (this.readOnlyRemovePhone) {
             return;
         }
-        const phoneErr = this.phone ? validateUpdatedInfoPhone(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
+        const phoneErr = this.phone ? this._getPhoneValidationError(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
         if (phoneErr) {
-            const phoneInput = this.template.querySelector('lightning-input');
-            if (phoneInput) {
-                phoneInput.setCustomValidity(phoneErr);
-                phoneInput.reportValidity();
-            }
+            this._applyPhoneInputValidity(true);
             this.resultMessage = STR_EMPTY;
             this.rows = [];
             this.selectedRowIds = [];
@@ -409,10 +435,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             this._recomputePagedRows();
             return;
         }
-        const phoneInputClear = this.template.querySelector('lightning-input');
-        if (phoneInputClear) {
-            phoneInputClear.setCustomValidity('');
-        }
+        this._applyPhoneInputValidity(false);
         this.isLoading = true;
         this.resultMessage = STR_EMPTY;
         this.rows = [];
@@ -432,7 +455,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                     this._bumpTableKey();
                     return;
                 }
-                this.resultMessage = (res && res.errorMessage) ? res.errorMessage : FEC_MSG_Remove_Phone_Service_Failed;
+                this.resultMessage = FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
             })
             .catch(() => {
