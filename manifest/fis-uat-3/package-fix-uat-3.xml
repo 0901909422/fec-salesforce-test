@@ -226,6 +226,7 @@
 	</types>
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
+		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
 	</types>
 	<version>66.0</version>
