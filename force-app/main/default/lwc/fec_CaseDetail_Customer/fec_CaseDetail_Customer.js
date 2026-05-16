@@ -30,7 +30,7 @@ import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
-import { updateRecord } from "lightning/uiRecordApi";
+import { updateRecord, getRecordNotifyChange } from "lightning/uiRecordApi";
 
 import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst";
 
@@ -184,6 +184,7 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
+    // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
 
@@ -396,8 +397,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const isRoutingMode = caseBusinessEle?.isRoutingAssignmentMode;
       const hasManualItems = caseBusinessEle?._manualItems?.length > 0;
       if (!(isRoutingMode && hasManualItems)) {
-      isAllValid = false;
-      this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
+        isAllValid = false;
+        this.errlst.push(REQUIRED_MSG.replace("{0}", FEC_Case_Remark_Label));
       }
     }
 
@@ -441,6 +442,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
+      }
+      if (this.recordId) {
+        getRecordNotifyChange([{ recordId: this.recordId }]);
       }
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();

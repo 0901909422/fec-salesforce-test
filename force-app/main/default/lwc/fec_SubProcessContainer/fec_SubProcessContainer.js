@@ -99,6 +99,17 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
+  //linhdev: Save remove phone draft if applicable
+  @api saveRemovePhoneDraftIfApplicable() {
+    const el =
+      this.template.querySelector("c-fec_-remove-phone-form") ||
+      this.template.querySelector("c-fec-remove-phone-form");
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
   async initializeCase() {
     try {
       const result = await getSubmittedSubProcesses({
