@@ -36,4 +36,24 @@ public with sharing class FEC_ClientPDFService {
             throw new AuraHandledException(e.getMessage());
         }
     }
+
+    @AuraEnabled
+    public static Id savePdfToCase(String base64Data, String fileName, String caseId) {
+        try {
+            if (String.isBlank(base64Data) || String.isBlank(fileName) || String.isBlank(caseId)) {
+                throw new AuraHandledException(Label.FEC_PDF_Error_DataEmpty);
+            }
+            ContentVersion cv = new ContentVersion();
+            cv.Title = fileName;
+            cv.PathOnClient = fileName + '.pdf';
+            cv.VersionData = EncodingUtil.base64Decode(base64Data);
+            cv.FirstPublishLocationId = caseId;
+            insert cv;
+            return cv.Id;
+        } catch (AuraHandledException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }
