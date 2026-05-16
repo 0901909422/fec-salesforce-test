@@ -233,6 +233,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 }
                 this._clearFastCashSessionStorage();
                 this._resetBlockStateFlagsInMemory();
+                this._isEdit = false;
             },
             { scope: APPLICATION_SCOPE }
         );
@@ -634,20 +635,28 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         return formatThousandsFromDigits(d);
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — lock NOC không khóa amount; chỉ disable sau block OK hoặc 3 lần fail
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — lock NOC không khóa amount; disable sau submit / block OK / 3 lần fail
     get amountFieldsDisabled() {
+        if (this.isReadOnly) {
+            return true;
+        }
         if (this.finalBlockFailure || this.blockSucceeded) {
             return true;
         }
         if (this.eligible) {
             return false;
         }
-        return this.isReadOnly;
+        return true;
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Block Amount không phụ thuộc isReadOnly từ parent metadata
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — disable sau submit (review) hoặc block OK / 3 lần fail
     get blockAmountButtonDisabled() {
-        return this.blockLoading || this.finalBlockFailure || this.blockSucceeded;
+        return (
+            this.isReadOnly ||
+            this.blockLoading ||
+            this.finalBlockFailure ||
+            this.blockSucceeded
+        );
     }
 
     get showNoti12() {
@@ -675,6 +684,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get showBlockButton() {
+        if (this.isReadOnly) {
+            return false;
+        }
         if (!this.eligible || this.blockSucceeded || this.finalBlockFailure) {
             return false;
         }
