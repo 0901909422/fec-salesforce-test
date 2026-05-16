@@ -138,6 +138,9 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
