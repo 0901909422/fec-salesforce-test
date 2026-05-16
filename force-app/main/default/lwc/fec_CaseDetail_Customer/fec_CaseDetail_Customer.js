@@ -42,10 +42,43 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
+  FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
+  FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 const PROCESS_CARD_REPLACEMENT = "Card Replacement";
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1366
+function isFastCashBlockModalConfirmed(caseId) {
+  try {
+    if (!caseId) {
+      return false;
+    }
+    return sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+function readFastCashNocSelectionForCaseDetail(caseId) {
+  try {
+    if (!caseId || !isFastCashBlockModalConfirmed(caseId)) {
+      return null;
+    }
+    const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    if (!raw) {
+      return null;
+    }
+    const sel = JSON.parse(raw);
+    if (!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId)) {
+      return null;
+    }
+    return sel;
+  } catch (e) {
+    return null;
+  }
+}
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -150,10 +183,13 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   async connectedCallback() {
     try {
-      await resetViewMode({
-        recordId: this.recordId,
-        viewMode: VIEW_MODE_REVIEW,
-      });
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Fast Cash sau Có/Không: không ép review khi remount/refresh
+      if (!isFastCashBlockModalConfirmed(this.recordId)) {
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: VIEW_MODE_REVIEW,
+        });
+      }
 
       this.subscribeToMessageChannel();
       this.loadRemarkHistory();
@@ -219,7 +255,17 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (caseBusinessEle) {
       // Chỉ gọi getData khi mode thực sự đổi: tránh reset NOC do broadcast từ tab khác
-      caseBusinessEle.getData();
+      const fastCashNocSel = readFastCashNocSelectionForCaseDetail(this.recordId);
+      if (fastCashNocSel && fastCashNocSel.productTypeId) {
+        caseBusinessEle.getData(
+          fastCashNocSel.productTypeId,
+          fastCashNocSel.categoryId,
+          fastCashNocSel.subCategoryId,
+          fastCashNocSel.subCodeId
+        );
+      } else {
+        caseBusinessEle.getData();
+      }
     }
   }
 

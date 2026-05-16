@@ -3,6 +3,7 @@ import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
 import CASE_ACTUAL_NOC from "@salesforce/schema/Case.FEC_Actual_Nature_of_Case__c";
 
@@ -42,7 +43,8 @@ import {
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
     FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
-    FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX
+    FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
+    FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX
 } from "c/fec_CommonConst";
 import { formatThousandsFromDigits, stripToIntString } from "c/fec_CommonUtils";
 
@@ -317,9 +319,73 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             sessionStorage.removeItem(this._storageBlockOkKey());
             sessionStorage.removeItem(this._storageModalConfirmedKey());
             sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
+            sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX + this.recordId);
         } catch (e) {
             /* ignore */
         }
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — giữ Requested Amount sau block fail / remount
+    _saveRequestedAmountToStorage() {
+        try {
+            if (!this.recordId || !this.requestedAmountDigits) {
+                return;
+            }
+            sessionStorage.setItem(
+                FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX + this.recordId,
+                JSON.stringify({
+                    digits: this.requestedAmountDigits,
+                    display: this.requestedAmountDisplay
+                })
+            );
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
+    _readRequestedAmountFromStorage() {
+        try {
+            if (!this.recordId) {
+                return null;
+            }
+            const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX + this.recordId);
+            if (!raw) {
+                return null;
+            }
+            return JSON.parse(raw);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    _restoreRequestedAmountFromStorageOrMemory(preservedDigits, preservedDisplay) {
+        const fromSession = this._readRequestedAmountFromStorage();
+        if (fromSession && fromSession.digits) {
+            this.requestedAmountDigits = fromSession.digits;
+            this.requestedAmountDisplay = fromSession.display || formatThousandsFromDigits(fromSession.digits);
+            return;
+        }
+        if (preservedDigits) {
+            this.requestedAmountDigits = preservedDigits;
+            this.requestedAmountDisplay = preservedDisplay || formatThousandsFromDigits(preservedDigits);
+        }
+    }
+
+    _persistRequestedAmountBeforeBlock(blockAmount) {
+        this._saveRequestedAmountToStorage();
+        return saveFastCashCaseAmounts({
+            caseId: this.recordId,
+            requestedAmount: blockAmount,
+            maxAmount: this.maxAmountDecimal
+        }).catch(() => undefined);
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — block fail không đổi Interaction sang review
+    _publishHandlingModeAfterBlockFailure() {
+        if (!this.messageContext) {
+            return;
+        }
+        publish(this.messageContext, IS_MODE_EDIT, { isModeEdit: true });
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — đổi NOC / rời RC35: reset toàn bộ state Fast Cash
@@ -331,7 +397,13 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     loadLockedSnapshot() {
-        this.clearBlockMessages();
+        const preservedDigits = this.requestedAmountDigits;
+        const preservedDisplay = this.requestedAmountDisplay;
+        const keepNoti09 = this.showNoti09;
+        const keepNoti10 = this.showNoti10;
+        if (!keepNoti09 && !keepNoti10) {
+            this.clearBlockMessages();
+        }
         getCaseFastCashState({ caseId: this.recordId })
             .then((st) => {
                 if (st && st.maxAmount != null && Number(st.maxAmount) > 0) {
@@ -343,6 +415,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                     const d = stripToIntString(st.requestedAmount);
                     this.requestedAmountDigits = d;
                     this.requestedAmountDisplay = formatThousandsFromDigits(d);
+                } else {
+                    this._restoreRequestedAmountFromStorageOrMemory(preservedDigits, preservedDisplay);
                 }
                 if (sessionStorage.getItem(this._storageBlockOkKey()) === "1") {
                     this.blockSucceeded = true;
@@ -351,10 +425,24 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                 if (this.blockFailCount >= MAX_FAST_CASH_BLOCK_ATTEMPTS) {
                     this.showNoti10 = true;
                 }
+                if (keepNoti09) {
+                    this.showNoti09 = true;
+                }
+                if (keepNoti10) {
+                    this.showNoti10 = true;
+                }
                 //linhdev fix jira FECREDIT_CSM_2025_KH-1294
                 this._notifyFastCashPropertyInfoVisibility(false);
             })
-            .catch(() => {});
+            .catch(() => {
+                this._restoreRequestedAmountFromStorageOrMemory(preservedDigits, preservedDisplay);
+                if (keepNoti09) {
+                    this.showNoti09 = true;
+                }
+                if (keepNoti10) {
+                    this.showNoti10 = true;
+                }
+            });
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -601,6 +689,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — chỉ gọi từ handleConfirmYes / handleConfirmNo (pop-up Block Amount)
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
+        this._saveRequestedAmountToStorage();
         if (this.messageContext && this.recordId) {
             publish(this.messageContext, CASE_NOC, {
                 caseId: this.recordId,
@@ -642,7 +731,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         this.blockLoading = true;
         this.clearBlockMessages();
-        executeFastCashBlock({ caseId: this.recordId, blockAmount: n })
+        this._persistRequestedAmountBeforeBlock(n)
+            .then(() => executeFastCashBlock({ caseId: this.recordId, blockAmount: n }))
             .then((res) => {
                 this.blockLoading = false;
                 if (res && res.success) {
@@ -657,36 +747,31 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
                     this.navigateToCase();
                     return;
                 }
-                this.blockFailCount += 1;
-                try {
-                    sessionStorage.setItem(this._storageBlockFailKey(), String(this.blockFailCount));
-                } catch (e) {
-                    /* ignore */
-                }
-                if (this.blockFailCount >= MAX_FAST_CASH_BLOCK_ATTEMPTS) {
-                    this.finalBlockFailure = true;
-                    this.showNoti10 = true;
-                    this.navigateToCase();
-                } else {
-                    this.showNoti09 = true;
-                }
+                this._handleBlockFailure();
             })
             .catch(() => {
                 this.blockLoading = false;
-                this.blockFailCount += 1;
-                try {
-                    sessionStorage.setItem(this._storageBlockFailKey(), String(this.blockFailCount));
-                } catch (e) {
-                    /* ignore */
-                }
-                if (this.blockFailCount >= MAX_FAST_CASH_BLOCK_ATTEMPTS) {
-                    this.finalBlockFailure = true;
-                    this.showNoti10 = true;
-                    this.navigateToCase();
-                } else {
-                    this.showNoti09 = true;
-                }
+                this._handleBlockFailure();
             });
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — block fail: giữ handling mode + Requested Amount, không navigate view
+    _handleBlockFailure() {
+        this.blockLoading = false;
+        this._saveRequestedAmountToStorage();
+        this.blockFailCount += 1;
+        try {
+            sessionStorage.setItem(this._storageBlockFailKey(), String(this.blockFailCount));
+        } catch (e) {
+            /* ignore */
+        }
+        if (this.blockFailCount >= MAX_FAST_CASH_BLOCK_ATTEMPTS) {
+            this.finalBlockFailure = true;
+            this.showNoti10 = true;
+        } else {
+            this.showNoti09 = true;
+        }
+        this._publishHandlingModeAfterBlockFailure();
     }
 
     navigateToCase() {

@@ -267,13 +267,27 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this._fastCashLockCombosApplied = true;
   }
 
+  _isFastCashBlockModalConfirmedInStorage() {
+    try {
+      if (!this.recordId) {
+        return false;
+      }
+      return sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
   async connectedCallback() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — phục hồi lock trước resetViewMode để isEdit không rơi output-field khi reload
     this._restoreFastCashNocLockFromStorage();
-    await resetViewMode({
-      recordId: this.recordId,
-      viewMode: VIEW_MODE_REVIEW,
-    });
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — sau Có/Không Block Amount: không ép review (giữ handling / combo disable)
+    if (!this._isFastCashBlockModalConfirmedInStorage()) {
+      await resetViewMode({
+        recordId: this.recordId,
+        viewMode: VIEW_MODE_REVIEW,
+      });
+    }
     this.subscribeToMessageChannel();
     
     getCase({ recordId: this.recordId })
