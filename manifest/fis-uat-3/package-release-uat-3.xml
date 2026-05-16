@@ -135,6 +135,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
+		<members>FEC_HoldCaseInheritanceService</members>
         <name>ApexClass</name>
     </types>
 	<types>

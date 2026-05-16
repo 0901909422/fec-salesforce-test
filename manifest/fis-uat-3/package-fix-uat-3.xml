@@ -49,6 +49,7 @@
         <members>FEC_BancaController</members>
         <members>FEC_DNBHandler</members>
         <members>FEC_GetCSCaseStatusService</members>
+		<members>Fec_HoldCaseConfigurationController</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<name>Apexclass</name>
 	</types>
