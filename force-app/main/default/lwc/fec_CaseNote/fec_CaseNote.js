@@ -89,7 +89,7 @@ export default class Fec_CaseNote extends LightningElement {
   handleModeMessage(message) {
     console.log("[LMS] Mode received:", message);
 
-    if (message?.isModeEdit !== undefined) {
+    if (message?.isModeEdit !== undefined && message?.caseId === this.recordId) {
       setMode(message.isModeEdit);
     }
   }
