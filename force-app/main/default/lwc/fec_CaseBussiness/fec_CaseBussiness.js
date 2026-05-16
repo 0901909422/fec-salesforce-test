@@ -3660,6 +3660,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
               hideSubSectionHeading: meta.hideSubSectionHeading === true,
+              isCollapsible: meta.isCollapsible === true,
               lwcColClassName,
             };
           })
