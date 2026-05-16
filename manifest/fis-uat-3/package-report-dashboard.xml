@@ -86,6 +86,10 @@
         <name>ReportType</name>
     </types>
     <types>
+        <members>FECReport</members>
+        <name>ReportFolder</name>
+    </types>
+    <types>
         <members>FECReport/FEC_RP_01</members>
         <members>FECReport/FEC_RP_02</members>
         <name>Report</name>
