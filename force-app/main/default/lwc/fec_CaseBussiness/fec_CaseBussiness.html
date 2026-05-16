@@ -2,7 +2,8 @@
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility}>
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1366-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecfastcashnoclocked={handleFastCashNocLocked}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
@@ -103,11 +104,6 @@
                       </div>
                     </lightning-record-edit-form>
                   </template>
-                  <template if:true={row.sub.showRemovePhoneAfter}>
-                    <div class="slds-m-top_medium">
-                      <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
-                    </div>
-                  </template>
                 </template>
 
                 <template if:true={row.sub.isCollapsible}>
@@ -190,11 +186,6 @@
                             </template>
                           </div>
                         </lightning-record-edit-form>
-                      </template>
-                      <template if:true={row.sub.showRemovePhoneAfter}>
-                        <div class="slds-m-top_medium" data-fec-lwc="fec_RemovePhoneForm">
-                          <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
-                        </div>
                       </template>
                     </lightning-accordion-section>
                   </lightning-accordion>

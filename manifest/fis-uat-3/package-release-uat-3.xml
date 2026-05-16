@@ -544,6 +544,9 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>Case.FEC_Original_Category__c</members>
+        <members>Case.FEC_Original_Sub_Category__c</members>
+        <members>Case.FEC_Original_Sub_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -602,6 +605,7 @@
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
+        <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Assignment_Record_Page</members>
         <members>Channel_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
@@ -1061,6 +1065,7 @@
 		<members>FEC_New_Value</members>
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
+        <members>FEC_MSG_IPP_Noti_10</members>
         <name>CustomLabel</name>
     </types>
 	<types>
