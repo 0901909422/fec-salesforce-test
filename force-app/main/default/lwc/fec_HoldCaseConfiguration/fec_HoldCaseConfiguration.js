@@ -48,7 +48,7 @@ import FEC_Error_Manual from '@salesforce/label/c.FEC_Error_Manual';
 import FEC_Hold_Case_Config from '@salesforce/label/c.FEC_Hold_Case_Config'; 
 import FEC_New_Hold_Case_Config from '@salesforce/label/c.FEC_New_Hold_Case_Config';
 import FEC_List_Of_NFU_Code from '@salesforce/label/c.FEC_List_Of_NFU_Code'; 
-import FEC_No_Data_Found from '@salesforce/label/c.FEC_No_Data_Found';
+import FEC_No_Data_Found_Hold_Case from '@salesforce/label/c.FEC_No_Data_Found_Hold_Case';
 
 export default class Fec_HoldCaseConfiguration extends NavigationMixin(LightningElement) {
 
@@ -112,7 +112,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         requiredInformation: FEC_Required_Information,
         information: FEC_Information,
         listOfNFUCode: FEC_List_Of_NFU_Code,
-        noDataFound: FEC_No_Data_Found
+        noDataFound: FEC_No_Data_Found_Hold_Case
     }
 
     // ================= TABLE COLUMNS =================

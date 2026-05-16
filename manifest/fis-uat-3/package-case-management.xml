@@ -52,6 +52,18 @@
 	    <members>FEC_ChannelFunctionServiceTest</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandler</members>
 	    <members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
+        <members>FEC_SalesChannelFromApplicationService</members>
+        <members>FEC_ApplicationListTriggerHandler</members>
+        <members>FEC_CMSRewardRedeemService</members>
+		<members>FEC_CMSRewardRedeemServiceTest</members>
+		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentConfigController</members>
+		<members>FEC_CaseAssignmentConflictService</members>
+		<members>FEC_CaseAssignmentConflictServiceTest</members>
+		<members>FEC_CaseAssignmentNOCDraftTest</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -59,6 +71,8 @@
 		<members>FEC_RelevantTicketTrigger</members>
 		<members>FEC_AssignmentTrigger</members>
 		<members>FEC_NatureOfCaseTrigger</members>
+        <members>FEC_ApplicationListTrigger</members>
+		<members>FEC_CaseAssignmentNOCTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -388,6 +402,7 @@
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case__c</members>
@@ -438,13 +453,22 @@
         <members>FEC_Additional_Info__c.FEC_Contract_Number_List__c</members>
         <members>FEC_Additional_Info__c.FEC_National_ID_List__c</members>
         <members>FEC_Additional_Info__c.FEC_Province_City__c</members>
+        <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
         <members>Case.FEC_Is_PIN_Reset_Success__c</members>
+        <members>Case.FEC_CMS_Phone__c</members>
+		<members>Case.FEC_Contract_Processing_Assessment_Type__c</members>
+		<members>Case.FEC_Customer_Confirmation__c</members>
+		<members>Case.FEC_MRC_Request_Handling_Option__c</members>
+		<members>Case.FEC_Redeemed_Points__c</members>
+        <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
         <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -452,6 +476,7 @@
         <members>FEC_BancaTabView</members>
         <members>FEC_Template_Import__c</members>
         <members>FEC_HoldCaseConfiguration</members>
+		<members>FEC_Case_Assignment__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
@@ -466,19 +491,38 @@
 		<members>FEC_Allocation_History__c</members>
 		<members>FEC_Collection_Interactions__c</members>
 		<members>FEC_Communication_History__c</members>
-		<members>FEC_Fast_Cash_Info__c</members>
+        <members>FEC_Fast_Cash_Info__c</members>
         <members>FEC_Team_Queue__c</members>
         <members>FEC_Team__c</members>
         <members>FEC_Insurance_Info__c</members>
+        <members>FEC_Incorrect_Payment_Info__c</members>
+        <members>FEC_Contract_List_for_Remove_Phone__c</members>
+        <members>FEC_Assignment_MDS__c</members>
         <members>FEC_Batch_Case_Handling__c</members>
         <members>FEC_Template_Import__c</members>
         <members>FEC_Hold_Case_Config__c</members>
+        <members>FEC_Sales_Logic__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c</members>
+		<members>FEC_Case_Assignment_Logs__c</members>
+		<members>FEC_Case_Assignment_NOC__c</members>
+		<members>FEC_Case_Assignment__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
+		<members>fecCaseAssignmentNewOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
+    <types>
+		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
+        <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
+        <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
+		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
+        <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
+        <members>FEC_Case_Assignment_NOC__c-Case Assignmetn NOC Layout</members>
+		<members>FEC_Case_Assignment__c-Case Assignment Layout</members>
+		<name>Layout</name>
+	</types>
     <types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
@@ -489,6 +533,7 @@
         <members>FEC_Batch_Case_Handling</members>
 		<members>Template_Import_Record_Page</members>
 		<members>Hold_Case_Config_Record_Page</members>
+		<members>FEC_Case_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
     <types>
@@ -544,10 +589,16 @@
         <members>fec_HoldCaseConfiguration</members>
         <members>fec_HoldCaseConfigurationTabView</members>
         <members>fec_RelatedListPaging</members>
+        <members>fec_holdCaseManual</members>
+        <members>fecCaseAssignmentNewForm</members>
+		<members>fec_CaseAssignmentConfig</members>
+		<members>fec_CaseAssignmentDetailSummary</members>
+		<members>fec_CaseAssignmentNocConfig</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
         <members>FEC_SheetJS</members>
+		<members>FEC_CommonCss</members>
         <name>StaticResource</name>
     </types>
 	<types>
@@ -1047,7 +1098,8 @@
         <members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
         <!-- Customer Data Management -->
-        <members>FEC_Permission_Set_Customer_Data_Management</members>
+        <members>FEC_Permission_Set_Customer_Data_Management_Admin</members>
+		<members>FEC_Permission_Set_Customer_Data_Management_User</members>
         <!-- Customer 360 -->
         <members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
 		<members>FEC_CS_CS_Ecom_Specialist_Customer_360</members>
@@ -1104,8 +1156,66 @@
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
         <!-- Batch Case Handling -->
         <members>FEC_Batch_Case_Handling</members>
+        <!-- Case Assignment -->
+        <members>FEC_Case_Assignment_Management</members>
         <name>PermissionSet</name>
     </types>
+    <types>
+		<members>PSG_RD_IT_User</members>
+        <members>FEC_PSG_CS_CS_Ecom_Officer</members>
+        <members>FEC_PSG_CS_CS_Ecom_Specialist</members>
+        <members>FEC_PSG_CS_CS_Ecom_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Inbound_Officer</members>
+        <members>FEC_PSG_CS_CS_Inbound_Specialist</members>
+        <members>FEC_PSG_CS_CS_Inbound_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Operations_Management_Specialist</members>
+        <members>FEC_PSG_CS_CS_Operations_Manager</members>
+        <members>FEC_PSG_CS_CS_Outbound_Officer</members>
+        <members>FEC_PSG_CS_CS_Outbound_Specialist</members>
+        <members>FEC_PSG_CS_CS_Outbound_Team_Leader</members>
+        <members>FEC_PSG_CS_CS_Quality_Control_Manager</members>
+        <members>FEC_PSG_CS_CS_Quality_Control_Specialist</members>
+        <members>FEC_PSG_CS_CS_Support_Manager</members>
+        <members>FEC_PSG_CS_CS_Support_Specialist</members>
+        <members>FEC_PSG_CS_Card_Risk_Monitoring_Specialist</members>
+        <members>FEC_PSG_CS_Center_Director</members>
+        <members>FEC_PSG_CS_Customer_Care_Manager</members>
+        <members>FEC_PSG_CS_Customer_Care_Specialist</members>
+        <members>FEC_PSG_CS_Customer_Experience_Manager_1</members>
+        <members>FEC_PSG_CS_Customer_Experience_Manager_2</members>
+        <members>FEC_PSG_CS_Customer_Experience_Manager_3</members>
+        <members>FEC_PSG_CS_Head_of_CS_Contact_Center_Dept</members>
+        <members>FEC_PSG_CS_Head_of_CS_QC_OM_Dept</members>
+        <members>FEC_PSG_CS_Head_of_Customer_Care_Dept</members>
+        <members>FEC_PSG_CS_Office_Based_Team_Leader</members>
+        <members>FEC_PSG_CS_Senior_CS_Ecom_Specialist</members>
+        <members>FEC_PSG_CS_Senior_CS_Inbound_Specialist</members>
+        <members>FEC_PSG_CS_Senior_CS_Operations_Management_Specialist</members>
+        <members>FEC_PSG_CS_Senior_CS_Outbound_Specialist</members>
+        <members>FEC_PSG_CS_Senior_CS_Quality_Control_Specialist</members>
+        <members>FEC_PSG_CS_Senior_CS_Support_Specialist</members>
+        <members>FEC_PSG_CS_Senior_Card_Risk_Monitoring_Specialist</members>
+        <members>FEC_PSG_CS_Senior_Customer_Care_Specialist</members>
+        <members>FEC_PSG_CS_Senior_Office_Based_Specialist</members>        
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Ecom</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Inbound</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Operations_Management</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Outbound</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Quality_Control</members>
+        <members>FEC_PSG_CS_Unit_Head_of_CS_Support</members>
+        <members>FEC_PSG_CS_Unit_Head_of_Customer_Care</members>    
+        <members>FEC_PSG_CS_Unit_Head_of_Office_Based</members> 
+        <members>FEC_PSG_RD_Telesales_User_1</members>
+        <members>FEC_PSG_RD_Card_Operations_User</members>
+        <members>FEC_PSG_RD_Collections_User</members>
+        <members>FEC_PSG_RD_Contract_Processing_User</members>
+        <members>FEC_PSG_RD_Payment_User</members>
+        <members>FEC_PSG_RD_Direct_Sales_PSG_User</members>
+        <members>FEC_PSG_RD_Telesales_User_2</members>
+        <members>FEC_PSG_RD_Credit_Assessment_User</members>
+        <members>FEC_PSG_RD_Internal_Audit_User</members>
+		<name>PermissionSetGroup</name>
+	</types>
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
         <name>QuickAction</name>
@@ -1158,10 +1268,10 @@
 	 	<members>Case.Internal_Case</members>
 		<name>RecordType</name>
 	</types>
-    <types>
-		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
-		<name>Layout</name>
-	</types>
+	<types>
+        <members>Case-en_US</members>
+        <name>CustomObjectTranslation</name>
+    </types>
     <types>
         <members>Case.FEC_Analyst_Case</members>
         <members>Case.FEC_Business_Admin_Case</members>
@@ -1237,5 +1347,16 @@
         <members>Case.X3_My_Completed_Cases</members>
         <name>ListView</name>
     </types>
+    <types>
+		<members>FEC_API_Config.FEC_Generate_Cashback</members>
+		<members>FEC_API_Config.FEC_Generate_EVoucher</members>
+		<members>FEC_API_Config.FEC_Generate_MVoucher</members>
+		<name>CustomMetadata</name>
+	</types>
+	<types>
+		<members>FEC_Service_Resource_Absence__c.FEC_EndDate_Greater_Than_StartDate</members>
+		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
+		<name>ValidationRule</name>
+	</types>
 	<version>66.0</version>
 </Package>
