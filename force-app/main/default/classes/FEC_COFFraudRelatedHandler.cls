@@ -1,5 +1,20 @@
 public with sharing class FEC_COFFraudRelatedHandler {
     
+    
+    @AuraEnabled
+    public static Case getCaseInfo(Id recordId) {
+        return [
+        SELECT
+            RecordTypeId,
+            FEC_Complain_Type__c,
+            FEC_Complaint_Source__c,
+            FEC_Interaction_View_Mode__c
+        FROM Case
+        WHERE Id = :recordId
+        LIMIT 1
+    ];
+    }
+    
     @AuraEnabled
     public static String getCategory(String categoryId) {
         if (String.isBlank(categoryId)) {

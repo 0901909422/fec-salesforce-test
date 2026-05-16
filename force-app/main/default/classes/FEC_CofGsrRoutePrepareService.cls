@@ -87,6 +87,90 @@ public without sharing class FEC_CofGsrRoutePrepareService {
         natureOfCaseId,
         fieldListJson
       );
+      updateCaseOriginalNocFromFlowHistory(caseId);
+    }
+  }
+
+  //PhongBT 15/05/26
+  /**
+   * Snapshot Category / Sub Category / Sub Code gốc lên Case từ NOC trên FEC_Case_Flow_History__c vừa tạo.
+   */
+  private static void updateCaseOriginalNocFromFlowHistory(String caseId) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+    try {
+      List<FEC_Case_Flow_History__c> flowHistories = [
+        SELECT
+          FEC_Nature_of_Cases__r.FEC_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Code__c
+        FROM FEC_Case_Flow_History__c
+        WHERE FEC_Case__c = :caseId AND FEC_Nature_of_Cases__c != NULL
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+      ];
+      if (flowHistories.isEmpty() || flowHistories[0].FEC_Nature_of_Cases__r == null) {
+        return;
+      }
+      FEC_Nature_of_Case__c baselineNoc = flowHistories[0].FEC_Nature_of_Cases__r;
+      update new Case(
+        Id = caseId,
+        FEC_Original_Category__c = baselineNoc.FEC_Category__c,
+        FEC_Original_Sub_Category__c = baselineNoc.FEC_Sub_Category__c,
+        FEC_Original_Sub_Code__c = baselineNoc.FEC_Sub_Code__c
+      );
+    } catch (Exception e) {
+      System.debug(
+        'updateCaseOriginalNocFromFlowHistory error: ' + e.getMessage()
+      );
+    }
+  }
+  //PhongBT: update bộ noc chọn ở updated khi revert về
+  /**
+   * Cập nhật bộ NOC (Product Type, Category, Sub Category, Sub Code) trên Case
+   * theo Nature of Case Id được chọn ở Updated NOC trên UI.
+   * Hỗ trợ cả Actual NOC (FEC_Actual_Nature_of_Case__c) và Template NOC (FEC_Nature_of_Case__c).
+   */
+  public static void updateCaseNocFromSelection(String caseId, String natureOfCaseId) {
+    if (String.isBlank(caseId) || String.isBlank(natureOfCaseId)) {
+      return;
+    }
+
+    List<FEC_Actual_Nature_of_Case__c> actualLst = [
+      SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c
+      FROM FEC_Actual_Nature_of_Case__c
+      WHERE Id = :natureOfCaseId
+      LIMIT 1
+    ];
+    if (!actualLst.isEmpty()) {
+      FEC_Actual_Nature_of_Case__c noc = actualLst[0];
+      update new Case(
+        Id = caseId,
+        FEC_Actual_Nature_of_Case__c = noc.Id,
+        FEC_Product_Type__c = noc.FEC_Product_Type__c,
+        FEC_Category__c = noc.FEC_Category__c,
+        FEC_SubCategory__c = noc.FEC_Sub_Category__c,
+        FEC_SubCode__c = noc.FEC_Sub_Code__c
+      );
+      return;
+    }
+
+    List<FEC_Nature_of_Case__c> templateLst = [
+      SELECT Id, FEC_Product_Type__c, FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c
+      FROM FEC_Nature_of_Case__c
+      WHERE Id = :natureOfCaseId
+      LIMIT 1
+    ];
+    if (!templateLst.isEmpty()) {
+      FEC_Nature_of_Case__c noc = templateLst[0];
+      update new Case(
+        Id = caseId,
+        FEC_Product_Type__c = noc.FEC_Product_Type__c,
+        FEC_Category__c = noc.FEC_Category__c,
+        FEC_SubCategory__c = noc.FEC_Sub_Category__c,
+        FEC_SubCode__c = noc.FEC_Sub_Code__c
+      );
     }
   }
 }

@@ -24,13 +24,26 @@
                 <div class="dnb-container"> <!-- Table -->
                     <c-fec_-reusable-d-n-b-custom-table key-field="id" data={pagedData} columns={columns}
                         oncheckboxchange={handleCheckboxChange} onpicklistchange={handlePicklistChange}
-                        ontogglecontact={handleToggleContact}>
+                        ontogglecontact={handleToggleContact} ontextareachange={handleTextareaChange}>
                     </c-fec_-reusable-d-n-b-custom-table>
                 </div>
                 <div class="btn-wrapper">
-                    <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
-                        onclick={openModal} disabled={isUpdateDisabled}>
-                    </lightning-button>
+
+                    <!-- SUCCESS -->
+                    <template if:true={isDNBUpdated}>
+                        <div class="dnb-success">
+                            Đã cập nhật Do Not Bother thành công
+                        </div>
+                    </template>
+
+                    <!-- BUTTON -->
+                    <template if:false={isDNBUpdated}>
+                        <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
+                            onclick={openModal} disabled={isUpdateDisabled}>
+                        </lightning-button>
+                    </template>
+
+
                 </div>
             </template>
         </div>

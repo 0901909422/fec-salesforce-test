@@ -83,7 +83,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -115,11 +115,6 @@
                                     <rightValue>Resolved-Cancelled</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Is_Owner__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>true</rightValue>
-                                </criteria>
-                                <criteria>
                                     <leftValue>{!Record.FEC_Can_Execute__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
@@ -129,7 +124,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Assigment</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -164,6 +159,11 @@
                                     <leftValue>{!Record.FEC_Can_Execute_Assignment__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.FEC_Assigment_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
@@ -233,12 +233,6 @@
                 </componentInstanceProperties>
                 <componentName>fec_CaseDetail_Customer</componentName>
                 <identifier>c_fec_CaseDetail_Customer</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_DoNotBotherHandling</componentName>
-                <identifier>c_fec_DoNotBotherHandling</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>

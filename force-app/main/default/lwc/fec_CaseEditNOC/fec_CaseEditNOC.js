@@ -45,7 +45,9 @@ import {
   VIEW_MODE_REVIEW, 
   // STR_UNDEFINED, 
   INTERNAL_REQUEST, 
-  INTERNAL_UBANK
+  INTERNAL_UBANK,
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
@@ -63,7 +65,14 @@ export default class Fec_CaseEditNOC extends LightningElement {
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
 
-//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  @track isNocLockedAfterFastCashBlock = false;
+  _fastCashLockCombosApplied = false;
+
+  //PhongBT: update bộ noc chọn ở updated khi revert về
+  _currentStageName = null;
+
+  //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
   updatedSubCodeId;        // Sub-Code đã chọn trong Updated section
@@ -84,7 +93,14 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isSubmittedState() {
+    console.log('issubmited ' + this.isSubmited);
+    console.log('showUpdatedSection ' + this.showUpdatedSection);
     return this.isSubmited === true && this.showUpdatedSection;
+  }
+
+  //PhongBT: update bộ noc chọn ở updated khi revert về
+  get _isStage1() {
+    return (this._currentStageName || '').includes('Stage 1');
   }
 
   // Sau submit (Submitted + Updated section): chỉ cho sửa khi user bật lại mode edit Case.
@@ -94,13 +110,27 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (!this.isSubmittedState) {
       return false;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return false;
+    }
+    //PhongBT: update bộ noc chọn ở updated khi revert về
+    // Stage 1 → readonly Updated NOC
+    if (this._isStage1) return false;
+    //PhongBT 15/06/26: Có Routing Assignment (hasAutoRoutingAssignment) → không cho edit Updated NOC
+    if (this.hasAutoRoutingAssignment) return false;
     return this.modeEditCase === true;
   }
 
   get showUpdatedSection() {
     const bpCode = (this.originalNOCBusinessProcessCode || "").toUpperCase();
     const isGsrOrCof = bpCode.includes("GSR") || bpCode.includes("COF");
-    return this.isSubmited === true && !this.hasAutoRoutingAssignment && isGsrOrCof;
+    console.log('bpCode ' + bpCode);
+    console.log('isGsrOrCof ' + isGsrOrCof);
+    console.log('hasAutoRoutingAssignment ' + this.hasAutoRoutingAssignment);
+    return this.isSubmited === true 
+    // && !this.hasAutoRoutingAssignment 
+    && isGsrOrCof;
   }
 
   get serializedProductTypeOptions() {
@@ -201,6 +231,16 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this._internalApplied = true;
       }
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock && !this.isSubmittedState && !this._fastCashLockCombosApplied) {
+      const pt = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
+      if (pt) {
+        ["prod-type", "category", "sub-category", "sub-code"].forEach((id) => {
+          this.handleDisableResetPinSuccess(id);
+        });
+        this._fastCashLockCombosApplied = true;
+      }
+    }
   }
 
   async connectedCallback() {
@@ -226,6 +266,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
         this.isDisableNOC = res.FEC_Is_Call_API_Success__c;
+        //PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
@@ -238,7 +280,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.handleDisableResetPinSuccess("sub-code");
         }
 
-//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+        this._restoreFastCashNocLockFromStorage();
+
+        //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
         // [NOC-HANDLING-STAGE-UPDATE]: Khi đã submit, kiểm tra Auto-Routing Assignment
         // và pre-populate Updated section với giá trị hiện tại của Case
         if (res.FEC_Is_Submited__c) {
@@ -298,6 +343,29 @@ export default class Fec_CaseEditNOC extends LightningElement {
       .catch((err) => {
         console.log("🚀 ~ Fec_CaseEditNOC ~ connectedCallback ~ err:", err);
       });
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  _restoreFastCashNocLockFromStorage() {
+    try {
+      if (!this.recordId) {
+        return;
+      }
+      const k = FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId;
+      if (sessionStorage.getItem(k) === "1") {
+        this.isNocLockedAfterFastCashBlock = true;
+        this._fastCashLockCombosApplied = false;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  @api
+  applyFastCashBlockNocLock() {
+    this.isNocLockedAfterFastCashBlock = true;
+    this._fastCashLockCombosApplied = false;
   }
 
   updateRoutingActionDisplay(field) {
@@ -369,6 +437,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   handleCaseNOCMessage(message) {
     if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     if (message.caseId != null && message.caseId !== this.recordId) {
       return;
     }
@@ -480,6 +552,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
     if (this.isDisableNOC) {
       return;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
 
     const nextModeEdit = message.isModeEdit === true;
     const prevModeEdit = this.modeEditCase === true;
@@ -492,6 +568,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   reloadData() {
     this._internalApplied = false;
     this._internalProductTypeId = null;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    this._fastCashLockCombosApplied = false;
 
     getCase({ recordId: this.recordId })
       .then((res) => {
@@ -504,11 +582,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
         this.recordTypeDevName = res.RecordType?.DeveloperName;
         this._isInternalRequest = res.FEC_Account_Contract_Number_PL__c === INTERNAL_REQUEST;
+        //PhongBT: update bộ noc chọn ở updated khi revert về
+        this._currentStageName = res.FEC_Current_Case_Stage__r?.Name || null;
         this.getProdType();
         this.getCategory();
         this.getSubCategory();
         this.getSubCode();
-//PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
+        //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
         // [NOC-HANDLING-STAGE-UPDATE]: Re-populate Updated section sau khi reload
         if (res.FEC_Is_Submited__c) {
           this.updatedCategoryId = res.FEC_Category__c;
@@ -536,6 +616,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
               this.originalNOCBusinessProcessCode = null;
             });
         }
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+        this._restoreFastCashNocLockFromStorage();
       })
       .catch((err) => {
         console.log("reloadData err:", err);
@@ -778,6 +860,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleRemoveProdType() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     let element = this.template.querySelector(
       `c-fec_-combo-box[data-id="prod-type"]`
     );
@@ -792,15 +878,27 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleRemoveCategory() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.handleDisable("sub-category");
     this.handleDisable("sub-code");
   }
 
   handleRemoveSubCategory() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.handleDisable("sub-code");
   }
 
   handleRemoveSubCode() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     let element = this.template.querySelector(
       `c-fec_-combo-box[data-id="sub-code"]`
     );
@@ -812,16 +910,37 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleChangeProdType(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.productTypeSelectedId = e.detail.value;
     this.handleEnable("category");
   }
 
+  //linhdev fix section Account Info + Case Info
   handleChangeCategory(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.categorySelectedId = e.detail.value;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
+    this.handleDisable("sub-category");
+    this.handleDisable("sub-code");
     this.handleEnable("sub-category");
+    if (this.productTypeSelectedId && this.categorySelectedId) {
+      this.handlePublishMessageChanel();
+    }
   }
 
   handleChangeSubCategory(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.subCategorySelectedId = e.detail.value;
     this.subCodeSelectedId = null;
     this.natureOfCase = null;
@@ -831,6 +950,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleChangeSubCode(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.subCodeSelectedId = e.detail.value;
 
     let element = this.template.querySelector(
@@ -927,6 +1050,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
    * Reset Sub-Category và Sub-Code, reload Sub-Category options.
    */
   handleUpdatedCategoryChange(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.updatedCategoryId = e.detail.categoryId;
     this.updatedSubCategoryId = null;
     this.updatedSubCodeId = null;
@@ -952,6 +1079,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
    * Reset Sub-Code, reload Sub-Code options.
    */
   handleUpdatedSubCategoryChange(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.updatedSubCategoryId = e.detail.subCategoryId;
     this.updatedSubCodeId = null;
 
@@ -965,6 +1096,38 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((res) => {
           this.subCodeOptionlst = res;
+
+          const noSubCodeOptions = !res || res.length === 0;
+          if (this.productTypeSelectedId && this.updatedCategoryId && this.updatedSubCategoryId && noSubCodeOptions) {
+            return getNatureOfCaseWithoutSubCode({
+              productTypeId: this.productTypeSelectedId,
+              categoryId: this.updatedCategoryId,
+              subCategoryId: this.updatedSubCategoryId
+            })
+              .then((noc) => {
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: noc?.Id ?? null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              })
+              .catch((err) => {
+                console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
+                const payload = {
+                  caseId: this.recordId,
+                  productTypeId: this.productTypeSelectedId,
+                  categoryId: this.updatedCategoryId,
+                  subCategoryId: this.updatedSubCategoryId,
+                  subCodeId: null,
+                  natureOfCaseId: null
+                };
+                publish(this.messageContext, CASE_NOC, payload);
+              });
+          }
         })
         .catch((err) => {
           console.error("getSubCodelst error (Updated section):", err);
@@ -978,6 +1141,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
    * Publish full payload lên CASE_NOC_Channel để trigger fec_CaseBussiness reload.
    */
   handleUpdatedSubCodeChange(e) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
     this.updatedSubCodeId = e.detail.subCodeId;
     const natureOfCaseId = e.detail.natureOfCaseId;
 

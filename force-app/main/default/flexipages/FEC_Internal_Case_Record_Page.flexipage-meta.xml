@@ -739,16 +739,6 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_Banca</componentName>
-                <identifier>c_fec_Banca</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -847,33 +837,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab21</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Banca</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab29</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>true</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Insurance</rightValue>
-                    </criteria>
-                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-51e81dc4-03cd-49ef-9915-964748bf0442</name>
@@ -1392,6 +1355,16 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-2fe9f3c7-8a9d-4f60-b69e-c87fa5a621ef</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
                     <value>Facet-08e2dee6-b6c4-42de-a09c-a976ff94ba18</value>
@@ -1403,10 +1376,21 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab16</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Account_or_Contract__r.FEC_Customer_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -1428,7 +1412,7 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -1438,6 +1422,16 @@
                         <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Account_or_Contract__r.FEC_Customer_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -1454,6 +1448,40 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab4</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>handling</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Account_or_Contract__r.FEC_Customer_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Existing</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-2fe9f3c7-8a9d-4f60-b69e-c87fa5a621ef</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Banca</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab29</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>Facet-81c43765-a5c3-4cfa-80c1-e5ad29dc2003</name>
@@ -1486,19 +1514,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tabset</componentName>
                 <identifier>flexipage_tabset2</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>handling</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Account_or_Contract__r.FEC_Customer_Type__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Existing</rightValue>
-                    </criteria>
-                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>main</name>

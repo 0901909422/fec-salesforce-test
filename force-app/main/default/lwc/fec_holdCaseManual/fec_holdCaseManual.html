@@ -1,84 +1,71 @@
 <template>
-    <lightning-card>
-        <div class="hold-case-modal">
+    <div class="hold-case-wrapper">
 
-            <!-- Title -->
-            <div class="modal-header">
-                <h2 class="modal-title">{customLabel.HoldCase}</h2>
-            </div>
-            <hr class="divider" />
+        <!-- Title -->
+        <div class="hold-case-title">
+            <h2>Hold Case</h2>
+        </div>
+        <hr class="hold-case-divider" />
 
-            <!-- Form Body -->
-            <div class="modal-body">
+        <!-- Body -->
+        <div class="hold-case-body">
 
-                <!-- NFU Reason -->
-                <div class="slds-grid slds-gutters slds-m-bottom_small">
-                    <div class="slds-col slds-size_4-of-12 label-col  centered-label">
-                        <label class="slds-form-element__label">
-                           {customLabel.nfuReason}
-                        </label>
-                    </div>
-                    <div class="slds-col slds-size_8-of-12">
-                        <lightning-combobox
-                            name="nfuReason"
-                            value={selectedReason}
-                            placeholder="-- Select NFU Reason --"
-                            options={nfuReasonOptions}
-                            onchange={handleReasonChange}
-                            class="reason-combobox">
-                        </lightning-combobox>
-                    </div>
-                </div>
-
-                <!-- NFU Code -->
-                <div class="slds-grid slds-gutters slds-m-bottom_small">
-                    <div class="slds-col slds-size_4-of-12 label-col">
-                        <label class="slds-form-element__label">
-                            {customLabel.nfuCode}
-                        </label>
-                    </div>
-                    <div class="slds-col slds-size_8-of-12 value-col">
-                        <span class="readonly-value">{nfuCode}</span>
-                    </div>
-                </div>
-
-                <!-- NFU Hold Day Duration -->
-                <div class="slds-grid slds-gutters slds-m-bottom_small">
-                    <div class="slds-col slds-size_4-of-12 label-col">
-                        <label class="slds-form-element__label">
-                           {customLabel.nfuHoldDayDuration}
-                        </label>
-                    </div>
-                    <div class="slds-col slds-size_8-of-12 value-col">
-                        <span class="readonly-value">{nfuHoldDayDuration}</span>
-                    </div>
-                </div>
-
-                <div lwc:if={isHoldCaseSuccess} class="slds-grid slds-gutters slds-m-bottom_small">
-                    <div class="slds-col slds-size_4-of-12 label-col">
-                        <label class="slds-text-color_success">
-                            {customLabel.messengerSuccessHoldCase}
-                        </label>
-                    </div>
+            <!-- NFU Reason -->
+            <div class="hold-case-row">
+                <label class="hold-case-label">{customLabel.nfuReason}</label>
+                <div class="hold-case-value">
+                    <lightning-combobox
+                        name="nfuReason"
+                        value={selectedReason}
+                        placeholder="-- Select NFU Reason --"
+                        options={nfuReasonOptions}
+                        onchange={handleReasonChange}>
+                    </lightning-combobox>
                 </div>
             </div>
 
-            <!-- Footer Buttons -->
-            <div class="modal-footer">
-                <lightning-button
-                    label="Cancel"
-                    onclick={handleCancel}
-                    class="cancel-btn">
-                </lightning-button>
-                <lightning-button
-                    label="Hold Case"
-                    variant="brand"
-                    onclick={handleHoldCase}
-                    disabled={isHoldDisabled}
-                    class="hold-btn">
-                </lightning-button>
+            <!-- NFU Code -->
+            <div class="hold-case-row">
+                <label class="hold-case-label">{customLabel.nfuCode}</label>
+                <div class="hold-case-value">
+                    <span>{nfuCode}</span>
+                </div>
             </div>
+
+            <!-- NFU Hold Day Duration -->
+            <div class="hold-case-row">
+                <label class="hold-case-label">{customLabel.nfuHoldDayDuration}</label>
+                <div class="hold-case-value">
+                    <span>{nfuHoldDayDuration}</span>
+                </div>
+            </div>
+
+            <!-- Response message - success (xanh lá) -->
+            <template if:true={isSuccessMessage}>
+                <div class="hold-case-message hold-case-message--success">
+                    {responseMessage}
+                </div>
+            </template>
+
+            <!-- Response message - error (đỏ) -->
+            <template if:true={isErrorMessage}>
+                <div class="hold-case-message hold-case-message--error">
+                    {responseMessage}
+                </div>
+            </template>
 
         </div>
-    </lightning-card>
+
+        <!-- Footer -->
+        <div class="hold-case-footer">
+            <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+            <lightning-button
+                variant="brand"
+                label="Hold Case"
+                onclick={handleHoldCase}
+                disabled={isHoldDisabled}>
+            </lightning-button>
+        </div>
+
+    </div>
 </template>

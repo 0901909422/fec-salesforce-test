@@ -654,6 +654,45 @@ export default class Fec_UpdateAddress extends LightningElement {
         return list.find((a) => a.addressType === typeLabel) || null;
     }
 
+    /** Id FEC_Address_Info__c gốc (CIF, không gắn Case) để set FEC_Parent_Address__c khi lưu pending. */
+    _parentAddressIdForSfType(sfAddressType) {
+        const fromSnap = this.findAddress(
+            sfAddressType,
+            this.originalAddressesSourceList
+        );
+        if (fromSnap?.addressInfoId) {
+            return fromSnap.addressInfoId;
+        }
+        const live = this.findAddress(sfAddressType, this.mainInfoData?.addresses);
+        return live?.addressInfoId || null;
+    }
+
+    _savePendingAddressRecord(p) {
+        const {
+            sfAddressType,
+            deletePending,
+            parentAddressInfoId,
+            building,
+            number_x,
+            street,
+            district,
+            city,
+            isMailingAddress
+        } = p;
+        return savePendingAddress({
+            caseId: this.resolvedCaseId,
+            sfAddressType,
+            deletePending: deletePending === true,
+            parentAddressInfoId: parentAddressInfoId || null,
+            building: building ?? '',
+            number_x: number_x ?? '',
+            street: street ?? '',
+            districtCode: district ?? '',
+            provinceCode: city ?? '',
+            isMailingAddress: isMailingAddress === true
+        });
+    }
+
     /** Mảng địa chỉ cho cột Original — snapshot lần load; nếu chưa có thì dùng addresses từ Main Info (cùng nguồn GetAddressesList). */
     get originalAddressesSourceList() {
         if (this.originalSnapshotInitialized) {
@@ -1232,10 +1271,17 @@ export default class Fec_UpdateAddress extends LightningElement {
                                 district: d,
                                 city: String(this.mailingCity || '').trim() || pendingSanitized.city
                             };
-                            return savePendingAddress({
-                                caseId: this.resolvedCaseId,
+                            return this._savePendingAddressRecord({
                                 sfAddressType,
-                                jsonPayload: JSON.stringify(enriched)
+                                deletePending: false,
+                                parentAddressInfoId:
+                                    this._parentAddressIdForSfType(sfAddressType),
+                                building: enriched.building ?? '',
+                                number_x: enriched.number_x ?? '',
+                                street: enriched.street ?? '',
+                                district: enriched.district ?? '',
+                                city: enriched.city ?? '',
+                                isMailingAddress: enriched.isMailingAddress === 'Y'
                             }).then(() => {
                                 const pk = this._pendingJsonFieldKey(sfAddressType);
                                 if (pk) {
@@ -1479,10 +1525,17 @@ export default class Fec_UpdateAddress extends LightningElement {
                     selectedRow === row ? 'Y' : 'N'
             };
             // eslint-disable-next-line no-await-in-loop
-            await savePendingAddress({
-                caseId: this.resolvedCaseId,
+            await this._savePendingAddressRecord({
                 sfAddressType: primarySfAddressType,
-                jsonPayload: JSON.stringify(primaryInfo)
+                deletePending: false,
+                parentAddressInfoId:
+                    this._parentAddressIdForSfType(primarySfAddressType),
+                building: primaryInfo.building,
+                number_x: primaryInfo.number_x,
+                street: primaryInfo.street,
+                district: primaryInfo.district,
+                city: primaryInfo.city,
+                isMailingAddress: primaryInfo.isMailingAddress === 'Y'
             });
             this._hasPendingDbDraft = true;
             // Cập nhật mainInfoData với JSON vừa lưu để lần edit tiếp theo lấy đúng dữ liệu
@@ -1521,10 +1574,16 @@ export default class Fec_UpdateAddress extends LightningElement {
                     desiredYn
                 );
                 // eslint-disable-next-line no-await-in-loop
-                await savePendingAddress({
-                    caseId: this.resolvedCaseId,
+                await this._savePendingAddressRecord({
                     sfAddressType: sf,
-                    jsonPayload: JSON.stringify(infoOther)
+                    deletePending: false,
+                    parentAddressInfoId: this._parentAddressIdForSfType(sf),
+                    building: infoOther.building,
+                    number_x: infoOther.number_x,
+                    street: infoOther.street,
+                    district: infoOther.district,
+                    city: infoOther.city,
+                    isMailingAddress: infoOther.isMailingAddress === 'Y'
                 });
                 // Cập nhật mainInfoData để lần edit sau lấy đúng dữ liệu cho row này
                 const otherPendingKey = this._pendingJsonFieldKey(sf);
@@ -1812,10 +1871,20 @@ export default class Fec_UpdateAddress extends LightningElement {
                 isMailingAddress: this.newAddrIsMailing ? 'Y' : 'N'
             };
 
-            await savePendingAddress({
-                caseId: this.resolvedCaseId,
+            const parentIdForNew = ctxBase.found
+                ? this._parentAddressIdForSfType(primarySfAddressType)
+                : null;
+
+            await this._savePendingAddressRecord({
                 sfAddressType: primarySfAddressType,
-                jsonPayload: JSON.stringify(primaryInfo)
+                deletePending: false,
+                parentAddressInfoId: parentIdForNew,
+                building: primaryInfo.building,
+                number_x: primaryInfo.number_x,
+                street: primaryInfo.street,
+                district: primaryInfo.district,
+                city: primaryInfo.city,
+                isMailingAddress: primaryInfo.isMailingAddress === 'Y'
             });
             this._hasPendingDbDraft = true;
             const primaryPendingKey =
@@ -1854,10 +1923,16 @@ export default class Fec_UpdateAddress extends LightningElement {
                     desiredYn
                 );
                 // eslint-disable-next-line no-await-in-loop
-                await savePendingAddress({
-                    caseId: this.resolvedCaseId,
+                await this._savePendingAddressRecord({
                     sfAddressType: sf,
-                    jsonPayload: JSON.stringify(infoOther)
+                    deletePending: false,
+                    parentAddressInfoId: this._parentAddressIdForSfType(sf),
+                    building: infoOther.building,
+                    number_x: infoOther.number_x,
+                    street: infoOther.street,
+                    district: infoOther.district,
+                    city: infoOther.city,
+                    isMailingAddress: infoOther.isMailingAddress === 'Y'
                 });
                 const otherPendingKey = this._pendingJsonFieldKey(sf);
                 if (otherPendingKey) {

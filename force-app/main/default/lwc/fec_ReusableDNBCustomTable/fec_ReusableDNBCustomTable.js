@@ -12,7 +12,7 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
         isCheckbox: col.type === "checkbox",
         isContact: col.type === "contact",
         isPicklist: col.type === "picklist",
-        checkboxLabel: col.checkboxLabel || "",
+        isTextarea: col.type === "textarea",
       };
     });
   }
@@ -39,19 +39,38 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
             rowId: row.id,
 
             isText: col.isText,
+            isTextarea: col.isTextarea,
             isCheckbox: col.isCheckbox,
             isContact: col.isContact,
             isPicklist: col.isPicklist,
 
             options: row.reasonOptionsFormatted || [],
             isDisabled: col.isPicklist ? !row.active : false,
-            checkboxLabel: col.checkboxLabel,
+            isDisabledText: col.isTextarea ? !row.active : false,
+            isRequired: row.active,
+            checkboxLabel:
+              row[col.checkboxLabelField] || col.checkboxLabel || "",
             hasContact: row.hasContact,
             isActionDisabled: row.isActionDisabled,
+
+            cellClass: this.getCellClass(col),
           };
         }),
       };
     });
+  }
+
+  getCellClass(col) {
+    switch (col.fieldName) {
+      case "updateReason":
+        return "update-reason-cell";
+
+      case "remarks":
+        return "remarks-cell";
+
+      default:
+        return "";
+    }
   }
 
   handleCheckboxChange(event) {
@@ -94,5 +113,17 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
       }
       return row;
     });
+  }
+
+  handleTextareaChange(event) {
+    const id = event.target.dataset.id;
+    const field = event.target.dataset.field;
+    const value = event.target.value;
+
+    this.dispatchEvent(
+      new CustomEvent("textareachange", {
+        detail: { id, field, value },
+      }),
+    );
   }
 }

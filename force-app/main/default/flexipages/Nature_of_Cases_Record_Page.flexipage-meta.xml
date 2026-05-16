@@ -81,36 +81,6 @@
                 <identifier>RecordFEC_Sub_Code_cField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Do_Not_Bother__c</fieldItem>
-                <identifier>RecordFEC_Do_Not_Bother__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Transfer_Call_to_Collection__c</fieldItem>
-                <identifier>RecordFEC_Transfer_Call_to_Collection__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.FEC_Remove_Phone__c</fieldItem>
-                <identifier>RecordFEC_Remove_Phone__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-7e0f0ea0-0c79-4d31-91f9-f82f95fb15a5</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -296,6 +266,16 @@
         <name>relatedTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
+     <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_HoldCaseConfiguration</componentName>
+                <identifier>c_fec_HoldCaseConfiguration</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</name>
+        <type>Facet</type>
+    </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
             <fieldInstance>
@@ -411,6 +391,20 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>relatedListsTab</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Hold Case</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab2</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

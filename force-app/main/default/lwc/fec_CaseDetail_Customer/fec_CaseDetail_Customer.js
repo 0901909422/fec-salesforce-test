@@ -30,7 +30,7 @@ import FEC_MSG_CARD_REPLACEMENT_ADDRESS_SELECT from "@salesforce/label/c.FEC_MSG
 import getCase from "@salesforce/apex/FEC_CaseEditNOCController.getCase";
 
 import { RefreshEvent } from "lightning/refresh";
-import { updateRecord } from "lightning/uiRecordApi";
+import { updateRecord, getRecordNotifyChange } from "lightning/uiRecordApi";
 
 import getRemarklst from "@salesforce/apex/FEC_CaseRemarkController.getRemarklst";
 
@@ -55,16 +55,11 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
   messageContext;
 
   // tungnm37 thêm: wire lấy businessCode để check COF/GSR
-  @wire(getRecord, {
-    recordId: "$recordId",
-    fields: [CASE_BUSINESS_PROCESS_CODE],
-  })
+  @wire(getRecord, { recordId: '$recordId', fields: [CASE_BUSINESS_PROCESS_CODE] })
   wiredCase({ data }) {
     if (data) {
       const code = getFieldValue(data, CASE_BUSINESS_PROCESS_CODE);
-      this._isCofGsr =
-        typeof code === "string" &&
-        (code.startsWith("COF") || code.startsWith("GSR"));
+      this._isCofGsr = typeof code === 'string' && (code.startsWith('COF') || code.startsWith('GSR'));
     }
   }
 
@@ -132,10 +127,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       .then((res) => {
         this.remarklst = res
           .filter((item) => item.Id)
-          // tungnm37 thêm: ẩn remark type Assignment khi case là COF/GSR
-          .filter(
-            (item) => !this._isCofGsr || item.Remark_Type__c !== "Assignment",
-          )
+          // tungnm37: ẩn Assignment Remark của Stage 1 (Stage 1 chỉ hiện Case Remark)
+          .filter((item) => {
+            if (item.FEC_Remark_Type__c === 'Assignment') {
+              const stageName = item.FEC_Stage_Name__c || '';
+              return !/stage\s*1/i.test(stageName);
+            }
+            return true;
+          })
           .map((item) => ({
             ...item,
             CreatedDate: formatDateTime(item.CreatedDate),
@@ -183,8 +182,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleMessage(message) {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
+
+
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
+    //Hieutt Update: thêm check caseId để tránh set các case khác khi  publish  mode edit
+    if (message.caseId !== this.recordId) {
+      return;
+    }
+    // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
 
@@ -429,10 +435,22 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       if (caseBusinessEle && caseRemarksEle) {
         caseBusinessEle.remarkContent = caseRemarksEle.getRemarkValue();
       }
-
+      const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode || this._isCofGsr;
+      // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → LWC không gọi submitRemarkDirect
+      // Stage 1 → Apex không tạo Case Remark → LWC phải gọi submitRemarkDirect
+      // tungnm37 fix: các action khác Route to (Escalate, Reject, Resolve...) → LWC phải gọi submitRemarkDirect dù ở stage nào
+      const isStage1 = /stage\s*1/i.test(stageName);
+      const currentAction = caseBusinessEle?.getRoutingActionCode?.() ?? '';
+      const isRouteToAction = currentAction === 'Route_to' || currentAction === 'Route to';
+      // tungnm37 fix: skipSubmitRemark chỉ khi COF/GSR + Route to + Stage 2 (Apex đã xử lý remark)
+      const skipSubmitRemark = isRoutingModeSubmit && isRouteToAction && !isStage1;
+      console.log('[FEC_DEBUG] handleSubmit stageName=' + stageName + ' isRoutingMode=' + isRoutingModeSubmit + ' isStage1=' + isStage1 + ' action=' + currentAction + ' skipSubmitRemark=' + skipSubmitRemark);
       const submitted = await caseBusinessEle.submit();
       if (submitted === false) {
         return;
+      }
+      if (this.recordId) {
+        getRecordNotifyChange([{ recordId: this.recordId }]);
       }
       // PhuongNT add reset msg process action after submit success
       caseBusinessEle.resetMsgProcessAction();
@@ -443,10 +461,15 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
-      // tungnm37: luôn dùng submitRemarkDirect - truyền content trực tiếp, tránh duplicate do draft bị clear
-      const isRoutingModeSubmit = !!caseBusinessEle?.isRoutingAssignmentMode;
-      await caseRemarksEle.submitRemarkDirect(stageName);
-      // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
+      if (typeof caseBusinessEle?.refreshAutoHoldCase === "function") {
+        caseBusinessEle.refreshAutoHoldCase();
+      }
+      // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
+      // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark
+      const hasManualItemsSubmit = skipSubmitRemark; // alias for clarity
+      if (!skipSubmitRemark) {
+        await caseRemarksEle.submitRemarkDirect(stageName);
+      }      // tungnm37 thêm: cập nhật _isCofGsr trước khi load remark history
       this._isCofGsr = isRoutingModeSubmit;
       this.loadRemarkHistory();
 
