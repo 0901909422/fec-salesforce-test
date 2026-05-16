@@ -2,7 +2,6 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
 		<members>FEC_CaseBusinessService</members>
-		<members>FEC_CaseEditNOCController</members>
 		<members>FEC_ClientPDFService</members>
 		<members>FEC_ClientPDFServiceTest</members>
 		<members>FEC_PaymentHistoryValidationService</members>
@@ -33,17 +32,18 @@
 	</types>
 	<types>
 		<members>fecPdfGenerator</members>
+		<members>fecPdfGeneratorDemo</members>
 		<members>fec_CaseBussiness</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
-    <members>FEC_pdfmake</members>
-    <members>FEC_pdfmakeVfs</members>
-    <members>FEC_TimesNewRoman</members>
-    <members>FEC_TimesNewRomanBold</members>
-    <members>FEC_TimesNewRomanItalic</members>
-    <members>FEC_TimesNewRomanBoldItalic</members>
-    <name>StaticResource</name>
-</types>
+		<members>FEC_pdfmake</members>
+		<members>FEC_pdfmakeVfs</members>
+		<members>FEC_TimesNewRoman</members>
+		<members>FEC_TimesNewRomanBold</members>
+		<members>FEC_TimesNewRomanItalic</members>
+		<members>FEC_TimesNewRomanBoldItalic</members>
+		<name>StaticResource</name>
+	</types>
 	<version>66.0</version>
 </Package>
