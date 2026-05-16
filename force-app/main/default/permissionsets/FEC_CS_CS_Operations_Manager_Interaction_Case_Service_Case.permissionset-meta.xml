@@ -4021,8 +4021,6 @@
         <field>FEC_Additional_Info__c.FEC_Province_City__c</field>
         <readable>true</readable>
     </fieldPermissions>
-<<<<<<< HEAD
-=======
     <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Assigment_Mode__c</field>
@@ -4038,7 +4036,6 @@
         <field>FEC_Transfer_Call_Error__c.FEC_Error_Message_VI__c</field>
         <readable>true</readable>
     </fieldPermissions>
->>>>>>> daf0a4fbc (done transfer call to collection)
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Operations Manager - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
