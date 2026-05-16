@@ -90,5 +90,9 @@
         <members>FECReport/FEC_RP_02</members>
         <name>Report</name>
     </types>
+    <types>
+        <members>BusinessHours</members>
+        <name>Settings</name>
+    </types>
     <version>67.0</version>
 </Package>
