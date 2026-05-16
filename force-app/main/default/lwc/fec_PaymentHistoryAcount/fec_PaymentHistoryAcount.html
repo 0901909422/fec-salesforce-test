@@ -25,6 +25,16 @@
 
             <!-- Real-time Payment -->
             <lightning-accordion-section name="realtimePayment" label="Real-time Payment">
+                <div slot="actions" class="slds-button-group" role="group">
+
+                    <lightning-button
+                        label="Refresh"
+                        variant="brand"
+                        class="slds-m-left_x-small"
+                        onclick={handleRefreshData}>
+                    </lightning-button>
+
+                </div>
 
                 <c-fec_-related-list-paging records={realtimePayments} columns={realtimePaymentColumns}
                    default-sorted-by="paymentDate" default-sort-direction="desc" show-refresh onrefresh={handleRefreshData}>

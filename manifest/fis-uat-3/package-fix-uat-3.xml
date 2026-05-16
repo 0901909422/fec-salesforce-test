@@ -47,6 +47,15 @@
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
+        <members>FEC_DNBHandler</members>
+        <members>FEC_GetCSCaseStatusService</members>
+		<members>Fec_HoldCaseConfigurationController</members>
+		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_NocRemovePhoneInheritanceHandler</members>
+		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
+		<members>FEC_PaymentHistoryController</members>
+		<members>FEC_IPPConversionController</members>
+		<members>FEC_AssignmentRoutingActionHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -94,18 +103,32 @@
         <members>maskedToggleDatatable</members>
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_RemovePhoneForm</members>
+        <members>fec_HoldCaseConfiguration</members>
+        <members>fec_PaymentHistoryAcount</members>
+        <members>fec_IPPConversionRetailForm</members>
+        <members>fec_AccountOrContractPicklistCustomerCase</members>
+        <members>fec_CaseNote</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
         <members>Case.FEC_Service_Case_Owner__c</members>
         <members>Case.FEC_Assigment_Mode__c</members>
         <members>Case.FEC_Complain_Type__c</members>
+        <members>Case.FEC_Original_Category__c</members>
+        <members>Case.FEC_Original_Sub_Category__c</members>
+        <members>Case.FEC_Original_Sub_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
 		<members>FEC_Stage_Change__c.FEC_Code__c</members>
 		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
+        <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
+		<members>FEC_Template__c.FEC_Preview_ZNS_Url__c</members>
+		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -125,6 +148,9 @@
         <members>FEC_LABEL_API_Code</members>
         <members>FEC_LABEL_Description</members>
         <members>FEC_MSG_Parsing_Error</members>
+        <members>FEC_No_Data_Found_Hold_Case</members>
+        <members>FEC_Hold_Case_Save_Success</members>
+        <members>FEC_MSG_IPP_Noti_10</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -136,9 +162,62 @@
     <types>
 		<members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
-        <members>RD_IT_User_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Customer_360</members>
         <members>RD_IT_User_Master_Data_Management</members>
+		<!-- Interaction Case Service Case -->
+		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Ecom_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Inbound_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Operations_Management_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Operations_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Officer_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Outbound_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Quality_Control_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Support_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Center_Director_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Care_Manager_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_1_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_2_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Customer_Experience_Manager_3_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_CS_Contact_Center_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_CS_QC_OM_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Head_of_Customer_Care_Dept_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Office_Based_Team_Leader_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Inbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Operations_Management_Specialist_Interaction_Case_Service_Cas</members>
+        <members>FEC_CS_Senior_CS_Outbound_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Quality_Control_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_CS_Support_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Customer_Care_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Senior_Office_Based_Specialist_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Ecom_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Inbound_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Operations_Management_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Outbound_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Quality_Control_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_CS_Support_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_Customer_Care_Interaction_Case_Service_Case</members>
+        <members>FEC_CS_Unit_Head_of_Office_Based_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Card_Operations_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Collections_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Contract_Processing_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Credit_Assessment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Direct_Sales_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Internal_Audit_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Payment_User_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
+        <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
+        <members>RD_IT_User_Interaction_Case_Service_Case</members>
 		<name>PermissionSet</name>
 	</types>
     <types>
@@ -147,6 +226,7 @@
 	</types>
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
+		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
 	</types>
 	<version>66.0</version>

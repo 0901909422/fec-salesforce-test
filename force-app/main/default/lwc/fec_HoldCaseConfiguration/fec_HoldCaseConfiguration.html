@@ -108,6 +108,18 @@
                                             </template>
                                         </div>
                                     </div>
+                                    <div class="pill-container">
+                                        <template for:each={channelSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChannel}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
                                     <template if:true={channelError}>
                                         <div class="slds-form-element__help custom-error">{channelError}</div>
                                     </template>
@@ -202,6 +214,18 @@
                                             </template>
                                         </div>
                                     </div>
+                                     <div class="pill-container">
+                                        <template for:each={currentStatusSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveCurrentStatus}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
                                     <template if:true={currentStatusError}>
                                         <div class="slds-form-element__help custom-error">{currentStatusError}</div>
                                     </template>
@@ -253,6 +277,18 @@
                                             </template>
                                         </div>
                                     </div>
+                                    <div class="pill-container">
+                                        <template for:each={changedStatusSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChangedStatus}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
                                     <template if:true={changedStatusError}>
                                         <div class="slds-form-element__help custom-error">{changedStatusError}</div>
                                     </template>
@@ -276,28 +312,26 @@
                             <div class="field-wrapper slds-form-element">
                                 <label class="slds-form-element__label">
                                     <span class="required">*</span>
-                                      {customLabel.channel}
+                                    {customLabel.channel}
                                 </label>
                                 <div class="slds-form-element__control">
                                     <div class="slds-combobox_container">
                                         <div class={channelWrapperClass} role="combobox">
                                             <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
                                                 <input
-                                                    data-id="channel"
                                                     type="text"
                                                     class="slds-input slds-combobox__input"
-                                                    value={channelSearchManual}
+                                                    value={channelSearch}
                                                     placeholder="Search Channel..."
-                                                    onkeyup={handleChannelSearchManual}
-                                                    onclick={handleFocusManual}
-                                                />
+                                                    onkeyup={handleChannelSearch}
+                                                    onclick={handleFocus} />
                                                 <lightning-icon
                                                     icon-name="utility:search"
                                                     size="x-small"
                                                     class="slds-input__icon slds-input__icon_right">
                                                 </lightning-icon>
                                             </div>
-                                            <template if:true={showDropdownManual}>
+                                            <template if:true={showDropdown}>
                                                 <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid">
                                                     <ul class="slds-listbox slds-listbox_vertical">
                                                         <template for:each={channelOptions} for:item="item">
@@ -306,7 +340,7 @@
                                                                     class="slds-media slds-listbox__option slds-listbox__option_plain slds-media_small"
                                                                     data-id={item.Id}
                                                                     data-name={item.Name}
-                                                                    onclick={handleSelectChannelManual}>
+                                                                    onclick={handleSelectChannel}>
                                                                     <span class="slds-media__body">
                                                                         <span class="slds-truncate">{item.Name}</span>
                                                                     </span>
@@ -317,6 +351,18 @@
                                                 </div>
                                             </template>
                                         </div>
+                                    </div>
+                                    <div class="pill-container">
+                                        <template for:each={channelSelected} for:item="item">
+                                            <span key={item.id} class="slds-pill">
+                                                <span class="slds-pill__label">{item.name}</span>
+                                                <button class="slds-pill__remove"
+                                                    data-id={item.id}
+                                                    onclick={handleRemoveChannel}>
+                                                    <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                                                </button>
+                                            </span>
+                                        </template>
                                     </div>
                                     <template if:true={channelError}>
                                         <div class="slds-form-element__help custom-error">{channelError}</div>
