@@ -125,11 +125,6 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
-        // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
-        syncAssignmentUsersOnOwnerChange(newCases, oldMap);
-        if (!FEC_CaseTriggerHandler.isSystemUpdate) {
-            FEC_MrcDuplicateCaseService.applyHandlingOptionChanges(newCases, oldMap);
-        }
         // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
         // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
         // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
