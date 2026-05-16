@@ -7,6 +7,7 @@
     <relationshipLabel>General Assignment Configs</relationshipLabel>
     <relationshipName>General_Assignment_Configs</relationshipName>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

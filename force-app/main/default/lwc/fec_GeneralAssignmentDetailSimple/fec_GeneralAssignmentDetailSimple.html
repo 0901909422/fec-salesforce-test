@@ -1,4 +1,5 @@
 <template>
+    <!-- Read mode -->
     <template if:false={isEditMode}>
         <article class="slds-card">
             <div class="slds-card__header slds-grid">
@@ -10,18 +11,6 @@
             </div>
             <div class="slds-card__body">
                 <div class="slds-grid slds-wrap detail-grid">
-                    <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">GA Name</span>
-                        <span class="detail-value">{record.Name}</span>
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">Customer Type</span>
-                        <span class="detail-value">{record.FEC_Customer_Type__c}</span>
-                    </div>
-                    <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">Channel</span>
-                        <span class="detail-value">{record.FEC_Channel__c}</span>
-                    </div>
                     <div class="slds-col slds-size_1-of-2 detail-row">
                         <span class="detail-label">General Assignment Name</span>
                         <span class="detail-value">{record.FEC_General_Assignment_Name__c}</span>
@@ -46,6 +35,7 @@
         </article>
     </template>
 
+    <!-- Edit mode -->
     <template if:true={isEditMode}>
         <article class="slds-card">
             <div class="slds-card__header slds-grid">
@@ -57,90 +47,16 @@
             </div>
             <div class="slds-card__body slds-card__body_inner">
                 <div class="form-grid">
-                    <!-- Customer Type -->
-                    <div class="form-label">Customer Type</div>
-                    <div class="form-value">
-                        <lightning-combobox label="" value={editCustomerType} options={customerTypeOptions} onchange={handleCustomerTypeChange}></lightning-combobox>
-                    </div>
-
-                    <!-- Channel -->
-                    <div class="form-label">Channel</div>
-                    <div class="form-value">
-                        <div class="ga-search-wrap">
-                            <div class="slds-input-has-icon slds-input-has-icon_right">
-                                <input type="text" class="slds-input"
-                                    placeholder="Search Channel"
-                                    value={channelSearchTerm}
-                                    oninput={handleChannelSearch}
-                                    onfocus={handleChannelFocus}
-                                    onblur={handleChannelBlur} />
-                                <span class="slds-icon_container slds-input__icon slds-input__icon_right">
-                                    <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
-                                </span>
-                            </div>
-                            <template if:true={showChannelDropdown}>
-                                <div class="ga-dropdown">
-                                    <ul class="slds-listbox slds-listbox_vertical" role="presentation">
-                                        <template for:each={filteredChannelOptions} for:item="opt">
-                                            <li key={opt.value} role="presentation" class="ga-option"
-                                                data-value={opt.value} onclick={handleChannelSelect}>
-                                                {opt.label}
-                                            </li>
-                                        </template>
-                                    </ul>
-                                </div>
-                            </template>
-                            <template if:true={selectedChannels.length}>
-                                <div class="slds-m-top_x-small">
-                                    <template for:each={selectedChannels} for:item="ch">
-                                        <lightning-pill key={ch} label={ch} name={ch} onremove={handleChannelRemove}></lightning-pill>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-
                     <!-- General Assignment Name -->
-                    <div class="form-label">General Assignment Name</div>
+                    <div class="form-label">* General Assignment Name</div>
                     <div class="form-value">
-                        <div class="ga-search-wrap">
-                            <div class="slds-input-has-icon slds-input-has-icon_right">
-                                <input type="text" class="slds-input"
-                                    placeholder="Search General Assignment Name"
-                                    value={gaSearchTerm}
-                                    oninput={handleGASearch}
-                                    onfocus={handleGAFocus}
-                                    onblur={handleGABlur} />
-                                <span class="slds-icon_container slds-input__icon slds-input__icon_right">
-                                    <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
-                                </span>
-                            </div>
-                            <template if:true={showGADropdown}>
-                                <div class="ga-dropdown">
-                                    <ul class="slds-listbox slds-listbox_vertical" role="presentation">
-                                        <template for:each={filteredGAOptions} for:item="opt">
-                                            <li key={opt.value} role="presentation" class="ga-option"
-                                                data-value={opt.value} onclick={handleGASelect}>
-                                                {opt.label}
-                                            </li>
-                                        </template>
-                                    </ul>
-                                </div>
-                            </template>
-                            <template if:true={selectedGANames.length}>
-                                <div class="slds-m-top_x-small">
-                                    <template for:each={selectedGANames} for:item="gaName">
-                                        <lightning-pill key={gaName} label={gaName} name={gaName} onremove={handleGARemove}></lightning-pill>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
+                        <lightning-input label="" variant="label-hidden" value={editName} onchange={handleNameChange}></lightning-input>
                     </div>
 
-                    <!-- GA Code -->
-                    <div class="form-label">General Assignment Code</div>
+                    <!-- General Assignment Code -->
+                    <div class="form-label">* General Assignment Code</div>
                     <div class="form-value">
-                        <input type="text" class="slds-input" value={gaCodeDisplay} onchange={handleGACodeChange} />
+                        <lightning-input label="" variant="label-hidden" value={editCode} onchange={handleCodeChange}></lightning-input>
                     </div>
 
                     <!-- Active -->
@@ -150,8 +66,8 @@
                     </div>
                 </div>
 
-                <div class="slds-text-align_center slds-m-top_medium">
-                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                <div class="slds-m-top_medium">
+                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
                     <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
                 </div>
             </div>

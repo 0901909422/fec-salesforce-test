@@ -49,11 +49,13 @@ public with sharing class FEC_NocGeneralAssignmentController {
     }
     
     @AuraEnabled(cacheable=true)
-    public static List<FEC_General_Assignment_Config__c> getGeneralAssignmentCodes() {
+    public static List<FEC_General_Assignment__c> getGeneralAssignmentCodes() {
+        // tungnm37: lấy từ FEC_General_Assignment__c (master list)
         return [
             SELECT Id, FEC_General_Assignment_Name__c 
-            FROM FEC_General_Assignment_Config__c 
+            FROM FEC_General_Assignment__c 
             WHERE FEC_General_Assignment_Name__c != null 
+              AND FEC_Active__c = true
             ORDER BY FEC_General_Assignment_Name__c
         ];
     }

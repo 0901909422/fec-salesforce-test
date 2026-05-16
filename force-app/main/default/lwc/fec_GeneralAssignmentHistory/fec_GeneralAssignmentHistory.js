@@ -1,13 +1,12 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
-import { getRecord } from 'lightning/uiRecordApi';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, MessageContext } from 'lightning/messageService';
 import getHistory from '@salesforce/apex/FEC_GeneralAssignmentHistoryController.getHistory';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
 import FEC_GA_SAVED from '@salesforce/messageChannel/FEC_GA_Saved__c';
 
-const WATCH_FIELDS = ['FEC_General_Assignment_Config__c.LastModifiedDate'];
+// tungnm37: WATCH_FIELDS bỏ vì component dùng chung cho cả 2 object
 
 export default class Fec_GeneralAssignmentHistory extends LightningElement {
     @api recordId;
@@ -21,35 +20,12 @@ export default class Fec_GeneralAssignmentHistory extends LightningElement {
 
     connectedCallback() {
         loadStyle(this, FEC_CommonCss);
-        // Subscribe to GA saved event to refresh history
-        subscribe(this.messageContext, FEC_GA_SAVED, (msg) => {
-            if (msg.recordId === this.recordId && this._wiredHistoryResult) {
-                setTimeout(() => {
-                    refreshApex(this._wiredHistoryResult);
-                }, 1500);
-            }
-        });
     }
 
     @api
     refresh() {
         if (this._wiredHistoryResult) {
             refreshApex(this._wiredHistoryResult);
-        }
-    }
-
-    _firstLoad = true;
-
-    // Watch for record changes to auto-refresh history
-    @wire(getRecord, { recordId: '$recordId', fields: WATCH_FIELDS })
-    wiredRecord({ data }) {
-        if (data) {
-            if (this._firstLoad) {
-                this._firstLoad = false;
-            } else {
-                // Record changed - refresh history
-                refreshApex(this._wiredHistoryResult);
-            }
         }
     }
 

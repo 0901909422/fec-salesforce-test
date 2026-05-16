@@ -1,0 +1,53 @@
+/* tungnm37: nền xám cho accordion header giống Routing Assignment */
+:host .slds-accordion__section-content {
+    background: #fff;
+}
+
+:host .slds-accordion__summary {
+    background-color: #f3f3f3;
+    border-radius: 4px 4px 0 0;
+    padding: 0.5rem 0.75rem;
+}
+
+.row-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid #e0e0e0;
+    min-height: 32px;
+}
+.row-label {
+    flex: 0 0 45%;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #3e3e3c;
+}
+.row-value {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: #181818;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: 20% 30% 20% 30%;
+    gap: 0.75rem 0;
+    align-items: center;
+    padding: 0.5rem 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.form-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #3e3e3c;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+    align-self: start;
+    padding-top: 0.5rem;
+}
+.form-value {
+    font-size: 0.8125rem;
+    min-width: 0;
+    padding-right: 1rem;
+    box-sizing: border-box;
+}

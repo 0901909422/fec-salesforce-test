@@ -51,6 +51,25 @@ c-fec_-noc-routing-assignment .slds-accordion__summary {
   border-radius: 4px;
 }
 
+/* tungnm37: nền xám cho General Assignment detail components */
+c-fec_-general-assignment-detail .slds-accordion__summary,
+c-fec_-general-assignment-config-detail .slds-accordion__summary {
+  background-color: #f3f3f3;
+  border-radius: 4px;
+}
+
+/* tungnm37: nền xám cho Routing Assignment History header */
+c-fec_-routing-assignment-history .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 4px 4px 0 0;
+}
+
+/* tungnm37: nền xám cho General Assignment History header */
+c-fec_-general-assignment-history .slds-card__header {
+  background-color: #f3f3f3;
+  border-radius: 4px 4px 0 0;
+}
+
 
 c-fec_-noc-general-assignment .slds-card__header {
   background-color: #f3f3f3;

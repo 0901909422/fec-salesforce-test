@@ -1,3 +1,4 @@
+// tungnm37: Detail + Edit form cho FEC_General_Assignment_Config__c
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
@@ -11,14 +12,16 @@ import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
 import LABEL_SAVE_ERROR from '@salesforce/label/c.FEC_GA_Save_Error_Message';
 
 const FIELDS = [
-    'FEC_General_Assignment__c.FEC_General_Assignment_Name__c',
-    'FEC_General_Assignment__c.FEC_General_Assignment_Code__c',
-    'FEC_General_Assignment__c.FEC_Active__c'
+    'FEC_General_Assignment_Config__c.Name',
+    'FEC_General_Assignment_Config__c.FEC_Customer_Type__c',
+    'FEC_General_Assignment_Config__c.FEC_Channel__c',
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Name__c',
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Code__c',
+    'FEC_General_Assignment_Config__c.FEC_Active__c'
 ];
 
-export default class Fec_GeneralAssignmentDetail extends LightningElement {
+export default class Fec_GeneralAssignmentConfigDetail extends LightningElement {
     @api recordId;
-    @api startInEditMode = false;
     @track isEditMode = false;
     @track record = {};
     @wire(MessageContext) messageContext;
@@ -30,13 +33,15 @@ export default class Fec_GeneralAssignmentDetail extends LightningElement {
                 this.isEditMode = true;
             }
         });
-        if (this.startInEditMode) this.isEditMode = true;
     }
 
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredRecord({ data }) {
         if (data) {
             this.record = {
+                Name: data.fields.Name?.value,
+                FEC_Customer_Type__c: data.fields.FEC_Customer_Type__c?.value,
+                FEC_Channel__c: data.fields.FEC_Channel__c?.value,
                 FEC_General_Assignment_Name__c: data.fields.FEC_General_Assignment_Name__c?.value,
                 FEC_General_Assignment_Code__c: data.fields.FEC_General_Assignment_Code__c?.value,
                 FEC_Active__c: data.fields.FEC_Active__c?.value
@@ -61,4 +66,3 @@ export default class Fec_GeneralAssignmentDetail extends LightningElement {
         this.dispatchEvent(new ShowToastEvent({ title: LABEL_ERROR, message: event.detail?.detail || LABEL_SAVE_ERROR, variant: 'error' }));
     }
 }
-

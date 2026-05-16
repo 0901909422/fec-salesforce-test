@@ -1,3 +1,4 @@
+// tungnm37: Actions header cho FEC_General_Assignment_Config__c - icon Custom50
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
@@ -6,7 +7,6 @@ import { publish, MessageContext } from 'lightning/messageService';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import FEC_GA_EDIT_MODE from '@salesforce/messageChannel/FEC_GA_Edit_Mode__c';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
-
 import FEC_BUTTON_EDIT from '@salesforce/label/c.FEC_Action_Edit';
 import FEC_CONFIRM_DELETE_MESSAGE from '@salesforce/label/c.FEC_Confirm_Delete_Message';
 import FEC_CONFIRM_DELETE_TITLE from '@salesforce/label/c.FEC_Confirm_Delete_Title';
@@ -18,11 +18,10 @@ import LABEL_DELETED from '@salesforce/label/c.FEC_GA_Delete_Success_Message';
 import LABEL_DELETE_ERROR from '@salesforce/label/c.FEC_GA_Delete_Error_Message';
 import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
 
-const FIELDS = ['FEC_General_Assignment__c.Name'];
+const FIELDS = ['FEC_General_Assignment_Config__c.Name'];
 
-export default class Fec_GeneralAssignmentActions extends NavigationMixin(LightningElement) {
+export default class Fec_GeneralAssignmentConfigActions extends NavigationMixin(LightningElement) {
     @api recordId;
-    @api objectApiName; // tungnm37: nhận từ flexipage để biết đang ở object nào
     @wire(MessageContext) messageContext;
 
     labels = {
@@ -35,9 +34,6 @@ export default class Fec_GeneralAssignmentActions extends NavigationMixin(Lightn
     };
 
     recordName;
-    // tungnm37: icon Custom70 cho FEC_General_Assignment__c
-    objectIconName = 'custom:custom70';
-    objectLabel = 'General Assignment';
     showDeleteModal = false;
 
     connectedCallback() {
@@ -66,11 +62,9 @@ export default class Fec_GeneralAssignmentActions extends NavigationMixin(Lightn
         try {
             await deleteRecord(this.recordId);
             this.dispatchEvent(new ShowToastEvent({ title: LABEL_SUCCESS, message: LABEL_DELETED, variant: 'success' }));
-            // tungnm37: navigate về list view của đúng object
-            const objName = this.objectApiName || 'FEC_General_Assignment__c';
             this[NavigationMixin.Navigate]({
                 type: 'standard__objectPage',
-                attributes: { objectApiName: objName, actionName: 'list' },
+                attributes: { objectApiName: 'FEC_General_Assignment_Config__c', actionName: 'list' },
                 state: { filterName: 'All' }
             });
         } catch (e) {
@@ -78,4 +72,3 @@ export default class Fec_GeneralAssignmentActions extends NavigationMixin(Lightn
         }
     }
 }
-

@@ -1,0 +1,36 @@
+.ga-actions-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+}
+.ga-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.ga-actions-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.ga-actions-label {
+    font-size: 0.85rem;
+    color: #706e6b;
+    line-height: 1.2;
+}
+.ga-actions-name {
+    font-size: 1.9rem;
+    line-height: 1.2;
+    font-weight: 600;
+    color: #181818;
+}
+.ga-actions-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

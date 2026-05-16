@@ -28,20 +28,20 @@ public with sharing class FEC_GeneralAssignmentController {
         ];
     }
 
-    // Lấy danh sách General Assignment Name (từ FEC_Business_Configuration_Tools__c hoặc custom object)
+    // tungnm37: Lấy danh sách General Assignment Name từ FEC_General_Assignment__c (master list)
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getGeneralAssignmentNames() {
-        List<AggregateResult> existing = [
-            SELECT FEC_General_Assignment_Name__c name
-            FROM FEC_General_Assignment_Config__c
+        List<FEC_General_Assignment__c> existing = [
+            SELECT FEC_General_Assignment_Name__c
+            FROM FEC_General_Assignment__c
             WHERE FEC_General_Assignment_Name__c != null
-            GROUP BY FEC_General_Assignment_Name__c
+              AND FEC_Active__c = true
+            ORDER BY FEC_General_Assignment_Name__c
             LIMIT 50
         ];
         List<Map<String, String>> result = new List<Map<String, String>>();
-        for (AggregateResult ar : existing) {
-            String n = (String) ar.get('name');
-            result.add(new Map<String, String>{ 'label' => n, 'value' => n });
+        for (FEC_General_Assignment__c ga : existing) {
+            result.add(new Map<String, String>{ 'label' => ga.FEC_General_Assignment_Name__c, 'value' => ga.FEC_General_Assignment_Name__c });
         }
         return result;
     }
@@ -57,11 +57,8 @@ public with sharing class FEC_GeneralAssignmentController {
         String generalAssignmentCode,
         Boolean active
     ) {
-        FEC_General_Assignment_Config__c ga = new FEC_General_Assignment_Config__c(
-            FEC_Nature_of_Cases__c = String.isNotBlank(nocId) ? nocId : null,
-            FEC_Customer_Type__c = customerType,
-            FEC_Channel__c = channelIds,
-            FEC_Case_Stage__c = String.isNotBlank(stageId) ? stageId : null,
+        // tungnm37: tạo FEC_General_Assignment__c (master list, chỉ có Name, Code, Active)
+        FEC_General_Assignment__c ga = new FEC_General_Assignment__c(
             FEC_General_Assignment_Name__c = generalAssignmentName,
             FEC_General_Assignment_Code__c = generalAssignmentCode,
             FEC_Active__c = active != null ? active : true
@@ -74,8 +71,9 @@ public with sharing class FEC_GeneralAssignmentController {
     @AuraEnabled(cacheable=true)
     public static String getRecordName(String recordId) {
         if (String.isBlank(recordId)) return 'General Assignment';
-        List<FEC_General_Assignment_Config__c> records = [
-            SELECT Name FROM FEC_General_Assignment_Config__c WHERE Id = :recordId LIMIT 1
+        // tungnm37: query FEC_General_Assignment__c (tab list view object)
+        List<FEC_General_Assignment__c> records = [
+            SELECT Name FROM FEC_General_Assignment__c WHERE Id = :recordId LIMIT 1
         ];
         return records.isEmpty() ? 'General Assignment' : records[0].Name;
     }
@@ -84,11 +82,13 @@ public with sharing class FEC_GeneralAssignmentController {
     @AuraEnabled(cacheable=true)
     public static String getGACodeByName(String gaName) {
         if (String.isBlank(gaName)) return '';
-        List<FEC_General_Assignment_Config__c> records = [
+        // tungnm37: lấy Code từ FEC_General_Assignment__c (master list)
+        List<FEC_General_Assignment__c> records = [
             SELECT FEC_General_Assignment_Code__c
-            FROM FEC_General_Assignment_Config__c
+            FROM FEC_General_Assignment__c
             WHERE FEC_General_Assignment_Name__c = :gaName
               AND FEC_General_Assignment_Code__c != null
+              AND FEC_Active__c = true
             LIMIT 1
         ];
         return records.isEmpty() ? '' : records[0].FEC_General_Assignment_Code__c;
@@ -104,10 +104,9 @@ public with sharing class FEC_GeneralAssignmentController {
         String generalAssignmentCode,
         Boolean active
     ) {
-        FEC_General_Assignment_Config__c ga = new FEC_General_Assignment_Config__c(
+        // tungnm37: update FEC_General_Assignment__c - chỉ có Name, Code, Active
+        FEC_General_Assignment__c ga = new FEC_General_Assignment__c(
             Id = recordId,
-            FEC_Customer_Type__c = customerType,
-            FEC_Channel__c = channelIds,
             FEC_General_Assignment_Name__c = generalAssignmentName,
             FEC_General_Assignment_Code__c = generalAssignmentCode,
             FEC_Active__c = active != null ? active : true

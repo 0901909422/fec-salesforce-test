@@ -3,6 +3,7 @@
     <fullName>FEC_Customer_Type__c</fullName>
     <label>Customer Type</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>

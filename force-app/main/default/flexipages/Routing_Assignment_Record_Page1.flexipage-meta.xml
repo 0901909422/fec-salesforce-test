@@ -39,6 +39,12 @@
                 <identifier>fec_RoutingAssignmentDetailSimple</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_RoutingAssignmentHistory</componentName>
+                <identifier>fec_RoutingAssignmentHistory</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>detailTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
