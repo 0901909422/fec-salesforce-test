@@ -1,7 +1,7 @@
 import { LightningElement, api, track, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
-import { publish, MessageContext } from "lightning/messageService";
+import { publish, subscribe, unsubscribe, MessageContext, APPLICATION_SCOPE } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 
@@ -205,7 +205,37 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             //linhdev fix jira FECREDIT_CSM_2025_KH-1366
             this._syncLocksWithStorage();
             this._maybeHydrateForFastCashScope();
+            this._subscribeModeEditChannel();
         }
+    }
+
+    disconnectedCallback() {
+        if (this._modeEditSubscription) {
+            unsubscribe(this._modeEditSubscription);
+            this._modeEditSubscription = null;
+        }
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — submit xong: dọn session/state Fast Cash
+    _subscribeModeEditChannel() {
+        if (this._modeEditSubscription || !this.messageContext) {
+            return;
+        }
+        this._modeEditSubscription = subscribe(
+            this.messageContext,
+            IS_MODE_EDIT,
+            (message) => {
+                if (!message || message.isModeEdit !== false) {
+                    return;
+                }
+                if (message.caseId != null && message.caseId !== this.recordId) {
+                    return;
+                }
+                this._clearFastCashSessionStorage();
+                this._resetBlockStateFlagsInMemory();
+            },
+            { scope: APPLICATION_SCOPE }
+        );
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — guard chung cho wiredCase & connectedCallback

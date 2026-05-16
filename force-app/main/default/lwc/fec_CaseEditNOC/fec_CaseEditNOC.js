@@ -728,6 +728,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
   handleMessage(message) {
     if (!message || typeof message.isModeEdit === "undefined") return;
 
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — submit → review: bỏ lock Fast Cash, cho reload NOC
+    if (message.isModeEdit === false) {
+      this._clearFastCashBlockSessionStorage();
+      this.isNocLockedAfterFastCashBlock = false;
+      this._fastCashLockCombosApplied = false;
+    }
+
     // 🚫 API success rồi thì không cho edit nữa
     if (this.isDisableNOC) {
       return;

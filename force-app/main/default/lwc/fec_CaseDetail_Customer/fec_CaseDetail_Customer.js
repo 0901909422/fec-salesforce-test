@@ -44,6 +44,10 @@ import {
   VIEW_MODE_REVIEW,
   FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
   FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
+  FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+  FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX,
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
@@ -58,6 +62,23 @@ function isFastCashBlockModalConfirmed(caseId) {
     return sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) === "1";
   } catch (e) {
     return false;
+  }
+}
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1366 — submit xong phải về review, không giữ session Fast Cash
+function clearFastCashBlockSessionStorage(caseId) {
+  try {
+    if (!caseId) {
+      return;
+    }
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX + caseId);
+  } catch (e) {
+    /* ignore */
   }
 }
 
@@ -227,8 +248,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleMessage(message) {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
+
+
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
+    //Hieutt Update: thêm check caseId để tránh set các case khác khi publish mode edit
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
     // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
@@ -325,6 +352,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     const payload = {
       isModeEdit: Boolean(isEdit),
     };
+    if (this.recordId) {
+      payload.caseId = this.recordId;
+    }
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
@@ -536,6 +566,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
       // Chuyển sang Case Review (chế độ xem), không đóng tab — publish mode trước để handleMessage nhận
       // đổi từ edit → review (không gán modeEditCase=false trước, nếu không prev===next và bỏ qua resetViewMode/getData).
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — xóa session Fast Cash để không ép lại handling sau submit
+      clearFastCashBlockSessionStorage(this.recordId);
       setTimeout(async () => {
         this.handlePublishMode(false);
 
