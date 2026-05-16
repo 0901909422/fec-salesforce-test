@@ -25,6 +25,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ApplicationListTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_ApplicationsListController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -53,6 +57,38 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingCaseFilter</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportRow</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingSObjectUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingTemplateHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingZipResult</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingZipService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_BeneficiaryBankInfoController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -70,6 +106,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CMSIPPBlockWS_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSRewardRedeemService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSRewardRedeemServiceTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -106,6 +150,38 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CardReplacementAddressController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentAutoDistributeService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConfigController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConflictService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConflictServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNOCDraftTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNOCTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNocController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentQueueRoleResolver</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -146,6 +222,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ChannelFunctionService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ChannelFunctionServiceTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -605,6 +689,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_NocRemovePhoneInheritanceHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocRemovePhoneInheritanceHandlerTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_Notification</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -634,6 +726,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_PinResetHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_PointsRedemptionCaseController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -678,6 +774,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_RoutingActionHistoryTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SalesChannelFromApplicationService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -726,6 +826,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_StatementsAccountController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SubProcessService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -805,6 +909,14 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_UpdateDisbursementStatusRestService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>Fec_HoldCaseConfigurationController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>CustomLog</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -814,10 +926,6 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_TeamQueue</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_UpdateDisbursementStatusRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <customMetadataTypeAccesses>
@@ -957,6 +1065,10 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_BancaTabView</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_HoldCaseConfiguration</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <userPermissions>

@@ -42,6 +42,11 @@ export default class Fec_RoutingAssignment extends LightningElement {
   @api get hasUnconfirmedForm() {
     return this.showAddForm && (this.formTeam || this.formQueue);
   }
+
+  // tungnm37: expose để parent check nút Add Item đang hiển thị nhưng chưa add item nào
+  @api get requiresManualItemButEmpty() {
+    return this.showAddItem && this.manualItems.length === 0;
+  }
   @track formRemark = '';
   @track showValidationError = false;
   @track validationErrorMsg = '';

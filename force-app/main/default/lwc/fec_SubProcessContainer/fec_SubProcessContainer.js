@@ -9,6 +9,7 @@ import {
 
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
+import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
 
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
@@ -18,7 +19,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   subscription = null;
   params;
-
+  isSubmitted = false;
   showHoldCase = false;
   showRemovePhone = false;
   showDoNotBother = false;
@@ -26,6 +27,8 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   connectedCallback() {
     this.subscribeToMessageChannel();
+
+    this.initializeCase();
   }
 
   disconnectedCallback() {
@@ -41,7 +44,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
       this.messageContext,
       CASE_NOC,
       (message) => this.handleMessage(message),
-      { scope: APPLICATION_SCOPE }
+      { scope: APPLICATION_SCOPE },
     );
   }
 
@@ -93,6 +96,37 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
     if (error) {
       console.error("[fec_SubProcessContainer] wire error", error);
+    }
+  }
+
+  //linhdev: Save remove phone draft if applicable
+  @api saveRemovePhoneDraftIfApplicable() {
+    const el =
+      this.template.querySelector("c-fec_-remove-phone-form") ||
+      this.template.querySelector("c-fec-remove-phone-form");
+    if (!el || typeof el.saveDraftIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return el.saveDraftIfApplicable();
+  }
+
+  async initializeCase() {
+    try {
+      const result = await getSubmittedSubProcesses({
+        caseId: this.recordId,
+      });
+
+      console.log("submitted subprocesses = ", JSON.stringify(result));
+
+      this.showHoldCase = !!result.showHoldCase;
+
+      this.showRemovePhone = !!result.showRemovePhone;
+
+      this.showDoNotBother = !!result.showDNB;
+
+      this.showTransferCall = !!result.showTransferCall;
+    } catch (error) {
+      console.error("[initializeCase] ERROR", error);
     }
   }
 }
