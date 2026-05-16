@@ -1,0 +1,140 @@
+<template>
+  <lightning-card title="Case Assignment NOC">
+    <div slot="actions">
+      <lightning-button
+        label="New"
+        title="Thêm Case Assignment NOC (chỉ khi Status = Draft)"
+        variant="neutral"
+        disabled={disableNewButton}
+        onclick={handleOpenModal}
+      ></lightning-button>
+    </div>
+    <div class="slds-p-horizontal_small slds-p-bottom_small">
+      <template if:false={canAddNoc}>
+        <div class="rule-hint slds-m-bottom_small">
+          Chỉ có thể thêm Case Assignment NOC khi Case Assignment có Status = Draft. Các giá trị chọn được lấy từ
+          <strong>FEC_Nature_of_Case__c</strong> (Nature of Case đang active).
+        </div>
+      </template>
+
+      <template if:true={hasItems}>
+        <div class="slds-m-top_x-small">
+          <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+            <thead>
+              <tr>
+                <th scope="col">Case Assignment NOC Name</th>
+                <th scope="col">Product Type</th>
+                <th scope="col">Category</th>
+                <th scope="col">Sub Category</th>
+                <th scope="col">Sub Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={items} for:item="item">
+                <tr key={item.id}>
+                  <td>
+                    <template if:true={item.recordUrl}>
+                      <lightning-formatted-url
+                        value={item.recordUrl}
+                        label={item.name}
+                        target="_self"
+                      ></lightning-formatted-url>
+                    </template>
+                    <template if:false={item.recordUrl}>
+                      {item.name}
+                    </template>
+                  </td>
+                  <td>{item.productType}</td>
+                  <td>{item.category}</td>
+                  <td>{item.subCategory}</td>
+                  <td>{item.subCode}</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </template>
+      <template if:false={hasItems}>
+        <div class="slds-text-color_weak slds-p-vertical_small">No Case Assignment NOC records.</div>
+      </template>
+    </div>
+
+    <template if:true={showModal}>
+      <section role="dialog" aria-modal="true" aria-labelledby="noc-modal-heading" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+          <header class="slds-modal__header">
+            <button
+              class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+              title="Close"
+              onclick={closeModal}
+            >
+              <lightning-icon
+                icon-name="utility:close"
+                alternative-text="Close"
+                variant="inverse"
+                size="small"
+              ></lightning-icon>
+            </button>
+            <h2 id="noc-modal-heading" class="slds-modal__title slds-hyphenate">New Case Assignment NOC</h2>
+            <p class="slds-m-top_x-small slds-text-body_small slds-text-color_weak">
+              Name sẽ được hệ thống tự sinh. Lưu Product Type, Category, Sub Category, Sub Code.
+            </p>
+          </header>
+          <div class="slds-modal__content slds-p-around_medium">
+            <lightning-combobox
+              name="productType"
+              label="Product Type"
+              value={selectedProductTypeId}
+              options={productTypeOptions}
+              required
+              onchange={handleProductTypeChange}
+            ></lightning-combobox>
+            <lightning-combobox
+              class="slds-m-top_small"
+              name="category"
+              label="Category"
+              value={selectedCategoryKey}
+              options={categoryOptions}
+              placeholder="Chọn Product Type trước"
+              required
+              disabled={categoryComboboxDisabled}
+              onchange={handleCategoryChange}
+            ></lightning-combobox>
+            <lightning-combobox
+              class="slds-m-top_small"
+              name="subCategory"
+              label="Sub Category"
+              value={selectedSubCategoryId}
+              options={subCategoryOptions}
+              placeholder="Chọn Category trước"
+              required
+              disabled={subCategoryComboboxDisabled}
+              onchange={handleSubCategoryChange}
+            ></lightning-combobox>
+            <lightning-combobox
+              class="slds-m-top_small"
+              name="subCode"
+              label="Sub Code"
+              value={selectedSubCodeId}
+              options={subCodeOptions}
+              placeholder="Tùy chọn — chọn Sub Category trước"
+              disabled={subCodeComboboxDisabled}
+              onchange={handleSubCodeChange}
+            ></lightning-combobox>
+          </div>
+          <footer class="slds-modal__footer">
+            <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+            <lightning-button
+              class="slds-m-left_x-small"
+              variant="brand"
+              label="Save"
+              disabled={isSaveDisabled}
+              onclick={handleSave}
+            ></lightning-button>
+          </footer>
+        </div>
+      </section>
+      <div role="presentation" class="slds-backdrop slds-backdrop_open" onclick={closeModal}></div>
+    </template>
+  </lightning-card>
+</template>

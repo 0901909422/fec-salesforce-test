@@ -13,7 +13,6 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
         isContact: col.type === "contact",
         isPicklist: col.type === "picklist",
         isTextarea: col.type === "textarea",
-        checkboxLabel: col.checkboxLabel || "",
       };
     });
   }
@@ -49,7 +48,8 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
             isDisabled: col.isPicklist ? !row.active : false,
             isDisabledText: col.isTextarea ? !row.active : false,
             isRequired: row.active,
-            checkboxLabel: col.checkboxLabel,
+            checkboxLabel:
+              row[col.checkboxLabelField] || col.checkboxLabel || "",
             hasContact: row.hasContact,
             isActionDisabled: row.isActionDisabled,
 

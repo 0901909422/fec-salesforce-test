@@ -28,6 +28,8 @@ export default class Fec_RoutingAssignment extends LightningElement {
   @api customerType;
   @api isSubmited;
   @api userGroup;
+  // tungnm37 fix: tên Queue của Case Owner để ẩn team tương ứng trong Add Item
+  @api caseOwnerQueueName;
 
   @track assignments = [];
   @track allTeamQueueOptions = [];
@@ -39,6 +41,11 @@ export default class Fec_RoutingAssignment extends LightningElement {
   // tungnm37: expose để parent check form đang mở chưa confirm
   @api get hasUnconfirmedForm() {
     return this.showAddForm && (this.formTeam || this.formQueue);
+  }
+
+  // tungnm37: expose để parent check nút Add Item đang hiển thị nhưng chưa add item nào
+  @api get requiresManualItemButEmpty() {
+    return this.showAddItem && this.manualItems.length === 0;
   }
   @track formRemark = '';
   @track showValidationError = false;
@@ -80,11 +87,23 @@ export default class Fec_RoutingAssignment extends LightningElement {
     return this.manualItems.length > 0;
   }
 
-  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c, ẩn CC và SP (tự động xử lý)
+  // tungnm37: danh sách Team unique từ FEC_Team_Queue__c
+  // tungnm37 fix: ẩn team tương ứng với Case Owner Queue
+  // - Case Owner = DQ CS Customer Care → ẩn CC
+  // - Case Owner = DQ CS Support → ẩn SP
   get teamOptions() {
     const seen = new Set();
+    const ownerQueue = this.caseOwnerQueueName || '';
+    // Dựa vào assignments: nếu có team CC/SP trong routing assignments thì ẩn team đó
+    const assignmentTeams = new Set(this.assignments.map(a => a.team));
+    const hiddenTeams = new Set();
+    if (assignmentTeams.has('CC')) hiddenTeams.add('CC');
+    if (assignmentTeams.has('SP')) hiddenTeams.add('SP');
+    // Fallback: dựa vào caseOwnerQueueName nếu có
+    if (ownerQueue.toLowerCase().includes('customer care')) hiddenTeams.add('CC');
+    if (ownerQueue.toLowerCase().includes('support')) hiddenTeams.add('SP');
     return this.allTeamQueueOptions
-      .filter(o => o.teamName !== 'CC' && o.teamName !== 'SP')
+      .filter(o => !hiddenTeams.has(o.teamName))
       .filter(o => { if (seen.has(o.teamName)) return false; seen.add(o.teamName); return true; })
       .map(o => ({ label: o.teamName, value: o.teamName }));
   }

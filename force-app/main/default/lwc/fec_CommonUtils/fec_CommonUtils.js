@@ -1002,6 +1002,13 @@ const promiseWithTimeoutSafe = (promise, timeoutMs, timeoutMessage) =>
   });
 
 const arrayBufferToBase64Safe = (buffer) => {
+}
+
+/** Encode ArrayBuffer to base64 (chunked for large buffers). */
+const arrayBufferToBase64 = (buffer) => {
+  if (!buffer) {
+    return "";
+  }
   const bytes = new Uint8Array(buffer);
   const chunkSize = 0x8000;
   let binary = "";
@@ -1102,4 +1109,5 @@ export {
   buildResultXlsxFileName,
   formatDateTimeEnGb,
   extractErrorMessage
+  arrayBufferToBase64
 };

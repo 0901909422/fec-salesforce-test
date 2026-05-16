@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Assignment_Method__c</fullName>
+    <defaultValue>&quot;Continuous&quot;</defaultValue>
+    <label>Assignment Method</label>
+    <required>true</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Continuous</fullName>
+                <default>true</default>
+                <label>Continuous</label>
+            </value>
+            <value>
+                <fullName>Time-Based</fullName>
+                <default>false</default>
+                <label>Time-Based</label>
+            </value>
+            <value>
+                <fullName>Continous</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Continous</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
