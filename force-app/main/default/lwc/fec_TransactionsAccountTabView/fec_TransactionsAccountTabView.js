@@ -8,6 +8,8 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-16     Quangdv7             Create
+   1.1      2026-05-12     Agent                Unbilled detail: show dual-source strings when Apex provides *DualDisplay
+   1.2      2026-05-12     Agent                Pending detail fields: sheet columns + dual *Display; drop removed pending fields
  
 ****************************************************************************************/
 
@@ -64,30 +66,28 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     /* ================= FIELD CONFIG ================= */
     unbilledFields = [
         { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode', apiName: 'FEC_Transaction_Code__c' },
-        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
+        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', dualFieldName: 'effectiveDateDualDisplay', apiName: 'FEC_Effective_Date__c' },
         { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: this.customLabel.postDateLabel, fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', dualFieldName: 'transactionPlanDualDisplay', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.postDateLabel, fieldName: 'postingDate', dualFieldName: 'postDateDualDisplay', apiName: 'FEC_Post_Date__c' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', dualFieldName: 'authorizationCodeDualDisplay', apiName: 'FEC_Authorization_Code__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', dualFieldName: 'transactionAmountDualDisplay', apiName: 'FEC_Transaction_Amount__c' },
         { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' }
     ];
 
     pendingFields = [
-        { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode', apiName: 'FEC_Transaction_Code__c' },
-        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
-        { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse', apiName: 'FEC_Authorization_Response__c' },
-        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
-        { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription', apiName: 'FEC_Decline_Description__c' },
-        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode', apiName: 'FEC_Approval_Code__c' },
-        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' }
+        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', dualFieldName: 'effectiveDateDualDisplay', apiName: 'FEC_Effective_Date__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', dualFieldName: 'transactionAmountDualDisplay', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', dualFieldName: 'merchantDescriptionDualDisplay', apiName: 'FEC_Merchant_Description__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', dualFieldName: 'transactionPlanDualDisplay', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', dualFieldName: 'merchantCategoryDualDisplay', apiName: 'FEC_Merchant_Category_Code__c' },
+        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', dualFieldName: 'currencyCodeDualDisplay', apiName: 'FEC_Currency_Code__c' },
+        { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode', dualFieldName: 'approvalCodeDualDisplay', apiName: 'FEC_Approval_Code__c' },
+        { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse', dualFieldName: 'authorizationResponseDualDisplay', apiName: 'FEC_Authorization_Response__c' },
+        { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription', dualFieldName: 'declineDescriptionDualDisplay', apiName: 'FEC_Decline_Description__c' }
     ];
 
     billedFields = [
@@ -170,12 +170,23 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
                         ? helpTexts[f.apiName]
                         : null;
 
+                    const dualRaw =
+                        f.dualFieldName != null
+                            ? this.transaction[f.dualFieldName]
+                            : null;
+                    const useDual =
+                        f.dualFieldName != null &&
+                        dualRaw != null &&
+                        String(dualRaw).trim() !== '';
+
                     return {
                         label: f.label,
-                        value: this.formatValue(
-                            f.fieldName,
-                            this.transaction[f.fieldName]
-                        ),
+                        value: useDual
+                            ? dualRaw
+                            : this.formatValue(
+                                  f.fieldName,
+                                  this.transaction[f.fieldName]
+                              ),
                         hasHelpText: !!helpText,
                         helpText
                     };
@@ -206,10 +217,16 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     }
 
     isDateField(fieldName) {
+        if (fieldName.endsWith('DualDisplay')) {
+            return false;
+        }
         return fieldName.toLowerCase().includes('date');
     }
 
     isNumberField(fieldName) {
+        if (fieldName.endsWith('DualDisplay')) {
+            return false;
+        }
         return [
             'amount',
             'balance',

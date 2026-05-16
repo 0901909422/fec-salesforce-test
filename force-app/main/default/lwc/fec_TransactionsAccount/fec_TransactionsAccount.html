@@ -6,7 +6,7 @@
                 <c-fec_-related-list-paging records={unbilledTransactions}
                  data-section="unbilled"
                     columns={unbilledTransactionsColumns} 
-                    default-sorted-by="effectiveDate" 
+                    default-sorted-by="effectiveDateDualDisplay" 
                     default-sort-direction="desc"
                     onrowselect={handleTransactionSelect}>
                 </c-fec_-related-list-paging>
@@ -17,7 +17,7 @@
                 <c-fec_-related-list-paging records={pendingTransactions}
                     data-section="pending"
                     columns={pendingTransactionsColumns} 
-                    default-sorted-by="effectiveDate" 
+                    default-sorted-by="effectiveDateDualDisplay" 
                     default-sort-direction="desc"
                     onrowselect={handleTransactionSelect}>
                 </c-fec_-related-list-paging>

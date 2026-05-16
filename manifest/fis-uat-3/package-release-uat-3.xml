@@ -69,6 +69,17 @@
         <members>FEC_UpdateDisb_Msg_Success</members>
         <members>FEC_UpdateDisb_Msg_InternalError</members>
         <members>FEC_UpdateDisb_Msg_AlreadyResolved</members>
+        <members>FEC_BilledTx_Col_Amount</members>
+        <members>FEC_BilledTx_Col_AuthCode</members>
+        <members>FEC_BilledTx_Col_Currency</members>
+        <members>FEC_BilledTx_Col_DebitCredit</members>
+        <members>FEC_BilledTx_Col_EffectiveDate</members>
+        <members>FEC_BilledTx_Col_MCC</members>
+        <members>FEC_BilledTx_Col_Merchant</members>
+        <members>FEC_BilledTx_Col_OTP</members>
+        <members>FEC_BilledTx_Col_Plan</members>
+        <members>FEC_BilledTx_Col_PostDate</members>
+        <members>FEC_BilledTx_Col_TxnCode</members>
         <name>CustomLabel</name>
     </types>
 
@@ -139,6 +150,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
+        <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
         <name>ApexClass</name>
     </types>
@@ -579,6 +591,7 @@
         <members>FEC_Insurance_Info__c</members>
         <members>FEC_Batch_Case_Creation__c</members>
 		<members>FEC_Batch_Data_Creation__c</members>
+        <members>FEC_Currency_Code__c</members>
         <members>FEC_Incorrect_Payment_Info__c</members>
         <members>FEC_Contract_List_for_Remove_Phone__c</members>
         <members>FEC_Assignment_MDS__c</members>
@@ -601,6 +614,7 @@
 		<members>FEC_Incorrect_Payment_Info__c-Incorrect Payment Info Layout</members>
         <members>FEC_Contract_List_for_Remove_Phone__c-Contract List for Remove Phone Layout</members>
         <members>FEC_Assignment_MDS__c-Assignment MDS Layout</members>
+        <members>FEC_Currency_Code__c-Currency Code Layout</members>
 		<members>FEC_Batch_Case_Handling__c-Batch Case Handling Layout</members>
         <members>FEC_Sales_Logic__c-Sales Logic Layout</members>
         <members>FEC_Case_Assignment_NOC__c-Case Assignmetn NOC Layout</members>
@@ -1453,6 +1467,11 @@
 		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
 		<name>ValidationRule</name>
 >>>>>>> manifest/fis-uat-3/package-release-uat-3.xml
+	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<members>Assign_Entitlement_to_Case</members>
+		<name>Flow</name>
 	</types>
 	<version>66.0</version>
 </Package>

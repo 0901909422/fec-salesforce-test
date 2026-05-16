@@ -77,16 +77,15 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     changedStatusOptions = [];
     showChangedStatusDropdown = false;
 
-    channelSearchManual = STR_EMPTY;
-    channelSelectedManual = [];
-
-    showDropdownManual = false;
-
     nfuSearch = STR_EMPTY;
     nfuSearchManual = STR_EMPTY;
     nfuModalError = STR_EMPTY;
     caseStageName = STR_EMPTY;
     selectedNfuRow = null;
+
+    currentStatusSelected = [];
+    changedStatusSelected = []; 
+    channelSelected = [];
 
     activeSections = ['holdCase'];
 
@@ -242,11 +241,9 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
 
         Promise.all([
             getHoldCaseConfigurations({ recordId: this.recordId }),
-            getParentHoldCaseConfigurations({ recordId: this.recordId })
         ])
         .then(([childResult, parentResult]) => {
             this.holdCase = childResult;
-            this.parentHoldCase = parentResult;
         })
         .finally(() => {
             this.isLoading = false;
@@ -283,6 +280,9 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
             changedStatus: STR_EMPTY,
             nfuCode: STR_EMPTY
         };
+        this.channelSelected = [];
+        this.currentStatusSelected = [];
+        this.changedStatusSelected = [];
         this.channelSearch = STR_EMPTY;
         this.currentStatusSearch = STR_EMPTY;
         this.changedStatusSearch = STR_EMPTY;
@@ -297,9 +297,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     handleStageChange(event) {
 
         this.formData.caseStage = event.detail.recordId;
-
         this.caseStageName = event.detail.value?.fields?.Name?.value || STR_EMPTY;
-        
         const field = this.template.querySelector('[data-id="caseStage"]');
 
         if (field) {
@@ -309,16 +307,13 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     // ================= CHANNEL =================
-
     handleChannelSearch(event) {
         this.channelSearch = event.target.value;
-
         if (!this.channelSearch) {
             this.channelOptions = [];
             this.showChannelDropdown = false;
             return;
         }
-
         searchChannels({ keyword: this.channelSearch })
             .then(result => {
                 this.channelOptions = result;
@@ -328,11 +323,10 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     handleFocus() {
-        this.showChannelDropdown = true;
-
         searchChannels({ keyword: this.channelSearch || STR_EMPTY })
             .then(result => {
                 this.channelOptions = result;
+                this.showChannelDropdown = result.length > 0;
             })
             .catch(error => console.error(error));
     }
@@ -341,11 +335,25 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         const el = event.target.closest('[data-id]');
         if (!el) return;
 
-        this.formData.channels = el.dataset.id;
-        this.channelSearch = el.dataset.name;
+        const id = el.dataset.id;
+        const name = el.dataset.name;
+
+        const exists = this.channelSelected.find(i => i.id === id);
+        if (!exists) {
+            this.channelSelected = [...this.channelSelected, { id, name }];
+        }
+
+        this.channelSearch = STR_EMPTY;
         this.showChannelDropdown = false;
         this.channelOptions = [];
+        this.formData.channels = this.channelSelected.map(i => i.name).join(', ');
         this.setLookupError('channel', false);
+    }
+
+    handleRemoveChannel(event) {
+        const id = event.currentTarget.dataset.id;
+        this.channelSelected = this.channelSelected.filter(i => i.id !== id);
+        this.formData.channels = this.channelSelected.map(i => i.name).join(', ');
     }
 
     // ================= CURRENT STATUS =================
@@ -374,16 +382,30 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     handleSelectCurrentStatus(event) {
-
         const el = event.target.closest('[data-id]');
         if (!el) return;
-        this.formData.currentStatus = el.dataset.name;
-        this.currentStatusSearch = el.dataset.name;
+
+        const id = el.dataset.id;
+        const name = el.dataset.name;
+
+        const exists = this.currentStatusSelected.find(i => i.id === id);
+        if (!exists) {
+            this.currentStatusSelected = [...this.currentStatusSelected, { id, name }];
+        }
+
+        this.currentStatusSearch = STR_EMPTY; 
         this.showCurrentStatusDropdown = false;
         this.currentStatusOptions = [];
+        this.formData.currentStatus = this.currentStatusSelected.map(i => i.name).join(', ');
         this.setLookupError('currentStatus', false);
     }
 
+    handleRemoveCurrentStatus(event) {
+        const id = event.currentTarget.dataset.id;
+        this.currentStatusSelected = this.currentStatusSelected.filter(i => i.id !== id);
+        this.formData.currentStatus = this.currentStatusSelected.map(i => i.name).join(', ');
+    }
+    
     // ================= CHANGED STATUS =================
 
     handleChangedStatusSearch(event) {
@@ -413,11 +435,25 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         const el = event.target.closest('[data-id]');
         if (!el) return;
 
-        this.formData.changedStatus = el.dataset.name;
-        this.changedStatusSearch = el.dataset.name;
+        const id = el.dataset.id;
+        const name = el.dataset.name;
+
+        const exists = this.changedStatusSelected.find(i => i.id === id);
+        if (!exists) {
+            this.changedStatusSelected = [...this.changedStatusSelected, { id, name }];
+        }
+
+        this.changedStatusSearch = STR_EMPTY;
         this.showChangedStatusDropdown = false;
         this.changedStatusOptions = [];
+        this.formData.changedStatus = this.changedStatusSelected.map(i => i.name).join(', ');
         this.setLookupError('changedStatus', false);
+    }
+
+    handleRemoveChangedStatus(event) {
+        const id = event.currentTarget.dataset.id;
+        this.changedStatusSelected = this.changedStatusSelected.filter(i => i.id !== id);
+        this.formData.changedStatus = this.changedStatusSelected.map(i => i.name).join(', ');
     }
 
     // ================= NFU MODAL =================
@@ -520,7 +556,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
 
         if (this.isAuto) {
 
-            if (!this.formData.channels) {
+            if (!this.channelSelected.length) {
                 this.setLookupError('channel', true);
                 isValid = false;
             } else {
@@ -551,7 +587,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
 
         if (this.isManual) {
 
-            if (!this.channelSelectedManual.length) {
+            if (!this.channelSelected.length) {
                 this.setLookupError('channel', true);
                 isValid = false;
             } else {
@@ -585,7 +621,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         const payload = {
             natureOfCaseId: this.recordId,
             holdCaseType: this.formData.holdCaseType,
-            channel: this.isManual ? this.channelSelectedManual.map(i => i.name).join(', ') : this.channelSearch,
+            channel: this.channelSelected.map(i => i.name).join(', '),
             caseStage: this.formData.caseStage,
             currentStatus: this.formData.currentStatus,
             changedStatus: this.formData.changedStatus,
@@ -716,15 +752,18 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
             caseStage: STR_EMPTY,
             currentStatus: STR_EMPTY,
             changedStatus: STR_EMPTY,
+            
             nfuCode: STR_EMPTY,
             active: false
         };
         this.channelSearch = STR_EMPTY;
+        this.channelSelected = [];
+        this.currentStatusSelected = [];
+        this.changedStatusSelected = [];
         this.currentStatusSearch = STR_EMPTY;
         this.changedStatusSearch = STR_EMPTY;
         this.nfuSearch = STR_EMPTY;
         this.channelSearchManual = STR_EMPTY;
-        this.channelSelectedManual = [];
         this.nfuSearchManual = STR_EMPTY;
         this.selectedNfuRowsManual = [];
         this.errors = { channel: STR_EMPTY, currentStatus: STR_EMPTY, changedStatus: STR_EMPTY, nfuCode: STR_EMPTY };

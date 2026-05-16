@@ -55,6 +55,7 @@
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
 		<members>FEC_PaymentHistoryController</members>
 		<members>FEC_IPPConversionController</members>
+		<members>FEC_AssignmentRoutingActionHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -105,6 +106,9 @@
         <members>fec_HoldCaseConfiguration</members>
         <members>fec_PaymentHistoryAcount</members>
         <members>fec_IPPConversionRetailForm</members>
+        <members>fec_AccountOrContractPicklistCustomerCase</members>
+        <members>fec_CaseNote</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -222,6 +226,7 @@
 	</types>
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
+		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
 	</types>
 	<version>66.0</version>

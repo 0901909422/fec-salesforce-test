@@ -12,7 +12,7 @@
 ****************************************************************************************/
 
 import { LightningElement, api, track } from 'lwc';
-import { isNegative, maskValue } from 'c/fec_CommonUtils';
+import { isNegative } from 'c/fec_CommonUtils';
 import FEC_Common_No_Results_Label from '@salesforce/label/c.FEC_Common_No_Results_Label';
 
 export default class Fec_RelatedListPaging extends LightningElement {
@@ -54,11 +54,6 @@ export default class Fec_RelatedListPaging extends LightningElement {
             this.sortedBy = this.defaultSortedBy;
             this.sortedDirection = this.defaultSortDirection || 'desc';
         }
-        // records có thể được gán trước connectedCallback (thứ tự @api không bảo đảm) —
-        // lúc đó setter chưa sort được; áp dụng sort sau khi đã có sortedBy.
-        if (this.sortedBy && this._records.length > 0) {
-            this.sortData(this.sortedBy, this.sortedDirection);
-        }
     }
 
     /* ===== NEW: eye mask state ===== */
@@ -79,11 +74,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
 
-        // Nếu records đến trước connectedCallback, sortedBy chưa có → áp mặc định từ cha rồi sort
-        if (!this.sortedBy && this.defaultSortedBy) {
-            this.sortedBy = this.defaultSortedBy;
-            this.sortedDirection = this.defaultSortDirection || 'desc';
-        }
+        // Re-apply existing sort if any
         if (this.sortedBy) {
             this.sortData(this.sortedBy, this.sortedDirection);
         }
@@ -98,6 +89,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     get showTableSurface() {
         return this.hasRecords || this.renderEmptyTableChrome === true;
+    }
+
+    get emptyStateMessage() {
+        return FEC_Common_No_Results_Label;
     }
 
     /** Colspan: cột STT (nếu có) + số cột dữ liệu. */
@@ -553,25 +548,13 @@ export default class Fec_RelatedListPaging extends LightningElement {
         const toTime = (v) => {
             if (!v) return null;
 
-            if (typeof v === 'string') {
-                // DD/MM/YYYY (fec_CommonUtils.formatDate)
-                let m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-                if (m) {
-                    const [, d, mo, y] = m;
-                    return new Date(+y, +mo - 1, +d).getTime();
-                }
-                // DD/MM/YYYY, HH:mm:ss hoặc DD/MM/YYYY HH:mm:ss (fec_CommonUtils.formatDateTime / VN)
-                m = v.match(
-                    /^(\d{2})\/(\d{2})\/(\d{4})(?:,\s*|\s+)(\d{2}):(\d{2}):(\d{2})$/
-                );
-                if (m) {
-                    const [, d, mo, y, h, min, s] = m;
-                    return new Date(+y, +mo - 1, +d, +h, +min, +s).getTime();
-                }
+            if (typeof v === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+                const [d, m, y] = v.split('/');
+                return new Date(+y, +m - 1, +d).getTime();
             }
 
             const t = Date.parse(v);
-            return Number.isNaN(t) ? null : t;
+            return isNaN(t) ? null : t;
         };
 
         /** Chuỗi đã format (vd 735,287) hoặc số — dùng để sort đúng thứ tự số, không sort theo chữ cái */
@@ -760,6 +743,26 @@ export default class Fec_RelatedListPaging extends LightningElement {
         this.dispatchEvent(
             new CustomEvent('rowselect', {
                 detail: { recordId },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    /**
+     * Click dòng (không phải link/checkbox/icon): bắn cùng sự kiện rowselect để parent xử lý như IPP.
+     */
+    handleRowSelect(event) {
+        if (event.target.closest('button, a, lightning-input, lightning-button-icon, select, input')) {
+            return;
+        }
+        const rowId = event.currentTarget?.dataset?.id;
+        if (!rowId) {
+            return;
+        }
+        this.dispatchEvent(
+            new CustomEvent('rowselect', {
+                detail: { recordId: rowId },
                 bubbles: true,
                 composed: true
             })

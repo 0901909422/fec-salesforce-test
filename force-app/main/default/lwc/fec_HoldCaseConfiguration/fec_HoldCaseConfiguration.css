@@ -108,3 +108,46 @@
     margin-top: 0.25rem;
     line-height: 1.25;
 }
+.pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.slds-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1.5px solid #c9c7c5;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 400;
+    background: #ffffff;
+    color: #3e3e3c;
+    line-height: 1.4;
+}
+
+.slds-pill__label {
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slds-pill__remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    color: #706e6b;
+    line-height: 1;
+    transition: color 0.15s;
+}
+
+.slds-pill__remove:hover {
+    color: #c23934;
+}
