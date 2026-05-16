@@ -11,6 +11,9 @@
         <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noEligibleMessage}</p>
       </template>
       <template if:true={hasEligibleTransactions}>
+        <template if:true={noti10Message}>
+          <p class="slds-m-bottom_small validation-msg validation-msg-red">{noti10Message}</p>
+        </template>
         <h3 class="slds-text-heading_small slds-m-bottom_small">
           {ippRetailUi.unbilledHeading}
         </h3>
@@ -47,15 +50,17 @@
                 class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
               >
                 <div class="slds-form-element">
-                  <lightning-combobox
-                    label={lblTenor}
-                    name="tenor"
-                    value={selectedTenor}
-                    options={tenorOptions}
-                    onchange={handleTenorChange}
-                    required
-                    disabled={isReadOnly}
-                  ></lightning-combobox>
+                  <template if:true={tenorBlockReady}>
+                    <lightning-combobox
+                      label={lblTenor}
+                      name="tenor"
+                      value={selectedTenor}
+                      options={tenorOptions}
+                      onchange={handleTenorChange}
+                      required
+                      disabled={isReadOnly}
+                    ></lightning-combobox>
+                  </template>
                 </div>
               </div>
               <div
@@ -101,7 +106,7 @@
               label={ippRetailUi.btnConvert}
               onclick={handleConvertIPP}
               variant="brand"
-              disabled={isReadOnly}
+              disabled={convertButtonDisabled}
             ></lightning-button>
           </div>
         </template>

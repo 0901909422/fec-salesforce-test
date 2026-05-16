@@ -49,7 +49,8 @@ public without sharing class FEC_AssignmentTriggerHandler {
             
             // tungnm37 fix: nếu có Routing assignment thì set value, nếu không có (chỉ có General) thì set null
             if (hasRoutingAssignment && !assignmentUserSet.isEmpty()) {
-                casesToUpdate.add(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(new List<String>(assignmentUserSet), ';')));
+                // tungnm37 fix: dùng ',' thống nhất với FEC_CofGsrAssignmentService và parseAssignmentUsers
+                casesToUpdate.add(new Case(Id = caseId, FEC_Assignment_Users__c = String.join(new List<String>(assignmentUserSet), ',')));
             } else if (!hasRoutingAssignment) {
                 // tungnm37 fix: set null khi không có Routing assignment (chỉ có General/thủ công)
                 casesToUpdate.add(new Case(Id = caseId, FEC_Assignment_Users__c = null));

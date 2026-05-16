@@ -467,6 +467,8 @@
         <members>Case.FEC_Assigment_Mode__c</members>
         <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <name>CustomField</name>
     </types>
     <types>
