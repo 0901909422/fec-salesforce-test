@@ -108,6 +108,7 @@
         <members>fec_IPPConversionRetailForm</members>
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CaseNote</members>
+        <members>fec_HoldCaseConfigurationTabView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
