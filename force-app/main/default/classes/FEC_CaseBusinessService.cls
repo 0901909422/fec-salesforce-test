@@ -26,6 +26,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  //PhongBT 14/05/26: Document Request
+  public static final String DOCUMENT_REQUEST = 'Document Request';
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FEC_Business_Process__r.FEC_Code__c (quy trình Fast Card / RC11…)
   public static final String FAST_CARD = 'Fast Cash';
   // tungnm37 thêm: COF/GSR route string constant
@@ -78,7 +80,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE,
     REPLACE_CARD,
     // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
-    ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -105,7 +109,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE => Method.PIN_REISSUE,
     REPLACE_CARD => Method.REPLACE_CARD,
     // tungnm37 thêm: COF/GSR route - không đổi owner
-    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST => Method.DOCUMENT_REQUEST
   };
 
   @AuraEnabled
@@ -189,6 +195,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Case_Phone_Number__c,
           FEC_Case_Email__c,
           FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+          FEC_Account_or_Contract__r.FEC_Fast_Cash_Status__c,
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
@@ -517,6 +524,11 @@ public without sharing class FEC_CaseBusinessService {
 
       Error err = new Error();
 
+      //PhongBT 14/05/26: Document Request — gọi validate 1 lần, dùng cho cả error display và ẩn field
+      String docReqValidationMessage = DOCUMENT_REQUEST.equals(businessProcessCode)
+        ? FEC_PaymentHistoryValidationService.getValidationMessage(selectedCase.Id, subCodeId)
+        : null;
+
       try {
         switch on METHOD_MAP.get(businessProcessCode) {
           when PHONE_UPDATE {
@@ -554,6 +566,13 @@ public without sharing class FEC_CaseBusinessService {
           when IDENTIFICATION_UPDATE {
             if (selectedCase.FEC_Account_or_Contract__c != null) {
               identificationUpdate(selectedCase);
+            }
+          }
+          //PhongBT 14/05/26: Document Request hiển thị cảnh báo từ validation (chỉ label, không có reason)
+          when DOCUMENT_REQUEST {
+            if (String.isNotBlank(docReqValidationMessage)) {
+              err = new Error(docReqValidationMessage, new List<String>());
+              result.sectionlst.add(new Section('Case Information', err));
             }
           }
           when else {
@@ -739,6 +758,10 @@ public without sharing class FEC_CaseBusinessService {
         Decimal subSectionLayoutTemp;
         SObject objTemp;
 
+        Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
+        Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
+        result.contextFlags.put('isCOFStage1Revert', isCOFStage1Revert);
+
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
           subSectionNameTemp = (String) item.get('FEC_Sub_Section__c');
@@ -749,11 +772,24 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          //PhongBT 14/05/26: Document Request
+          //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
+          if(
+            DOCUMENT_REQUEST.equals(businessProcessCode)
+            && String.isNotBlank(docReqValidationMessage)
+            && 'Case Information'.equals(sectionNameTemp)
+            && !'Property Info'.equals(subSectionNameTemp)
+          ){
+            continue;
+          }
 
-          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FAST_CARD: chỉ ẩn subsection C360 Info; section Account Information và subsection khác vẫn render.
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — Fast Cash: ẩn subsection C360 Info chỉ khi FEC_Fast_Cash_Status__c = Not Eligible; Eligible (hoặc chưa có snapshot) vẫn hiển thị C360.
           if (
             FAST_CARD.equals(businessProcessCode) &&
-            'C360 Info'.equals(subSectionNameTemp)
+            'C360 Info'.equals(subSectionNameTemp) &&
+            System.Label.FEC_MSG_Status_Not_Eligible.equals(
+              selectedCase.FEC_Account_or_Contract__r?.FEC_Fast_Cash_Status__c
+            )
           ) {
             continue;
           }
@@ -788,10 +824,7 @@ public without sharing class FEC_CaseBusinessService {
             sectionTemp = new Section(sectionNameTemp);
             result.sectionlst.add(sectionTemp);
           }
-          Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
-          
           Boolean isCOFStage1NotRevert = !isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
-          Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
           if (TYPE_LWC.equals(itemType)) {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
             // COF General Flow Stage 1: chỉ ẩn / remap subsection cho LWC Original Info (ORIGINAL_LWC_COF); các LWC khác vẫn hiển thị bình thường.
@@ -820,6 +853,9 @@ public without sharing class FEC_CaseBusinessService {
                 'Original Info'.equals(subSectionNameTemp)
               ) {
                 lwcSlot.hideSubSectionHeading = true;
+              }
+              if (isCOF && (subSectionNameTemp == FEC_ConstantCommon.ORIGINAL_INFO || subSectionNameTemp == FEC_ConstantCommon.UPDATED_INFO)) {
+                lwcSlot.isCollapsible = (checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_ONE) && isLatestRevertToCurrentStage) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_TWO) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_THREE);
               }
               sectionTemp.componentlst.add(lwcSlot);
             }
@@ -3734,6 +3770,9 @@ public without sharing class FEC_CaseBusinessService {
     @AuraEnabled
     public Map<String, Map<String, List<PicklistOptionDto>>> picklistOptionsMap;
 
+    @AuraEnabled
+    public Map<String, Boolean> contextFlags;
+
     // @AuraEnabled
     // public FEC_CommonUltils.PicklistOption lastQueue;
 
@@ -3741,6 +3780,7 @@ public without sharing class FEC_CaseBusinessService {
       this.routingActionlst = new List<Action>();
       this.processActionlst = new List<Action>();
       this.sectionlst = new List<Section>();
+      this.contextFlags = new Map<String, Boolean>();
 
       // this.lastQueue = new FEC_CommonUltils.PicklistOption();
 
@@ -3785,6 +3825,8 @@ public without sharing class FEC_CaseBusinessService {
     /** true: không hiển thị dòng label subsection (vd Original Info + GSR trên NOC flow history). */
     @AuraEnabled
     public Boolean hideSubSectionHeading;
+    @AuraEnabled
+    public Boolean isCollapsible;
   }
 
   public class Section implements Comparable {
@@ -4750,7 +4792,7 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    
+
     // Start with the user's direct ID
     Set<Id> allAssociatedIds = new Set<Id>{ userId };
     // 1. Add the Group IDs that correspond to the User's Role
@@ -4952,7 +4994,7 @@ public without sharing class FEC_CaseBusinessService {
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
    * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
-   * rồi cờ default; không dùng FEC_Order__c.
+   * rồi cờ default; cuối cùng mới lấy bản ghi đầu theo Name.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,

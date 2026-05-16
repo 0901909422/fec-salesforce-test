@@ -1,0 +1,7 @@
+.history-accordion .slds-accordion__summary {
+    background: #f3f3f3;
+    min-height: 3rem;
+    display: flex;
+    align-items: center;
+    padding-left: 0.75rem;
+}
