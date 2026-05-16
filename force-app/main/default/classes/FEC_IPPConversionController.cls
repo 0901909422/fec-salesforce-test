@@ -31,6 +31,7 @@ public without sharing class FEC_IPPConversionController {
         @AuraEnabled public String message;
         @AuraEnabled public String errorMessage;
         @AuraEnabled public Decimal actionCount;
+        @AuraEnabled public Boolean maxRetriesExceeded;
     }
 
     public class ActionStatusDTO {
@@ -217,6 +218,7 @@ public without sharing class FEC_IPPConversionController {
         result.success = false;
         result.message = null;
         result.errorMessage = null;
+        result.maxRetriesExceeded = false;
         if (caseId == null) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
@@ -294,6 +296,7 @@ public without sharing class FEC_IPPConversionController {
             updateCaseActionCountForConvertResult(c, false);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
+        result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
         return result;
     }
 
@@ -309,6 +312,7 @@ public without sharing class FEC_IPPConversionController {
         result.success = false;
         result.message = null;
         result.errorMessage = null;
+        result.maxRetriesExceeded = false;
         if (caseId == null) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
@@ -377,6 +381,7 @@ public without sharing class FEC_IPPConversionController {
             updateCaseActionCountForConvertResult(c, false);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
+        result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
         return result;
     }
 
@@ -391,6 +396,7 @@ public without sharing class FEC_IPPConversionController {
         result.success = false;
         result.message = null;
         result.errorMessage = null;
+        result.maxRetriesExceeded = false;
         if (caseId == null) {
             result.errorMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return result;
@@ -459,6 +465,7 @@ public without sharing class FEC_IPPConversionController {
             updateCaseActionCountForConvertResult(c, false);
         }
         result.actionCount = c != null ? c.FEC_Process_Action_Count__c : null;
+        result.maxRetriesExceeded = (result.success != true && c != null && c.FEC_Process_Action_Count__c != null && c.FEC_Process_Action_Count__c >= MAX_RETRY_COUNT);
         return result;
     }
 
