@@ -1265,6 +1265,11 @@ export default class Fec_CaseBussiness extends LightningElement {
     // Chỉ xử lý message dành cho case này, tránh cross-tab interference
     if (message.caseId != null && message.caseId !== this.recordId) return;
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    if (message.fastCashNocLocked === true) {
+      return;
+    }
+
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
       // Existing behavior: account type change — không xử lý ở đây
       // (fec_CaseEditNOC đã tự xử lý)

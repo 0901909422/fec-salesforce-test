@@ -1,6 +1,8 @@
 import { LightningElement, api, track, wire } from "lwc";
 import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
+import { publish, MessageContext } from "lightning/messageService";
+import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 
 import CASE_ACTUAL_NOC from "@salesforce/schema/Case.FEC_Actual_Nature_of_Case__c";
 
@@ -47,6 +49,9 @@ const FAST_CASH_SUB_CATEGORY_CODE = "RC35";
 export default class Fec_FastCashCaseForm extends NavigationMixin(LightningElement) {
     @api recordId;
 
+    @wire(MessageContext)
+    messageContext;
+
     _isEdit = true;
     @api get isEdit() {
         return this._isEdit;
@@ -68,6 +73,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this._subCategoryCode = newCode;
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         if (wasFastCash && newCode !== FAST_CASH_SUB_CATEGORY_CODE) {
+            this._clearFastCashNocLockStorage();
+            this.nocLockedAfterBlockModal = false;
             this._notifyFastCashPropertyInfoVisibility(false);
         }
         if (this._isFastCashScope) {
@@ -215,6 +222,17 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
 
     _storageBlockOkKey() {
         return FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + this.recordId;
+    }
+
+    _clearFastCashNocLockStorage() {
+        try {
+            if (!this.recordId) {
+                return;
+            }
+            sessionStorage.removeItem(this._storageNocKey());
+        } catch (e) {
+            /* ignore */
+        }
     }
 
     loadLockedSnapshot() {
@@ -474,7 +492,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         this.showConfirmModal = true;
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — chỉ gọi từ handleConfirmYes / handleConfirmNo (pop-up Block Amount)
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
         try {
@@ -482,13 +500,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         } catch (e) {
             /* ignore */
         }
-        this.dispatchEvent(
-            new CustomEvent("fecfastcashnoclocked", {
-                bubbles: true,
-                composed: true,
-                detail: { locked: true, recordId: this.recordId }
-            })
-        );
+        if (this.messageContext && this.recordId) {
+            publish(this.messageContext, CASE_NOC, {
+                caseId: this.recordId,
+                fastCashNocLocked: true
+            });
+        }
     }
 
     handleConfirmNo() {

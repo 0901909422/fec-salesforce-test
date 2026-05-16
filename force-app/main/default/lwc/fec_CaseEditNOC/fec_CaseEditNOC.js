@@ -371,6 +371,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
   applyFastCashBlockNocLock() {
     this.isNocLockedAfterFastCashBlock = true;
     this._fastCashLockCombosApplied = false;
+    try {
+      if (this.recordId) {
+        sessionStorage.setItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId, "1");
+      }
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   updateRoutingActionDisplay(field) {
@@ -441,12 +448,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   handleCaseNOCMessage(message) {
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — khóa NOC ngay khi Có/Không pop-up Block Amount
+    if (message.fastCashNocLocked === true) {
+      this.applyFastCashBlockNocLock();
+      return;
+    }
     if (!Object.prototype.hasOwnProperty.call(message, 'accountType')) return;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     if (this.isNocLockedAfterFastCashBlock) {
-      return;
-    }
-    if (message.caseId != null && message.caseId !== this.recordId) {
       return;
     }
 
