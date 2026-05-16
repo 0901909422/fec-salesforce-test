@@ -1062,18 +1062,6 @@
 		<members>FEC_New_Value</members>
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
-        <members>FEC_BilledTx_Col_Amount</members>
-        <members>FEC_BilledTx_Col_AuthCode</members>
-        <members>FEC_BilledTx_Col_Currency</members>
-        <members>FEC_BilledTx_Col_DebitCredit</members>
-        <members>FEC_BilledTx_Col_EffectiveDate</members>
-        <members>FEC_BilledTx_Col_MCC</members>
-        <members>FEC_BilledTx_Col_Merchant</members>
-        <members>FEC_BilledTx_Col_OTP</members>
-        <members>FEC_BilledTx_Col_Plan</members>
-        <members>FEC_BilledTx_Col_PostDate</members>
-        <members>FEC_BilledTx_Col_TxnCode</members>
-        <members>FEC_Billed_Transactions</members>
         <members>FEC_MSG_IPP_Noti_10</members>
         <name>CustomLabel</name>
     </types>
