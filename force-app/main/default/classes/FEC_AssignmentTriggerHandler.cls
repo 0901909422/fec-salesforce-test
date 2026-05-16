@@ -40,9 +40,11 @@ public without sharing class FEC_AssignmentTriggerHandler {
                 // tungnm37 fix: xử lý tất cả Routing assignment (cả auto và manual)
                 if (assignment.FEC_Assignment_Type__c == FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING) {
                     hasRoutingAssignment = true;
-                    // tungnm37 fix: lưu FEC_Assignment_Owner_Text__c (formula field đã tính sẵn)
-                    if (String.isNotBlank(assignment.FEC_Assignment_Owner_Text__c)) {
-                        assignmentUserSet.add(assignment.FEC_Assignment_Owner_Text__c);
+                    // tungnm37 fix: User → lưu User ID; Queue → lưu Queue Name (FEC_OwnerID__c)
+                    if (assignment.FEC_Assignment_Owner__c != null) {
+                        assignmentUserSet.add(String.valueOf(assignment.FEC_Assignment_Owner__c));
+                    } else if (String.isNotBlank(assignment.FEC_OwnerID__c)) {
+                        assignmentUserSet.add(assignment.FEC_OwnerID__c);
                     }
                 }
             }
