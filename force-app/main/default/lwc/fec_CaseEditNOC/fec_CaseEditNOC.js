@@ -152,7 +152,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get isEdit() {
     
     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
-    return defaultEdit && !this.isSubmited;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    return defaultEdit && !this.isSubmited && !this.isNocLockedAfterFastCashBlock;
   }
 
   get natureOfCaseLabel() {
@@ -230,6 +231,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
         el.disabled = true;
         this._internalApplied = true;
       }
+    }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — đồng bộ lock từ sessionStorage (fec_FastCashCaseForm là sibling trên flexipage)
+    if (!this.isNocLockedAfterFastCashBlock) {
+      this._restoreFastCashNocLockFromStorage();
     }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     if (this.isNocLockedAfterFastCashBlock && !this.isSubmittedState && !this._fastCashLockCombosApplied) {
