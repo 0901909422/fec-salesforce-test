@@ -29,7 +29,7 @@ export default class Fec_NewGeneralAssignment extends NavigationMixin(LightningE
     _navigateToList() {
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
-            attributes: { objectApiName: 'FEC_General_Assignment__c', actionName: 'list' },
+            attributes: { objectApiName: 'FEC_General_Assignment_Config__c', actionName: 'list' },
             state: { filterName: 'All' }
         });
     }
@@ -63,7 +63,7 @@ export default class Fec_NewGeneralAssignment extends NavigationMixin(LightningE
             // Navigate đến record mới (tab sẽ đổi sang record detail)
             this[NavigationMixin.Navigate]({
                 type: 'standard__recordPage',
-                attributes: { recordId: newId, objectApiName: 'FEC_General_Assignment__c', actionName: 'view' }
+                attributes: { recordId: newId, objectApiName: 'FEC_General_Assignment_Config__c', actionName: 'view' }
             });
         } catch (e) {
             this.errorMsg = e?.body?.message || LABEL_CREATE_ERROR;
@@ -72,3 +72,4 @@ export default class Fec_NewGeneralAssignment extends NavigationMixin(LightningE
         }
     }
 }
+

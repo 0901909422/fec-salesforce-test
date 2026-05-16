@@ -17,12 +17,12 @@ import getGACodeByName from '@salesforce/apex/FEC_GeneralAssignmentController.ge
 import updateGeneralAssignment from '@salesforce/apex/FEC_GeneralAssignmentController.updateGeneralAssignment';
 
 const FIELDS = [
-    'FEC_General_Assignment__c.Name',
-    'FEC_General_Assignment__c.FEC_General_Assignment_Name__c',
-    'FEC_General_Assignment__c.FEC_General_Assignment_Code__c',
-    'FEC_General_Assignment__c.FEC_Active__c',
-    'FEC_General_Assignment__c.FEC_Customer_Type__c',
-    'FEC_General_Assignment__c.FEC_Channel__c'
+    'FEC_General_Assignment_Config__c.Name',
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Name__c',
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Code__c',
+    'FEC_General_Assignment_Config__c.FEC_Active__c',
+    'FEC_General_Assignment_Config__c.FEC_Customer_Type__c',
+    'FEC_General_Assignment_Config__c.FEC_Channel__c'
 ];
 
 export default class Fec_GeneralAssignmentDetailSimple extends LightningElement {
@@ -264,4 +264,5 @@ export default class Fec_GeneralAssignmentDetailSimple extends LightningElement 
         });
     }
 }
+
 

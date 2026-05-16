@@ -1,14 +1,14 @@
 public class FEC_GeneralAssignmentTriggerHandler {
     
-    public static void handleAfterInsert(List<FEC_General_Assignment__c> newRecords) {
+    public static void handleAfterInsert(List<FEC_General_Assignment_Config__c> newRecords) {
         processInheritance(newRecords, null);
     }
     
-    public static void handleAfterUpdate(List<FEC_General_Assignment__c> newRecords, Map<Id, FEC_General_Assignment__c> oldMap) {
-        List<FEC_General_Assignment__c> recordsToProcess = new List<FEC_General_Assignment__c>();
+    public static void handleAfterUpdate(List<FEC_General_Assignment_Config__c> newRecords, Map<Id, FEC_General_Assignment_Config__c> oldMap) {
+        List<FEC_General_Assignment_Config__c> recordsToProcess = new List<FEC_General_Assignment_Config__c>();
         
-        for (FEC_General_Assignment__c ga : newRecords) {
-            FEC_General_Assignment__c oldGA = oldMap.get(ga.Id);
+        for (FEC_General_Assignment_Config__c ga : newRecords) {
+            FEC_General_Assignment_Config__c oldGA = oldMap.get(ga.Id);
             // Only process if Nature of Case changed
             if (ga.FEC_Nature_of_Cases__c != oldGA.FEC_Nature_of_Cases__c) {
                 recordsToProcess.add(ga);
@@ -20,10 +20,10 @@ public class FEC_GeneralAssignmentTriggerHandler {
         }
     }
     
-    private static void processInheritance(List<FEC_General_Assignment__c> gaRecords, Map<Id, FEC_General_Assignment__c> oldMap) {
+    private static void processInheritance(List<FEC_General_Assignment_Config__c> gaRecords, Map<Id, FEC_General_Assignment_Config__c> oldMap) {
         Set<Id> nocIds = new Set<Id>();
         
-        for (FEC_General_Assignment__c ga : gaRecords) {
+        for (FEC_General_Assignment_Config__c ga : gaRecords) {
             if (ga.FEC_Nature_of_Cases__c != null) {
                 nocIds.add(ga.FEC_Nature_of_Cases__c);
             }
@@ -49,9 +49,9 @@ public class FEC_GeneralAssignmentTriggerHandler {
         Map<Id, Set<String>> existingGAByNoc = getExistingGeneralAssignments(allChildNocIds);
         
         // Create new General Assignments for children
-        List<FEC_General_Assignment__c> newGAs = new List<FEC_General_Assignment__c>();
+        List<FEC_General_Assignment_Config__c> newGAs = new List<FEC_General_Assignment_Config__c>();
         
-        for (FEC_General_Assignment__c parentGA : gaRecords) {
+        for (FEC_General_Assignment_Config__c parentGA : gaRecords) {
             if (parentGA.FEC_Nature_of_Cases__c == null) {
                 continue;
             }
@@ -68,7 +68,7 @@ public class FEC_GeneralAssignmentTriggerHandler {
                 
                 // Only create if child doesn't have this config yet
                 if (existingKeys == null || !existingKeys.contains(gaKey)) {
-                    FEC_General_Assignment__c childGA = new FEC_General_Assignment__c();
+                    FEC_General_Assignment_Config__c childGA = new FEC_General_Assignment_Config__c();
                     childGA.FEC_Nature_of_Cases__c = childNocId;
                     childGA.FEC_Customer_Type__c = parentGA.FEC_Customer_Type__c;
                     childGA.FEC_Channel__c = parentGA.FEC_Channel__c;
@@ -161,14 +161,14 @@ public class FEC_GeneralAssignmentTriggerHandler {
     private static Map<Id, Set<String>> getExistingGeneralAssignments(Set<Id> nocIds) {
         Map<Id, Set<String>> existingGAByNoc = new Map<Id, Set<String>>();
         
-        List<FEC_General_Assignment__c> existingGAs = [
+        List<FEC_General_Assignment_Config__c> existingGAs = [
             SELECT Id, FEC_Nature_of_Cases__c, FEC_Customer_Type__c, FEC_Channel__c, 
                    FEC_Case_Stage__c, FEC_General_Assignment_Name__c
-            FROM FEC_General_Assignment__c
+            FROM FEC_General_Assignment_Config__c
             WHERE FEC_Nature_of_Cases__c IN :nocIds
         ];
         
-        for (FEC_General_Assignment__c ga : existingGAs) {
+        for (FEC_General_Assignment_Config__c ga : existingGAs) {
             String key = generateGAKey(ga);
             
             if (!existingGAByNoc.containsKey(ga.FEC_Nature_of_Cases__c)) {
@@ -181,7 +181,7 @@ public class FEC_GeneralAssignmentTriggerHandler {
         return existingGAByNoc;
     }
     
-    private static String generateGAKey(FEC_General_Assignment__c ga) {
+    private static String generateGAKey(FEC_General_Assignment_Config__c ga) {
         // Generate unique key based on config fields
         return String.valueOf(ga.FEC_Customer_Type__c) + '|' 
              + String.valueOf(ga.FEC_Channel__c) + '|'
@@ -189,3 +189,4 @@ public class FEC_GeneralAssignmentTriggerHandler {
              + String.valueOf(ga.FEC_General_Assignment_Name__c);
     }
 }
+

@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ca7bc6cc-4a34-4666-ac2b-ad49d8838ed6" name="Changes" comment="fix jira">
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentController.cls" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentController.cls" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentHistoryController.cls" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentHistoryController.cls" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentTriggerHandler.cls" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/classes/FEC_GeneralAssignmentTriggerHandler.cls" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/classes/FEC_NocGeneralAssignmentController.cls" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/classes/FEC_NocGeneralAssignmentController.cls" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentActions/fec_GeneralAssignmentActions.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentActions/fec_GeneralAssignmentActions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetail/fec_GeneralAssignmentDetail.html" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetail/fec_GeneralAssignmentDetail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetail/fec_GeneralAssignmentDetail.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetail/fec_GeneralAssignmentDetail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetailSimple/fec_GeneralAssignmentDetailSimple.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentDetailSimple/fec_GeneralAssignmentDetailSimple.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentHistory/fec_GeneralAssignmentHistory.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_GeneralAssignmentHistory/fec_GeneralAssignmentHistory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NewGeneralAssignment/fec_NewGeneralAssignment.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NewGeneralAssignment/fec_NewGeneralAssignment.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NocGeneralAssignment/fec_NocGeneralAssignment.html" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NocGeneralAssignment/fec_NocGeneralAssignment.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NocGeneralAssignment/fec_NocGeneralAssignment.js" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/lwc/fec_NocGeneralAssignment/fec_NocGeneralAssignment.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/force-app/main/default/triggers/FEC_GeneralAssignmentTrigger.trigger" beforeDir="false" afterPath="$PROJECT_DIR$/force-app/main/default/triggers/FEC_GeneralAssignmentTrigger.trigger" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/manifest/package.xml" beforeDir="false" afterPath="$PROJECT_DIR$/manifest/package.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="module" />
+      <option value="repository" />
+    </option>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_D:/FEC/fec_csm" value="3B3z6TwHMN7KzUGb59tSCk2UgnF" />
+    </persistenceIdMap>
+  </component>
+  <component name="Git.Settings">
+    <favorite-branches>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="phase-3/case-management" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </favorite-branches>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="tungnm37-auto-stage-progression" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitLabMergeRequestFiltersHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPENED&quot;,
+    &quot;assignee&quot;: {
+      &quot;type&quot;: &quot;org.jetbrains.plugins.gitlab.mergerequest.ui.filters.GitLabMergeRequestsFiltersValue.MergeRequestsMemberFilterValue.MergeRequestsAssigneeFilterValue&quot;,
+      &quot;username&quot;: &quot;TungNM37&quot;,
+      &quot;fullname&quot;: &quot;Tung Nguyen Minh&quot;
+    }
+  }
+}</component>
+  <component name="GitLabMergeRequestsSettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;first&quot;: &quot;https://git.fis.vn/fis-bank/bank_hcm/fecredit_csm_2025_th/fec_csm.git&quot;,
+    &quot;second&quot;: &quot;e3dbc7fd-0518-4531-9ef5-ef81e73adeaf&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="3B3z6TwHMN7KzUGb59tSCk2UgnF" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "tungnm37-general-assignment",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/FEC/fec_csm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ca7bc6cc-4a34-4666-ac2b-ad49d8838ed6" name="Changes" comment="" />
+      <created>1773732366444</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1773732366444</updated>
+    </task>
+    <task id="LOCAL-00198" summary="FECREDIT_CSM_2025_KH-1266">
+      <option name="closed" value="true" />
+      <created>1778494804792</created>
+      <option name="number" value="00198" />
+      <option name="presentableId" value="LOCAL-00198" />
+      <option name="project" value="LOCAL" />
+      <updated>1778494804792</updated>
+    </task>
+    <task id="LOCAL-00199" summary="FECREDIT_CSM_2025_KH-1266">
+      <option name="closed" value="true" />
+      <created>1778499897865</created>
+      <option name="number" value="00199" />
+      <option name="presentableId" value="LOCAL-00199" />
+      <option name="project" value="LOCAL" />
+      <updated>1778499897865</updated>
+    </task>
+    <task id="LOCAL-00200" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778574303334</created>
+      <option name="number" value="00200" />
+      <option name="presentableId" value="LOCAL-00200" />
+      <option name="project" value="LOCAL" />
+      <updated>1778574303334</updated>
+    </task>
+    <task id="LOCAL-00201" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778576231896</created>
+      <option name="number" value="00201" />
+      <option name="presentableId" value="LOCAL-00201" />
+      <option name="project" value="LOCAL" />
+      <updated>1778576231896</updated>
+    </task>
+    <task id="LOCAL-00202" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778580825985</created>
+      <option name="number" value="00202" />
+      <option name="presentableId" value="LOCAL-00202" />
+      <option name="project" value="LOCAL" />
+      <updated>1778580825985</updated>
+    </task>
+    <task id="LOCAL-00203" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778581109706</created>
+      <option name="number" value="00203" />
+      <option name="presentableId" value="LOCAL-00203" />
+      <option name="project" value="LOCAL" />
+      <updated>1778581109706</updated>
+    </task>
+    <task id="LOCAL-00204" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778581268020</created>
+      <option name="number" value="00204" />
+      <option name="presentableId" value="LOCAL-00204" />
+      <option name="project" value="LOCAL" />
+      <updated>1778581268020</updated>
+    </task>
+    <task id="LOCAL-00205" summary="done task">
+      <option name="closed" value="true" />
+      <created>1778590428533</created>
+      <option name="number" value="00205" />
+      <option name="presentableId" value="LOCAL-00205" />
+      <option name="project" value="LOCAL" />
+      <updated>1778590428534</updated>
+    </task>
+    <task id="LOCAL-00206" summary="done task">
+      <option name="closed" value="true" />
+      <created>1778591131766</created>
+      <option name="number" value="00206" />
+      <option name="presentableId" value="LOCAL-00206" />
+      <option name="project" value="LOCAL" />
+      <updated>1778591131766</updated>
+    </task>
+    <task id="LOCAL-00207" summary="done task">
+      <option name="closed" value="true" />
+      <created>1778591268670</created>
+      <option name="number" value="00207" />
+      <option name="presentableId" value="LOCAL-00207" />
+      <option name="project" value="LOCAL" />
+      <updated>1778591268670</updated>
+    </task>
+    <task id="LOCAL-00208" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778644923419</created>
+      <option name="number" value="00208" />
+      <option name="presentableId" value="LOCAL-00208" />
+      <option name="project" value="LOCAL" />
+      <updated>1778644923419</updated>
+    </task>
+    <task id="LOCAL-00209" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645376316</created>
+      <option name="number" value="00209" />
+      <option name="presentableId" value="LOCAL-00209" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645376316</updated>
+    </task>
+    <task id="LOCAL-00210" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645456426</created>
+      <option name="number" value="00210" />
+      <option name="presentableId" value="LOCAL-00210" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645456426</updated>
+    </task>
+    <task id="LOCAL-00211" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645569154</created>
+      <option name="number" value="00211" />
+      <option name="presentableId" value="LOCAL-00211" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645569154</updated>
+    </task>
+    <task id="LOCAL-00212" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645642261</created>
+      <option name="number" value="00212" />
+      <option name="presentableId" value="LOCAL-00212" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645642261</updated>
+    </task>
+    <task id="LOCAL-00213" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645685186</created>
+      <option name="number" value="00213" />
+      <option name="presentableId" value="LOCAL-00213" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645685186</updated>
+    </task>
+    <task id="LOCAL-00214" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778645738214</created>
+      <option name="number" value="00214" />
+      <option name="presentableId" value="LOCAL-00214" />
+      <option name="project" value="LOCAL" />
+      <updated>1778645738214</updated>
+    </task>
+    <task id="LOCAL-00215" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778647711362</created>
+      <option name="number" value="00215" />
+      <option name="presentableId" value="LOCAL-00215" />
+      <option name="project" value="LOCAL" />
+      <updated>1778647711362</updated>
+    </task>
+    <task id="LOCAL-00216" summary="fix mr">
+      <option name="closed" value="true" />
+      <created>1778648223613</created>
+      <option name="number" value="00216" />
+      <option name="presentableId" value="LOCAL-00216" />
+      <option name="project" value="LOCAL" />
+      <updated>1778648223613</updated>
+    </task>
+    <task id="LOCAL-00217" summary="done ták">
+      <option name="closed" value="true" />
+      <created>1778663647255</created>
+      <option name="number" value="00217" />
+      <option name="presentableId" value="LOCAL-00217" />
+      <option name="project" value="LOCAL" />
+      <updated>1778663647255</updated>
+    </task>
+    <task id="LOCAL-00218" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778667380443</created>
+      <option name="number" value="00218" />
+      <option name="presentableId" value="LOCAL-00218" />
+      <option name="project" value="LOCAL" />
+      <updated>1778667380443</updated>
+    </task>
+    <task id="LOCAL-00219" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778667714048</created>
+      <option name="number" value="00219" />
+      <option name="presentableId" value="LOCAL-00219" />
+      <option name="project" value="LOCAL" />
+      <updated>1778667714048</updated>
+    </task>
+    <task id="LOCAL-00220" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778667749336</created>
+      <option name="number" value="00220" />
+      <option name="presentableId" value="LOCAL-00220" />
+      <option name="project" value="LOCAL" />
+      <updated>1778667749336</updated>
+    </task>
+    <task id="LOCAL-00221" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778667927435</created>
+      <option name="number" value="00221" />
+      <option name="presentableId" value="LOCAL-00221" />
+      <option name="project" value="LOCAL" />
+      <updated>1778667927436</updated>
+    </task>
+    <task id="LOCAL-00222" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778667951477</created>
+      <option name="number" value="00222" />
+      <option name="presentableId" value="LOCAL-00222" />
+      <option name="project" value="LOCAL" />
+      <updated>1778667951477</updated>
+    </task>
+    <task id="LOCAL-00223" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778668207164</created>
+      <option name="number" value="00223" />
+      <option name="presentableId" value="LOCAL-00223" />
+      <option name="project" value="LOCAL" />
+      <updated>1778668207164</updated>
+    </task>
+    <task id="LOCAL-00224" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778672475735</created>
+      <option name="number" value="00224" />
+      <option name="presentableId" value="LOCAL-00224" />
+      <option name="project" value="LOCAL" />
+      <updated>1778672475735</updated>
+    </task>
+    <task id="LOCAL-00225" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778730140319</created>
+      <option name="number" value="00225" />
+      <option name="presentableId" value="LOCAL-00225" />
+      <option name="project" value="LOCAL" />
+      <updated>1778730140320</updated>
+    </task>
+    <task id="LOCAL-00226" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778731935811</created>
+      <option name="number" value="00226" />
+      <option name="presentableId" value="LOCAL-00226" />
+      <option name="project" value="LOCAL" />
+      <updated>1778731935811</updated>
+    </task>
+    <task id="LOCAL-00227" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778734597382</created>
+      <option name="number" value="00227" />
+      <option name="presentableId" value="LOCAL-00227" />
+      <option name="project" value="LOCAL" />
+      <updated>1778734597382</updated>
+    </task>
+    <task id="LOCAL-00228" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778746720738</created>
+      <option name="number" value="00228" />
+      <option name="presentableId" value="LOCAL-00228" />
+      <option name="project" value="LOCAL" />
+      <updated>1778746720738</updated>
+    </task>
+    <task id="LOCAL-00229" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778750136003</created>
+      <option name="number" value="00229" />
+      <option name="presentableId" value="LOCAL-00229" />
+      <option name="project" value="LOCAL" />
+      <updated>1778750136003</updated>
+    </task>
+    <task id="LOCAL-00230" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778750146560</created>
+      <option name="number" value="00230" />
+      <option name="presentableId" value="LOCAL-00230" />
+      <option name="project" value="LOCAL" />
+      <updated>1778750146560</updated>
+    </task>
+    <task id="LOCAL-00231" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778752596729</created>
+      <option name="number" value="00231" />
+      <option name="presentableId" value="LOCAL-00231" />
+      <option name="project" value="LOCAL" />
+      <updated>1778752596729</updated>
+    </task>
+    <task id="LOCAL-00232" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778767769661</created>
+      <option name="number" value="00232" />
+      <option name="presentableId" value="LOCAL-00232" />
+      <option name="project" value="LOCAL" />
+      <updated>1778767769661</updated>
+    </task>
+    <task id="LOCAL-00233" summary="done jira">
+      <option name="closed" value="true" />
+      <created>1778767891835</created>
+      <option name="number" value="00233" />
+      <option name="presentableId" value="LOCAL-00233" />
+      <option name="project" value="LOCAL" />
+      <updated>1778767891835</updated>
+    </task>
+    <task id="LOCAL-00234" summary="MR này để lên QA test API HOLD CASE">
+      <option name="closed" value="true" />
+      <created>1778814157017</created>
+      <option name="number" value="00234" />
+      <option name="presentableId" value="LOCAL-00234" />
+      <option name="project" value="LOCAL" />
+      <updated>1778814157018</updated>
+    </task>
+    <task id="LOCAL-00235" summary="update Assignment User">
+      <option name="closed" value="true" />
+      <created>1778818211854</created>
+      <option name="number" value="00235" />
+      <option name="presentableId" value="LOCAL-00235" />
+      <option name="project" value="LOCAL" />
+      <updated>1778818211854</updated>
+    </task>
+    <task id="LOCAL-00236" summary="update Assignment User">
+      <option name="closed" value="true" />
+      <created>1778819174901</created>
+      <option name="number" value="00236" />
+      <option name="presentableId" value="LOCAL-00236" />
+      <option name="project" value="LOCAL" />
+      <updated>1778819174901</updated>
+    </task>
+    <task id="LOCAL-00237" summary="update Assignment User">
+      <option name="closed" value="true" />
+      <created>1778820142899</created>
+      <option name="number" value="00237" />
+      <option name="presentableId" value="LOCAL-00237" />
+      <option name="project" value="LOCAL" />
+      <updated>1778820142899</updated>
+    </task>
+    <task id="LOCAL-00238" summary="update Assignment User">
+      <option name="closed" value="true" />
+      <created>1778832575569</created>
+      <option name="number" value="00238" />
+      <option name="presentableId" value="LOCAL-00238" />
+      <option name="project" value="LOCAL" />
+      <updated>1778832575569</updated>
+    </task>
+    <task id="LOCAL-00239" summary="update Assignment User">
+      <option name="closed" value="true" />
+      <created>1778833213195</created>
+      <option name="number" value="00239" />
+      <option name="presentableId" value="LOCAL-00239" />
+      <option name="project" value="LOCAL" />
+      <updated>1778833213196</updated>
+    </task>
+    <task id="LOCAL-00240" summary="update hold case">
+      <option name="closed" value="true" />
+      <created>1778847530438</created>
+      <option name="number" value="00240" />
+      <option name="presentableId" value="LOCAL-00240" />
+      <option name="project" value="LOCAL" />
+      <updated>1778847530438</updated>
+    </task>
+    <task id="LOCAL-00241" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778849989906</created>
+      <option name="number" value="00241" />
+      <option name="presentableId" value="LOCAL-00241" />
+      <option name="project" value="LOCAL" />
+      <updated>1778849989906</updated>
+    </task>
+    <task id="LOCAL-00242" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778863017521</created>
+      <option name="number" value="00242" />
+      <option name="presentableId" value="LOCAL-00242" />
+      <option name="project" value="LOCAL" />
+      <updated>1778863017521</updated>
+    </task>
+    <task id="LOCAL-00243" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778866797771</created>
+      <option name="number" value="00243" />
+      <option name="presentableId" value="LOCAL-00243" />
+      <option name="project" value="LOCAL" />
+      <updated>1778866797771</updated>
+    </task>
+    <task id="LOCAL-00244" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778901748721</created>
+      <option name="number" value="00244" />
+      <option name="presentableId" value="LOCAL-00244" />
+      <option name="project" value="LOCAL" />
+      <updated>1778901748721</updated>
+    </task>
+    <task id="LOCAL-00245" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778903877334</created>
+      <option name="number" value="00245" />
+      <option name="presentableId" value="LOCAL-00245" />
+      <option name="project" value="LOCAL" />
+      <updated>1778903877334</updated>
+    </task>
+    <task id="LOCAL-00246" summary="fix jira">
+      <option name="closed" value="true" />
+      <created>1778905404701</created>
+      <option name="number" value="00246" />
+      <option name="presentableId" value="LOCAL-00246" />
+      <option name="project" value="LOCAL" />
+      <updated>1778905404701</updated>
+    </task>
+    <option name="localTasksCounter" value="247" />
+    <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix bug FECREDIT_CSM_2025_KH-1152" />
+    <MESSAGE value="api update case" />
+    <MESSAGE value="fix FECREDIT_CSM_2025_KH-1176" />
+    <MESSAGE value="fix cmt MR" />
+    <MESSAGE value="thêm yêu cầu mới assigment cho báo cáo" />
+    <MESSAGE value="fix MR" />
+    <MESSAGE value="fix FECREDIT_CSM_2025_KH-548" />
+    <MESSAGE value="fix FECREDIT_CSM_2025_KH-1152" />
+    <MESSAGE value="fix FECREDIT_CSM_2025_KH-1180" />
+    <MESSAGE value="fix cmt mr" />
+    <MESSAGE value="fix cmt" />
+    <MESSAGE value="fix FECREDIT_CSM_2025_KH-1215" />
+    <MESSAGE value="done task FECREDIT_CSM_2025_KH-1214" />
+    <MESSAGE value="resolve" />
+    <MESSAGE value="FECREDIT_CSM_2025_KH-1180" />
+    <MESSAGE value="FECREDIT_CSM_2025_KH-1215" />
+    <MESSAGE value="FECREDIT_CSM_2025_KH-1266" />
+    <MESSAGE value="done task" />
+    <MESSAGE value="fix mr" />
+    <MESSAGE value="done ták" />
+    <MESSAGE value="done jira" />
+    <MESSAGE value="MR này để lên QA test API HOLD CASE" />
+    <MESSAGE value="update Assignment User" />
+    <MESSAGE value="update hold case" />
+    <MESSAGE value="fix jira" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix jira" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

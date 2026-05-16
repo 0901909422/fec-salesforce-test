@@ -51,3 +51,4 @@ public with sharing class FEC_GeneralAssignmentHistoryController {
         @AuraEnabled public String NewValue;
     }
 }
+

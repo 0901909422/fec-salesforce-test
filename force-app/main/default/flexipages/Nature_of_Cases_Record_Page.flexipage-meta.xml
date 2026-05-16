@@ -280,16 +280,6 @@
         <name>relatedTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
-     <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_HoldCaseConfiguration</componentName>
-                <identifier>c_fec_HoldCaseConfiguration</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</name>
-        <type>Facet</type>
-    </flexiPageRegions>
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
@@ -455,20 +445,6 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Hold Case</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab2</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
                     <value>nocChannelConfigTabContent</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -541,16 +517,6 @@
         </itemInstances>
         <name>main</name>
         <type>Region</type>
-    </flexiPageRegions>
-        <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>c:fec_NocChannelConfig</componentName>
-                <identifier>fec_NocChannelConfig</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>nocChannelConfigTabContent</name>
-        <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>

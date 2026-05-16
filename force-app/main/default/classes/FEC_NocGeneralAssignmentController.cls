@@ -5,16 +5,16 @@ public with sharing class FEC_NocGeneralAssignmentController {
         List<GeneralAssignmentWrapper> wrapperList = new List<GeneralAssignmentWrapper>();
         
         try {
-            List<FEC_General_Assignment__c> gaList = [
+            List<FEC_General_Assignment_Config__c> gaList = [
                 SELECT Id, Name, FEC_Customer_Type__c, FEC_Channel__c, 
                        FEC_Case_Stage__c, FEC_Case_Stage__r.Name, 
                        FEC_General_Assignment_Name__c, FEC_Active__c
-                FROM FEC_General_Assignment__c
+                FROM FEC_General_Assignment_Config__c
                 WHERE FEC_Nature_of_Cases__c = :nocId
                 ORDER BY CreatedDate DESC
             ];
             
-            for (FEC_General_Assignment__c ga : gaList) {
+            for (FEC_General_Assignment_Config__c ga : gaList) {
                 GeneralAssignmentWrapper wrapper = new GeneralAssignmentWrapper();
                 wrapper.Id = ga.Id;
                 wrapper.Name = ga.Name;
@@ -49,10 +49,10 @@ public with sharing class FEC_NocGeneralAssignmentController {
     }
     
     @AuraEnabled(cacheable=true)
-    public static List<FEC_General_Assignment__c> getGeneralAssignmentCodes() {
+    public static List<FEC_General_Assignment_Config__c> getGeneralAssignmentCodes() {
         return [
             SELECT Id, FEC_General_Assignment_Name__c 
-            FROM FEC_General_Assignment__c 
+            FROM FEC_General_Assignment_Config__c 
             WHERE FEC_General_Assignment_Name__c != null 
             ORDER BY FEC_General_Assignment_Name__c
         ];
@@ -61,7 +61,7 @@ public with sharing class FEC_NocGeneralAssignmentController {
     @AuraEnabled
     public static void saveGeneralAssignment(Map<String, Object> gaData) {
         try {
-            FEC_General_Assignment__c ga = new FEC_General_Assignment__c();
+            FEC_General_Assignment_Config__c ga = new FEC_General_Assignment_Config__c();
             ga.FEC_Nature_of_Cases__c = (Id)gaData.get('FEC_Nature_of_Cases__c');
             ga.FEC_Customer_Type__c = (String)gaData.get('FEC_Customer_Type__c');
             ga.FEC_Channel__c = (String)gaData.get('FEC_Channel__c');
@@ -86,3 +86,4 @@ public with sharing class FEC_NocGeneralAssignmentController {
         @AuraEnabled public Boolean Active;
     }
 }
+

@@ -1,4 +1,4 @@
-trigger FEC_GeneralAssignmentTrigger on FEC_General_Assignment__c (after insert, after update) {
+trigger FEC_GeneralAssignmentTrigger on FEC_General_Assignment_Config__c (after insert, after update) {
     if (Trigger.isAfter) {
         if (Trigger.isInsert) {
             FEC_GeneralAssignmentTriggerHandler.handleAfterInsert(Trigger.new);
@@ -7,3 +7,4 @@ trigger FEC_GeneralAssignmentTrigger on FEC_General_Assignment__c (after insert,
         }
     }
 }
+

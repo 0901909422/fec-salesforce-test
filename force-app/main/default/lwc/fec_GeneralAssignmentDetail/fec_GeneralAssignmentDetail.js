@@ -11,9 +11,9 @@ import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
 import LABEL_SAVE_ERROR from '@salesforce/label/c.FEC_GA_Save_Error_Message';
 
 const FIELDS = [
-    'FEC_General_Assignment__c.FEC_General_Assignment_Name__c',
-    'FEC_General_Assignment__c.FEC_General_Assignment_Code__c',
-    'FEC_General_Assignment__c.FEC_Active__c'
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Name__c',
+    'FEC_General_Assignment_Config__c.FEC_General_Assignment_Code__c',
+    'FEC_General_Assignment_Config__c.FEC_Active__c'
 ];
 
 export default class Fec_GeneralAssignmentDetail extends LightningElement {
@@ -61,3 +61,4 @@ export default class Fec_GeneralAssignmentDetail extends LightningElement {
         this.dispatchEvent(new ShowToastEvent({ title: LABEL_ERROR, message: event.detail?.detail || LABEL_SAVE_ERROR, variant: 'error' }));
     }
 }
+

@@ -18,7 +18,7 @@ import LABEL_DELETED from '@salesforce/label/c.FEC_GA_Delete_Success_Message';
 import LABEL_DELETE_ERROR from '@salesforce/label/c.FEC_GA_Delete_Error_Message';
 import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
 
-const FIELDS = ['FEC_General_Assignment__c.Name'];
+const FIELDS = ['FEC_General_Assignment_Config__c.Name'];
 
 export default class Fec_GeneralAssignmentActions extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -66,7 +66,7 @@ export default class Fec_GeneralAssignmentActions extends NavigationMixin(Lightn
             this.dispatchEvent(new ShowToastEvent({ title: LABEL_SUCCESS, message: LABEL_DELETED, variant: 'success' }));
             this[NavigationMixin.Navigate]({
                 type: 'standard__objectPage',
-                attributes: { objectApiName: 'FEC_General_Assignment__c', actionName: 'list' },
+                attributes: { objectApiName: 'FEC_General_Assignment_Config__c', actionName: 'list' },
                 state: { filterName: 'All' }
             });
         } catch (e) {
@@ -74,3 +74,4 @@ export default class Fec_GeneralAssignmentActions extends NavigationMixin(Lightn
         }
     }
 }
+

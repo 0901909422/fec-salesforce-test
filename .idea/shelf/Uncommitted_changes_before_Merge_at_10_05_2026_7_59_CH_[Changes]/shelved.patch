@@ -1,0 +1,269 @@
+Index: force-app/main/default/staticresources/FEC_CommonCss.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>c-fec_-case-detail_-interation_-edit .slds-accordion__summary,\nc-fec_-case-detail_-customer_-edit .slds-accordion__summary,\nc-fec_-case-detail_-customer .slds-accordion__summary,\nc-fec_-search .slds-accordion__summary,\nc-fec-interaction-info .slds-accordion__summary,\nc-fec-interaction-email-info .slds-accordion__summary,\nc-fec_-send-notification .slds-accordion__summary,\nc-fec_-case-detail_-interation .slds-accordion__summary,\nc-fec_-create-case-in-list-view .slds-accordion__summary,\nc-fec_-main-info .slds-accordion__summary,\nc-fec_-related-list-paging .slds-accordion__summary,\nc-fec_-secondary-info .slds-accordion__summary,\nc-fec_-applications-list .slds-accordion__summary,\nc-fec_-main-info-account .slds-accordion__summary,\nc-fec_-secondary-info-account .slds-accordion__summary,\nc-fec_-transactions-account .slds-accordion__summary,\nc-fec_-statements-account .slds-accordion__summary,\nc-fec_-payment-history-acount .slds-accordion__summary,\nc-fec_-common-detail-view .slds-accordion__summary,\nc-fec_-case-edit-n-o-c .slds-accordion__summary,\nc-fec_-statements-account-tab-view .slds-accordion__summary,\nc-fec_-card-info .slds-accordion__summary,\nc-fec_-card-payment .slds-accordion__summary,\nc-fec_-i-p-p-details .slds-accordion__summary,\nc-fec_-i-p-p-detail-page .slds-accordion__summary,\nc-fec_-pending-service-cases .slds-accordion__summary,\nc-fec_-closed-service-cases .slds-accordion__summary,\nc-fec_-interaction-cases .slds-accordion__summary,\nc-fec_-main-info-loan-account .slds-accordion__summary,\nc-fec_-secondary-info-loan-account .slds-accordion__summary,\nc-fec_-termination .slds-accordion__summary,\nc-fec_-repayment-schedule-payment-history .slds-accordion__summary,\nc-fec_-interaction-info-f2-f_-letter .slds-accordion__summary,\nc-fec_-interaction-my-case-info .slds-accordion__summary,\nc-fec_-k-y-c .slds-accordion__summary,\nc-fec_-card-replacement-address .slds-accordion__summary {\n  background-color: #f3f3f3;\n  border-radius: 4px;\n}\n\n/* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */\nc-fec-email-section .slds-accordion__summary {\n  background-color: #f3f3f3;\n  border-radius: 4px 4px 0 0;\n  min-height: 2.75rem;\n}\nc-fec-email-section .slds-accordion__summary-action {\n  padding: 0.75rem 1rem;\n  min-height: 2.75rem;\n}\nc-fec-email-section .slds-accordion__section {\n  border-bottom: none !important;\n}\nc-fec-email-section .slds-tabs_card {\n  border: none !important;\n  box-shadow: none !important;\n  border-radius: 8px !important;\n  overflow: hidden !important;\n}\nc-fec-email-section .email-section-card {\n  border-radius: 8px;\n  overflow: hidden;\n  border: 1px solid #dddbda;\n  box-shadow: 0 2px 8px rgba(0,0,0,0.08);\n}\nc-lwc-multi-lookup input.channel {\n  padding-left: 8px;\n}\n\nc-lwc-multi-lookup .slds-dropdown {\n  position: relative;\n}\n\nc-lwc-multi-lookup .slds-input-has-icon .slds-input__icon.channel-icon {\n  top:15px;\n}\n\n/* lwcMultiLookup: set 1px padding on lightning-icon inside selected pills */\nc-lwc-multi-lookup lightning-pill lightning-icon {\n  padding: 1px !important;\n}\n\nc-lwc-multi-lookup lightning-input input {\n  padding-left: 8px !important;\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/force-app/main/default/staticresources/FEC_CommonCss.css b/force-app/main/default/staticresources/FEC_CommonCss.css
+--- a/force-app/main/default/staticresources/FEC_CommonCss.css	(revision abb6ff09ed554230e74e2c15e0fbfcc33a53cdbf)
++++ b/force-app/main/default/staticresources/FEC_CommonCss.css	(date 1778417948322)
+@@ -33,11 +33,24 @@
+ c-fec_-interaction-info-f2-f_-letter .slds-accordion__summary,
+ c-fec_-interaction-my-case-info .slds-accordion__summary,
+ c-fec_-k-y-c .slds-accordion__summary,
+-c-fec_-card-replacement-address .slds-accordion__summary {
++c-fec_-card-replacement-address .slds-accordion__summary,
++c-fec_-assignment-list .slds-accordion__summary,
++c-fec_-banca .slds-accordion__summary,
++c-fec_-hold-case-configuration .slds-accordion__summary {
++  background-color: #f3f3f3;
++  border-radius: 4px;
++}
++
++c-fec_-noc-general-assignment .slds-accordion__summary {
+   background-color: #f3f3f3;
+   border-radius: 4px;
+ }
+ 
++
++c-fec_-noc-general-assignment .slds-card__header {
++  background-color: #f3f3f3;
++  border-radius: 4px 4px 0 0;
++}
+ /* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
+ c-fec-email-section .slds-accordion__summary {
+   background-color: #f3f3f3;
+@@ -83,3 +96,16 @@
+ c-lwc-multi-lookup lightning-input input {
+   padding-left: 8px !important;
+ }
++
++/* fec_FileUploadCard: cursor tay trên vùng lightning-file-upload (SLDS trong shadow; CSS LWC scoped không tới được) */
++c-fec_-file-upload-card
++  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
++  .slds-file-selector__dropzone,
++c-fec_-file-upload-card
++  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
++  .slds-file-selector__button,
++c-fec_-file-upload-card
++  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
++  .slds-file-selector__text {
++  cursor: pointer !important;
++}
+Index: force-app/main/default/objects/FEC_Channel__c/fields/FEC_Code__c.field-meta.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CustomField xmlns=\"http://soap.sforce.com/2006/04/metadata\">\n    <fullName>FEC_Code__c</fullName>\n    <caseSensitive>false</caseSensitive>\n    <externalId>true</externalId>\n    <label>FEC Code</label>\n    <length>255</length>\n    <required>false</required>\n    <trackHistory>false</trackHistory>\n    <trackTrending>false</trackTrending>\n    <type>Text</type>\n    <unique>true</unique>\n</CustomField>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/force-app/main/default/objects/FEC_Channel__c/fields/FEC_Code__c.field-meta.xml b/force-app/main/default/objects/FEC_Channel__c/fields/FEC_Code__c.field-meta.xml
+--- a/force-app/main/default/objects/FEC_Channel__c/fields/FEC_Code__c.field-meta.xml	(revision abb6ff09ed554230e74e2c15e0fbfcc33a53cdbf)
++++ b/force-app/main/default/objects/FEC_Channel__c/fields/FEC_Code__c.field-meta.xml	(date 1778417948322)
+@@ -4,7 +4,7 @@
+     <caseSensitive>false</caseSensitive>
+     <externalId>true</externalId>
+     <label>FEC Code</label>
+-    <length>255</length>
++    <length>18</length>
+     <required>false</required>
+     <trackHistory>false</trackHistory>
+     <trackTrending>false</trackTrending>
+Index: manifest/package.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<Package xmlns=\"http://soap.sforce.com/2006/04/metadata\">\n    <types>\n        <members>*</members>\n        <name>ApexClass</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>ApexComponent</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>ApexPage</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>ApexTestSuite</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>ApexTrigger</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>AuraDefinitionBundle</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>LightningComponentBundle</name>\n    </types>\n    <types>\n        <members>*</members>\n        <name>StaticResource</name>\n    </types>\n    <version>45.0</version>\n</Package>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/manifest/package.xml b/manifest/package.xml
+--- a/manifest/package.xml	(revision abb6ff09ed554230e74e2c15e0fbfcc33a53cdbf)
++++ b/manifest/package.xml	(date 1778417948330)
+@@ -1,36 +1,8 @@
+ <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <Package xmlns="http://soap.sforce.com/2006/04/metadata">
+-    <types>
+-        <members>*</members>
+-        <name>ApexClass</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>ApexComponent</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>ApexPage</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>ApexTestSuite</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>ApexTrigger</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>AuraDefinitionBundle</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>LightningComponentBundle</name>
+-    </types>
+-    <types>
+-        <members>*</members>
+-        <name>StaticResource</name>
+-    </types>
+-    <version>45.0</version>
++	<types>
++		<members>FEC_General_Assignment__c</members>
++		<name>CustomObject</name>
++	</types>
++	<version>66.0</version>
+ </Package>
+\ No newline at end of file
+Index: force-app/main/default/objects/FEC_Channel__c/FEC_Channel__c.object-meta.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CustomObject xmlns=\"http://soap.sforce.com/2006/04/metadata\">\n    <actionOverrides>\n        <actionName>Accept</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Accept</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Accept</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>CancelEdit</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>CancelEdit</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>CancelEdit</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Clone</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Clone</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Clone</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Delete</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Delete</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Delete</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Edit</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Edit</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Edit</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>List</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>List</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>List</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>New</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>New</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>New</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>SaveEdit</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>SaveEdit</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>SaveEdit</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Tab</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Tab</actionName>\n        <formFactor>Large</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>Tab</actionName>\n        <formFactor>Small</formFactor>\n        <type>Default</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>View</actionName>\n        <comment>Action override created by Lightning App Builder during activation.</comment>\n        <content>Channel_Record_Page</content>\n        <formFactor>Large</formFactor>\n        <skipRecordTypeSelect>false</skipRecordTypeSelect>\n        <type>Flexipage</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>View</actionName>\n        <comment>Action override created by Lightning App Builder during activation.</comment>\n        <content>Channel_Record_Page</content>\n        <formFactor>Small</formFactor>\n        <skipRecordTypeSelect>false</skipRecordTypeSelect>\n        <type>Flexipage</type>\n    </actionOverrides>\n    <actionOverrides>\n        <actionName>View</actionName>\n        <type>Default</type>\n    </actionOverrides>\n    <allowInChatterGroups>true</allowInChatterGroups>\n    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>\n    <deploymentStatus>Deployed</deploymentStatus>\n    <description>Là tính năng Channels Library thuộc module Business Configuration Tools trong Salesforce tại FEC. Channels Library dùng để liệt kê và quản lý các kênh tích hợp, hỗ trợ hệ thống bên ngoài truy xuất dữ liệu (Master Data, Nature of Case, trạng thái Case…).\nThông qua MyCase API, các hệ thống như Mobile App, Vymo, Pega có thể tạo Case trên New CSM; để thực hiện thao tác này, hệ thống cần được khai báo Channel tương ứng trong Channels Library.</description>\n    <enableActivities>true</enableActivities>\n    <enableBulkApi>true</enableBulkApi>\n    <enableFeeds>false</enableFeeds>\n    <enableHistory>true</enableHistory>\n    <enableLicensing>false</enableLicensing>\n    <enableReports>true</enableReports>\n    <enableSearch>true</enableSearch>\n    <enableSharing>true</enableSharing>\n    <enableStreamingApi>true</enableStreamingApi>\n    <externalSharingModel>Private</externalSharingModel>\n    <label>Channels</label>\n    <nameField>\n        <label>Channel English Name</label>\n        <trackHistory>true</trackHistory>\n        <type>Text</type>\n    </nameField>\n    <pluralLabel>Channels</pluralLabel>\n    <searchLayouts>\n        <excludedStandardButtons>OpenListInQuip</excludedStandardButtons>\n        <excludedStandardButtons>NewFromDocument</excludedStandardButtons>\n        <excludedStandardButtons>Accept</excludedStandardButtons>\n        <excludedStandardButtons>ChangeOwner</excludedStandardButtons>\n        <excludedStandardButtons>Import</excludedStandardButtons>\n        <excludedStandardButtons>MassChangeOwner</excludedStandardButtons>\n        <excludedStandardButtons>PrintableListView</excludedStandardButtons>\n        <excludedStandardButtons>MassAssignRecordLabel</excludedStandardButtons>\n        <searchResultsAdditionalFields>FEC_Channel_ID__c</searchResultsAdditionalFields>\n        <searchResultsAdditionalFields>FEC_Channel_Status__c</searchResultsAdditionalFields>\n        <searchResultsAdditionalFields>FEC_Channel_Vietnamese_name__c</searchResultsAdditionalFields>\n        <searchResultsAdditionalFields>FEC_Self_Service_Flag__c</searchResultsAdditionalFields>\n    </searchLayouts>\n    <sharingModel>ReadWrite</sharingModel>\n    <visibility>Public</visibility>\n</CustomObject>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/force-app/main/default/objects/FEC_Channel__c/FEC_Channel__c.object-meta.xml b/force-app/main/default/objects/FEC_Channel__c/FEC_Channel__c.object-meta.xml
+--- a/force-app/main/default/objects/FEC_Channel__c/FEC_Channel__c.object-meta.xml	(revision abb6ff09ed554230e74e2c15e0fbfcc33a53cdbf)
++++ b/force-app/main/default/objects/FEC_Channel__c/FEC_Channel__c.object-meta.xml	(date 1778417948322)
+@@ -130,7 +130,7 @@
+         <actionName>View</actionName>
+         <comment>Action override created by Lightning App Builder during activation.</comment>
+         <content>Channel_Record_Page</content>
+-        <formFactor>Large</formFactor>
++        <formFactor>Small</formFactor>
+         <skipRecordTypeSelect>false</skipRecordTypeSelect>
+         <type>Flexipage</type>
+     </actionOverrides>
+@@ -138,7 +138,7 @@
+         <actionName>View</actionName>
+         <comment>Action override created by Lightning App Builder during activation.</comment>
+         <content>Channel_Record_Page</content>
+-        <formFactor>Small</formFactor>
++        <formFactor>Large</formFactor>
+         <skipRecordTypeSelect>false</skipRecordTypeSelect>
+         <type>Flexipage</type>
+     </actionOverrides>
+Index: force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<FlexiPage xmlns=\"http://soap.sforce.com/2006/04/metadata\">\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>collapsed</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>enableActionsConfiguration</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>enableActionsInNative</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>hideChatterActions</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>numVisibleActions</name>\n                    <value>3</value>\n                </componentInstanceProperties>\n                <componentName>force:highlightsPanel</componentName>\n                <identifier>force_highlightsPanel</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>header</name>\n        <type>Region</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>readonly</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.Name</fieldItem>\n                <identifier>RecordNameField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Product_Type__c</fieldItem>\n                <identifier>RecordFEC_Product_Type_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Category__c</fieldItem>\n                <identifier>RecordFEC_Category_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Sub_Category__c</fieldItem>\n                <identifier>RecordFEC_Sub_Category_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Sub_Code__c</fieldItem>\n                <identifier>RecordFEC_Sub_Code_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Do_Not_Bother__c</fieldItem>\n                <identifier>RecordFEC_Do_Not_Bother__cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Transfer_Call_to_Collection__c</fieldItem>\n                <identifier>RecordFEC_Transfer_Call_to_Collection__cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Remove_Phone__c</fieldItem>\n                <identifier>RecordFEC_Remove_Phone__cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <name>Facet-7e0f0ea0-0c79-4d31-91f9-f82f95fb15a5</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Business_Process__c</fieldItem>\n                <identifier>RecordFEC_Business_Process_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Active__c</fieldItem>\n                <identifier>RecordFEC_Active_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_User_Group__c</fieldItem>\n                <identifier>RecordFEC_User_Group_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Customer_Type__c</fieldItem>\n                <identifier>RecordFEC_Customer_Type_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <name>Facet-a1406a32-d10f-4e6c-a3f7-fe75ba1148e7</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-7e0f0ea0-0c79-4d31-91f9-f82f95fb15a5</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column5</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-a1406a32-d10f-4e6c-a3f7-fe75ba1148e7</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column6</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>Facet-b8ffede3-5e5a-4b36-ad05-2e66e39d9676</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>readonly</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.CreatedById</fieldItem>\n                <identifier>RecordCreatedByIdField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <name>Facet-46d58aaa-1a52-4161-a8ed-3fbdc6851a1c</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>readonly</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.LastModifiedById</fieldItem>\n                <identifier>RecordLastModifiedByIdField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <name>Facet-3004c4ef-2ce3-40ad-b5da-960beb5ea903</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-46d58aaa-1a52-4161-a8ed-3fbdc6851a1c</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column3</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-3004c4ef-2ce3-40ad-b5da-960beb5ea903</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column4</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>Facet-0146f61a-a8b3-453c-b847-e0a77e3378e6</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>columns</name>\n                    <value>Facet-b8ffede3-5e5a-4b36-ad05-2e66e39d9676</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>horizontalAlignment</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>label</name>\n                    <value>Nature of Case Information</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:fieldSection</componentName>\n                <identifier>flexipage_fieldSection3</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>columns</name>\n                    <value>Facet-0146f61a-a8b3-453c-b847-e0a77e3378e6</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>horizontalAlignment</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>label</name>\n                    <value>@@@SFDCSystem_InformationSFDC@@@</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:fieldSection</componentName>\n                <identifier>flexipage_fieldSection2</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>detailTabContent</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>relatedListComponentOverride</name>\n                    <value>NONE</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>rowsToDisplay</name>\n                    <value>10</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>showActionBar</name>\n                    <value>true</value>\n                </componentInstanceProperties>\n                <componentName>force:relatedListContainer</componentName>\n                <identifier>force_relatedListContainer</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>relatedTabContent</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Do_Not_Bother__c</fieldItem>\n                <identifier>RecordFEC_Do_Not_Bother_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Transfer_Call_to_Collection__c</fieldItem>\n                <identifier>RecordFEC_Transfer_Call_to_Collection_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <itemInstances>\n            <fieldInstance>\n                <fieldInstanceProperties>\n                    <name>uiBehavior</name>\n                    <value>none</value>\n                </fieldInstanceProperties>\n                <fieldItem>Record.FEC_Remove_Phone__c</fieldItem>\n                <identifier>RecordFEC_Remove_Phone_cField</identifier>\n            </fieldInstance>\n        </itemInstances>\n        <name>Facet-6289af61-fe72-4bf8-b01f-6bf770472181</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <name>Facet-9a9d414f-9188-4521-873a-9cec549a50bf</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-6289af61-fe72-4bf8-b01f-6bf770472181</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-9a9d414f-9188-4521-873a-9cec549a50bf</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:column</componentName>\n                <identifier>flexipage_column2</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>Facet-f8c0cec6-0903-4c32-9eda-ddf1242da9a1</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>columns</name>\n                    <value>Facet-f8c0cec6-0903-4c32-9eda-ddf1242da9a1</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>horizontalAlignment</name>\n                    <value>false</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>label</name>\n                    <value>Section</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:fieldSection</componentName>\n                <identifier>flexipage_fieldSection</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>Facet-dafc244f-0a76-499d-80a1-08e18841b329</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>active</name>\n                    <value>true</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>detailTabContent</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>title</name>\n                    <value>Standard.Tab.detail</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:tab</componentName>\n                <identifier>detailTab</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>relatedTabContent</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>title</name>\n                    <value>Standard.Tab.relatedLists</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:tab</componentName>\n                <identifier>relatedListsTab</identifier>\n            </componentInstance>\n        </itemInstances>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>body</name>\n                    <value>Facet-dafc244f-0a76-499d-80a1-08e18841b329</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>title</name>\n                    <value>Sub Process Config</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:tab</componentName>\n                <identifier>flexipage_tab</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>maintabs</name>\n        <type>Facet</type>\n    </flexiPageRegions>\n    <flexiPageRegions>\n        <itemInstances>\n            <componentInstance>\n                <componentInstanceProperties>\n                    <name>label</name>\n                    <value>Tabs</value>\n                </componentInstanceProperties>\n                <componentInstanceProperties>\n                    <name>tabs</name>\n                    <value>maintabs</value>\n                </componentInstanceProperties>\n                <componentName>flexipage:tabset</componentName>\n                <identifier>flexipage_tabset</identifier>\n            </componentInstance>\n        </itemInstances>\n        <name>main</name>\n        <type>Region</type>\n    </flexiPageRegions>\n    <masterLabel>Nature of Cases Record Page</masterLabel>\n    <sobjectType>FEC_Nature_of_Case__c</sobjectType>\n    <template>\n        <name>flexipage:recordHomeSimpleViewTemplate</name>\n    </template>\n    <type>RecordPage</type>\n</FlexiPage>\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml b/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml
+--- a/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml	(revision abb6ff09ed554230e74e2c15e0fbfcc33a53cdbf)
++++ b/force-app/main/default/flexipages/Nature_of_Cases_Record_Page.flexipage-meta.xml	(date 1778417948322)
+@@ -298,6 +298,26 @@
+     </flexiPageRegions>
+     <flexiPageRegions>
+         <itemInstances>
++            <componentInstance>
++                <componentName>fec_HoldCaseConfiguration</componentName>
++                <identifier>c_fec_HoldCaseConfiguration</identifier>
++            </componentInstance>
++        </itemInstances>
++        <name>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</name>
++        <type>Facet</type>
++    </flexiPageRegions>
++    <flexiPageRegions>
++        <itemInstances>
++            <componentInstance>
++                <componentName>fec_NocChannelConfig</componentName>
++                <identifier>fec_NocChannelConfig</identifier>
++            </componentInstance>
++        </itemInstances>
++        <name>nocChannelConfigTabContent</name>
++        <type>Facet</type>
++    </flexiPageRegions>
++    <flexiPageRegions>
++        <itemInstances>
+             <fieldInstance>
+                 <fieldInstanceProperties>
+                     <name>uiBehavior</name>
+@@ -411,6 +431,34 @@
+                 </componentInstanceProperties>
+                 <componentName>flexipage:tab</componentName>
+                 <identifier>relatedListsTab</identifier>
++            </componentInstance>
++        </itemInstances>
++        <itemInstances>
++            <componentInstance>
++                <componentInstanceProperties>
++                    <name>body</name>
++                    <value>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</value>
++                </componentInstanceProperties>
++                <componentInstanceProperties>
++                    <name>title</name>
++                    <value>Hold Case</value>
++                </componentInstanceProperties>
++                <componentName>flexipage:tab</componentName>
++                <identifier>flexipage_tab2</identifier>
++            </componentInstance>
++        </itemInstances>
++        <itemInstances>
++            <componentInstance>
++                <componentInstanceProperties>
++                    <name>body</name>
++                    <value>nocChannelConfigTabContent</value>
++                </componentInstanceProperties>
++                <componentInstanceProperties>
++                    <name>title</name>
++                    <value>Channel Config</value>
++                </componentInstanceProperties>
++                <componentName>flexipage:tab</componentName>
++                <identifier>nocChannelConfigTab</identifier>
+             </componentInstance>
+         </itemInstances>
+         <itemInstances>
+@@ -427,12 +475,36 @@
+                 <identifier>flexipage_tab</identifier>
+             </componentInstance>
+         </itemInstances>
++        <itemInstances>
++            <componentInstance>
++                <componentInstanceProperties>
++                    <name>body</name>
++                    <value>generalAssignmentTabContent</value>
++                </componentInstanceProperties>
++                <componentInstanceProperties>
++                    <name>title</name>
++                    <value>General Assignment</value>
++                </componentInstanceProperties>
++                <componentName>flexipage:tab</componentName>
++                <identifier>generalAssignmentTab</identifier>
++            </componentInstance>
++        </itemInstances>
+         <name>maintabs</name>
+         <type>Facet</type>
+     </flexiPageRegions>
+     <flexiPageRegions>
+         <itemInstances>
+             <componentInstance>
++                <componentName>fec_NocGeneralAssignment</componentName>
++                <identifier>c_fec_NocGeneralAssignment</identifier>
++            </componentInstance>
++        </itemInstances>
++        <name>generalAssignmentTabContent</name>
++        <type>Facet</type>
++    </flexiPageRegions>
++    <flexiPageRegions>
++        <itemInstances>
++            <componentInstance>
+                 <componentInstanceProperties>
+                     <name>label</name>
+                     <value>Tabs</value>
+@@ -454,4 +526,4 @@
+         <name>flexipage:recordHomeSimpleViewTemplate</name>
+     </template>
+     <type>RecordPage</type>
+-</FlexiPage>
++</FlexiPage>
+\ No newline at end of file

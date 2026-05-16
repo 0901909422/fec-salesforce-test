@@ -1,0 +1,218 @@
+Index: force-app/main/default/labels/CustomLabels.labels-meta.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/force-app/main/default/labels/CustomLabels.labels-meta.xml b/force-app/main/default/labels/CustomLabels.labels-meta.xml
+--- a/force-app/main/default/labels/CustomLabels.labels-meta.xml	(revision 26527c2565dc4900d2ee8e962ed36af92f1252b1)
++++ b/force-app/main/default/labels/CustomLabels.labels-meta.xml	(date 1778574824911)
+@@ -14516,7 +14516,7 @@
+         <language>en_US</language>
+         <protected>false</protected>
+         <shortDescription>Assignment Remark Label</shortDescription>
+-        <value>Remark</value>
++        <value>Assignment Remark</value>
+     </labels>
+     <labels>
+         <fullName>FEC_Choose_Queue_Placeholder</fullName>
+@@ -15460,10 +15460,199 @@
+         <value>User ID</value>
+     </labels>
+     <labels>
++        <fullName>FEC_Insurance_Info_Error</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>Insurance Info Error</shortDescription>
++        <value>Insurance Info</value>
++    </labels>
++    <labels>
+         <fullName>FEC_UpdateDisb_Msg_DisbDT_Required</fullName>
+         <language>en_US</language>
+         <protected>false</protected>
+         <shortDescription>Disbursement Date Required Message</shortDescription>
+         <value>DISB_DT is required</value>
+     </labels>
++    <labels>
++        <fullName>FEC_Collections_Transfer_Failed_Summary</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>Transfer Collections thất bại — dòng tóm tắt (đỏ đậm)</shortDescription>
++        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại. Vui lòng thử lại</value>
++    </labels>
++    <labels>
++        <fullName>FEC_Notification_16_Collections_Transfer_Success</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>Noti-16: chuyển KH tới Collections thành công</shortDescription>
++        <value>Chuyển thông tin khách hàng tới hệ thống Collections thành công.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Btn_Cancel</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: nút Cancel trong modal</shortDescription>
++        <value>Cancel</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Btn_TransferToCollection</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: nút/tiêu đề modal Transfer Data to Collection</shortDescription>
++        <value>Transfer Data to Collection</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Modal_ConfirmMessage</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: nội dung xác nhận trong modal</shortDescription>
++        <value>Bạn sắp chuyển dữ liệu tới Collections trước khi chuyển cuộc gọi. Bạn có chắc chắn muốn tiếp tục không?</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Section_CaseInfo</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: tiêu đề accordion Case Information</shortDescription>
++        <value>Case Information</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Spinner_Loading</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: alternative-text spinner Loading</shortDescription>
++        <value>Loading</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Subtitle</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: tiêu đề phụ Transfer Call</shortDescription>
++        <value>Transfer Call</value>
++    </labels>
++    <labels>
++        <fullName>FEC_Collections_Transfer_MaxFailed_Summary</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>Transfer Collections thất bại sau 3 lần — dòng tóm tắt không còn thử lại</shortDescription>
++        <value>Chuyển thông tin khách hàng tới hệ thống Collections thất bại.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Btn_ConfirmTransfer</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: nút xác nhận Transfer Data to Collections</shortDescription>
++        <value>Transfer Data to Collections</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Modal_RemarkLabel</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: nhãn textarea Remark for Collections</shortDescription>
++        <value>Remark for Collections</value>
++    </labels>
++    <labels>
++        <fullName>FEC_TransferCall_Modal_RemarkRequired</fullName>
++        <categories>Label</categories>
++        <language>en_US</language>
++        <protected>false</protected>
++        <shortDescription>TransferCall: thông báo bắt buộc nhập Remark</shortDescription>
++        <value>Vui lòng nhập Remark for Collections.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Save_Success</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Save Success</shortDescription>
++        <value>Thành công</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Saved_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Saved Message</shortDescription>
++        <value>Đã lưu.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Save_Error</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Save Error</shortDescription>
++        <value>Lỗi</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Save_Error_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Save Error Message</shortDescription>
++        <value>Lỗi khi lưu.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Create_Success_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Create Success Message</shortDescription>
++        <value>Đã tạo General Assignment.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Create_Error_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Create Error Message</shortDescription>
++        <value>Lỗi khi tạo record</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Delete_Success_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Delete Success Message</shortDescription>
++        <value>Đã xóa.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Delete_Error_Message</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Delete Error Message</shortDescription>
++        <value>Lỗi khi xóa.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Channel_Required</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Channel Required</shortDescription>
++        <value>Vui lòng chọn ít nhất một Channel</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Name_Required</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Name Required</shortDescription>
++        <value>Vui lòng chọn ít nhất một General Assignment Name</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Name_Required_Field</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Name Required Field</shortDescription>
++        <value>General Assignment Name là bắt buộc.</value>
++    </labels>
++    <labels>
++        <fullName>FEC_GA_Code_Required_Field</fullName>
++        <language>vi</language>
++        <protected>false</protected>
++        <shortDescription>GA Code Required Field</shortDescription>
++        <value>General Assignment Code là bắt buộc.</value>
++    </labels>
++
+ </CustomLabels>
+\ No newline at end of file

@@ -7,7 +7,7 @@ import getHistory from '@salesforce/apex/FEC_GeneralAssignmentHistoryController.
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
 import FEC_GA_SAVED from '@salesforce/messageChannel/FEC_GA_Saved__c';
 
-const WATCH_FIELDS = ['FEC_General_Assignment__c.LastModifiedDate'];
+const WATCH_FIELDS = ['FEC_General_Assignment_Config__c.LastModifiedDate'];
 
 export default class Fec_GeneralAssignmentHistory extends LightningElement {
     @api recordId;
@@ -112,3 +112,4 @@ export default class Fec_GeneralAssignmentHistory extends LightningElement {
         }
     }
 }
+
