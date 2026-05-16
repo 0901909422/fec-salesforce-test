@@ -574,14 +574,23 @@ public without sharing class FEC_CofGsrAssignmentService {
                 : System.Label.FEC_CS_Support_Queue_Name;
             List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
             if (!targetQueues.isEmpty()) {
+                // tungnm37 fix: query Case TRƯỚC khi đổi owner để lấy đúng originalOwner
+                Case caseBeforeUpdate = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
+                // tungnm37 fix: Stage 1 → Original = currentUser (người submit), không phải Case owner
+                Boolean isStage1ForHistory = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
+                String originalOwnerLabel = isStage1ForHistory
+                    ? emailLocalPart(currentUser.Email)
+                    : resolveRoutingHistoryOwnerLabel(caseBeforeUpdate.OwnerId, caseBeforeUpdate.Owner?.Name);
+                String originalOwnerIdStr = isStage1ForHistory
+                    ? String.valueOf(currentUser.Id)
+                    : (caseBeforeUpdate.OwnerId != null ? String.valueOf(caseBeforeUpdate.OwnerId) : null);
+
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
                 // tungnm37 fix: không set FEC_Assignment_Users__c cho CC/SP team để Service Case Owner vẫn hiển thị
                 Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
 
                 // tungnm37: tạo Routing Action History cho luồng CC/SP
                 try {
-                    Case currentCase = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
-                    String originalOwnerLabel = resolveRoutingHistoryOwnerLabel(currentCase.OwnerId, currentCase.Owner?.Name);
                     String userRoleName = currentUser.UserRole?.Name;
                     Database.insert(new FEC_Routing_Action_History__c(
                         FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
@@ -591,10 +600,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_User_Role__c = userRoleName,
                         FEC_Stage_Name__c = stageName,
                         FEC_Original_User_Queue__c = originalOwnerLabel,
-                        FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
+                        FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                        FEC_Current_Status__c = caseBeforeUpdate.FEC_Final_Status__c,
                         FEC_Submitted_On__c = DateTime.now()
                     ));
                     // tungnm37 fix: tạo Case Remark cho CC/SP team path

@@ -102,15 +102,15 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
             console.warn('Billing API failed', e);
         }
 
-        try {
-            await syncRealtimePayment({ caseId: this._recordId });
-        } catch (e) {
-            console.warn('Realtime API failed', e);
-        }
+        // try {
+        //     await syncRealtimePayment({ caseId: this._recordId });
+        // } catch (e) {
+        //     console.warn('Realtime API failed', e);
+        // }
 
         await Promise.all([
             this.loadBilling(),
-            this.loadRealtime()
+           // this.loadRealtime()
         ]);
 
         this.isLoading = false;
@@ -122,22 +122,17 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
        ===================================================== */
     async loadBilling() {
         try {
-            const data = await loadPaymentHistory({
-                caseId: this._recordId
-            });
+            const data = await loadPaymentHistory({ caseId: this._recordId });
 
-            this.paymentHistory = (data || []).map((row, index) => {
-                return {
-                    paymentNo: index + 1,
-                    ...this.transformRow(row)
-                   
-                };
-            });
+            this.paymentHistory = (data || []).map((row, index) => ({
+                paymentNo: index + 1,
+                ...this.transformRow(row)
+            }));
 
-            this.totalPaymentAmount = this.paymentHistory.reduce(
-                (sum, row) => sum + (Number(row.paymentAmount) || 0),
-                0
-            );
+            this.totalPaymentAmount = (data && data.length > 0)
+                ? (data[0].totalPaymentAmount || 0)
+                : 0;
+
         } catch (e) {
             this.paymentHistory = [];
             this.totalPaymentAmount = null;
@@ -197,22 +192,23 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
     transformRow(row) {
         const amount = Number(row.paymentAmount) || 0;
         const absAmount = Math.abs(amount);
-        const formattedAmount = absAmount.toLocaleString('en-US');
 
-        const displayAmount = amount < 0 
-            ? `-${formattedAmount}` 
-            : formattedAmount;
+        const formattedAmount = absAmount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
-        const colorClass = amount < 0 
-            ? 'slds-text-color_error slds-text-title_bold' 
+        const displayAmount = amount < 0 ? `-${formattedAmount}` : formattedAmount;
+        const colorClass = amount < 0
+            ? 'slds-text-color_error slds-text-title_bold'
             : '';
 
         return {
             ...row,
-            paymentDate: this.formatDate(row.paymentDate),
-            bookingDate: this.formatDate(row.bookingDate),
+            paymentDate:          this.formatDate(row.paymentDate),
+            bookingDate:          this.formatDate(row.bookingDate),
             paymentAmountDisplay: displayAmount,
-            amountColorClass: colorClass
+            amountColorClass:     colorClass
         };
     }
 
@@ -221,16 +217,10 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
        ===================================================== */
     formatDate(value) {
         if (!value) return '';
-        
         try {
-            const d = new Date(value);
-            if (isNaN(d.getTime())) return '';
-            
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            
-            return `${day}/${month}/${year}`;
+            const parts = String(value).split('-');
+            if (parts.length !== 3) return value;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/MM/yyyy
         } catch (e) {
             return '';
         }
@@ -240,15 +230,15 @@ export default class Fec_PaymentHistoryAccount extends LightningElement {
        FORMAT TOTAL AMOUNT
        ===================================================== */
     get formattedTotalAmount() {
-        if (this.totalPaymentAmount === null || this.totalPaymentAmount === undefined) {
-            return '';
-        }
+        if (this.totalPaymentAmount === null || this.totalPaymentAmount === undefined) return '';
 
         const amount = Number(this.totalPaymentAmount) || 0;
         const absAmount = Math.abs(amount);
-        const formatted = absAmount.toLocaleString('en-US');
+        const formatted = absAmount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
         return amount < 0 ? `-${formatted}` : formatted;
     }
-
 }
