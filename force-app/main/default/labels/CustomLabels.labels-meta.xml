@@ -10028,6 +10028,14 @@
         <value>Chuyển đổi trả góp thành công.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_IPP_Noti_10</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Noti_10</shortDescription>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
         <categories>IPP Conversion LWC</categories>
         <language>en_US</language>
@@ -14063,6 +14071,46 @@
         <value>Không tìm thấy bản ghi lịch sử khách hàng phù hợp với Case/ hợp đồng.</value>
     </labels>
     <labels>
+        <fullName>FEC_PDF_DefaultFileName</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Default File Name</shortDescription>
+        <value>Document</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_DataEmpty</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error Data Empty</shortDescription>
+        <value>Dữ liệu PDF không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_NoCreatePermission</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error No Create Permission</shortDescription>
+        <value>Không có quyền tạo file. Vui lòng liên hệ Admin.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_NoLinkPermission</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error No Link Permission</shortDescription>
+        <value>Không có quyền liên kết file. Vui lòng liên hệ Admin.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_PDF_Error_TemplateNotFound</fullName>
+        <categories>PDF</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>PDF Error Template Not Found</shortDescription>
+        <value>Không tìm thấy template: {0}</value>
+    </labels>
+    <labels>
         <fullName>FEC_Notification_History_Case_Read_Error</fullName>
         <categories>Notification History LWC</categories>
         <language>en_US</language>
@@ -14633,7 +14681,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hold Case Save Success</shortDescription>
-        <value>Hold Case Config created successfully</value>
+        <value>Hold Case Config was created </value>
     </labels>
     <labels>
         <fullName>FEC_Hold_Case_Type</fullName>
@@ -14712,6 +14760,27 @@
         <protected>false</protected>
         <shortDescription>Table</shortDescription>
         <value>User Role</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Can_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Đủ điều kiện gợi ý tạo giấy xác nhận đóng thẻ</shortDescription>
+        <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện gửi yêu cầu lịch sử thanh toán</shortDescription>
+        <value>Không thể tạo yêu cầu gửi lịch sử thanh toán</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_Cannot_Request_Repayment_Schedule</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
+        <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_Months</fullName>
@@ -15814,7 +15883,7 @@
         <value>of</value>
     </labels>
     <labels>
-        <fullName>FEC_No_Data_Found</fullName>
+        <fullName>FEC_No_Data_Found_Hold_Case</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>

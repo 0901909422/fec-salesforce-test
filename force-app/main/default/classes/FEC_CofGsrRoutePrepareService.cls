@@ -87,6 +87,43 @@ public without sharing class FEC_CofGsrRoutePrepareService {
         natureOfCaseId,
         fieldListJson
       );
+      updateCaseOriginalNocFromFlowHistory(caseId);
+    }
+  }
+
+  //PhongBT 15/05/26
+  /**
+   * Snapshot Category / Sub Category / Sub Code gốc lên Case từ NOC trên FEC_Case_Flow_History__c vừa tạo.
+   */
+  private static void updateCaseOriginalNocFromFlowHistory(String caseId) {
+    if (String.isBlank(caseId)) {
+      return;
+    }
+    try {
+      List<FEC_Case_Flow_History__c> flowHistories = [
+        SELECT
+          FEC_Nature_of_Cases__r.FEC_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Category__c,
+          FEC_Nature_of_Cases__r.FEC_Sub_Code__c
+        FROM FEC_Case_Flow_History__c
+        WHERE FEC_Case__c = :caseId AND FEC_Nature_of_Cases__c != NULL
+        ORDER BY CreatedDate DESC
+        LIMIT 1
+      ];
+      if (flowHistories.isEmpty() || flowHistories[0].FEC_Nature_of_Cases__r == null) {
+        return;
+      }
+      FEC_Nature_of_Case__c baselineNoc = flowHistories[0].FEC_Nature_of_Cases__r;
+      update new Case(
+        Id = caseId,
+        FEC_Original_Category__c = baselineNoc.FEC_Category__c,
+        FEC_Original_Sub_Category__c = baselineNoc.FEC_Sub_Category__c,
+        FEC_Original_Sub_Code__c = baselineNoc.FEC_Sub_Code__c
+      );
+    } catch (Exception e) {
+      System.debug(
+        'updateCaseOriginalNocFromFlowHistory error: ' + e.getMessage()
+      );
     }
   }
   //PhongBT: update bộ noc chọn ở updated khi revert về
