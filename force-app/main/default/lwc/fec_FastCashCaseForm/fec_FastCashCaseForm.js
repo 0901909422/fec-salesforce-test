@@ -564,7 +564,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     handleOpenBlockModal() {
-        if (this.isReadOnly) {
+        if (this.blockAmountButtonDisabled || !this.showBlockButton) {
             return;
         }
         this.showConfirmModal = true;
