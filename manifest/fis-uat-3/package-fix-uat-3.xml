@@ -112,6 +112,8 @@
         <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
 		<members>FEC_Template__c.FEC_Preview_ZNS_Url__c</members>
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -132,6 +134,7 @@
         <members>FEC_LABEL_Description</members>
         <members>FEC_MSG_Parsing_Error</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
+        <members>FEC_Hold_Case_Save_Success</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
