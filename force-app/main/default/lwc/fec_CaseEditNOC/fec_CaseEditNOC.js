@@ -151,9 +151,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isEdit() {
-    
     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
-    // KH-1366: giữ combo + disable (renderedCallback), không chuyển output-field Case (tránh mất Category/Sub khi chưa save DB)
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — giữ combo + disable qua getter, không chuyển output-field Case (tránh mất Category/Sub khi chưa save DB)
     return defaultEdit && !this.isSubmited;
   }
 
@@ -193,14 +192,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
   @track interactionViewMode;
   recordTypeDevName;
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — RC35: sau pop-up Block Amount khóa 3 combo Category / Sub-Category / Sub-Code
   get disableCategory() {
-    return !this.productTypeSelectedId;
+    return this.isNocLockedAfterFastCashBlock || !this.productTypeSelectedId;
   }
   get disableSubCategory() {
-    return !this.categorySelectedId;
+    return this.isNocLockedAfterFastCashBlock || !this.categorySelectedId;
   }
   get disableSubCode() {
-    return !this.subCategorySelectedId;
+    return this.isNocLockedAfterFastCashBlock || !this.subCategorySelectedId;
   }
 
   @track productTypeOptionlst = [];
@@ -238,15 +238,26 @@ export default class Fec_CaseEditNOC extends LightningElement {
       this._restoreFastCashNocLockFromStorage();
     }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-    if (this.isNocLockedAfterFastCashBlock && !this.isSubmittedState && !this._fastCashLockCombosApplied) {
-      const pt = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
-      if (pt) {
-        ["prod-type", "category", "sub-category", "sub-code"].forEach((id) => {
-          this.handleDisableResetPinSuccess(id);
-        });
-        this._fastCashLockCombosApplied = true;
-      }
+    this._applyFastCashRc35PartialLockCombos();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — RC35: chỉ disable Category / Sub-Category / Sub-Code sau pop-up Block Amount
+  _applyFastCashRc35PartialLockCombos() {
+    if (
+      !this.isNocLockedAfterFastCashBlock ||
+      this.isSubmittedState ||
+      this._fastCashLockCombosApplied
+    ) {
+      return;
     }
+    const cat = this.template.querySelector(`c-fec_-combo-box[data-id="category"]`);
+    if (!cat) {
+      return;
+    }
+    ["category", "sub-category", "sub-code"].forEach((id) => {
+      this.handleDisableResetPinSuccess(id);
+    });
+    this._fastCashLockCombosApplied = true;
   }
 
   async connectedCallback() {
@@ -384,6 +395,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     } catch (e) {
       /* ignore */
     }
+    this._applyFastCashRc35PartialLockCombos();
   }
 
   updateRoutingActionDisplay(field) {

@@ -75,13 +75,15 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         const wasFastCash = this._subCategoryCode === FAST_CASH_SUB_CATEGORY_CODE;
         this._subCategoryCode = newCode;
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         if (wasFastCash && newCode !== FAST_CASH_SUB_CATEGORY_CODE) {
-            this._clearFastCashNocLockStorage();
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — rời RC35: dọn session lock & flag
+            this._clearFastCashSessionStorage();
             this.nocLockedAfterBlockModal = false;
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1294
             this._notifyFastCashPropertyInfoVisibility(false);
         }
         if (this._isFastCashScope) {
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — vào RC35 lần đầu mà chưa qua pop-up Block Amount: reset state
             if (!wasFastCash && !this._isBlockModalConfirmedInStorage()) {
                 this._resetFastCashBlockSessionState();
             }
@@ -161,21 +163,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return;
         }
         const nocId = getFieldValue(data, CASE_ACTUAL_NOC);
-        if (!this._isBlockModalConfirmedInStorage()) {
-            this.nocLockedAfterBlockModal = false;
-            this.blockSucceeded = false;
-            this.finalBlockFailure = false;
-            this.blockFailCount = 0;
-        } else {
-            this.restoreLocksFromStorage();
-        }
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — chỉ phục hồi lock khi đã xác nhận pop-up; ngược lại reset flag tránh kẹt từ session cũ
+        this._syncLocksWithStorage();
         if (!nocId) {
             this._lastNocId = null;
             if (this.nocLockedAfterBlockModal) {
-                if (!this._lockedViewLoaded) {
-                    this._lockedViewLoaded = true;
-                    this.loadLockedSnapshot();
-                }
+                this._ensureLockedSnapshotLoaded();
                 return;
             }
             if (this._isFastCashScope) {
@@ -187,9 +180,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
         if (this.nocLockedAfterBlockModal) {
             if (!this._lockedViewLoaded) {
-                this._lockedViewLoaded = true;
                 this._lastNocId = nocId;
-                this.loadLockedSnapshot();
+                this._ensureLockedSnapshotLoaded();
             }
             return;
         }
@@ -197,19 +189,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             const isNocChange = this._lastNocId != null;
             this._lastNocId = nocId;
             this._lockedViewLoaded = false;
-            if (
-                isNocChange &&
-                !this.nocLockedAfterBlockModal &&
-                !this._isBlockModalConfirmedInStorage()
-            ) {
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — đổi NOC trước khi qua pop-up: dọn state Fast Cash của NOC cũ
+            if (isNocChange && !this._isBlockModalConfirmedInStorage()) {
                 this._resetFastCashBlockSessionState();
-            }
-            if (this.nocLockedAfterBlockModal) {
-                if (!this._lockedViewLoaded) {
-                    this._lockedViewLoaded = true;
-                    this.loadLockedSnapshot();
-                }
-                return;
             }
             this.hydrateFromCaseThenEligibility();
         }
@@ -217,30 +199,42 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
 
     connectedCallback() {
         if (this.recordId) {
-            if (this._isBlockModalConfirmedInStorage()) {
-                this.restoreLocksFromStorage();
-            } else {
-                this._clearFastCashSessionStorage();
-                this.nocLockedAfterBlockModal = false;
-                this.blockSucceeded = false;
-                this.finalBlockFailure = false;
-                this.blockFailCount = 0;
-            }
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+            this._syncLocksWithStorage();
             this._maybeHydrateForFastCashScope();
         }
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — guard chung cho wiredCase & connectedCallback
+    _syncLocksWithStorage() {
+        if (!this._isBlockModalConfirmedInStorage()) {
+            this._clearFastCashSessionStorage();
+            this._resetBlockStateFlagsInMemory();
+            return;
+        }
+        this.restoreLocksFromStorage();
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    _resetBlockStateFlagsInMemory() {
+        this.nocLockedAfterBlockModal = false;
+        this.blockSucceeded = false;
+        this.finalBlockFailure = false;
+        this.blockFailCount = 0;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    _ensureLockedSnapshotLoaded() {
+        if (this._lockedViewLoaded) {
+            return;
+        }
+        this._lockedViewLoaded = true;
+        this.loadLockedSnapshot();
+    }
+
     restoreLocksFromStorage() {
         try {
-            if (!this.recordId) {
-                return;
-            }
-            if (!this._isBlockModalConfirmedInStorage()) {
-                this._clearFastCashSessionStorage();
-                this.nocLockedAfterBlockModal = false;
-                this.blockSucceeded = false;
-                this.finalBlockFailure = false;
-                this.blockFailCount = 0;
+            if (!this.recordId || !this._isBlockModalConfirmedInStorage()) {
                 return;
             }
             this.nocLockedAfterBlockModal = true;
@@ -285,6 +279,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     _clearFastCashSessionStorage() {
         try {
             if (!this.recordId) {
@@ -299,16 +294,10 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         }
     }
 
-    _clearFastCashNocLockStorage() {
-        this._clearFastCashSessionStorage();
-    }
-
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — đổi NOC / rời RC35: reset toàn bộ state Fast Cash
     _resetFastCashBlockSessionState() {
         this._clearFastCashSessionStorage();
-        this.nocLockedAfterBlockModal = false;
-        this.blockSucceeded = false;
-        this.finalBlockFailure = false;
-        this.blockFailCount = 0;
+        this._resetBlockStateFlagsInMemory();
         this._lockedViewLoaded = false;
         this.clearBlockMessages();
     }
@@ -496,8 +485,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         return formatThousandsFromDigits(d);
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — lock NOC không khóa amount; chỉ disable sau block OK hoặc 3 lần fail
     get amountFieldsDisabled() {
-        // KH-1366: lock NOC không khóa amount; sau block OK hoặc 3 lần fail mới khóa nhập
         if (this.finalBlockFailure || this.blockSucceeded) {
             return true;
         }
@@ -505,6 +494,11 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return false;
         }
         return this.isReadOnly;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Block Amount không phụ thuộc isReadOnly từ parent metadata
+    get blockAmountButtonDisabled() {
+        return this.blockLoading || this.finalBlockFailure || this.blockSucceeded;
     }
 
     get showNoti12() {
@@ -585,10 +579,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         } catch (e) {
             /* ignore */
         }
-        if (!this._lockedViewLoaded) {
-            this._lockedViewLoaded = true;
-            this.loadLockedSnapshot();
-        }
+        this._ensureLockedSnapshotLoaded();
         if (this.messageContext && this.recordId) {
             publish(this.messageContext, CASE_NOC, {
                 caseId: this.recordId,

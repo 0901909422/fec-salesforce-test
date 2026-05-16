@@ -1265,7 +1265,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     // Chỉ xử lý message dành cho case này, tránh cross-tab interference
     if (message.caseId != null && message.caseId !== this.recordId) return;
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — message khóa NOC chỉ dành cho fec_CaseEditNOC, không reload business
     if (message.fastCashNocLocked === true) {
       return;
     }
