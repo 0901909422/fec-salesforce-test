@@ -544,6 +544,9 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>Case.FEC_Original_Category__c</members>
+        <members>Case.FEC_Original_Sub_Category__c</members>
+        <members>Case.FEC_Original_Sub_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
