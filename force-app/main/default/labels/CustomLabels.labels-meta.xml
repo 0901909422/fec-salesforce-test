@@ -16787,6 +16787,14 @@
         <value>Export with all Properties</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_FooterOf</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FooterOf</shortDescription>
+        <value>of</value>
+    </labels>
+    <labels>
         <fullName>FEC_No_Data_Found_Hold_Case</fullName>
         <categories>Label</categories>
         <language>en_US</language>
