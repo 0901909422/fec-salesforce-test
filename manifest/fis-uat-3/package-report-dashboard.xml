@@ -3,6 +3,7 @@
     <types>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RoutingHistTatSvc</members>
+        <members>FEC_CaseTatFullProcessSvc</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -19,6 +20,8 @@
         <members>Case.FEC_Case_Status_History_2__c</members>
         <members>Case.FEC_Case_Status_History_3__c</members>
         <members>Case.FEC_TAT_Full_Process_Hrs__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <name>CustomField</name>
     </types>
