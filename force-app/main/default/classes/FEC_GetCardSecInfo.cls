@@ -67,6 +67,7 @@ public with sharing class FEC_GetCardSecInfo {
         public List<CardsDelivery> CardsDeliveries;
         public List<IPP> IPPs;
         public List<CardStatement> CardStatements;
+        public List<FinancialTransaction> FinancialTransactions;
     }
   
     // =========================================================================
@@ -238,6 +239,35 @@ public with sharing class FEC_GetCardSecInfo {
         public Decimal TotalPaymentDue;
   
         public Date DueDate;
+    }
+
+    // =========================================================================
+    // FINANCICAL TRANSACTION
+    // =========================================================================
+    public class FinancialTransaction {
+        public String  TRNXDateAndTime;
+        public String  Description;
+        public String  CreditDebitFlag;
+        public String  TransactionType;
+        public String  Status;
+        public Decimal TRNXAmount;
+        public String  TransactionCode;
+        public String  TRNXCurrencyCode;
+        public Decimal Fee;
+        public String  PostingDate;
+        public String  SettlementDate;
+        public String  Plan;
+        public String  MCC;
+        public String  RRN;
+        public String  AuthCode;
+        public String  MerchantName;
+        public String  PaymentFlag;
+        public String  IsCashTRNX;
+        public String  PlanType;
+        public String  OTPSent;
+        public String  AZDWLGActionReason;
+        public String  AZDWLGReasonDesc;
+        public String  LOGIC_MOD;
     }
   
     // =========================================================================
@@ -551,6 +581,44 @@ public with sharing class FEC_GetCardSecInfo {
                     cs.DueDate = FEC_CommonUltils.parseDate(FEC_CommonUltils.getXmlValue(child,'DueDate'));
   
                     result.CardSecInfo.CardStatements.add(cs);
+                }
+            }
+        }
+
+        Dom.XmlNode ftNode = infoNode.getChildElement('FinancialTransactions', null);
+        if (ftNode != null) {
+            result.CardSecInfo.FinancialTransactions = new List<FinancialTransaction>();
+            for (Dom.XmlNode child : ftNode.getChildElements()) {
+                String childName = child.getName();
+                if (childName.contains(':')) {
+                    childName = childName.substring(childName.indexOf(':') + 1);
+                }
+                if (childName == 'FinancialTransaction') {
+                    FinancialTransaction ft = new FinancialTransaction();
+                    ft.TRNXDateAndTime     = FEC_CommonUltils.getXmlValue(child, 'TRNXDateAndTime');
+                    ft.Description         = FEC_CommonUltils.getXmlValue(child, 'Description');
+                    ft.CreditDebitFlag     = FEC_CommonUltils.getXmlValue(child, 'CreditDebitFlag');
+                    ft.TransactionType     = FEC_CommonUltils.getXmlValue(child, 'TransactionType');
+                    ft.Status              = FEC_CommonUltils.getXmlValue(child, 'Status');
+                    ft.TRNXAmount          = FEC_CommonUltils.xmlValToDecimal(child, 'TRNXAmount');
+                    ft.TransactionCode     = FEC_CommonUltils.getXmlValue(child, 'TransactionCode');
+                    ft.TRNXCurrencyCode    = FEC_CommonUltils.getXmlValue(child, 'TRNXCurrencyCode');
+                    ft.Fee                 = FEC_CommonUltils.xmlValToDecimal(child, 'Fee');
+                    ft.PostingDate         = FEC_CommonUltils.getXmlValue(child, 'PostingDate');
+                    ft.SettlementDate      = FEC_CommonUltils.getXmlValue(child, 'SettlementDate');
+                    ft.Plan                = FEC_CommonUltils.getXmlValue(child, 'Plan');
+                    ft.MCC                 = FEC_CommonUltils.getXmlValue(child, 'MCC');
+                    ft.RRN                 = FEC_CommonUltils.getXmlValue(child, 'RRN');
+                    ft.AuthCode            = FEC_CommonUltils.getXmlValue(child, 'AuthCode');
+                    ft.MerchantName        = FEC_CommonUltils.getXmlValue(child, 'MerchantName');
+                    ft.PaymentFlag         = FEC_CommonUltils.getXmlValue(child, 'PaymentFlag');
+                    ft.IsCashTRNX          = FEC_CommonUltils.getXmlValue(child, 'IsCashTRNX');
+                    ft.PlanType            = FEC_CommonUltils.getXmlValue(child, 'PlanType');
+                    ft.OTPSent             = FEC_CommonUltils.getXmlValue(child, 'OTPSent');
+                    ft.AZDWLGActionReason  = FEC_CommonUltils.getXmlValue(child, 'AZDWLGActionReason');
+                    ft.AZDWLGReasonDesc    = FEC_CommonUltils.getXmlValue(child, 'AZDWLGReasonDesc');
+                    ft.LOGIC_MOD           = FEC_CommonUltils.getXmlValue(child, 'LOGIC_MOD');
+                    result.CardSecInfo.FinancialTransactions.add(ft);
                 }
             }
         }
