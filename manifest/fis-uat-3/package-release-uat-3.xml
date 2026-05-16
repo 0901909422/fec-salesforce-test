@@ -1438,5 +1438,10 @@
 		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
 		<name>ValidationRule</name>
 	</types>
+	<types>
+		<members>FEC_Assignment_Set_User_Role</members>
+		<members>Assign_Entitlement_to_Case</members>
+		<name>Flow</name>
+	</types>
 	<version>66.0</version>
 </Package>
