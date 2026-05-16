@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Case.FEC_Case_Remarks_Entered_By_1__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_2__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_Role_1__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_Role_2__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_By_Role_3__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_On_1__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_On_2__c</members>
+        <members>Case.FEC_Case_Remarks_Entered_On_3__c</members>
+        <members>Case.FEC_Case_Status_History_1__c</members>
+        <members>Case.FEC_Case_Status_History_2__c</members>
+        <members>Case.FEC_Case_Status_History_3__c</members>
+        <name>CustomField</name>
+    </types>
+    <version>66.0</version>
+</Package>
