@@ -147,6 +147,7 @@ public with sharing class FEC_AssignmentExecuteService {
             return values;
         }
         
+        // tungnm37 fix: split bằng ',' - delimiter chuẩn
         for (String value : assignmentUsers.split(',')) {
             if (!String.isBlank(value)) {
                 values.add(value.trim());
