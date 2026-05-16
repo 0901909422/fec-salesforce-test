@@ -1,40 +1,3 @@
-// import { LightningElement, wire, api } from "lwc";
-// import { publish, MessageContext } from "lightning/messageService";
-// import { CloseActionScreenEvent } from "lightning/actions";
-// import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
-// import { setMode } from "c/fec_CustomerCaseModeStore";
-// import executeCase from "@salesforce/apex/FEC_CaseExecuteService.executeCase";
-// export default class Fec_CustomerCaseExecuteAction extends LightningElement {
-//   @api recordId;
-//   @wire(MessageContext)
-//   messageContext;
-
-//   async connectedCallback() {
-//     try {
-//       /*
-//        * Update owner
-//        */
-//       await executeCase({
-//         caseId: this.recordId,
-//       });
-
-//       console.log("Owner updated");
-//       await this.handlePublishMessageChanel();
-//     } catch (e) {
-//       console.log(">>>error: ", e);
-//     } finally {
-//       this.dispatchEvent(new CloseActionScreenEvent());
-//     }
-//   }
-
-//   async handlePublishMessageChanel() {
-//     const payload = {
-//       isModeEdit: true,
-//     };
-//     setMode(true);
-//     publish(this.messageContext, IS_MODE_EDIT, payload);
-//   }
-// }
 import { LightningElement, api, wire } from "lwc";
 
 import { publish, MessageContext } from "lightning/messageService";
@@ -100,6 +63,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
       /*
        * Enable edit mode
        */
+    
       await this.handlePublishMessageChanel();
 
       /*
@@ -115,6 +79,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
 
   async handlePublishMessageChanel() {
     const payload = {
+      caseId: this.recordId,
       isModeEdit: true,
     };
 
