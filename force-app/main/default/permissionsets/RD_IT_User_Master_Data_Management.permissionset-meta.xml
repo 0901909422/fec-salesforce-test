@@ -1402,6 +1402,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Stage_Change__c.FEC_Next_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1532,7 +1537,22 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Template__c.FEC_Is_ZNS_Template__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Preview_ZNS_Url__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Template_ZNS_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1590,7 +1610,6 @@
         <field>FEC_Decision_Table__c.FEC_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1617,7 +1636,6 @@
         <field>FEC_MDM_Additional_Field__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1639,7 +1657,6 @@
         <field>FEC_MDM_Additional_Field_List_Value__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1706,7 +1723,6 @@
         <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Channel__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -2104,7 +2120,6 @@
         <object>FEC_MDM_Additional_Field__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Permissions -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -2115,7 +2130,6 @@
         <object>FEC_MDM_Additional_Field_List_Value__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- Other MDM Objects -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -2243,7 +2257,6 @@
         <object>FEC_Decision_Table__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-    
     <recordTypeVisibilities>
         <recordType>FEC_Notification__c.Auto_Notification</recordType>
         <visible>true</visible>

@@ -8,5 +8,8 @@
     <permissionSets>FEC_CS_Unit_Head_of_CS_Inbound_Search_Functions</permissionSets>
     <permissionSets>FEC_CS_Unit_Head_of_CS_Inbound_User_Management</permissionSets>
     <permissionSets>FEC_Common_System_Setting</permissionSets>
+    <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
+    <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Batch_Case_Handling</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
