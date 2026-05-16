@@ -41,7 +41,8 @@ import {
     FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
-    FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX
+    FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
+    FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX
 } from "c/fec_CommonConst";
 import { formatThousandsFromDigits, stripToIntString } from "c/fec_CommonUtils";
 
@@ -208,11 +209,37 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — guard chung cho wiredCase & connectedCallback
     _syncLocksWithStorage() {
         if (!this._isBlockModalConfirmedInStorage()) {
-            this._clearFastCashSessionStorage();
-            this._resetBlockStateFlagsInMemory();
+            if (!this.nocLockedAfterBlockModal) {
+                this._clearFastCashSessionStorage();
+                this._resetBlockStateFlagsInMemory();
+            }
+            return;
+        }
+        if (!this._isFastCashNocSelectionCompleteInStorage()) {
+            if (!this.nocLockedAfterBlockModal) {
+                this._clearFastCashSessionStorage();
+                this._resetBlockStateFlagsInMemory();
+            }
             return;
         }
         this.restoreLocksFromStorage();
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    _isFastCashNocSelectionCompleteInStorage() {
+        try {
+            if (!this.recordId) {
+                return false;
+            }
+            const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
+            if (!raw) {
+                return false;
+            }
+            const sel = JSON.parse(raw);
+            return !!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId);
+        } catch (e) {
+            return false;
+        }
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
@@ -289,6 +316,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             sessionStorage.removeItem(this._storageBlockFailKey());
             sessionStorage.removeItem(this._storageBlockOkKey());
             sessionStorage.removeItem(this._storageModalConfirmedKey());
+            sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
         } catch (e) {
             /* ignore */
         }
@@ -573,6 +601,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — chỉ gọi từ handleConfirmYes / handleConfirmNo (pop-up Block Amount)
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
+        if (this.messageContext && this.recordId) {
+            publish(this.messageContext, CASE_NOC, {
+                caseId: this.recordId,
+                fastCashNocLocked: true
+            });
+        }
         try {
             sessionStorage.setItem(this._storageModalConfirmedKey(), "1");
             sessionStorage.setItem(this._storageNocKey(), "1");
@@ -580,12 +614,6 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             /* ignore */
         }
         this._ensureLockedSnapshotLoaded();
-        if (this.messageContext && this.recordId) {
-            publish(this.messageContext, CASE_NOC, {
-                caseId: this.recordId,
-                fastCashNocLocked: true
-            });
-        }
     }
 
     handleConfirmNo() {

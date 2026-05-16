@@ -228,6 +228,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (message.caseId !== this.recordId) {
       return;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không pop-up Block Amount: không getData(null) → mất Case Information / Fast Cash
+    if (message.fastCashNocLocked === true) {
+      return;
+    }
     //PhongBT: fix th đổi từ bộ noc đủ subcode sang bộ thiếu subcode thì updatedNoc lại hiển thị bộ đủ subcode
     // Always sync latest NOC natureOfCase (including null) to avoid stale fallback.
     // this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId ?? null;

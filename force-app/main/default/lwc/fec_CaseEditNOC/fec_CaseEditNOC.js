@@ -48,7 +48,10 @@ import {
   INTERNAL_UBANK,
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
-  FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX
+  FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
+  FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
@@ -151,8 +154,11 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   get isEdit() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — sau pop-up Block Amount: reload vẫn giữ combo disable, không chuyển output-field Case (resetViewMode → review)
+    if (this.isNocLockedAfterFastCashBlock && !this.isSubmited) {
+      return true;
+    }
     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — giữ combo + disable qua getter, không chuyển output-field Case (tránh mất Category/Sub khi chưa save DB)
     return defaultEdit && !this.isSubmited;
   }
 
@@ -238,6 +244,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
       this._restoreFastCashNocLockFromStorage();
     }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    this._releaseFastCashNocLockIfStale();
     this._applyFastCashRc35PartialLockCombos();
   }
 
@@ -261,6 +268,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   }
 
   async connectedCallback() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — phục hồi lock trước resetViewMode để isEdit không rơi output-field khi reload
+    this._restoreFastCashNocLockFromStorage();
     await resetViewMode({
       recordId: this.recordId,
       viewMode: VIEW_MODE_REVIEW,
@@ -277,6 +286,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.subCategorySelectedId = res.FEC_SubCategory__c;
 
         this.subCodeSelectedId = res.FEC_SubCode__c;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — NOC chọn trên UI chưa ghi Case: overlay từ session sau Có/Không
+        this._applyFastCashNocSelectionFromStorage();
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
@@ -299,6 +310,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
         //linhdev fix jira FECREDIT_CSM_2025_KH-1366
         this._restoreFastCashNocLockFromStorage();
+        this._releaseFastCashNocLockIfStale();
 
         //PhongBT11 update jira KH-1084 bổ sung Updated Information cho NOC, GSR Handling Stage
         // [NOC-HANDLING-STAGE-UPDATE]: Khi đã submit, kiểm tra Auto-Routing Assignment
@@ -362,6 +374,50 @@ export default class Fec_CaseEditNOC extends LightningElement {
       });
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — RC35 cần đủ Product Type + Category + Sub-Category trước khi coi lock hợp lệ
+  _isFastCashNocSelectionComplete(sel) {
+    return !!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId);
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  _clearFastCashBlockSessionStorage() {
+    try {
+      if (!this.recordId) {
+        return;
+      }
+      sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId);
+      sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId);
+      sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
+      sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX + this.recordId);
+      sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + this.recordId);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — session cũ (chỉ Card, chưa RC35): bỏ lock để chọn lại NOC
+  _releaseFastCashNocLockIfStale() {
+    if (!this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
+    const sel = this._readFastCashNocSelectionFromStorage();
+    if (this._isFastCashNocSelectionComplete(sel)) {
+      return;
+    }
+    this._clearFastCashBlockSessionStorage();
+    this.isNocLockedAfterFastCashBlock = false;
+    this._fastCashLockCombosApplied = false;
+    if (this.productTypeSelectedId) {
+      this.handleEnable("category");
+    }
+    if (this.categorySelectedId) {
+      this.handleEnable("sub-category");
+    }
+    if (this.subCategorySelectedId) {
+      this.handleEnable("sub-code");
+    }
+  }
+
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   _restoreFastCashNocLockFromStorage() {
     try {
@@ -382,15 +438,85 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — lưu bộ NOC đang chọn (chưa submit Case) để reload không mất Case Information / Fast Cash
+  _saveFastCashNocSelectionToStorage() {
+    try {
+      if (!this.recordId) {
+        return;
+      }
+      sessionStorage.setItem(
+        FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId,
+        JSON.stringify({
+          productTypeId: this.productTypeSelectedId || null,
+          categoryId: this.categorySelectedId || null,
+          subCategoryId: this.subCategorySelectedId || null,
+          subCodeId: this.subCodeSelectedId || null
+        })
+      );
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  _readFastCashNocSelectionFromStorage() {
+    try {
+      if (!this.recordId) {
+        return null;
+      }
+      const modalKey = FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId;
+      if (sessionStorage.getItem(modalKey) !== "1") {
+        return null;
+      }
+      const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
+      if (!raw) {
+        return null;
+      }
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  _applyFastCashNocSelectionFromStorage() {
+    const sel = this._readFastCashNocSelectionFromStorage();
+    if (!sel || !this.isNocLockedAfterFastCashBlock) {
+      return;
+    }
+    if (sel.productTypeId) {
+      this.productTypeSelectedId = sel.productTypeId;
+      this.disableProdType = true;
+    }
+    if (sel.categoryId) {
+      this.categorySelectedId = sel.categoryId;
+    }
+    if (sel.subCategoryId) {
+      this.subCategorySelectedId = sel.subCategoryId;
+    }
+    if (sel.subCodeId !== undefined) {
+      this.subCodeSelectedId = sel.subCodeId;
+    }
+  }
+
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   @api
   applyFastCashBlockNocLock() {
+    const pendingSel = {
+      productTypeId: this.productTypeSelectedId,
+      categoryId: this.categorySelectedId,
+      subCategoryId: this.subCategorySelectedId,
+      subCodeId: this.subCodeSelectedId
+    };
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — chưa chọn đủ RC35 thì không khóa (tránh execute lại kẹt disable)
+    if (!this._isFastCashNocSelectionComplete(pendingSel)) {
+      return;
+    }
     this.isNocLockedAfterFastCashBlock = true;
     this._fastCashLockCombosApplied = false;
     try {
       if (this.recordId) {
         sessionStorage.setItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId, "1");
         sessionStorage.setItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId, "1");
+        this._saveFastCashNocSelectionToStorage();
       }
     } catch (e) {
       /* ignore */
@@ -612,6 +738,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
         this.categorySelectedId = res.FEC_Category__c;
         this.subCategorySelectedId = res.FEC_SubCategory__c;
         this.subCodeSelectedId = res.FEC_SubCode__c;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+        this._applyFastCashNocSelectionFromStorage();
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
@@ -653,6 +781,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
         }
         //linhdev fix jira FECREDIT_CSM_2025_KH-1366
         this._restoreFastCashNocLockFromStorage();
+        this._releaseFastCashNocLockIfStale();
       })
       .catch((err) => {
         console.log("reloadData err:", err);

@@ -1457,5 +1457,9 @@
 		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
 	</types>
+    <types>
+		<members>FEC_Case_NOC</members>
+		<name>LightningMessageChannel</name>
+	</types>
 	<version>66.0</version>
 </Package>
