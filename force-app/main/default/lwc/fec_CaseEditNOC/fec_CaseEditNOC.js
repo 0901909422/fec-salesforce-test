@@ -37,7 +37,6 @@ import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
-//linhdev fix jira FECREDIT_CSM_2025_KH-1366
 import { 
   ACTION_REOPEN, 
   ACTION_RECALL,
@@ -47,6 +46,7 @@ import {
   // STR_UNDEFINED, 
   INTERNAL_REQUEST, 
   INTERNAL_UBANK,
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
