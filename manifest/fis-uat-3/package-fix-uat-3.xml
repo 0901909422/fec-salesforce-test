@@ -47,6 +47,8 @@
         <members>FEC_CardEligibilityController</members>
         <members>FEC_AssignmentTriggerHandler</members>
         <members>FEC_BancaController</members>
+        <members>FEC_DNBHandler</members>
+        <members>FEC_GetCSCaseStatusService</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<name>Apexclass</name>
 	</types>
@@ -95,6 +97,7 @@
         <members>maskedToggleDatatable</members>
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_RemovePhoneForm</members>
+        <members>fec_HoldCaseConfiguration</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -104,6 +107,14 @@
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
+		<members>FEC_Action_Button__c.FEC_Code__c</members>
+		<members>FEC_Stage_Change__c.FEC_Code__c</members>
+		<members>FEC_Stage_Screen__c.FEC_Code__c</members>
+        <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
+		<members>FEC_Template__c.FEC_Preview_ZNS_Url__c</members>
+		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <name>CustomField</name>
     </types>
 	<types>
@@ -123,6 +134,8 @@
         <members>FEC_LABEL_API_Code</members>
         <members>FEC_LABEL_Description</members>
         <members>FEC_MSG_Parsing_Error</members>
+        <members>FEC_No_Data_Found_Hold_Case</members>
+        <members>FEC_Hold_Case_Save_Success</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

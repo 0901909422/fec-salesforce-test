@@ -37,7 +37,7 @@ import {
   formatCurrencyIncludeTax,
 } from "c/fec_CommonUtils";
 
-import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER, FIELD_CONTACT_CHANNEL } from "c/fec_CommonConst";
+import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER } from "c/fec_CommonConst";
 import FEC_MSG_UPDATED_INFO_NOT_UPDATED from "@salesforce/label/c.FEC_MSG_UPDATED_INFO_NOT_UPDATED";
 import FEC_MSG_Can_Not_Find_Next_Stage from "@salesforce/label/c.FEC_MSG_Can_Not_Find_Next_Stage";
 import FEC_Error_Title from "@salesforce/label/c.FEC_Error_Title";
@@ -86,6 +86,11 @@ import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_
 import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
+//PhongBT 14/05/26: Document Request — save PDF to Case
+import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
+import { getPdfConfigForSubCode, buildPdfDataForSubCode } from "./fecDocumentRequestPdfData";
+import getPaymentHistoryRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getPaymentHistoryRows";
+import getRepaymentScheduleRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getRepaymentScheduleRows";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -168,8 +173,7 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   CUSTOMER_PHONE_NUMBER_SUB,
   FIELD_FEOL_Phone__c,
   FIELD_CUSTOMER_PHONE_NUMBER,
-  FIELD_RECEIVING_PHONE_NUMBER,
-  FIELD_CONTACT_CHANNEL
+  FIELD_RECEIVING_PHONE_NUMBER
 ]);
 const CASE_UPDATED_INFO_FIRST_NAME = "Case.FEC_Updated_Info_First_Name__c";
 const CASE_UPDATED_INFO_MIDDLE_NAME = "Case.FEC_Updated_Info_Middle_Name__c";
@@ -1459,7 +1463,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         this.business.sectionlst.forEach((section, index) => {
           // handle error
-          if (section.error?.errorlst?.length > 0) {
+          if (section.error?.errorlst?.length > 0 || section.error?.label) {
             section.hasError = true;
 
             section.error.errorPanellst = [];
@@ -1471,7 +1475,9 @@ export default class Fec_CaseBussiness extends LightningElement {
               });
             });
 
+            if (section.error?.errorlst?.length > 0) {
             this._setActionValueByCode(ACTION_REJECT);
+            }
           }
           section.id = crypto.randomUUID();
 
@@ -1553,7 +1559,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                       field.value = opt.value;
                     }
                   } else {
-                    const defaultOpt = picklistOptions.find(o => o.isDefaultValue);
+                    const defaultOpt = picklistOptions.find(o => o.isDefault);
                     if (defaultOpt) {
                       field.value = defaultOpt.value;
                     }
@@ -3006,7 +3012,39 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+    //PhongBT 14/05/26: Document Request — gen PDF + save vào Case sau submit thành công
+    await this._generateAndSavePdfIfApplicable();
     return true;
+  }
+
+  /**
+   * PhongBT 14/05/26: Document Request — gen PDF theo sub-code RL04.02/RL04.03 và lưu vào Case.
+   * Data lấy từ business object (sectionlst → field value), mapping xem fecDocumentRequestPdfData.js.
+   */
+  async _generateAndSavePdfIfApplicable() {
+    const config = getPdfConfigForSubCode(this.business?.subCodeCode);
+    if (!config) return;
+    try {
+      let paymentRows = [];
+      let repaymentRows = [];
+      if (config.needsPaymentRows) {
+        paymentRows = await getPaymentHistoryRows({ caseId: this.recordId });
+      }
+      if (config.needsRepaymentRows) {
+        repaymentRows = await getRepaymentScheduleRows({ caseId: this.recordId });
+      }
+      const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, this.business, paymentRows, repaymentRows);
+      const generator = this.template.querySelector('c-fec-pdf-generator');
+      if (!generator) return;
+      const { base64, fileName } = await generator.generatePdf(pdfConfig.templateCode, pdfConfig.data);
+      await savePdfToCase({
+        base64Data: base64,
+        fileName: fileName || pdfConfig.templateCode,
+        caseId: this.recordId
+      });
+    } catch (err) {
+      console.error('PDF generation/save failed:', err);
+    }
   }
 
   /**

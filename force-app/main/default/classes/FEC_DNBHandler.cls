@@ -15,6 +15,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String interactionEmail;
         @AuraEnabled public String interactionMaskedEmail;
         @AuraEnabled public String channel;
+        @AuraEnabled public String contractId;
     }
     
     public class CaseInfoNonExistingResponse{
@@ -25,6 +26,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String interactionEmail;
         @AuraEnabled public String interactionMaskedEmail;
         @AuraEnabled public String channel;
+        @AuraEnabled public String contractId;
     }
     
     public class DNBResponseItem {
@@ -41,7 +43,7 @@ public with sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoResponse getCaseData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c 
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c 
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -55,6 +57,7 @@ public with sharing class FEC_DNBHandler {
         response.interactionEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c;
         response.interactionMaskedEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Masked_Email__c;
         response.channel = caseRecord.FEC_Channel__c;
+        response.contractId = caseRecord.FEC_Account_Contract_Number_Text__c;
         return response;
         
     }
@@ -63,7 +66,7 @@ public with sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoNonExistingResponse getCaseNonExistingData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c 
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -76,6 +79,7 @@ public with sharing class FEC_DNBHandler {
         response.interactionEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c;
         response.interactionMaskedEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Masked_Email__c;
         response.channel = caseRecord.FEC_Channel__c;
+        response.contractId = caseRecord.FEC_Account_Contract_Number_Text__c;
         return response;
         
     }
@@ -168,7 +172,7 @@ public with sharing class FEC_DNBHandler {
         FEC_GetDNBCalloutService.DNBRequest req =
             new FEC_GetDNBCalloutService.DNBRequest();
         
-        req.phone = phoneNumber;
+        req.phone = normalizePhone(phoneNumber);
         req.nid   = nationalId;
         req.email = email; // allowed in your updated validation
         
@@ -213,12 +217,16 @@ public with sharing class FEC_DNBHandler {
                 throw new AuraHandledException('Payload is empty');
             }
             
-            List<FEC_PsDNBServiceCallout.DNBRequest> reqList = new List<FEC_PsDNBServiceCallout.DNBRequest>();
+            List<FEC_PsDNBServiceCallout.DNBRequest> reqList =
+                new List<FEC_PsDNBServiceCallout.DNBRequest>();
             
             for (Object obj : payload) {
-                Map<String, Object> item = (Map<String, Object>) obj;
                 
-                FEC_PsDNBServiceCallout.DNBRequest req = new FEC_PsDNBServiceCallout.DNBRequest();
+                Map<Object, Object> item =
+                    (Map<Object, Object>) obj;
+                
+                FEC_PsDNBServiceCallout.DNBRequest req =
+                    new FEC_PsDNBServiceCallout.DNBRequest();
                 
                 req.reason = (String) item.get('reason');
                 req.full_name = (String) item.get('full_name');
@@ -226,18 +234,16 @@ public with sharing class FEC_DNBHandler {
                 req.do_not_bother = (Boolean) item.get('do_not_bother');
                 req.type = (String) item.get('type');
                 req.type_value = (String) item.get('type_value');
-                
+                req.contract_id = (String) item.get('contract_id');
                 reqList.add(req);
             }
             
-            // 🔥 CALL SERVICE
-            FEC_PsDNBServiceCallout.DNBResult result =
-                FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
-            
-            return result;
+            return FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
             
         } catch (Exception e) {
-            throw new AuraHandledException('Create DNB failed: ' + e.getMessage());
+            throw new AuraHandledException(
+                'Create DNB failed: ' + e.getMessage()
+                );
         }
     }
     
@@ -406,4 +412,25 @@ public with sharing class FEC_DNBHandler {
         
     }
     
+    
+    private static String normalizePhone(String phone) {
+        
+        if (String.isBlank(phone)) {
+            return null;
+        }
+        
+        /*
+         * Remove all non-digit chars
+         */
+        String cleaned = phone.replaceAll('[^0-9]', '');
+        
+        /*
+         * 0xxxxxxxxx -> 84xxxxxxxxx
+         */
+        if (cleaned.startsWith('0')) {
+            cleaned = '84' + cleaned.substring(1);
+        }
+        
+        return cleaned;
+    }
 }
