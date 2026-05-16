@@ -53,6 +53,7 @@
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_NocRemovePhoneInheritanceHandler</members>
 		<members>FEC_NocRemovePhoneInheritanceHandlerTest</members>
+		<members>FEC_PaymentHistoryController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -101,6 +102,7 @@
         <members>fec_CaseExecuteVisibility</members>
         <members>fec_RemovePhoneForm</members>
         <members>fec_HoldCaseConfiguration</members>
+        <members>fec_PaymentHistoryAcount</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
