@@ -1080,6 +1080,12 @@
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+		<members>FEC_Batch_FileExcelXlsxOnly</members>
+		<members>FEC_Batch_FileMaxSize150MB</members>
+		<members>FEC_Batch_Msg_CannotReadExcelContent</members>
+		<members>FEC_Batch_Msg_InvalidImportData</members>
+		<members>FEC_Batch_RequestTimeout</members>
+		<members>FEC_Batch_TemplateNoAttachment</members>
         <name>CustomLabel</name>
     </types>
 	<types>

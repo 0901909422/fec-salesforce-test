@@ -16997,4 +16997,46 @@
         <shortDescription>FEC BilledTx Col TxnCode</shortDescription>
         <value>Mã giao dịch</value>
     </labels>
+    <labels>
+        <fullName>FEC_Batch_FileExcelXlsxOnly</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileExcelXlsxOnly</shortDescription>
+        <value>Chỉ cho phép tải lên file Excel (.xlsx).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_FileMaxSize150MB</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileMaxSize150MB</shortDescription>
+        <value>Dung lượng file tối đa là 150MB.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_CannotReadExcelContent</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg CannotReadExcelContent</shortDescription>
+        <value>Không đọc được nội dung file Excel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_InvalidImportData</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg InvalidImportData</shortDescription>
+        <value>Dữ liệu file import không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_RequestTimeout</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch RequestTimeout</shortDescription>
+        <value>Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_TemplateNoAttachment</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch TemplateNoAttachment</shortDescription>
+        <value>Mẫu đã chọn chưa có file đính kèm để tải.</value>
+    </labels>
 </CustomLabels>
