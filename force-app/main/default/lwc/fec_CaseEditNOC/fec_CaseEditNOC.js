@@ -153,8 +153,8 @@ export default class Fec_CaseEditNOC extends LightningElement {
   get isEdit() {
     
     const defaultEdit = (this.modeEditCase || this.interactionViewMode === VIEW_MODE_HANDLING) ? true : false;
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-    return defaultEdit && !this.isSubmited && !this.isNocLockedAfterFastCashBlock;
+    // KH-1366: giữ combo + disable (renderedCallback), không chuyển output-field Case (tránh mất Category/Sub khi chưa save DB)
+    return defaultEdit && !this.isSubmited;
   }
 
   get natureOfCaseLabel() {
