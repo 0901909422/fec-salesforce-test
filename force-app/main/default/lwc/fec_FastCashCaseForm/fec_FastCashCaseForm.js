@@ -401,7 +401,8 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get amountFieldsDisabled() {
-        return this.isReadOnly || this.blockSucceeded || this.nocLockedAfterBlockModal;
+        // KH-1366: nocLockedAfterBlockModal chỉ khóa NOC (fec_CaseEditNOC), không khóa nhập Requested Amount
+        return this.isReadOnly || this.blockSucceeded || this.finalBlockFailure;
     }
 
     get showNoti12() {
