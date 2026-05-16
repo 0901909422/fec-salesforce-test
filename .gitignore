@@ -60,3 +60,9 @@ README.md
 .github/prompts/MainPrompt.prompt.md
 # ApexPMD cache
 .pmdCache
+
+# IDE files
+.idea/
+
+# Local scripts
+scripts/
