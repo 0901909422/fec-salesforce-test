@@ -145,7 +145,7 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                 }
             }
 
-            if (String.isNotBlank(r.interactionEmail) && !Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', r.interactionEmail)) {
+            if (String.isNotBlank(r.interactionEmail) && !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, r.interactionEmail)) {
                 errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
@@ -383,7 +383,10 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                     rr.status = 'Failed';
                     rr.recordId = '';
                     rr.errors =
-                        'Interaction đã tạo nhưng Case Customer không tạo được: ' + formatSaveResultErrors(srCust[k]);
+                        String.format(
+                            System.Label.FEC_Batch_Import_Welcome_Customer_Case_Failed,
+                            new List<String>{ formatSaveResultErrors(srCust[k]) }
+                        );
                 }
             }
         }
@@ -460,7 +463,10 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                 } else {
                     rr.status = 'Failed';
                     rr.recordId = '';
-                    rr.errors = 'Interaction đã tạo nhưng Case Customer không tạo được: ' + formatSaveResultErrors(srCust[k]);
+                    rr.errors = String.format(
+                        System.Label.FEC_Batch_Import_Welcome_Customer_Case_Failed,
+                        new List<String>{ formatSaveResultErrors(srCust[k]) }
+                    );
                 }
             }
         }

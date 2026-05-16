@@ -236,7 +236,7 @@ public with sharing class FEC_BatchCaseCreationController {
 
         Schema.SObjectType batchType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
         if (batchType == null) {
-            out.message = OBJECT_API_NAME + ' is not available in this org.';
+            out.message = String.format(System.Label.FEC_Batch_Import_Object_Not_Available, new List<String>{ OBJECT_API_NAME });
             upsertFailedBatch(fileName, templateName, out.message);
             return out;
         }
@@ -508,7 +508,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 }
             }
 
-            if (String.isNotBlank(r.interactionEmail) && !Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', r.interactionEmail)) {
+            if (String.isNotBlank(r.interactionEmail) && !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, r.interactionEmail)) {
                 errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
@@ -746,7 +746,10 @@ public with sharing class FEC_BatchCaseCreationController {
                     rr.status = 'Failed';
                     rr.recordId = '';
                     rr.errors =
-                        'Interaction đã tạo nhưng Case Customer không tạo được: ' + formatSaveResultErrors(srCust[k]);
+                        String.format(
+                            System.Label.FEC_Batch_Import_Welcome_Customer_Case_Failed,
+                            new List<String>{ formatSaveResultErrors(srCust[k]) }
+                        );
                 }
             }
         }
@@ -823,7 +826,10 @@ public with sharing class FEC_BatchCaseCreationController {
                 } else {
                     rr.status = 'Failed';
                     rr.recordId = '';
-                    rr.errors = 'Interaction đã tạo nhưng Case Customer không tạo được: ' + formatSaveResultErrors(srCust[k]);
+                    rr.errors = String.format(
+                        System.Label.FEC_Batch_Import_Welcome_Customer_Case_Failed,
+                        new List<String>{ formatSaveResultErrors(srCust[k]) }
+                    );
                 }
             }
         }

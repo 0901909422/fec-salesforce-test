@@ -247,7 +247,7 @@ public with sharing class FEC_BatchDataCreationController {
 
         Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(OBJECT_API_NAME);
         if (sObjType == null) {
-            out.message = OBJECT_API_NAME + ' is not available in this org.';
+            out.message = String.format(System.Label.FEC_Batch_Import_Object_Not_Available, new List<String>{ OBJECT_API_NAME });
             upsertSystemFailureBatch(fileName, templateName, out.message);
             return out;
         }
@@ -559,22 +559,22 @@ public with sharing class FEC_BatchDataCreationController {
             List<String> errs = new List<String>();
 
             if (String.isBlank(rr.serviceResource)) {
-                errs.add('Thiếu giá trị Service Resource.');
+                errs.add(System.Label.FEC_Batch_Import_Data_Missing_Service_Resource);
             }
             if (String.isBlank(rr.startDate)) {
-                errs.add('Thiếu giá trị Start Date.');
+                errs.add(System.Label.FEC_Batch_Import_Data_Missing_Start_Date);
             }
             if (String.isBlank(rr.endDate)) {
-                errs.add('Thiếu giá trị End Date.');
+                errs.add(System.Label.FEC_Batch_Import_Data_Missing_End_Date);
             }
             if (String.isNotBlank(rr.note) && rr.note.length() > 255) {
-                errs.add('Note vượt quá số ký tự cho phép (255 ký tự).');
+                errs.add(System.Label.FEC_Batch_Import_Data_Note_Too_Long);
             }
 
             Boolean isEmailFormat = String.isNotBlank(rr.serviceResource)
-                && Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', rr.serviceResource);
+                && Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, rr.serviceResource);
             if (String.isNotBlank(rr.serviceResource) && !isEmailFormat) {
-                errs.add('Service Resource không đúng định dạng (thiếu @ hoặc .).');
+                errs.add(System.Label.FEC_Batch_Import_Data_Invalid_Service_Resource_Format);
             }
 
             Id srId = null;
@@ -584,7 +584,7 @@ public with sharing class FEC_BatchDataCreationController {
                     srId = serviceResourceByKey.get(rr.serviceResource);
                 }
                 if (srId == null) {
-                    errs.add('Service Resource không tồn tại.');
+                    errs.add(System.Label.FEC_Batch_Import_Data_Service_Resource_Not_Found);
                 }
             }
 
@@ -594,33 +594,33 @@ public with sharing class FEC_BatchDataCreationController {
                 try {
                     startDt = parseDateTimeStrict(rr.startDate, rowNumber, 'Start Date');
                 } catch (Exception e) {
-                    errs.add('Start Date không đúng định dạng.');
+                    errs.add(System.Label.FEC_Batch_Import_Data_Invalid_Start_Date_Format);
                 }
             }
             if (String.isNotBlank(rr.endDate)) {
                 try {
                     endDt = parseDateTimeStrict(rr.endDate, rowNumber, 'End Date');
                 } catch (Exception e) {
-                    errs.add('End Date không đúng định dạng.');
+                    errs.add(System.Label.FEC_Batch_Import_Data_Invalid_End_Date_Format);
                 }
             }
 
             if (startDt != null && endDt != null && endDt < startDt) {
-                errs.add('End Date nhỏ hơn Start Date.');
+                errs.add(System.Label.FEC_Batch_Import_Data_End_Before_Start);
             }
             Datetime nowGmt = System.now();
             if (startDt != null && startDt < nowGmt) {
-                errs.add('Start Date là thời điểm trong quá khứ.');
+                errs.add(System.Label.FEC_Batch_Import_Data_Start_In_Past);
             }
             if (endDt != null && endDt < nowGmt) {
-                errs.add('End Date là thời điểm trong quá khứ.');
+                errs.add(System.Label.FEC_Batch_Import_Data_End_In_Past);
             }
             if (srId != null && startDt != null && endDt != null) {
                 String uniqueKey = String.valueOf(srId) + '|' + String.valueOf(startDt.getTime()) + '|' + String.valueOf(endDt.getTime());
                 if (dbExistingKeys.contains(uniqueKey)) {
-                    errs.add('Service Resource đã có Absence trùng giá trị trong hệ thống.');
+                    errs.add(System.Label.FEC_Batch_Import_Data_Absence_Duplicate_In_System);
                 } else if (uniqueKeys.contains(uniqueKey)) {
-                    errs.add('Trùng giá trị Service Resource và Start Date và End Date.');
+                    errs.add(System.Label.FEC_Batch_Import_Data_Absence_Duplicate_In_File);
                 } else {
                     uniqueKeys.add(uniqueKey);
                 }
@@ -738,9 +738,12 @@ public with sharing class FEC_BatchDataCreationController {
             );
         }
         // Spec: yyyy-mm-ddThh:mm:ss.msmmsms+0700
-        if (!Pattern.matches('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{4}$', raw)) {
+        if (!Pattern.matches(FEC_ConstantCommon.PATTERN_BATCH_DATETIME_OFFSET, raw)) {
             throw new AuraHandledException(
-                'Dòng ' + rowNumber + ': ' + label + ' không đúng định dạng yyyy-mm-ddThh:mm:ss.msmmsms+0700.'
+                String.format(
+                    System.Label.FEC_Batch_Import_Invalid_Datetime_Format,
+                    new List<String>{ String.valueOf(rowNumber), label }
+                )
             );
         }
         try {
@@ -759,7 +762,10 @@ public with sharing class FEC_BatchDataCreationController {
             return localDt.addMinutes(-offsetMinutes);
         } catch (Exception e) {
             throw new AuraHandledException(
-                'Dòng ' + rowNumber + ': ' + label + ' không đúng định dạng yyyy-mm-ddThh:mm:ss.msmmsms+0700.'
+                String.format(
+                    System.Label.FEC_Batch_Import_Invalid_Datetime_Format,
+                    new List<String>{ String.valueOf(rowNumber), label }
+                )
             );
         }
     }
@@ -772,7 +778,7 @@ public with sharing class FEC_BatchDataCreationController {
         if (len != 15 && len != 18) {
             return false;
         }
-        return Pattern.matches('[a-zA-Z0-9]+', value);
+        return Pattern.matches(FEC_ConstantCommon.PATTERN_ALPHANUMERIC, value);
     }
 
     /** Ghi log khi không có file đính kèm / không parse được — trạng thái Processed (đã tiếp nhận yêu cầu). */
