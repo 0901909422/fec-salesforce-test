@@ -263,18 +263,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                 }
             }
 
-            Datetime assignmentSubmitTs = System.now();
-            List<FEC_Assignment__c> submitStamp = new List<FEC_Assignment__c>();
-            for (FEC_Assignment__c a : assignments) {
-                submitStamp.add(new FEC_Assignment__c(
-                    Id = a.Id,
-                    FEC_Submitted_On__c = assignmentSubmitTs
-                ));
-            }
-            if (!submitStamp.isEmpty()) {
-                update submitStamp;
-            }
-
             List<FEC_Case_Remarks__c> remarksToInsert = new List<FEC_Case_Remarks__c>();
             for (FEC_Assignment__c a : assignments) {
                 remarksToInsert.add(new FEC_Case_Remarks__c(
@@ -422,18 +410,6 @@ public without sharing class FEC_CofGsrAssignmentService {
                 } finally {
                     FEC_CaseTriggerHandler.isSystemUpdate = false;
                 }
-            }
-
-            Datetime manualSubmitTs = System.now();
-            List<FEC_Assignment__c> manualSubmitStamp = new List<FEC_Assignment__c>();
-            for (FEC_Assignment__c a : assignments) {
-                manualSubmitStamp.add(new FEC_Assignment__c(
-                    Id = a.Id,
-                    FEC_Submitted_On__c = manualSubmitTs
-                ));
-            }
-            if (!manualSubmitStamp.isEmpty()) {
-                update manualSubmitStamp;
             }
 
             List<FEC_Case_Remarks__c> remarks = new List<FEC_Case_Remarks__c>();
