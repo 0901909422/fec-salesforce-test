@@ -72,28 +72,55 @@ public with sharing class Fec_HoldCaseConfigurationController {
 
         if(String.isBlank(payload)) {
             throw new AuraHandledException(
-                String.format(System.Label.FEC_MSG_Param_Required,
-                new List<String>{'Payload'}));
+                String.format(
+                    System.Label.FEC_MSG_Param_Required,
+                    new List<String>{'Payload'}
+                )
+            );
         }
 
         Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(payload);
-        FEC_Hold_Case_Config__c record = new FEC_Hold_Case_Config__c();
+        Id recordId = (Id) data.get('id');
+        FEC_Hold_Case_Config__c record;
+
+        /* =========================================
+        * UPDATE
+        * ========================================= */
+        if(recordId != null){
+
+            record = [
+                SELECT Id
+                FROM FEC_Hold_Case_Config__c
+                WHERE Id = :recordId
+                LIMIT 1
+            ];
+
+        } else {
+
+            /* =========================================
+            * CREATE
+            * ========================================= */
+            record = new FEC_Hold_Case_Config__c();
+        }
 
         record.FEC_Nature_of_Cases__c = (String) data.get('natureOfCaseId');
-        record.Hold_Case_Type__c      = (String) data.get('holdCaseType');
-        record.FEC_Channel__c         = (String) data.get('channel');
-        record.FEC_Case_Stage__c      = (String) data.get('caseStage');
-        record.FEC_Current_Status__c  = (String) data.get('currentStatus');
-        record.FEC_Changed_Status__c  = (String) data.get('changedStatus');
-        record.FEC_NFU_Code__c        = (String) data.get('nfuCode');
-
+        record.Hold_Case_Type__c = (String) data.get('holdCaseType');
+        record.FEC_Channel__c = (String) data.get('channel');
+        record.FEC_Case_Stage__c = (String) data.get('caseStage');
+        record.FEC_Current_Status__c = (String) data.get('currentStatus');
+        record.FEC_Changed_Status__c = (String) data.get('changedStatus');
+        record.FEC_NFU_Code__c = (String) data.get('nfuCode');
         Object activeValue = data.get('active');
-        if(activeValue != null) {
+        if(activeValue != null){
             record.FEC_Active__c = (Boolean) activeValue;
         }
 
-        insert record;
+        upsert record;
 
+        /* =========================================
+        * INHERITANCE
+        * ========================================= */
+        FEC_HoldCaseInheritanceService.process(record.Id);
         return record.Id;
     }
 

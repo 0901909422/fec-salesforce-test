@@ -888,6 +888,12 @@ function applyFormat(value, format) {
     if (format === "FormatCurrency" || format === "CurrencyAmount") {
         return formatCurrency(value);
     }
+    if (format === "Uppercase") {
+        return String(value).toUpperCase();
+    }
+    if (format === "Lowercase") {
+        return String(value).toLowerCase();
+    }
     return value;
 }
 

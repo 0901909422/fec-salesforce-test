@@ -67,7 +67,7 @@
             &amp;nbsp;&amp;nbsp;&lt;b&gt;1.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Tổng số Tiền Vay&lt;/b&gt; (bao gồm phí bảo hiểm nếu có):
             &lt;pega:reference name=&quot;pyWorkPage.RepaymentScheduleData.TotalLoanAmount&quot;&gt;&lt;/pega:reference&gt; đồng
             &lt;br /&gt;
-            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Bằng chữ: &lt;pega:reference
+            &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Bằng chữ: &lt;pega:reference format=&quot;Uppercase&quot;
                 name=&quot;pyWorkPage.RepaymentScheduleData.LoanAmountInVNText&quot;&gt;&lt;/pega:reference&gt;
         &lt;/p&gt;
         &lt;p style=&quot;margin-left: 6px;&quot;&gt;&lt;b&gt;2.&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;b&gt;Lãi suất cho vay&lt;/b&gt;:&lt;/p&gt;
