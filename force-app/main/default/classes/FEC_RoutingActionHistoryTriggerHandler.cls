@@ -29,15 +29,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   private void onBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
-    FEC_RoutingHistAssignedOnSvc.applyBeforeInsert(newRecords);
-    FEC_RoutingHistAssignedOnSvc.applyTatBeforeSave(newRecords, null);
+    // TODO: Add before insert logic here
   }
 
   private void onBeforeUpdate(
     List<FEC_Routing_Action_History__c> newRecords,
     Map<Id, FEC_Routing_Action_History__c> oldMap
   ) {
-    FEC_RoutingHistAssignedOnSvc.applyTatBeforeSave(newRecords, oldMap);
+    // TODO: Add before update logic here
   }
 
   private void onAfterInsert(List<FEC_Routing_Action_History__c> newRecords) {

@@ -574,14 +574,23 @@ public without sharing class FEC_CofGsrAssignmentService {
                 : System.Label.FEC_CS_Support_Queue_Name;
             List<Group> targetQueues = [SELECT Id FROM Group WHERE Name = :targetQueueName AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
             if (!targetQueues.isEmpty()) {
+                // tungnm37 fix: query Case TRƯỚC khi đổi owner để lấy đúng originalOwner
+                Case caseBeforeUpdate = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
+                // tungnm37 fix: Stage 1 → Original = currentUser (người submit), không phải Case owner
+                Boolean isStage1ForHistory = stageName != null && Pattern.matches('(?i).*stage\\s*1.*', stageName);
+                String originalOwnerLabel = isStage1ForHistory
+                    ? emailLocalPart(currentUser.Email)
+                    : resolveRoutingHistoryOwnerLabel(caseBeforeUpdate.OwnerId, caseBeforeUpdate.Owner?.Name);
+                String originalOwnerIdStr = isStage1ForHistory
+                    ? String.valueOf(currentUser.Id)
+                    : (caseBeforeUpdate.OwnerId != null ? String.valueOf(caseBeforeUpdate.OwnerId) : null);
+
                 FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(caseId);
                 // tungnm37 fix: không set FEC_Assignment_Users__c cho CC/SP team để Service Case Owner vẫn hiển thị
                 Database.update(new Case(Id = caseId, OwnerId = targetQueues[0].Id), AccessLevel.SYSTEM_MODE);
 
                 // tungnm37: tạo Routing Action History cho luồng CC/SP
                 try {
-                    Case currentCase = [SELECT Id, OwnerId, Owner.Name, Owner.Type, FEC_Final_Status__c FROM Case WHERE Id = :caseId LIMIT 1];
-                    String originalOwnerLabel = resolveRoutingHistoryOwnerLabel(currentCase.OwnerId, currentCase.Owner?.Name);
                     String userRoleName = currentUser.UserRole?.Name;
                     Database.insert(new FEC_Routing_Action_History__c(
                         FEC_Routing_Action__c = FEC_CaseBusinessService.ROUTE_TO,
@@ -591,10 +600,10 @@ public without sharing class FEC_CofGsrAssignmentService {
                         FEC_User_Role__c = userRoleName,
                         FEC_Stage_Name__c = stageName,
                         FEC_Original_User_Queue__c = originalOwnerLabel,
-                        FEC_Original_User_Queue_ID__c = currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null,
+                        FEC_Original_User_Queue_ID__c = originalOwnerIdStr,
                         FEC_Updated_User_Queue__c = targetQueueName,
                         FEC_Updated_User_Queue_ID__c = String.valueOf(targetQueues[0].Id),
-                        FEC_Current_Status__c = currentCase.FEC_Final_Status__c,
+                        FEC_Current_Status__c = caseBeforeUpdate.FEC_Final_Status__c,
                         FEC_Submitted_On__c = DateTime.now()
                     ));
                     // tungnm37 fix: tạo Case Remark cho CC/SP team path
@@ -631,10 +640,43 @@ public without sharing class FEC_CofGsrAssignmentService {
             // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
             if (hasNonCcSpTeam(nocIds)) {
                 createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+                // tungnm37 15/05/2026: chuyển sang stage tiếp theo sau khi tạo assignment tự động
+                moveToNextStage(caseId, nocIds);
             }
         } else {
             createAssignmentsOnRoute(caseId, nocIds, currentUser, null, stageName, remarkContent);
+            // tungnm37 15/05/2026: chuyển sang stage tiếp theo sau khi tạo assignment tự động
+            moveToNextStage(caseId, nocIds);
         }
         return null;
+    }
+
+    // tungnm37 15/05/2026: chuyển Case sang stage tiếp theo
+    private static void moveToNextStage(String caseId, Set<Id> nocIds) {
+        try {
+            if (nocIds == null || nocIds.isEmpty()) return;
+            List<Case> cases = [SELECT Id, FEC_Current_Case_Stage__c FROM Case WHERE Id = :caseId LIMIT 1];
+            if (cases.isEmpty()) return;
+            Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
+
+            // tungnm37: lấy stage không phải default (stage 2+) theo NOC
+            List<FEC_Case_Stage__c> nextStages = [
+                SELECT Id FROM FEC_Case_Stage__c
+                WHERE FEC_Nature_of_Cases__c IN :nocIds
+                  AND FEC_Default_Stage__c = false
+                  AND FEC_Active__c = true
+                ORDER BY Name ASC LIMIT 1
+            ];
+            if (!nextStages.isEmpty() && nextStages[0].Id != currentStageId) {
+                FEC_CaseTriggerHandler.isSystemUpdate = true;
+                try {
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                } finally {
+                    FEC_CaseTriggerHandler.isSystemUpdate = false;
+                }
+            }
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG moveToNextStage error: ' + e.getMessage());
+        }
     }
 }

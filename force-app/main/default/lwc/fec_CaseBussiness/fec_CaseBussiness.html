@@ -2,15 +2,18 @@
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
-  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility}>
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1366-->
+  <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecfastcashnoclocked={handleFastCashNocLocked}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
       <lightning-accordion-section key={section.id} name={section.id} label={section.name}>
         <div class="error" if:true={section.hasError}>
           <p>{section.error.label}</p>
+          <template if:true={section.error.errorPanellst.length}>
           <p>{customLabel.reasonLabel}:</p>
           <template for:each={section.error.errorPanellst} for:item="item">
             <p key={item.id}>{item.value}</p>
+          </template>
           </template>
         </div>
 
@@ -101,11 +104,6 @@
                       </div>
                     </lightning-record-edit-form>
                   </template>
-                  <template if:true={row.sub.showRemovePhoneAfter}>
-                    <div class="slds-m-top_medium">
-                      <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
-                    </div>
-                  </template>
                 </template>
 
                 <template if:true={row.sub.isCollapsible}>
@@ -189,24 +187,32 @@
                           </div>
                         </lightning-record-edit-form>
                       </template>
-                      <template if:true={row.sub.showRemovePhoneAfter}>
-                        <div class="slds-m-top_medium" data-fec-lwc="fec_RemovePhoneForm">
-                          <c-fec_-remove-phone-form is-edit={isEdit} record-id={recordId}></c-fec_-remove-phone-form>
-                        </div>
-                      </template>
                     </lightning-accordion-section>
                   </lightning-accordion>
                 </template>
               </template>
 
               <template if:true={row.isLwc}>
-                <template if:true={row.showLwcSubHeading}>
-                  <p class="sub-section">{row.dynCmp.subSectionName}</p>
+                <template if:false={row.dynCmp.isCollapsible}>
+                  <template if:true={row.showLwcSubHeading}>
+                    <p class="sub-section">{row.dynCmp.subSectionName}</p>
+                  </template>
+                  <div data-fec-lwc={row.dynCmp.componentName}>
+                    <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
+                      is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                  </div>
                 </template>
-                <div data-fec-lwc={row.dynCmp.componentName}>
-                  <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
-                    is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
-                </div>
+
+                <template if:true={row.dynCmp.isCollapsible}>
+                  <lightning-accordion allow-multiple-sections-open>
+                    <lightning-accordion-section name={row.dynCmp.subSectionName} label={row.dynCmp.subSectionName}>
+                      <div data-fec-lwc={row.dynCmp.componentName}>
+                        <lwc:component lwc:is={row.dynCmp.ctor} record-id={recordId} sub-code-code={business.subCodeCode} sub-category-code={business.subCategoryCode}
+                          is-edit={row.dynCmp.isEdit} is-hidden-lwc={isHiddenLwc}></lwc:component>
+                      </div>
+                    </lightning-accordion-section>
+                  </lightning-accordion>
+                </template>
               </template>
             </div>
           </template>
@@ -331,4 +337,5 @@
       <lightning-button variant="brand" label="Có" onclick={handleRun} class="slds-m-left_x-small"></lightning-button>
     </div>
   </c-fec_-modal>
+  <c-fec-pdf-generator></c-fec-pdf-generator>
 </template>
