@@ -2,6 +2,10 @@
  * Shared helpers for batch import controllers (Case / Data creation).
  */
 public with sharing class FEC_BatchImportCommon {
+    public static Id getCustomerCaseRecordTypeId() {
+        return FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME);
+    }
+
     public static String removeFileExtension(String fileName) {
         if (String.isBlank(fileName)) {
             return fileName;

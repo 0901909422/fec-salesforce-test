@@ -1,18 +1,6 @@
 ﻿public with sharing class FEC_BatchCaseCreationService {
-    private static final String CASE_RECORD_TYPE_DEVELOPER_NAME = 'Customer_Case';
-    private static final List<String> CUSTOMER_CASE_STATUS_VALUES = new List<String>{
-        'Open',
-        'Pending',
-        'Resolved-AutoCancelled',
-        'Resolved-Cancelled',
-        'Resolved-CannotContactCustomer',
-        'Resolved-Completed',
-        'Resolved-Rejected'
-    };
     private static final String WELCOME_CALL_TEMPLATE_TOKEN = 'welcome call';
     private static final String WELCOME_CALL_TEMPLATE_TOKEN_COMPACT = 'welcomecall';
-    private static final String WELCOME_CALL_CHANNEL_VALUE = 'Outbound';
-    private static final String WELCOME_CALL_SUB_CHANNEL_VALUE = 'Outbound Call';
 
     private class ParsedCaseRow {
         String layout;
@@ -87,37 +75,37 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
 
             Boolean extended = 'extended'.equalsIgnoreCase(r.layout);
             if (!extended && !'simple'.equalsIgnoreCase(r.layout)) {
-                errs.add('layout không hợp lệ.');
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Layout);
             }
 
             if (String.isBlank(r.contractNumber)) {
-                errs.add('Contract Number là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Contract_Number);
             }
             if (String.isBlank(r.interactionPhone)) {
-                errs.add('Interaction Phone là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
             }
             if (String.isBlank(r.productType)) {
-                errs.add('Product Type là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Product_Type);
             }
             if (String.isBlank(r.category)) {
-                errs.add('Category là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Category);
             }
             if (String.isBlank(r.subCategory)) {
-                errs.add('Sub Category là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Category);
             }
             if (String.isBlank(r.subCode)) {
-                errs.add('Sub Code là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
             }
             if (!welcome && String.isBlank(r.caseStatus)) {
-                errs.add('Case Status là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
             }
 
             if (extended) {
                 if (String.isBlank(r.interactionChannel)) {
-                    errs.add('Interaction Channel là bắt buộc.');
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
                 }
                 if (String.isBlank(r.interactionSubChannel)) {
-                    errs.add('Interaction Sub Channel là bắt buộc.');
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Sub_Channel);
                 }
             }
 
@@ -127,22 +115,22 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
             Id subCodeId = lookupFromMap(r.subCode, maps.subCodeMap);
 
             if (String.isNotBlank(r.productType) && productId == null) {
-                errs.add('Không tìm thấy Product Type.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Product_Type_Not_Found);
             }
             if (String.isNotBlank(r.category) && categoryId == null) {
-                errs.add('Không tìm thấy Category.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Category_Not_Found);
             }
             if (String.isNotBlank(r.subCategory) && subCategoryId == null) {
-                errs.add('Không tìm thấy Sub Category.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Sub_Category_Not_Found);
             }
             if (String.isNotBlank(r.subCode) && subCodeId == null) {
-                errs.add('Không tìm thấy Sub Code.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Sub_Code_Not_Found);
             }
 
             if (!welcome) {
                 String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
                 if (String.isBlank(statusApi)) {
-                    errs.add('Case Status không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
                 }
             }
 
@@ -150,15 +138,15 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
                 String channelApi = matchPicklist(channelDfr, r.interactionChannel);
                 String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
                 if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
-                    errs.add('Interaction Channel không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
                 }
                 if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
-                    errs.add('Interaction Sub Channel không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
                 }
             }
 
             if (String.isNotBlank(r.interactionEmail) && !Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', r.interactionEmail)) {
-                errs.add('Interaction Email không đúng định dạng.');
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
@@ -170,9 +158,9 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
     }
 
     private static List<Case> buildCasesFromResults(List<ParsedCaseRow> parsed) {
-        Id rtId = getCustomerCaseRecordTypeId();
+        Id rtId = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (rtId == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -301,13 +289,13 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
     private static void applyWelcomeInteractionDefaults(Case interactionCase) {
         // Welcome Call chỉ ép theo custom status field theo yêu cầu nghiệp vụ.
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, interactionCase, new List<String>{ 'FEC_Interaction_Status__c' }, 'Closed');
+        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, interactionCase, new List<String>{ 'FEC_Interaction_Status__c' }, FEC_ConstantCommon.INTERACTION_STATUS_CLOSED);
     }
 
     private static void applyWelcomeCustomerDefaults(Case customerCase) {
         // Welcome Call chỉ ép theo custom status field theo yêu cầu nghiệp vụ.
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, customerCase, new List<String>{ 'FEC_Case_Status__c' }, 'Resolved-Completed');
+        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, customerCase, new List<String>{ 'FEC_Case_Status__c' }, FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED);
     }
 
     private static void applyWelcomeChannelDefaults(
@@ -315,20 +303,20 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         Schema.DescribeFieldResult channelDfr,
         Schema.DescribeFieldResult subChannelDfr
     ) {
-        String channelApi = matchPicklist(channelDfr, WELCOME_CALL_CHANNEL_VALUE);
-        String subChannelApi = matchPicklist(subChannelDfr, WELCOME_CALL_SUB_CHANNEL_VALUE);
-        caseToFill.FEC_Channel__c = String.isNotBlank(channelApi) ? channelApi : WELCOME_CALL_CHANNEL_VALUE;
-        caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : WELCOME_CALL_SUB_CHANNEL_VALUE;
+        String channelApi = matchPicklist(channelDfr, FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME);
+        String subChannelApi = matchPicklist(subChannelDfr, FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME);
+        caseToFill.FEC_Channel__c = String.isNotBlank(channelApi) ? channelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+        caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
     }
 
     private static void insertWelcomeCallCases(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
-        Id custRt = getCustomerCaseRecordTypeId();
+        Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Interaction.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Interaction_Not_Found);
         }
         if (custRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -403,12 +391,12 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
 
     private static void insertStandardCasesWithInteraction(List<ParsedCaseRow> parsed, List<FEC_BatchCaseCreationController.CaseRowResult> rowResults) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
-        Id custRt = getCustomerCaseRecordTypeId();
+        Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Interaction.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Interaction_Not_Found);
         }
         if (custRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -677,22 +665,12 @@ private static List<ParsedCaseRow> parseInputRows(List<Object> inputRows) {
         if (String.isNotBlank(direct)) {
             return direct;
         }
-        for (String allowed : CUSTOMER_CASE_STATUS_VALUES) {
+        for (String allowed : FEC_ConstantCommon.CUSTOMER_CASE_IMPORT_STATUS_VALUES) {
             if (t.equalsIgnoreCase(allowed)) {
                 return allowed;
             }
         }
         return null;
-    }
-
-    private static Id getCustomerCaseRecordTypeId() {
-        List<RecordType> rts = [
-            SELECT Id
-            FROM RecordType
-            WHERE SObjectType = 'Case' AND DeveloperName = :CASE_RECORD_TYPE_DEVELOPER_NAME
-            LIMIT 1
-        ];
-        return rts.isEmpty() ? null : rts[0].Id;
     }
 
 }

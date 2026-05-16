@@ -1,25 +1,12 @@
 public with sharing class FEC_BatchCaseCreationController {
     private static final String OBJECT_API_NAME = 'FEC_Batch_Case_Creation__c';
-    private static final String CASE_RECORD_TYPE_DEVELOPER_NAME = 'Customer_Case';
     private static final String TEMPLATE_OBJECT_API_NAME = 'FEC_Template_Import__c';
     private static final String TEMPLATE_APPLICABLE_VALUE = 'Batch Case Creation';
     private static final Integer MAX_ROWS = 200;
 
-    private static final List<String> CUSTOMER_CASE_STATUS_VALUES = new List<String>{
-        'Open',
-        'Pending',
-        'Resolved-AutoCancelled',
-        'Resolved-Cancelled',
-        'Resolved-CannotContactCustomer',
-        'Resolved-Completed',
-        'Resolved-Rejected'
-    };
-
     /** Template import có chứa chuỗi này → luồng Welcome Call (Interaction + Customer Case). */
     private static final String WELCOME_CALL_TEMPLATE_TOKEN = 'welcome call';
     private static final String WELCOME_CALL_TEMPLATE_TOKEN_COMPACT = 'welcomecall';
-    private static final String WELCOME_CALL_CHANNEL_VALUE = 'Outbound';
-    private static final String WELCOME_CALL_SUB_CHANNEL_VALUE = 'Outbound Call';
 
     public class TemplateOption {
         @AuraEnabled public String label;
@@ -127,7 +114,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 }
                 String latestVersionId = String.valueOf(link.ContentDocument.LatestPublishedVersionId);
                 if (String.isNotBlank(latestVersionId)) {
-                    option.downloadUrl = '/sfc/servlet.shepherd/version/download/' + latestVersionId;
+                    option.downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + latestVersionId;
                 }
             }
         }
@@ -142,26 +129,26 @@ public with sharing class FEC_BatchCaseCreationController {
         }
 
         Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
-        String fileField = pickField(fieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
-        String fileContentDocumentIdField = pickField(fieldMap, new List<String>{ 'FEC_File_Content_Document_Id__c' });
-        String uploadedOnField = pickField(fieldMap, new List<String>{ 'FEC_Uploaded_On__c', 'CreatedDate' });
-        String totalRecordsField = pickField(fieldMap, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' });
-        String totalSuccessField = pickField(fieldMap, new List<String>{ 'FEC_Total_Success_Records__c' });
-        String totalFailedField = pickField(fieldMap, new List<String>{ 'FEC_Total_Failed_Records__c' });
-        String statusField = pickField(fieldMap, new List<String>{ 'FEC_Status__c' });
-        String failureReasonField = pickField(fieldMap, new List<String>{ 'FEC_Failure_Reason__c' });
-        String resultField = pickField(fieldMap, new List<String>{ 'FEC_Result__c' });
+        String fileField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
+        String fileContentDocumentIdField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_File_Content_Document_Id__c' });
+        String uploadedOnField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Uploaded_On__c', 'CreatedDate' });
+        String totalRecordsField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' });
+        String totalSuccessField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Success_Records__c' });
+        String totalFailedField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Failed_Records__c' });
+        String statusField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Status__c' });
+        String failureReasonField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Failure_Reason__c' });
+        String resultField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Result__c' });
 
         List<String> selectParts = new List<String>{ 'Id', 'Name', 'CreatedDate', 'CreatedBy.Email' };
-        addIfNotBlank(selectParts, fileField);
-        addIfNotBlank(selectParts, fileContentDocumentIdField);
-        addIfNotBlank(selectParts, uploadedOnField);
-        addIfNotBlank(selectParts, totalRecordsField);
-        addIfNotBlank(selectParts, totalSuccessField);
-        addIfNotBlank(selectParts, totalFailedField);
-        addIfNotBlank(selectParts, statusField);
-        addIfNotBlank(selectParts, failureReasonField);
-        addIfNotBlank(selectParts, resultField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, fileField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, fileContentDocumentIdField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, uploadedOnField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalRecordsField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalSuccessField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalFailedField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, statusField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, failureReasonField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, resultField);
 
         String queryText =
             'SELECT ' + String.join(selectParts, ', ') +
@@ -191,10 +178,10 @@ public with sharing class FEC_BatchCaseCreationController {
                 }
                 if (title.toLowerCase().endsWith('_result')) {
                     if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                        resultUrlByBatchId.put(link.LinkedEntityId, '/sfc/servlet.shepherd/version/download/' + versionId);
+                        resultUrlByBatchId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId);
                     }
                 } else if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                    sourceUrlByBatchId.put(link.LinkedEntityId, '/sfc/servlet.shepherd/version/download/' + versionId);
+                    sourceUrlByBatchId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId);
                 }
             }
         }
@@ -202,29 +189,29 @@ public with sharing class FEC_BatchCaseCreationController {
         for (SObject row : rows) {
             FEC_BatchDataCreationController.BatchRow dto = new FEC_BatchDataCreationController.BatchRow();
             dto.id = (Id) row.get('Id');
-            dto.fileName = asString(getFieldValue(row, fileField));
+            dto.fileName = FEC_BatchImportCommon.asString(FEC_BatchImportCommon.getFieldValue(row, fileField));
             if (String.isBlank(dto.fileName)) {
-                dto.fileName = asString(row.get('Name'));
+                dto.fileName = FEC_BatchImportCommon.asString(row.get('Name'));
             }
             String sourceDocumentId = String.isBlank(fileContentDocumentIdField)
                 ? null
-                : asString(getFieldValue(row, fileContentDocumentIdField));
+                : FEC_BatchImportCommon.asString(FEC_BatchImportCommon.getFieldValue(row, fileContentDocumentIdField));
             dto.fileDownloadUrl = sourceUrlByBatchId.get(dto.id);
             if (String.isBlank(dto.fileDownloadUrl) && String.isNotBlank(sourceDocumentId)) {
-                dto.fileDownloadUrl = '/sfc/servlet.shepherd/document/download/' + sourceDocumentId;
+                dto.fileDownloadUrl = FEC_ConstantCommon.CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX + sourceDocumentId;
             }
-            dto.uploadedOn = asDatetime(getFieldValue(row, uploadedOnField));
+            dto.uploadedOn = FEC_BatchImportCommon.asDatetime(FEC_BatchImportCommon.getFieldValue(row, uploadedOnField));
             if (dto.uploadedOn == null) {
-                dto.uploadedOn = asDatetime(row.get('CreatedDate'));
+                dto.uploadedOn = FEC_BatchImportCommon.asDatetime(row.get('CreatedDate'));
             }
             SObject createdBy = row.getSObject('CreatedBy');
             dto.uploadedBy = createdBy == null ? null : (String) createdBy.get('Email');
-            dto.totalRecordsCount = asDecimal(getFieldValue(row, totalRecordsField));
-            dto.totalSuccessRecords = asDecimal(getFieldValue(row, totalSuccessField));
-            dto.totalFailedRecords = asDecimal(getFieldValue(row, totalFailedField));
-            dto.status = asString(getFieldValue(row, statusField));
-            dto.failureReason = asString(getFieldValue(row, failureReasonField));
-            dto.result = asString(getFieldValue(row, resultField));
+            dto.totalRecordsCount = FEC_BatchImportCommon.asDecimal(FEC_BatchImportCommon.getFieldValue(row, totalRecordsField));
+            dto.totalSuccessRecords = FEC_BatchImportCommon.asDecimal(FEC_BatchImportCommon.getFieldValue(row, totalSuccessField));
+            dto.totalFailedRecords = FEC_BatchImportCommon.asDecimal(FEC_BatchImportCommon.getFieldValue(row, totalFailedField));
+            dto.status = FEC_BatchImportCommon.asString(FEC_BatchImportCommon.getFieldValue(row, statusField));
+            dto.failureReason = FEC_BatchImportCommon.asString(FEC_BatchImportCommon.getFieldValue(row, failureReasonField));
+            dto.result = FEC_BatchImportCommon.asString(FEC_BatchImportCommon.getFieldValue(row, resultField));
             dto.resultDownloadUrl = resultUrlByBatchId.get(dto.id);
             output.add(dto);
         }
@@ -242,7 +229,7 @@ public with sharing class FEC_BatchCaseCreationController {
         out.success = false;
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
-            out.message = 'Please select a file before importing.';
+            out.message = System.Label.FEC_Batch_Import_Select_File;
             upsertFailedBatch(fileName, templateName, out.message);
             return out;
         }
@@ -259,13 +246,13 @@ public with sharing class FEC_BatchCaseCreationController {
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
-                out.message = 'Vui lòng đính kèm tệp dữ liệu';
+                out.message = System.Label.FEC_BCH_RequireFile;
                 upsertFailedBatch(fileName, templateName, out.message);
                 return out;
             }
 
             ContentVersion cv = new ContentVersion();
-            cv.Title = removeFileExtension(fileName);
+            cv.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
             cv.PathOnClient = '/' + fileName;
             cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
             insert cv;
@@ -278,21 +265,21 @@ public with sharing class FEC_BatchCaseCreationController {
             ];
 
             batchRow = batchType.newSObject();
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, '');
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_File_Content_Document_Id__c' }, String.valueOf(insertedCv.ContentDocumentId));
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, inputRows.size());
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, '');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_File_Content_Document_Id__c' }, String.valueOf(insertedCv.ContentDocumentId));
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, inputRows.size());
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             insert batchRow;
-            linkFileToBatch((Id) batchRow.get('Id'), insertedCv.ContentDocumentId);
+            FEC_BatchImportCommon.linkFileToBatch((Id) batchRow.get('Id'), insertedCv.ContentDocumentId);
 
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
             update batchRow;
 
             List<ParsedCaseRow> parsed = parseInputRows(inputRows);
@@ -366,21 +353,21 @@ public with sharing class FEC_BatchCaseCreationController {
                 }
             }
 
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
-            putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
-            putIfFieldExists(
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+            FEC_BatchImportCommon.putIfFieldExists(
                 batchFieldMap,
                 batchRow,
                 new List<String>{ 'FEC_Failure_Reason__c' },
-                failedCount > 0 ? 'Có ' + failedCount + ' dòng dữ liệu không hợp lệ.' : ''
+                failedCount > 0 ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) }) : ''
             );
             update batchRow;
 
             out.success = true;
-            out.message = 'Import request has been submitted.';
+            out.message = System.Label.FEC_Batch_Import_Submitted;
             out.batchRecordId = (Id) batchRow.get('Id');
             out.contentDocumentId = insertedCv.ContentDocumentId;
             out.status = 'Processed';
@@ -389,9 +376,9 @@ public with sharing class FEC_BatchCaseCreationController {
         } catch (Exception ex) {
             if (batchRow != null && batchRow.get('Id') != null) {
                 try {
-                    putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-                    putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                    putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, ex.getMessage());
+                    FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+                    FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+                    FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, ex.getMessage());
                     update batchRow;
                 } catch (Exception e) {
                     upsertFailedBatch(fileName, templateName, ex.getMessage());
@@ -419,18 +406,18 @@ public with sharing class FEC_BatchCaseCreationController {
         for (Object rowObj : inputRows) {
             Map<String, Object> m = (Map<String, Object>) rowObj;
             ParsedCaseRow r = new ParsedCaseRow();
-            r.layout = normalizeText(m.get('layout'));
-            r.contractNumber = normalizeText(m.get('contractNumber'));
-            r.interactionPhone = normalizeText(m.get('interactionPhone'));
-            r.productType = normalizeText(m.get('productType'));
-            r.category = normalizeText(m.get('category'));
-            r.subCategory = normalizeText(m.get('subCategory'));
-            r.subCode = normalizeText(m.get('subCode'));
-            r.caseStatus = normalizeText(m.get('caseStatus'));
-            r.caseRemarks = normalizeText(m.get('caseRemarks'));
-            r.interactionChannel = normalizeText(m.get('interactionChannel'));
-            r.interactionSubChannel = normalizeText(m.get('interactionSubChannel'));
-            r.interactionEmail = normalizeText(m.get('interactionEmail'));
+            r.layout = FEC_BatchImportCommon.normalizeText(m.get('layout'));
+            r.contractNumber = FEC_BatchImportCommon.normalizeText(m.get('contractNumber'));
+            r.interactionPhone = FEC_BatchImportCommon.normalizeText(m.get('interactionPhone'));
+            r.productType = FEC_BatchImportCommon.normalizeText(m.get('productType'));
+            r.category = FEC_BatchImportCommon.normalizeText(m.get('category'));
+            r.subCategory = FEC_BatchImportCommon.normalizeText(m.get('subCategory'));
+            r.subCode = FEC_BatchImportCommon.normalizeText(m.get('subCode'));
+            r.caseStatus = FEC_BatchImportCommon.normalizeText(m.get('caseStatus'));
+            r.caseRemarks = FEC_BatchImportCommon.normalizeText(m.get('caseRemarks'));
+            r.interactionChannel = FEC_BatchImportCommon.normalizeText(m.get('interactionChannel'));
+            r.interactionSubChannel = FEC_BatchImportCommon.normalizeText(m.get('interactionSubChannel'));
+            r.interactionEmail = FEC_BatchImportCommon.normalizeText(m.get('interactionEmail'));
             out.add(r);
         }
         return out;
@@ -451,37 +438,37 @@ public with sharing class FEC_BatchCaseCreationController {
 
             Boolean extended = 'extended'.equalsIgnoreCase(r.layout);
             if (!extended && !'simple'.equalsIgnoreCase(r.layout)) {
-                errs.add('layout không hợp lệ.');
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Layout);
             }
 
             if (String.isBlank(r.contractNumber)) {
-                errs.add('Contract Number là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Contract_Number);
             }
             if (String.isBlank(r.interactionPhone)) {
-                errs.add('Interaction Phone là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
             }
             if (String.isBlank(r.productType)) {
-                errs.add('Product Type là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Product_Type);
             }
             if (String.isBlank(r.category)) {
-                errs.add('Category là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Category);
             }
             if (String.isBlank(r.subCategory)) {
-                errs.add('Sub Category là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Category);
             }
             if (String.isBlank(r.subCode)) {
-                errs.add('Sub Code là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
             }
             if (!welcome && String.isBlank(r.caseStatus)) {
-                errs.add('Case Status là bắt buộc.');
+                errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
             }
 
             if (extended) {
                 if (String.isBlank(r.interactionChannel)) {
-                    errs.add('Interaction Channel là bắt buộc.');
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Channel);
                 }
                 if (String.isBlank(r.interactionSubChannel)) {
-                    errs.add('Interaction Sub Channel là bắt buộc.');
+                    errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Sub_Channel);
                 }
             }
 
@@ -491,22 +478,22 @@ public with sharing class FEC_BatchCaseCreationController {
             Id subCodeId = lookupFromMap(r.subCode, maps.subCodeMap);
 
             if (String.isNotBlank(r.productType) && productId == null) {
-                errs.add('Không tìm thấy Product Type.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Product_Type_Not_Found);
             }
             if (String.isNotBlank(r.category) && categoryId == null) {
-                errs.add('Không tìm thấy Category.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Category_Not_Found);
             }
             if (String.isNotBlank(r.subCategory) && subCategoryId == null) {
-                errs.add('Không tìm thấy Sub Category.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Sub_Category_Not_Found);
             }
             if (String.isNotBlank(r.subCode) && subCodeId == null) {
-                errs.add('Không tìm thấy Sub Code.');
+                errs.add(System.Label.FEC_Batch_Import_Lookup_Sub_Code_Not_Found);
             }
 
             if (!welcome) {
                 String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
                 if (String.isBlank(statusApi)) {
-                    errs.add('Case Status không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
                 }
             }
 
@@ -514,15 +501,15 @@ public with sharing class FEC_BatchCaseCreationController {
                 String channelApi = matchPicklist(channelDfr, r.interactionChannel);
                 String subChannelApi = matchPicklist(subChannelDfr, r.interactionSubChannel);
                 if (String.isNotBlank(r.interactionChannel) && channelApi == null) {
-                    errs.add('Interaction Channel không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Channel);
                 }
                 if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
-                    errs.add('Interaction Sub Channel không hợp lệ.');
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
                 }
             }
 
             if (String.isNotBlank(r.interactionEmail) && !Pattern.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$', r.interactionEmail)) {
-                errs.add('Interaction Email không đúng định dạng.');
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
@@ -534,9 +521,9 @@ public with sharing class FEC_BatchCaseCreationController {
     }
 
     private static List<Case> buildCasesFromResults(List<ParsedCaseRow> parsed) {
-        Id rtId = getCustomerCaseRecordTypeId();
+        Id rtId = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (rtId == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -665,13 +652,13 @@ public with sharing class FEC_BatchCaseCreationController {
     private static void applyWelcomeInteractionDefaults(Case interactionCase) {
         // Welcome Call chỉ ép theo custom status field theo yêu cầu nghiệp vụ.
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        putIfFieldExists(caseFieldMap, interactionCase, new List<String>{ 'FEC_Interaction_Status__c' }, 'Closed');
+        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, interactionCase, new List<String>{ 'FEC_Interaction_Status__c' }, FEC_ConstantCommon.INTERACTION_STATUS_CLOSED);
     }
 
     private static void applyWelcomeCustomerDefaults(Case customerCase) {
         // Welcome Call chỉ ép theo custom status field theo yêu cầu nghiệp vụ.
         Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
-        putIfFieldExists(caseFieldMap, customerCase, new List<String>{ 'FEC_Case_Status__c' }, 'Resolved-Completed');
+        FEC_BatchImportCommon.putIfFieldExists(caseFieldMap, customerCase, new List<String>{ 'FEC_Case_Status__c' }, FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED);
     }
 
     private static void applyWelcomeChannelDefaults(
@@ -679,20 +666,20 @@ public with sharing class FEC_BatchCaseCreationController {
         Schema.DescribeFieldResult channelDfr,
         Schema.DescribeFieldResult subChannelDfr
     ) {
-        String channelApi = matchPicklist(channelDfr, WELCOME_CALL_CHANNEL_VALUE);
-        String subChannelApi = matchPicklist(subChannelDfr, WELCOME_CALL_SUB_CHANNEL_VALUE);
-        caseToFill.FEC_Channel__c = String.isNotBlank(channelApi) ? channelApi : WELCOME_CALL_CHANNEL_VALUE;
-        caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : WELCOME_CALL_SUB_CHANNEL_VALUE;
+        String channelApi = matchPicklist(channelDfr, FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME);
+        String subChannelApi = matchPicklist(subChannelDfr, FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME);
+        caseToFill.FEC_Channel__c = String.isNotBlank(channelApi) ? channelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_NAME;
+        caseToFill.FEC_Interaction_Subchannel__c = String.isNotBlank(subChannelApi) ? subChannelApi : FEC_ConstantCommon.CHANNEL_OUTBOUND_SUBCHANNEL_NAME;
     }
 
     private static void insertWelcomeCallCases(List<ParsedCaseRow> parsed, List<CaseRowResult> rowResults) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
-        Id custRt = getCustomerCaseRecordTypeId();
+        Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Interaction.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Interaction_Not_Found);
         }
         if (custRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -767,12 +754,12 @@ public with sharing class FEC_BatchCaseCreationController {
 
     private static void insertStandardCasesWithInteraction(List<ParsedCaseRow> parsed, List<CaseRowResult> rowResults) {
         Id intRt = FEC_CommonUltils.getRecordTypeIdByDev(FEC_ConstantCommon.CASE_INTERACTION_RECORD_TYPE_DEV_NAME);
-        Id custRt = getCustomerCaseRecordTypeId();
+        Id custRt = FEC_BatchImportCommon.getCustomerCaseRecordTypeId();
         if (intRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Interaction.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Interaction_Not_Found);
         }
         if (custRt == null) {
-            throw new AuraHandledException('Không tìm thấy Record Type Customer Case.');
+            throw new AuraHandledException(System.Label.FEC_Batch_Import_RT_Customer_Case_Not_Found);
         }
 
         LookupMaps maps = loadLookupMaps(parsed);
@@ -1041,37 +1028,12 @@ public with sharing class FEC_BatchCaseCreationController {
         if (String.isNotBlank(direct)) {
             return direct;
         }
-        for (String allowed : CUSTOMER_CASE_STATUS_VALUES) {
+        for (String allowed : FEC_ConstantCommon.CUSTOMER_CASE_IMPORT_STATUS_VALUES) {
             if (t.equalsIgnoreCase(allowed)) {
                 return allowed;
             }
         }
         return null;
-    }
-
-    private static Id getCustomerCaseRecordTypeId() {
-        List<RecordType> rts = [
-            SELECT Id
-            FROM RecordType
-            WHERE SObjectType = 'Case' AND DeveloperName = :CASE_RECORD_TYPE_DEVELOPER_NAME
-            LIMIT 1
-        ];
-        return rts.isEmpty() ? null : rts[0].Id;
-    }
-
-    private static void linkFileToBatch(Id batchId, Id contentDocumentId) {
-        if (batchId == null || contentDocumentId == null) {
-            return;
-        }
-        try {
-            ContentDocumentLink link = new ContentDocumentLink();
-            link.LinkedEntityId = batchId;
-            link.ContentDocumentId = contentDocumentId;
-            link.ShareType = 'V';
-            link.Visibility = 'AllUsers';
-            insert link;
-        } catch (DmlException ex) {
-        }
     }
 
     private static void upsertFailedBatch(String fileName, String templateName, String reason) {
@@ -1082,39 +1044,16 @@ public with sharing class FEC_BatchCaseCreationController {
             }
             Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
             SObject failedRow = sObjType.newSObject();
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
             insert failedRow;
         } catch (Exception ex) {
         }
-    }
-
-    private static void addIfNotBlank(List<String> selectParts, String fieldApiName) {
-        if (String.isNotBlank(fieldApiName) && !selectParts.contains(fieldApiName)) {
-            selectParts.add(fieldApiName);
-        }
-    }
-
-    private static String pickField(Map<String, Schema.SObjectField> fieldMap, List<String> preferredNames) {
-        for (String name : preferredNames) {
-            if (fieldMap.containsKey(name)) {
-                return name;
-            }
-        }
-        return null;
-    }
-
-    private static String normalizeText(Object value) {
-        return value == null ? '' : String.valueOf(value).trim();
-    }
-
-    private static String asString(Object value) {
-        return value == null ? null : String.valueOf(value);
     }
 
     /**
@@ -1131,70 +1070,5 @@ public with sharing class FEC_BatchCaseCreationController {
             return m.group(1);
         }
         return s.replaceAll('<[^>]*>', '').trim();
-    }
-
-    private static Object getFieldValue(SObject row, String fieldApiName) {
-        if (row == null || String.isBlank(fieldApiName)) {
-            return null;
-        }
-        return row.get(fieldApiName);
-    }
-
-    private static Datetime asDatetime(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Datetime) {
-            return (Datetime) value;
-        }
-        return null;
-    }
-
-    private static Decimal asDecimal(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Decimal) {
-            return (Decimal) value;
-        }
-        if (value instanceof Integer) {
-            return Decimal.valueOf((Integer) value);
-        }
-        if (value instanceof Long) {
-            return Decimal.valueOf((Long) value);
-        }
-        return null;
-    }
-
-    private static void putIfFieldExists(
-        Map<String, Schema.SObjectField> fieldMap,
-        SObject recordToFill,
-        List<String> fieldNames,
-        Object value
-    ) {
-        for (String name : fieldNames) {
-            if (!fieldMap.containsKey(name)) {
-                continue;
-            }
-            Schema.DescribeFieldResult dfr = fieldMap.get(name).getDescribe();
-            if (!dfr.isCreateable()) {
-                continue;
-            }
-            if (dfr.isAutoNumber()) {
-                continue;
-            }
-            if (!dfr.isCalculated()) {
-                recordToFill.put(name, value);
-                return;
-            }
-        }
-    }
-
-    private static String removeFileExtension(String fileName) {
-        Integer idx = fileName == null ? -1 : fileName.lastIndexOf('.');
-        if (idx == null || idx <= 0) {
-            return fileName;
-        }
-        return fileName.substring(0, idx);
     }
 }

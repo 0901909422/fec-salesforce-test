@@ -81,7 +81,7 @@ public with sharing class FEC_BatchDataCreationController {
         List<SObject> rows = Database.query(queryText);
         Map<Id, TemplateOption> optionsByTemplateId = new Map<Id, TemplateOption>();
         for (SObject row : rows) {
-            String nameValue = asString(row.get('Name'));
+            String nameValue = FEC_BatchImportCommon.asString(row.get('Name'));
             if (String.isBlank(nameValue)) {
                 continue;
             }
@@ -108,7 +108,7 @@ public with sharing class FEC_BatchDataCreationController {
                 }
                 String latestVersionId = String.valueOf(link.ContentDocument.LatestPublishedVersionId);
                 if (String.isNotBlank(latestVersionId)) {
-                    option.downloadUrl = '/sfc/servlet.shepherd/version/download/' + latestVersionId;
+                    option.downloadUrl = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + latestVersionId;
                 }
             }
         }
@@ -123,26 +123,26 @@ public with sharing class FEC_BatchDataCreationController {
         }
 
         Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
-        String fileField = pickField(fieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
-        String fileContentDocumentIdField = pickField(fieldMap, new List<String>{ 'FEC_File_Content_Document_Id__c' });
-        String uploadedOnField = pickField(fieldMap, new List<String>{ 'FEC_Uploaded_On__c', 'CreatedDate' });
-        String totalRecordsField = pickField(fieldMap, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' });
-        String totalSuccessField = pickField(fieldMap, new List<String>{ 'FEC_Total_Success_Records__c' });
-        String totalFailedField = pickField(fieldMap, new List<String>{ 'FEC_Total_Failed_Records__c' });
-        String statusField = pickField(fieldMap, new List<String>{ 'FEC_Status__c' });
-        String failureReasonField = pickField(fieldMap, new List<String>{ 'FEC_Failure_Reason__c' });
-        String resultField = pickField(fieldMap, new List<String>{ 'FEC_Result__c' });
+        String fileField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_File_Name__c', 'Name' });
+        String fileContentDocumentIdField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_File_Content_Document_Id__c' });
+        String uploadedOnField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Uploaded_On__c', 'CreatedDate' });
+        String totalRecordsField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' });
+        String totalSuccessField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Success_Records__c' });
+        String totalFailedField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Total_Failed_Records__c' });
+        String statusField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Status__c' });
+        String failureReasonField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Failure_Reason__c' });
+        String resultField = FEC_BatchImportCommon.pickField(fieldMap, new List<String>{ 'FEC_Result__c' });
 
         List<String> selectParts = new List<String>{ 'Id', 'CreatedBy.Email' };
-        addIfNotBlank(selectParts, fileField);
-        addIfNotBlank(selectParts, fileContentDocumentIdField);
-        addIfNotBlank(selectParts, uploadedOnField);
-        addIfNotBlank(selectParts, totalRecordsField);
-        addIfNotBlank(selectParts, totalSuccessField);
-        addIfNotBlank(selectParts, totalFailedField);
-        addIfNotBlank(selectParts, statusField);
-        addIfNotBlank(selectParts, failureReasonField);
-        addIfNotBlank(selectParts, resultField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, fileField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, fileContentDocumentIdField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, uploadedOnField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalRecordsField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalSuccessField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, totalFailedField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, statusField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, failureReasonField);
+        FEC_BatchImportCommon.addIfNotBlank(selectParts, resultField);
 
         String queryText =
             'SELECT ' + String.join(selectParts, ', ') +
@@ -160,7 +160,7 @@ public with sharing class FEC_BatchDataCreationController {
             Id batchId = (Id) row.get('Id');
             batchIds.add(batchId);
             if (String.isNotBlank(fileContentDocumentIdField)) {
-                String docIdStr = asString(row.get(fileContentDocumentIdField));
+                String docIdStr = FEC_BatchImportCommon.asString(row.get(fileContentDocumentIdField));
                 if (String.isNotBlank(docIdStr)) {
                     try {
                         sourceDocIdByBatchId.put(batchId, (Id) docIdStr);
@@ -185,7 +185,7 @@ public with sharing class FEC_BatchDataCreationController {
                     continue;
                 }
                 Id sourceDocId = sourceDocIdByBatchId.get(link.LinkedEntityId);
-                String url = '/sfc/servlet.shepherd/version/download/' + versionId;
+                String url = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId;
                 if (sourceDocId != null) {
                     // Có FEC_File_Content_Document_Id__c → match đúng id mới là source.
                     if (link.ContentDocumentId == sourceDocId) {
@@ -209,45 +209,29 @@ public with sharing class FEC_BatchDataCreationController {
         for (SObject row : rows) {
             BatchRow dto = new BatchRow();
             dto.id = (Id) row.get('Id');
-            dto.fileName = asString(row.get(fileField));
+            dto.fileName = FEC_BatchImportCommon.asString(row.get(fileField));
             String sourceDocumentId = String.isBlank(fileContentDocumentIdField)
                 ? null
-                : asString(row.get(fileContentDocumentIdField));
+                : FEC_BatchImportCommon.asString(row.get(fileContentDocumentIdField));
             // Luôn ưu tiên ContentDocumentId đã lưu trên batch = file gốc import (ổn định hơn heuristic theo Title).
             if (String.isNotBlank(sourceDocumentId)) {
-                dto.fileDownloadUrl = '/sfc/servlet.shepherd/document/download/' + sourceDocumentId;
+                dto.fileDownloadUrl = FEC_ConstantCommon.CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX + sourceDocumentId;
             } else {
                 dto.fileDownloadUrl = sourceUrlByBatchId.get(dto.id);
             }
-            dto.uploadedOn = asDatetime(row.get(uploadedOnField));
+            dto.uploadedOn = FEC_BatchImportCommon.asDatetime(row.get(uploadedOnField));
             SObject createdBy = row.getSObject('CreatedBy');
             dto.uploadedBy = createdBy == null ? null : (String) createdBy.get('Email');
-            dto.totalRecordsCount = asDecimal(row.get(totalRecordsField));
-            dto.totalSuccessRecords = asDecimal(row.get(totalSuccessField));
-            dto.totalFailedRecords = asDecimal(row.get(totalFailedField));
-            dto.status = asString(row.get(statusField));
-            dto.failureReason = asString(row.get(failureReasonField));
-            dto.result = asString(row.get(resultField));
+            dto.totalRecordsCount = FEC_BatchImportCommon.asDecimal(row.get(totalRecordsField));
+            dto.totalSuccessRecords = FEC_BatchImportCommon.asDecimal(row.get(totalSuccessField));
+            dto.totalFailedRecords = FEC_BatchImportCommon.asDecimal(row.get(totalFailedField));
+            dto.status = FEC_BatchImportCommon.asString(row.get(statusField));
+            dto.failureReason = FEC_BatchImportCommon.asString(row.get(failureReasonField));
+            dto.result = FEC_BatchImportCommon.asString(row.get(resultField));
             dto.resultDownloadUrl = resultUrlByBatchId.get(dto.id);
             output.add(dto);
         }
         return output;
-    }
-
-    private static void linkFileToBatch(Id batchId, Id contentDocumentId) {
-        if (batchId == null || contentDocumentId == null) {
-            return;
-        }
-        try {
-            ContentDocumentLink link = new ContentDocumentLink();
-            link.LinkedEntityId = batchId;
-            link.ContentDocumentId = contentDocumentId;
-            link.ShareType = 'V';
-            link.Visibility = 'AllUsers';
-            insert link;
-        } catch (DmlException ex) {
-            // continue without blocking import if file is already linked
-        }
     }
 
     @AuraEnabled
@@ -256,7 +240,7 @@ public with sharing class FEC_BatchDataCreationController {
         out.success = false;
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
-            out.message = 'Please select a file before importing.';
+            out.message = System.Label.FEC_Batch_Import_Select_File;
             upsertFailedBatch(fileName, templateName, out.message);
             return out;
         }
@@ -274,7 +258,7 @@ public with sharing class FEC_BatchDataCreationController {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
                 ContentVersion cvEmpty = new ContentVersion();
-                cvEmpty.Title = removeFileExtension(fileName);
+                cvEmpty.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
                 cvEmpty.PathOnClient = '/' + fileName;
                 cvEmpty.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
                 insert cvEmpty;
@@ -287,32 +271,32 @@ public with sharing class FEC_BatchDataCreationController {
                 ];
 
                 batchRow = sObjType.newSObject();
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
-                putIfFieldExists(
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+                FEC_BatchImportCommon.putIfFieldExists(
                     fieldMap,
                     batchRow,
                     new List<String>{ 'FEC_File_Content_Document_Id__c' },
                     String.valueOf(insertedCvEmpty.ContentDocumentId)
                 );
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-                putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-                putIfFieldExists(
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+                FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+                FEC_BatchImportCommon.putIfFieldExists(
                     fieldMap,
                     batchRow,
                     new List<String>{ 'FEC_Failure_Reason__c' },
-                    'Vui lòng đính kèm tệp dữ liệu'
+                    System.Label.FEC_BCH_RequireFile
                 );
                 insert batchRow;
-                linkFileToBatch((Id) batchRow.get('Id'), insertedCvEmpty.ContentDocumentId);
+                FEC_BatchImportCommon.linkFileToBatch((Id) batchRow.get('Id'), insertedCvEmpty.ContentDocumentId);
 
                 out.success = true;
-                out.message = 'Import request has been submitted.';
+                out.message = System.Label.FEC_Batch_Import_Submitted;
                 out.batchRecordId = (Id) batchRow.get('Id');
                 out.contentDocumentId = insertedCvEmpty.ContentDocumentId;
                 out.status = 'Processed';
@@ -321,7 +305,7 @@ public with sharing class FEC_BatchDataCreationController {
             }
             System.debug(((Map<String, Object>) inputRows[0]).get('note'));
             ContentVersion cv = new ContentVersion();
-            cv.Title = removeFileExtension(fileName);
+            cv.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
             cv.PathOnClient = '/' + fileName;
             cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
             insert cv;
@@ -334,21 +318,21 @@ public with sharing class FEC_BatchDataCreationController {
             ];
 
             batchRow = sObjType.newSObject();
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, '');
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_File_Content_Document_Id__c' }, String.valueOf(insertedCv.ContentDocumentId));
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, inputRows.size());
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Uploaded');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, '');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_File_Content_Document_Id__c' }, String.valueOf(insertedCv.ContentDocumentId));
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, inputRows.size());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             insert batchRow;
-            linkFileToBatch((Id) batchRow.get('Id'), insertedCv.ContentDocumentId);
+            FEC_BatchImportCommon.linkFileToBatch((Id) batchRow.get('Id'), insertedCv.ContentDocumentId);
 
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processing');
             update batchRow;
 
             ValidationOutput vo = validateAndBuildAbsences(inputRows);
@@ -415,12 +399,12 @@ public with sharing class FEC_BatchDataCreationController {
                 }
             }
 
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
-            putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
-            putIfFieldExists(
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+            FEC_BatchImportCommon.putIfFieldExists(
                 fieldMap,
                 batchRow,
                 new List<String>{ 'FEC_Failure_Reason__c' },
@@ -429,7 +413,7 @@ public with sharing class FEC_BatchDataCreationController {
             update batchRow;
 
             out.success = true;
-            out.message = 'Import request has been submitted.';
+            out.message = System.Label.FEC_Batch_Import_Submitted;
             out.batchRecordId = (Id) batchRow.get('Id');
             out.contentDocumentId = insertedCv.ContentDocumentId;
             out.status = 'Processed';
@@ -438,9 +422,9 @@ public with sharing class FEC_BatchDataCreationController {
         } catch (Exception ex) {
             if (batchRow != null && batchRow.get('Id') != null) {
                 try {
-                    putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
-                    putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-                    putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, ex.getMessage());
+                    FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+                    FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+                    FEC_BatchImportCommon.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, ex.getMessage());
                     update batchRow;
                 } catch (Exception e) {
                     upsertSystemFailureBatch(fileName, templateName, ex.getMessage());
@@ -478,7 +462,7 @@ public with sharing class FEC_BatchDataCreationController {
             Id contentDocumentId = null;
             if (String.isNotBlank(fileBodyBase64) && String.isNotBlank(fileName)) {
                 ContentVersion cv = new ContentVersion();
-                cv.Title = removeFileExtension(fileName);
+                cv.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
                 cv.PathOnClient = '/' + fileName;
                 cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
                 insert cv;
@@ -492,18 +476,18 @@ public with sharing class FEC_BatchDataCreationController {
             }
 
             SObject failedRow = sObjType.newSObject();
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
             if (contentDocumentId != null) {
-                putIfFieldExists(
+                FEC_BatchImportCommon.putIfFieldExists(
                     fieldMap,
                     failedRow,
                     new List<String>{ 'FEC_File_Content_Document_Id__c' },
@@ -513,7 +497,7 @@ public with sharing class FEC_BatchDataCreationController {
             insert failedRow;
 
             if (contentDocumentId != null) {
-                linkFileToBatch((Id) failedRow.get('Id'), contentDocumentId);
+                FEC_BatchImportCommon.linkFileToBatch((Id) failedRow.get('Id'), contentDocumentId);
             }
             return (Id) failedRow.get('Id');
         } catch (Exception ex) {
@@ -527,7 +511,7 @@ public with sharing class FEC_BatchDataCreationController {
             return;
         }
         ContentVersion cv = new ContentVersion();
-        cv.Title = removeFileExtension(resultFileName);
+        cv.Title = FEC_BatchImportCommon.removeFileExtension(resultFileName);
         cv.PathOnClient = '/' + resultFileName;
         cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
         cv.FirstPublishLocationId = batchRecordId;
@@ -545,10 +529,10 @@ public with sharing class FEC_BatchDataCreationController {
         for (Object rowObj : inputRows) {
             Map<String, Object> row = (Map<String, Object>) rowObj;
             RowResult rr = new RowResult();
-            rr.serviceResource = normalizeText(row.get('serviceResource'));
-            rr.startDate = normalizeText(row.get('startDate'));
-            rr.endDate = normalizeText(row.get('endDate'));
-            rr.note = normalizeText(row.get('note'));
+            rr.serviceResource = FEC_BatchImportCommon.normalizeText(row.get('serviceResource'));
+            rr.startDate = FEC_BatchImportCommon.normalizeText(row.get('startDate'));
+            rr.endDate = FEC_BatchImportCommon.normalizeText(row.get('endDate'));
+            rr.note = FEC_BatchImportCommon.normalizeText(row.get('note'));
             rr.recordId = '';
             rr.status = 'Succeeded';
             rr.errors = '';
@@ -698,7 +682,7 @@ public with sharing class FEC_BatchDataCreationController {
         Set<String> names = new Set<String>();
         Set<String> emails = new Set<String>();
         for (String value : rawValues) {
-            String v = normalizeText(value);
+            String v = FEC_BatchImportCommon.normalizeText(value);
             if (String.isBlank(v)) {
                 continue;
             }
@@ -749,7 +733,9 @@ public with sharing class FEC_BatchDataCreationController {
 
     private static Datetime parseDateTimeStrict(String raw, Integer rowNumber, String label) {
         if (String.isBlank(raw)) {
-            throw new AuraHandledException('Dòng ' + rowNumber + ': ' + label + ' không được để trống.');
+            throw new AuraHandledException(
+                String.format(System.Label.FEC_Batch_Import_Field_Required, new List<String>{ String.valueOf(rowNumber), label })
+            );
         }
         // Spec: yyyy-mm-ddThh:mm:ss.msmmsms+0700
         if (!Pattern.matches('^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{4}$', raw)) {
@@ -789,13 +775,6 @@ public with sharing class FEC_BatchDataCreationController {
         return Pattern.matches('[a-zA-Z0-9]+', value);
     }
 
-    private static String normalizeText(Object value) {
-        if (value == null) {
-            return '';
-        }
-        return String.valueOf(value).trim();
-    }
-
     /** Ghi log khi không có file đính kèm / không parse được — trạng thái Processed (đã tiếp nhận yêu cầu). */
     private static void upsertFailedBatch(String fileName, String templateName, String reason) {
         insertFailureRow(fileName, templateName, reason, 'Processed');
@@ -814,96 +793,20 @@ public with sharing class FEC_BatchDataCreationController {
             }
             Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
             SObject failedRow = sObjType.newSObject();
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, statusValue);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
-            putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'Name', 'FEC_File_Name__c' }, fileName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_On__c' }, Datetime.now());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Uploaded_By__c' }, UserInfo.getUserEmail());
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Status__c' }, statusValue);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Failure_Reason__c' }, reason);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Template__c', 'FEC_Template_Name__c' }, templateName);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(fieldMap, failedRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
             insert failedRow;
         } catch (Exception ex) {
             // avoid masking original error
         }
     }
 
-    private static void addIfNotBlank(List<String> selectParts, String fieldApiName) {
-        if (String.isNotBlank(fieldApiName) && !selectParts.contains(fieldApiName)) {
-            selectParts.add(fieldApiName);
-        }
-    }
-
-    private static String pickField(Map<String, Schema.SObjectField> fieldMap, List<String> preferredNames) {
-        for (String name : preferredNames) {
-            if (fieldMap.containsKey(name)) {
-                return name;
-            }
-        }
-        return null;
-    }
-
-    private static String asString(Object value) {
-        return value == null ? null : String.valueOf(value);
-    }
-
-    private static Datetime asDatetime(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Datetime) {
-            return (Datetime) value;
-        }
-        return null;
-    }
-
-    private static Decimal asDecimal(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Decimal) {
-            return (Decimal) value;
-        }
-        if (value instanceof Integer) {
-            return Decimal.valueOf((Integer) value);
-        }
-        if (value instanceof Long) {
-            return Decimal.valueOf((Long) value);
-        }
-        return null;
-    }
-
-    private static void putIfFieldExists(
-        Map<String, Schema.SObjectField> fieldMap,
-        SObject recordToFill,
-        List<String> fieldNames,
-        Object value
-    ) {
-        for (String name : fieldNames) {
-            if (!fieldMap.containsKey(name)) {
-                continue;
-            }
-            Schema.DescribeFieldResult dfr = fieldMap.get(name).getDescribe();
-            if (!dfr.isCreateable()) {
-                continue;
-            }
-            if (dfr.isAutoNumber()) {
-                continue;
-            }
-            if (!dfr.isCalculated()) {
-                recordToFill.put(name, value);
-                return;
-            }
-        }
-    }
-
-    private static String removeFileExtension(String fileName) {
-        Integer idx = fileName == null ? -1 : fileName.lastIndexOf('.');
-        if (idx == null || idx <= 0) {
-            return fileName;
-        }
-        return fileName.substring(0, idx);
-    }
 }
