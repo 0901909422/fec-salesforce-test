@@ -1472,7 +1472,6 @@
 		<members>FEC_Service_Resource_Absence__c.FEC_EndDate_Greater_Than_StartDate</members>
 		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
 		<name>ValidationRule</name>
->>>>>>> manifest/fis-uat-3/package-release-uat-3.xml
 	</types>
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
