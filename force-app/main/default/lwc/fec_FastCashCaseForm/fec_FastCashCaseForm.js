@@ -161,7 +161,14 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return;
         }
         const nocId = getFieldValue(data, CASE_ACTUAL_NOC);
-        this.restoreLocksFromStorage();
+        if (!this._isBlockModalConfirmedInStorage()) {
+            this.nocLockedAfterBlockModal = false;
+            this.blockSucceeded = false;
+            this.finalBlockFailure = false;
+            this.blockFailCount = 0;
+        } else {
+            this.restoreLocksFromStorage();
+        }
         if (!nocId) {
             this._lastNocId = null;
             if (this.nocLockedAfterBlockModal) {
@@ -210,7 +217,15 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
 
     connectedCallback() {
         if (this.recordId) {
-            this.restoreLocksFromStorage();
+            if (this._isBlockModalConfirmedInStorage()) {
+                this.restoreLocksFromStorage();
+            } else {
+                this._clearFastCashSessionStorage();
+                this.nocLockedAfterBlockModal = false;
+                this.blockSucceeded = false;
+                this.finalBlockFailure = false;
+                this.blockFailCount = 0;
+            }
             this._maybeHydrateForFastCashScope();
         }
     }
@@ -482,8 +497,14 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     }
 
     get amountFieldsDisabled() {
-        // KH-1366: nocLockedAfterBlockModal chỉ khóa NOC (fec_CaseEditNOC), không khóa nhập Requested Amount
-        return this.isReadOnly || this.blockSucceeded || this.finalBlockFailure;
+        // KH-1366: lock NOC không khóa amount; sau block OK hoặc 3 lần fail mới khóa nhập
+        if (this.finalBlockFailure || this.blockSucceeded) {
+            return true;
+        }
+        if (this.eligible) {
+            return false;
+        }
+        return this.isReadOnly;
     }
 
     get showNoti12() {
