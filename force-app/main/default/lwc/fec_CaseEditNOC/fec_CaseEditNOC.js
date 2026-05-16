@@ -47,7 +47,8 @@ import {
   INTERNAL_REQUEST, 
   INTERNAL_UBANK,
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-  FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX
+  FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
+  FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX
 } from "c/fec_CommonConst";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
@@ -356,6 +357,10 @@ export default class Fec_CaseEditNOC extends LightningElement {
       if (!this.recordId) {
         return;
       }
+      const modalKey = FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId;
+      if (sessionStorage.getItem(modalKey) !== "1") {
+        return;
+      }
       const k = FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId;
       if (sessionStorage.getItem(k) === "1") {
         this.isNocLockedAfterFastCashBlock = true;
@@ -373,6 +378,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this._fastCashLockCombosApplied = false;
     try {
       if (this.recordId) {
+        sessionStorage.setItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId, "1");
         sessionStorage.setItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + this.recordId, "1");
       }
     } catch (e) {

@@ -40,7 +40,8 @@ import {
     MAX_FAST_CASH_BLOCK_ATTEMPTS,
     FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
     FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
-    FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX
+    FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+    FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX
 } from "c/fec_CommonConst";
 import { formatThousandsFromDigits, stripToIntString } from "c/fec_CommonUtils";
 
@@ -57,7 +58,10 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         return this._isEdit;
     }
     set isEdit(value) {
-        this._isEdit = Boolean(value);
+        if (value === undefined || value === null) {
+            return;
+        }
+        this._isEdit = value === true || value === "true";
     }
 
     _subCategoryCode = "";
@@ -78,6 +82,9 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             this._notifyFastCashPropertyInfoVisibility(false);
         }
         if (this._isFastCashScope) {
+            if (!wasFastCash && !this._isBlockModalConfirmedInStorage()) {
+                this._resetFastCashBlockSessionState();
+            }
             this._maybeHydrateForFastCashScope();
         } else if (wasFastCash) {
             this._presubmitHydrated = false;
@@ -173,8 +180,12 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             return;
         }
         if (this._lastNocId !== nocId) {
+            const isNocChange = this._lastNocId != null;
             this._lastNocId = nocId;
             this._lockedViewLoaded = false;
+            if (isNocChange) {
+                this._resetFastCashBlockSessionState();
+            }
             this.hydrateFromCaseThenEligibility();
         }
     }
@@ -191,10 +202,15 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
             if (!this.recordId) {
                 return;
             }
-            const k = this._storageNocKey();
-            if (sessionStorage.getItem(k) === "1") {
-                this.nocLockedAfterBlockModal = true;
+            if (!this._isBlockModalConfirmedInStorage()) {
+                this._clearFastCashSessionStorage();
+                this.nocLockedAfterBlockModal = false;
+                this.blockSucceeded = false;
+                this.finalBlockFailure = false;
+                this.blockFailCount = 0;
+                return;
             }
+            this.nocLockedAfterBlockModal = true;
             const bk = this._storageBlockFailKey();
             const n = parseInt(sessionStorage.getItem(bk) || "0", 10);
             if (!isNaN(n) && n > 0) {
@@ -224,15 +240,44 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
         return FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + this.recordId;
     }
 
-    _clearFastCashNocLockStorage() {
+    _storageModalConfirmedKey() {
+        return FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId;
+    }
+
+    _isBlockModalConfirmedInStorage() {
+        try {
+            return sessionStorage.getItem(this._storageModalConfirmedKey()) === "1";
+        } catch (e) {
+            return false;
+        }
+    }
+
+    _clearFastCashSessionStorage() {
         try {
             if (!this.recordId) {
                 return;
             }
             sessionStorage.removeItem(this._storageNocKey());
+            sessionStorage.removeItem(this._storageBlockFailKey());
+            sessionStorage.removeItem(this._storageBlockOkKey());
+            sessionStorage.removeItem(this._storageModalConfirmedKey());
         } catch (e) {
             /* ignore */
         }
+    }
+
+    _clearFastCashNocLockStorage() {
+        this._clearFastCashSessionStorage();
+    }
+
+    _resetFastCashBlockSessionState() {
+        this._clearFastCashSessionStorage();
+        this.nocLockedAfterBlockModal = false;
+        this.blockSucceeded = false;
+        this.finalBlockFailure = false;
+        this.blockFailCount = 0;
+        this._lockedViewLoaded = false;
+        this.clearBlockMessages();
     }
 
     loadLockedSnapshot() {
@@ -496,6 +541,7 @@ export default class Fec_FastCashCaseForm extends NavigationMixin(LightningEleme
     applyNocLockAfterModal() {
         this.nocLockedAfterBlockModal = true;
         try {
+            sessionStorage.setItem(this._storageModalConfirmedKey(), "1");
             sessionStorage.setItem(this._storageNocKey(), "1");
         } catch (e) {
             /* ignore */
