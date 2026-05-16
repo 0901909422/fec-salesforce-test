@@ -95,13 +95,13 @@ public with sharing class FEC_AssignmentExecuteService {
          * Current user
          */
         User currentUser = [
-    SELECT Id, Name, UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1
-  ];
+            SELECT Id, Name, UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1
+        ];
         
         /*
          * 1. Direct user match
          */
-        if (assignmentValues.contains(currentUser.Name)) {
+        if (assignmentValues.contains(currentUser.Id)) {
             return true;
         }
         
