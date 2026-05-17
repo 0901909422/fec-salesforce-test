@@ -21,6 +21,15 @@
         <members>Case.FEC_Case_Status_History_2__c</members>
         <members>Case.FEC_Case_Status_History_3__c</members>
         <members>Case.FEC_TAT_Full_Process_Hrs__c</members>
+        <members>Case.FEC_Application_Status__c</members>
+		<members>Case.FEC_Case_Remarks_1__c</members>
+		<members>Case.FEC_Case_Remarks_2__c</members>
+		<members>Case.FEC_Case_Remarks_3__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By_Role__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_By__c</members>
+		<members>Case.FEC_Case_Remarks_Entered_On__c</members>
+		<members>Case.FEC_Case_Status_History__c</members>
+		<members>Case.FEC_Full_Remarks__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
@@ -87,10 +96,7 @@
         <name>ReportType</name>
     </types>
     <types>
-        <members>FECReport</members>
-        <name>ReportFolder</name>
-    </types>
-    <types>
+        <members>FECReport/</members>
         <members>FECReport/FEC_RP_01</members>
         <members>FECReport/FEC_RP_02</members>
         <name>Report</name>
