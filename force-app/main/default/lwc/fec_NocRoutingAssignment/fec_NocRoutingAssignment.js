@@ -16,7 +16,7 @@ import getRoutingAssignmentHistory from '@salesforce/apex/FEC_NocRoutingAssignme
 import LABEL_NEW from '@salesforce/label/c.FEC_Btn_Add_New';
 import LABEL_PREVIOUS from '@salesforce/label/c.FEC_Previous_Btn_Label';
 import LABEL_NEXT from '@salesforce/label/c.FEC_Next_Btn_Label';
-import LABEL_PAGE_OF from '@salesforce/label/c.Pagination_Page_Of_Label';``
+import LABEL_PAGE_OF from '@salesforce/label/c.Pagination_Page_Of_Label';
 import LABEL_SUCCESS from '@salesforce/label/c.FEC_RA_Save_Success';
 import LABEL_CREATE_SUCCESS from '@salesforce/label/c.FEC_RA_Create_Success';
 import LABEL_UPDATE_SUCCESS from '@salesforce/label/c.FEC_RA_Update_Success';
@@ -25,6 +25,23 @@ import LABEL_CUSTOMER_TYPE_REQUIRED from '@salesforce/label/c.FEC_RA_Customer_Ty
 import LABEL_CHANNEL_REQUIRED from '@salesforce/label/c.FEC_RA_Channel_Required';
 import LABEL_TEAM_REQUIRED from '@salesforce/label/c.FEC_RA_Team_Required';
 import LABEL_QUEUE_REQUIRED from '@salesforce/label/c.FEC_RA_Queue_Required';
+import LABEL_DETAIL_INFO from '@salesforce/label/c.FEC_Label_Detail_Information';
+import LABEL_RA_NAME from '@salesforce/label/c.FEC_Label_RA_Name';
+import LABEL_CUSTOMER_TYPE from '@salesforce/label/c.FEC_Label_Customer_Type';
+import LABEL_CHANNEL from '@salesforce/label/c.FEC_Label_Channel';
+import LABEL_TEAM from '@salesforce/label/c.FEC_Label_Team';
+import LABEL_QUEUE from '@salesforce/label/c.FEC_Label_Queue';
+import LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
+import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_SAVE from '@salesforce/label/c.FEC_Button_Save';
+import LABEL_EDIT from '@salesforce/label/c.FEC_Label_Edit';
+import LABEL_BACK from '@salesforce/label/c.FEC_Label_Back';
+import LABEL_RA_HISTORY from '@salesforce/label/c.FEC_Label_RA_History';
+import LABEL_NO_RECORDS from '@salesforce/label/c.FEC_Label_No_Records';
+import LABEL_NO_HISTORY_SHORT from '@salesforce/label/c.FEC_Label_No_History_Short';
+import LABEL_NEW_RA from '@salesforce/label/c.FEC_Label_New_RA';
+import LABEL_REQUIRED_INFO from '@salesforce/label/c.FEC_Label_Required_Info';
+import LABEL_SEARCH_CHANNEL from '@salesforce/label/c.FEC_Label_Search_Channel';
 
 const PAGE_SIZE = 10;
 
@@ -77,7 +94,24 @@ export default class Fec_NocRoutingAssignment extends NavigationMixin(LightningE
         new: LABEL_NEW,
         previous: LABEL_PREVIOUS,
         next: LABEL_NEXT,
-        pageOf: LABEL_PAGE_OF
+        pageOf: LABEL_PAGE_OF,
+        detailInfo: LABEL_DETAIL_INFO,
+        raName: LABEL_RA_NAME,
+        customerType: LABEL_CUSTOMER_TYPE,
+        channel: LABEL_CHANNEL,
+        team: LABEL_TEAM,
+        queue: LABEL_QUEUE,
+        active: LABEL_ACTIVE,
+        cancel: LABEL_CANCEL,
+        save: LABEL_SAVE,
+        edit: LABEL_EDIT,
+        back: LABEL_BACK,
+        raHistory: LABEL_RA_HISTORY,
+        noRecords: LABEL_NO_RECORDS,
+        noHistory: LABEL_NO_HISTORY_SHORT,
+        newRA: LABEL_NEW_RA,
+        requiredInfo: LABEL_REQUIRED_INFO,
+        searchChannel: LABEL_SEARCH_CHANNEL
     };
 
     connectedCallback() {

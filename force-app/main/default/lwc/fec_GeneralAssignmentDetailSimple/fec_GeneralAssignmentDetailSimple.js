@@ -10,6 +10,12 @@ import LABEL_SUCCESS from '@salesforce/label/c.FEC_GA_Save_Success';
 import LABEL_SAVED from '@salesforce/label/c.FEC_GA_Saved_Message';
 import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
 import LABEL_SAVE_ERROR from '@salesforce/label/c.FEC_GA_Save_Error_Message';
+import LABEL_DETAIL_INFO from '@salesforce/label/c.FEC_Label_Detail_Information';
+import LABEL_GA_NAME from '@salesforce/label/c.FEC_Label_GA_Name';
+import LABEL_GA_CODE from '@salesforce/label/c.FEC_Label_GA_Code';
+import LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
+import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_SAVE from '@salesforce/label/c.FEC_Button_Save';
 import updateGeneralAssignment from '@salesforce/apex/FEC_GeneralAssignmentController.updateGeneralAssignment';
 
 const FIELDS = [
@@ -27,6 +33,15 @@ export default class Fec_GeneralAssignmentDetailSimple extends LightningElement 
     @track editCode = '';
     @track editActive = false;
     @wire(MessageContext) messageContext;
+
+    labels = {
+        detailInfo: LABEL_DETAIL_INFO,
+        gaName: LABEL_GA_NAME,
+        gaCode: LABEL_GA_CODE,
+        active: LABEL_ACTIVE,
+        cancel: LABEL_CANCEL,
+        save: LABEL_SAVE
+    };
 
     connectedCallback() {
         loadStyle(this, FEC_CommonCss);

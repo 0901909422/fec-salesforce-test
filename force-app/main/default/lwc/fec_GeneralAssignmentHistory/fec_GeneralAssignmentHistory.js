@@ -2,6 +2,15 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import { refreshApex } from '@salesforce/apex';
 import { subscribe, MessageContext } from 'lightning/messageService';
+import LABEL_SUCCESS from '@salesforce/label/c.FEC_GA_Save_Success';
+import LABEL_SAVED from '@salesforce/label/c.FEC_GA_Saved_Message';
+import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
+import LABEL_SAVE_ERROR from '@salesforce/label/c.FEC_GA_Save_Error_Message';
+import LABEL_HISTORY_TITLE from '@salesforce/label/c.FEC_Label_GA_History';
+import LABEL_PAGE_SIZE from '@salesforce/label/c.FEC_Label_Page_Size';
+import LABEL_GO_TO_PAGE from '@salesforce/label/c.FEC_Label_Go_To_Page';
+import LABEL_GO from '@salesforce/label/c.FEC_Label_Go';
+import LABEL_NO_HISTORY from '@salesforce/label/c.FEC_Label_No_History';
 import getHistory from '@salesforce/apex/FEC_GeneralAssignmentHistoryController.getHistory';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
 import FEC_GA_SAVED from '@salesforce/messageChannel/FEC_GA_Saved__c';
@@ -17,6 +26,15 @@ export default class Fec_GeneralAssignmentHistory extends LightningElement {
     _wiredHistoryResult;
     _firstLoad = true;
     @wire(MessageContext) messageContext;
+
+    labels = {
+        historyTitle: LABEL_HISTORY_TITLE,
+        pageSize: LABEL_PAGE_SIZE,
+        goToPage: LABEL_GO_TO_PAGE,
+        go: LABEL_GO,
+        noHistory: LABEL_NO_HISTORY,
+        ofPages: 'of'
+    };
 
     connectedCallback() {
         loadStyle(this, FEC_CommonCss);

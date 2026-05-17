@@ -34,7 +34,7 @@
 
                         <template if:false={hasRecords}>
                             <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
-                                No records to display
+                                {labels.noRecords}
                             </div>
                         </template>
                     </div>
@@ -47,7 +47,7 @@
             <div class="slds-p-around_medium">
                 <!-- Back button -->
                 <div class="slds-m-bottom_small">
-                    <lightning-button label="← Back" variant="neutral" onclick={handleDetailBack}></lightning-button>
+                    <lightning-button label={labels.back} variant="neutral" onclick={handleDetailBack}></lightning-button>
                 </div>
 
                 <!-- Header -->
@@ -55,38 +55,38 @@
                     <lightning-icon icon-name="standard:routing_rules" size="small" class="slds-m-right_small"></lightning-icon>
                     <span class="slds-text-heading_medium">{detailRecord.name}</span>
                     <template if:false={isDetailEdit}>
-                        <lightning-button label="Edit" variant="neutral" onclick={handleDetailEdit} class="slds-m-left_small"></lightning-button>
+                        <lightning-button label={labels.edit} variant="neutral" onclick={handleDetailEdit} class="slds-m-left_small"></lightning-button>
                     </template>
                 </div>
 
                 <!-- Detail Information -->
-                <div class="ra-section-header slds-m-bottom_small">Detail Information</div>
+                <div class="ra-section-header slds-m-bottom_small">{labels.detailInfo}</div>
                 <div class="slds-box slds-m-bottom_medium">
                     <template if:false={isDetailEdit}>
                         <!-- Read-only -->
                         <div class="slds-grid slds-wrap slds-gutters">
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">RA Name</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.raName}</div>
                                 <div>{detailRecord.name}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">Customer Type</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.customerType}</div>
                                 <div>{detailRecord.customerType}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">Channel</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.channel}</div>
                                 <div>{detailRecord.channel}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">Team</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.team}</div>
                                 <div>{detailRecord.team}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">Queue</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.queue}</div>
                                 <div>{detailRecord.queue}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2 slds-p-around_small">
-                                <div class="slds-form-element__label ra-field-label">Active</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.active}</div>
                                 <lightning-input type="checkbox" checked={detailRecord.active} disabled></lightning-input>
                             </div>
                         </div>
@@ -96,12 +96,12 @@
                         <!-- Edit form -->
                         <div class="slds-grid slds-wrap slds-gutters">
                             <div class="slds-col slds-size_1-of-2">
-                                <div class="slds-form-element__label ra-field-label">RA Name</div>
+                                <div class="slds-form-element__label ra-field-label">{labels.raName}</div>
                                 <div class="slds-p-around_small">{detailRecord.name}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-2">
                                 <lightning-combobox
-                                    label="Customer Type"
+                                    label={labels.customerType}
                                     required
                                     value={detailFormCustomerType}
                                     options={customerTypeOptions}
@@ -111,11 +111,11 @@
                             <!-- Channel multi-select -->
                             <div class="slds-col slds-size_1-of-2">
                                 <div class="slds-form-element">
-                                    <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr> Channel</label>
+                                    <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr> {labels.channel}</label>
                                     <div class="ra-search-container">
                                         <div class="slds-input-has-icon slds-input-has-icon_right">
                                             <lightning-icon icon-name="utility:search" size="x-small" class="slds-icon slds-input__icon slds-input__icon_right"></lightning-icon>
-                                            <input type="text" class="slds-input" placeholder="Search Channel..."
+                                            <input type="text" class="slds-input" placeholder={labels.searchChannel}
                                                 value={detailChannelSearchTerm}
                                                 oninput={handleDetailChannelSearch}
                                                 onfocus={handleDetailChannelFocus}
@@ -145,7 +145,7 @@
                             </div>
                             <div class="slds-col slds-size_1-of-2">
                                 <lightning-combobox
-                                    label="Team"
+                                    label={labels.team}
                                     required
                                     value={detailFormTeam}
                                     options={teamOptions}
@@ -154,7 +154,7 @@
                             </div>
                             <div class="slds-col slds-size_1-of-2">
                                 <lightning-combobox
-                                    label="Queue"
+                                    label={labels.queue}
                                     required
                                     value={detailFormQueue}
                                     options={detailQueueOptions}
@@ -162,18 +162,18 @@
                                 </lightning-combobox>
                             </div>
                             <div class="slds-col slds-size_1-of-1 slds-p-around_small">
-                                <lightning-input type="checkbox" label="Active" checked={detailFormActive} onchange={handleDetailActiveChange}></lightning-input>
+                                <lightning-input type="checkbox" label={labels.active} checked={detailFormActive} onchange={handleDetailActiveChange}></lightning-input>
                             </div>
                         </div>
                         <div class="slds-m-top_medium">
-                            <lightning-button label="Cancel" onclick={handleDetailCancel} class="slds-m-right_small"></lightning-button>
-                            <lightning-button variant="brand" label="Save" onclick={handleDetailSave}></lightning-button>
+                            <lightning-button label={labels.cancel} onclick={handleDetailCancel} class="slds-m-right_small"></lightning-button>
+                            <lightning-button variant="brand" label={labels.save} onclick={handleDetailSave}></lightning-button>
                         </div>
                     </template>
                 </div>
 
                 <!-- Routing Assignment History -->
-                <div class="ra-section-header slds-m-bottom_small">Routing Assignment History</div>
+                <div class="ra-section-header slds-m-bottom_small">{labels.raHistory}</div>
                 <div class="slds-box">
                     <template if:true={hasHistory}>
                         <table class="slds-table slds-table_cell-buffer slds-table_bordered ra-table">
@@ -207,7 +207,7 @@
                         </div>
                     </template>
                     <template if:false={hasHistory}>
-                        <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">No history</div>
+                        <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">{labels.noHistory}</div>
                     </template>
                 </div>
             </div>
@@ -219,15 +219,15 @@
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">New Routing Flow Assignment</h2>
-                    <p class="slds-text-body_small slds-m-top_x-small">* = Required Information</p>
+                    <h2 class="slds-text-heading_medium">{labels.newRA}</h2>
+                    <p class="slds-text-body_small slds-m-top_x-small">{labels.requiredInfo}</p>
                 </header>
                 <div class="slds-modal__content slds-p-around_medium">
                     <div class="slds-grid slds-wrap slds-gutters">
                         <!-- Customer Type -->
                         <div class="slds-col slds-size_1-of-2">
                             <lightning-combobox
-                                label="Customer Type"
+                                label={labels.customerType}
                                 required
                                 value={formCustomerType}
                                 options={customerTypeOptions}
@@ -237,11 +237,11 @@
                         <!-- Channel -->
                         <div class="slds-col slds-size_1-of-2">
                             <div class="slds-form-element">
-                                <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr> Channel</label>
+                                <label class="slds-form-element__label"><abbr class="slds-required" title="required">*</abbr> {labels.channel}</label>
                                 <div class="ra-search-container">
                                     <div class="slds-input-has-icon slds-input-has-icon_right">
                                         <lightning-icon icon-name="utility:search" size="x-small" class="slds-icon slds-input__icon slds-input__icon_right"></lightning-icon>
-                                        <input type="text" class="slds-input" placeholder="Search Channel..."
+                                        <input type="text" class="slds-input" placeholder={labels.searchChannel}
                                             value={channelSearchTerm}
                                             oninput={handleChannelSearch}
                                             onfocus={handleChannelFocus}
@@ -272,7 +272,7 @@
                         <!-- Team -->
                         <div class="slds-col slds-size_1-of-2">
                             <lightning-combobox
-                                label="Team"
+                                label={labels.team}
                                 required
                                 value={formTeam}
                                 options={teamOptions}
@@ -282,7 +282,7 @@
                         <!-- Queue -->
                         <div class="slds-col slds-size_1-of-2">
                             <lightning-combobox
-                                label="Queue"
+                                label={labels.queue}
                                 required
                                 value={formQueue}
                                 options={queueOptions}
@@ -291,13 +291,13 @@
                         </div>
                         <!-- Active -->
                         <div class="slds-col slds-size_1-of-1 slds-p-around_small">
-                            <lightning-input type="checkbox" label="Active" checked={formActive} onchange={handleFormActiveChange}></lightning-input>
+                            <lightning-input type="checkbox" label={labels.active} checked={formActive} onchange={handleFormActiveChange}></lightning-input>
                         </div>
                     </div>
                 </div>
                 <footer class="slds-modal__footer">
-                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
-                    <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+                    <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label={labels.save} onclick={handleSave}></lightning-button>
                 </footer>
             </div>
         </section>

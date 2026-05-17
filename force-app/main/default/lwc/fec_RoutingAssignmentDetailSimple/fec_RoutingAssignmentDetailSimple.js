@@ -13,6 +13,16 @@ import LABEL_SAVE_SUCCESS_TITLE from '@salesforce/label/c.FEC_Toast_Save_Success
 import LABEL_SAVE_SUCCESS_MSG from '@salesforce/label/c.FEC_Toast_Save_Success_Message';
 import LABEL_ERROR from '@salesforce/label/c.FEC_Toast_Error';
 import LABEL_SAVE_ERROR_MSG from '@salesforce/label/c.FEC_Toast_Save_Error_Message';
+import LABEL_DETAIL_INFO from '@salesforce/label/c.FEC_Label_Detail_Information';
+import LABEL_RA_NAME from '@salesforce/label/c.FEC_Label_RA_Name';
+import LABEL_CUSTOMER_TYPE from '@salesforce/label/c.FEC_Label_Customer_Type';
+import LABEL_CHANNEL from '@salesforce/label/c.FEC_Label_Channel';
+import LABEL_TEAM from '@salesforce/label/c.FEC_Label_Team';
+import LABEL_QUEUE from '@salesforce/label/c.FEC_Label_Queue';
+import LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
+import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_SAVE from '@salesforce/label/c.FEC_Button_Save';
+import LABEL_SEARCH_CHANNEL from '@salesforce/label/c.FEC_Label_Search_Channel';
 
 const FIELDS = [
     'FEC_Routing_Assignment__c.Name',
@@ -35,6 +45,19 @@ export default class Fec_RoutingAssignmentDetailSimple extends LightningElement 
 
     record = {};
     isLoaded = false;
+
+    labels = {
+        detailInfo: LABEL_DETAIL_INFO,
+        raName: LABEL_RA_NAME,
+        customerType: LABEL_CUSTOMER_TYPE,
+        channel: LABEL_CHANNEL,
+        team: LABEL_TEAM,
+        queue: LABEL_QUEUE,
+        active: LABEL_ACTIVE,
+        cancel: LABEL_CANCEL,
+        save: LABEL_SAVE,
+        searchChannel: LABEL_SEARCH_CHANNEL
+    };
 
     // edit form
     @track editCustomerType = '';

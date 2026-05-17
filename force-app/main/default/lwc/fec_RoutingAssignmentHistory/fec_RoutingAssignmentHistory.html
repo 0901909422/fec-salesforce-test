@@ -7,7 +7,7 @@
                 </div>
                 <div class="slds-media__body">
                     <h2 class="slds-card__header-title">
-                        <span>Routing Assignment History</span>
+                        <span>{labels.historyTitle}</span>
                     </h2>
                 </div>
             </header>
@@ -24,7 +24,7 @@
                 <!-- Pagination bar -->
                 <div class="pagination-bar">
                     <div class="pagination-left">
-                        <span class="pagination-label">Page size</span>
+                        <span class="pagination-label">{labels.pageSize}</span>
                         <input type="number" class="pagination-input" value={pageSize} min="1" onchange={handlePageSizeChange} />
                     </div>
                     <div class="pagination-center">
@@ -33,17 +33,17 @@
                         <button class="pagination-btn" onclick={handleNext} disabled={isLastPage}>&#8250;</button>
                     </div>
                     <div class="pagination-right">
-                        <span class="pagination-label">Go to page</span>
+                        <span class="pagination-label">{labels.goToPage}</span>
                         <input type="number" class="pagination-input" value={goToPage} min="1" max={totalPages} onchange={handleGoToPage} />
-                        <span class="pagination-label">of {totalPages}</span>
-                        <button class="pagination-go-btn" onclick={handleGo}>Go</button>
+                        <span class="pagination-label">{labels.ofPages} {totalPages}</span>
+                        <button class="pagination-go-btn" onclick={handleGo}>{labels.go}</button>
                     </div>
                 </div>
             </template>
 
             <template if:true={showEmpty}>
                 <div class="slds-text-align_center slds-p-around_medium slds-text-color_weak">
-                    No history records to display
+                    {labels.noHistory}
                 </div>
             </template>
         </div>

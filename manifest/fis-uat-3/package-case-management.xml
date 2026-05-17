@@ -555,21 +555,22 @@
         <members>fec_TransferCall</members>
         <members>fec_AssigmentListView</members>
         <members>fec_AssignmentViewAll</members>
-<<<<<<< ours
         <members>fec_NocGeneralAssignment</members>
         <members>fec_GeneralAssignmentDetailSimple</members>
         <members>fec_GeneralAssignmentHistory</members>
         <members>fec_GeneralAssignmentDetail</members>
         <members>fec_GeneralAssignmentActions</members>
+        <members>fec_GeneralAssignmentConfigActions</members>
+        <members>fec_GeneralAssignmentConfigDetail</members>
         <members>fec_NewGeneralAssignment</members>
         <members>fec_NocRoutingAssignment</members>
+        <members>fec_RoutingAssignmentActions</members>
         <members>fec_RoutingAssignmentDetailSimple</members>
         <members>fec_RoutingAssignmentHistory</members>
         <members>fec_CommonDetailView</members>
         <members>fec_HoldCaseConfiguration</members>
         <members>fec_HoldCaseConfigurationTabView</members>
         <members>fec_RelatedListPaging</members>
->>>>>>> theirs
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -938,7 +939,6 @@
         <members>FEC_BCH_Modal_BpColName</members>
         <members>FEC_BCH_ExportWithAllProperties</members>
         <members>FEC_BCH_FooterOf</members>
-<<<<<<< ours
         <members>FEC_GA_Save_Success</members>
         <members>FEC_GA_Saved_Message</members>
         <members>FEC_GA_Save_Error</members>
@@ -947,6 +947,10 @@
         <members>FEC_GA_Create_Error_Message</members>
         <members>FEC_GA_Channel_Required</members>
         <members>FEC_GA_Name_Required</members>
+        <members>FEC_GA_Delete_Success_Message</members>
+        <members>FEC_GA_Delete_Error_Message</members>
+        <members>FEC_GA_Name_Required_Field</members>
+        <members>FEC_GA_Code_Required_Field</members>
         <members>FEC_RA_Save_Success</members>
         <members>FEC_RA_Create_Success</members>
         <members>FEC_RA_Update_Success</members>
@@ -955,6 +959,32 @@
         <members>FEC_RA_Channel_Required</members>
         <members>FEC_RA_Team_Required</members>
         <members>FEC_RA_Queue_Required</members>
+        <members>FEC_Label_Detail_Information</members>
+        <members>FEC_Label_GA_Name</members>
+        <members>FEC_Label_GA_Code</members>
+        <members>FEC_Label_Active</members>
+        <members>FEC_Button_Save</members>
+        <members>FEC_Label_GA_History</members>
+        <members>FEC_Label_RA_History</members>
+        <members>FEC_Label_Page_Size</members>
+        <members>FEC_Label_Go_To_Page</members>
+        <members>FEC_Label_Go</members>
+        <members>FEC_Label_No_History</members>
+        <members>FEC_Label_No_Records</members>
+        <members>FEC_Label_RA_Name</members>
+        <members>FEC_Label_Customer_Type</members>
+        <members>FEC_Label_Channel</members>
+        <members>FEC_Label_Team</members>
+        <members>FEC_Label_Queue</members>
+        <members>FEC_Label_New_GA</members>
+        <members>FEC_Label_Required_Info</members>
+        <members>FEC_Label_Information</members>
+        <members>FEC_Label_New_RA</members>
+        <members>FEC_Label_Back</members>
+        <members>FEC_Label_Edit</members>
+        <members>FEC_Label_No_History_Short</members>
+        <members>FEC_Label_GA_Name_Field</members>
+        <members>FEC_Label_Search_Channel</members>
         <members>FEC_Btn_Previous</members>
         <members>FEC_Btn_Next</members>
         <members>FEC_Auto</members>
@@ -978,7 +1008,6 @@
 		<members>FEC_New_Value</members>
 		<members>FEC_Original_Value</members>
 		<members>FEC_Parent_Hold_Case_Config</members>
->>>>>>> theirs
         <name>CustomLabel</name>
     </types>
     <types>
@@ -989,16 +1018,40 @@
     <types>
         <members>FEC_GA_Edit_Mode__c</members>
         <members>FEC_GA_Saved__c</members>
+        <members>FEC_RA_Edit_Mode__c</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
-        <members>FEC_General_Assignment__c.FEC_General_Assignment_New</members>
-        <members>FEC_General_Assignment__c.FEC_General_Assignment_Edit</members>
+        <members>fecGeneralAssignmentDetailFromNOC</members>
+        <members>fecNewGeneralAssignmentAction</members>
+        <members>fecRoutingAssignmentDetailFromNOC</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
+        <members>FEC_General_Assignment_Config__c.New_General_Assignment</members>
+        <members>FEC_General_Assignment__c.Edit_General_Assignment</members>
+        <members>FEC_General_Assignment__c.New_General_Assignment</members>
         <name>QuickAction</name>
     </types>
     <types>
+        <members>FEC_General_Assignment_Config_Record_Page</members>
         <members>FEC_General_Assignment_Record_Page</members>
+        <members>Routing_Assignment_Record_Page1</members>
+        <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>FEC_General_Assignment_Config__c</members>
+        <members>FEC_General_Assignment__c</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>FEC_CaseAssignmentNOCTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>RD_IT_User_Master_Data_Management</members>
+        <name>PermissionSet</name>
     </types>
 	<types>
 		<!-- Interaction Case Service Case -->

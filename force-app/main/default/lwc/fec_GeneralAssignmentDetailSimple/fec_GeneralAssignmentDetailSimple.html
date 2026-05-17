@@ -5,22 +5,22 @@
             <div class="slds-card__header slds-grid">
                 <header class="slds-media slds-media_center slds-has-flexi-truncate">
                     <div class="slds-media__body">
-                        <h2 class="slds-card__header-title"><span>Detail Information</span></h2>
+                        <h2 class="slds-card__header-title"><span>{labels.detailInfo}</span></h2>
                     </div>
                 </header>
             </div>
             <div class="slds-card__body">
                 <div class="slds-grid slds-wrap detail-grid">
                     <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">General Assignment Name</span>
+                        <span class="detail-label">{labels.gaName}</span>
                         <span class="detail-value">{record.FEC_General_Assignment_Name__c}</span>
                     </div>
                     <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">General Assignment Code</span>
+                        <span class="detail-label">{labels.gaCode}</span>
                         <span class="detail-value">{record.FEC_General_Assignment_Code__c}</span>
                     </div>
                     <div class="slds-col slds-size_1-of-2 detail-row">
-                        <span class="detail-label">Active</span>
+                        <span class="detail-label">{labels.active}</span>
                         <span class="detail-value">
                             <template if:true={record.FEC_Active__c}>
                                 <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
@@ -41,34 +41,34 @@
             <div class="slds-card__header slds-grid">
                 <header class="slds-media slds-media_center slds-has-flexi-truncate">
                     <div class="slds-media__body">
-                        <h2 class="slds-card__header-title"><span>Detail Information</span></h2>
+                        <h2 class="slds-card__header-title"><span>{labels.detailInfo}</span></h2>
                     </div>
                 </header>
             </div>
             <div class="slds-card__body slds-card__body_inner">
                 <div class="form-grid">
                     <!-- General Assignment Name -->
-                    <div class="form-label">* General Assignment Name</div>
+                    <div class="form-label">* {labels.gaName}</div>
                     <div class="form-value">
                         <lightning-input label="" variant="label-hidden" value={editName} onchange={handleNameChange}></lightning-input>
                     </div>
 
                     <!-- General Assignment Code -->
-                    <div class="form-label">* General Assignment Code</div>
+                    <div class="form-label">* {labels.gaCode}</div>
                     <div class="form-value">
                         <lightning-input label="" variant="label-hidden" value={editCode} onchange={handleCodeChange}></lightning-input>
                     </div>
 
                     <!-- Active -->
-                    <div class="form-label">Active</div>
+                    <div class="form-label">{labels.active}</div>
                     <div class="form-value">
                         <input type="checkbox" checked={editActive} onchange={handleActiveChange} />
                     </div>
                 </div>
 
                 <div class="slds-m-top_medium">
-                    <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
-                    <lightning-button variant="brand" label="Save" onclick={handleSave}></lightning-button>
+                    <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label={labels.save} onclick={handleSave}></lightning-button>
                 </div>
             </div>
         </article>

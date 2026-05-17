@@ -1,6 +1,11 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { loadStyle } from 'lightning/platformResourceLoader';
 import FEC_CommonCss from '@salesforce/resourceUrl/FEC_CommonCss';
+import LABEL_HISTORY_TITLE from '@salesforce/label/c.FEC_Label_RA_History';
+import LABEL_PAGE_SIZE from '@salesforce/label/c.FEC_Label_Page_Size';
+import LABEL_GO_TO_PAGE from '@salesforce/label/c.FEC_Label_Go_To_Page';
+import LABEL_GO from '@salesforce/label/c.FEC_Label_Go';
+import LABEL_NO_HISTORY from '@salesforce/label/c.FEC_Label_No_History';
 import getRoutingAssignmentHistory from '@salesforce/apex/FEC_NocRoutingAssignmentController.getRoutingAssignmentHistory';
 
 export default class Fec_RoutingAssignmentHistory extends LightningElement {
@@ -9,6 +14,15 @@ export default class Fec_RoutingAssignmentHistory extends LightningElement {
     @track pageNumber = 1;
     @track pageSize = 10;
     @track goToPage = 1;
+
+    labels = {
+        historyTitle: LABEL_HISTORY_TITLE,
+        pageSize: LABEL_PAGE_SIZE,
+        goToPage: LABEL_GO_TO_PAGE,
+        go: LABEL_GO,
+        noHistory: LABEL_NO_HISTORY,
+        ofPages: 'of'
+    };
 
     connectedCallback() {
         loadStyle(this, FEC_CommonCss);

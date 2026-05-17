@@ -8,6 +8,14 @@ import LABEL_CREATED from '@salesforce/label/c.FEC_GA_Create_Success_Message';
 import LABEL_CREATE_ERROR from '@salesforce/label/c.FEC_GA_Create_Error_Message';
 import LABEL_NAME_REQUIRED from '@salesforce/label/c.FEC_GA_Name_Required_Field';
 import LABEL_CODE_REQUIRED from '@salesforce/label/c.FEC_GA_Code_Required_Field';
+import LABEL_TITLE_NEW_GA from '@salesforce/label/c.FEC_Label_New_GA';
+import LABEL_REQUIRED_INFO from '@salesforce/label/c.FEC_Label_Required_Info';
+import LABEL_INFORMATION from '@salesforce/label/c.FEC_Label_Information';
+import LABEL_GA_NAME from '@salesforce/label/c.FEC_Label_GA_Name';
+import LABEL_GA_CODE from '@salesforce/label/c.FEC_Label_GA_Code';
+import LABEL_ACTIVE from '@salesforce/label/c.FEC_Label_Active';
+import LABEL_CANCEL from '@salesforce/label/c.FEC_Button_Cancel';
+import LABEL_SAVE from '@salesforce/label/c.FEC_Button_Save';
 
 export default class Fec_NewGeneralAssignment extends NavigationMixin(LightningElement) {
     @track generalAssignmentName = '';
@@ -15,6 +23,17 @@ export default class Fec_NewGeneralAssignment extends NavigationMixin(LightningE
     @track active = true;
     @track errorMsg = '';
     @track isSaving = false;
+
+    labels = {
+        titleNewGA: LABEL_TITLE_NEW_GA,
+        requiredInfo: LABEL_REQUIRED_INFO,
+        information: LABEL_INFORMATION,
+        gaName: LABEL_GA_NAME,
+        gaCode: LABEL_GA_CODE,
+        active: LABEL_ACTIVE,
+        cancel: LABEL_CANCEL,
+        save: LABEL_SAVE
+    };
 
     connectedCallback() {}
 

@@ -16,9 +16,7 @@ import FEC_BUTTON_CONFIRM from '@salesforce/label/c.FEC_Button_Confirm';
 import LABEL_SUCCESS from '@salesforce/label/c.FEC_GA_Save_Success';
 import LABEL_DELETED from '@salesforce/label/c.FEC_GA_Delete_Success_Message';
 import LABEL_DELETE_ERROR from '@salesforce/label/c.FEC_GA_Delete_Error_Message';
-import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';
-
-const FIELDS = ['FEC_General_Assignment__c.Name'];
+import LABEL_ERROR from '@salesforce/label/c.FEC_GA_Save_Error';const FIELDS = ['FEC_General_Assignment__c.Name'];
 
 export default class Fec_GeneralAssignmentActions extends NavigationMixin(LightningElement) {
     @api recordId;

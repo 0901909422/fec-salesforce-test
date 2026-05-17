@@ -2,17 +2,17 @@
     <div style="width:70%;max-width:1000px;min-height:480px;margin:40px auto;padding:0 40px;">
         <div class="slds-card">
             <div class="slds-card__header slds-grid slds-grid_align-spread">
-                <h2 class="slds-card__header-title slds-text-heading_medium">New General Assignment</h2>
-                <p style="color:#c23934;font-size:0.75rem;">* = Required Information</p>
+                <h2 class="slds-card__header-title slds-text-heading_medium">{labels.titleNewGA}</h2>
+                <p style="color:#c23934;font-size:0.75rem;">{labels.requiredInfo}</p>
             </div>
             <div class="slds-card__body slds-card__body_inner">
                 <div class="slds-section slds-is-open slds-m-bottom_medium">
-                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small slds-m-bottom_small">Information</h3>
+                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small slds-m-bottom_small">{labels.information}</h3>
                     <div class="slds-grid slds-gutters slds-wrap">
                         <!-- General Assignment Name -->
                         <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
                             <lightning-input
-                                label="General Assignment Name"
+                                label={labels.gaName}
                                 required
                                 value={generalAssignmentName}
                                 onchange={handleNameChange}>
@@ -21,7 +21,7 @@
                         <!-- General Assignment Code -->
                         <div class="slds-col slds-size_1-of-2 slds-m-bottom_small">
                             <lightning-input
-                                label="General Assignment Code"
+                                label={labels.gaCode}
                                 required
                                 value={generalAssignmentCode}
                                 onchange={handleCodeChange}>
@@ -29,7 +29,7 @@
                         </div>
                         <!-- Active -->
                         <div class="slds-col slds-size_1-of-1 slds-m-bottom_small">
-                            <lightning-input type="checkbox" label="Active"
+                            <lightning-input type="checkbox" label={labels.active}
                                 checked={active} onchange={handleActiveChange}>
                             </lightning-input>
                         </div>
@@ -40,8 +40,8 @@
                 </div>
             </div>
             <div class="slds-card__footer slds-text-align_right">
-                <lightning-button label="Cancel" onclick={handleCancel} class="slds-m-right_small"></lightning-button>
-                <lightning-button variant="brand" label="Save" onclick={handleSave} disabled={isSaving}></lightning-button>
+                <lightning-button label={labels.cancel} onclick={handleCancel} class="slds-m-right_small"></lightning-button>
+                <lightning-button variant="brand" label={labels.save} onclick={handleSave} disabled={isSaving}></lightning-button>
             </div>
         </div>
     </div>
