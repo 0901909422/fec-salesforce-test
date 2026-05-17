@@ -78,6 +78,9 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
   }
 
   async handlePublishMessageChanel() {
+    if (!this.recordId) {
+      return;
+    }
     const payload = {
       caseId: this.recordId,
       isModeEdit: true,

@@ -1,4 +1,4 @@
-public with sharing class FEC_CaseEditNOCController {
+public without sharing class FEC_CaseEditNOCController {
   @AuraEnabled
   public static List<String> getProductTypeIds(String recordId) {
     try {
