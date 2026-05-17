@@ -11,9 +11,6 @@
         <p class="slds-m-bottom_medium validation-msg validation-msg-red">{noEligibleMessage}</p>
       </template>
       <template if:true={hasEligibleTransactions}>
-        <template if:true={noti10Message}>
-          <p class="slds-m-bottom_small validation-msg validation-msg-red">{noti10Message}</p>
-        </template>
         <h3 class="slds-text-heading_small slds-m-bottom_small">
           {ippRetailUi.unbilledHeading}
         </h3>
@@ -108,6 +105,15 @@
               variant="brand"
               disabled={convertButtonDisabled}
             ></lightning-button>
+            <template if:true={showNoti08}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-green">{noti08Message}</p>
+            </template>
+            <template if:true={showNoti09BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti09Message}</p>
+            </template>
+            <template if:true={showNoti10BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti10Message}</p>
+            </template>
           </div>
         </template>
       </template>
