@@ -1,10 +1,10 @@
-public with sharing class FEC_GetCSCaseStatusService {
+global with sharing class FEC_GetCSCaseStatusService {
     
     // -------------------------------------------------
     // MAIN SERVICE METHOD
     // -------------------------------------------------
-    @AuraEnabled
-    public static GetCSCaseStatusResponse GetCSCaseStatus(GetCSCaseStatusRequest req) {
+    
+    webService static GetCSCaseStatusResponse GetCSCaseStatus(GetCSCaseStatusRequest req) {
         
         GetCSCaseStatusResponse response = new GetCSCaseStatusResponse();
         response.Sys = new SysType2();
@@ -357,90 +357,90 @@ public with sharing class FEC_GetCSCaseStatusService {
     // -------------------------------------------------
     // REQUEST TYPES
     // -------------------------------------------------
-    public class GetCSCaseStatusRequest {
-        @AuraEnabled public SysType Sys;
-        @AuraEnabled public CaseRequestInfoType CaseRequestInfo;
+    global class GetCSCaseStatusRequest {
+        webservice  SysType Sys;
+        webservice  CaseRequestInfoType CaseRequestInfo;
     }
     
-    public class SysType {
-        @AuraEnabled public String Channel;
-        @AuraEnabled public String TransactionID;
-        @AuraEnabled public String  DateTime_x;
+    global class SysType {
+        webservice  String Channel;
+        webservice  String TransactionID;
+        webservice  String  DateTime_x;
     }
     
-    public class CaseRequestInfoType {
-        @AuraEnabled public  ContractOrAccountInfosType ContractOrAccountInfos;
-        @AuraEnabled public  String PhoneNumber;
-        @AuraEnabled public  String UserType;
-        @AuraEnabled public  String CaseID;
-        @AuraEnabled public  Boolean IncludeFinishedRequest;
-        @AuraEnabled public  String NationalID;
+    global class CaseRequestInfoType {
+        webservice   ContractOrAccountInfosType ContractOrAccountInfos;
+        webservice   String PhoneNumber;
+        webservice   String UserType;
+        webservice   String CaseID;
+        webservice   Boolean IncludeFinishedRequest;
+        webservice   String NationalID;
     }
     
-    public class ContractOrAccountInfosType {
-        @AuraEnabled public String ContractOrAccountNumber;
-        @AuraEnabled public String ProductType;
+    global class ContractOrAccountInfosType {
+        webservice  String ContractOrAccountNumber;
+        webservice  String ProductType;
     }
     
     // -------------------------------------------------
     // RESPONSE TYPES
     // -------------------------------------------------
-    public class GetCSCaseStatusResponse {
-        @AuraEnabled public SysType2 Sys;
-        @AuraEnabled public CaseResultInfoType CaseResultInfo;
-        @AuraEnabled public OriginalRequestType OriginalRequest;
+    global class GetCSCaseStatusResponse {
+        webservice  SysType2 Sys;
+        webservice  CaseResultInfoType CaseResultInfo;
+        webservice  OriginalRequestType OriginalRequest;
     }
     
-    public class SysType2 {
-        @AuraEnabled public String TransactionID;
-        @AuraEnabled public String DateTime_x;
-        @AuraEnabled public Integer Code;
-        @AuraEnabled public String Description;
+    global class SysType2 {
+        webservice  String TransactionID;
+        webservice  String DateTime_x;
+        webservice  Integer Code;
+        webservice  String Description;
     }
     
-    public class CaseResultInfoType {
-        @AuraEnabled public String CaseID;
-        @AuraEnabled public String CaseStatus;
-        @AuraEnabled public String Remarks;
-        @AuraEnabled public String CreatedTime;
-        @AuraEnabled public String UpdatedTime;
+    global class CaseResultInfoType {
+        webservice  String CaseID;
+        webservice  String CaseStatus;
+        webservice  String Remarks;
+        webservice  String CreatedTime;
+        webservice  String UpdatedTime;
     }
     
-    public class OriginalRequestType {
-        @AuraEnabled public SysType Sys;
-        @AuraEnabled public CustomerInfoType CustomerInfo;
-        @AuraEnabled public RequestInfoType RequestInfo;
-        @AuraEnabled public CreatorInfoType CreatorInfo;
-    }
-    
-    
-    public class CustomerInfoType {
-        @AuraEnabled public String Name;
-        @AuraEnabled public String PhoneNumber;
-        @AuraEnabled public String UserType;
-        @AuraEnabled public String NationalID;
-        @AuraEnabled public String ContractOrAccountNumber;
-        @AuraEnabled public String EmailAddress;
-    }
-    
-    public class RequestInfoType {
-        @AuraEnabled public String CaseType;
-        @AuraEnabled public String ProductType;
-        @AuraEnabled public String Category;
-        @AuraEnabled public String SubCategory;
-        @AuraEnabled public String SubCode;
-        @AuraEnabled public String Remarks;
-        @AuraEnabled public AdditionalInfor AdditionalInfo;
+    global class OriginalRequestType {
+        webservice  SysType Sys;
+        webservice  CustomerInfoType CustomerInfo;
+        webservice  RequestInfoType RequestInfo;
+        webservice  CreatorInfoType CreatorInfo;
     }
     
     
-    public class AdditionalInfor {
-        @AuraEnabled public String ID;
-        @AuraEnabled public String Value;
+    global class CustomerInfoType {
+        webservice  String Name;
+        webservice  String PhoneNumber;
+        webservice  String UserType;
+        webservice  String NationalID;
+        webservice  String ContractOrAccountNumber;
+        webservice  String EmailAddress;
     }
     
-    public class CreatorInfoType {
-        @AuraEnabled public String CreatorEmail;
+    global class RequestInfoType {
+        webservice  String CaseType;
+        webservice  String ProductType;
+        webservice  String Category;
+        webservice  String SubCategory;
+        webservice  String SubCode;
+        webservice  String Remarks;
+        webservice  AdditionalInfor AdditionalInfo;
+    }
+    
+    
+    global class AdditionalInfor {
+        webservice  String ID;
+        webservice  String Value;
+    }
+    
+    global class CreatorInfoType {
+        webservice  String CreatorEmail;
     }
     
     

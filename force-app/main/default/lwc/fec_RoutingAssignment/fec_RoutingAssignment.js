@@ -40,7 +40,12 @@ export default class Fec_RoutingAssignment extends LightningElement {
 
   // tungnm37: expose để parent check form đang mở chưa confirm
   @api get hasUnconfirmedForm() {
-    return this.showAddForm && (this.formTeam || this.formQueue);
+    return this.showAddForm && (this.formTeam || this.formQueue || (this.formRemark && this.formRemark.trim()));
+  }
+
+  // tungnm37: expose để parent check nút Add Item đang hiển thị nhưng chưa add item nào
+  @api get requiresManualItemButEmpty() {
+    return this.showAddItem && this.manualItems.length === 0;
   }
   @track formRemark = '';
   @track showValidationError = false;
@@ -186,7 +191,8 @@ export default class Fec_RoutingAssignment extends LightningElement {
     const errors = [];
     if (!this.formTeam) errors.push('Team');
     if (!this.formQueue) errors.push('Queue');
-    if (!this.formRemark) errors.push('Assignment Remark');
+    // tungnm37 fix: trim để tránh nhập toàn dấu cách qua validate
+    if (!this.formRemark || !this.formRemark.trim()) errors.push('Assignment Remark');
     if (errors.length > 0) {
       this.showValidationError = true;
       this.validationErrorMsg = errors.join(', ') + ' là bắt buộc.';
