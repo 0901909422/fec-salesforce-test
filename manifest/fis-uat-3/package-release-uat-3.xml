@@ -150,6 +150,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -552,8 +553,6 @@
         <members>Case.FEC_Assigment_Mode__c</members>
         <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
-        <members>FEC_Transfer_Call_Error__c.FEC_Error_Message_EN__c</members>
-        <members>FEC_Transfer_Call_Error__c.FEC_Error_Message_VI__c</members>
         <members>FEC_Template__c.FEC_Is_ZNS_Template__c</members>
 		<members>FEC_Template__c.FEC_Preview_ZNS_Url__c</members>
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
@@ -565,8 +564,6 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
-        <members>FEC_Transfer_Call_Error__c.FEC_Error_Message_EN__c</members>
-        <members>FEC_Transfer_Call_Error__c.FEC_Error_Message_VI__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -599,13 +596,13 @@
         <members>FEC_Assignment_MDS__c</members>
         <members>FEC_Batch_Case_Handling__c</members>
         <members>FEC_Template_Import__c</members>
-        <members>FEC_Transfer_Call_Error__c</members>
         <members>FEC_Hold_Case_Config__c</members>
         <members>FEC_Sales_Logic__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c</members>
 		<members>FEC_Case_Assignment_Logs__c</members>
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
+        <members>FEC_Transfer_Call_Error__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
