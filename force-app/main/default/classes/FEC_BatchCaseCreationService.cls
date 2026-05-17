@@ -1,4 +1,4 @@
-﻿public with sharing class FEC_BatchCaseCreationService {
+public with sharing class FEC_BatchCaseCreationService {
     private static final String WELCOME_CALL_TEMPLATE_TOKEN = 'welcome call';
     private static final String WELCOME_CALL_TEMPLATE_TOKEN_COMPACT = 'welcomecall';
 
