@@ -160,6 +160,7 @@ public with sharing class FEC_HoldCaseController {
                       AND FEC_Active__c = true
                       AND Hold_Case_Type__c = 'Manual'
                       AND FEC_Case_Stage__c != null
+                      AND FEC_Case_Stage__c = :currentStageId
                     WITH SECURITY_ENFORCED
                 ];
             } else if (currentStageId != null) {
