@@ -62,6 +62,10 @@
 		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
+		<members>FEC_InteractionInforHandler</members>
+		<members>FEC_NocInheritanceUtil</members>
+		<members>FEC_NocInheritanceUtilTest</members>
+		<members>FEC_PointsRedemptionCaseController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -118,6 +122,8 @@
         <members>fec_StatementsAccountTabView</members>
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
+        <members>fecInteractionChatConversations</members>
+        <members>fec_PointsRedemptionCaseForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -138,6 +144,9 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -175,6 +184,10 @@
         <members>FEC_BilledTx_Col_Plan</members>
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
+        <members>FEC_MSG_IPP_Conversion_Success</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -256,6 +269,34 @@
     <types>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
 		<name>Layout</name>
+	</types>
+    <types>
+		<members>FEC_Case_NOC</members>
+        <name>LightningMessageChannel</name>
+    </types>
+	<types>
+		<members>CA_Credit_Assessment</members>
+		<members>CL_Collections</members>
+		<members>CO_Card_Operations</members>
+		<members>CP_Contract_Processing</members>
+		<members>FS_Direct_Sales</members>
+		<members>IA_Internal_Audit</members>
+		<members>IT_IT_Operations_Support</members>
+		<members>PM_Payment</members>
+		<members>TS_Telesales</members>
+		<name>Group</name>
+	</types>
+	<types>
+		<members>Case.CA_Credit_Assessment</members>
+		<members>Case.CL_Collections</members>
+		<members>Case.CO_Card_Operations</members>
+		<members>Case.CP_Contract_Processing</members>
+		<members>Case.FS_Direct_Sales</members>
+		<members>Case.IA_Internal_Audit</members>
+		<members>Case.IT_IT_Operations_Support</members>
+		<members>Case.PM_Payment</members>
+		<members>Case.TS_Telesales</members>
+		<name>SharingCriteriaRule</name>
 	</types>
 	<version>66.0</version>
 </Package>

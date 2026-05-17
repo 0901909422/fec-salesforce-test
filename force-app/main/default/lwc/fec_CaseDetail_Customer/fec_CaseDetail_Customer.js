@@ -42,10 +42,64 @@ import {
   STR_UNDEFINED,
   VIEW_MODE_HANDLING,
   VIEW_MODE_REVIEW,
+  FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
+  FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
+  FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
+  FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
+  FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX,
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
 const PROCESS_CARD_REPLACEMENT = "Card Replacement";
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1366
+function isFastCashBlockModalConfirmed(caseId) {
+  try {
+    if (!caseId) {
+      return false;
+    }
+    return sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1366 — submit xong phải về review, không giữ session Fast Cash
+function clearFastCashBlockSessionStorage(caseId) {
+  try {
+    if (!caseId) {
+      return;
+    }
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_LOCK_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + caseId);
+    sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX + caseId);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function readFastCashNocSelectionForCaseDetail(caseId) {
+  try {
+    if (!caseId || !isFastCashBlockModalConfirmed(caseId)) {
+      return null;
+    }
+    const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    if (!raw) {
+      return null;
+    }
+    const sel = JSON.parse(raw);
+    if (!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId)) {
+      return null;
+    }
+    return sel;
+  } catch (e) {
+    return null;
+  }
+}
 
 export default class Fec_CaseDetail_Customer extends LightningElement {
   @api recordId;
@@ -150,10 +204,22 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   async connectedCallback() {
     try {
-      await resetViewMode({
-        recordId: this.recordId,
-        viewMode: VIEW_MODE_REVIEW,
-      });
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Fast Cash sau Có/Không: giữ handling (Save/Submit, remark, routing)
+      if (isFastCashBlockModalConfirmed(this.recordId)) {
+        this.modeEditCase = true;
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: VIEW_MODE_HANDLING,
+        });
+        if (!this.activeSections.includes("case-remark")) {
+          this.activeSections = [...this.activeSections, "case-remark"];
+        }
+      } else {
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: VIEW_MODE_REVIEW,
+        });
+      }
 
       this.subscribeToMessageChannel();
       this.loadRemarkHistory();
@@ -182,8 +248,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleMessage(message) {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
+
+
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
+    //Hieutt Update: thêm check caseId để tránh set các case khác khi publish mode edit
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
+    }
     // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
@@ -219,13 +291,27 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
     if (caseBusinessEle) {
       // Chỉ gọi getData khi mode thực sự đổi: tránh reset NOC do broadcast từ tab khác
-      caseBusinessEle.getData();
+      const fastCashNocSel = readFastCashNocSelectionForCaseDetail(this.recordId);
+      if (fastCashNocSel && fastCashNocSel.productTypeId) {
+        caseBusinessEle.getData(
+          fastCashNocSel.productTypeId,
+          fastCashNocSel.categoryId,
+          fastCashNocSel.subCategoryId,
+          fastCashNocSel.subCodeId
+        );
+      } else {
+        caseBusinessEle.getData();
+      }
     }
   }
 
   handleNOCMsg(message) {
     if (message == null) return;
     if (message.caseId !== this.recordId) {
+      return;
+    }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không pop-up Block Amount: không getData(null) → mất Case Information / Fast Cash
+    if (message.fastCashNocLocked === true) {
       return;
     }
     //PhongBT: fix th đổi từ bộ noc đủ subcode sang bộ thiếu subcode thì updatedNoc lại hiển thị bộ đủ subcode
@@ -266,6 +352,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     const payload = {
       isModeEdit: Boolean(isEdit),
     };
+    if (this.recordId) {
+      payload.caseId = this.recordId;
+    }
     publish(this.messageContext, IS_MODE_EDIT, payload);
   }
 
@@ -455,6 +544,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       ) {
         caseBusinessEle.refreshFileUploadCards();
       }
+      if (typeof caseBusinessEle?.refreshAutoHoldCase === "function") {
+        caseBusinessEle.refreshAutoHoldCase();
+      }
       // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
       // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark
       const hasManualItemsSubmit = skipSubmitRemark; // alias for clarity
@@ -477,6 +569,8 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
       //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226
       // Chuyển sang Case Review (chế độ xem), không đóng tab — publish mode trước để handleMessage nhận
       // đổi từ edit → review (không gán modeEditCase=false trước, nếu không prev===next và bỏ qua resetViewMode/getData).
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — xóa session Fast Cash để không ép lại handling sau submit
+      clearFastCashBlockSessionStorage(this.recordId);
       setTimeout(async () => {
         this.handlePublishMode(false);
 
