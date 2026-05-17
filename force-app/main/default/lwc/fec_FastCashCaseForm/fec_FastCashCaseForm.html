@@ -64,7 +64,7 @@
           </lightning-layout-item>
           <lightning-layout-item size="12" padding="around-small">
             <template if:true={showBlockButton}>
-              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={isReadOnly}>
+              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={blockAmountButtonDisabled}>
               </lightning-button>
             </template>
             <template if:true={showNoti09BelowButton}>
