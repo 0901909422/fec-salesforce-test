@@ -58,7 +58,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
 
       console.log("Owner updated");
 
-      localStorage.setItem(this.recordId, "handling");
+      localStorage.setItem(`CaseExecute-${this.recordId}`, "handling");
 
       /*
        * Enable edit mode
