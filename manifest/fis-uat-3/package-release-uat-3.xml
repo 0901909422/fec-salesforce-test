@@ -150,6 +150,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -601,6 +602,7 @@
 		<members>FEC_Case_Assignment_Logs__c</members>
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
+        <members>FEC_Transfer_Call_Error__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>

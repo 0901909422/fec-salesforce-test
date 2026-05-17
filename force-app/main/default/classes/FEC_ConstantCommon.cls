@@ -13,6 +13,10 @@ public with sharing class FEC_ConstantCommon {
     public static final Integer HTTP_TIMEOUT_MAX = 120000;
     public static final Integer HTTP_TIMEOUT_DEFAULT = 60000;
     public static final Integer HTTP_STATUS_OK = 200;
+    public static final Integer HTTP_STATUS_BAD_REQUEST = 400;
+
+    /** Múi giờ khi format datetime hiển thị VN (Transfer Call / Pega callback). */
+    public static final String USER_TIMEZONE_VIETNAM = 'Asia/Ho_Chi_Minh';
 
     /** Chuỗi rỗng dùng chung (default khi value blank). */
     public static final String STR_EMPTY = '';
@@ -697,6 +701,73 @@ public with sharing class FEC_ConstantCommon {
         'DOCUMENT_PREP' => 'Pending-DocumentPreparation',
         'TASK_UNDER_REVIEW' => 'Pending-TaskUnderReview'
     };
+
+    /** Transfer Call: RequestorID gửi lên Pega Collections. */
+    public static final String TRANSFER_CALL_REQUESTOR_ID_CSM = 'CSM';
+
+    /** Transfer Call: tên FEC_API_Config__mdt record cho endpoint. */
+    public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
+
+    /** REST POST Update_Transfer_Information (Pega Collections → SF): log / context. */
+    public static final String UPDATE_TRANSFER_REST_SERVICE_NAME = 'FEC_UpdateTransferInfoRestService';
+    public static final String UPDATE_TRANSFER_MSG_SUCCESS =
+        'Update call transfer information by ServiceCaseID successfully';
+    public static final String UPDATE_TRANSFER_VAL_REQUEST_BODY_REQUIRED = 'Request body is required';
+    public static final String UPDATE_TRANSFER_VAL_SERVICE_CASE_ID_REQUIRED = 'ServiceCaseID is required';
+    public static final String UPDATE_TRANSFER_VAL_REQUESTOR_ID_REQUIRED = 'RequestorID is required';
+    public static final String UPDATE_TRANSFER_VAL_COLL_ACTION_CODE_REQUIRED = 'CollActionCode is required';
+    public static final String UPDATE_TRANSFER_ERR_SERVICE_CASE_NOT_FOUND_PREFIX = 'ServiceCaseID not found: ';
+
+    /**
+     * Transfer Call: thứ tự các fieldKey trong mảng data[].
+     * Theo spec: 7 field, KHÔNG có csCaseID (csCaseID nằm ở root body riêng).
+     */
+    public static final List<String> TRANSFER_CALL_DATA_FIELD_ORDER = new List<String>{
+        'productType',
+        'extAppId',
+        'phoneNumber',
+        'category',
+        'subCategory',
+        'subCode',
+        'remark'
+    };  
+
+    public static final String TRANSFER_ERR_EN_GENESYS_ID_NULL = 'genesysId is null';
+    public static final String TRANSFER_ERR_EN_PHONE_NUMBER_NULL = 'phoneNumber is null';
+    public static final String TRANSFER_ERR_EN_PHONE_NUMBER_INVALID = 'Invalid format PhoneNumber';
+    public static final String TRANSFER_ERR_EN_CS_CASE_ID_NULL = 'csCaseId is null';
+    public static final String TRANSFER_ERR_EN_EXT_APP_ID_NULL = 'extAppId is null';
+    public static final String TRANSFER_ERR_EN_PRODUCT_TYPE_NULL = 'productType is null';
+    public static final String TRANSFER_ERR_EN_PRODUCT_TYPE_INVALID = 'productType is invalid';
+    public static final String TRANSFER_ERR_EN_CATEGORY_NULL = 'category is null';
+    public static final String TRANSFER_ERR_EN_SUB_CATEGORY_NULL = 'subCategory is null';
+    public static final String TRANSFER_ERR_EN_SUB_CODE_NULL = 'subCode is null';
+    public static final String TRANSFER_ERR_EN_REMARK_NULL = 'remark is null';
+    /** Lỗi nghiệp vụ từ Pega (Reason) khi số HĐ/tài khoản không có trên Collections. */
+    public static final String TRANSFER_ERR_EN_EXT_APP_ID_NOT_ON_COLLECTIONS =
+        '-';
+
+    /** Transfer Call: giá trị mặc định khi field trống. */
+    public static final String TRANSFER_CALL_DEFAULT_GENESYS_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PRODUCT_TYPE  = '';
+    public static final String TRANSFER_CALL_DEFAULT_EXT_APP_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PHONE         = '';
+    public static final String TRANSFER_CALL_DEFAULT_CATEGORY      = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CATEGORY  = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CODE      = '';
+    public static final String TRANSFER_CALL_DEFAULT_CS_CASE_ID    = '';
+
+    /** Transfer Call: giới hạn độ dài log/hint khi parse lỗi. */
+    public static final Integer TRANSFER_CALL_DEBUG_BODY_MAX_LEN   = 1000;
+    public static final Integer TRANSFER_CALL_API_HINT_RAW_MAX_LEN = 500;
+
+    /** Transfer Call: các key JSON ưu tiên khi trích xuất thông tin lỗi từ response. */
+    public static final List<String> TRANSFER_CALL_JSON_ERROR_HINT_KEYS = new List<String>{
+        'Reason', 'reason', 'message', 'errorMessage', 'error', 'detail', 'ResultOfClass'
+    };
+
+    /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
+    public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
     
     public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
         TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
