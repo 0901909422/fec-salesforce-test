@@ -1,4 +1,4 @@
-public without sharing class FEC_CaseEditNOCController {
+public with sharing class FEC_CaseEditNOCController {
   @AuraEnabled
   public static List<String> getProductTypeIds(String recordId) {
     try {
@@ -528,7 +528,6 @@ public without sharing class FEC_CaseEditNOCController {
     String subCategoryId,
     String subCodeId
   ){
-
     Case cs = new Case(
       Id = recordId,
       FEC_Product_Type__c = productTypeId,
