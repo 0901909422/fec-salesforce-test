@@ -193,6 +193,16 @@
         <members>FEC_MSG_Remove_Phone_Service_Failed</members>
         <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
         <members>FEC_MSG_IPP_Conversion_Success</members>
+        <members>FEC_TransferCall_Details_Title</members>
+        <members>FEC_TransferCall_Field_TransferDataToCollections</members>
+        <members>FEC_TransferCall_Field_TransferTime</members>
+        <members>FEC_TransferCall_Field_TransferStatus</members>
+        <members>FEC_TransferCall_Field_FailureReason</members>
+        <members>FEC_TransferCall_Field_CollActionCode</members>
+        <members>FEC_TransferCall_Field_CollSubActionCode</members>
+        <members>FEC_TransferCall_Field_CollRemarks</members>
+        <members>FEC_TransferCall_Field_CollActionDate</members>
+        <members>FEC_TransferCall_Field_CollAgent</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

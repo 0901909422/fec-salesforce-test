@@ -1090,6 +1090,16 @@
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
         <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_TransferCall_Details_Title</members>
+        <members>FEC_TransferCall_Field_TransferDataToCollections</members>
+        <members>FEC_TransferCall_Field_TransferTime</members>
+        <members>FEC_TransferCall_Field_TransferStatus</members>
+        <members>FEC_TransferCall_Field_FailureReason</members>
+        <members>FEC_TransferCall_Field_CollActionCode</members>
+        <members>FEC_TransferCall_Field_CollSubActionCode</members>
+        <members>FEC_TransferCall_Field_CollRemarks</members>
+        <members>FEC_TransferCall_Field_CollActionDate</members>
+        <members>FEC_TransferCall_Field_CollAgent</members>
         <name>CustomLabel</name>
     </types>
 	<types>
