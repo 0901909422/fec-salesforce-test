@@ -200,6 +200,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
           FEC_SubCode__r.Name,
+          FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
@@ -326,6 +327,14 @@ public without sharing class FEC_CaseBusinessService {
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
         }
+      }
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — fallback subCodeCode từ Case khi chưa resolve từ subCodeId
+      if (
+        String.isBlank(result.subCodeCode) &&
+        selectedCase.FEC_SubCode__r != null &&
+        String.isNotBlank(selectedCase.FEC_SubCode__r.FEC_Code__c)
+      ) {
+        result.subCodeCode = selectedCase.FEC_SubCode__r.FEC_Code__c.trim();
       }
 
       result.subCategoryCode = FEC_ConstantCommon.STR_EMPTY;
@@ -791,6 +800,11 @@ public without sharing class FEC_CaseBusinessService {
               selectedCase.FEC_Account_or_Contract__r?.FEC_Fast_Cash_Status__c
             )
           ) {
+            continue;
+          }
+
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 / Property
+          if (shouldSkipPointsRedemptionSubSection(result.subCodeCode, sectionNameTemp, subSectionNameTemp)) {
             continue;
           }
 
@@ -4418,6 +4432,70 @@ public without sharing class FEC_CaseBusinessService {
     } catch (DmlException e) {
       throw new AuraHandledException(e.getMessage());
     }
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
+  private static Boolean shouldSkipPointsRedemptionSubSection(
+    String subCodeCode,
+    String sectionName,
+    String subSectionName
+  ) {
+    if (String.isBlank(subCodeCode)) {
+      return false;
+    }
+    String s = subCodeCode.toUpperCase();
+    if (!s.contains('RC33.01') && !s.contains('RC33.02') && !s.contains('RC33.03')) {
+      return false;
+    }
+    return ('Account Information'.equals(sectionName) && 'C360 Info'.equals(subSectionName))
+      || ('Case Information'.equals(sectionName) && 'Property Info'.equals(subSectionName));
+  }
+
+  /**
+   * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
+   * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
+   */
+  public static Error mrcReturnCaseInformationValidate(
+    Case selectedCase,
+    String subCategoryCode,
+    String subCodeCode
+  ) {
+    List<String> errorlst = new List<String>();
+
+    if (String.isBlank(subCategoryCode)) {
+      return new Error();
+    }
+    Boolean isMrcRl05Branch = subCategoryCode.toUpperCase().contains('RL05');
+    if (!isMrcRl05Branch) {
+      return new Error();
+    }
+
+    if (
+      selectedCase == null ||
+      selectedCase.FEC_Account_or_Contract__c == null ||
+      selectedCase.FEC_Account_or_Contract__r == null
+    ) {
+      return new Error();
+    }
+
+    String productCode = selectedCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+    if (String.isNotBlank(productCode)) {
+      if (!'TW'.equalsIgnoreCase(productCode.trim())) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_Product_Not_TW);
+      }
+    }
+
+    if (String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RL05.03')) {
+      Decimal dpd = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (dpd != null && dpd >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
+
+    if (errorlst.isEmpty()) {
+      return new Error();
+    }
+    return new Error(System.Label.FEC_MRC_Return_Case_Info_Block_Title, errorlst);
   }
 
   public static Error phoneUpdateValidate(Id cHistoryId) {

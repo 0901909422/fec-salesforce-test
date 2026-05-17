@@ -269,13 +269,49 @@ const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
 
-//linhdev fix jira FECREDIT_CSM_2025_KH-1393
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
 function isPointsRedemptionHideC360AndProperty(subCode) {
   if (!subCode) {
     return false;
   }
   const s = String(subCode).trim().toUpperCase();
   return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
+}
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+function pointsRedemptionHideTargetForSection(sectionName, hide) {
+  if (!hide) {
+    return null;
+  }
+  if (sectionName === SECTION_NAME_ACCOUNT_INFORMATION) {
+    return 'c360';
+  }
+  if (sectionName === SECTION_NAME_CASE_INFORMATION) {
+    return 'property';
+  }
+  return null;
+}
+
+function shouldHidePointsRedemptionSubSection(sectionName, subName, hide) {
+  if (!hide) {
+    return false;
+  }
+  return (
+    (sectionName === SECTION_NAME_ACCOUNT_INFORMATION && subName === SUBSECTION_NAME_C360_INFO) ||
+    (sectionName === SECTION_NAME_CASE_INFORMATION && subName === SUBSECTION_NAME_PROPERTY_INFO)
+  );
+}
+
+function shouldSkipPointsRedemptionLwcDynCmp(prHideTarget, dynSubKey) {
+  if (!prHideTarget || !dynSubKey) {
+    return false;
+  }
+  if (prHideTarget === 'c360') {
+    return dynSubKey === normalizeSubSectionName(SUBSECTION_NAME_C360_INFO);
+  }
+  if (prHideTarget === 'property') {
+    return dynSubKey === normalizeSubSectionName(SUBSECTION_NAME_PROPERTY_INFO);
+  }
+  return false;
 }
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — reload sau Có/Không: getData với bộ NOC session (Case DB có thể chưa có Category/Sub)
@@ -455,7 +491,7 @@ function mergeSectionSortedRows(section) {
     if (sub._hideForFastCash) {
       return;
     }
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
     if (sub._hideForPointsRedemption) {
       return;
     }
@@ -487,6 +523,11 @@ function mergeSectionSortedRows(section) {
   });
 
   (section.resolvedComponentlst || []).forEach((dynCmp, idx) => {
+    const dynSubKey = normalizeSubSectionName(dynCmp?.subSectionName);
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn LWC C360 / Property
+    if (shouldSkipPointsRedemptionLwcDynCmp(section._pointsRedemptionHideTarget, dynSubKey)) {
+      return;
+    }
     const fecOrd = readFecSubSectionOrder(dynCmp);
     const subSectionNameKey = normalizeSubSectionName(dynCmp?.subSectionName);
     const matchedFieldOrder = subSectionNameKey
@@ -595,7 +636,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _hidePropertyInfoForFastCash = false;
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   _hideC360AndPropertyForPointsRedemption = false;
 
   // get eyeIcon() {
@@ -1466,7 +1507,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.businessLoaded = false;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
     this._hidePropertyInfoForFastCash = false;
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
     this._hideC360AndPropertyForPointsRedemption = false;
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
@@ -1722,11 +1763,10 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1393
-        this._hideC360AndPropertyForPointsRedemption = isPointsRedemptionHideC360AndProperty(
-          this.business?.subCodeCode
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+        this._setPointsRedemptionHideFlag(
+          isPointsRedemptionHideC360AndProperty(this.business?.subCodeCode)
         );
-        this._applyPointsRedemptionSectionVisibility();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
@@ -1862,14 +1902,18 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   handlePointsRedemptionSectionVisibility(event) {
-    const hide = !!(event.detail && event.detail.hideC360AndProperty);
-    this._hideC360AndPropertyForPointsRedemption = hide;
+    this._setPointsRedemptionHideFlag(!!(event.detail && event.detail.hideC360AndProperty));
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+  _setPointsRedemptionHideFlag(hide) {
+    this._hideC360AndPropertyForPointsRedemption = !!hide;
     this._applyPointsRedemptionSectionVisibility();
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   _applyPointsRedemptionSectionVisibility() {
     if (!this.business?.sectionlst) {
       return;
@@ -1877,18 +1921,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     let changed = false;
     const hide = !!this._hideC360AndPropertyForPointsRedemption;
     this.business.sectionlst.forEach((section) => {
-      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
-        return;
+      const sectionName = section.name;
+      const nextTarget = pointsRedemptionHideTargetForSection(sectionName, hide);
+      if (section._pointsRedemptionHideTarget !== nextTarget) {
+        section._pointsRedemptionHideTarget = nextTarget;
+        changed = true;
       }
       section.subSectionlst?.forEach((sub) => {
-        if (
-          sub.name !== SUBSECTION_NAME_C360_INFO &&
-          sub.name !== SUBSECTION_NAME_PROPERTY_INFO
-        ) {
-          return;
-        }
-        if (sub._hideForPointsRedemption !== hide) {
-          sub._hideForPointsRedemption = hide;
+        const shouldHideSub = shouldHidePointsRedemptionSubSection(sectionName, sub.name, hide);
+        if (sub._hideForPointsRedemption !== shouldHideSub) {
+          sub._hideForPointsRedemption = shouldHideSub;
           changed = true;
         }
       });
