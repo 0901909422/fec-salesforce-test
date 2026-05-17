@@ -223,9 +223,14 @@ public without sharing class FEC_CaseEditNOCController {
           FEC_Account_or_Contract__c,
           FEC_Account_Contract_Number_PL__c,
           FEC_Product_Type__c,
+          FEC_Product_Type__r.Name,
           FEC_Category__c,
+          FEC_Category__r.Name,
           FEC_SubCategory__c,
-          FEC_SubCode__c, FEC_Is_Submited__c,
+          FEC_SubCategory__r.Name,
+          FEC_SubCode__c,
+          FEC_SubCode__r.Name,
+          FEC_Is_Submited__c,
           FEC_Interaction_View_Mode__c,
           RecordType.DeveloperName,
           FEC_Is_Call_API_Success__c,
@@ -543,5 +548,5 @@ public without sharing class FEC_CaseEditNOCController {
       throw new AuraHandledException('Update failed: ' + e.getMessage());
     }
   }
-  
+
 }
