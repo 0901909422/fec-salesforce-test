@@ -152,6 +152,8 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <name>CustomField</name>
     </types>
     <types>
