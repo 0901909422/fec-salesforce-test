@@ -150,6 +150,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -601,6 +602,7 @@
 		<members>FEC_Case_Assignment_Logs__c</members>
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
+        <members>FEC_Transfer_Call_Error__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -691,6 +693,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_RemovePhoneForm</members>
+        <members>fec_IPPConversionRetailForm</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -702,6 +706,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+		<members>FEC_Case_NOC</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -1084,6 +1089,17 @@
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_TransferCall_Details_Title</members>
+        <members>FEC_TransferCall_Field_TransferDataToCollections</members>
+        <members>FEC_TransferCall_Field_TransferTime</members>
+        <members>FEC_TransferCall_Field_TransferStatus</members>
+        <members>FEC_TransferCall_Field_FailureReason</members>
+        <members>FEC_TransferCall_Field_CollActionCode</members>
+        <members>FEC_TransferCall_Field_CollSubActionCode</members>
+        <members>FEC_TransferCall_Field_CollRemarks</members>
+        <members>FEC_TransferCall_Field_CollActionDate</members>
+        <members>FEC_TransferCall_Field_CollAgent</members>
         <name>CustomLabel</name>
     </types>
 	<types>
