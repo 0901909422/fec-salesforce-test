@@ -20,6 +20,8 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
+        <members>FEC_NocInheritanceUtil</members>
+	    <members>FEC_NocInheritanceUtilTest</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
