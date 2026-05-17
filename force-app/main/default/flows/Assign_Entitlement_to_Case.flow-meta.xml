@@ -97,14 +97,14 @@
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>AccountId</field>
+            <field>FEC_Product_Type__c</field>
             <operator>IsNull</operator>
             <value>
                 <booleanValue>false</booleanValue>
             </value>
         </filters>
         <object>Case</object>
-        <recordTriggerType>Create</recordTriggerType>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
     </start>
     <status>Active</status>
