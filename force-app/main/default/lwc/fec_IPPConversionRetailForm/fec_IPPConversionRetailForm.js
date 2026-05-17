@@ -77,7 +77,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     get convertButtonDisabled() {
-        return this.isReadOnly || this.convertDisabled;
+        return this.isReadOnly || this.convertLoading || this.convertSucceeded || this.convertDisabled;
     }
 
     get datatableMaxRowSelection() {
@@ -94,7 +94,10 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track detailsLoading = false;
     @track convertLoading = false;
     @track convertDisabled = false;
-    @track noti10Message = null;
+    @track convertSucceeded = false;
+    @track showNoti08 = false;
+    @track showNoti09 = false;
+    @track showNoti10 = false;
     @track retryCount = 0;
     @track showConfirmModal = false;
     @track showManualEntry = false;
@@ -168,10 +171,11 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                     this.retryCount = actionCount;
                 }
                 this.convertDisabled = !(res?.canConvert !== false);
-                if (actionCount != null && actionCount >= CONST.MAX_RETRY) {
-                    this.noti10Message = FEC_MSG_IPP_Noti_10;
-                } else {
-                    this.noti10Message = null;
+                if (actionCount != null && Number(actionCount) === -1) {
+                    this.convertSucceeded = true;
+                    this.showNoti08 = true;
+                } else if (actionCount != null && actionCount >= CONST.MAX_RETRY) {
+                    this.showNoti10 = true;
                 }
             })
             .catch(() => {
@@ -276,6 +280,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
             return;
         }
         this.convertLoading = true;
+        this.clearConvertMessages();
         convertIPP({
             caseId: this.recordId,
             transactionId: this.selectedTransactionId,
@@ -285,19 +290,21 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         })
             .then((res) => {
                 if (res && res.success) {
-                    this.showToast(FEC_Success_Title, FEC_MSG_IPP_Conversion_Success, CONST.VARIANT_SUCCESS);
+                    this.convertSucceeded = true;
+                    this.convertDisabled = true;
+                    this.showNoti08 = true;
                     this.navigateToCase();
                 } else {
                     const actionCount = res?.actionCount != null ? Number(res.actionCount) : null;
                     this.retryCount = actionCount != null ? actionCount : (this.retryCount + 1);
                     if (res?.maxRetriesExceeded === true || this.retryCount >= CONST.MAX_RETRY) {
                         this.convertDisabled = true;
-                        this.noti10Message = FEC_MSG_IPP_Noti_10;
+                        this.showNoti10 = true;
                         window.setTimeout(() => {
                             this.navigateToCase();
                         }, 2000);
                     } else {
-                        this.showToast(FEC_Toast_Error, res?.errorMessage || FEC_MSG_IPP_Conversion_Fail_Retry, CONST.VARIANT_ERROR);
+                        this.showNoti09 = true;
                     }
                 }
             })
@@ -305,12 +312,12 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 this.retryCount += 1;
                 if (this.retryCount >= CONST.MAX_RETRY) {
                     this.convertDisabled = true;
-                    this.noti10Message = FEC_MSG_IPP_Noti_10;
+                    this.showNoti10 = true;
                     window.setTimeout(() => {
                         this.navigateToCase();
                     }, 2000);
                 } else {
-                    this.showToast(FEC_Toast_Error, err?.body?.message || err?.message || FEC_MSG_IPP_Conversion_Fail_Retry, CONST.VARIANT_ERROR);
+                    this.showNoti09 = true;
                 }
             })
             .finally(() => {
@@ -446,7 +453,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         })
             .then((res) => {
                 if (res && res.success) {
-                    this.showToast(FEC_Success_Title, FEC_MSG_IPP_Conversion_Success, CONST.VARIANT_SUCCESS);
+                    this.convertSucceeded = true;
+                    this.convertDisabled = true;
+                    this.showNoti08 = true;
                     this.showManualEntry = false;
                     this.navigateToCase();
                 } else {
@@ -456,13 +465,13 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                     }
                     if (res?.maxRetriesExceeded === true || (actionCount != null && actionCount >= CONST.MAX_RETRY)) {
                         this.convertDisabled = true;
-                        this.noti10Message = FEC_MSG_IPP_Noti_10;
+                        this.showNoti10 = true;
                         this.showManualEntry = false;
                         window.setTimeout(() => {
                             this.navigateToCase();
                         }, 2000);
                     } else {
-                        this.showToast(FEC_Toast_Error, res?.errorMessage || FEC_MSG_IPP_AddIpp_Default_Failed, CONST.VARIANT_ERROR);
+                        this.showNoti09 = true;
                     }
                 }
             })
@@ -477,6 +486,12 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     formatAmount(val) {
         if (val == null) return STR_EMPTY;
         return new Intl.NumberFormat('vi-VN').format(val);
+    }
+
+    clearConvertMessages() {
+        this.showNoti08 = false;
+        this.showNoti09 = false;
+        this.showNoti10 = false;
     }
 
     showToast(title, message, variant) {
@@ -499,8 +514,12 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         return this.details != null && !this.details.errorMessage;
     }
 
-    get showConvertButton() {
-        return this.showDetailsSection && this.selectedTenor != null && !this.convertDisabled;
+    get showNoti09BelowButton() {
+        return this.showNoti09 && !this.showNoti10;
+    }
+
+    get showNoti10BelowButton() {
+        return this.showNoti10;
     }
 
     get detailsInterestDisplay() {
@@ -517,5 +536,17 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     get noEligibleMessage() {
         return FEC_MSG_IPP_No_Eligible_Transactions;
+    }
+
+    get noti08Message() {
+        return FEC_MSG_IPP_Conversion_Success;
+    }
+
+    get noti09Message() {
+        return FEC_MSG_IPP_Conversion_Fail_Retry;
+    }
+
+    get noti10Message() {
+        return FEC_MSG_IPP_Noti_10;
     }
 }

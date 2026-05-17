@@ -691,6 +691,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_RemovePhoneForm</members>
+        <members>fec_IPPConversionRetailForm</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1462,6 +1464,9 @@
 		<name>Flow</name>
 	</types>
     <types>
+		<members>FEC_Case_NOC</members>
+		<name>LightningMessageChannel</name>
+    </types>
 		<members>CA_Credit_Assessment</members>
 		<members>CL_Collections</members>
 		<members>CO_Card_Operations</members>
