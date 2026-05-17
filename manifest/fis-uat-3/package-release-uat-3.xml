@@ -691,6 +691,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_RemovePhoneForm</members>
+        <members>fec_IPPConversionRetailForm</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -702,6 +704,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+		<members>FEC_Case_NOC</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -1084,6 +1087,7 @@
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
         <name>CustomLabel</name>
     </types>
 	<types>
