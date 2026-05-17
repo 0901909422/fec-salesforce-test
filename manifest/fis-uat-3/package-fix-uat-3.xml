@@ -66,6 +66,7 @@
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
 		<members>FEC_PointsRedemptionCaseController</members>
+		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
