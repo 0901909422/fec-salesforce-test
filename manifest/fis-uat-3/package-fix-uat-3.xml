@@ -299,5 +299,9 @@
 		<members>Case.TS_Telesales</members>
 		<name>SharingCriteriaRule</name>
 	</types>
+    <types>
+        <members>Case</members>
+        <name>SharingRules</name>
+    </types>
 	<version>66.0</version>
 </Package>
