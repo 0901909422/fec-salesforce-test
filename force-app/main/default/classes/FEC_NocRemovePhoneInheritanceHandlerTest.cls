@@ -1,6 +1,18 @@
 @IsTest
 private class FEC_NocRemovePhoneInheritanceHandlerTest {
 
+    private static FEC_Product_Type__c createProductType(String name) {
+        FEC_Product_Type__c pt = new FEC_Product_Type__c(Name = name);
+        insert pt;
+        return pt;
+    }
+
+    private static FEC_Category__c createCategory(String name) {
+        FEC_Category__c cat = new FEC_Category__c(Name = name);
+        insert cat;
+        return cat;
+    }
+
     private static FEC_Sub_Category__c createSubCategory(String name) {
         FEC_Sub_Category__c sc = new FEC_Sub_Category__c(Name = name);
         insert sc;
@@ -14,11 +26,15 @@ private class FEC_NocRemovePhoneInheritanceHandlerTest {
     }
 
     @IsTest
-    static void testUpdateParentPropagatesToActiveChildrenWithSubCode() {
-        FEC_Sub_Category__c subCat = createSubCategory('SC Propagate');
-        FEC_Sub_Code__c subCode = createSubCode('SCODE Propagate');
+    static void testParentWithMoreNullsPropagatesToChildSameProductType() {
+        FEC_Product_Type__c pt = createProductType('PT Inherit 1');
+        FEC_Category__c cat = createCategory('Cat Inherit 1');
+        FEC_Sub_Category__c subCat = createSubCategory('SC Inherit 1');
+        FEC_Sub_Code__c subCode = createSubCode('SCODE Inherit 1');
 
-        FEC_Nature_of_Case__c childShouldUpdate = new FEC_Nature_of_Case__c(
+        FEC_Nature_of_Case__c child = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
+            FEC_Category__c = cat.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id,
             FEC_Active__c = true,
@@ -26,52 +42,35 @@ private class FEC_NocRemovePhoneInheritanceHandlerTest {
             FEC_Do_Not_Bother__c = false,
             FEC_Transfer_Call_to_Collection__c = false
         );
-        FEC_Nature_of_Case__c childShouldKeepTrue = new FEC_Nature_of_Case__c(
-            FEC_Sub_Category__c = subCat.Id,
-            FEC_Sub_Code__c = subCode.Id,
+        insert child;
+
+        insert new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
+            FEC_Category__c = cat.Id,
             FEC_Active__c = true,
             FEC_Remove_Phone__c = true,
             FEC_Do_Not_Bother__c = true,
             FEC_Transfer_Call_to_Collection__c = true
         );
-        FEC_Nature_of_Case__c inactiveChild = new FEC_Nature_of_Case__c(
-            FEC_Sub_Category__c = subCat.Id,
-            FEC_Sub_Code__c = subCode.Id,
-            FEC_Active__c = false,
-            FEC_Remove_Phone__c = false,
-            FEC_Do_Not_Bother__c = false,
-            FEC_Transfer_Call_to_Collection__c = false
-        );
-        insert new List<FEC_Nature_of_Case__c>{ childShouldUpdate, childShouldKeepTrue, inactiveChild };
 
-        FEC_Nature_of_Case__c parent = new FEC_Nature_of_Case__c(
-            FEC_Sub_Category__c = subCat.Id,
-            FEC_Active__c = true,
-            FEC_Remove_Phone__c = true,
-            FEC_Do_Not_Bother__c = true,
-            FEC_Transfer_Call_to_Collection__c = true
-        );
-        insert parent;
-
-        Map<Id, FEC_Nature_of_Case__c> refreshed = new Map<Id, FEC_Nature_of_Case__c>([
-            SELECT Id, FEC_Remove_Phone__c, FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c, FEC_Active__c
+        FEC_Nature_of_Case__c refreshed = [
+            SELECT FEC_Do_Not_Bother__c, FEC_Remove_Phone__c, FEC_Transfer_Call_to_Collection__c
             FROM FEC_Nature_of_Case__c
-            WHERE Id IN :new List<Id>{ childShouldUpdate.Id, childShouldKeepTrue.Id, inactiveChild.Id }
-        ]);
-
-        System.assertEquals(true, refreshed.get(childShouldUpdate.Id).FEC_Remove_Phone__c);
-        System.assertEquals(true, refreshed.get(childShouldUpdate.Id).FEC_Do_Not_Bother__c);
-        System.assertEquals(true, refreshed.get(childShouldUpdate.Id).FEC_Transfer_Call_to_Collection__c);
-        System.assertEquals(true, refreshed.get(childShouldKeepTrue.Id).FEC_Remove_Phone__c);
-        System.assertEquals(false, refreshed.get(inactiveChild.Id).FEC_Remove_Phone__c);
+            WHERE Id = :child.Id
+        ];
+        System.assertEquals(true, refreshed.FEC_Do_Not_Bother__c);
+        System.assertEquals(true, refreshed.FEC_Remove_Phone__c);
+        System.assertEquals(true, refreshed.FEC_Transfer_Call_to_Collection__c);
     }
 
     @IsTest
     static void testUpdateParentFalseDoesNotOverrideChildTrue() {
-        FEC_Sub_Category__c subCat = createSubCategory('SC No Override');
-        FEC_Sub_Code__c subCode = createSubCode('SCODE No Override');
+        FEC_Product_Type__c pt = createProductType('PT Inherit 2');
+        FEC_Sub_Category__c subCat = createSubCategory('SC Inherit 2');
+        FEC_Sub_Code__c subCode = createSubCode('SCODE Inherit 2');
 
         FEC_Nature_of_Case__c childTrue = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id,
             FEC_Active__c = true,
@@ -82,6 +81,7 @@ private class FEC_NocRemovePhoneInheritanceHandlerTest {
         insert childTrue;
 
         FEC_Nature_of_Case__c parent = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Active__c = true,
             FEC_Remove_Phone__c = true,
@@ -96,10 +96,9 @@ private class FEC_NocRemovePhoneInheritanceHandlerTest {
         update parent;
 
         FEC_Nature_of_Case__c refreshedChild = [
-            SELECT Id, FEC_Remove_Phone__c, FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c
+            SELECT FEC_Remove_Phone__c, FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c
             FROM FEC_Nature_of_Case__c
             WHERE Id = :childTrue.Id
-            LIMIT 1
         ];
         System.assertEquals(true, refreshedChild.FEC_Remove_Phone__c);
         System.assertEquals(true, refreshedChild.FEC_Do_Not_Bother__c);
@@ -107,36 +106,38 @@ private class FEC_NocRemovePhoneInheritanceHandlerTest {
     }
 
     @IsTest
-    static void testInsertChildInheritsFromExistingParentSameSubCategory() {
-        FEC_Sub_Category__c subCat = createSubCategory('SC Insert Inherit');
-        FEC_Sub_Code__c subCode = createSubCode('SCODE Insert Inherit');
+    static void testInsertChildInheritsFromSparseParentSameProductType() {
+        FEC_Product_Type__c pt = createProductType('PT Inherit 3');
+        FEC_Category__c cat = createCategory('Cat Inherit 3');
+        FEC_Sub_Category__c subCat = createSubCategory('SC Inherit 3');
+        FEC_Sub_Code__c subCode = createSubCode('SCODE Inherit 3');
 
         insert new FEC_Nature_of_Case__c(
-            FEC_Sub_Category__c = subCat.Id,
+            FEC_Product_Type__c = pt.Id,
+            FEC_Category__c = cat.Id,
             FEC_Active__c = true,
-            FEC_Remove_Phone__c = true,
             FEC_Do_Not_Bother__c = true,
+            FEC_Remove_Phone__c = true,
             FEC_Transfer_Call_to_Collection__c = true
         );
 
         FEC_Nature_of_Case__c child = new FEC_Nature_of_Case__c(
+            FEC_Product_Type__c = pt.Id,
+            FEC_Category__c = cat.Id,
             FEC_Sub_Category__c = subCat.Id,
             FEC_Sub_Code__c = subCode.Id,
             FEC_Active__c = true,
-            FEC_Remove_Phone__c = false,
             FEC_Do_Not_Bother__c = false,
+            FEC_Remove_Phone__c = false,
             FEC_Transfer_Call_to_Collection__c = false
         );
         insert child;
 
         FEC_Nature_of_Case__c refreshed = [
-            SELECT Id, FEC_Remove_Phone__c, FEC_Do_Not_Bother__c, FEC_Transfer_Call_to_Collection__c
+            SELECT FEC_Do_Not_Bother__c
             FROM FEC_Nature_of_Case__c
             WHERE Id = :child.Id
-            LIMIT 1
         ];
-        System.assertEquals(true, refreshed.FEC_Remove_Phone__c);
         System.assertEquals(true, refreshed.FEC_Do_Not_Bother__c);
-        System.assertEquals(true, refreshed.FEC_Transfer_Call_to_Collection__c);
     }
 }

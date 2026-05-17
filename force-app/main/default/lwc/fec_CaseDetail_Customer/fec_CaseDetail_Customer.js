@@ -182,8 +182,14 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
   handleMessage(message) {
     console.log('>>>>>>handleMessage isModeEdit: ', message.isModeEdit);
+
+
     if (message == null || typeof message.isModeEdit === STR_UNDEFINED) return;
 
+    //Hieutt Update: thêm check caseId để tránh set các case khác khi  publish  mode edit
+    if (message.caseId !== this.recordId) {
+      return;
+    }
     // Author: Toannd61
     const prevModeEdit = this.modeEditCase === true;
     const nextModeEdit = message.isModeEdit === true;
@@ -454,6 +460,9 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         typeof caseBusinessEle.refreshFileUploadCards === "function"
       ) {
         caseBusinessEle.refreshFileUploadCards();
+      }
+      if (typeof caseBusinessEle?.refreshAutoHoldCase === "function") {
+        caseBusinessEle.refreshAutoHoldCase();
       }
       // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
       // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark
