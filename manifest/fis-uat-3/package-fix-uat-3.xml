@@ -67,6 +67,8 @@
 		<members>FEC_NocInheritanceUtilTest</members>
 		<members>FEC_PointsRedemptionCaseController</members>
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_TranferInformationCallout</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -125,6 +127,7 @@
         <members>fec_TransactionsAccountTabView</members>
         <members>fecInteractionChatConversations</members>
         <members>fec_PointsRedemptionCaseForm</members>
+        <members>fec_TransferCall</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -152,6 +155,7 @@
     </types>
     <types>
 		<members>FEC_Currency_Code__c</members>
+		<members>FEC_Transfer_Call_Error__c</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
