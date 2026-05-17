@@ -4439,6 +4439,14 @@
         <value>Xác nhận đổi điểm</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redemption_Available_Points_Below_Min</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Available_Points_Below_Min</shortDescription>
+        <value>Available Points &lt; 100,000</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -11784,7 +11792,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
-        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+        <value>Dịch vụ lỗi, vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
@@ -11840,7 +11848,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
-        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
@@ -11848,7 +11856,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
-        <value>Chuyển đổi trả góp thành công.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Noti_10</fullName>
