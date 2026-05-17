@@ -63,6 +63,8 @@
 		<members>FEC_StatementsAccountController</members>
 		<members>FEC_TransactionsController</members>
 		<members>FEC_InteractionInforHandler</members>
+		<members>FEC_NocInheritanceUtil</members>
+		<members>FEC_NocInheritanceUtilTest</members>
 		<name>Apexclass</name>
 	</types>
     <types>
