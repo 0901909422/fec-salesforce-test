@@ -1051,7 +1051,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1066,7 +1066,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1091,7 +1091,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</field>
         <readable>true</readable>
     </fieldPermissions>

@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import checkEligibility from '@salesforce/apex/FEC_RemovePhoneController.checkEligibility';
 import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneController.saveRemovePhoneSelections';
 import loadRemovePhoneDraft from '@salesforce/apex/FEC_RemovePhoneController.loadRemovePhoneDraft';
@@ -19,6 +20,8 @@ import FEC_Btn_Previous from '@salesforce/label/c.FEC_Btn_Previous';
 import FEC_Btn_Next from '@salesforce/label/c.FEC_Btn_Next';
 import Pagination_Page_Of_Label from '@salesforce/label/c.Pagination_Page_Of_Label';
 import Loading from '@salesforce/label/c.Loading';
+import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
+import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
 import { STR_EMPTY, RESULT_ERROR } from 'c/fec_CommonConst';
 import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 
@@ -106,13 +109,36 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         loading: Loading
     };
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     _syncPhoneFromInput() {
         const phoneInput = this.template.querySelector('lightning-input');
-        if (!phoneInput || typeof phoneInput.value !== 'string') {
+        const fromInput = phoneInput && phoneInput.value != null
+            ? String(phoneInput.value).trim()
+            : STR_EMPTY;
+        const fromTrack = (this.phone || STR_EMPTY).trim();
+        this.phone = fromInput || fromTrack;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    _getPhoneValidationError(phoneValue) {
+        const p = (phoneValue != null ? String(phoneValue) : (this.phone || STR_EMPTY)).trim();
+        if (!p) {
+            return null;
+        }
+        return validateUpdatedInfoPhone(p) || null;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    _applyPhoneInputValidity(reportNow) {
+        const phoneInput = this.template.querySelector('lightning-input');
+        if (!phoneInput) {
             return;
         }
-        const nextPhone = (phoneInput.value || STR_EMPTY).trim();
-        this.phone = nextPhone;
+        const err = this._getPhoneValidationError(this.phone);
+        phoneInput.setCustomValidity(err || '');
+        if (reportNow) {
+            phoneInput.reportValidity();
+        }
     }
 
     _removePhoneCellText(v) {
@@ -250,10 +276,8 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         }
         const nextPhone = (event.target.value || STR_EMPTY).trim();
         this.phone = nextPhone;
-        const phoneInput = this.template.querySelector('lightning-input');
-        if (phoneInput) {
-            phoneInput.setCustomValidity('');
-        }
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+        this._applyPhoneInputValidity(true);
         if (this.phone !== this.lastCheckedPhone) {
             this.rows = [];
             this.selectedRowIds = [];
@@ -263,8 +287,23 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         this.resultMessage = STR_EMPTY;
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     get disableCheckButton() {
-        return this.isLoading || !this.phone || this.readOnlyRemovePhone;
+        if (this.isLoading || this.readOnlyRemovePhone || !this.phone) {
+            return true;
+        }
+        if (this._getPhoneValidationError(this.phone)) {
+            return true;
+        }
+        return this.isEligibilityChecked;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    get isEligibilityChecked() {
+        const p = (this.phone || STR_EMPTY).trim();
+        return p.length > 0
+            && p === (this.lastCheckedPhone || STR_EMPTY).trim()
+            && (this.rows || []).length > 0;
     }
 
     get phoneReadOnlyDisplay() {
@@ -395,13 +434,10 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         if (this.readOnlyRemovePhone) {
             return;
         }
-        const phoneErr = this.phone ? validateUpdatedInfoPhone(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+        const phoneErr = this.phone ? this._getPhoneValidationError(this.phone) : FEC_MSG_Remove_Phone_Invalid_Format;
         if (phoneErr) {
-            const phoneInput = this.template.querySelector('lightning-input');
-            if (phoneInput) {
-                phoneInput.setCustomValidity(phoneErr);
-                phoneInput.reportValidity();
-            }
+            this._applyPhoneInputValidity(true);
             this.resultMessage = STR_EMPTY;
             this.rows = [];
             this.selectedRowIds = [];
@@ -409,10 +445,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             this._recomputePagedRows();
             return;
         }
-        const phoneInputClear = this.template.querySelector('lightning-input');
-        if (phoneInputClear) {
-            phoneInputClear.setCustomValidity('');
-        }
+        this._applyPhoneInputValidity(false);
         this.isLoading = true;
         this.resultMessage = STR_EMPTY;
         this.rows = [];
@@ -432,10 +465,12 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                     this._bumpTableKey();
                     return;
                 }
-                this.resultMessage = (res && res.errorMessage) ? res.errorMessage : FEC_MSG_Remove_Phone_Service_Failed;
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+                this.resultMessage = FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
             })
             .catch(() => {
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1368
                 this.resultMessage = FEC_MSG_Remove_Phone_Service_Failed;
                 this.resultClass = RESULT_ERROR;
             })
@@ -444,26 +479,98 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             });
     }
 
-    @api saveDraftIfApplicable() {
+    _buildRemovePhoneSavePayload() {
         if (this.readOnlyRemovePhone) {
-            return Promise.resolve();
+            return null;
         }
         this._syncPhoneFromInput();
+        this._syncCheckRemovePhoneFromSelection();
         const phone = (this.phone || STR_EMPTY).trim();
-        const recordId = this._recordId;
+        const recordId = this._recordId || this.recordId;
         const rowSnapshot = (this.rows || []).map((r) => (r ? Object.assign({}, r) : r));
         if (!recordId || !phone || !rowSnapshot.length) {
-            return Promise.resolve();
+            return null;
         }
         const selected = this._collectSelectedIds();
         const rowPayload = rowSnapshot
             .map((r) => this._mapTableRowToSaveDto(r, selected))
             .filter((row) => row != null);
+        if (!rowPayload.length) {
+            return null;
+        }
+        return { recordId, phone, rowPayload };
+    }
+
+    _persistRemovePhoneSavePayload(payload) {
+        if (!payload) {
+            return Promise.resolve();
+        }
         return saveRemovePhoneSelections({
-            caseId: recordId,
-            removedPhoneNumber: phone,
-            rowsJson: JSON.stringify(rowPayload)
+            caseId: payload.recordId,
+            removedPhoneNumber: payload.phone,
+            rowsJson: JSON.stringify(payload.rowPayload)
         });
+    }
+
+    _hasRemovePhoneTableData() {
+        return (this.rows || []).length > 0;
+    }
+
+    _hasRemovePhoneRowSelection() {
+        const selected = this._collectSelectedIds();
+        if (selected.size > 0) {
+            return true;
+        }
+        return (this.rows || []).some((r) => r && r.checkRemovePhone === true);
+    }
+
+    _showRemovePhoneValidationToast(message) {
+        this.dispatchEvent(new ShowToastEvent({
+            title: FEC_Toast_Validation_Title,
+            message: message || FEC_Complete_This_Field,
+            variant: 'warning'
+        }));
+    }
+
+    /** Submit: validate trước khi parent gọi submit(). */
+    @api validateForSubmit() {
+        if (this.readOnlyRemovePhone) {
+            return true;
+        }
+        this._syncPhoneFromInput();
+        const phone = (this.phone || STR_EMPTY).trim();
+        if (!phone && !this._hasRemovePhoneTableData()) {
+            return true;
+        }
+        if (phone && this._getPhoneValidationError(phone)) {
+            this._applyPhoneInputValidity(true);
+            this._showRemovePhoneValidationToast(FEC_MSG_Remove_Phone_Invalid_Format);
+            return false;
+        }
+        if (phone && !this._hasRemovePhoneTableData()) {
+            this._showRemovePhoneValidationToast(FEC_Btn_Remove_Phone_Check_Eligibility);
+            return false;
+        }
+        if (this._hasRemovePhoneTableData() && !this._hasRemovePhoneRowSelection()) {
+            this._showRemovePhoneValidationToast(FEC_Complete_This_Field);
+            return false;
+        }
+        return true;
+    }
+
+    /** Save & Close: lưu nháp khi đã Check Eligibility và có bảng; không bắt buộc chọn dòng. */
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    @api saveDraftIfApplicable() {
+        return this._persistRemovePhoneSavePayload(this._buildRemovePhoneSavePayload());
+    }
+
+    /** Submit: lưu sau khi validateForSubmit; cùng Apex nhưng gọi từ luồng submit. */
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    @api saveForSubmitIfApplicable() {
+        if (this.readOnlyRemovePhone) {
+            return Promise.resolve();
+        }
+        return this._persistRemovePhoneSavePayload(this._buildRemovePhoneSavePayload());
     }
 
     connectedCallback() {

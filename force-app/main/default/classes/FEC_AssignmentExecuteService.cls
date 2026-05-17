@@ -1,4 +1,4 @@
-public with sharing class FEC_AssignmentExecuteService {
+public without sharing class FEC_AssignmentExecuteService {
 
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
@@ -95,13 +95,13 @@ public with sharing class FEC_AssignmentExecuteService {
          * Current user
          */
         User currentUser = [
-    SELECT Id, Name, UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1
-  ];
+            SELECT Id, Name, UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1
+        ];
         
         /*
          * 1. Direct user match
          */
-        if (assignmentValues.contains(currentUser.Name)) {
+        if (assignmentValues.contains(currentUser.Id)) {
             return true;
         }
         
@@ -147,6 +147,7 @@ public with sharing class FEC_AssignmentExecuteService {
             return values;
         }
         
+        // tungnm37 fix: split bằng ',' - delimiter chuẩn
         for (String value : assignmentUsers.split(',')) {
             if (!String.isBlank(value)) {
                 values.add(value.trim());

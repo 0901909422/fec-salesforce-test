@@ -1,4 +1,4 @@
-public with sharing class FEC_CaseExecuteService {
+public without sharing class FEC_CaseExecuteService {
   public class ExecuteVisibilityResult {
     @AuraEnabled public Boolean value;
     @AuraEnabled public Boolean shouldUpdate;
@@ -349,7 +349,7 @@ public with sharing class FEC_CaseExecuteService {
       /*
        * Routing history
        */
-      createRoutingActionHistory(caseId, oldOwnerId, userId);
+      // createRoutingActionHistory(caseId, oldOwnerId, userId);
       
       System.debug('SUCCESS: Owner updated');
       

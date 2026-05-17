@@ -78,7 +78,6 @@
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
-        <members>Case.FEC_Chat_History__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
@@ -1357,6 +1356,10 @@
 		<members>FEC_Service_Resource_Absence__c.FEC_EndDate_Greater_Than_StartDate</members>
 		<members>FEC_Service_Resource_Absence__c.FEC_StartDate_Not_In_Past</members>
 		<name>ValidationRule</name>
+	</types>
+    <types>
+		<members>Assign_Entitlement_to_Case</members>
+		<name>Flow</name>
 	</types>
 	<version>66.0</version>
 </Package>

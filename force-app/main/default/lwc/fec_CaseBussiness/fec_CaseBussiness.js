@@ -267,6 +267,43 @@ const LABEL_ACCOUNT_CONTRACT_NUMBER = 'Account/ Contract Number';
 const SECTION_NAME_ACCOUNT_INFORMATION = 'Account Information';
 const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
+const SUBSECTION_NAME_C360_INFO = 'C360 Info';
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393
+function isPointsRedemptionHideC360AndProperty(subCode) {
+  if (!subCode) {
+    return false;
+  }
+  const s = String(subCode).trim().toUpperCase();
+  return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
+}
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1366 — reload sau Có/Không: getData với bộ NOC session (Case DB có thể chưa có Category/Sub)
+function isFastCashNocSelectionComplete(sel) {
+  return !!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId);
+}
+
+function readFastCashNocSelectionFromStorage(caseId) {
+  try {
+    if (!caseId) {
+      return null;
+    }
+    if (sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) !== "1") {
+      return null;
+    }
+    const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    if (!raw) {
+      return null;
+    }
+    const sel = JSON.parse(raw);
+    if (!isFastCashNocSelectionComplete(sel)) {
+      return null;
+    }
+    return sel;
+  } catch (e) {
+    return null;
+  }
+}
 
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
@@ -418,6 +455,10 @@ function mergeSectionSortedRows(section) {
     if (sub._hideForFastCash) {
       return;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    if (sub._hideForPointsRedemption) {
+      return;
+    }
     const fecOrd = readFecSubSectionOrder(sub);
     const sortOrder =
       fecOrd !== undefined ? fecOrd : subIndex + 1;
@@ -553,6 +594,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _hidePropertyInfoForFastCash = false;
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  _hideC360AndPropertyForPointsRedemption = false;
 
   // get eyeIcon() {
   //   return this.isMasked ? "utility:preview" : "utility:hide";
@@ -1215,7 +1259,18 @@ export default class Fec_CaseBussiness extends LightningElement {
       (message) => this._handleCaseNOCMessage(message),
       { scope: APPLICATION_SCOPE }
     );
-    this.getData();
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+    const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
+    if (fastCashNocSel && fastCashNocSel.productTypeId) {
+      this.getData(
+        fastCashNocSel.productTypeId,
+        fastCashNocSel.categoryId,
+        fastCashNocSel.subCategoryId,
+        fastCashNocSel.subCodeId
+      );
+    } else {
+      this.getData();
+    }
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
     }
@@ -1264,6 +1319,11 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     // Chỉ xử lý message dành cho case này, tránh cross-tab interference
     if (message.caseId != null && message.caseId !== this.recordId) return;
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — message khóa NOC chỉ dành cho fec_CaseEditNOC, không reload business
+    if (message.fastCashNocLocked === true) {
+      return;
+    }
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
       // Existing behavior: account type change — không xử lý ở đây
@@ -1406,6 +1466,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.businessLoaded = false;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
     this._hidePropertyInfoForFastCash = false;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    this._hideC360AndPropertyForPointsRedemption = false;
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
@@ -1534,7 +1596,8 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
                 // }
 
-                if (!this.isEdit) {
+                const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
+                if (!this.isEdit || isCOFStage1Revert) {
                   field.readonly = true;
                   field.editable = false;
                 }
@@ -1659,6 +1722,11 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+        this._hideC360AndPropertyForPointsRedemption = isPointsRedemptionHideC360AndProperty(
+          this.business?.subCodeCode
+        );
+        this._applyPointsRedemptionSectionVisibility();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
@@ -1768,18 +1836,6 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-  handleFastCashNocLocked(event) {
-    const rid = event.detail && event.detail.recordId;
-    if (rid && this.recordId && rid !== this.recordId) {
-      return;
-    }
-    const nocEl = this.template.querySelector("c-fec_-case-edit-n-o-c");
-    if (nocEl && typeof nocEl.applyFastCashBlockNocLock === "function") {
-      nocEl.applyFastCashBlockNocLock();
-    }
-  }
-
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _applyFastCashPropertyInfoVisibility() {
     if (!this.business?.sectionlst) {
@@ -1797,6 +1853,42 @@ export default class Fec_CaseBussiness extends LightningElement {
         const next = !!this._hidePropertyInfoForFastCash;
         if (sub._hideForFastCash !== next) {
           sub._hideForFastCash = next;
+          changed = true;
+        }
+      });
+    });
+    if (changed) {
+      this._rebuildAllSectionSortedRows();
+    }
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  handlePointsRedemptionSectionVisibility(event) {
+    const hide = !!(event.detail && event.detail.hideC360AndProperty);
+    this._hideC360AndPropertyForPointsRedemption = hide;
+    this._applyPointsRedemptionSectionVisibility();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  _applyPointsRedemptionSectionVisibility() {
+    if (!this.business?.sectionlst) {
+      return;
+    }
+    let changed = false;
+    const hide = !!this._hideC360AndPropertyForPointsRedemption;
+    this.business.sectionlst.forEach((section) => {
+      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+        return;
+      }
+      section.subSectionlst?.forEach((sub) => {
+        if (
+          sub.name !== SUBSECTION_NAME_C360_INFO &&
+          sub.name !== SUBSECTION_NAME_PROPERTY_INFO
+        ) {
+          return;
+        }
+        if (sub._hideForPointsRedemption !== hide) {
+          sub._hideForPointsRedemption = hide;
           changed = true;
         }
       });
@@ -2333,6 +2425,10 @@ export default class Fec_CaseBussiness extends LightningElement {
       isAllValid = false;
     }
 
+    if (!this._validateRemovePhoneForSubmit()) {
+      isAllValid = false;
+    }
+
     const contractClosureEl = this._getContractClosureFormEl();
     if (
       contractClosureEl &&
@@ -2602,17 +2698,41 @@ export default class Fec_CaseBussiness extends LightningElement {
     return el.saveForSubmitIfApplicable();
   }
 
-  _saveRemovePhoneDraftIfApplicable() {
-    const host =
+  _getSubProcessContainerEl() {
+    return (
       this.template.querySelector("c-fec_-sub-process-container") ||
-      this.template.querySelector("c-fec-sub-process-container");
+      this.template.querySelector("c-fec-sub-process-container")
+    );
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _validateRemovePhoneForSubmit() {
+    const host = this._getSubProcessContainerEl();
+    if (!host || typeof host.validateRemovePhoneForSubmit !== "function") {
+      return true;
+    }
+    return host.validateRemovePhoneForSubmit();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _saveRemovePhoneDraftIfApplicable() {
+    const host = this._getSubProcessContainerEl();
     if (!host || typeof host.saveRemovePhoneDraftIfApplicable !== "function") {
       return Promise.resolve();
     }
     return host.saveRemovePhoneDraftIfApplicable();
   }
 
-  //linhdev: Persist child data before case record form submit
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _saveRemovePhoneForSubmitIfApplicable() {
+    const host = this._getSubProcessContainerEl();
+    if (!host || typeof host.saveRemovePhoneForSubmitIfApplicable !== "function") {
+      return Promise.resolve();
+    }
+    return host.saveRemovePhoneForSubmitIfApplicable();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
@@ -2735,6 +2855,7 @@ export default class Fec_CaseBussiness extends LightningElement {
    * Dùng cho nút "Save & Close". Không validate input/select khi Save & Close.
    */
   @api saveOnly() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     return this._persistChildDataBeforeCaseRecordFormSubmit().then(() => {
     let formlst = this.template.querySelectorAll("lightning-record-edit-form");
     let formToSubmit = [];
@@ -2756,6 +2877,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._saveRefundRequestDraftIfApplicable(),
         this._saveFastCashDraftIfApplicable(),
         this._savePointsRedemptionDraftIfApplicable(),
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+        this._saveRemovePhoneDraftIfApplicable(),
       ])
         .then(() => this._saveContractClosureDraftIfApplicable())
         .then((closureRes) => {
@@ -2766,12 +2889,10 @@ export default class Fec_CaseBussiness extends LightningElement {
 
     if (total === 0) {
       // DungLT — flush upload file trước khi lưu form
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1368
       return this._uploadFecFileUploadCardsIfApplicable()
         .then(() => afterForms())
-        .then(() => {
-          this.handleSaveFieldReadOnly();
-        })
-        .then(() => this._saveRemovePhoneDraftIfApplicable());
+        .then(() => this.handleSaveFieldReadOnly());
     }
 
     return new Promise((resolve, reject) => {
@@ -2791,8 +2912,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       .then(() => {
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
-      })
-      .then(() => this._saveRemovePhoneDraftIfApplicable());
+      });
     });
   }
 
@@ -2848,7 +2968,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._saveFastCashForSubmitIfApplicable(),
       this._savePointsRedemptionDraftIfApplicable(),
     ]);
-    await this._saveRemovePhoneDraftIfApplicable();
+    await this._saveRemovePhoneForSubmitIfApplicable();
     const closureSaveRes = await this._saveContractClosureIfApplicable();
     if (closureSaveRes && closureSaveRes.valid === false) {
       return false;
@@ -3658,6 +3778,7 @@ export default class Fec_CaseBussiness extends LightningElement {
               fieldLayout: meta.fieldLayout,
               subSectionName: meta.subSectionName,
               hideSubSectionHeading: meta.hideSubSectionHeading === true,
+              isCollapsible: meta.isCollapsible === true,
               lwcColClassName,
             };
           })
