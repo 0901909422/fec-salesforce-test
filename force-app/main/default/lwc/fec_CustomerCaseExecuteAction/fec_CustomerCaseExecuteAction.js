@@ -58,7 +58,7 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
 
       console.log("Owner updated");
 
-      localStorage.setItem(`CaseExecute-${this.recordId}`, "handling");
+      localStorage.setItem(this.recordId, "handling");
 
       /*
        * Enable edit mode
@@ -78,9 +78,6 @@ export default class Fec_CustomerCaseExecuteAction extends LightningElement {
   }
 
   async handlePublishMessageChanel() {
-    if (!this.recordId) {
-      return;
-    }
     const payload = {
       caseId: this.recordId,
       isModeEdit: true,
