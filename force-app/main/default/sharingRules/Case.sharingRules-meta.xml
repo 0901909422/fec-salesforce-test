@@ -37,7 +37,7 @@
         </sharedTo>
         <criteriaItems>
             <field>FEC_Assignment_Users__c</field>
-            <operation>equals</operation>
+            <operation>contains</operation>
             <value>Card Operations</value>
         </criteriaItems>
         <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
