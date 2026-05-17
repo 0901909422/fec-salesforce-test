@@ -59,7 +59,7 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Category__r.Name,
         FEC_SubCategory__r.Name,
         FEC_SubCode__r.Name,
-        FEC_Remarks_for_Collections__c,
+        FEC_Remark_for_Collections__c,
         FEC_Case_ID__c,
         FEC_ID_Search__c
       FROM Case
@@ -85,7 +85,7 @@ public without sharing class FEC_TranferInformationCallout {
     data.category = c.FEC_Category__r?.Name;
     data.subCategory = c.FEC_SubCategory__r?.Name;
     data.subCode = c.FEC_SubCode__r?.Name;
-    data.remark = c.FEC_Remarks_for_Collections__c;
+    data.remark = c.FEC_Remark_for_Collections__c;
     data.csCaseID = c.FEC_ID_Search__c; // mã Case (S-xxxx), không dùng hyperlink formula
     return data;
   }
