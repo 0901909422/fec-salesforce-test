@@ -667,21 +667,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_General_Assignment__c.FEC_Case_Stage__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_General_Assignment__c.FEC_Channel__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_General_Assignment__c.FEC_Customer_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_General_Assignment__c.FEC_General_Assignment_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -691,8 +676,38 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>FEC_General_Assignment__c.FEC_Nature_of_Cases__c</field>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_Case_Stage__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_Customer_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_General_Assignment_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_General_Assignment_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_General_Assignment_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -2105,9 +2120,9 @@
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_Routing_Assignment__c</object>
-        <viewAllRecords>true</viewAllRecords>
+        <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -2359,6 +2374,14 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Product_Type__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_General_Assignment_Config__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_General_Assignment__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
