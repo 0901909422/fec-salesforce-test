@@ -65,6 +65,7 @@
 		<members>FEC_InteractionInforHandler</members>
 		<members>FEC_NocInheritanceUtil</members>
 		<members>FEC_NocInheritanceUtilTest</members>
+		<members>FEC_PointsRedemptionCaseController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -122,6 +123,7 @@
         <members>fec_TransactionsAccount</members>
         <members>fec_TransactionsAccountTabView</members>
         <members>fecInteractionChatConversations</members>
+        <members>fec_PointsRedemptionCaseForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -182,6 +184,10 @@
         <members>FEC_BilledTx_Col_Plan</members>
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
+        <members>FEC_MSG_IPP_Conversion_Success</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -264,6 +270,10 @@
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
 		<name>Layout</name>
 	</types>
+    <types>
+		<members>FEC_Case_NOC</members>
+        <name>LightningMessageChannel</name>
+    </types>
 	<types>
 		<members>CA_Credit_Assessment</members>
 		<members>CL_Collections</members>
