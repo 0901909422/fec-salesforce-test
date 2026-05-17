@@ -4,8 +4,6 @@ import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'light
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import IS_MODE_EDIT from '@salesforce/messageChannel/FEC_Case_Mode__c';
 import VIEW_MODE from '@salesforce/schema/Case.FEC_Interaction_View_Mode__c';
-import CHAT_HISTORY from '@salesforce/schema/Case.FEC_Chat_History__c';
-import saveChatHistory from '@salesforce/apex/FEC_InteractionInforHandler.saveChatHistory';
 import FEC_Conversations_Label from '@salesforce/label/c.FEC_Chat_Conversations_Label';
 import FEC_Chat_History_Label from '@salesforce/label/c.FEC_Chat_History_Label';
 import FEC_Button_Save from '@salesforce/label/c.FEC_Button_Save';
@@ -30,11 +28,11 @@ export default class FecInteractionChatConversations extends LightningElement {
     @wire(MessageContext)
     messageContext;
 
-    @wire(getRecord, { recordId: '$recordId', fields: [VIEW_MODE, CHAT_HISTORY] })
+    @wire(getRecord, { recordId: '$recordId', fields: [VIEW_MODE] })
     wiredCase({ data, error }) {
         if (data) {
             this.viewMode = getFieldValue(data, VIEW_MODE);
-            this.chatHistory = getFieldValue(data, CHAT_HISTORY) || '';
+            this.chatHistory = '';
         }
     }
 
@@ -50,7 +48,7 @@ export default class FecInteractionChatConversations extends LightningElement {
     subscribeToMessageChannel() {
         if (!this.subscription) {
             this.subscription = subscribe(this.messageContext, IS_MODE_EDIT, (msg) => {
-                if (msg && typeof msg.isModeEdit !== 'undefined') {
+                if (msg && typeof msg.isModeEdit !== 'undefined' && msg.caseId === this.recordId) {
                     this.viewMode = msg.isModeEdit ? VIEW_MODE_HANDLING : VIEW_MODE_REVIEW;
                 }
             }, { scope: APPLICATION_SCOPE });

@@ -1098,19 +1098,6 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fecInteractionChatConversations</componentName>
-                <identifier>c_fecInteractionChatConversations2</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Chat</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </componentInstance>
-        </itemInstances>
         <name>Facet-i9z6432zuwn</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -1437,19 +1424,6 @@
             <componentInstance>
                 <componentName>fecRelevantInteractionCase</componentName>
                 <identifier>c_fecRelevantInteractionCase</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fecInteractionChatConversations</componentName>
-                <identifier>c_fecInteractionChatConversations</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Chat</rightValue>
-                    </criteria>
-                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <name>sidebar</name>
