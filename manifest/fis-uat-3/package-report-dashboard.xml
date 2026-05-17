@@ -4,6 +4,7 @@
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseTriggerHandler</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -98,5 +99,5 @@
         <members>BusinessHours</members>
         <name>Settings</name>
     </types>
-    <version>67.0</version>
+    <version>66.0</version>
 </Package>
