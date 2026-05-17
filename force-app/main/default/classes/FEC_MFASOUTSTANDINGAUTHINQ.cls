@@ -7,6 +7,10 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2026-01-29     Quangdv7             Create
+   1.1      2026-05-12     Agent                Auth row: AUTH_CD, MERCH_CAT, TXN_CURR_CODE, FINAL_ACTN, ACTN_RSN_DESC (pending map)
+   1.2      2026-05-12     Agent                Parse AUTH_GRP / MODULE007 + AUTH_AMT; pad Auths when AUTHS_TABLE empty; relax row EFF/AMT
+   1.3      2026-05-12     Agent                EFF_DATE_AUTH_DETAIL from AUTH_GRP (prefer MODULE007 path) for Pending effective
+   1.4      2026-05-12     Agent                Pending: DTL_* from MODULE007 AUTH_GRP; VMX_MSGOUT.AUTH_CD on rows as MSGOUT_AUTH_CD
  
 ****************************************************************************************/
 
@@ -43,6 +47,9 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         public Token PREV_TOKEN;
         public Integer MORE_DATA_FLAG;
         public Integer NBR_RETURNED_ITEMS;
+        /** M_FAS…VMX_MSGOUT.AUTH_CD (message level; Pending approval). */
+        public String AUTH_CD;
+        public List<AuthTableRow> Auths;
     }
 
     public class RCData {
@@ -53,6 +60,35 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     public class Token {
         public String EFF_DATE;
         public Integer TIME_X;
+    }
+
+    /** One row under VMX_MSGOUT / AUTHS_TABLE (outstanding auth). */
+    public class AuthTableRow {
+        public String EFF_DATE;
+        /** VMX_AUTH_DETAIL…RETRV_AUTH_DTL_OUT.AUTH_GRP.EFF_DATE when present in envelope. */
+        public String EFF_DATE_AUTH_DETAIL;
+        public String POSTING_DATE;
+        public String AUTH_AMOUNT;
+        public String Description;
+        public String CreditDebitFlag;
+        public String CREDIT_PLAN;
+        public String AUTHORIZATION_CODE;
+        /** Pending / sheet: approval (AUTH_CD). */
+        public String AUTH_CD;
+        public String MERCH_CAT;
+        public String TXN_CURR_CODE;
+        public String FINAL_ACTN;
+        public String ACTN_RSN_DESC;
+        /** VMX_AUTH_DETAIL…MODULE007…RETRV_AUTH_DTL_OUT.AUTH_GRP — Pending primary fields. */
+        public String DTL_AUTH_AMT;
+        public String DTL_MERC_NAME_LOC;
+        public String DTL_CR_PLAN;
+        public String DTL_MERCH_CAT;
+        public String DTL_TXN_CURR_CODE;
+        public String DTL_FINAL_ACTN;
+        public String DTL_ACTN_RSN_DESC;
+        /** Copy of VMX_MSGOUT.AUTH_CD for consumers that only hold AuthTableRow. */
+        public String MSGOUT_AUTH_CD;
     }
 
     /* =====================================================
@@ -108,8 +144,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
                 errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
             }
         
-            throw new CalloutException(
-            );
+            throw new CalloutException(errorMsg);
         }
 
         return response;
@@ -203,6 +238,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     ResponseWrapper result = new ResponseWrapper();
     result.VMXMsgOut = new VMXMsgOut();
     result.VMXMsgOut.RC_DATA = new List<RCData>();
+    result.VMXMsgOut.Auths = new List<AuthTableRow>();
 
     if (String.isBlank(xml)) {
         return result;
@@ -255,6 +291,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     out.ORG = FEC_CommonUltils.getValueSafe(msgOutNode, 'ORG');
     out.ACCT = FEC_CommonUltils.getValueSafe(msgOutNode, 'ACCT');
     out.REQ_TYPE = FEC_CommonUltils.getValueSafe(msgOutNode, 'REQ_TYPE');
+    out.AUTH_CD = FEC_CommonUltils.getValueSafe(msgOutNode, 'AUTH_CD');
     out.MORE_DATA_FLAG = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(msgOutNode, 'MORE_DATA_FLAG') );
     out.NBR_RETURNED_ITEMS = FEC_CommonUltils.toInt( FEC_CommonUltils.getValueSafe(msgOutNode, 'NBR_RETURNED_ITEMS'));
 
@@ -285,8 +322,305 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         out.PREV_TOKEN.TIME_X = FEC_CommonUltils.toInt(FEC_CommonUltils.getValueSafe(prevNode, 'TIME_PREV'));
     }
 
+    Dom.XmlNode detailGrpEnvelope = findAuthGrpForDetailEff(msgOutNode);
+    String envelopeEffDetail = null;
+    if (detailGrpEnvelope != null) {
+        envelopeEffDetail = firstNonBlankAuth(
+            pickXmlField(detailGrpEnvelope, 'EFF_DATE'),
+            pickXmlField(detailGrpEnvelope, 'EffDate')
+        );
+    }
+    String dtlAuthAmt = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'AUTH_AMT')
+        : null;
+    String dtlMercLoc = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'MERC_NAME_LOC')
+        : null;
+    String dtlCrPlan = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'CR_PLAN')
+        : null;
+    String dtlMerchCat = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'MERCH_CAT')
+        : null;
+    String dtlTxnCurr = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'TXN_CURR_CODE')
+        : null;
+    String dtlFinalActn = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'FINAL_ACTN')
+        : null;
+    String dtlActnRsn = detailGrpEnvelope != null
+        ? pickXmlField(detailGrpEnvelope, 'ACTN_RSN_DESC')
+        : null;
+
+    /* ================= AUTHS_TABLE (per-row fields) ================= */
+    Dom.XmlNode authTableNode = FEC_CommonUltils.findChildByName(msgOutNode, 'AUTHS_TABLE');
+    if (authTableNode != null) {
+        for (Dom.XmlNode rowNode : authTableNode.getChildElements()) {
+            if (rowNode == null) {
+                continue;
+            }
+            String effRaw = readAuthTableCell(rowNode, 'EFF_DATE');
+            if (String.isBlank(effRaw)) {
+                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+            }
+            String amtRaw = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'AUTH_AMOUNT'),
+                readAuthTableCell(rowNode, 'AUTH_AMT')
+            );
+            if (String.isBlank(effRaw) && String.isBlank(amtRaw)) {
+                continue;
+            }
+            if (String.isBlank(effRaw)) {
+                effRaw = readAuthTableCell(rowNode, 'POSTING_DATE');
+            }
+            if (String.isBlank(effRaw)) {
+                continue;
+            }
+            AuthTableRow ar = new AuthTableRow();
+            ar.EFF_DATE = effRaw.trim();
+            ar.POSTING_DATE = readAuthTableCell(rowNode, 'POSTING_DATE');
+            ar.AUTH_AMOUNT = amtRaw;
+            ar.Description = readAuthTableCell(rowNode, 'Description');
+            if (String.isBlank(ar.Description)) {
+                ar.Description = readAuthTableCell(rowNode, 'MERCHANT_NAME');
+            }
+            if (String.isBlank(ar.Description)) {
+                ar.Description = readAuthTableCell(rowNode, 'MERC_NAME_LOC');
+            }
+            ar.CreditDebitFlag = readAuthTableCell(rowNode, 'CreditDebitFlag');
+            if (String.isBlank(ar.CreditDebitFlag)) {
+                ar.CreditDebitFlag = readAuthTableCell(rowNode, 'DEBIT_CREDIT_FLAG');
+            }
+            ar.CREDIT_PLAN = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'CREDIT_PLAN'),
+                readAuthTableCell(rowNode, 'CR_PLAN')
+            );
+            ar.AUTHORIZATION_CODE = firstNonBlankAuth(
+                readAuthTableCell(rowNode, 'AUTHORIZATION_CODE'),
+                readAuthTableCell(rowNode, 'AuthCode')
+            );
+            ar.AUTH_CD = readAuthTableCell(rowNode, 'AUTH_CD');
+            ar.MERCH_CAT = readAuthTableCell(rowNode, 'MERCH_CAT');
+            ar.TXN_CURR_CODE = readAuthTableCell(rowNode, 'TXN_CURR_CODE');
+            ar.FINAL_ACTN = readAuthTableCell(rowNode, 'FINAL_ACTN');
+            ar.ACTN_RSN_DESC = readAuthTableCell(rowNode, 'ACTN_RSN_DESC');
+
+            Dom.XmlNode grpRow = findFirstAuthGrpNode(rowNode);
+            String effDetailRow = null;
+            if (grpRow != null) {
+                effDetailRow = firstNonBlankAuth(
+                    pickXmlField(grpRow, 'EFF_DATE'),
+                    pickXmlField(grpRow, 'EffDate')
+                );
+            }
+            ar.EFF_DATE_AUTH_DETAIL = firstNonBlankAuth(
+                effDetailRow,
+                envelopeEffDetail
+            );
+            ar.DTL_AUTH_AMT = dtlAuthAmt;
+            ar.DTL_MERC_NAME_LOC = dtlMercLoc;
+            ar.DTL_CR_PLAN = dtlCrPlan;
+            ar.DTL_MERCH_CAT = dtlMerchCat;
+            ar.DTL_TXN_CURR_CODE = dtlTxnCurr;
+            ar.DTL_FINAL_ACTN = dtlFinalActn;
+            ar.DTL_ACTN_RSN_DESC = dtlActnRsn;
+            ar.MSGOUT_AUTH_CD = out.AUTH_CD;
+
+            out.Auths.add(ar);
+        }
+    }
+
+    padAuthsIfEmpty(out, msgOutNode);
+
     return result;
 }
+    /**
+     * Reads a direct child text of an AUTHS_TABLE row, or the first child whose
+     * local name matches {@code tagName} (case-insensitive).
+     */
+    private static String readAuthTableCell(Dom.XmlNode rowNode, String tagName) {
+        if (rowNode == null || String.isBlank(tagName)) {
+            return null;
+        }
+        String v = FEC_CommonUltils.getXmlValue(rowNode, tagName);
+        if (!String.isBlank(v)) {
+            return v.trim();
+        }
+        for (Dom.XmlNode childEl : rowNode.getChildElements()) {
+            if (childEl != null
+                && childEl.getName() != null
+                && childEl.getName().equalsIgnoreCase(tagName)) {
+                String t = childEl.getText();
+                return String.isBlank(t) ? null : t.trim();
+            }
+        }
+        return null;
+    }
+
+    private static String firstNonBlankAuth(String a, String b) {
+        if (!String.isBlank(a)) {
+            return a.trim();
+        }
+        if (!String.isBlank(b)) {
+            return b.trim();
+        }
+        return null;
+    }
+
+    /** Direct child (getValueSafe) then deep match (readAuthTableCell). */
+    private static String pickXmlField(Dom.XmlNode n, String tag) {
+        if (n == null || String.isBlank(tag)) {
+            return null;
+        }
+        String v = FEC_CommonUltils.getValueSafe(n, tag);
+        if (!String.isBlank(v)) {
+            return v.trim();
+        }
+        return readAuthTableCell(n, tag);
+    }
+
+    private static Dom.XmlNode findFirstAuthGrpNode(Dom.XmlNode root) {
+        if (root == null) {
+            return null;
+        }
+        List<Dom.XmlNode> queue = new List<Dom.XmlNode>{ root };
+        Integer hops = 0;
+        while (!queue.isEmpty() && hops < 500) {
+            hops++;
+            Dom.XmlNode n = queue.remove(0);
+            if (n == null) {
+                continue;
+            }
+            String nm = n.getName();
+            if (nm != null && nm.toLowerCase().contains('auth_grp')) {
+                return n;
+            }
+            for (Dom.XmlNode c : n.getChildElements()) {
+                queue.add(c);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * AUTH_GRP for VMX_AUTH_DETAIL path: …MODULE007…RETRV_AUTH_DTL_OUT…AUTH_GRP.EFF_DATE
+     * Prefers a group under MODULE007 / RETRV_AUTH_DTL; else first AUTH_GRP under VMX_MSGOUT.
+     */
+    private static Dom.XmlNode findAuthGrpForDetailEff(Dom.XmlNode msgOut) {
+        if (msgOut == null) {
+            return null;
+        }
+        List<Dom.XmlNode> queue = new List<Dom.XmlNode>{ msgOut };
+        Integer hops = 0;
+        while (!queue.isEmpty() && hops < 500) {
+            hops++;
+            Dom.XmlNode n = queue.remove(0);
+            if (n == null) {
+                continue;
+            }
+            String nm = n.getName();
+            if (nm != null) {
+                String low = nm.toLowerCase();
+                if (low.contains('module007') || low.contains('retrv_auth_dtl')) {
+                    Dom.XmlNode g = findFirstAuthGrpNode(n);
+                    if (g != null) {
+                        return g;
+                    }
+                }
+            }
+            for (Dom.XmlNode c : n.getChildElements()) {
+                queue.add(c);
+            }
+        }
+        return findFirstAuthGrpNode(msgOut);
+    }
+
+    /**
+     * Maps VMX_AUTH_DETAIL-style AUTH_GRP fields (sheet: EFF_DATE, AUTH_AMT, MERC_NAME_LOC, CR_PLAN, …)
+     * from the same SOAP envelope when AUTHS_TABLE has no rows.
+     */
+    private static AuthTableRow authRowFromDetailShapedNode(Dom.XmlNode n) {
+        if (n == null) {
+            return null;
+        }
+        String effRaw = firstNonBlankAuth(
+            pickXmlField(n, 'EFF_DATE'),
+            pickXmlField(n, 'EffDate')
+        );
+        if (String.isBlank(effRaw)) {
+            effRaw = pickXmlField(n, 'POSTING_DATE');
+        }
+        String amtRaw = firstNonBlankAuth(
+            pickXmlField(n, 'AUTH_AMT'),
+            pickXmlField(n, 'AUTH_AMOUNT')
+        );
+        String merchDesc = firstNonBlankAuth(
+            pickXmlField(n, 'MERC_NAME_LOC'),
+            firstNonBlankAuth(
+                pickXmlField(n, 'Description'),
+                pickXmlField(n, 'MERCHANT_NAME')
+            )
+        );
+        String plan = firstNonBlankAuth(
+            pickXmlField(n, 'CR_PLAN'),
+            pickXmlField(n, 'CREDIT_PLAN')
+        );
+        if (String.isBlank(effRaw)
+            && String.isBlank(amtRaw)
+            && String.isBlank(merchDesc)
+            && String.isBlank(plan)) {
+            return null;
+        }
+        if (String.isBlank(effRaw)) {
+            return null;
+        }
+        AuthTableRow ar = new AuthTableRow();
+        ar.EFF_DATE = effRaw.trim();
+        ar.POSTING_DATE = pickXmlField(n, 'POSTING_DATE');
+        ar.AUTH_AMOUNT = amtRaw;
+        ar.Description = merchDesc;
+        ar.CREDIT_PLAN = plan;
+        ar.AUTHORIZATION_CODE = firstNonBlankAuth(
+            pickXmlField(n, 'AUTHORIZATION_CODE'),
+            pickXmlField(n, 'AuthCode')
+        );
+        ar.AUTH_CD = pickXmlField(n, 'AUTH_CD');
+        ar.MERCH_CAT = pickXmlField(n, 'MERCH_CAT');
+        ar.TXN_CURR_CODE = pickXmlField(n, 'TXN_CURR_CODE');
+        ar.FINAL_ACTN = pickXmlField(n, 'FINAL_ACTN');
+        ar.ACTN_RSN_DESC = pickXmlField(n, 'ACTN_RSN_DESC');
+        ar.EFF_DATE_AUTH_DETAIL = firstNonBlankAuth(
+            pickXmlField(n, 'EFF_DATE'),
+            pickXmlField(n, 'EffDate')
+        );
+        ar.DTL_AUTH_AMT = pickXmlField(n, 'AUTH_AMT');
+        ar.DTL_MERC_NAME_LOC = pickXmlField(n, 'MERC_NAME_LOC');
+        ar.DTL_CR_PLAN = pickXmlField(n, 'CR_PLAN');
+        ar.DTL_MERCH_CAT = pickXmlField(n, 'MERCH_CAT');
+        ar.DTL_TXN_CURR_CODE = pickXmlField(n, 'TXN_CURR_CODE');
+        ar.DTL_FINAL_ACTN = pickXmlField(n, 'FINAL_ACTN');
+        ar.DTL_ACTN_RSN_DESC = pickXmlField(n, 'ACTN_RSN_DESC');
+        return ar;
+    }
+
+    private static void padAuthsIfEmpty(VMXMsgOut out, Dom.XmlNode msgOutNode) {
+        if (out == null || out.Auths == null || msgOutNode == null) {
+            return;
+        }
+        if (!out.Auths.isEmpty()) {
+            return;
+        }
+        Dom.XmlNode grp = findFirstAuthGrpNode(msgOutNode);
+        AuthTableRow padded = authRowFromDetailShapedNode(grp);
+        if (padded == null) {
+            padded = authRowFromDetailShapedNode(msgOutNode);
+        }
+        if (padded != null) {
+            padded.MSGOUT_AUTH_CD = out.AUTH_CD;
+            out.Auths.add(padded);
+        }
+    }
+
     /* =====================================================
        VALIDATION
        ===================================================== */
