@@ -518,6 +518,16 @@
         <name>main</name>
         <type>Region</type>
     </flexiPageRegions>
+     <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:fec_NocChannelConfig</componentName>
+                <identifier>fec_NocChannelConfig</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocChannelConfigTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>
     <template>
