@@ -4,6 +4,10 @@
     <label>PSG - RD - Telesales User 2</label>
     <permissionSets>FEC_Common_System_Setting</permissionSets>
     <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
+    <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Batch_Case_Handling</permissionSets>
+    <permissionSets>FEC_Batch_Case_Creation</permissionSets>
+    <permissionSets>FEC_Permission_Set_Batch_Data_Creation</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_2_Customer_360</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_2_Master_Data_Management</permissionSets>
