@@ -20,6 +20,8 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
+        <members>FEC_NocInheritanceUtil</members>
+	    <members>FEC_NocInheritanceUtilTest</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -694,6 +696,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_RemovePhoneForm</members>
+        <members>fec_IPPConversionRetailForm</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -705,6 +709,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+		<members>FEC_Case_NOC</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -1087,6 +1092,7 @@
 		<members>FEC_Original_Value</members>
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
         <name>CustomLabel</name>
     </types>
 	<types>
@@ -1463,6 +1469,30 @@
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
+	</types>
+    <types>
+		<members>CA_Credit_Assessment</members>
+		<members>CL_Collections</members>
+		<members>CO_Card_Operations</members>
+		<members>CP_Contract_Processing</members>
+		<members>FS_Direct_Sales</members>
+		<members>IA_Internal_Audit</members>
+		<members>IT_IT_Operations_Support</members>
+		<members>PM_Payment</members>
+		<members>TS_Telesales</members>
+		<name>Group</name>
+	</types>
+	<types>
+		<members>Case.CA_Credit_Assessment</members>
+		<members>Case.CL_Collections</members>
+		<members>Case.CO_Card_Operations</members>
+		<members>Case.CP_Contract_Processing</members>
+		<members>Case.FS_Direct_Sales</members>
+		<members>Case.IA_Internal_Audit</members>
+		<members>Case.IT_IT_Operations_Support</members>
+		<members>Case.PM_Payment</members>
+		<members>Case.TS_Telesales</members>
+		<name>SharingCriteriaRule</name>
 	</types>
 	<version>66.0</version>
 </Package>

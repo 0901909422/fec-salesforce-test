@@ -4439,6 +4439,14 @@
         <value>Xác nhận đổi điểm</value>
     </labels>
     <labels>
+        <fullName>FEC_Points_Redemption_Available_Points_Below_Min</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Available_Points_Below_Min</shortDescription>
+        <value>Available Points &lt; 100,000</value>
+    </labels>
+    <labels>
         <fullName>FEC_Post_Date</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -11784,7 +11792,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
-        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+        <value>Dịch vụ lỗi, vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
@@ -11840,7 +11848,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
-        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
@@ -11848,7 +11856,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
-        <value>Chuyển đổi trả góp thành công.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thành công</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Noti_10</fullName>
@@ -16996,6 +17004,374 @@
         <protected>false</protected>
         <shortDescription>FEC BilledTx Col TxnCode</shortDescription>
         <value>Mã giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_FileExcelXlsxOnly</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileExcelXlsxOnly</shortDescription>
+        <value>Chỉ cho phép tải lên file Excel (.xlsx).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_FileMaxSize150MB</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileMaxSize150MB</shortDescription>
+        <value>Dung lượng file tối đa là 150MB.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_CannotReadExcelContent</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg CannotReadExcelContent</shortDescription>
+        <value>Không đọc được nội dung file Excel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_InvalidImportData</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg InvalidImportData</shortDescription>
+        <value>Dữ liệu file import không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_RequestTimeout</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch RequestTimeout</shortDescription>
+        <value>Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_TemplateNoAttachment</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch TemplateNoAttachment</shortDescription>
+        <value>Mẫu đã chọn chưa có file đính kèm để tải.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Select_File</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Select_File</shortDescription>
+        <value>Please select a file before importing.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Submitted</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Submitted</shortDescription>
+        <value>Import request has been submitted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_RT_Customer_Case_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_RT_Customer_Case_Not_Found</shortDescription>
+        <value>Không tìm thấy Record Type Customer Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_RT_Interaction_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_RT_Interaction_Not_Found</shortDescription>
+        <value>Không tìm thấy Record Type Interaction.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Layout</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Layout</shortDescription>
+        <value>layout không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Contract_Number</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Contract_Number</shortDescription>
+        <value>Contract Number là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Phone</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Phone</shortDescription>
+        <value>Interaction Phone là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Product_Type</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Product_Type</shortDescription>
+        <value>Product Type là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Category</shortDescription>
+        <value>Category là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Sub_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Sub_Category</shortDescription>
+        <value>Sub Category là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Sub_Code</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Sub_Code</shortDescription>
+        <value>Sub Code là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Case_Status</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Case_Status</shortDescription>
+        <value>Case Status là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Channel</shortDescription>
+        <value>Interaction Channel là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Sub_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Sub_Channel</shortDescription>
+        <value>Interaction Sub Channel là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Product_Type_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Product_Type_Not_Found</shortDescription>
+        <value>Không tìm thấy Product Type.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Category_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Category_Not_Found</shortDescription>
+        <value>Không tìm thấy Category.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Sub_Category_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Sub_Category_Not_Found</shortDescription>
+        <value>Không tìm thấy Sub Category.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Sub_Code_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Sub_Code_Not_Found</shortDescription>
+        <value>Không tìm thấy Sub Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Case_Status</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Case_Status</shortDescription>
+        <value>Case Status không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Channel</shortDescription>
+        <value>Interaction Channel không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</shortDescription>
+        <value>Interaction Sub Channel không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Email</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Email</shortDescription>
+        <value>Interaction Email không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Row_Count</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Row_Count</shortDescription>
+        <value>Có {0} dòng dữ liệu không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Field_Required</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Field_Required</shortDescription>
+        <value>Dòng {0}: {1} không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Datetime_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Datetime_Format</shortDescription>
+        <value>Dòng {0}: {1} không đúng định dạng yyyy-mm-ddThh:mm:ss.msmmsms+0700.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Object_Not_Available</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Object_Not_Available</shortDescription>
+        <value>{0} is not available in this org.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Welcome_Customer_Case_Failed</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Welcome_Customer_Case_Failed</shortDescription>
+        <value>Interaction đã tạo nhưng Case Customer không tạo được: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_Service_Resource</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_Service_Resource</shortDescription>
+        <value>Thiếu giá trị Service Resource.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_Start_Date</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_Start_Date</shortDescription>
+        <value>Thiếu giá trị Start Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_End_Date</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_End_Date</shortDescription>
+        <value>Thiếu giá trị End Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Note_Too_Long</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Note_Too_Long</shortDescription>
+        <value>Note vượt quá số ký tự cho phép (255 ký tự).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_Service_Resource_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_Service_Resource_Format</shortDescription>
+        <value>Service Resource không đúng định dạng (thiếu @ hoặc .).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Service_Resource_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Service_Resource_Not_Found</shortDescription>
+        <value>Service Resource không tồn tại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_Start_Date_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_Start_Date_Format</shortDescription>
+        <value>Start Date không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_End_Date_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_End_Date_Format</shortDescription>
+        <value>End Date không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_End_Before_Start</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_End_Before_Start</shortDescription>
+        <value>End Date nhỏ hơn Start Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Start_In_Past</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Start_In_Past</shortDescription>
+        <value>Start Date là thời điểm trong quá khứ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_End_In_Past</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_End_In_Past</shortDescription>
+        <value>End Date là thời điểm trong quá khứ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Absence_Duplicate_In_System</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Absence_Duplicate_In_System</shortDescription>
+        <value>Service Resource đã có Absence trùng giá trị trong hệ thống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Absence_Duplicate_In_File</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Absence_Duplicate_In_File</shortDescription>
+        <value>Trùng giá trị Service Resource và Start Date và End Date.</value>
     </labels>
     <labels>
         <fullName>FEC_TransferCall_Details_Title</fullName>
