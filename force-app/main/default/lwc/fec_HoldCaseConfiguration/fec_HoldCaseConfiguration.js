@@ -86,6 +86,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     currentStatusSelected = [];
     changedStatusSelected = []; 
     channelSelected = [];
+    _nfuTempSelectedIds = [];
 
     activeSections = ['holdCase'];
 
@@ -232,6 +233,20 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     return this.holdCase && this.holdCase.length > 0
         ? this.holdCase
         : [{ isEmpty: true, name: STR_EMPTY,changedStatus: this.customLabel.noDataFound }];
+    }
+
+    get currentNfuSelectedIds() {
+        if (this.isManual) {
+            return this.selectedNfuRowsManual.map(r => r.Id);
+        }
+        return this.selectedNfuRow ? [this.selectedNfuRow.Id] : [];
+    }
+
+    handleRemoveNfuItem(event) {
+        const id = event.currentTarget.dataset.id;
+        this.selectedNfuRowsManual = this.selectedNfuRowsManual.filter(r => r.Id !== id);
+        this.formData.nfuCode = this.selectedNfuRowsManual.map(i => i.FEC_NFU_Code__c).join(', ');
+        this.nfuSearchManual = this.formData.nfuCode;
     }
 
     // ================= LOAD DATA =================
@@ -460,12 +475,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
 
     handleOpenNfuModal() {
         this.nfuModalError = STR_EMPTY;
-
-        if (this.isManual) {
-            this.selectedNfuRowsManual = [];
-        } else {
-            this.selectedNfuRow = null;
-        }
+        this._nfuTempSelectedIds = this.selectedNfuRow ? [this.selectedNfuRow.Id] : [];
 
         getNfuCodes()
             .then(result => {
@@ -478,31 +488,25 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     handleCloseNfuModal() {
         this.isShowNfuModal = false;
         this.nfuModalError = STR_EMPTY;
-        this.selectedNfuRow = null;
+        this._nfuTempSelectedIds = [];
     }
 
     handleNfuRowSelect(event) {
         let selectedIds = event.detail.selectedRecordIds || [];
-
         selectedIds = Array.from(selectedIds);
 
         if (selectedIds.length === 0) {
-            this.selectedNfuRow = null;
             return;
         }
 
-        if (this.isAuto && selectedIds.length > 1) {
+        if (selectedIds.length > 1) {
             this.nfuModalError = this.customLabel.nfuModalError;
-            this.selectedNfuRow = null;
             return;
         }
 
+        this.nfuModalError = STR_EMPTY;
         const selectedId = String(selectedIds[0]);
-
-        const selectedRow = this.nfuOptions.find(
-            r => String(r.Id) === selectedId
-        );
-
+        const selectedRow = this.nfuOptions.find(r => String(r.Id) === selectedId);
         this.selectedNfuRow = selectedRow || null;
     }
 
@@ -515,6 +519,10 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     handleSaveNfu() {
+        if (this.nfuModalError) {
+            return;
+        }
+
         if (!this.selectedNfuRow) {
             this.nfuModalError = this.customLabel.nfuModalSaveError;
             return;
@@ -526,7 +534,6 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         this.setLookupError('nfuCode', false);
         this.isShowNfuModal = false;
         this.nfuModalError = STR_EMPTY;
-        this.selectedNfuRow = null;
     }
 
     // ================= VALIDATE =================
@@ -706,7 +713,6 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         selectedIds = Array.from(selectedIds);
 
         if (!selectedIds.length) {
-            this.selectedNfuRowsManual = [];
             return;
         }
 
@@ -742,6 +748,12 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
             this.handleNfuRowSelect(event);
         }
     }
+    
+    handleRemoveNfu() {
+        this.selectedNfuRow = null;
+        this.formData.nfuCode = STR_EMPTY;
+        this.nfuSearch = STR_EMPTY;
+    }
 
     // ================= RESET =================
 
@@ -756,6 +768,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
             nfuCode: STR_EMPTY,
             active: false
         };
+        this.selectedNfuRow = null;
         this.channelSearch = STR_EMPTY;
         this.channelSelected = [];
         this.currentStatusSelected = [];
