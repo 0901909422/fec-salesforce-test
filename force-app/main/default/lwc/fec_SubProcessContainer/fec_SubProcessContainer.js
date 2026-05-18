@@ -69,6 +69,15 @@ export default class Fec_SubProcessContainer extends LightningElement {
       subCategoryId,
       subCodeId,
     };
+
+    // tungnm37: lưu NOC IDs vào sessionStorage để fec_holdCaseManual đọc được
+    // (holdCaseManual mount sau khi message đã publish nên không nhận được message)
+    try {
+      const key = 'fec_case_noc_' + this.recordId;
+      sessionStorage.setItem(key, JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }));
+    } catch (e) {
+      // ignore
+    }
   }
 
   @wire(getSubProcesses, {
@@ -99,15 +108,45 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
-  //linhdev: Save remove phone draft if applicable
-  @api saveRemovePhoneDraftIfApplicable() {
-    const el =
-      this.template.querySelector("c-fec_-remove-phone-form") ||
-      this.template.querySelector("c-fec-remove-phone-form");
-    if (!el || typeof el.saveDraftIfApplicable !== "function") {
-      return Promise.resolve();
+  _findRemovePhoneFormEl() {
+    const selectors = [
+      "c-fec_-remove-phone-form",
+      "c-fec-remove-phone-form",
+    ];
+    for (let i = 0; i < selectors.length; i++) {
+      const el = this.template.querySelector(selectors[i]);
+      if (el) {
+        return el;
+      }
     }
-    return el.saveDraftIfApplicable();
+    return null;
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api saveRemovePhoneDraftIfApplicable() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.saveDraftIfApplicable === "function") {
+      return el.saveDraftIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api saveRemovePhoneForSubmitIfApplicable() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.saveForSubmitIfApplicable === "function") {
+      return el.saveForSubmitIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api validateRemovePhoneForSubmit() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.validateForSubmit === "function") {
+      return el.validateForSubmit();
+    }
+    return true;
   }
 
   async initializeCase() {
@@ -118,6 +157,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
       console.log("submitted subprocesses = ", JSON.stringify(result));
 
+      // tungnm37: Hold Case depends on config (wire getSubProcesses decides)
       this.showHoldCase = !!result.showHoldCase;
 
       this.showRemovePhone = !!result.showRemovePhone;

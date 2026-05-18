@@ -1,4 +1,4 @@
-public with sharing class FEC_AssignmentRoutingActionHandler {
+public without sharing class FEC_AssignmentRoutingActionHandler {
     
     @AuraEnabled
     public static void execute(

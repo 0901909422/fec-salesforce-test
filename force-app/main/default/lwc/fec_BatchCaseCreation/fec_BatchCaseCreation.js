@@ -1,0 +1,703 @@
+import { LightningElement, track } from "lwc";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { loadScript } from "lightning/platformResourceLoader";
+import getRecentRows from "@salesforce/apex/FEC_BatchCaseCreationController.getRecentRows";
+import importBatchData from "@salesforce/apex/FEC_BatchCaseCreationController.importBatchData";
+import saveResultFile from "@salesforce/apex/FEC_BatchCaseCreationController.saveResultFile";
+import logFailedImport from "@salesforce/apex/FEC_BatchCaseCreationController.logFailedImport";
+import getTemplateOptions from "@salesforce/apex/FEC_BatchCaseCreationController.getTemplateOptions";
+import FEC_Batch_RequestTimeout from "@salesforce/label/c.FEC_Batch_RequestTimeout";
+import FEC_Batch_FileExcelXlsxOnly from "@salesforce/label/c.FEC_Batch_FileExcelXlsxOnly";
+import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSize150MB";
+import FEC_Batch_TemplateNoAttachment from "@salesforce/label/c.FEC_Batch_TemplateNoAttachment";
+import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_InvalidImportData";
+import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
+import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
+import {
+  normalizeHeaderCell,
+  findColumnIndex,
+  normalizeNoteTextSafe,
+  promiseWithTimeoutSafe,
+  arrayBufferToBase64Safe,
+  buildResultXlsxFileName,
+  formatDateTimeEnGb,
+  extractErrorMessage
+} from "c/fec_CommonUtils";
+const PAGE_SIZE_OPTIONS = [
+  { label: "10", value: "10" },
+  { label: "20", value: "20" },
+  { label: "30", value: "30" },
+  { label: "40", value: "40" },
+  { label: "50", value: "50" }
+];
+const MAX_UPLOAD_SIZE_BYTES = 150 * 1024 * 1024;
+const IMPORT_TIMEOUT_MS = 60 * 1000;
+const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
+/** Hai layout: simple (8 cột) và extended (thêm channel / sub channel / email). */
+const HEADER_CONTRACT = [
+  "contract number",
+  "account/ contract number",
+  "account contract number"
+];
+const HEADER_INTERACTION_PHONE = [
+  "interaction phone",
+  "interection phone",
+  "interestion phone",
+  "interaction phone number",
+  "phone"
+];
+const RESULT_FILE_HEADERS = [
+  "Contract Number",
+  "Interaction Phone",
+  "Product Type",
+  "Category",
+  "Sub Category",
+  "Sub Code",
+  "Case Status",
+  "Case Remarks",
+  "__Status",
+  "__Interaction ID",
+  "__Case ID",
+  "__Errors"
+];
+
+export default class Fec_BatchCaseCreation extends LightningElement {
+  @track activeSettingSections = ["setting"];
+  @track activeProcessedSections = ["processed"];
+
+  @track rows = [];
+  @track pagedRows = [];
+  @track selectedTemplate = "";
+  @track selectedFileName = "";
+  @track isLoading = false;
+  @track goToPageInput = "1";
+  @track templateRequiredError = false;
+  @track fileRequiredError = false;
+  @track attachDataRequiredError = false;
+  @track importValidationError = "";
+
+  currentPage = 1;
+  pageSize = "20";
+  selectedFile;
+  sheetJsReady = false;
+  templateDownloadUrlByValue = {};
+  pendingImportRows = [];
+
+  templateOptions = [];
+  pageSizeOptions = PAGE_SIZE_OPTIONS;
+
+  async connectedCallback() {
+    await this.loadTemplateOptions();
+    this.refreshRows();
+  }
+
+  async loadTemplateOptions() {
+    try {
+      const data = await getTemplateOptions();
+      const dynamicOptions = Array.isArray(data)
+        ? data
+            .filter((item) => item && item.value)
+            .map((item) => ({
+              label: item.label || item.value,
+              value: item.value
+            }))
+        : [];
+      this.templateDownloadUrlByValue = {};
+      (Array.isArray(data) ? data : []).forEach((item) => {
+        if (item?.value) {
+          this.templateDownloadUrlByValue[item.value] = item.downloadUrl || "";
+        }
+      });
+
+      this.templateOptions = [
+        { label: "--None--", value: "" },
+        ...dynamicOptions
+      ];
+
+      const hasCurrentValue = dynamicOptions.some(
+        (opt) => opt.value === this.selectedTemplate
+      );
+      if (!hasCurrentValue) {
+        this.selectedTemplate = "";
+      }
+    } catch (error) {
+      this.templateOptions = [];
+      this.templateDownloadUrlByValue = {};
+      this.selectedTemplate = "";
+      this.showInfo(
+        "Thông báo",
+        `Không tải được danh sách mẫu từ cấu hình. ${extractErrorMessage(error)}`
+      );
+    }
+  }
+
+  handleSettingSectionToggle(event) {
+    const open = event.detail?.openSections;
+    if (Array.isArray(open)) {
+      this.activeSettingSections = [...open];
+    }
+  }
+
+  handleProcessedSectionToggle(event) {
+    const open = event.detail?.openSections;
+    if (Array.isArray(open)) {
+      this.activeProcessedSections = [...open];
+    }
+  }
+
+  get hasRows() {
+    return this.rows.length > 0;
+  }
+
+  get totalPages() {
+    const size = Number(this.pageSize) || 20;
+    return Math.max(1, Math.ceil(this.rows.length / size));
+  }
+
+  get previousDisabled() {
+    return this.currentPage <= 1;
+  }
+
+  get nextDisabled() {
+    return this.currentPage >= this.totalPages;
+  }
+
+  get hasAttachedFile() {
+    return !!(this.selectedFile && this.selectedFileName);
+  }
+
+  handleTemplateChange(event) {
+    this.selectedTemplate = event.detail.value;
+    this.templateRequiredError = false;
+    this.fileRequiredError = false;
+    this.attachDataRequiredError = false;
+    this.importValidationError = "";
+    this.pendingImportRows = [];
+  }
+
+  handleChooseFile() {
+    const input = this.template.querySelector('[data-id="batch-file-input"]');
+    if (input) {
+      input.click();
+    }
+  }
+
+  handleFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    this.selectedFile = null;
+    this.selectedFileName = "";
+    this.fileRequiredError = false;
+    this.attachDataRequiredError = false;
+    this.importValidationError = "";
+    this.pendingImportRows = [];
+    if (file) {
+      const lowerName = (file.name || "").toLowerCase();
+      if (!lowerName.endsWith(".xlsx")) {
+        this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
+      } else if ((file.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
+        this.importValidationError = FEC_Batch_FileMaxSize150MB;
+      } else {
+        this.selectedFile = file;
+        this.selectedFileName = file.name;
+      }
+    }
+    event.target.value = "";
+  }
+
+  handleClearFile(event) {
+    event.stopPropagation();
+    this.selectedFile = null;
+    this.selectedFileName = "";
+    this.fileRequiredError = false;
+    this.attachDataRequiredError = false;
+    this.importValidationError = "";
+  }
+
+  handleDownloadTemplate() {
+    const key = (this.selectedTemplate || "").trim();
+    if (!key) {
+      this.templateRequiredError = true;
+      this.fileRequiredError = false;
+      this.attachDataRequiredError = false;
+      return;
+    }
+    this.templateRequiredError = false;
+    this.importValidationError = "";
+    this.attachDataRequiredError = false;
+    const url = this.templateDownloadUrlByValue[key] || "";
+    if (!url) {
+      this.showError(
+        "Thông báo",
+        FEC_Batch_TemplateNoAttachment
+      );
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async ensureSheetJsLoaded() {
+    if (this.sheetJsReady) {
+      return;
+    }
+    await loadScript(this, FEC_SheetJS);
+    this.sheetJsReady = true;
+  }
+
+  async validateCaseBatchExcel(file) {
+    await this.ensureSheetJsLoaded();
+    const data = await this.readFileAsArrayBuffer(file);
+    const workbook = window.XLSX.read(data, { type: "array", cellText: false });
+    const firstSheetName =
+      Array.isArray(workbook.SheetNames) && workbook.SheetNames.length > 0
+        ? workbook.SheetNames[0]
+        : "";
+    if (!firstSheetName) {
+      return { ok: false, noData: true };
+    }
+    const sheet = workbook.Sheets[firstSheetName];
+    if (!sheet || sheet["!ref"] == null) {
+      return { ok: false, noData: true };
+    }
+
+    const rowsAoA = window.XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: "",
+      raw: true
+    });
+    if (!Array.isArray(rowsAoA) || rowsAoA.length === 0) {
+      return { ok: false, noData: true };
+    }
+
+    const headerRow = rowsAoA[0];
+    if (!Array.isArray(headerRow)) {
+      return { ok: false, noData: true };
+    }
+
+    const headersNorm = headerRow.map((c) => normalizeHeaderCell(c));
+    const idxChannel = findColumnIndex(headersNorm, ["interaction channel"]);
+    const extended = idxChannel >= 0;
+
+    const idxContract = findColumnIndex(headersNorm, HEADER_CONTRACT);
+    const idxPhone = findColumnIndex(headersNorm, HEADER_INTERACTION_PHONE);
+    const idxProduct = findColumnIndex(headersNorm, ["product type"]);
+    const idxCategory = findColumnIndex(headersNorm, ["category"]);
+    const idxSubCat = findColumnIndex(headersNorm, ["sub category"]);
+    const idxSubCode = findColumnIndex(headersNorm, ["sub code"]);
+    const idxCaseStatus = findColumnIndex(headersNorm, ["case status"]);
+    const idxRemarks = findColumnIndex(headersNorm, ["case remarks"]);
+    const idxSubChannel = findColumnIndex(headersNorm, [
+      "interaction sub channel"
+    ]);
+    const idxEmail = findColumnIndex(headersNorm, ["interaction email"]);
+
+    const missing = [];
+    if (idxContract < 0) {
+      missing.push("Contract Number (hoặc Account/ Contract Number)");
+    }
+    if (idxPhone < 0) {
+      missing.push("Interaction Phone");
+    }
+    if (idxProduct < 0) {
+      missing.push("Product Type");
+    }
+    if (idxCategory < 0) {
+      missing.push("Category");
+    }
+    if (idxSubCat < 0) {
+      missing.push("Sub Category");
+    }
+    if (idxSubCode < 0) {
+      missing.push("Sub Code");
+    }
+    if (idxCaseStatus < 0) {
+      missing.push("Case Status");
+    }
+    if (extended) {
+      if (idxChannel < 0) {
+        missing.push("Interaction Channel");
+      }
+      if (idxSubChannel < 0) {
+        missing.push("Interaction Sub Channel");
+      }
+    }
+    if (missing.length > 0) {
+      return {
+        ok: false,
+        message: `File thiếu cột: ${missing.join(", ")}.`
+      };
+    }
+
+    const cellAt = (rowArr, colIdx) => {
+      if (!Array.isArray(rowArr) || colIdx < 0) {
+        return "";
+      }
+      const v = rowArr[colIdx];
+      if (v == null || v === "") {
+        return "";
+      }
+      return String(v).trim();
+    };
+
+    let dataRowCount = 0;
+    const importRows = [];
+    for (let i = 1; i < rowsAoA.length; i += 1) {
+      const rowArr = rowsAoA[i];
+      const contractNumber = cellAt(rowArr, idxContract);
+      const interactionPhone = cellAt(rowArr, idxPhone);
+      const productType = cellAt(rowArr, idxProduct);
+      const category = cellAt(rowArr, idxCategory);
+      const subCategory = cellAt(rowArr, idxSubCat);
+      const subCode = cellAt(rowArr, idxSubCode);
+      const caseStatus = cellAt(rowArr, idxCaseStatus);
+      const rawCaseRemarks = idxRemarks >= 0 ? cellAt(rowArr, idxRemarks) : "";
+      const caseRemarks = normalizeNoteTextSafe(rawCaseRemarks);
+      const interactionChannel = extended ? cellAt(rowArr, idxChannel) : "";
+      const interactionSubChannel = extended
+        ? cellAt(rowArr, idxSubChannel)
+        : "";
+      const interactionEmail = extended ? cellAt(rowArr, idxEmail) : "";
+
+      if (
+        !contractNumber &&
+        !interactionPhone &&
+        !productType &&
+        !category &&
+        !subCategory &&
+        !subCode &&
+        !caseStatus
+      ) {
+        continue;
+      }
+      dataRowCount += 1;
+      importRows.push({
+        layout: extended ? "extended" : "simple",
+        contractNumber,
+        interactionPhone,
+        productType,
+        category,
+        subCategory,
+        subCode,
+        caseStatus,
+        caseRemarks,
+        interactionChannel,
+        interactionSubChannel,
+        interactionEmail
+      });
+    }
+    if (dataRowCount === 0) {
+      return { ok: false, noData: true };
+    }
+    return { ok: true, message: "", rows: importRows };
+  }
+
+  readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Cannot read selected file."));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  async handleImportData() {
+    this.importValidationError = "";
+    this.attachDataRequiredError = false;
+    const key = (this.selectedTemplate || "").trim();
+    this.templateRequiredError = false;
+
+    const fileToUpload = this.selectedFile;
+    if (!fileToUpload) {
+      this.fileRequiredError = false;
+      this.attachDataRequiredError = true;
+      await this.logFailedImportAttempt("", key, "Vui lòng đính kèm tệp dữ liệu");
+      return;
+    }
+    this.fileRequiredError = false;
+    this.attachDataRequiredError = false;
+
+    const lowerName = (fileToUpload.name || "").toLowerCase();
+    if (!lowerName.endsWith(".xlsx")) {
+      this.importValidationError = FEC_Batch_FileExcelXlsxOnly;
+      await this.logFailedImportAttempt(
+        fileToUpload.name,
+        key,
+        this.importValidationError
+      );
+      return;
+    }
+    if ((fileToUpload.size || 0) > MAX_UPLOAD_SIZE_BYTES) {
+      this.importValidationError = FEC_Batch_FileMaxSize150MB;
+      await this.logFailedImportAttempt(
+        fileToUpload.name,
+        key,
+        this.importValidationError
+      );
+      return;
+    }
+    try {
+      const check = await this.validateCaseBatchExcel(fileToUpload);
+      if (!check.ok) {
+        if (check.noData) {
+          this.attachDataRequiredError = true;
+          await this.logFailedImportAttempt(
+            fileToUpload.name,
+            key,
+            "Vui lòng đính kèm tệp dữ liệu"
+          );
+        } else {
+          this.importValidationError = check.message || "";
+          await this.logFailedImportAttempt(
+            fileToUpload.name,
+            key,
+            this.importValidationError || FEC_Batch_Msg_InvalidImportData
+          );
+        }
+        return;
+      }
+      this.pendingImportRows = Array.isArray(check.rows) ? check.rows : [];
+    } catch {
+      this.importValidationError = FEC_Batch_Msg_CannotReadExcelContent;
+      await this.logFailedImportAttempt(
+        fileToUpload.name,
+        key,
+        this.importValidationError
+      );
+      return;
+    }
+
+    this.isLoading = true;
+    try {
+      const base64 = await this.readFileAsBase64(fileToUpload);
+      const result = await promiseWithTimeoutSafe(
+        importBatchData({
+          fileName: fileToUpload.name,
+          fileBodyBase64: base64,
+          templateName: key,
+          rowsJson: JSON.stringify(this.pendingImportRows || [])
+        }),
+        IMPORT_TIMEOUT_MS,
+        IMPORT_TIMEOUT_MESSAGE
+      );
+      if (result?.success) {
+        if (result.batchRecordId && result.resultRowsJson) {
+          await this.saveResultWorkbook(
+            result.batchRecordId,
+            fileToUpload.name,
+            result.resultRowsJson
+          );
+        }
+        this.showSuccess("Success", result.message || "Import started.");
+        this.selectedFile = null;
+        this.selectedFileName = "";
+        this.pendingImportRows = [];
+        this.importValidationError = "";
+        this.attachDataRequiredError = false;
+        await this.refreshRows();
+        return;
+      }
+      this.showError("Import failed", result?.message || "Unable to import.");
+    } catch (error) {
+      if (error?.message === IMPORT_TIMEOUT_MESSAGE) {
+        this.importValidationError = IMPORT_TIMEOUT_MESSAGE;
+      } else {
+        this.showError("Import failed", extractErrorMessage(error));
+      }
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async refreshRows() {
+    this.isLoading = true;
+    try {
+      const data = await getRecentRows();
+      this.rows = Array.isArray(data) ? data.map((row) => this.normalizeRow(row)) : [];
+      if (this.currentPage > this.totalPages) {
+        this.currentPage = this.totalPages;
+      }
+      this.rebuildPageRows();
+    } catch (error) {
+      this.rows = [];
+      this.pagedRows = [];
+      this.showError("Load failed", extractErrorMessage(error));
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  normalizeRow(row) {
+    const status = row.status || "";
+    const resultLabel =
+      status === "Processed" || status === "Failure" || row.resultDownloadUrl
+        ? "Result"
+        : "";
+    return {
+      ...row,
+      fileDownloadUrl: row.fileDownloadUrl || "",
+      uploadedOnLabel: row.uploadedOn ? formatDateTimeEnGb(row.uploadedOn) : "",
+      totalRecordsCount: row.totalRecordsCount ?? 0,
+      totalSuccessRecords: row.totalSuccessRecords ?? 0,
+      totalFailedRecords: row.totalFailedRecords ?? 0,
+      result: resultLabel,
+      resultDownloadUrl: row.resultDownloadUrl || ""
+    };
+  }
+
+  async saveResultWorkbook(batchRecordId, sourceFileName, resultRowsJson) {
+    await this.ensureSheetJsLoaded();
+    const parsedRows = JSON.parse(resultRowsJson || "[]");
+    const exportRows = Array.isArray(parsedRows)
+      ? parsedRows.map((r) => [
+          String(r?.contractNumber || ""),
+          String(r?.interactionPhone || ""),
+          String(r?.productType || ""),
+          String(r?.category || ""),
+          String(r?.subCategory || ""),
+          String(r?.subCode || ""),
+          String(r?.caseStatus || ""),
+          String(r?.caseRemarks || ""),
+          String(r?.finalStatus || ""),
+          String(r?.interactionId || ""),
+          String(r?.caseBusinessId || ""),
+          String(r?.errors || "")
+        ])
+      : [];
+    const worksheet = window.XLSX.utils.aoa_to_sheet([
+      RESULT_FILE_HEADERS,
+      ...exportRows
+    ]);
+    const workbook = window.XLSX.utils.book_new();
+    window.XLSX.utils.book_append_sheet(workbook, worksheet, "Result");
+    const wbout = window.XLSX.write(workbook, {
+      type: "array",
+      bookType: "xlsx"
+    });
+    const resultBase64 = arrayBufferToBase64Safe(wbout);
+    const resultFileName = buildResultXlsxFileName(sourceFileName);
+    await saveResultFile({
+      batchRecordId,
+      resultFileName,
+      fileBodyBase64: resultBase64
+    });
+  }
+
+  handleResultClick(event) {
+    const url = event.currentTarget?.dataset?.url || "";
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  handleFileNameClick(event) {
+    const url = event.currentTarget?.dataset?.url || "";
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
+
+  rebuildPageRows() {
+    const size = Number(this.pageSize) || 20;
+    const start = (this.currentPage - 1) * size;
+    this.pagedRows = this.rows.slice(start, start + size);
+    this.goToPageInput = String(this.currentPage);
+  }
+
+  handlePageSizeChange(event) {
+    this.pageSize = event.detail.value;
+    this.currentPage = 1;
+    this.rebuildPageRows();
+  }
+
+  handleGoToPageInput(event) {
+    this.goToPageInput = event.detail.value;
+  }
+
+  handleGoToPage() {
+    const n = parseInt(this.goToPageInput, 10);
+    if (Number.isNaN(n) || n < 1) {
+      this.showInfo("Invalid page", "Enter a page number ≥ 1.");
+      return;
+    }
+    const max = this.totalPages;
+    const target = Math.min(Math.max(1, n), max);
+    this.currentPage = target;
+    this.goToPageInput = String(target);
+    this.rebuildPageRows();
+  }
+
+  handlePreviousPage() {
+    if (this.currentPage <= 1) {
+      return;
+    }
+    this.currentPage -= 1;
+    this.rebuildPageRows();
+  }
+
+  handleNextPage() {
+    if (this.currentPage >= this.totalPages) {
+      return;
+    }
+    this.currentPage += 1;
+    this.rebuildPageRows();
+  }
+
+  async handleRefresh() {
+    await this.refreshRows();
+  }
+
+  readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result || "";
+        const commaIndex = result.indexOf(",");
+        resolve(commaIndex >= 0 ? result.substring(commaIndex + 1) : result);
+      };
+      reader.onerror = () => reject(new Error("Cannot read selected file."));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async logFailedImportAttempt(fileName, templateName, reason) {
+    try {
+      await logFailedImport({
+        fileName: fileName || "Unknown_File.xlsx",
+        templateName: templateName || "",
+        reason: reason || "Import failed."
+      });
+      await this.refreshRows();
+    } catch (e) {
+      // Do not block UI flow if fail-log cannot be saved.
+    }
+  }
+
+  showSuccess(title, message) {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title,
+        message,
+        variant: "success"
+      })
+    );
+  }
+
+  showInfo(title, message) {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title,
+        message,
+        variant: "info"
+      })
+    );
+  }
+
+  showError(title, message) {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title,
+        message,
+        variant: "error"
+      })
+    );
+  }
+}
