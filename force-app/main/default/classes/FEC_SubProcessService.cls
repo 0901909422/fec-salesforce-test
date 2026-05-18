@@ -4,6 +4,12 @@ public with sharing class FEC_SubProcessService {
         
         @AuraEnabled
         public Boolean showHoldCase = false;
+
+        @AuraEnabled
+        public Boolean showHoldCaseManual = false;
+
+        @AuraEnabled
+        public Boolean showHoldCaseAuto = false;
         
         @AuraEnabled
         public Boolean showRemovePhone = false;
