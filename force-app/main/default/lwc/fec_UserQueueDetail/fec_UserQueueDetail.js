@@ -98,6 +98,8 @@ export default class Fec_UserQueueDetail extends LightningElement {
             
             this.selectedMainQueueDevName = devName;
             this.selectedQueueId = queueId;
+        } else {
+            this.selectedMainQueueDevName = null;
         }
         
     }
