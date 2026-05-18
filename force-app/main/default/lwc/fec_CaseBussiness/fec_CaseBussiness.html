@@ -251,7 +251,7 @@
   <!--END: Hieutt74: Update ngày 12/5/2026-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
-    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
+    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
@@ -308,6 +308,59 @@
               <p>Không tìm thấy giá trị thỏa mãn.</p>
             </template> -->
 
+          </div>
+        </div>
+        <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionUpdateOptions} required>
+            </lightning-combobox>
+          </div>
+        </div>
+      </div>
+    </lightning-accordion-section>
+
+    <!-- Document Request RL04/RC04: routing Team/Queue từ FEC_Stage_Change__c (thay block routing cũ) -->
+    <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
+      name="routing-action-doc-request" label={customLabel.routingActionLabel}>
+      <div class="slds-grid slds-wrap">
+        <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
+          <lightning-select data-id="routing-action" label={customLabel.actionLabel} value={actionValue}
+            options={business.routingActionlst} onchange={handleChangeAction} disabled={isRoutingActionDisabled}
+            required={isEdit}></lightning-select>
+        </div>
+        <div if:true={showRouteTo} class={routingAssignmentContainerClass}>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">{customLabel.teamLabel}</p>
+            <p class="value">{business.nextTeam}</p>
+          </div>
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">{customLabel.queueLabel}</p>
+            <p class="value">{routeToQueueDisplayLabel}</p>
+          </div>
+        </div>
+        <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <p class="label">{customLabel.decisionLabel}</p>
+            <p class="value">{revertDecisionDisplayLabel}</p>
+          </div>
+        </div>
+        <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <lightning-combobox name="decision" label={customLabel.decisionLabel}
+              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
+              options={decisionOptions} required>
+            </lightning-combobox>
+          </div>
+          <div if:true={decisionValue}
+            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
+            <template if:true={isSubDecisionOptionsDisplay}>
+              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel}
+                placeholder={customLabel.chooseSubDecisionLabel} value={subDecisionValue} onchange={handleChange}
+                options={subDecisionOptions} required>
+              </lightning-combobox>
+            </template>
           </div>
         </div>
         <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
