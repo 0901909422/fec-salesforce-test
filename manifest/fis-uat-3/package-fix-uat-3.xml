@@ -69,6 +69,11 @@
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
+		<members>FEC_NewAssignmentController</members>
+		<members>FEC_BatchCaseHandlingController</members>
+		<members>FEC_BatchCaseHandlingExportRow</members>
+		<members>FEC_BatchCaseHandlingExportService</members>
+		<members>FEC_SalesChannelFromApplicationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -129,6 +134,9 @@
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
         <members>fec_CaseNocUpdatedSection</members>
+        <members>fec_holdCaseManual</members>
+        <members>fec_NewAssignmentAction</members>
+        <members>fec_BatchCaseHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -139,6 +147,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
@@ -215,6 +224,7 @@
 		<name>CustomMetadata</name>
 	</types>
     <types>
+        <members>FEC_Batch_Case_Handling</members>
 		<members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
@@ -372,6 +382,19 @@
     <types>
         <members>Case</members>
         <name>SharingRules</name>
+    </types>
+    <types>
+		<members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
+        <name>QuickAction</name>
+    </types>
+	<types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
+	<types>
+		<members>Batch_Case_Handling</members>
+        <name>CustomTab</name>
     </types>
 	<version>66.0</version>
 </Package>

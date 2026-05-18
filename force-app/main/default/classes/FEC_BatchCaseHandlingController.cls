@@ -11,24 +11,8 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public List<String> operators;
     }
 
-    public class FilteredCaseRow {
-        @AuraEnabled public Id caseId;
-        @AuraEnabled public String customerType;
-        @AuraEnabled public String caseIdSearch;
-        @AuraEnabled public String categoryCode;
-        @AuraEnabled public String subCategoryCode;
-        @AuraEnabled public String subCodeCode;
-        @AuraEnabled public String caseStatus;
-        @AuraEnabled public Datetime caseCreatedOn;
-        @AuraEnabled public Datetime lastUpdatedOn;
-        @AuraEnabled public Boolean hasAttachment;
-        @AuraEnabled public String caseReviewUrl;
-        @AuraEnabled public String businessProcessCode;
-        @AuraEnabled public String businessProcessName;
-    }
-
     public class BulkCaseSearchResult {
-        @AuraEnabled public List<FilteredCaseRow> rows;
+        @AuraEnabled public List<FEC_BatchCaseHandlingExportRow> rows;
         @AuraEnabled public Integer totalCount;
     }
 
@@ -43,6 +27,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public Integer totalCases;
         @AuraEnabled public String templateName;
         @AuraEnabled public String templateDownloadUrl;
+        @AuraEnabled public Id templateContentVersionId;
     }
 
     public class BatchRow {
@@ -192,7 +177,7 @@ public without sharing class FEC_BatchCaseHandlingController {
     @AuraEnabled
     public static BulkCaseSearchResult searchBulkCases(String filtersJson, Integer pageSize, Integer pageNumber) {
         BulkCaseSearchResult out = new BulkCaseSearchResult();
-        out.rows = new List<FilteredCaseRow>();
+        out.rows = new List<FEC_BatchCaseHandlingExportRow>();
         out.totalCount = 0;
         Integer ps = pageSize == null || pageSize < 1 ? 20 : pageSize;
         if (ps > 100) {
@@ -240,7 +225,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         cases = (List<Case>) decision.getRecords();
 
         for (Case c : cases) {
-            FilteredCaseRow r = new FilteredCaseRow();
+            FEC_BatchCaseHandlingExportRow r = new FEC_BatchCaseHandlingExportRow();
             r.caseId = c.Id;
             r.customerType = c.FEC_Customer_Type__c;
             r.caseIdSearch = c.FEC_ID_Search__c;
@@ -262,7 +247,7 @@ public without sharing class FEC_BatchCaseHandlingController {
     @AuraEnabled
     public static BulkCaseSearchResult searchBulkCasesForExport(String filtersJson, String afterCaseId, Integer pageSize) {
         BulkCaseSearchResult out = new BulkCaseSearchResult();
-        out.rows = new List<FilteredCaseRow>();
+        out.rows = new List<FEC_BatchCaseHandlingExportRow>();
         out.totalCount = 0;
         Integer ps = pageSize == null || pageSize < 1 ? EXPORT_CURSOR_PAGE_SIZE : pageSize;
         if (ps > EXPORT_CURSOR_PAGE_SIZE) {
@@ -288,20 +273,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
 
         String whereClause = String.join(whereParts, ' AND ');
-        List<String> selectFields = new List<String>{
-            'Id',
-            'FEC_Customer_Type__c',
-            'FEC_ID_Search__c',
-            'FEC_Final_Status__c',
-            'FEC_Case_Created_On__c',
-            'FEC_Last_Updated_On__c',
-            'FEC_Category__r.FEC_Code__c',
-            'FEC_SubCategory__r.FEC_Code__c',
-            'FEC_SubCode__r.FEC_Code__c',
-            'FEC_Business_Process__r.FEC_Code__c',
-            'FEC_Business_Process__r.Name',
-            '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
-        };
+        List<String> selectFields = FEC_BatchCaseHandlingExportService.buildCaseExportSelectFields();
         String dataSoql =
             'SELECT ' + String.join(selectFields, ', ') +
             ' FROM Case WHERE ' + whereClause +
@@ -313,22 +285,9 @@ public without sharing class FEC_BatchCaseHandlingController {
         cases = (List<Case>) decision.getRecords();
 
         for (Case c : cases) {
-            FilteredCaseRow r = new FilteredCaseRow();
-            r.caseId = c.Id;
-            r.customerType = c.FEC_Customer_Type__c;
-            r.caseIdSearch = c.FEC_ID_Search__c;
-            r.categoryCode = c.FEC_Category__r == null ? null : c.FEC_Category__r.FEC_Code__c;
-            r.subCategoryCode = c.FEC_SubCategory__r == null ? null : c.FEC_SubCategory__r.FEC_Code__c;
-            r.subCodeCode = c.FEC_SubCode__r == null ? null : c.FEC_SubCode__r.FEC_Code__c;
-            r.caseStatus = c.FEC_Final_Status__c;
-            r.caseCreatedOn = c.FEC_Case_Created_On__c;
-            r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
-            r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
-            r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
-            r.businessProcessCode = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.FEC_Code__c;
-            r.businessProcessName = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.Name;
-            out.rows.add(r);
+            out.rows.add(FEC_BatchCaseHandlingExportService.mapCaseToExportRow(c));
         }
+        FEC_BatchCaseHandlingExportService.enrichExportRows(out.rows);
         return out;
     }
 
@@ -387,6 +346,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
         Map<Id, String> urlByTemplateId = new Map<Id, String>();
+        Map<Id, Id> versionIdByTemplateId = new Map<Id, Id>();
         Set<Id> templateIds = new Set<Id>();
         for (SObject r : templateRows) {
             templateIds.add((Id) r.get('Id'));
@@ -399,7 +359,9 @@ public without sharing class FEC_BatchCaseHandlingController {
                 ORDER BY LinkedEntityId, SystemModstamp DESC
             ]) {
                 if (!urlByTemplateId.containsKey(link.LinkedEntityId)) {
-                    urlByTemplateId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(link.ContentDocument.LatestPublishedVersionId));
+                    Id versionId = link.ContentDocument.LatestPublishedVersionId;
+                    urlByTemplateId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + String.valueOf(versionId));
+                    versionIdByTemplateId.put(link.LinkedEntityId, versionId);
                 }
             }
         }
@@ -427,11 +389,14 @@ public without sharing class FEC_BatchCaseHandlingController {
             item.totalCases = Integer.valueOf(String.valueOf(ar.get('cnt')));
             SObject matched = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateByBusinessProcessAndUserGroup(bpName, userGroup, templateRows);
             if (matched != null) {
+                Id matchedTemplateId = (Id) matched.get('Id');
                 item.templateName = String.valueOf(matched.get('Name'));
-                item.templateDownloadUrl = urlByTemplateId.get((Id) matched.get('Id'));
+                item.templateDownloadUrl = urlByTemplateId.get(matchedTemplateId);
+                item.templateContentVersionId = versionIdByTemplateId.get(matchedTemplateId);
             } else {
                 item.templateName = FEC_ConstantCommon.STR_EMPTY;
                 item.templateDownloadUrl = FEC_ConstantCommon.STR_EMPTY;
+                item.templateContentVersionId = null;
             }
             if (item.templateDownloadUrl == null) {
                 item.templateDownloadUrl = FEC_ConstantCommon.STR_EMPTY;
@@ -439,6 +404,23 @@ public without sharing class FEC_BatchCaseHandlingController {
             out.add(item);
         }
         return out;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static String getTemplateFileBase64(Id contentVersionId) {
+        if (contentVersionId == null) {
+            return null;
+        }
+        List<ContentVersion> versions = [
+            SELECT VersionData
+            FROM ContentVersion
+            WHERE Id = :contentVersionId
+            LIMIT 1
+        ];
+        if (versions.isEmpty() || versions[0].VersionData == null) {
+            return null;
+        }
+        return EncodingUtil.base64Encode(versions[0].VersionData);
     }
     @AuraEnabled
     public static ImportResult importBatchData(

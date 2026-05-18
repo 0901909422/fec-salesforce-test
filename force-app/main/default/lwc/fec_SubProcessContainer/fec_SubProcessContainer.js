@@ -69,6 +69,15 @@ export default class Fec_SubProcessContainer extends LightningElement {
       subCategoryId,
       subCodeId,
     };
+
+    // tungnm37: lưu NOC IDs vào sessionStorage để fec_holdCaseManual đọc được
+    // (holdCaseManual mount sau khi message đã publish nên không nhận được message)
+    try {
+      const key = 'fec_case_noc_' + this.recordId;
+      sessionStorage.setItem(key, JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }));
+    } catch (e) {
+      // ignore
+    }
   }
 
   @wire(getSubProcesses, {
@@ -148,6 +157,7 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
       console.log("submitted subprocesses = ", JSON.stringify(result));
 
+      // tungnm37: Hold Case depends on config (wire getSubProcesses decides)
       this.showHoldCase = !!result.showHoldCase;
 
       this.showRemovePhone = !!result.showRemovePhone;
