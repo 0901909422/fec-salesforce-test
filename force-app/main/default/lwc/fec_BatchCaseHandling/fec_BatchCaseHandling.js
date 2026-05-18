@@ -273,7 +273,26 @@ const EXPORT_HEADER_FIELD_MAP = {
   attachment: "hasAttachmentLabel",
   businessprocess: "businessProcessName",
   businessprocessname: "businessProcessName",
-  businessprocesscode: "businessProcessCode"
+  businessprocesscode: "businessProcessCode",
+  blocklimitdate: "blockLimitDateLabel",
+  blocklimitamount: "blockLimitAmount",
+  cccode: "ccCode",
+  ccname: "ccName",
+  dsacode: "dsaCode",
+  dsaname: "dsaName",
+  tsacode: "tsaCode",
+  tsaname: "tsaName",
+  saleschannel: "salesChannel",
+  salessubchannel: "salesSubChannel",
+  classificationbycs: "classificationByCs",
+  evaluationbycs: "evaluationByCs",
+  finalproduct: "finalProduct",
+  evaluationbysales: "evaluationBySales",
+  disciplineresult: "disciplineResult",
+  contactpoint: "contactPoint",
+  teamleader: "teamLeader",
+  supervisor: "supervisor",
+  pendingcssupport: "pendingCsSupportLabel"
 };
 const FILTERED_EXPORT_EXTRA_COLUMNS = [
   { header: FEC_BCH_Col_CustomerType, field: "customerType" },
@@ -947,9 +966,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       raw.forEach((r) => {
         all.push({
           ...r,
-          caseCreatedOnLabel: this.formatDateTimeSafe(r.caseCreatedOn),
-          lastUpdatedOnLabel: this.formatDateTimeSafe(r.lastUpdatedOn),
-          hasAttachmentLabel: r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY
+          caseCreatedOnLabel:
+            r.caseCreatedOnLabel || this.formatDateTimeSafe(r.caseCreatedOn),
+          lastUpdatedOnLabel:
+            r.lastUpdatedOnLabel || this.formatDateTimeSafe(r.lastUpdatedOn),
+          hasAttachmentLabel:
+            r.hasAttachmentLabel ||
+            (r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY)
         });
       });
       afterCaseId = String(raw[raw.length - 1]?.caseId || STR_EMPTY);
