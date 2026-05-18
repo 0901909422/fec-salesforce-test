@@ -1,0 +1,126 @@
+<template>
+  <div class="page-wrap slds-p-around_medium">
+    <div class="slds-m-bottom_medium">
+      <h1 class="page-heading">{pageTitle}</h1>
+    </div>
+
+    <div class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-theme_shade slds-border_bottom">
+        <h2 class="slds-card__header-title">{sectionTitle}</h2>
+      </div>
+      <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+        <lightning-layout multiple-rows pull-to-boundary="small">
+          <lightning-layout-item flexibility="auto" padding="horizontal-small" size="12" large-device-size="6">
+            <lightning-record-picker
+              key={assignmentPickerKey}
+              label="Case Assignment Name"
+              object-api-name="FEC_Case_Assignment__c"
+              value={assignmentRecordId}
+              disabled={assignmentPickerLocked}
+              onchange={handleAssignmentChange}
+              required
+              placeholder="Search Case Assignments..."
+              data-id="picker-assignment"
+            ></lightning-record-picker>
+
+            <div class="slds-m-top_small">
+              <lightning-record-picker
+                label="Owner"
+                object-api-name="User"
+                value={ownerRecordId}
+                onchange={handleOwnerChange}
+                required
+                placeholder="Search Users..."
+                data-id="picker-owner"
+              ></lightning-record-picker>
+            </div>
+
+            <div class="slds-m-top_small">
+              <c-fec_-combo-box
+                data-id="noc-new-prod-type"
+                label="Product Type"
+                placeholder="Select Product Type"
+                required
+                value={selectedProductTypeId}
+                option={formattedProductTypeOption}
+                disabled={comboProdTypeLocked}
+                onremove={handleRemoveProductType}
+                onchange={handleChangeProductType}
+              ></c-fec_-combo-box>
+            </div>
+
+            <div class="slds-m-top_small">
+              <div class="slds-form-element slds-form-element_readonly">
+                <span class="slds-form-element__label">Created By</span>
+                <div class="slds-form-element__control">
+                  <div class="slds-form-element__static">{auditStamp}</div>
+                </div>
+              </div>
+            </div>
+          </lightning-layout-item>
+
+          <lightning-layout-item flexibility="auto" padding="horizontal-small" size="12" large-device-size="6">
+            <c-fec_-combo-box
+              data-id="noc-new-category"
+              label="Category"
+              placeholder="Select Category"
+              required
+              value={selectedCategoryKey}
+              option={formattedCategoryOption}
+              disabled={comboCategoryLocked}
+              onremove={handleRemoveCategory}
+              onchange={handleChangeCategory}
+            ></c-fec_-combo-box>
+
+            <div class="slds-m-top_small">
+              <c-fec_-combo-box
+                data-id="noc-new-sub-category"
+                label="Sub-Category"
+                placeholder="Select Sub-Category"
+                required
+                value={selectedSubCategoryId}
+                option={formattedSubCategoryOption}
+                disabled={comboSubCategoryLocked}
+                onremove={handleRemoveSubCategory}
+                onchange={handleChangeSubCategory}
+              ></c-fec_-combo-box>
+            </div>
+
+            <div class="slds-m-top_small">
+              <c-fec_-combo-box
+                data-id="noc-new-sub-code"
+                label="Sub-Code"
+                placeholder="Select Sub-Code"
+                value={selectedSubCodeId}
+                option={formattedSubCodeOption}
+                disabled={comboSubCodeLocked}
+                onremove={handleRemoveSubCode}
+                onchange={handleChangeSubCode}
+              ></c-fec_-combo-box>
+            </div>
+
+            <div class="slds-m-top_small">
+              <div class="slds-form-element slds-form-element_readonly">
+                <span class="slds-form-element__label">Last Modified By</span>
+                <div class="slds-form-element__control">
+                  <div class="slds-form-element__static">{auditStamp}</div>
+                </div>
+              </div>
+            </div>
+          </lightning-layout-item>
+        </lightning-layout>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <lightning-layout horizontal-align="end">
+        <lightning-layout-item padding="horizontal-small">
+          <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+        </lightning-layout-item>
+        <lightning-layout-item padding="horizontal-small">
+          <lightning-button variant="brand" label="Save" disabled={isSaveDisabled} onclick={handleSave}></lightning-button>
+        </lightning-layout-item>
+      </lightning-layout>
+    </div>
+  </div>
+</template>
