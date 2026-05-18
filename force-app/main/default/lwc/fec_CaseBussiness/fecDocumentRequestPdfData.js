@@ -44,7 +44,15 @@ function getFieldValue(business, objectName, apiName) {
  * NationalID           | FEC_Customer_History__c   | FEC_National_ID_Passport_ID__c
  * FullName             | FEC_Customer_History__c   | FEC_Customer_Name__c
  * logoUrl              | (static)                  | /resource/Logo
- * _rows                | FEC_Payment_History__c    | Apex getPaymentHistoryRows (RemovalNote, BankAddress, PaymentAmount)
+ * _rows                | FEC_Payment_History__c    | Apex FEC_PaymentHistoryValidationService.getPaymentHistoryRows
+ *                      |                           | (WHERE FEC_Customer_History__c = Case.FEC_Account_or_Contract__c)
+ *
+ * _rows[] — mỗi phần tử (map 1 dòng bảng PDF LSTT):
+ * Row key (PDF)   | Object                  | Field API Name           | Cột PDF / Ghi chú
+ * ----------------|-------------------------|--------------------------|------------------------------------------
+ * RemovalNote     | FEC_Payment_History__c  | FEC_Payment_No__c        | Số thứ tự
+ * BankAddress     | FEC_Payment_History__c  | FEC_Payment_Date__c      | Ngày Khách hàng thanh toán (format dd/MM/yyyy)
+ * PaymentAmount   | FEC_Payment_History__c  | FEC_Payment_Amount__c    | Số tiền Khách hàng thanh toán (FormatCurrency)
  *
  * @param {Object} business - business object từ getByCase
  * @param {Array}  paymentRows - kết quả từ Apex getPaymentHistoryRows
@@ -83,7 +91,18 @@ function buildLsttData(business, paymentRows) {
  * MonthlyRate          | FEC_Customer_History__c   | FEC_Monthly_Rate__c
  * YearlyRate           | FEC_Customer_History__c   | FEC_Yearly_Rate__c
  * MaturityDate2        | FEC_Customer_History__c   | FEC_Expiry_Date__c
- * _rows                | FEC_Repayment_Schedule__c | Apex getRepaymentScheduleRows (InstallmentDueDate, Principal, Interest, ClosingPrincipal, RepaymentFees, InstallmentAmount)
+ * _rows                | FEC_Repayment_Schedule__c | Apex FEC_PaymentHistoryValidationService.getRepaymentScheduleRows
+ *                      |                           | (WHERE FEC_Customer_History__c = Case.FEC_Account_or_Contract__c)
+ *
+ * _rows[] — mỗi phần tử (map 1 dòng bảng PDF TBCV_LTN):
+ * Row key (PDF)      | Object                     | Field API Name              | Cột PDF / Ghi chú
+ * -------------------|----------------------------|-----------------------------|------------------------------------------
+ * InstallmentDueDate | FEC_Repayment_Schedule__c  | FEC_Installment_Due_Date__c | Ngày đến hạn trả nợ (format dd/MM/yyyy)
+ * Principal          | FEC_Repayment_Schedule__c  | FEC_Principal__c            | Nợ gốc phải trả (FormatCurrency)
+ * Interest           | FEC_Repayment_Schedule__c  | FEC_Interest__c             | Lãi phải trả (FormatCurrency)
+ * ClosingPrincipal   | FEC_Repayment_Schedule__c  | FEC_Closing_Principal__c    | Nợ gốc còn lại (FormatCurrency)
+ * RepaymentFees      | FEC_Repayment_Schedule__c  | FEC_Repayment_Fee__c        | Phí dịch vụ thu hộ phải trả (FormatCurrency)
+ * InstallmentAmount  | FEC_Repayment_Schedule__c  | FEC_Installment_Amount__c   | Tổng số tiền phải trả trong tháng (FormatCurrency)
  *
  * @param {Object} business       - business object từ getByCase
  * @param {Array}  _paymentRows   - (không dùng cho template này)

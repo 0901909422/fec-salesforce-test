@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
+import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
@@ -49,6 +50,7 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -85,7 +87,6 @@ import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_Name";
 import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
-import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
@@ -157,7 +158,6 @@ const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
-  FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
 ]);
@@ -168,7 +168,6 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_CASE_PHONE_NUMBER,
   FIELD_RECIPIENT_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
-  FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
   CUSTOMER_PHONE_NUMBER_SUB,
@@ -434,6 +433,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_MRC: () => import('c/fec_MRC'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
@@ -599,7 +599,7 @@ function normalizeMasterDataLwcEntry(entry) {
   };
 }
 
-export default class Fec_CaseBussiness extends LightningElement {
+export default class Fec_CaseBussiness extends NavigationMixin(LightningElement) {
 
   @api recordId;
 
@@ -1111,7 +1111,32 @@ export default class Fec_CaseBussiness extends LightningElement {
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
     confirmLabel: FEC_Confirm_Label,
-    mrcDupOpenCaseBtn: FEC_MRC_RL0502_Dup_Open_Case_Btn,
+    mrcDupOpenCaseBtn: "Mở Case trước",
+  };
+
+  get showMrcRl0502DupBanner() {
+    const v = this.business?.mrcRl0502DuplicateOpenCaseId;
+    return typeof v === "string" && v.length >= 15;
+  }
+
+  get mrcRl0502DupBannerText() {
+    const num = this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY;
+    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
+  }
+
+  handleOpenMrcDupCase() {
+    const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
+    if (!rid) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: rid,
+        objectApiName: "Case",
+        actionName: "view",
+      },
+    });
   }
 
   @api getNatureOfCaseId() {
@@ -1876,6 +1901,18 @@ export default class Fec_CaseBussiness extends LightningElement {
   //linhdev fix jira FECREDIT_CSM_2025_KH-1367
   handleFastCashBlockConfirmed() {
     this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
+  handleFastCashNocLocked(event) {
+    const rid = event.detail && event.detail.recordId;
+    if (rid && this.recordId && rid !== this.recordId) {
+      return;
+    }
+    const nocEl = this.template.querySelector("c-fec_-case-edit-n-o-c");
+    if (nocEl && typeof nocEl.applyFastCashBlockNocLock === "function") {
+      nocEl.applyFastCashBlockNocLock();
+    }
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
@@ -2776,7 +2813,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     return host.saveRemovePhoneForSubmitIfApplicable();
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
@@ -3935,6 +3972,21 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api
   refreshFileUploadCards() {
     this._scheduleRefreshFileUploadCards();
+  }
+
+  /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
+  @api
+  refreshAutoHoldCase() {
+    const delays = [2000, 5000, 8000];
+    delays.forEach((delayMs) => {
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      setTimeout(() => {
+        const subprocess =
+          this.template.querySelector("c-fec_-sub-process-container") ||
+          this.template.querySelector("c-fec-sub-process-container");
+        subprocess?.refreshAutoHoldCase?.();
+      }, delayMs);
+    });
   }
 
   applyDraft() {
