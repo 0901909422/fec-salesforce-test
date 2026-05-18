@@ -17549,4 +17549,12 @@
         <shortDescription>FEC MSG ERROR</shortDescription>
         <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
     </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_Select_Template</fullName>
+        <categories>LWC fec_BatchCaseCreation, fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg Select Template</shortDescription>
+        <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
+    </labels>
 </CustomLabels>
