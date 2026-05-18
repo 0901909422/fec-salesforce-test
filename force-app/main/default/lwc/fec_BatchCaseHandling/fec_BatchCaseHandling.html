@@ -121,16 +121,66 @@
                         onchange={handleCaseSelectAll}
                       ></lightning-input>
                     </th>
-                    <th><a href="javascript:void(0);" data-key="customerType" onclick={handleCaseSort}>{batchUi.colCustomerType}</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseIdSearch" onclick={handleCaseSort}>{batchUi.colCaseId}</a></th>
-                    <th><a href="javascript:void(0);" data-key="categoryCode" onclick={handleCaseSort}>{batchUi.colCategory}</a></th>
-                    <th><a href="javascript:void(0);" data-key="subCategoryCode" onclick={handleCaseSort}>{batchUi.colSubCategory}</a></th>
-                    <th><a href="javascript:void(0);" data-key="subCodeCode" onclick={handleCaseSort}>{batchUi.colSubCode}</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseStatus" onclick={handleCaseSort}>{batchUi.colCaseStatus}</a></th>
-                    <th><a href="javascript:void(0);" data-key="caseCreatedOn" onclick={handleCaseSort}>{batchUi.colCaseCreatedOn}</a></th>
-                    <th><a href="javascript:void(0);" data-key="lastUpdatedOn" onclick={handleCaseSort}>{batchUi.colLastUpdatedOn}</a></th>
-                    <th><a href="javascript:void(0);" data-key="hasAttachment" onclick={handleCaseSort}>{batchUi.colAttachments}</a></th>
-                    <th>{batchUi.colAttachmentDownloaded}</th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="customerType" onclick={handleCaseSort}>
+                        {batchUi.colCustomerType}
+                        <lightning-icon icon-name={caseSortIconCustomerType} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="caseIdSearch" onclick={handleCaseSort}>
+                        {batchUi.colCaseId}
+                        <lightning-icon icon-name={caseSortIconCaseId} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="categoryCode" onclick={handleCaseSort}>
+                        {batchUi.colCategory}
+                        <lightning-icon icon-name={caseSortIconCategory} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="subCategoryCode" onclick={handleCaseSort}>
+                        {batchUi.colSubCategory}
+                        <lightning-icon icon-name={caseSortIconSubCategory} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="subCodeCode" onclick={handleCaseSort}>
+                        {batchUi.colSubCode}
+                        <lightning-icon icon-name={caseSortIconSubCode} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="caseStatus" onclick={handleCaseSort}>
+                        {batchUi.colCaseStatus}
+                        <lightning-icon icon-name={caseSortIconCaseStatus} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="caseCreatedOn" onclick={handleCaseSort}>
+                        {batchUi.colCaseCreatedOn}
+                        <lightning-icon icon-name={caseSortIconCaseCreatedOn} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="lastUpdatedOn" onclick={handleCaseSort}>
+                        {batchUi.colLastUpdatedOn}
+                        <lightning-icon icon-name={caseSortIconLastUpdatedOn} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <a href="javascript:void(0);" class="fec-case-sort-link" data-key="hasAttachment" onclick={handleCaseSort}>
+                        {batchUi.colAttachments}
+                        <lightning-icon icon-name={caseSortIconAttachments} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </a>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colAttachmentDownloaded}
+                        <lightning-icon icon-name={caseSortIconAttachmentDownloaded} size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,7 +252,6 @@
                   options={pageSizeOptions}
                   onchange={handleCasePageSizeChange}
                 ></lightning-combobox>
-                <span class="fec-case-total-label">{batchUi.totalPrefix} {caseTotalCount}</span>
               </div>
               <div class="fec-footer__center">
                 <lightning-button-icon
@@ -212,13 +261,27 @@
                   disabled={casePreviousDisabled}
                 ></lightning-button-icon>
                 <span class="fec-footer__page">{caseSearchPage}</span>
-                <span class="fec-footer__label">/ {caseTotalPages}</span>
                 <lightning-button-icon
                   icon-name="utility:chevronright"
                   alternative-text={batchUi.next}
                   onclick={handleCaseNextPage}
                   disabled={caseNextDisabled}
                 ></lightning-button-icon>
+              </div>
+              <div class="fec-footer__goto">
+                <span class="fec-footer__label">{batchUi.goToPage}</span>
+                <lightning-input
+                  variant="label-hidden"
+                  value={caseGoToPageInput}
+                  type="number"
+                  min="1"
+                  class="fec-footer__goto-input"
+                  onchange={handleCaseGoToPageInput}
+                ></lightning-input>
+                <lightning-button
+                  label={batchUi.go}
+                  onclick={handleCaseGoToPage}
+                ></lightning-button>
               </div>
             </div>
           </div>
@@ -331,15 +394,6 @@
           class="slds-accordion__section"
         >
           <div class="fec-session-body">
-            <div class="fec-section2-toolbar">
-              <span class="fec-section2-toolbar__spacer"></span>
-              <lightning-button-icon
-                icon-name="utility:refresh"
-                alternative-text={batchUi.refresh}
-                title={batchUi.refresh}
-                onclick={handleRefresh}
-              ></lightning-button-icon>
-            </div>
             <div class="fec-table-wrap">
               <table class="fec-table">
                 <thead>
@@ -347,32 +401,57 @@
                     <th>
                       <span class="fec-th-inner">
                         {batchUi.colFileName}
-                        <lightning-icon
-                          icon-name="utility:arrowup"
-                          size="xx-small"
-                          class="fec-sort-icon"
-                          alternative-text={strEmpty}
-                        ></lightning-icon>
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
                       </span>
                     </th>
                     <th>
                       <span class="fec-th-inner">
                         {batchUi.colUploadedOn}
-                        <lightning-icon
-                          icon-name="utility:arrowup"
-                          size="xx-small"
-                          class="fec-sort-icon"
-                          alternative-text={strEmpty}
-                        ></lightning-icon>
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
                       </span>
                     </th>
-                    <th>{batchUi.colUploadedBy}</th>
-                    <th>{batchUi.colTotalRecords}</th>
-                    <th>{batchUi.colTotalSuccess}</th>
-                    <th>{batchUi.colTotalFailed}</th>
-                    <th>{batchUi.colStatus}</th>
-                    <th>{batchUi.colFailureReason}</th>
-                    <th>{batchUi.colResult}</th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colUploadedBy}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colTotalRecords}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colTotalSuccess}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colTotalFailed}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colStatus}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colFailureReason}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
+                    <th>
+                      <span class="fec-th-inner">
+                        {batchUi.colResult}
+                        <lightning-icon icon-name="utility:arrowdown" size="xx-small" class="fec-sort-icon" alternative-text={batchUi.sort}></lightning-icon>
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

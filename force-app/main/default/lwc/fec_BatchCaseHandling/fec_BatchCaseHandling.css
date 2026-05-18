@@ -19,10 +19,6 @@
 
 .fec-session-accordion {
   overflow: visible;
-  --sds-c-accordion-summary-color-background: #eff0f0;
-  --sds-c-accordion-heading-font-size: 0.875rem;
-  --sds-c-accordion-heading-font-weight: 600;
-  --sds-c-accordion-heading-text-color: #16325c;
 }
 
 .fec-session-body {
@@ -148,9 +144,34 @@
 
 .fec-table th {
   background: #f3f3f2;
-  color: #16325c;
+  color: #3e3e3c;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.fec-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.fec-case-sort-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #3e3e3c;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.fec-case-sort-link:hover {
+  color: #0176d3;
+  text-decoration: underline;
+}
+
+.fec-sort-icon {
+  --sds-c-icon-color-foreground-default: #706e6b;
+  opacity: 0.85;
 }
 
 .fec-empty {
@@ -168,12 +189,34 @@
   gap: 0.75rem;
 }
 
+.fec-footer__label {
+  font-size: 0.8125rem;
+  color: #3e3e3c;
+  margin-right: 0.35rem;
+}
+
 .fec-footer__left,
 .fec-footer__center,
 .fec-footer__goto {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.fec-footer__left lightning-combobox {
+  min-width: 4.5rem;
+  max-width: 6rem;
+}
+
+.fec-footer__page {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #3e3e3c;
+}
+
+.fec-footer__goto-input {
+  width: 3.5rem;
 }
 
 .fec-session-body--filters {
@@ -284,12 +327,6 @@
 
 .fec-case-footer {
   margin-top: 0.5rem;
-}
-
-.fec-case-total-label {
-  font-size: 0.8125rem;
-  color: #16325c;
-  margin-left: 0.35rem;
 }
 
 .fec-export-success {
