@@ -128,10 +128,6 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
-        <type>Default</type>
-    </actionOverrides>
-    <actionOverrides>
-        <actionName>View</actionName>
         <comment>Action override created by tungnm37</comment>
         <content>FEC_General_Assignment_Config_Record_Page</content>
         <formFactor>Large</formFactor>
@@ -145,6 +141,10 @@
         <formFactor>Small</formFactor>
         <skipRecordTypeSelect>false</skipRecordTypeSelect>
         <type>Flexipage</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
     </actionOverrides>
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
@@ -163,6 +163,7 @@
     <nameField>
         <displayFormat>GA - {0}</displayFormat>
         <label>GA Name</label>
+        <trackHistory>false</trackHistory>
         <type>AutoNumber</type>
     </nameField>
     <pluralLabel>General Assignment Configs</pluralLabel>
