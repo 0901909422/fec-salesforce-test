@@ -19,14 +19,11 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
         'FEC_Category__c',
         'FEC_Sub_Category__c',
         'FEC_Sub_Code__c',
-        'FEC_Business_Process__c'
-
-        // Lookup relationships to Case
-        // >> Thêm field IsArchiveTemp__c vào các field này để delete dc
-        'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
-        'FEC_Card_Payment__c' => 'FEC_Case__c',
-        'FEC_Process_Action__c' => 'FEC_Linked_Case__c',
-        'FEC_Integration_Case__c' => 'FEC_Integrate_Case_ID__c'
+        'FEC_Business_Process__c',
+        'FEC_IPP__c',
+        'FEC_Card_Payment__c',
+        'FEC_Process_Action__c',
+        'FEC_Integration_Case__c'
     };
 
     private Integer currentObjectIndex = 0;
