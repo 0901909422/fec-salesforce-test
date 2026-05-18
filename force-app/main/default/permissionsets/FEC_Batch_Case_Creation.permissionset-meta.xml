@@ -47,6 +47,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Do_Not_Bother__c.FEC_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Template_Import__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -78,6 +83,10 @@
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>Batch_Case_Creation</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
     <tabSettings>
         <tab>FEC_Template_Import__c</tab>
         <visibility>Visible</visibility>
