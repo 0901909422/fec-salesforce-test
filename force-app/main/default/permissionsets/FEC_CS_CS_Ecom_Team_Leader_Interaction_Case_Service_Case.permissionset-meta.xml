@@ -3991,6 +3991,11 @@
         <field>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Ecom Team Leader - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

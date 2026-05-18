@@ -3976,6 +3976,11 @@
         <field>FEC_Additional_Info__c.FEC_Province_City__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Telesales User 2 - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
