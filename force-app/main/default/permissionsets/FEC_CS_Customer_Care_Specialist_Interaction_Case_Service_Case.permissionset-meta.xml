@@ -3167,6 +3167,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_NFU_Description_Result__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_NFU_Expiry_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
