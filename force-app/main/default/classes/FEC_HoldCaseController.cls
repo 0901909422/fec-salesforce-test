@@ -391,7 +391,7 @@ public with sharing class FEC_HoldCaseController {
                 Case refreshed = [
                     SELECT FEC_NFU_Status__c, FEC_NFU_Code__c,
                            FEC_NFU_Started_Date__c, FEC_NFU_Expiry_Date__c,
-                           FEC_NFU_Reason__c, FEC_Collections_Response__c
+                           FEC_NFU_Reason__c
                     FROM Case WHERE Id = :caseId LIMIT 1
                 ];
                 resp.status    = 'SUCCESS';
@@ -403,7 +403,6 @@ public with sharing class FEC_HoldCaseController {
                 resp.nfuStartedDate = refreshed.FEC_NFU_Started_Date__c != null ? refreshed.FEC_NFU_Started_Date__c.format() : '';
                 resp.nfuExpiryDate  = refreshed.FEC_NFU_Expiry_Date__c != null ? refreshed.FEC_NFU_Expiry_Date__c.format() : '';
                 resp.nfuReason      = refreshed.FEC_NFU_Reason__c;
-                resp.collectionsResponse = refreshed.FEC_Collections_Response__c;
                 return resp;
             }
 
