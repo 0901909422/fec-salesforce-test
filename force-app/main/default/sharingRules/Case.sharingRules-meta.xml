@@ -1,6 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SharingRules xmlns="http://soap.sforce.com/2006/04/metadata">
     <sharingCriteriaRules>
+        <fullName>CA_Credit_Assessment</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>CA - Credit Assessment</label>
+        <sharedTo>
+            <group>CA_Credit_Assessment</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Credit Assessment</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>CL_Collections</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>CL - Collections</label>
+        <sharedTo>
+            <group>CL_Collections</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Collections</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>CO_Card_Operations</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>CO Card Operations</label>
+        <sharedTo>
+            <group>CO_Card_Operations</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Card Operations</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>CP_Contract_Processing</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>CP - Contract Processing</label>
+        <sharedTo>
+            <group>CP_Contract_Processing</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Contract Processing</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
         <fullName>FEC_Share_all_Interaction_Cases_to_Back_Office_user</fullName>
         <accessLevel>Read</accessLevel>
         <description>Chia sẻ toàn bộ bản ghi Interaction trên hệ thống cho toàn bộ người dùng thuộc Back Office (bao gồm SP, CC, QC, OM, CX)</description>
@@ -57,6 +113,76 @@
             <field>RecordTypeId</field>
             <operation>equals</operation>
             <value>Customer Case,Interaction,Internal Case</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>FS_Direct_Sales</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>FS - Direct Sales</label>
+        <sharedTo>
+            <group>FS_Direct_Sales</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Direct Sales</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>IA_Internal_Audit</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>IA - Internal Audit</label>
+        <sharedTo>
+            <group>IA_Internal_Audit</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Internal Audit</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>IT_IT_Operations_Support</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>IT IT Operations Support</label>
+        <sharedTo>
+            <group>IT_IT_Operations_Support</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Operations Support</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>PM_Payment</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>PM - Payment</label>
+        <sharedTo>
+            <group>PM_Payment</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Payment</value>
+        </criteriaItems>
+        <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
+    </sharingCriteriaRules>
+    <sharingCriteriaRules>
+        <fullName>TS_Telesales</fullName>
+        <accessLevel>Edit</accessLevel>
+        <label>TS - Telesales</label>
+        <sharedTo>
+            <group>TS_Telesales</group>
+        </sharedTo>
+        <criteriaItems>
+            <field>FEC_Assignment_Users__c</field>
+            <operation>contains</operation>
+            <value>Telesales</value>
         </criteriaItems>
         <includeRecordsOwnedByAll>true</includeRecordsOwnedByAll>
     </sharingCriteriaRules>

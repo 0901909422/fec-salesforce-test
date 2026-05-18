@@ -26,6 +26,8 @@ public without sharing class FEC_CaseBusinessService {
   public static final String UNBLOCK_CARD = 'Unblock Card';
   public static final String PIN_REISSUE = 'Reissue PIN';
   public static final String REPLACE_CARD = 'Replace Card';
+  //PhongBT 14/05/26: Document Request
+  public static final String DOCUMENT_REQUEST = 'Document Request';
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FEC_Business_Process__r.FEC_Code__c (quy trình Fast Card / RC11…)
   public static final String FAST_CARD = 'Fast Cash';
   // tungnm37 thêm: COF/GSR route string constant
@@ -78,7 +80,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE,
     REPLACE_CARD,
     // tungnm37 thêm: COF/GSR - không đổi owner, chỉ tạo Assignment
-    ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST
   }
 
   public static final Map<String, Method> METHOD_MAP = new Map<String, Method>{
@@ -105,7 +109,9 @@ public without sharing class FEC_CaseBusinessService {
     PIN_REISSUE => Method.PIN_REISSUE,
     REPLACE_CARD => Method.REPLACE_CARD,
     // tungnm37 thêm: COF/GSR route - không đổi owner
-    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR
+    ROUTE_TO_COF_GSR_ACTION => Method.ROUTE_TO_COF_GSR,
+    //PhongBT 14/05/26: Document Request
+    DOCUMENT_REQUEST => Method.DOCUMENT_REQUEST
   };
 
   @AuraEnabled
@@ -189,10 +195,12 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Case_Phone_Number__c,
           FEC_Case_Email__c,
           FEC_Account_or_Contract__r.FEC_Customer_Type__c,
+          FEC_Account_or_Contract__r.FEC_Fast_Cash_Status__c,
           FEC_Interaction__c,
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
           FEC_SubCode__r.Name,
+          FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
@@ -319,6 +327,14 @@ public without sharing class FEC_CaseBusinessService {
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
         }
+      }
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — fallback subCodeCode từ Case khi chưa resolve từ subCodeId
+      if (
+        String.isBlank(result.subCodeCode) &&
+        selectedCase.FEC_SubCode__r != null &&
+        String.isNotBlank(selectedCase.FEC_SubCode__r.FEC_Code__c)
+      ) {
+        result.subCodeCode = selectedCase.FEC_SubCode__r.FEC_Code__c.trim();
       }
 
       result.subCategoryCode = FEC_ConstantCommon.STR_EMPTY;
@@ -517,6 +533,11 @@ public without sharing class FEC_CaseBusinessService {
 
       Error err = new Error();
 
+      //PhongBT 14/05/26: Document Request — gọi validate 1 lần, dùng cho cả error display và ẩn field
+      String docReqValidationMessage = DOCUMENT_REQUEST.equals(businessProcessCode)
+        ? FEC_PaymentHistoryValidationService.getValidationMessage(selectedCase.Id, subCodeId)
+        : null;
+
       try {
         switch on METHOD_MAP.get(businessProcessCode) {
           when PHONE_UPDATE {
@@ -554,6 +575,13 @@ public without sharing class FEC_CaseBusinessService {
           when IDENTIFICATION_UPDATE {
             if (selectedCase.FEC_Account_or_Contract__c != null) {
               identificationUpdate(selectedCase);
+            }
+          }
+          //PhongBT 14/05/26: Document Request hiển thị cảnh báo từ validation (chỉ label, không có reason)
+          when DOCUMENT_REQUEST {
+            if (String.isNotBlank(docReqValidationMessage)) {
+              err = new Error(docReqValidationMessage, new List<String>());
+              result.sectionlst.add(new Section('Case Information', err));
             }
           }
           when else {
@@ -753,12 +781,30 @@ public without sharing class FEC_CaseBusinessService {
             'FEC_Sub_Section_Layout__c'
           );
           String itemType = (String) item.get('FEC_Type__c');
+          //PhongBT 14/05/26: Document Request
+          //Ẩn Case Info (trừ Property Info), chỉ khi sub-code RL04.02/RL04.03/RC04.04 trả về message
+          if(
+            DOCUMENT_REQUEST.equals(businessProcessCode)
+            && String.isNotBlank(docReqValidationMessage)
+            && 'Case Information'.equals(sectionNameTemp)
+            && !'Property Info'.equals(subSectionNameTemp)
+          ){
+            continue;
+          }
 
-          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FAST_CARD: chỉ ẩn subsection C360 Info; section Account Information và subsection khác vẫn render.
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — Fast Cash: ẩn subsection C360 Info chỉ khi FEC_Fast_Cash_Status__c = Not Eligible; Eligible (hoặc chưa có snapshot) vẫn hiển thị C360.
           if (
             FAST_CARD.equals(businessProcessCode) &&
-            'C360 Info'.equals(subSectionNameTemp)
+            'C360 Info'.equals(subSectionNameTemp) &&
+            System.Label.FEC_MSG_Status_Not_Eligible.equals(
+              selectedCase.FEC_Account_or_Contract__r?.FEC_Fast_Cash_Status__c
+            )
           ) {
+            continue;
+          }
+
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 / Property
+          if (shouldSkipPointsRedemptionSubSection(result.subCodeCode, sectionNameTemp, subSectionNameTemp)) {
             continue;
           }
 
@@ -4390,6 +4436,70 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
+  private static Boolean shouldSkipPointsRedemptionSubSection(
+    String subCodeCode,
+    String sectionName,
+    String subSectionName
+  ) {
+    if (String.isBlank(subCodeCode)) {
+      return false;
+    }
+    String s = subCodeCode.toUpperCase();
+    if (!s.contains('RC33.01') && !s.contains('RC33.02') && !s.contains('RC33.03')) {
+      return false;
+    }
+    return ('Account Information'.equals(sectionName) && 'C360 Info'.equals(subSectionName))
+      || ('Case Information'.equals(sectionName) && 'Property Info'.equals(subSectionName));
+  }
+
+  /**
+   * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
+   * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
+   */
+  public static Error mrcReturnCaseInformationValidate(
+    Case selectedCase,
+    String subCategoryCode,
+    String subCodeCode
+  ) {
+    List<String> errorlst = new List<String>();
+
+    if (String.isBlank(subCategoryCode)) {
+      return new Error();
+    }
+    Boolean isMrcRl05Branch = subCategoryCode.toUpperCase().contains('RL05');
+    if (!isMrcRl05Branch) {
+      return new Error();
+    }
+
+    if (
+      selectedCase == null ||
+      selectedCase.FEC_Account_or_Contract__c == null ||
+      selectedCase.FEC_Account_or_Contract__r == null
+    ) {
+      return new Error();
+    }
+
+    String productCode = selectedCase.FEC_Account_or_Contract__r.FEC_Product_Code__c;
+    if (String.isNotBlank(productCode)) {
+      if (!'TW'.equalsIgnoreCase(productCode.trim())) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_Product_Not_TW);
+      }
+    }
+
+    if (String.isNotBlank(subCodeCode) && subCodeCode.toUpperCase().contains('RL05.03')) {
+      Decimal dpd = selectedCase.FEC_Account_or_Contract__r.FEC_Days_Past_Due__c;
+      if (dpd != null && dpd >= 15) {
+        errorlst.add(System.Label.FEC_MRC_Return_Msg_DPD_RL0503);
+      }
+    }
+
+    if (errorlst.isEmpty()) {
+      return new Error();
+    }
+    return new Error(System.Label.FEC_MRC_Return_Case_Info_Block_Title, errorlst);
+  }
+
   public static Error phoneUpdateValidate(Id cHistoryId) {
     List<String> validStatuslst = new List<String>{ '8', '9', 'Z' };
     List<String> validBlockCodelst = new List<String>{ 'C' };
@@ -4762,7 +4872,7 @@ public without sharing class FEC_CaseBusinessService {
   public static List<Group> getTransferQueues() {
     Id userId = UserInfo.getUserId();
     Id roleId = UserInfo.getUserRoleId(); 
-    
+
     // Start with the user's direct ID
     Set<Id> allAssociatedIds = new Set<Id>{ userId };
     // 1. Add the Group IDs that correspond to the User's Role
@@ -4964,7 +5074,7 @@ public without sharing class FEC_CaseBusinessService {
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
    * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
-   * rồi cờ default; không dùng FEC_Order__c.
+   * rồi cờ default; cuối cùng mới lấy bản ghi đầu theo Name.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,

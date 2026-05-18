@@ -4,16 +4,20 @@
     <description>email của chủ sở hữu (bỏ đuôi) hoặc tên Queue nếu người sở hữu Case là Queue. Ẩn khi là COF/GSR và đã có Assignment.</description>
     <externalId>false</externalId>
     <formula>IF(
-    FEC_Assignment_Count__c > 0,
-    "",
+    BEGINS(TEXT(Status), "Resolved"),
+    "Unassigned",
     IF(
-        OR(RecordType.Name = "Customer Case", RecordType.Name = "Internal Case"),
+        FEC_Assignment_Count__c > 0,
+        "",
         IF(
-            ISBLANK(Owner:Queue.Name),
-            IF(ISBLANK(Owner:User.Email), "", LEFT(Owner:User.Email, FIND("@", Owner:User.Email) - 1)),
-            Owner:Queue.Name
-        ),
-        ""
+            OR(RecordType.Name = "Customer Case", RecordType.Name = "Internal Case"),
+            IF(
+                ISBLANK(Owner:Queue.Name),
+                IF(ISBLANK(Owner:User.Email), "", LEFT(Owner:User.Email, FIND("@", Owner:User.Email) - 1)),
+                Owner:Queue.Name
+            ),
+            ""
+        )
     )
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>

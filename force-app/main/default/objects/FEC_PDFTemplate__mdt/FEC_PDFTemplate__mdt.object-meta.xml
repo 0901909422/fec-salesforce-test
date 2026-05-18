@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Custom Metadata Type lưu trữ HTML template cho PDF generation. Mỗi record là 1 template với unique code.</description>
+    <label>FEC PDF Template</label>
+    <pluralLabel>FEC PDF Templates</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

@@ -113,6 +113,9 @@ public with sharing class FEC_GetCardBasicInfo {
         @AuraEnabled public Date SettlementDate;
         @AuraEnabled public String Plan;
         @AuraEnabled public String RRN;
+        @AuraEnabled public String AuthCode;
+        @AuraEnabled public String MCC;
+        @AuraEnabled public String TRNXCurrencyCode;
         @AuraEnabled public String MerchantName;
         @AuraEnabled public String PaymentFlag;
         @AuraEnabled public String IsCashTRNX;
@@ -444,6 +447,17 @@ public with sharing class FEC_GetCardBasicInfo {
                 ti.SettlementDate    = FEC_CommonUltils.xmlValToDate(t, 'SettlementDate');
                 ti.Plan              = FEC_CommonUltils.getXmlValue(t, 'Plan');
                 ti.RRN               = FEC_CommonUltils.getXmlValue(t, 'RRN');
+                ti.AuthCode =
+                    firstNonBlank(
+                        FEC_CommonUltils.getXmlValue(t, 'AuthCode'),
+                        FEC_CommonUltils.getXmlValue(t, 'AuthorizationCode')
+                    );
+                ti.MCC               = FEC_CommonUltils.getXmlValue(t, 'MCC');
+                ti.TRNXCurrencyCode =
+                    firstNonBlank(
+                        FEC_CommonUltils.getXmlValue(t, 'TRNXCurrencyCode'),
+                        FEC_CommonUltils.getXmlValue(t, 'CurrencyCode')
+                    );
                 ti.MerchantName      = FEC_CommonUltils.getXmlValue(t, 'MerchantName');
                 ti.PaymentFlag       = FEC_CommonUltils.getXmlValue(t, 'PaymentFlag');
                 ti.IsCashTRNX        = FEC_CommonUltils.getXmlValue(t, 'IsCashTRNX');
@@ -474,5 +488,15 @@ public with sharing class FEC_GetCardBasicInfo {
  
         return result;
     }
- 
+
+    private static String firstNonBlank(String a, String b) {
+        if (!String.isBlank(a)) {
+            return a.trim();
+        }
+        if (!String.isBlank(b)) {
+            return b.trim();
+        }
+        return null;
+    }
+
 }

@@ -179,21 +179,61 @@ public with sharing class FEC_SubProcessService {
         }
     }
     
-    @AuraEnabled(cacheable = true)
-    public static Boolean getCase(Id caseId) {
-       
+    
+    
+    
+    @AuraEnabled(cacheable=true)
+    public static SubProcessWrapper getSubmittedSubProcesses(Id caseId) {
+        
+        SubProcessWrapper result =
+            new SubProcessWrapper();
+        
         try {
-            List<Case> caseRecord =
-                [SELECT FEC_Is_Submited__c FROM Case WHERE Id = : caseId LIMIT 1];
             
-            System.debug('FEC_Is_Submited__c = ' + caseRecord[0].FEC_Is_Submited__c);
+            List<Case> caseRecords = [
+            SELECT
+                Id,
+                FEC_Is_Submited__c,
+                FEC_Product_Type__c,
+                FEC_Category__c,
+                FEC_SubCategory__c,
+                FEC_SubCode__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
             
-            return caseRecord[0].FEC_Is_Submited__c;
+            /*
+             * Not submitted
+             */
+            if (
+                caseRecords.isEmpty() ||
+                !caseRecords[0].FEC_Is_Submited__c
+            ) {
+                return result;
+            }
+            
+            /*
+             * Get subprocess config from NOC
+             */
+            return getSubProcesses(
+                caseRecords[0].Id,
+            caseRecords[0].FEC_Product_Type__c,
+            caseRecords[0].FEC_Category__c,
+            caseRecords[0].FEC_SubCategory__c,
+            caseRecords[0].FEC_SubCode__c
+                );
             
         } catch (Exception e) {
-            System.debug('getCase ERROR = ' + e.getMessage());
             
-            throw new AuraHandledException(e.getMessage());
+            System.debug(
+                'getSubmittedSubProcesses ERROR = ' +
+                e.getMessage()
+                );
+            
+            throw new AuraHandledException(
+                e.getMessage()
+                );
         }
     }
 }

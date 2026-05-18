@@ -85,7 +85,7 @@ export default class Fec_CaseExecuteVisibility extends LightningElement {
        * PRIORITY:
        * Check local storage first
        */
-      const localStatus = localStorage.getItem(`${this.recordId}`);
+      const localStatus = localStorage.getItem(`CaseExecute-${this.recordId}`);
 
       console.log("localStatus = ", localStatus);
 

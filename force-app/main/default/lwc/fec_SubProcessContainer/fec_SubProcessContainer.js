@@ -12,7 +12,7 @@ import {
 
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
-import getCase from "@salesforce/apex/FEC_SubProcessService.getCase";
+import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
 
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
@@ -39,7 +39,6 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   subscription = null;
   params;
-  isSubmitted = false;
   showHoldCase = false;
   showHoldCaseManual = false;
   /** Từ Hold Case Config type Auto — không ghi đè khi Case đã có FEC_NFU_Description_Result__c. */
@@ -217,23 +216,17 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
   async initializeCase() {
     try {
-      this.isSubmitted = await getCase({
+      const result = await getSubmittedSubProcesses({
         caseId: this.recordId,
       });
 
-      console.log("isSubmitted = ", this.isSubmitted);
+      console.log("submitted subprocesses = ", JSON.stringify(result));
 
-      /*
-       * Force show all subprocesses except Hold Case (Hold Case depends on config)
-       * tungnm37: bỏ force showHoldCase, để wire getSubProcesses quyết định
-       */
-      if (this.isSubmitted) {
-        this.showRemovePhone = true;
-
-        this.showDoNotBother = true;
-
-        this.showTransferCall = true;
-      }
+      // release-uat-3: visibility sau submit; giữ Hold Case khi Case đã có kết quả
+      this.showHoldCase = !!result.showHoldCase || this.holdCaseResultOnCase;
+      this.showRemovePhone = !!result.showRemovePhone;
+      this.showDoNotBother = !!result.showDNB;
+      this.showTransferCall = !!result.showTransferCall;
     } catch (error) {
       console.error("[initializeCase] ERROR", error);
     }

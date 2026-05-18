@@ -751,10 +751,4 @@ public without sharing class FEC_InteractionInforHandler {
         }
         update c;
     }
-
-    @AuraEnabled
-    public static void saveChatHistory(Id recordId, String chatHistory) {
-        if (recordId == null) return;
-        update new Case(Id = recordId, FEC_Chat_History__c = chatHistory);
-    }
 }
