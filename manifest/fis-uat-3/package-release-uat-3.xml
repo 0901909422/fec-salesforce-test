@@ -130,6 +130,8 @@
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BatchCaseHandlingExportService</members>
+        <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_SubProcessService</members>
         <members>Fec_HoldCaseConfigurationController</members>
         <members>FEC_ChannelFunctionService</members>
@@ -576,6 +578,9 @@
         <members>FEC_Template_Import__c</members>
         <members>FEC_HoldCaseConfiguration</members>
 		<members>FEC_Case_Assignment__c</members>
+        <members>Batch_Case_Creation</members>
+		<members>Batch_Case_Handling</members>
+		<members>Batch_Data_Creation</members>
         <name>CustomTab</name>
     </types>
 	<types>
