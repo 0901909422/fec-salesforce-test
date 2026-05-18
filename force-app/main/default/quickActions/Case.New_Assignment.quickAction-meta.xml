@@ -7,20 +7,18 @@
         <quickActionLayoutColumns>
             <quickActionLayoutItems>
                 <emptySpace>false</emptySpace>
-                <field>FEC_Assignment_Name__c</field>
+                <field>FEC_Assignment_Type__c</field>
                 <uiBehavior>Edit</uiBehavior>
             </quickActionLayoutItems>
             <quickActionLayoutItems>
                 <emptySpace>false</emptySpace>
-                <field>FEC_Assignment_Type__c</field>
+                <field>FEC_Assignment_Name__c</field>
                 <uiBehavior>Edit</uiBehavior>
             </quickActionLayoutItems>
         </quickActionLayoutColumns>
         <quickActionLayoutColumns>
             <quickActionLayoutItems>
-                <emptySpace>false</emptySpace>
-                <field>FEC_Assignment_Status__c</field>
-                <uiBehavior>Required</uiBehavior>
+                <emptySpace>true</emptySpace>
             </quickActionLayoutItems>
         </quickActionLayoutColumns>
     </quickActionLayout>

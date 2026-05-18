@@ -72,3 +72,38 @@
     padding-top: 0.75rem;
     border-top: 1px solid #dddbda;
 }
+
+/* tungnm37: NFU Details section sau khi thành công */
+.nfu-details-section {
+    margin-top: 1rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    background: #f9f9f9;
+}
+
+.nfu-details-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #3e3e3c;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dddbda;
+}
+
+.nfu-detail-item {
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.nfu-detail-label {
+    font-size: 0.75rem;
+    color: #706e6b;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.nfu-detail-value {
+    font-size: 0.875rem;
+    color: #181818;
+}
