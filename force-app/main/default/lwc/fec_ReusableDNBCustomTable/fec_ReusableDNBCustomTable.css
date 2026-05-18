@@ -1,31 +1,61 @@
 .custom-table {
-    width: 100%;
-    table-layout: fixed;
+  width: 100%;
+  table-layout: auto;
 }
 
+.custom-table th,
 .custom-table td {
-    vertical-align: top;
+  vertical-align: top;
+
+  white-space: nowrap;
 }
 
-/* REMARKS */
+/*
+ * ONLY LONG TEXT COLUMNS
+ */
+.update-reason-cell,
 .remarks-cell {
-    width: 140px;
-    min-width: 140px;
 
-    white-space: pre-line;
-    word-break: break-word;
+  white-space: normal;
+
+  overflow-wrap: anywhere;
 }
 
+/*
+ * COLUMN WIDTHS
+ */
+.update-reason-header {
+  width: 260px;
+}
+
+.remarks-header {
+  width: 180px;
+}
+
+/*
+ * INPUTS
+ */
+.update-reason-cell lightning-combobox,
 .remarks-cell lightning-textarea {
-    width: 100%;
+  width: 100%;
 }
 
-/* UPDATE REASON */
-.update-reason-cell {
-    width: 320px;
-    min-width: 320px;
+/*
+ * READONLY
+ */
+.readonly-text {
+  display: block;
+
+  line-height: 1.5;
 }
 
-.update-reason-cell lightning-combobox {
-    width: 100%;
+/*
+ * CHECKBOX
+ */
+.checkbox-wrapper {
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.5rem;
 }

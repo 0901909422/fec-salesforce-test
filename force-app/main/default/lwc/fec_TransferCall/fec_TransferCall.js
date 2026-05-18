@@ -1,6 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { getRecord, getFieldValue, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import TRANSFER_DATA_FIELD   from '@salesforce/schema/Case.FEC_Transfer_Data_to_Collections__c';
 import TRANSFER_TIME_FIELD   from '@salesforce/schema/Case.FEC_Transfer_Time__c';
 import TRANSFER_STATUS_FIELD from '@salesforce/schema/Case.FEC_Transfer_Status__c';
@@ -37,10 +37,10 @@ const TRANSFER_DETAIL_FIELDS = [
     ...COLL_REST_UPDATE_FIELDS
 ];
 import transferCallFromCase from '@salesforce/apex/FEC_TranferInformationCallout.transferCallFromCase';
+import prepareRemarkForCollectionsTransfer from '@salesforce/apex/FEC_TranferInformationCallout.prepareRemarkForCollectionsTransfer';
 import FEC_Collections_Transfer_Failed_Summary from '@salesforce/label/c.FEC_Collections_Transfer_Failed_Summary';
 import FEC_Collections_Transfer_MaxFailed_Summary from '@salesforce/label/c.FEC_Collections_Transfer_MaxFailed_Summary';
 import FEC_Notification_16_Collections_Transfer_Success from '@salesforce/label/c.FEC_Notification_16_Collections_Transfer_Success';
-import FEC_TransferCall_Section_CaseInfo from '@salesforce/label/c.FEC_TransferCall_Section_CaseInfo';
 import FEC_TransferCall_Subtitle from '@salesforce/label/c.FEC_TransferCall_Subtitle';
 import FEC_TransferCall_Btn_TransferToCollection from '@salesforce/label/c.FEC_TransferCall_Btn_TransferToCollection';
 import FEC_TransferCall_Modal_ConfirmMessage from '@salesforce/label/c.FEC_TransferCall_Modal_ConfirmMessage';
@@ -59,7 +59,6 @@ import FEC_TransferCall_Field_CollSubActionCode from '@salesforce/label/c.FEC_Tr
 import FEC_TransferCall_Field_CollRemarks from '@salesforce/label/c.FEC_TransferCall_Field_CollRemarks';
 import FEC_TransferCall_Field_CollActionDate from '@salesforce/label/c.FEC_TransferCall_Field_CollActionDate';
 import FEC_TransferCall_Field_CollAgent from '@salesforce/label/c.FEC_TransferCall_Field_CollAgent';
-const CASE_INFO_SECTION = 'caseInformation';
 /** Mirror FEC_ConstantCommon.STR_EMPTY — chuỗi rỗng dùng chung. */
 const STR_EMPTY = '';
 const STR_UNKNOWN_ERROR = 'Unknown error';
@@ -189,7 +188,6 @@ const MAX_TRANSFER_RETRIES = 3;
 export default class Fec_TransferCall extends NavigationMixin(LightningElement) {
     @api recordId;
 
-    activeSections = [CASE_INFO_SECTION];
     showConfirmModal = false;
     remarkValue = STR_EMPTY;
     isTransferring = false;
@@ -314,7 +312,6 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
     labelNoti16 = FEC_Notification_16_Collections_Transfer_Success;
     labelTransferFailSummary = FEC_Collections_Transfer_Failed_Summary;
     labelTransferMaxFailSummary = FEC_Collections_Transfer_MaxFailed_Summary;
-    labelSectionCaseInfo = FEC_TransferCall_Section_CaseInfo;
     labelSubtitle = FEC_TransferCall_Subtitle;
     labelTransferToCollection = FEC_TransferCall_Btn_TransferToCollection;
     labelModalConfirmMessage = FEC_TransferCall_Modal_ConfirmMessage;
@@ -528,20 +525,33 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         });
     }
 
-    handleSectionToggle(event) {
-        this.activeSections = event.detail.openSections;
-    }
-
-    handleOpenConfirmModal() {
+    handleOpenConfirmModal(event) {
         if (!this.recordId || this.isTransferring || this.transferButtonLocked || this.isTransferReadonly) {
             return;
         }
+        event?.currentTarget?.blur?.();
         this.transferErrorReason = STR_EMPTY;
         this.transferFailed = false;
         this._localTransferStatus = STR_EMPTY;
         this._localFailureReason = STR_EMPTY;
+        this.transferRemark = STR_EMPTY;
         this.remarkValue = STR_EMPTY;
-        this.showConfirmModal = true;
+        try {
+            sessionStorage.removeItem(STORAGE_REMARK_PREFIX + this.recordId);
+        } catch {
+            /* bỏ qua */
+        }
+        prepareRemarkForCollectionsTransfer({ caseId: this.recordId })
+            .then(() => {
+                getRecordNotifyChange([{ recordId: this.recordId }]);
+            })
+            .catch((err) => {
+                // eslint-disable-next-line no-console
+                console.warn('[fec_TransferCall] clear remark on Case failed', err);
+            })
+            .finally(() => {
+                this.showConfirmModal = true;
+            });
     }
 
     handleCancelModal() {
@@ -552,32 +562,66 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         this.remarkValue = STR_EMPTY;
     }
 
-    handleRemarkChange(event) {
-        this.remarkValue = event.target.value;
+    _getCollectionsRemarkTextarea() {
+        return this.template.querySelector(
+            'lightning-textarea[name="collectionsRemark"]'
+        );
     }
 
-    async handleConfirmTransfer() {
+    _syncRemarkValueFromDom() {
+        const textarea = this._getCollectionsRemarkTextarea();
+        if (textarea && typeof textarea.value === 'string') {
+            this.remarkValue = textarea.value;
+        }
+    }
+
+    /**
+     * Kiểm tra Remark for Collections trước khi gọi Apex.
+     * @returns {{ valid: boolean, trimmed: string }}
+     */
+    _validateCollectionsRemark() {
+        this._syncRemarkValueFromDom();
+        const textarea = this._getCollectionsRemarkTextarea();
+        const trimmed = (this.remarkValue || STR_EMPTY).trim();
+
+        if (trimmed.length > 0) {
+            if (textarea?.setCustomValidity) {
+                textarea.setCustomValidity(STR_EMPTY);
+                textarea.reportValidity();
+            }
+            return { valid: true, trimmed };
+        }
+
+        if (textarea) {
+            if (textarea.setCustomValidity) {
+                textarea.setCustomValidity(this.labelRemarkRequired);
+            }
+            if (textarea.reportValidity) {
+                textarea.reportValidity();
+            }
+        }
+        return { valid: false, trimmed: STR_EMPTY };
+    }
+
+    handleRemarkChange(event) {
+        this.remarkValue = event.target.value;
+        const textarea = event.target;
+        if (textarea?.setCustomValidity) {
+            textarea.setCustomValidity(STR_EMPTY);
+            textarea.reportValidity();
+        }
+    }
+
+    async handleConfirmTransfer(event) {
         if (!this.recordId || this.isTransferring || this.transferButtonLocked || this.isTransferReadonly) {
             return;
         }
 
-        const textarea = this.template.querySelector(
-            'lightning-textarea[name="collectionsRemark"]'
-        );
-        if (textarea) {
-            const ok = textarea.checkValidity();
-            textarea.reportValidity();
-            if (!ok) {
-                return;
-            }
-        }
-
-        const trimmed = (this.remarkValue || STR_EMPTY).trim();
-        if (!trimmed) {
-            this.showConfirmModal = false;
-            this.transferErrorReason = 'Vui lòng nhập Remark for Collections.';
+        const { valid, trimmed } = this._validateCollectionsRemark();
+        if (!valid) {
             return;
         }
+        event?.currentTarget?.blur?.();
 
         this.transferErrorReason = STR_EMPTY;
         this.isTransferring = true;

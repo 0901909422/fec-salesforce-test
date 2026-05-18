@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
+import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
@@ -51,6 +52,8 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
+import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -438,6 +441,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_MRC: () => import('c/fec_MRC'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
@@ -603,7 +607,7 @@ function normalizeMasterDataLwcEntry(entry) {
   };
 }
 
-export default class Fec_CaseBussiness extends LightningElement {
+export default class Fec_CaseBussiness extends NavigationMixin(LightningElement) {
 
   @api recordId;
 
@@ -1133,7 +1137,33 @@ export default class Fec_CaseBussiness extends LightningElement {
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
     confirmLabel: FEC_Confirm_Label,
-  };
+    mrcDupOpenCaseBtn: FEC_MRC_RL0502_Dup_Open_Case_Btn,
+  }
+
+  get showMrcRl0502DupBanner() {
+    const v = this.business?.mrcRl0502DuplicateOpenCaseId;
+    return typeof v === "string" && v.length >= 15;
+  }
+
+  get mrcRl0502DupBannerText() {
+    const num = String(this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY);
+    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
+  }
+
+  handleOpenMrcDupCase() {
+    const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
+    if (!rid) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: rid,
+        objectApiName: "Case",
+        actionName: "view",
+      },
+    });
+  }
 
   @api getNatureOfCaseId() {
     return this.business?.natureOfCase || null;
@@ -1281,7 +1311,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
       (componentName === "fec_IPPConversionRetailForm" ||
-        componentName === "fec_CardClosureRefundForm")
+        componentName === "fec_CardClosureRefundForm" ||
+        componentName === "fec_RemovePhoneForm")
     ) {
       return false;
     }
@@ -1799,6 +1830,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         );
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
+        this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
         //linhdev fix section Account Info + Case Info
@@ -2804,6 +2836,23 @@ export default class Fec_CaseBussiness extends LightningElement {
     return host.saveRemovePhoneForSubmitIfApplicable();
   }
 
+  _notifyRemovePhoneCaseSubmitted() {
+    const host = this._getSubProcessContainerEl();
+    if (host && typeof host.notifyRemovePhoneCaseSubmitted === "function") {
+      host.notifyRemovePhoneCaseSubmitted();
+    }
+    this._syncRemovePhoneLockAfterRevert();
+  }
+
+  _syncRemovePhoneLockAfterRevert() {
+    const host = this._getSubProcessContainerEl();
+    if (!host) {
+      return;
+    }
+    host.lockApiLwcsAfterRevertToDefaultStage =
+      this.business?.lockApiLwcsAfterRevertToDefaultStage === true;
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
@@ -3202,6 +3251,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    this._notifyRemovePhoneCaseSubmitted();
     return true;
   }
 

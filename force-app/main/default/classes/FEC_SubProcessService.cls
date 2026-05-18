@@ -145,10 +145,8 @@ public with sharing class FEC_SubProcessService {
             List<FEC_Hold_Case_Config__c> manualConfigs = [
                 SELECT Id
                 FROM FEC_Hold_Case_Config__c
-                WHERE FEC_Nature_of_Cases__c = :noc.Id
-                  AND Hold_Case_Type__c = 'Manual'
+                WHERE Hold_Case_Type__c = 'Manual'
                   AND FEC_Active__c = true
-                  AND FEC_Case_Stage__c != null
                   AND FEC_Case_Stage__c = :currentStageId
                 WITH SECURITY_ENFORCED
                 LIMIT 1
