@@ -1,7 +1,6 @@
 <template>
-    <template if:true={showHoldCase}>
-        <c-fec_hold-case-manual record-id={recordId}>
-        </c-fec_hold-case-manual>
+    <template if:true={showHoldCaseAuto}>
+        <c-fec_hold-case-auto record-id={recordId}></c-fec_hold-case-auto>
     </template>
 
     <template if:true={showRemovePhone}>

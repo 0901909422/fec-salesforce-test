@@ -64,6 +64,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
+		<members>FEC_NewAssignmentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -401,6 +402,7 @@
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
@@ -613,6 +615,7 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+		<members>fec_NewAssignmentAction</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1286,6 +1289,8 @@
 	</types>
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
+        <members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
         <members>FEC_General_Assignment_Config__c.New_General_Assignment</members>
         <members>FEC_General_Assignment__c.Edit_General_Assignment</members>
         <members>FEC_General_Assignment__c.New_General_Assignment</members>

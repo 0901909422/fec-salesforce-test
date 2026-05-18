@@ -23,16 +23,16 @@ public with sharing class FEC_NewAssignmentController {
         ];
         if (nocs.isEmpty()) return new List<Map<String, String>>();
 
-        List<FEC_General_Assignment_Config__c> assignments = [
+        List<FEC_General_Assignment__c> assignments = [
             SELECT Id, FEC_General_Assignment_Name__c
-            FROM FEC_General_Assignment_Config__c
+            FROM FEC_General_Assignment__c
             WHERE FEC_Nature_of_Cases__c = :nocs[0].Id
               AND FEC_Active__c = true
             ORDER BY FEC_General_Assignment_Name__c ASC
         ];
 
         List<Map<String, String>> result = new List<Map<String, String>>();
-        for (FEC_General_Assignment_Config__c ga : assignments) {
+        for (FEC_General_Assignment__c ga : assignments) {
             result.add(new Map<String, String>{
                 'label' => ga.FEC_General_Assignment_Name__c,
                 'value' => ga.FEC_General_Assignment_Name__c

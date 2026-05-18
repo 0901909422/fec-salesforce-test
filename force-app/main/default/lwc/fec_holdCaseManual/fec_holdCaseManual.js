@@ -69,6 +69,13 @@ export default class Fec_holdCaseManual extends LightningElement {
     @track nfuStartedDate = STR_EMPTY;
     @track nfuExpiryDate = STR_EMPTY;
     @track nfuReason = STR_EMPTY;
+    // tungnm37: NFU result sau khi thành công
+    @track nfuStatusResult = STR_EMPTY;
+    @track nfuCodeResult = STR_EMPTY;
+    @track nfuStartedDateResult = STR_EMPTY;
+    @track nfuExpiryDateResult = STR_EMPTY;
+    @track nfuReasonResult = STR_EMPTY;
+    @track isCompleted = false; // tungnm37: true khi SUCCESS hoặc ALREADY_MARKED
 
     _nfuReasonMap = {};
     _retryCount = 0;
@@ -171,9 +178,8 @@ export default class Fec_holdCaseManual extends LightningElement {
                         nfuCode: item.nfuCode
                     };
                 });
-            } else if (!isInitial) {
-                // tungnm37 fix: chỉ đóng popup khi không phải lần load đầu tiên
-                // (lần đầu có thể chưa có NOC IDs từ message channel)
+            } else {
+                // tungnm37 fix: không có config hold case → hiện thông báo và đóng popup
                 this._showToast(STR_EMPTY, this.customLabel.showActionHoldCase, ERROR_TOAST_TYPE);
                 this.handleCancel();
             }
@@ -239,12 +245,25 @@ export default class Fec_holdCaseManual extends LightningElement {
                 this.responseMessage = this.customLabel.messengerSuccessHoldCase;
                 this.nfuCode = this.nfuCode;
                 this._retryCount = 0;
+                // tungnm37: set NFU result để hiển thị trong Case Information
+                this.isCompleted = true;
+                this.nfuCodeResult = response.nfuCode || this.nfuCode || STR_EMPTY;
+                this.nfuStatusResult = response.nfuStatus || STR_EMPTY;
+                this.nfuStartedDateResult = response.nfuStartedDate || STR_EMPTY;
+                this.nfuExpiryDateResult = response.nfuExpiryDate || STR_EMPTY;
+                this.nfuReasonResult = response.nfuReason || this.selectedReason || STR_EMPTY;
 
             } else if (response?.status === 'ALREADY_MARKED') {
                 // tungnm37: TH1 - Contract has already marked as NFU
                 this.responseType = 'ALREADY_MARKED';
                 this.responseMessage = response.message || STR_EMPTY;
                 this._retryCount = 0;
+                this.isCompleted = true;
+                this.nfuCodeResult = response.nfuCode || this.nfuCode || STR_EMPTY;
+                this.nfuStatusResult = response.nfuStatus || STR_EMPTY;
+                this.nfuStartedDateResult = response.nfuStartedDate || STR_EMPTY;
+                this.nfuExpiryDateResult = response.nfuExpiryDate || STR_EMPTY;
+                this.nfuReasonResult = response.nfuReason || this.selectedReason || STR_EMPTY;
 
             } else {
                 // tungnm37: TH3 - Error - tăng retry count

@@ -151,6 +151,7 @@
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
+		<members>FEC_NewAssignmentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -566,6 +567,7 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -697,6 +699,7 @@
 		<members>fec_CaseAssignmentNocConfig</members>
         <members>fec_RemovePhoneForm</members>
         <members>fec_IPPConversionRetailForm</members>
+        <members>fec_NewAssignmentAction</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1334,6 +1337,8 @@
 	</types>
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
+        <members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
         <name>QuickAction</name>
     </types>
     <types>
