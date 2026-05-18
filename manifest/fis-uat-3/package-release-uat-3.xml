@@ -1120,6 +1120,7 @@
         <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
         <members>FEC_MSG_SUCCESS</members>
         <members>FEC_MSG_ERROR</members>
+        <members>FEC_Account_Contract_Status</members>
         <name>CustomLabel</name>
     </types>
 	<types>
