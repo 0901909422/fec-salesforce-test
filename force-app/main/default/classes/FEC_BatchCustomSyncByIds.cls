@@ -28,7 +28,7 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
     global Database.QueryLocator start(Database.BatchableContext bc) {
         this.cus = [
             SELECT Id, Name, CaseBusinessCode__c, TableName__c, TargetObject__c,
-                   RequestBodyMapping__c, MappingDataType__c, PkColumn__c,
+                   RequestBodyMapping__c, MappingDataType__c,
                    ProcessingQuantity__c
             FROM CustomSync__c
             WHERE Id = :customSyncId

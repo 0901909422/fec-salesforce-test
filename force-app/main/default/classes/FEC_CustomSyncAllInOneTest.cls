@@ -56,6 +56,10 @@ private class FEC_CustomSyncAllInOneTest {
         String mappingJson = '{"CaseID":"Id","CaseName":"CaseNumber","PXURGENCYWORK":1}';
         String dataTypeJson = '{"CaseID":"VARCHAR2","CaseName":"VARCHAR2","PXURGENCYWORK":"NUMBER"}';
 
+        FEC_Business_Process__c codeType = new FEC_Business_Process__c();
+        codeType.FEC_Code__c = 'Phone Update';
+        insert codeType;
+
         CustomSync__c cus = new CustomSync__c(
             Name = 'Test Sync',
             TableName__c = 'BIX_TEST',
@@ -65,7 +69,6 @@ private class FEC_CustomSyncAllInOneTest {
             SyncTo__c = 'Bix',
             RequestBodyMapping__c = mappingJson,
             MappingDataType__c = dataTypeJson,
-            PkColumn__c = 'PXEXTRACTDATETIME',
             TargetObject__c = 'Case'
         );
         insert cus;
@@ -79,14 +82,9 @@ private class FEC_CustomSyncAllInOneTest {
             SyncTo__c = 'Bix',
             RequestBodyMapping__c = mappingJson,
             MappingDataType__c = dataTypeJson,
-            PkColumn__c = 'PXEXTRACTDATETIME',
             TargetObject__c = 'Case'
         );
         insert cus2;
-
-        FEC_Business_Process__c codeType = new FEC_Business_Process__c();
-        codeType.FEC_Code__c = 'Phone Update';
-        insert codeType;
 
         FEC_Actual_Nature_of_Case__c fec = new FEC_Actual_Nature_of_Case__c();
         fec.FEC_Business_Process__c = codeType.Id;
@@ -129,7 +127,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         List<CustomSync__c> cusList = [
             SELECT Id, TableName__c, CaseBusinessCode__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, TargetObject__c, ProcessingQuantity__c, EndAt__c
+                   TargetObject__c, ProcessingQuantity__c, EndAt__c
             FROM CustomSync__c
         ];
 
@@ -155,7 +153,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
             SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c
         ]);
 
@@ -171,7 +169,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
             SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c
         ]);
 
@@ -187,7 +185,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
             SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c
         ]);
 
@@ -206,7 +204,7 @@ private class FEC_CustomSyncAllInOneTest {
         CustomSync__c cus = [
             SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
                    EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, SyncTo__c, Active__c,
+                   SyncTo__c, Active__c,
                    SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
             FROM CustomSync__c
             LIMIT 1
@@ -225,7 +223,7 @@ private class FEC_CustomSyncAllInOneTest {
         CustomSync__c cus = [
             SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
                    EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, SyncTo__c, Active__c,
+                   SyncTo__c, Active__c,
                    SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
             FROM CustomSync__c
             LIMIT 1
@@ -236,7 +234,7 @@ private class FEC_CustomSyncAllInOneTest {
         cus = [
             SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
                    EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, SyncTo__c, Active__c,
+                   SyncTo__c, Active__c,
                    SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
             FROM CustomSync__c
             WHERE Id = :cus.Id
@@ -255,7 +253,7 @@ private class FEC_CustomSyncAllInOneTest {
         CustomSync__c cus = [
             SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
                    EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, SyncTo__c, Active__c,
+                   SyncTo__c, Active__c,
                    SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
             FROM CustomSync__c
             LIMIT 1
@@ -274,7 +272,7 @@ private class FEC_CustomSyncAllInOneTest {
         CustomSync__c cus = [
             SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
                    EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   PkColumn__c, SyncTo__c, Active__c,
+                   SyncTo__c, Active__c,
                    SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
             FROM CustomSync__c
             LIMIT 1
@@ -316,7 +314,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         CustomSync__c cus = [
             SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -335,7 +333,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         CustomSync__c cus = [
             SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -354,7 +352,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         CustomSync__c cus = [
             SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
@@ -377,7 +375,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         CustomSync__c cus = [
             SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c LIMIT 1
         ];
 
@@ -405,7 +403,7 @@ private class FEC_CustomSyncAllInOneTest {
 
         CustomSync__c cus = [
             SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c, PkColumn__c
+                   MappingDataType__c
             FROM CustomSync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();

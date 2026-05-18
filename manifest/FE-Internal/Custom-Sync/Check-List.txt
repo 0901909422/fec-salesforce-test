@@ -51,8 +51,7 @@ List<CustomSync__c> lst = [Select id, Name,
                                         TotalRecordSync__c,
                                         TargetObject__c,
                                         RequestBodyMapping__c,
-                                        MappingDataType__c,
-                                        PkColumn__c
+                                        MappingDataType__c
                                         from CustomSync__c
                                         where SyncTo__c = 'Bix' and Active__c = true]; 
             if(!lst.isEmpty()){  

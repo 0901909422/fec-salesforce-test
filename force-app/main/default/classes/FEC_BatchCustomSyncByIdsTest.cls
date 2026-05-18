@@ -52,6 +52,9 @@ private class FEC_BatchCustomSyncByIdsTest {
         String mappingJson = '{"CaseID":"Id","CaseName":"CaseNumber","PXURGENCYWORK":1}';
         String dataTypeJson = '{"CaseID":"VARCHAR2","CaseName":"VARCHAR2","PXURGENCYWORK":"NUMBER"}';
 
+        FEC_Business_Process__c bp = new FEC_Business_Process__c(FEC_Code__c = 'Phone Update');
+        insert bp;
+
         CustomSync__c cus = new CustomSync__c(
             Name = 'Test Sync ByIds',
             TableName__c = 'BIX_TEST',
@@ -61,13 +64,9 @@ private class FEC_BatchCustomSyncByIdsTest {
             SyncTo__c = 'Bix',
             RequestBodyMapping__c = mappingJson,
             MappingDataType__c = dataTypeJson,
-            PkColumn__c = 'PXEXTRACTDATETIME',
             TargetObject__c = 'Case'
         );
         insert cus;
-
-        FEC_Business_Process__c bp = new FEC_Business_Process__c(FEC_Code__c = 'Phone Update');
-        insert bp;
 
         FEC_Actual_Nature_of_Case__c anoc = new FEC_Actual_Nature_of_Case__c(FEC_Business_Process__c = bp.Id);
         insert anoc;

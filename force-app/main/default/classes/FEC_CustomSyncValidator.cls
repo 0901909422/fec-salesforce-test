@@ -19,8 +19,8 @@ public class FEC_CustomSyncValidator {
                         fieldsByTargetObject.put(rec.TargetObject__c, new Set<String>());
                     }
                     for (Object val : bodyMap.values()) {
-                        if (val != null) {
-                            fieldsByTargetObject.get(rec.TargetObject__c).add(String.valueOf(val));
+                        if (val != null && val instanceof String) {
+                            fieldsByTargetObject.get(rec.TargetObject__c).add((String) val);
                         }
                     }
                 } catch (Exception e) {

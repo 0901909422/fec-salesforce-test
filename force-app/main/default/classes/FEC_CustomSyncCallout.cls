@@ -186,7 +186,6 @@ public with sharing class FEC_CustomSyncCallout {
 
         Map<String, Object> finalWrapper = new Map<String, Object>();
         finalWrapper.put('tableName', cus.TableName__c);
-        finalWrapper.put('pkColumn', String.isNotBlank(cus.PkColumn__c) ? cus.PkColumn__c : '');
         finalWrapper.put('records', mappedRecords);
         return JSON.serialize(finalWrapper);
     }

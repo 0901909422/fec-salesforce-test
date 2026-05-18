@@ -423,8 +423,7 @@ private class FEC_CustomSyncValidatorTest {
             SyncTo__c = 'Bix',
             TargetObject__c = 'Case',
             RequestBodyMapping__c = validMappingJson,
-            MappingDataType__c = validDataTypeJson,
-            PkColumn__c = 'PXEXTRACTDATETIME'
+            MappingDataType__c = validDataTypeJson
         );
     }
 }

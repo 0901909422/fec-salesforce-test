@@ -34,8 +34,7 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
                                         TotalRecordSync__c,
                                         TargetObject__c,
                                         RequestBodyMapping__c,
-                                        MappingDataType__c,
-                                        PkColumn__c
+                                        MappingDataType__c
                                         from CustomSync__c
                                         where SyncTo__c = 'Bix' and Active__c = true]; 
             if(!lst.isEmpty()){  
