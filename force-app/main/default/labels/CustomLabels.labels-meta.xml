@@ -11795,6 +11795,14 @@
         <value>Dịch vụ lỗi, vui lòng thử lại</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Contract_Status</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Status (Remove Phone datatable)</shortDescription>
+        <value>Account/ Contract Status</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
         <categories>Remove Phone LWC</categories>
         <language>en_US</language>
