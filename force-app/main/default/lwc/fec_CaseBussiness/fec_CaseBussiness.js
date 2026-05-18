@@ -1186,19 +1186,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     return false;
   }
 
+  /** COF/GSR Stage 1 sau Revert: toàn bộ field master data read-only. */
+  _isStage1RevertMasterReadonly() {
+    const flags = this.business?.contextFlags;
+    return (
+      flags?.isCOFStage1Revert === true || flags?.isGsrStage1Revert === true
+    );
+  }
+
   /**
    * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
    * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
-    const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
+    const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = isCOFStage1Revert ? true : !this._isEdit;
-            field.editable = isCOFStage1Revert ? false : this._isEdit;
+            field.readonly = stage1RevertReadonly ? true : !this._isEdit;
+            field.editable = stage1RevertReadonly ? false : this._isEdit;
           });
         });
       });
@@ -1214,6 +1222,9 @@ export default class Fec_CaseBussiness extends LightningElement {
   _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
     const master =
       typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
+    if (this.business?.contextFlags?.isGsrStage1Revert === true) {
+      return false;
+    }
     if (
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
       (componentName === "fec_IPPConversionRetailForm" ||
@@ -1596,8 +1607,7 @@ export default class Fec_CaseBussiness extends LightningElement {
                 }
                 // }
 
-                const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
-                if (!this.isEdit || isCOFStage1Revert) {
+                if (!this.isEdit || this._isStage1RevertMasterReadonly()) {
                   field.readonly = true;
                   field.editable = false;
                 }

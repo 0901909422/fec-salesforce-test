@@ -761,6 +761,23 @@ public without sharing class FEC_CaseBusinessService {
         Boolean isCOF = selectedStage?.FEC_Business_Process__r?.Name == FEC_ConstantCommon.COF_GENERAL_FLOW;
         Boolean isCOFStage1Revert = isLatestRevertToCurrentStage && isCOF && checkStageName(selectedStage.Name,FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isCOFStage1Revert', isCOFStage1Revert);
+        Boolean isGsrBusinessProcess =
+          String.isNotBlank(businessProcessCode) &&
+          businessProcessCode.toUpperCase().contains('GSR');
+        Boolean isGsrStage1Revert =
+          isLatestRevertToCurrentStage &&
+          isGsrBusinessProcess &&
+          checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
+        result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        if (isGsrStage1Revert) {
+          FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
+            masterDatalst,
+            masterDataSettingObj,
+            natureOfCaseObj,
+            selectedNatureOfCaseId,
+            templateNatureIdForCaseStages
+          );
+        }
 
         for (SObject item : masterDatalst) {
           sectionNameTemp = (String) item.get('FEC_Section__c');
@@ -799,7 +816,11 @@ public without sharing class FEC_CaseBusinessService {
             if (isUpdatedNocDifferentFromCurrent) {
 
               //Có khác:
-              if ('Original Info'.equals(subSectionNameTemp) && TYPE_LWC.equals(itemType)) {
+              if (
+                'Original Info'.equals(subSectionNameTemp) &&
+                TYPE_LWC.equals(itemType) &&
+                !isGsrStage1Revert
+              ) {
                 continue;
               }
             } else {
@@ -829,7 +850,7 @@ public without sharing class FEC_CaseBusinessService {
             String lwcName = (String) item.get('FEC_LWC_Name__c');
             // COF General Flow Stage 1: chỉ ẩn / remap subsection cho LWC Original Info (ORIGINAL_LWC_COF); các LWC khác vẫn hiển thị bình thường.
             Boolean isOriginalLwcCof = String.isNotBlank(lwcName) && FEC_ConstantCommon.ORIGINAL_LWC_COF.equalsIgnoreCase(lwcName);
-            if (String.isNotBlank(lwcName) && !isCOFStage1NotRevert) {
+            if (String.isNotBlank(lwcName) && (!isCOFStage1NotRevert || isGsrStage1Revert)) {
               DynamicLwcComponent lwcSlot = new DynamicLwcComponent();
               lwcSlot.componentName = lwcName;
               lwcSlot.order = subSectionOrderTemp;
@@ -842,6 +863,9 @@ public without sharing class FEC_CaseBusinessService {
                 currentUser.FEC_User_Group__c,
                 selectedStage.Name
               );
+              if (isGsrStage1Revert) {
+                lwcSlot.fecMasterDataSettingIsEdit = false;
+              }
               if (
                 isLatestRevertToCurrentStage &&
                 LWC_INCORRECT_PAYMENT_FORM.equalsIgnoreCase(lwcName)
@@ -934,7 +958,8 @@ public without sharing class FEC_CaseBusinessService {
                     masterDataItem,
                     objTemp,
                     currentUser.FEC_User_Group__c,
-                    isRevert
+                    isRevert,
+                    isGsrStage1Revert
                   );
 
                   if (fieldTemp == null)
@@ -3566,7 +3591,8 @@ public without sharing class FEC_CaseBusinessService {
     Sobject masterDataItem,
     SObject objTemp,
     String userGr,
-    Boolean isStageRevert
+    Boolean isStageRevert,
+    Boolean forceMasterDataReadOnly
   ) {
     String maskingTypeTemp = (String) masterDataItem.get('FEC_Masking_Type__c');
     String editableGr = (String) masterDataItem.get(
@@ -3618,13 +3644,21 @@ public without sharing class FEC_CaseBusinessService {
       maskingTypeTemp = 'National ID/ Passport';
     }
 
+    Boolean outReadOnly = (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c');
+    Boolean outEditable =
+      isEditable ||
+      (String.isNotBlank(editableGr) && editableGr.contains(userGr));
+    if (forceMasterDataReadOnly == true) {
+      outReadOnly = true;
+      outEditable = false;
+    }
+
     return new Field(
       apiName,
       (String) masterDataItem.get('FEC_Field_Label_Name__c'),
       value,
-      (Boolean) masterDataItem.get('FEC_Field_ReadOnly__c'),
-      isEditable ||
-      String.isNotBlank(editableGr) && editableGr.contains(userGr),
+      outReadOnly,
+      outEditable,
       (Boolean) masterDataItem.get('FEC_Field_Mandatory__c'),
       (Decimal) masterDataItem.get('FEC_Field_Order_Display__c'),
       masked,
