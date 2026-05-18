@@ -850,7 +850,7 @@ public without sharing class FEC_CaseBusinessService {
               lwcSlot.fieldLayout = (Decimal) item.get(
                 'FEC_Sub_Section_Field_Layout__c'
               );
-              lwcSlot.subSectionName = (isCOFStage1Revert && isOriginalLwcCof) ? FEC_ConstantCommon.ORIGINAL_INFORMATION : subSectionNameTemp;
+              lwcSlot.subSectionName = (isCOFStage1Revert && isOriginalLwcCof) ? FEC_ConstantCommon.ORIGINAL_INFO : subSectionNameTemp;
               lwcSlot.fecMasterDataSettingIsEdit = isLwcDynamicMasterInEditMode(
                 item,
                 currentUser.FEC_User_Group__c,
@@ -868,13 +868,14 @@ public without sharing class FEC_CaseBusinessService {
               ) {
                 lwcSlot.hideSubSectionHeading = true;
               }
-              if (isCOF && (subSectionNameTemp == FEC_ConstantCommon.ORIGINAL_INFO || subSectionNameTemp == FEC_ConstantCommon.UPDATED_INFO)) {
+              if (isCOF && (lwcSlot.subSectionName == FEC_ConstantCommon.ORIGINAL_INFO || lwcSlot.subSectionName == FEC_ConstantCommon.UPDATED_INFO)) {
                 lwcSlot.isCollapsible = (checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_ONE) && isLatestRevertToCurrentStage) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_TWO) || checkStageName(selectedStage?.Name, FEC_ConstantCommon.STAGE_THREE);
               }
               sectionTemp.componentlst.add(lwcSlot);
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
+              subSectionNameTemp = (isCOFStage1Revert && subSectionNameTemp == FEC_ConstantCommon.PROPERTY_INFO) ? FEC_ConstantCommon.UPDATED_INFO : subSectionNameTemp;
               subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
               if (subSectionTemp == null) {
@@ -2528,6 +2529,7 @@ public without sharing class FEC_CaseBusinessService {
       ];
       history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
       Database.update(history, AccessLevel.SYSTEM_MODE);
+      FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
@@ -2593,6 +2595,7 @@ public without sharing class FEC_CaseBusinessService {
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
+      FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
         'FEC_DEBUG CaseBusinessService.createRoutingActionHis corrId=' + corrId +
         ' inserted historyId=' + history.Id +

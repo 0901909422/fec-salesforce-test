@@ -4,6 +4,12 @@ public with sharing class FEC_SubProcessService {
         
         @AuraEnabled
         public Boolean showHoldCase = false;
+
+        @AuraEnabled
+        public Boolean showHoldCaseManual = false;
+
+        @AuraEnabled
+        public Boolean showHoldCaseAuto = false;
         
         @AuraEnabled
         public Boolean showRemovePhone = false;
@@ -28,6 +34,33 @@ public with sharing class FEC_SubProcessService {
             new SubProcessWrapper();
         
         try {
+
+            if (recordId != null &&
+                (productTypeId == null || categoryId == null || subCategoryId == null)) {
+                List<Case> casesFromRecord = [
+                    SELECT
+                        FEC_Product_Type__c,
+                        FEC_Category__c,
+                        FEC_SubCategory__c,
+                        FEC_SubCode__c,
+                        FEC_NFU_Description_Result__c
+                    FROM Case
+                    WHERE Id = :recordId
+                    WITH SECURITY_ENFORCED
+                    LIMIT 1
+                ];
+                if (!casesFromRecord.isEmpty()) {
+                    Case caseRow = casesFromRecord[0];
+                    productTypeId = caseRow.FEC_Product_Type__c;
+                    categoryId = caseRow.FEC_Category__c;
+                    subCategoryId = caseRow.FEC_SubCategory__c;
+                    subCodeId = caseRow.FEC_SubCode__c;
+                    if (String.isNotBlank(caseRow.FEC_NFU_Description_Result__c)) {
+                        result.showHoldCaseAuto = true;
+                        result.showHoldCase = true;
+                    }
+                }
+            }
             
             // ===== VALIDATION =====
             
@@ -95,7 +128,7 @@ public with sharing class FEC_SubProcessService {
             result.showTransferCall =
                 noc.FEC_Transfer_Call_to_Collection__c;
             
-            // ===== HOLD CASE =====
+            // ===== HOLD CASE — Manual =====
             // tungnm37: chỉ hiển thị khi có config Manual + Active + Stage khớp với stage hiện tại của case
             Id currentStageId = null;
             if (recordId != null) {
@@ -121,6 +154,19 @@ public with sharing class FEC_SubProcessService {
                 LIMIT 1
             ];
             result.showHoldCaseManual = !manualConfigs.isEmpty();
+
+            // ===== HOLD CASE — Auto =====
+            List<FEC_Hold_Case_Config__c> autoConfigs = [
+                SELECT Id
+                FROM FEC_Hold_Case_Config__c
+                WHERE FEC_Nature_of_Cases__c = :noc.Id
+                  AND Hold_Case_Type__c = 'Auto'
+                  AND FEC_Active__c = true
+                WITH SECURITY_ENFORCED
+                LIMIT 1
+            ];
+            result.showHoldCaseAuto = result.showHoldCaseAuto || !autoConfigs.isEmpty();
+
             result.showHoldCase = result.showHoldCaseManual || result.showHoldCaseAuto;
             
             return result;

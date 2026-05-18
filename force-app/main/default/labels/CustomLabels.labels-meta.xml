@@ -17518,6 +17518,30 @@
         <value>Coll Agent</value>
     </labels>
     <labels>
+        <fullName>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC STOP IMPACT ALREADY MARKED MSG</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã có thông tin ngưng tác động trước đó</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SUCCESS</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG SUCCESS</shortDescription>
+        <value>Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ERROR</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG ERROR</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+    </labels>
+    <labels>
         <fullName>FEC_GA_Save_Success</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -17679,13 +17703,6 @@
         <value>General Assignment Code</value>
     </labels>
     <labels>
-        <fullName>FEC_Label_Active</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Label Active</shortDescription>
-        <value>Active</value>
-    </labels>
-    <labels>
         <fullName>FEC_Button_Save</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -17754,13 +17771,6 @@
         <protected>false</protected>
         <shortDescription>Label Customer Type</shortDescription>
         <value>Customer Type</value>
-    </labels>
-    <labels>
-        <fullName>FEC_Label_Channel</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>Label Channel</shortDescription>
-        <value>Channel</value>
     </labels>
     <labels>
         <fullName>FEC_Label_Team</fullName>
