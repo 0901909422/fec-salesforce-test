@@ -42,11 +42,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Do_Not_Bother__c.FEC_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>FEC_Template_Import__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
