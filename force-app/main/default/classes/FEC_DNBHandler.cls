@@ -4,7 +4,7 @@
  * Created Date: 2026-04-09 14:16:00
  */
 
-public with sharing class FEC_DNBHandler {
+public without sharing class FEC_DNBHandler {
     
     public class CaseInfoResponse{
         @AuraEnabled public String customerName;
@@ -16,6 +16,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String interactionMaskedEmail;
         @AuraEnabled public String channel;
         @AuraEnabled public String contractId;
+        @AuraEnabled public Integer processActionCount;
     }
     
     public class CaseInfoNonExistingResponse{
@@ -27,6 +28,7 @@ public with sharing class FEC_DNBHandler {
         @AuraEnabled public String interactionMaskedEmail;
         @AuraEnabled public String channel;
         @AuraEnabled public String contractId;
+        @AuraEnabled public Integer processActionCount;
     }
     
     public class DNBResponseItem {
@@ -43,7 +45,7 @@ public with sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoResponse getCaseData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c 
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -58,6 +60,13 @@ public with sharing class FEC_DNBHandler {
         response.interactionMaskedEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Masked_Email__c;
         response.channel = caseRecord.FEC_Channel__c;
         response.contractId = caseRecord.FEC_Account_Contract_Number_Text__c;
+        response.processActionCount =
+            caseRecord.FEC_Process_Action_Count__c == null
+            ? 0
+            : Integer.valueOf(
+            caseRecord
+            .FEC_Process_Action_Count__c
+            );
         return response;
         
     }
@@ -66,7 +75,7 @@ public with sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoNonExistingResponse getCaseNonExistingData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c 
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -80,38 +89,18 @@ public with sharing class FEC_DNBHandler {
         response.interactionMaskedEmail = caseRecord.FEC_Interaction__r.FEC_Interaction_Masked_Email__c;
         response.channel = caseRecord.FEC_Channel__c;
         response.contractId = caseRecord.FEC_Account_Contract_Number_Text__c;
+        response.processActionCount =
+            caseRecord.FEC_Process_Action_Count__c == null
+            ? 0
+            : Integer.valueOf(
+            caseRecord
+            .FEC_Process_Action_Count__c
+            );
         return response;
         
     }
     
     
-    // @AuraEnabled
-    // public static Boolean checkDNB(Id categoryId, Id subCategoryId, Id subCodeId) {
-        //     try {
-            //         if (categoryId != null) {
-                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Category__c WHERE Id = :categoryId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    //                 return true;
-                //             }
-            //         }
-            
-            //         if (subCategoryId != null) {
-                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Category__c WHERE Id = :subCategoryId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    //                 return true;
-                //             }
-            //         }
-            
-            //         if (subCodeId != null) {
-                //             if ([SELECT FEC_Do_Not_Bother__c FROM FEC_Sub_Code__c WHERE Id = :subCodeId LIMIT 1].FEC_Do_Not_Bother__c) {
-                    //                 return true;
-                //             }
-            //         }
-            
-            //         return false;
-            
-        //     } catch (Exception e) {
-            //         throw new AuraHandledException(e.getMessage());
-        //     }
-    // }
     
     @AuraEnabled
     public static Boolean checkDNB(Id categoryId, Id subCategoryId, Id subCodeId) {
@@ -238,7 +227,26 @@ public with sharing class FEC_DNBHandler {
                 reqList.add(req);
             }
             
-            return FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
+            // return FEC_PsDNBServiceCallout.notifyPsDNB(reqList);
+            
+            FEC_PsDNBServiceCallout.DNBResult result =
+                FEC_PsDNBServiceCallout.notifyPsDNB(
+                reqList
+                );
+            
+            /*
+             * Persist DB if success
+             */
+            if (
+                result != null
+                &&
+                Integer.valueOf(result.code) == 0
+            ) {
+                
+                saveDNBUpdates(payload);
+            }
+            
+            return result;
             
         } catch (Exception e) {
             throw new AuraHandledException(
@@ -247,10 +255,445 @@ public with sharing class FEC_DNBHandler {
         }
     }
     
+    //HieuTt74 - 2026-05-17: Update fix lỗi Do Not Bother API callout + Insert DNB record
+    
+    private static void saveDNBUpdates(List<Object> payload) {
+        if (payload == null || payload.isEmpty()) {
+            return;
+        }
+        
+        Map<Id, Map<Object, Object>> payloadMap = new Map<Id, Map<Object, Object>>();
+        
+        for (Object obj : payload) {
+            Map<Object, Object> item = (Map<Object, Object>) obj;
+            
+            String dnbId = (String) item.get('dnb_id');
+            
+            if (String.isBlank(dnbId)) {
+                continue;
+            }
+            
+            payloadMap.put((Id) dnbId, item);
+        }
+        
+        if (payloadMap.isEmpty()) {
+            return;
+        }
+        
+        List<FEC_Do_Not_Bother__c> records = [
+
+    SELECT Id, FEC_Action__c, FEC_Current_Status__c, FEC_Previous_Status__c,
+    FEC_Updated_Reason__c,
+    FEC_Remarks__c
+
+        FROM FEC_Do_Not_Bother__c
+
+            WHERE Id IN : payloadMap.keySet()
+  ];
+        
+        List<FEC_Do_Not_Bother__c> updates = new List<FEC_Do_Not_Bother__c>();
+        
+        for (FEC_Do_Not_Bother__c record : records) {
+            Map<Object, Object> item = payloadMap.get(record.Id);
+            
+            /*
+             * Save previous status
+             */
+            record.FEC_Previous_Status__c = record.FEC_Current_Status__c;
+            
+            /*
+             * Activate
+             */
+            if (
+                record.FEC_Current_Status__c
+                == 'Active'
+            ) {
+                
+                record.FEC_Current_Status__c =
+                    'Extend Expiry Date';
+                
+            } else if (
+            record.FEC_Current_Status__c
+                == 'Extend Expiry Date'
+            ) {
+                
+                record.FEC_Current_Status__c =
+                    'Extend Expiry Date';
+            }
+            
+            /*
+             * User action
+             */
+            record.FEC_Action__c = true;
+            
+            /*
+             * User reason
+             */
+            record.FEC_Updated_Reason__c = mapReasonLabel((String) item.get('reason'));
+            
+            
+            /*
+             * Remarks
+             */
+            record.FEC_Remarks__c = (String) item.get('remarks');
+            
+            updates.add(record);
+        }
+        
+        if (!updates.isEmpty()) {
+            update updates;
+        }
+    }
+    
+    private class DNBRowTemplate {
+        
+        public String channel;
+        
+        public String type;
+        
+        public String value;
+    }
+    
+    @AuraEnabled
+    public static FEC_GetDNBCalloutService.DNBResult getDNBResultForHandling(String caseId) {
+        
+        FEC_GetDNBCalloutService.DNBResult finalRes;
+        
+        // ===== Check existing =====
+        List<FEC_Do_Not_Bother__c> existingDNB = [
+        SELECT Id 
+        FROM FEC_Do_Not_Bother__c 
+        WHERE FEC_Case__c = :caseId
+        LIMIT 1
+    ];
+        
+        // ===== Get Case =====
+        List<Case> caseRecord = [
+        SELECT 
+            Id,
+            FEC_Phone_Number__c,
+            FEC_Interaction__c,
+            FEC_Interaction__r.FEC_Phone_Number__c,
+            FEC_Interaction__r.FEC_Interaction_Email__c,
+            FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+    ];
+        
+        // ===== Build request =====
+        FEC_GetDNBCalloutService.DNBRequest req = new FEC_GetDNBCalloutService.DNBRequest();
+        
+        req.phone = String.isNotBlank(caseRecord[0].FEC_Phone_Number__c)
+            ? normalizePhone(caseRecord[0].FEC_Phone_Number__c)
+            : '';
+        
+        req.nid = (
+            caseRecord[0].FEC_Account_or_Contract__r != null &&
+            String.isNotBlank(caseRecord[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c)
+            )
+            ? caseRecord[0].FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c
+            : '';
+        
+        req.email = (
+            caseRecord[0].FEC_Interaction__r != null &&
+            String.isNotBlank(caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c)
+            )
+            ? caseRecord[0].FEC_Interaction__r.FEC_Interaction_Email__c
+            : '';
+        
+        // ===== Call API =====
+        FEC_GetDNBCalloutService.DNBResult res =
+            FEC_GetDNBCalloutService.getDNB(req);
+        
+        // ===== Ensure NOT NULL =====
+        if (res == null) {
+            finalRes = new FEC_GetDNBCalloutService.DNBResult();
+            finalRes.success = false;
+            finalRes.errorMessage = 'Service returned null';
+            return finalRes;
+        }
+        
+        // ===== FORCE VISIBILITY =====
+        System.debug('===== RAW RESPONSE =====');
+        System.debug(res.rawResponse);
+        System.debug('===== PARSED RESULT =====');
+        System.debug(JSON.serializePretty(res));
+        
+        // ===== If API FAIL → RETURN FULL RESPONSE (NO INSERT) =====
+        if (!res.success) {
+            return res; // 🔥 IMPORTANT: return as-is
+        }
+        
+        // ===== Skip insert if already exists =====
+        if (!existingDNB.isEmpty()) {
+            res.errorMessage = 'DNB already exists';
+            return res;
+        }
+        
+        // ===== Business layer =====
+        /*
+         * Build fixed business rows
+         */
+        List<DNBRowTemplate> fixedRows = buildFixedRows(caseRecord[0]);
+        
+        /*
+         * API lookup
+         */
+        Map<String, FEC_GetDNBCalloutService.ResultItem> apiMap =
+            buildResultMap(res.result);
+        
+        List<FEC_Do_Not_Bother__c> dnbToInsert = new List<FEC_Do_Not_Bother__c>();
+        
+        for (DNBRowTemplate row : fixedRows) {
+            FEC_Do_Not_Bother__c dnb = new FEC_Do_Not_Bother__c();
+            
+            dnb.FEC_Case__c = caseId;
+            
+            /*
+             * Fixed mapping
+             */
+            dnb.FEC_DNB_Channel__c = row.channel;
+            
+            dnb.FEC_Type__c = row.type;
+            
+            dnb.FEC_Phone_Email__c = row.value;
+            
+            /*
+             * Default workflow state
+             */
+            dnb.FEC_Previous_Status__c = 'Inactive';
+            
+            dnb.FEC_Action__c = false;
+            
+            dnb.FEC_Updated_Reason__c = 'Already have a loan from another company';
+            
+            dnb.FEC_Remarks__c = '';
+            
+            /*
+             * Match API
+             */
+            String key = mapType(row.channel) + '_' + normalizeCompareValue(row.value);
+            
+            FEC_GetDNBCalloutService.ResultItem apiItem = apiMap.get(key);
+            
+            if (apiItem != null) {
+                dnb.FEC_Current_Status__c = apiItem.do_not_bother ? 'Active' : 'Inactive';
+                
+                dnb.FEC_Original_Reason__c = apiItem.reason;
+                
+                /*
+                 * Expiry Date
+                 */
+                if (String.isNotBlank(apiItem.expected_exclude_time)
+                && apiItem.expected_exclude_time != 'N/A') {
+                    try {
+                        dnb.FEC_Expiry_Date__c =
+                            FEC_CommonUltils.parseDate(apiItem.expected_exclude_time);
+                        
+                    } catch (Exception e) {
+                        System.debug('Date parse error: ' + e.getMessage());
+                    }
+                }
+                
+            } else {
+                /*
+                 * Default inactive
+                 */
+                dnb.FEC_Current_Status__c = 'Inactive';
+            }
+            
+            dnbToInsert.add(dnb);
+        }
+        
+        /*
+         * Insert rows
+         */
+        if (!dnbToInsert.isEmpty()) {
+            try {
+                insert dnbToInsert;
+                
+            } catch (Exception e) {
+                res.success = false;
+                
+                res.errorMessage = 'Insert failed: ' + e.getMessage();
+            }
+        }
+        
+        return res;
+    }
     
     
+    public class DNBResultWrapper {
+        @AuraEnabled public Id id;
+        
+        @AuraEnabled public String channel;
+        
+        @AuraEnabled public String type;
+        
+        @AuraEnabled public String phoneEmail;
+        
+        @AuraEnabled public Boolean action;
+        
+        @AuraEnabled public String updatedReason;
+        
+        @AuraEnabled public String remarks;
+        
+        
+    }
+    
+    @AuraEnabled(cacheable=false)
+    public static List<DNBResultWrapper>
+        getDNBResultTable(
+        Id caseId
+    ) {
+        
+        List<FEC_Do_Not_Bother__c> records = [
+
+        SELECT
+            Id,
+
+            FEC_DNB_Channel__c,
+            FEC_Type__c,
+            FEC_Phone_Email__c,
+
+            FEC_Action__c,
+
+            FEC_Updated_Reason__c,
+            FEC_Remarks__c,
+
+            /*
+             * DETAIL
+             */
+            FEC_Previous_Status__c,
+            FEC_Expiry_Date__c,
+            FEC_Original_Reason__c,
+
+            LastModifiedBy.Name,
+            LastModifiedDate
+
+        FROM FEC_Do_Not_Bother__c
+
+        WHERE
+            FEC_Case__c = :caseId
+            AND FEC_Action__c = true
+
+        ORDER BY LastModifiedDate DESC
+    ];
+        
+        List<DNBResultWrapper> result =
+            new List<DNBResultWrapper>();
+        
+        for (
+            FEC_Do_Not_Bother__c row
+            : records
+        ) {
+            
+            DNBResultWrapper item =
+                new DNBResultWrapper();
+            
+            item.id = row.Id;
+            
+            item.channel =
+                row.FEC_DNB_Channel__c;
+            
+            item.type =
+                row.FEC_Type__c;
+            
+            item.phoneEmail =
+                row.FEC_Phone_Email__c;
+            
+            item.action =
+                row.FEC_Action__c;
+            
+            item.updatedReason =
+                row.FEC_Updated_Reason__c;
+            
+            item.remarks =
+                row.FEC_Remarks__c;
+            
+            
+            result.add(item);
+        }
+        
+        return result;
+    }
+    
+    @AuraEnabled
+    public static void updateFieldDoNotBother(
+        Id caseId,
+    String selectedOption
+    ) {
+        
+        if (caseId == null) {
+            throw new AuraHandledException(
+                'Case Id is required'
+                );
+        }
+        /*
+         * Map UI value
+         */
+        String dnbValue =
+            selectedOption == 'yes'
+            ? 'Yes'
+            : 'No';
+        
+        update new Case(
+            Id = caseId,
+        FEC_Is_DNB__c = dnbValue
+            );
+    }
     
     
+    @AuraEnabled
+    public static Integer updateDNBProcessCount(
+        Id caseId,
+    Boolean isSuccess
+    ) {
+        
+        Case caseRecord = [
+
+        SELECT
+            Id,
+            FEC_Process_Action_Count__c
+
+        FROM Case
+
+        WHERE Id = :caseId
+
+        LIMIT 1
+    ];
+        
+        Integer count =
+            caseRecord.FEC_Process_Action_Count__c == null
+            ? 0
+            : Integer.valueOf(
+            caseRecord
+            .FEC_Process_Action_Count__c
+            );
+        
+        /*
+         * SUCCESS
+         */
+        if (isSuccess) {
+            
+            count = 0;
+            
+        } else {
+            
+            count++;
+        }
+        
+        caseRecord.FEC_Process_Action_Count__c =
+            count;
+        
+        update caseRecord;
+        
+        return count;
+    }
+    
+    
+    //------------------------------------------------------------------------------------
     
     
     @AuraEnabled
@@ -388,6 +831,7 @@ public with sharing class FEC_DNBHandler {
                     FEC_Original_Reason__c,
                     FEC_DNB_Channel__c,
                     FEC_Type__c,
+                    FEC_Remarks__c,
                     FEC_Phone_Email__c
                 FROM FEC_Do_Not_Bother__c
                 WHERE FEC_Case__c = :caseId
@@ -433,4 +877,199 @@ public with sharing class FEC_DNBHandler {
         
         return cleaned;
     }
+    
+    private static List<DNBRowTemplate> buildFixedRows(
+        Case caseRecord
+    ) {
+        
+        List<DNBRowTemplate> rows =
+            new List<DNBRowTemplate>();
+        
+        String primaryPhone =
+            normalizePhone(caseRecord.FEC_Phone_Number__c);
+        
+        String interactionPhone =
+            normalizePhone(
+            caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Phone_Number__c
+            : null
+            );
+        
+        String interactionEmail =
+            caseRecord.FEC_Interaction__r != null
+            ? caseRecord.FEC_Interaction__r.FEC_Interaction_Email__c
+            : null;
+        
+        /*
+         * Primary Phone - CALL
+         */
+        rows.add(
+            createTemplate(
+            'Call',
+        'Primary Phone',
+        primaryPhone
+            )
+            );
+        
+        /*
+         * Primary Phone - SMS
+         */
+        rows.add(
+            createTemplate(
+            'SMS',
+        'Primary Phone',
+        primaryPhone
+            )
+            );
+        
+        /*
+         * Interaction Phone - CALL
+         */
+        rows.add(
+            createTemplate(
+            'Call',
+        'Interaction Phone',
+        interactionPhone
+            )
+            );
+        
+        /*
+         * Interaction Phone - SMS
+         */
+        rows.add(
+            createTemplate(
+            'SMS',
+        'Interaction Phone',
+        interactionPhone
+            )
+            );
+        
+        /*
+         * Interaction Email
+         */
+        rows.add(
+            createTemplate(
+            'Email',
+        'Interaction Email',
+        interactionEmail
+            )
+            );
+        
+        return rows;
+    }
+    
+    private static DNBRowTemplate createTemplate(
+        String channel,
+    String type,
+    String value
+    ) {
+        
+        DNBRowTemplate row =
+            new DNBRowTemplate();
+        
+        row.channel = channel;
+        row.type = type;
+        row.value = value;
+        
+        return row;
+    }
+    
+    private static Map<String, FEC_GetDNBCalloutService.ResultItem>
+        buildResultMap(
+        List<FEC_GetDNBCalloutService.ResultItem> result
+    ) {
+        
+        Map<String, FEC_GetDNBCalloutService.ResultItem>
+            mapResult =
+            new Map<String,
+        FEC_GetDNBCalloutService.ResultItem>();
+        
+        if (result == null) {
+            return mapResult;
+        }
+        
+        for (FEC_GetDNBCalloutService.ResultItem item : result) {
+            
+            if (item == null) {
+                continue;
+            }
+            
+            String key =
+                item.type + '_' +
+                normalizeCompareValue(item.type_value);
+            
+            mapResult.put(key, item);
+        }
+        
+        return mapResult;
+    }
+    
+    
+    private static String normalizeCompareValue(
+        String value
+    ) {
+        
+        if (String.isBlank(value)) {
+            return '';
+        }
+        
+        /*
+         * EMAIL
+         */
+        if (value.contains('@')) {
+            return value.trim().toLowerCase();
+        }
+        
+        /*
+         * PHONE
+         */
+        return normalizePhone(value);
+    }
+    
+    private static String mapType(String channel) {
+        
+        switch on channel {
+            
+            when 'Call' {
+                return 'PHONE';
+            }
+            
+            when 'SMS' {
+                return 'SMS';
+            }
+            
+            when 'Email' {
+                return 'EMAIL';
+            }
+            
+            when else {
+                return 'PHONE';
+            }
+        }
+    }
+    
+    private static String mapReasonLabel(String value) {
+        if (String.isBlank(value)) {
+            return null;
+        }
+        
+        Map<String, String> reasonMap = new Map<String, String>{
+            
+            'not_interested' => 'Not interested',
+            
+            'receiving_too_many_calls_sms_emails' =>
+                'Receiving too many calls/ SMS/ Emails, ...',
+            
+            'already_have_a_loan_from_another_company' =>
+                'Already have a loan from another company',
+            
+            'already_being_served_by_1_fec_employee' =>
+                'Already being served by 1 FEC employee',
+            
+        'other_reason' => 'Other reason'};
+        
+        return reasonMap.containsKey(value) ? reasonMap.get(value) : value;
+    }
+    
+    
 }
