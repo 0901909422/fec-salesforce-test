@@ -1,0 +1,48 @@
+<template>
+    <div class="modal-header slds-modal__header">
+        <h2 class="slds-text-heading_medium slds-text-align_center">New Assignment</h2>
+    </div>
+    <div class="slds-p-around_medium">
+        <div class="slds-text-align_right slds-m-bottom_small required-info">
+            <abbr title="required" class="required-star">*</abbr> = Required Information
+        </div>
+        <!-- Row 1: Assignment Type | Assignment Status -->
+        <div class="slds-grid slds-gutters slds-m-bottom_small">
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    label="Assignment Type"
+                    value={assignmentType}
+                    options={assignmentTypeOptions}
+                    onchange={handleTypeChange}
+                    required>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <lightning-combobox
+                    label="Assignment Status"
+                    value={assignmentStatus}
+                    options={assignmentStatusOptions}
+                    onchange={handleStatusChange}>
+                </lightning-combobox>
+            </div>
+        </div>
+        <!-- Row 2: Assignment Name -->
+        <div class="slds-m-bottom_small">
+            <lightning-combobox
+                label="Assignment Name"
+                value={assignmentName}
+                options={assignmentNameOptions}
+                onchange={handleNameChange}
+                disabled={isNameDisabled}
+                required>
+            </lightning-combobox>
+        </div>
+        <template if:true={errorMsg}>
+            <div class="slds-text-color_error slds-m-top_small">{errorMsg}</div>
+        </template>
+    </div>
+    <div class="slds-modal__footer">
+        <lightning-button label="Cancel" onclick={handleClose} class="slds-m-right_small"></lightning-button>
+        <lightning-button variant="brand" label="Save" onclick={handleSave} disabled={isSaving}></lightning-button>
+    </div>
+</template>

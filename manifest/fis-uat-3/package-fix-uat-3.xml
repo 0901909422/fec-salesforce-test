@@ -69,6 +69,7 @@
 		<members>FEC_RoutingActionHistoryTriggerHandler</members>
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
+		<members>FEC_NewAssignmentController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -129,6 +130,8 @@
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
         <members>fec_CaseNocUpdatedSection</members>
+        <members>fec_holdCaseManual</members>
+        <members>fec_NewAssignmentAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -139,6 +142,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
@@ -372,6 +376,11 @@
     <types>
         <members>Case</members>
         <name>SharingRules</name>
+    </types>
+    <types>
+		<members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
+        <name>QuickAction</name>
     </types>
 	<version>66.0</version>
 </Package>

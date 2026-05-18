@@ -27,6 +27,13 @@ public with sharing class FEC_HoldCaseController {
         @AuraEnabled public String  message;
         @AuraEnabled public Id      recordId;
         @AuraEnabled public Boolean isSuccess;
+        // tungnm37: NFU info để hiển thị trong Case Information
+        @AuraEnabled public String  nfuStatus;
+        @AuraEnabled public String  nfuCode;
+        @AuraEnabled public String  nfuStartedDate;
+        @AuraEnabled public String  nfuExpiryDate;
+        @AuraEnabled public String  nfuReason;
+        @AuraEnabled public String  collectionsResponse;
 
         public ResponseModel success(Id recId, String msg) {
             this.status    = FEC_ConstantCommon.STATUS_SUCCESS;
@@ -146,35 +153,25 @@ public with sharing class FEC_HoldCaseController {
             // → tìm config theo Stage để lấy NFU codes
             List<FEC_Hold_Case_Config__c> configs;
             if (nocId != null) {
-                if (currentStageId != null) {
-                    configs = [
-                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
-                        FROM FEC_Hold_Case_Config__c
-                        WHERE FEC_Nature_of_Cases__c = :nocId
-                          AND FEC_Active__c = true
-                          AND Hold_Case_Type__c = 'Manual'
-                          AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
-                        WITH SECURITY_ENFORCED
-                    ];
-                } else {
-                    configs = [
-                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
-                        FROM FEC_Hold_Case_Config__c
-                        WHERE FEC_Nature_of_Cases__c = :nocId
-                          AND FEC_Active__c = true
-                          AND Hold_Case_Type__c = 'Manual'
-                        WITH SECURITY_ENFORCED
-                    ];
-                }
+                configs = [
+                    SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
+                    FROM FEC_Hold_Case_Config__c
+                    WHERE FEC_Nature_of_Cases__c = :nocId
+                      AND FEC_Active__c = true
+                      AND Hold_Case_Type__c = 'Manual'
+                      AND FEC_Case_Stage__c != null
+                      AND FEC_Case_Stage__c = :currentStageId
+                    WITH SECURITY_ENFORCED
+                ];
             } else if (currentStageId != null) {
                 // tungnm37: fallback 4 - query theo Stage khi không có nocId
-                // include cả config không gắn stage cụ thể (FEC_Case_Stage__c = null)
                 configs = [
                     SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
                     FROM FEC_Hold_Case_Config__c
                     WHERE FEC_Active__c = true
                       AND Hold_Case_Type__c = 'Manual'
-                      AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
+                      AND FEC_Case_Stage__c != null
+                      AND FEC_Case_Stage__c = :currentStageId
                     WITH SECURITY_ENFORCED
                 ];
             } else {
@@ -390,10 +387,23 @@ public with sharing class FEC_HoldCaseController {
             if (markResult.success) {
                 c.Status = FEC_ConstantCommon.CASE_STATUS_ON_HOLD;
                 update c;
+                // tungnm37: query NFU info từ Case để hiển thị trong Case Information
+                Case refreshed = [
+                    SELECT FEC_NFU_Status__c, FEC_NFU_Code__c,
+                           FEC_NFU_Started_Date__c, FEC_NFU_Expiry_Date__c,
+                           FEC_NFU_Reason__c, FEC_Collections_Response__c
+                    FROM Case WHERE Id = :caseId LIMIT 1
+                ];
                 resp.status    = 'SUCCESS';
                 resp.message   = System.Label.FEC_Succes_Hold_Case;
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
+                resp.nfuStatus      = refreshed.FEC_NFU_Status__c;
+                resp.nfuCode        = refreshed.FEC_NFU_Code__c;
+                resp.nfuStartedDate = refreshed.FEC_NFU_Started_Date__c != null ? refreshed.FEC_NFU_Started_Date__c.format() : '';
+                resp.nfuExpiryDate  = refreshed.FEC_NFU_Expiry_Date__c != null ? refreshed.FEC_NFU_Expiry_Date__c.format() : '';
+                resp.nfuReason      = refreshed.FEC_NFU_Reason__c;
+                resp.collectionsResponse = refreshed.FEC_Collections_Response__c;
                 return resp;
             }
 
