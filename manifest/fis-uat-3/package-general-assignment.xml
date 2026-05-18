@@ -24,7 +24,7 @@
     <types>
         <members>FEC_General_Assignment_Config_Record_Page</members>
         <members>FEC_General_Assignment_Record_Page</members>
-        <members>Routing_Assignment_Record_Page1</members>
+        <members>FEC_Routing_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
