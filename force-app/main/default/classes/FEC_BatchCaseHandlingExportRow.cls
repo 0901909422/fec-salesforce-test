@@ -42,4 +42,22 @@ public class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String caseReviewUrl;
     @AuraEnabled public String businessProcessCode;
     @AuraEnabled public String businessProcessName;
+    @AuraEnabled public String blockLimitDateLabel;
+    @AuraEnabled public String blockLimitAmount;
+    @AuraEnabled public String ccCode;
+    @AuraEnabled public String ccName;
+    @AuraEnabled public String dsaCode;
+    @AuraEnabled public String dsaName;
+    @AuraEnabled public String tsaCode;
+    @AuraEnabled public String tsaName;
+    @AuraEnabled public String salesChannel;
+    @AuraEnabled public String salesSubChannel;
+    @AuraEnabled public String classificationByCs;
+    @AuraEnabled public String evaluationByCs;
+    @AuraEnabled public String finalProduct;
+    @AuraEnabled public String evaluationBySales;
+    @AuraEnabled public String disciplineResult;
+    @AuraEnabled public String contactPoint;
+    @AuraEnabled public String teamLeader;
+    @AuraEnabled public String supervisor;
 }

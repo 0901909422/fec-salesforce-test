@@ -37,6 +37,24 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Business_Process__r.FEC_Code__c',
             'FEC_Business_Process__r.Name',
             'FEC_Interaction__r.FEC_ID_Search__c',
+            'FEC_CS_Check_Block_Limit_Date__c',
+            'FEC_CS_Check_Block_Limit_Amount__c',
+            'FEC_CS_Check_Classification_by_CS__c',
+            'FEC_CS_Check_Evaluation_by_CS__c',
+            'FEC_CS_Check_Final_Product__c',
+            'FEC_Sales_Check_Evaluation_by_Sales__c',
+            'FEC_Sales_Check_Discipline_Result__c',
+            'FEC_Sales_Check_Contact_Point__c',
+            'FEC_Sales_Check_Team_Leader__c',
+            'FEC_Sales_Check_Supervisor__c',
+            'FEC_Account_or_Contract__r.FEC_CC_Code__c',
+            'FEC_Account_or_Contract__r.FEC_CC_Name__c',
+            'FEC_Account_or_Contract__r.FEC_DSA_Code__c',
+            'FEC_Account_or_Contract__r.FEC_DSA_Name__c',
+            'FEC_Account_or_Contract__r.FEC_TSA_Code__c',
+            'FEC_Account_or_Contract__r.FEC_TSA_Name__c',
+            'FEC_Account_or_Contract__r.FEC_Sales_Channel__c',
+            'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c',
             '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
         };
     }
@@ -83,6 +101,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
                 }
             }
         }
+        enrichApplicationListExportFields(rows);
     }
 
     public static FEC_BatchCaseHandlingExportRow mapCaseToExportRow(Case c) {
@@ -120,7 +139,103 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
         r.businessProcessCode = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.FEC_Code__c;
         r.businessProcessName = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.Name;
+        r.blockLimitDateLabel = formatExportDate(c.FEC_CS_Check_Block_Limit_Date__c);
+        r.blockLimitAmount = formatExportCurrency(c.FEC_CS_Check_Block_Limit_Amount__c);
+        r.classificationByCs = c.FEC_CS_Check_Classification_by_CS__c;
+        r.evaluationByCs = c.FEC_CS_Check_Evaluation_by_CS__c;
+        r.finalProduct = c.FEC_CS_Check_Final_Product__c;
+        r.evaluationBySales = c.FEC_Sales_Check_Evaluation_by_Sales__c;
+        r.disciplineResult = c.FEC_Sales_Check_Discipline_Result__c;
+        r.contactPoint = c.FEC_Sales_Check_Contact_Point__c;
+        r.teamLeader = c.FEC_Sales_Check_Team_Leader__c;
+        r.supervisor = c.FEC_Sales_Check_Supervisor__c;
+        SObject ch = c.getSObject('FEC_Account_or_Contract__r');
+        if (ch != null) {
+            r.ccCode = (String) ch.get('FEC_CC_Code__c');
+            r.ccName = (String) ch.get('FEC_CC_Name__c');
+            r.dsaCode = (String) ch.get('FEC_DSA_Code__c');
+            r.dsaName = (String) ch.get('FEC_DSA_Name__c');
+            r.tsaCode = (String) ch.get('FEC_TSA_Code__c');
+            r.tsaName = (String) ch.get('FEC_TSA_Name__c');
+            r.salesChannel = (String) ch.get('FEC_Sales_Channel__c');
+            r.salesSubChannel = (String) ch.get('FEC_Sales_Sub_Channel__c');
+        }
         return r;
+    }
+
+    private static void enrichApplicationListExportFields(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Set<String> appIdsNeedingLookup = new Set<String>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || String.isBlank(r.appId) || !String.isBlank(r.ccCode)) {
+                continue;
+            }
+            appIdsNeedingLookup.add(r.appId.trim());
+        }
+        if (!appIdsNeedingLookup.isEmpty()) {
+            Map<String, FEC_Application_List__c> latestByAppId = new Map<String, FEC_Application_List__c>();
+            for (FEC_Application_List__c al : [
+                SELECT FEC_Application_ID__c, FEC_CC_Code__c, FEC_CC_Name__c, FEC_DSA_Code__c, FEC_DSA_Name__c,
+                    FEC_TSA_Code__c, FEC_TSA_Name__c, CreatedDate
+                FROM FEC_Application_List__c
+                WHERE FEC_Application_ID__c IN :appIdsNeedingLookup
+                ORDER BY FEC_Application_ID__c, CreatedDate DESC
+            ]) {
+                if (String.isBlank(al.FEC_Application_ID__c) || latestByAppId.containsKey(al.FEC_Application_ID__c)) {
+                    continue;
+                }
+                latestByAppId.put(al.FEC_Application_ID__c, al);
+            }
+            for (FEC_BatchCaseHandlingExportRow r : rows) {
+                if (r == null || String.isBlank(r.appId) || !String.isBlank(r.ccCode)) {
+                    continue;
+                }
+                FEC_Application_List__c al = latestByAppId.get(r.appId.trim());
+                if (al == null) {
+                    continue;
+                }
+                r.ccCode = al.FEC_CC_Code__c;
+                r.ccName = al.FEC_CC_Name__c;
+                r.dsaCode = al.FEC_DSA_Code__c;
+                r.dsaName = al.FEC_DSA_Name__c;
+                r.tsaCode = al.FEC_TSA_Code__c;
+                r.tsaName = al.FEC_TSA_Name__c;
+            }
+        }
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || !String.isBlank(r.salesChannel)) {
+                continue;
+            }
+            if (String.isBlank(r.ccCode) && String.isBlank(r.dsaCode) && String.isBlank(r.tsaCode)) {
+                continue;
+            }
+            FEC_SalesChannelFromApplicationService.SalesChannelResult channelResult =
+                FEC_SalesChannelFromApplicationService.resolveSalesChannelFromApplicationCodes(
+                    r.ccCode,
+                    r.dsaCode,
+                    r.tsaCode
+                );
+            if (channelResult != null) {
+                r.salesChannel = channelResult.channel;
+                r.salesSubChannel = channelResult.subChannel;
+            }
+        }
+    }
+
+    private static String formatExportDate(Date d) {
+        if (d == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return Datetime.newInstance(d.year(), d.month(), d.day()).format('dd/MM/yyyy');
+    }
+
+    private static String formatExportCurrency(Decimal amount) {
+        if (amount == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return String.valueOf(amount.setScale(0));
     }
 
     private static String formatExportDatetime(Datetime dt) {

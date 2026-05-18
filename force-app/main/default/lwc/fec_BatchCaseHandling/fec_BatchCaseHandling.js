@@ -273,7 +273,25 @@ const EXPORT_HEADER_FIELD_MAP = {
   attachment: "hasAttachmentLabel",
   businessprocess: "businessProcessName",
   businessprocessname: "businessProcessName",
-  businessprocesscode: "businessProcessCode"
+  businessprocesscode: "businessProcessCode",
+  blocklimitdate: "blockLimitDateLabel",
+  blocklimitamount: "blockLimitAmount",
+  cccode: "ccCode",
+  ccname: "ccName",
+  dsacode: "dsaCode",
+  dsaname: "dsaName",
+  tsacode: "tsaCode",
+  tsaname: "tsaName",
+  saleschannel: "salesChannel",
+  salessubchannel: "salesSubChannel",
+  classificationbycs: "classificationByCs",
+  evaluationbycs: "evaluationByCs",
+  finalproduct: "finalProduct",
+  evaluationbysales: "evaluationBySales",
+  disciplineresult: "disciplineResult",
+  contactpoint: "contactPoint",
+  teamleader: "teamLeader",
+  supervisor: "supervisor"
 };
 const FILTERED_EXPORT_EXTRA_COLUMNS = [
   { header: FEC_BCH_Col_CustomerType, field: "customerType" },
