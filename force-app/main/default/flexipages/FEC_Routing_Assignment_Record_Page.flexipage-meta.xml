@@ -3,8 +3,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>force:highlightsPanel</componentName>
-                <identifier>flexipage_highlightPanel</identifier>
+                <componentName>fec_RoutingAssignmentActions</componentName>
+                <identifier>fec_RoutingAssignmentActions</identifier>
             </componentInstance>
         </itemInstances>
         <name>header</name>
@@ -35,8 +35,14 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>flexipage:fieldSection</componentName>
-                <identifier>flexipage_recordDetail</identifier>
+                <componentName>fec_RoutingAssignmentDetailSimple</componentName>
+                <identifier>fec_RoutingAssignmentDetailSimple</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_RoutingAssignmentHistory</componentName>
+                <identifier>fec_RoutingAssignmentHistory</identifier>
             </componentInstance>
         </itemInstances>
         <name>detailTabContent</name>
