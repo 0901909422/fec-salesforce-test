@@ -3,11 +3,14 @@
     font-family: inherit;
 }
 
-h3.fec-transfer-call__subtitle {
+/* Giống .sub-section — Account Infor */
+h3.fec-transfer-call__subtitle,
+.fec-transfer-details__title {
+    font-family: inherit;
     font-size: 16px;
     font-weight: 500;
     line-height: 1.25;
-    color: inherit;
+    color: #706e6b;
 }
 
 /* Nút SLDS native — chữ trắng (styling hooks lightning-button không ổn định khi disabled). */
@@ -18,10 +21,23 @@ button.slds-button.fec-transfer-call__btn-transfer {
 }
 
 button.slds-button.fec-transfer-call__btn-transfer:hover:not(:disabled),
-button.slds-button.fec-transfer-call__btn-transfer:focus:not(:disabled) {
+button.slds-button.fec-transfer-call__btn-transfer:active:not(:disabled) {
     color: #ffffff;
     background-color: #014486;
     border-color: #014486;
+}
+
+/* Tránh giữ màu hover sau click (focus sticky); chỉ highlight khi Tab bàn phím. */
+button.slds-button.fec-transfer-call__btn-transfer:focus:not(:disabled) {
+    outline: none;
+    box-shadow: none;
+}
+
+button.slds-button.fec-transfer-call__btn-transfer:focus-visible:not(:disabled) {
+    color: #ffffff;
+    background-color: #014486;
+    border-color: #014486;
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #014486;
 }
 
 button.slds-button.fec-transfer-call__btn-transfer:disabled {
@@ -110,15 +126,6 @@ button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-fa
     font-family: inherit;
 }
 
-/* Giống .sub-section */
-.fec-transfer-details__title {
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.25;
-    color: inherit;
-}
-
 .fec-transfer-details__grid {
     --fec-td-label-col: 13rem;
     margin-top: 0.5rem;
@@ -132,7 +139,7 @@ button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-fa
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 0.5rem;
-    align-items: start;
+    align-items: stretch;
     min-width: 0;
     margin-bottom: var(--slds-spacing-small, 1.25rem);
     padding: 0;
@@ -143,8 +150,10 @@ button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-fa
     display: grid;
     grid-template-columns: minmax(0, var(--fec-td-label-col)) minmax(0, 1fr);
     column-gap: 0.5rem;
+    align-content: start;
     align-items: start;
     min-width: 0;
+    min-height: 100%;
     padding: var(--slds-spacing-x-small, 0.5rem) 0;
     border-bottom: 1px solid var(--slds-g-color-border-base-1, #e5e5e5);
     box-sizing: border-box;
@@ -154,13 +163,13 @@ button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-fa
     margin: 0;
 }
 
-/* Nhãn: một dòng, thẳng hàng; quá dài thì ellipsis (chỉ value được wrap). */
+/* Nhãn — giống .label (Account Infor) */
 .fec-td-label {
     font-family: inherit;
     font-size: inherit;
-    color: inherit;
     font-weight: 500;
-    line-height: 1.2;
+    color: #706e6b;
+    line-height: 1.25;
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -168,15 +177,15 @@ button.slds-button.fec-transfer-call__btn-transfer.fec-transfer-call__btn-max-fa
     padding-right: 0.25rem;
 }
 
-/* Giá trị: wrap trong cột 1fr tương ứng. */
+/* Giá trị — giống .value (Account Infor): đen/xám đậm */
 .fec-td-value {
     min-width: 0;
     text-align: left;
     word-break: break-word;
     overflow-wrap: anywhere;
     font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-    font-weight: inherit;
-    line-height: 1.2;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: #706e6b;
+    line-height: 1.35;
 }
