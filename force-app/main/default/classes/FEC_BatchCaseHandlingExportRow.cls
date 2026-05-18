@@ -60,4 +60,5 @@ public class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public String contactPoint;
     @AuraEnabled public String teamLeader;
     @AuraEnabled public String supervisor;
+    @AuraEnabled public String pendingCsSupportLabel;
 }

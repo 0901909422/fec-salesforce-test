@@ -102,6 +102,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             }
         }
         enrichApplicationListExportFields(rows);
+        enrichPendingCsSupportLabels(rows);
     }
 
     public static FEC_BatchCaseHandlingExportRow mapCaseToExportRow(Case c) {
@@ -222,6 +223,103 @@ public without sharing class FEC_BatchCaseHandlingExportService {
                 r.salesSubChannel = channelResult.subChannel;
             }
         }
+    }
+
+    private static void enrichPendingCsSupportLabels(List<FEC_BatchCaseHandlingExportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Set<Id> caseIds = new Set<Id>();
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r != null && r.caseId != null) {
+                caseIds.add(r.caseId);
+            }
+        }
+        if (caseIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Case> caseById = new Map<Id, Case>([
+            SELECT Id, Status, FEC_Team__c
+            FROM Case
+            WHERE Id IN :caseIds
+        ]);
+
+        Set<Id> pendingCaseIds = new Set<Id>();
+        for (Id caseId : caseIds) {
+            Case c = caseById.get(caseId);
+            if (c != null && c.Status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+                pendingCaseIds.add(caseId);
+            }
+        }
+
+        Map<Id, FEC_Routing_Action_History__c> latestChangeOwnerByCaseId =
+            loadLatestChangeOwnerHistoryByCaseId(pendingCaseIds);
+
+        for (FEC_BatchCaseHandlingExportRow r : rows) {
+            if (r == null || r.caseId == null) {
+                continue;
+            }
+            Case c = caseById.get(r.caseId);
+            if (c == null || c.Status != FEC_ConstantCommon.CASE_STATUS_PENDING) {
+                r.pendingCsSupportLabel = FEC_ConstantCommon.STR_EMPTY;
+                continue;
+            }
+            FEC_Routing_Action_History__c hist = latestChangeOwnerByCaseId.get(r.caseId);
+            String compactPending;
+            if (hist != null) {
+                compactPending = FEC_RoutingActionHistoryTriggerHandler.buildPendingStatusFromRouteHistoryRow(hist);
+            } else if (String.isNotBlank(c.FEC_Team__c)) {
+                compactPending = FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX + c.FEC_Team__c;
+            } else {
+                compactPending = FEC_ConstantCommon.CASE_STATUS_PENDING;
+            }
+            r.pendingCsSupportLabel = formatPendingStatusForExport(compactPending);
+        }
+    }
+
+    private static Map<Id, FEC_Routing_Action_History__c> loadLatestChangeOwnerHistoryByCaseId(Set<Id> caseIds) {
+        Map<Id, FEC_Routing_Action_History__c> out = new Map<Id, FEC_Routing_Action_History__c>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return out;
+        }
+        for (FEC_Routing_Action_History__c hist : [
+            SELECT FEC_Case__c, FEC_Routing_Action__c, FEC_Original_User_Queue_ID__c, FEC_Updated_User_Queue_ID__c, CreatedDate
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c IN :caseIds
+            AND FEC_Routing_Action__c = :FEC_ConstantCommon.FEC_ROUTING_ACTION_CHANGE_OWNER
+            ORDER BY FEC_Case__c, CreatedDate DESC, Id DESC
+        ]) {
+            if (hist.FEC_Case__c != null && !out.containsKey(hist.FEC_Case__c)) {
+                out.put(hist.FEC_Case__c, hist);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Chuỗi export GSR cột Pending-CSSupport: Pending - {Team} (có dấu cách quanh dấu -),
+     * khớp FEC_Final_Status__c / hiển thị UI, không dùng Pending-{Team} nội bộ.
+     */
+    private static String formatPendingStatusForExport(String compactPending) {
+        if (String.isBlank(compactPending)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        if (compactPending == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+            return FEC_ConstantCommon.CASE_STATUS_PENDING;
+        }
+        if (compactPending.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX)) {
+            String teams = compactPending.substring(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX.length());
+            if (String.isBlank(teams)) {
+                return FEC_ConstantCommon.CASE_STATUS_PENDING;
+            }
+            teams = teams.replace(
+                FEC_ConstantCommon.DELIMITER_UNDERSCORE,
+                ' - '
+            );
+            return 'Pending - ' + teams;
+        }
+        return compactPending;
     }
 
     private static String formatExportDate(Date d) {
