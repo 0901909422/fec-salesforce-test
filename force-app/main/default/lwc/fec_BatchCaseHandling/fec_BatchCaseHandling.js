@@ -394,7 +394,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track filterLines = [];
   @track caseRows = [];
   @track caseTotalCount = 0;
-  @track casePageSize = "20";
+  @track casePageSize = "10";
   @track caseSearchPage = 1;
   @track caseGoToPageInput = "1";
   @track caseSearchLoading = false;
@@ -426,7 +426,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track bpSubmitLoading = false;
 
   currentPage = 1;
-  pageSize = "20";
+  pageSize = "10";
   sheetJsReady = false;
   filterMetaByKey = {};
   filterUid = 0;
@@ -730,7 +730,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseSearchLoading = true;
     try {
       const filtersJson = JSON.stringify(payload);
-      const ps = Number(this.casePageSize) || 20;
+      const ps = Number(this.casePageSize) || 10;
       const res = await searchBulkCases({
         filtersJson,
         pageSize: ps,
@@ -768,7 +768,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get casePageSizeNum() {
-    return Number(this.casePageSize) || 20;
+    return Number(this.casePageSize) || 10;
   }
 
   get caseTotalPages() {
@@ -1823,7 +1823,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get totalPages() {
-    const size = Number(this.pageSize) || 20;
+    const size = Number(this.pageSize) || 10;
     return Math.max(1, Math.ceil(this.rows.length / size));
   }
 
@@ -2140,7 +2140,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   rebuildPageRows() {
-    const size = Number(this.pageSize) || 20;
+    const size = Number(this.pageSize) || 10;
     const start = (this.currentPage - 1) * size;
     this.pagedRows = this.rows.slice(start, start + size);
     this.goToPageInput = String(this.currentPage);
