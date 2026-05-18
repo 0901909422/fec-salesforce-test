@@ -70,6 +70,9 @@
 		<members>FEC_TranferInformationCallout</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
 		<members>FEC_NewAssignmentController</members>
+		<members>FEC_BatchCaseHandlingController</members>
+		<members>FEC_BatchCaseHandlingExportRow</members>
+		<members>FEC_BatchCaseHandlingExportService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -132,6 +135,7 @@
         <members>fec_CaseNocUpdatedSection</members>
         <members>fec_holdCaseManual</members>
         <members>fec_NewAssignmentAction</members>
+        <members>fec_BatchCaseHandling</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -219,6 +223,7 @@
 		<name>CustomMetadata</name>
 	</types>
     <types>
+        <members>FEC_Batch_Case_Handling</members>
 		<members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
@@ -381,6 +386,14 @@
 		<members>Case.FEC_New_Assignment_LWC</members>
         <members>Case.New_Assignment</members>
         <name>QuickAction</name>
+    </types>
+	<types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
+	<types>
+		<members>Batch_Case_Handling</members>
+        <name>CustomTab</name>
     </types>
 	<version>66.0</version>
 </Package>
