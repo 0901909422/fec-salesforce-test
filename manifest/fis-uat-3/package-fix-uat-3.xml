@@ -78,6 +78,7 @@
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_CreateCSCaseService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -143,6 +144,7 @@
         <members>fec_BatchCaseHandling</members>
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
+        <members>fec_DoNotBotherResultView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -154,6 +156,7 @@
         <members>Case.FEC_Original_Sub_Code__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
+		<members>Case.FEC_Is_DNB__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
@@ -378,6 +381,7 @@
 	</types>
     <types>
 		<members>FEC_Case_NOC</members>
+		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
     </types>
 	<types>
@@ -420,6 +424,10 @@
 	<types>
 		<members>Batch_Case_Handling</members>
         <name>CustomTab</name>
+    </types>
+	<types>
+        <members>case sla main</members>
+        <name>EntitlementProcess</name>
     </types>
 	<version>66.0</version>
 </Package>

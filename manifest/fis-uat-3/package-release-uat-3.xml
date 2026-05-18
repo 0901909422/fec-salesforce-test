@@ -579,6 +579,7 @@
 		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
+		<members>Case.FEC_Is_DNB__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -713,6 +714,7 @@
         <members>fec_IPPConversionRetailForm</members>
         <members>fec_NewAssignmentAction</members>
         <members>fec_holdCaseAuto</members>
+        <members>fec_DoNotBotherResultView</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -725,6 +727,7 @@
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
 		<members>FEC_Case_NOC</members>
+		<members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
