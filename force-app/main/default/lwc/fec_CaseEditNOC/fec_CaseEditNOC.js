@@ -40,6 +40,9 @@ import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import FEC_Tab_Nature_Of_Case from "@salesforce/label/c.FEC_Tab_Nature_Of_Case";
+
+//HieuTT74 Cập nhật ngày  18-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB
+import DO_NOT_BOTHER_CHANNEL from "@salesforce/messageChannel/FEC_DoNotBother__c";
 import { 
   ACTION_REOPEN, 
   ACTION_RECALL,
@@ -220,7 +223,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   subscriptionNOC = null;
   subscriptionResetPin = null;
   subscriptionPinReissue = null;
-
+  subscriptionDoNotBother = null;
   activeSection = ["noc"];
   productTypeSelectedId;
   categorySelectedId;
@@ -707,6 +710,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
     unsubscribe(this.subscriptionResetPin);
     this.subscriptionResetPin = null;
 
+
+    //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
+    unsubscribe(this.subscriptionResetPin);
+    this.subscriptionResetPin = null;
+
+    //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
+    unsubscribe(this.subscriptionDoNotBother);
+    this.subscriptionDoNotBother = null;
+
     this.modeEditCase = false;
   }
 
@@ -746,6 +758,15 @@ export default class Fec_CaseEditNOC extends LightningElement {
       (message) => this.handleMessageResetPin(message),
       { scope: APPLICATION_SCOPE },
     );
+
+    //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
+    this.subscriptionDoNotBother = subscribe(
+      this.messageContext,
+      DO_NOT_BOTHER_CHANNEL,
+      (message) => this.handleMessageDoNotBother(message),
+      { scope: APPLICATION_SCOPE }
+    );
+    
   }
 
   handleCaseNOCMessage(message) {
@@ -829,7 +850,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
-  //HieuTT74 Cập nhật ngày  17-4-2026: Bổ sung message channel để disable các combobox khi call api reset pin thành công
   handleMessageResetPin(message) {
     this.handleDisableResetPinSuccess("category");
     this.handleDisableResetPinSuccess("sub-category");
