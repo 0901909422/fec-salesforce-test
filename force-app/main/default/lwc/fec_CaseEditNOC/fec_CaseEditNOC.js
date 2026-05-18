@@ -80,6 +80,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   updatedCategoryId;       // Category đã chọn trong Updated section
   updatedSubCategoryId;    // Sub-Category đã chọn trong Updated section
   updatedSubCodeId;        // Sub-Code đã chọn trong Updated section
+  @track updatedNocDisplayNames = {};
   hasAutoRoutingAssignment = false; // true → ẩn Updated section (có Routing Assignment)
   //PhongBT: Original Information của NOC lấy từ FEC_Case_Flow_History__c
   @track originalNOC = null;
@@ -151,6 +152,35 @@ export default class Fec_CaseEditNOC extends LightningElement {
 
   get serializedSubCodeOptions() {
     return JSON.stringify(this.subCodeOptionlst ?? []);
+  }
+
+  get updatedNocProductTypeName() {
+    return this.updatedNocDisplayNames?.productType ?? null;
+  }
+
+  get updatedNocCategoryName() {
+    return this.updatedNocDisplayNames?.category ?? null;
+  }
+
+  get updatedNocSubCategoryName() {
+    return this.updatedNocDisplayNames?.subCategory ?? null;
+  }
+
+  get updatedNocSubCodeName() {
+    return this.updatedNocDisplayNames?.subCode ?? null;
+  }
+
+  _setUpdatedNocDisplayNamesFromCase(caseRecord) {
+    if (!caseRecord) {
+      this.updatedNocDisplayNames = {};
+      return;
+    }
+    this.updatedNocDisplayNames = {
+      productType: caseRecord.FEC_Product_Type__r?.Name ?? null,
+      category: caseRecord.FEC_Category__r?.Name ?? null,
+      subCategory: caseRecord.FEC_SubCategory__r?.Name ?? null,
+      subCode: caseRecord.FEC_SubCode__r?.Name ?? null,
+    };
   }
 
   get isEdit() {
@@ -339,6 +369,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.updatedCategoryId = res.FEC_Category__c;
           this.updatedSubCategoryId = res.FEC_SubCategory__c;
           this.updatedSubCodeId = res.FEC_SubCode__c;
+          this._setUpdatedNocDisplayNamesFromCase(res);
 
           // Kiểm tra có Routing Assignment không — nếu có thì ẩn Updated section
           hasAutoRoutingAssignment({ caseId: this.recordId })
@@ -787,6 +818,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
           this.updatedCategoryId = res.FEC_Category__c;
           this.updatedSubCategoryId = res.FEC_SubCategory__c;
           this.updatedSubCodeId = res.FEC_SubCode__c;
+          this._setUpdatedNocDisplayNamesFromCase(res);
 
           hasAutoRoutingAssignment({ caseId: this.recordId })
             .then((result) => {

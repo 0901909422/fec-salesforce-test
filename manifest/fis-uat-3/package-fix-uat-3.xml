@@ -128,6 +128,7 @@
         <members>fecInteractionChatConversations</members>
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
+        <members>fec_CaseNocUpdatedSection</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -151,6 +152,8 @@
         <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <name>CustomField</name>
     </types>
     <types>
