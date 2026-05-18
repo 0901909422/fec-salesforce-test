@@ -112,6 +112,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    /** Batch Data Creation: yyyy-MM-ddTHH:mm:ss.SSS+0700 (offset không có dấu :). */
+    public static final String PATTERN_BATCH_DATETIME_OFFSET = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{4}$';
+    public static final String PATTERN_ALPHANUMERIC = '^[a-zA-Z0-9]+$';
     public static final String PATTERN_DATE_FORMAT_MM = '^(1[0-2]|[1-9])$';
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
@@ -368,6 +371,17 @@ public with sharing class FEC_ConstantCommon {
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String FEC_RAH_DESCRIPTION_AUTO_ASSIGNMENT = 'Auto Assignment';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
+
+    /** Case Status values allowed for Batch Case Creation import. */
+    public static final List<String> CUSTOMER_CASE_IMPORT_STATUS_VALUES = new List<String>{
+        CASE_STATUS_OPEN,
+        CASE_STATUS_PENDING,
+        CASE_STATUS_AUTO_CANCELLED,
+        CASE_STATUS_RESOLVED_CANCELLED,
+        CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+        CASE_STATUS_RESOLVED_COMPLETED,
+        CASE_STATUS_RESOLVED_REJECTED
+    };
 
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';
@@ -802,5 +816,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
     public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
+    /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
+    public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
 
 }
