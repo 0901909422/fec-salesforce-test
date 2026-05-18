@@ -56,6 +56,20 @@
 		<members>FEC_PaymentHistoryController</members>
 		<members>FEC_IPPConversionController</members>
 		<members>FEC_AssignmentRoutingActionHandler</members>
+		<members>FEC_CurrencyCodeLookup</members>
+		<members>FEC_GetCardBasicInfo</members>
+		<members>FEC_GetCardFinancialTransactions</members>
+		<members>FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_StatementsAccountController</members>
+		<members>FEC_TransactionsController</members>
+		<members>FEC_InteractionInforHandler</members>
+		<members>FEC_NocInheritanceUtil</members>
+		<members>FEC_NocInheritanceUtilTest</members>
+		<members>FEC_PointsRedemptionCaseController</members>
+		<members>FEC_RoutingActionHistoryTriggerHandler</members>
+		<members>FEC_TranferInformationCallout</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
+		<members>FEC_NewAssignmentController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -109,6 +123,15 @@
         <members>fec_AccountOrContractPicklistCustomerCase</members>
         <members>fec_CaseNote</members>
         <members>fec_HoldCaseConfigurationTabView</members>
+        <members>fec_StatementsAccountTabView</members>
+        <members>fec_TransactionsAccount</members>
+        <members>fec_TransactionsAccountTabView</members>
+        <members>fecInteractionChatConversations</members>
+        <members>fec_PointsRedemptionCaseForm</members>
+        <members>fec_TransferCall</members>
+        <members>fec_CaseNocUpdatedSection</members>
+        <members>fec_holdCaseManual</members>
+        <members>fec_NewAssignmentAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -119,6 +142,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
 		<members>FEC_Action_Button__c.FEC_Code__c</members>
@@ -129,8 +153,18 @@
 		<members>FEC_Template__c.FEC_Template_ZNS_Status__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>FEC_Sales_Logic__c.FEC_CC_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
+		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <name>CustomField</name>
     </types>
+    <types>
+		<members>FEC_Currency_Code__c</members>
+		<members>FEC_Transfer_Call_Error__c</members>
+		<name>CustomObject</name>
+	</types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
@@ -151,6 +185,31 @@
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_Hold_Case_Save_Success</members>
         <members>FEC_MSG_IPP_Noti_10</members>
+        <members>FEC_BilledTx_Col_Amount</members>
+        <members>FEC_BilledTx_Col_AuthCode</members>
+        <members>FEC_BilledTx_Col_Currency</members>
+        <members>FEC_BilledTx_Col_DebitCredit</members>
+        <members>FEC_BilledTx_Col_EffectiveDate</members>
+        <members>FEC_BilledTx_Col_MCC</members>
+        <members>FEC_BilledTx_Col_Merchant</members>
+        <members>FEC_BilledTx_Col_OTP</members>
+        <members>FEC_BilledTx_Col_Plan</members>
+        <members>FEC_BilledTx_Col_PostDate</members>
+        <members>FEC_BilledTx_Col_TxnCode</members>
+        <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_MSG_Remove_Phone_Service_Failed</members>
+        <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
+        <members>FEC_MSG_IPP_Conversion_Success</members>
+        <members>FEC_TransferCall_Details_Title</members>
+        <members>FEC_TransferCall_Field_TransferDataToCollections</members>
+        <members>FEC_TransferCall_Field_TransferTime</members>
+        <members>FEC_TransferCall_Field_TransferStatus</members>
+        <members>FEC_TransferCall_Field_FailureReason</members>
+        <members>FEC_TransferCall_Field_CollActionCode</members>
+        <members>FEC_TransferCall_Field_CollSubActionCode</members>
+        <members>FEC_TransferCall_Field_CollRemarks</members>
+        <members>FEC_TransferCall_Field_CollActionDate</members>
+        <members>FEC_TransferCall_Field_CollAgent</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -162,8 +221,61 @@
     <types>
 		<members>FEC_Common_System_Setting</members>
         <members>RD_IT_User_System_Management</members>
-        <members>RD_IT_User_Customer_360</members>
         <members>RD_IT_User_Master_Data_Management</members>
+        <!-- Customer 360 -->
+        <members>FEC_CS_CS_Ecom_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Ecom_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Inbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Operations_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Officer_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Outbound_Team_Leader_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_CS_Support_Manager_Customer_360</members>
+		<members>FEC_CS_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Center_Director_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Manager_Customer_360</members>
+		<members>FEC_CS_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_1_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_2_Customer_360</members>
+		<members>FEC_CS_Customer_Experience_Manager_3_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_Contact_Center_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_CS_QC_OM_Dept_Customer_360</members>
+		<members>FEC_CS_Head_of_Customer_Care_Dept_Customer_360</members>
+		<members>FEC_CS_Office_Based_Team_Leader_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Ecom_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Inbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Operations_Management_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Outbound_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Quality_Control_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_CS_Support_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Card_Risk_Monitoring_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Customer_Care_Specialist_Customer_360</members>
+		<members>FEC_CS_Senior_Office_Based_Specialist_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Ecom_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Inbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Operations_Management_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Outbound_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Quality_Control_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_CS_Support_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Customer_Care_Customer_360</members>
+		<members>FEC_CS_Unit_Head_of_Office_Based_Customer_360</members>
+		<members>RD_IT_User_Customer_360</members>
+        <members>FEC_RD_Card_Operations_User_Customer_360</members>
+        <members>FEC_RD_Collections_User_Customer_360</members>
+        <members>FEC_RD_Contract_Processing_User_Customer_360</members>
+		<members>FEC_RD_Credit_Assessment_User_Customer_360</members>
+        <members>FEC_RD_Direct_Sales_User_Customer_360</members>
+        <members>FEC_RD_Internal_Audit_User_Customer_360</members>
+        <members>FEC_RD_Payment_User_Customer_360</members>
+        <members>FEC_RD_Telesales_User_1_Customer_360</members>
+        <members>FEC_RD_Telesales_User_2_Customer_360</members>
 		<!-- Interaction Case Service Case -->
 		<members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
@@ -229,5 +341,46 @@
 		<members>Assign_Entitlement_to_Case</members>
 		<name>Flow</name>
 	</types>
+    <types>
+        <members>FEC_Currency_Code__c-Currency Code Layout</members>
+		<name>Layout</name>
+	</types>
+    <types>
+		<members>FEC_Case_NOC</members>
+        <name>LightningMessageChannel</name>
+    </types>
+	<types>
+		<members>CA_Credit_Assessment</members>
+		<members>CL_Collections</members>
+		<members>CO_Card_Operations</members>
+		<members>CP_Contract_Processing</members>
+		<members>FS_Direct_Sales</members>
+		<members>IA_Internal_Audit</members>
+		<members>IT_IT_Operations_Support</members>
+		<members>PM_Payment</members>
+		<members>TS_Telesales</members>
+		<name>Group</name>
+	</types>
+	<types>
+		<members>Case.CA_Credit_Assessment</members>
+		<members>Case.CL_Collections</members>
+		<members>Case.CO_Card_Operations</members>
+		<members>Case.CP_Contract_Processing</members>
+		<members>Case.FS_Direct_Sales</members>
+		<members>Case.IA_Internal_Audit</members>
+		<members>Case.IT_IT_Operations_Support</members>
+		<members>Case.PM_Payment</members>
+		<members>Case.TS_Telesales</members>
+		<name>SharingCriteriaRule</name>
+	</types>
+    <types>
+        <members>Case</members>
+        <name>SharingRules</name>
+    </types>
+    <types>
+		<members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
+        <name>QuickAction</name>
+    </types>
 	<version>66.0</version>
 </Package>

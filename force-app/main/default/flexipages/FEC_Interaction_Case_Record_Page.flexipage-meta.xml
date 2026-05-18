@@ -1101,7 +1101,7 @@
         <itemInstances>
             <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
-                <identifier>c_fecInteractionChatConversations2</identifier>
+                <identifier>c_fecInteractionChatConversations</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
@@ -1337,7 +1337,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
-                    <value>Conversions</value>
+                    <value>Conversations</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab30</identifier>

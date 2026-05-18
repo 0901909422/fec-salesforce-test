@@ -64,6 +64,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
+		<members>FEC_NewAssignmentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -78,7 +79,6 @@
 	<types>
 		<members>Case.FEC_Max_Amount__c</members>
 		<members>Case.FEC_Requested_Amount__c</members>
-        <members>Case.FEC_Chat_History__c</members>
         <members>Case.FEC_Assignment_Count__c</members>
         <members>Case.FEC_Disbursement_Date__c</members>
         <members>Case.FEC_Disbursement_Status__c</members>
@@ -402,6 +402,7 @@
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
@@ -595,6 +596,7 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+		<members>fec_NewAssignmentAction</members>
         <members>fec_DoNotBotherResultView</members>
 		<name>LightningComponentBundle</name>
     </types>
@@ -1221,6 +1223,8 @@
 	</types>
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
+        <members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
         <name>QuickAction</name>
     </types>
     <types>
