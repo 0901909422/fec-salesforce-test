@@ -1275,6 +1275,8 @@
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
         <!-- Batch Case Handling -->
         <members>FEC_Batch_Case_Handling</members>
+        <!--Common System Setting-->
+        <members>FEC_Common_System_Setting</members>
         <!-- Case Assignment -->
         <members>FEC_Case_Assignment_Management</members>
         <name>PermissionSet</name>
@@ -1508,5 +1510,9 @@
 		<members>Case.TS_Telesales</members>
 		<name>SharingCriteriaRule</name>
 	</types>
+    <types>
+        <members>FEC_Service</members>
+        <name>CustomApplication</name>
+    </types>
 	<version>66.0</version>
 </Package>
