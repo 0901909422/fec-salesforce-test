@@ -77,6 +77,7 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_AutoHoldCaseServiceTest</members>
+		<members>FEC_MrcDuplicateCaseService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -141,6 +142,7 @@
         <members>fec_NewAssignmentAction</members>
         <members>fec_BatchCaseHandling</members>
         <members>fec_holdCaseAuto</members>
+        <members>fec_MRC</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -151,6 +153,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
+        <members>Case.FEC_Delivery_Option_2__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>FEC_Address_Info__c.FEC_Parent_Address__c</members>
@@ -185,6 +188,7 @@
         <members>Nature_of_Cases_Record_Page</members>
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
+        <members>FEC_Case_Assignment_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -228,6 +232,13 @@
         <members>FEC_MSG_SUCCESS</members>
         <members>FEC_MSG_ERROR</members>
         <members>FEC_Account_Contract_Status</members>
+		<members>FEC_MRC_Return_Case_Info_Block_Title</members>
+        <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
+        <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
+        <members>FEC_MRC_RL0502_Dup_Banner</members>
+        <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
+        <members>FEC_MRC_Dup_Remark_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
