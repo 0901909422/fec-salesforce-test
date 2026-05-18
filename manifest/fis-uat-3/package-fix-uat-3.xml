@@ -73,6 +73,7 @@
 		<members>FEC_BatchCaseHandlingController</members>
 		<members>FEC_BatchCaseHandlingExportRow</members>
 		<members>FEC_BatchCaseHandlingExportService</members>
+		<members>FEC_SalesChannelFromApplicationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
