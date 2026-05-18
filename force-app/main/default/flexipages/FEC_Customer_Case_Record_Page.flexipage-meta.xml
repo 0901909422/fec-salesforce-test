@@ -71,7 +71,7 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
-                            <value>Case.New_Assignment</value>
+                            <value>Case.FEC_New_Assignment_LWC</value>
                             <visibilityRule>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>

@@ -30,6 +30,11 @@
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
+        <members>Batch_Case_Creation</members>
+		<members>Batch_Data_Creation</members>
+        <name>CustomTab</name>
+    </types>
+	<types>
 		<members>FEC_Batch_FileExcelXlsxOnly</members>
         <members>FEC_Batch_FileMaxSize150MB</members>
         <members>FEC_Batch_Msg_CannotReadExcelContent</members>
