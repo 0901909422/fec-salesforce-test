@@ -9972,6 +9972,14 @@
         <value>Dịch vụ lỗi, vui lòng thử lại</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Contract_Status</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Status (Remove Phone datatable)</shortDescription>
+        <value>Account/ Contract Status</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
         <categories>Remove Phone LWC</categories>
         <language>en_US</language>
@@ -17675,5 +17683,29 @@
         <protected>false</protected>
         <shortDescription>TransferCall: nhãn Coll Agent</shortDescription>
         <value>Coll Agent</value>
+    </labels>
+    <labels>
+        <fullName>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC STOP IMPACT ALREADY MARKED MSG</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã có thông tin ngưng tác động trước đó</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SUCCESS</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG SUCCESS</shortDescription>
+        <value>Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ERROR</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG ERROR</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
     </labels>
 </CustomLabels>

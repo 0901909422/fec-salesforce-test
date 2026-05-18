@@ -3,7 +3,7 @@
     <fullName>FEC_Transfer_Call_to_Collection__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Transfer Call to Collection</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
