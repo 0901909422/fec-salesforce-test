@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_Customer_History__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Customer History</label>
+    <referenceTo>FEC_Customer_History__c</referenceTo>
+    <relationshipLabel>Currency Codes</relationshipLabel>
+    <relationshipName>Currency_Codes</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

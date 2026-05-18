@@ -3,6 +3,10 @@
     <description>Channel for switch mode Case</description>
     <isExposed>true</isExposed>
     <lightningMessageFields>
+        <fieldName>caseId</fieldName>
+        <description>Case Id</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
         <description>mode handling</description>
         <fieldName>isModeEdit</fieldName>
     </lightningMessageFields>

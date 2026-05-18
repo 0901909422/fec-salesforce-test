@@ -1051,7 +1051,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1066,7 +1066,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1091,7 +1091,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1402,6 +1402,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Stage_Change__c.FEC_Next_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1532,7 +1537,22 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Template__c.FEC_Is_ZNS_Template__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Preview_ZNS_Url__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Template_ZNS_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1720,7 +1740,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>

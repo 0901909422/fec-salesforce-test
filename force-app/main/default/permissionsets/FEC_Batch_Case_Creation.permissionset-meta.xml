@@ -2,69 +2,69 @@
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_EndDate__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Failure_Reason__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_FieldName__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_File_Name__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_IsActive__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Result__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_KeyIdentifier__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_StartDate__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Total_Failed_Records__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfoConfig__c.FEC_Status__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Total_Records__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfo__c.FEC_CompositeKey__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Total_Success_Records__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfo__c.FEC_FieldValue__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Uploaded_By__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfo__c.FEC_IsActive__c</field>
+        <field>FEC_Batch_Case_Creation__c.FEC_Uploaded_On__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfo__c.FEC_KeyIDValue__c</field>
+        <field>FEC_Template_Import__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_CustomerAdditionalInfo__c.FEC_LinkedFilename__c</field>
+        <field>FEC_Template_Import__c.FEC_Applicable_for__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
-    <label>Permission Set - Customer Data Management</label>
+    <label>Batch Case Creation</label>
     <license>Salesforce</license>
     <objectPermissions>
         <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
+        <allowDelete>false</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_CustomerAdditionalInfoConfig__c</object>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Batch_Case_Creation__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
@@ -74,8 +74,16 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_CustomerAdditionalInfo__c</object>
+        <object>FEC_Template_Import__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>Batch_Case_Creation</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Template_Import__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>

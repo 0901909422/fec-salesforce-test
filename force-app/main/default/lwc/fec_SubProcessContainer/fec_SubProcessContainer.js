@@ -9,7 +9,7 @@ import {
 
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
-import getCase from "@salesforce/apex/FEC_SubProcessService.getCase";
+import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
 
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
@@ -69,6 +69,15 @@ export default class Fec_SubProcessContainer extends LightningElement {
       subCategoryId,
       subCodeId,
     };
+
+    // tungnm37: lưu NOC IDs vào sessionStorage để fec_holdCaseManual đọc được
+    // (holdCaseManual mount sau khi message đã publish nên không nhận được message)
+    try {
+      const key = 'fec_case_noc_' + this.recordId;
+      sessionStorage.setItem(key, JSON.stringify({ productTypeId, categoryId, subCategoryId, subCodeId }));
+    } catch (e) {
+      // ignore
+    }
   }
 
   @wire(getSubProcesses, {
@@ -99,26 +108,63 @@ export default class Fec_SubProcessContainer extends LightningElement {
     }
   }
 
+  _findRemovePhoneFormEl() {
+    const selectors = [
+      "c-fec_-remove-phone-form",
+      "c-fec-remove-phone-form",
+    ];
+    for (let i = 0; i < selectors.length; i++) {
+      const el = this.template.querySelector(selectors[i]);
+      if (el) {
+        return el;
+      }
+    }
+    return null;
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api saveRemovePhoneDraftIfApplicable() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.saveDraftIfApplicable === "function") {
+      return el.saveDraftIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api saveRemovePhoneForSubmitIfApplicable() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.saveForSubmitIfApplicable === "function") {
+      return el.saveForSubmitIfApplicable();
+    }
+    return Promise.resolve();
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api validateRemovePhoneForSubmit() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.validateForSubmit === "function") {
+      return el.validateForSubmit();
+    }
+    return true;
+  }
+
   async initializeCase() {
     try {
-      this.isSubmitted = await getCase({
+      const result = await getSubmittedSubProcesses({
         caseId: this.recordId,
       });
 
-      console.log("isSubmitted = ", this.isSubmitted);
+      console.log("submitted subprocesses = ", JSON.stringify(result));
 
-      /*
-       * Force show all subprocesses
-       */
-      if (this.isSubmitted) {
-        this.showHoldCase = true;
+      // tungnm37: Hold Case depends on config (wire getSubProcesses decides)
+      this.showHoldCase = !!result.showHoldCase;
 
-        this.showRemovePhone = true;
+      this.showRemovePhone = !!result.showRemovePhone;
 
-        this.showDoNotBother = true;
+      this.showDoNotBother = !!result.showDNB;
 
-        this.showTransferCall = true;
-      }
+      this.showTransferCall = !!result.showTransferCall;
     } catch (error) {
       console.error("[initializeCase] ERROR", error);
     }

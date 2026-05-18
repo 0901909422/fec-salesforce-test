@@ -13,7 +13,6 @@ import {
 } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_ACTION_CHANNEL from "@salesforce/messageChannel/FEC_CaseAction__c";
-// import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
 import getCaseInfo from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCaseInfo";
 import getCategory from "@salesforce/apex/FEC_COFFraudRelatedHandler.getCategory";
 import updateCase from "@salesforce/apex/FEC_COFFraudRelatedHandler.updateCase";

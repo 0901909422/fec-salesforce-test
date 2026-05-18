@@ -47,15 +47,17 @@
                 class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-horizontal_x-small"
               >
                 <div class="slds-form-element">
-                  <lightning-combobox
-                    label={lblTenor}
-                    name="tenor"
-                    value={selectedTenor}
-                    options={tenorOptions}
-                    onchange={handleTenorChange}
-                    required
-                    disabled={isReadOnly}
-                  ></lightning-combobox>
+                  <template if:true={tenorBlockReady}>
+                    <lightning-combobox
+                      label={lblTenor}
+                      name="tenor"
+                      value={selectedTenor}
+                      options={tenorOptions}
+                      onchange={handleTenorChange}
+                      required
+                      disabled={isReadOnly}
+                    ></lightning-combobox>
+                  </template>
                 </div>
               </div>
               <div
@@ -101,8 +103,17 @@
               label={ippRetailUi.btnConvert}
               onclick={handleConvertIPP}
               variant="brand"
-              disabled={isReadOnly}
+              disabled={convertButtonDisabled}
             ></lightning-button>
+            <template if:true={showNoti08}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-green">{noti08Message}</p>
+            </template>
+            <template if:true={showNoti09BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti09Message}</p>
+            </template>
+            <template if:true={showNoti10BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{noti10Message}</p>
+            </template>
           </div>
         </template>
       </template>

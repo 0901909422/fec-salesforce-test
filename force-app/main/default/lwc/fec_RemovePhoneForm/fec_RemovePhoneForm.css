@@ -10,6 +10,12 @@
     align-items: end;
 }
 
+.input-row lightning-input {
+    flex: 0 1 16rem;
+    max-width: 16rem;
+    min-width: 0;
+}
+
 .button-wrap {
-    padding-bottom: 0.125rem;
+    flex: 0 0 auto;
 }

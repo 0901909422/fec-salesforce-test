@@ -9,17 +9,171 @@ public without sharing class FEC_PointsRedemptionCaseController {
     private static final String NS = 'http://esbservice.fecredit.org/CMS_RewardWS/';
     private static final String MSG_NOT_ELIGIBLE = 'Không đủ điều kiện đổi điểm thưởng.';
 
-    /** Sub Code từ UI (param) ưu tiên khi User vừa chọn NOC chưa Save Case. */
-    private static String mergeSubCode(String caseSubCode, String paramSubCode) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — Sub Code: param UI → Case → FEC_Nature_of_Case__c
+    private static String resolveEffectiveSubCode(Case c, String paramSubCode) {
         if (String.isNotBlank(paramSubCode)) {
             return paramSubCode.trim();
         }
-        return caseSubCode != null ? caseSubCode.trim() : FEC_ConstantCommon.STR_EMPTY;
+        if (c.FEC_SubCode__r != null && String.isNotBlank(c.FEC_SubCode__r.FEC_Code__c)) {
+            return c.FEC_SubCode__r.FEC_Code__c.trim();
+        }
+        return resolveSubCodeFromNatureOfCase(c);
+    }
+
+    private static Case loadCase(Id caseId) {
+        if (caseId == null) {
+            return null;
+        }
+        List<Case> cases = [
+            SELECT Id, CaseNumber,
+                FEC_Product_Type__c, FEC_Product_Type__r.Name,
+                FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c,
+                FEC_SubCode__r.FEC_Code__c,
+                FEC_Account_or_Contract__c,
+                FEC_Account_or_Contract__r.FEC_Account_Number__c,
+                FEC_Account_or_Contract__r.FEC_Contract_Number__c,
+                FEC_Account_Number__c,
+                FEC_Account_Contract_Number_Text__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        return cases.isEmpty() ? null : cases[0];
+    }
+
+    private static String resolveSubCodeFromNatureOfCase(Case c) {
+        if (c == null || c.FEC_Product_Type__c == null || c.FEC_Category__c == null || c.FEC_SubCategory__c == null) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Id subCodeId = c.FEC_SubCode__c;
+        List<FEC_Nature_of_Case__c> nocs = [
+            SELECT FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Nature_of_Case__c
+            WHERE FEC_Product_Type__c = :c.FEC_Product_Type__c
+                AND FEC_Category__c = :c.FEC_Category__c
+                AND FEC_Sub_Category__c = :c.FEC_SubCategory__c
+                AND FEC_Sub_Code__c = :subCodeId
+            LIMIT 1
+        ];
+        if (!nocs.isEmpty() && nocs[0].FEC_Sub_Code__r != null && String.isNotBlank(nocs[0].FEC_Sub_Code__r.FEC_Code__c)) {
+            return nocs[0].FEC_Sub_Code__r.FEC_Code__c.trim();
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — Customer History: Case.FEC_Account_or_Contract__c (lookup) hoặc FEC_Case__c (MD)
+    private static FEC_Customer_History__c loadCustomerHistoryById(Id customerHistoryId) {
+        if (customerHistoryId == null) {
+            return null;
+        }
+        List<FEC_Customer_History__c> rows = [
+            SELECT FEC_Account_Number__c, FEC_Contract_Number__c, FEC_Available_Points__c, FEC_Product_Code__c
+            FROM FEC_Customer_History__c
+            WHERE Id = :customerHistoryId
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0];
+    }
+
+    private static FEC_Customer_History__c loadFirstCustomerHistoryByCase(Id caseId) {
+        if (caseId == null) {
+            return null;
+        }
+        List<FEC_Customer_History__c> rows = [
+            SELECT FEC_Account_Number__c, FEC_Contract_Number__c, FEC_Available_Points__c, FEC_Product_Code__c
+            FROM FEC_Customer_History__c
+            WHERE FEC_Case__c = :caseId
+            ORDER BY CreatedDate ASC
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0];
+    }
+
+    private static FEC_Customer_History__c resolveCustomerHistoryForCase(Case c) {
+        if (c == null) {
+            return null;
+        }
+        if (c.FEC_Account_or_Contract__c != null) {
+            FEC_Customer_History__c linked = loadCustomerHistoryById(c.FEC_Account_or_Contract__c);
+            if (linked != null) {
+                return linked;
+            }
+        }
+        return loadFirstCustomerHistoryByCase(c.Id);
+    }
+
+    private static String resolveAccountNumberFromCustomerHistory(Case c, FEC_Customer_History__c ch) {
+        if (ch == null) {
+            return null;
+        }
+        String productTypeName = c.FEC_Product_Type__r != null ? c.FEC_Product_Type__r.Name : null;
+        if (String.isBlank(productTypeName) && String.isNotBlank(ch.FEC_Product_Code__c)) {
+            productTypeName = ch.FEC_Product_Code__c;
+        }
+        String resolved = FEC_CommonUltils.resolveAccountNumber(
+            productTypeName,
+            ch.FEC_Account_Number__c,
+            ch.FEC_Contract_Number__c
+        );
+        return String.isNotBlank(resolved) ? resolved.trim() : null;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — Account number: CH (lookup/FEC_Case__c) rồi field Case
+    private static String resolveAccountNumberForCase(Case c) {
+        return resolveAccountNumberForCase(c, resolveCustomerHistoryForCase(c));
+    }
+
+    private static String resolveAccountNumberForCase(Case c, FEC_Customer_History__c ch) {
+        if (c == null) {
+            return null;
+        }
+        String fromHistory = resolveAccountNumberFromCustomerHistory(c, ch);
+        if (String.isNotBlank(fromHistory)) {
+            return fromHistory;
+        }
+        if (String.isNotBlank(c.FEC_Account_Number__c)) {
+            return c.FEC_Account_Number__c.trim();
+        }
+        if (String.isNotBlank(c.FEC_Account_Contract_Number_Text__c)) {
+            return c.FEC_Account_Contract_Number_Text__c.trim();
+        }
+        return null;
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — C360 Available Points từ FEC_Customer_History__c
+    private static Decimal resolveC360AvailablePointsFromCustomerHistory(String accountNumber, FEC_Customer_History__c ch) {
+        if (ch != null && ch.FEC_Available_Points__c != null) {
+            return ch.FEC_Available_Points__c;
+        }
+        if (String.isNotBlank(accountNumber)) {
+            List<FEC_Customer_History__c> rows = [
+                SELECT FEC_Available_Points__c
+                FROM FEC_Customer_History__c
+                WHERE FEC_Account_Number__c = :accountNumber
+                ORDER BY LastModifiedDate DESC
+                LIMIT 1
+            ];
+            if (!rows.isEmpty()) {
+                return rows[0].FEC_Available_Points__c;
+            }
+        }
+        return null;
     }
 
     /** Nhánh đổi điểm thưởng (SRS RC33): sau khi chọn NOC cần gọi GetRewardEligibility để lấy AvailablePoints. */
     private static Boolean isPointsRedemptionNoc(String subCode) {
         return String.isNotBlank(subCode) && subCode.contains('RC33');
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+    private static void applyNotEligibleBelowMinPoints(InitResult r, Decimal points) {
+        r.availablePoints = points;
+        r.notEligibleMessage = MSG_NOT_ELIGIBLE;
+        r.notEligibleReason = System.Label.FEC_Points_Redemption_Available_Points_Below_Min;
+    }
+
+    private static Boolean isBelowMinAvailablePoints(Decimal points) {
+        return points == null || points < MIN_AVAILABLE_POINTS;
     }
 
     public class TierOption {
@@ -30,6 +184,8 @@ public without sharing class FEC_PointsRedemptionCaseController {
     public class InitResult {
         @AuraEnabled public Boolean showRedemptionUi;
         @AuraEnabled public String notEligibleMessage;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+        @AuraEnabled public String notEligibleReason;
         @AuraEnabled public String cmsPhone;
         @AuraEnabled public List<TierOption> tierOptions;
         @AuraEnabled public String subCodeCode;
@@ -56,37 +212,37 @@ public without sharing class FEC_PointsRedemptionCaseController {
             r.notEligibleMessage = String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case Id' });
             return r;
         }
-        List<Case> cases = [
-            SELECT Id, CaseNumber, FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__c,
-                FEC_Account_or_Contract__r.FEC_Account_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
+        Case c = loadCase(caseId);
+        if (c == null) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case' }));
         }
-        Case c = cases[0];
-        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : FEC_ConstantCommon.STR_EMPTY;
-        String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
-        r.subCodeCode = String.isNotBlank(effectiveSub) ? effectiveSub : codeFromCase;
+        String effectiveSub = resolveEffectiveSubCode(c, subCodeCode);
+        r.subCodeCode = effectiveSub;
         if (!isPointsRedemptionNoc(effectiveSub)) {
             return r;
         }
-        if (c.FEC_Account_or_Contract__c == null || c.FEC_Account_or_Contract__r == null ||
-            String.isBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c)) {
+        FEC_Customer_History__c customerHistory = resolveCustomerHistoryForCase(c);
+        String accountNumber = resolveAccountNumberForCase(c, customerHistory);
+        if (String.isBlank(accountNumber)) {
             r.notEligibleMessage = MSG_NOT_ELIGIBLE;
             return r;
         }
-        String accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — SRS: Available Points từ Customer History (C360)
+        Decimal c360AvailablePoints = resolveC360AvailablePointsFromCustomerHistory(
+            accountNumber,
+            customerHistory
+        );
+        if (isBelowMinAvailablePoints(c360AvailablePoints)) {
+            applyNotEligibleBelowMinPoints(r, c360AvailablePoints);
+            return r;
+        }
         EligibilityParse el = callAndParseEligibility(accountNumber);
         if (el == null || el.sysCode == null || el.sysCode != 0) {
             r.notEligibleMessage = MSG_NOT_ELIGIBLE;
             return r;
         }
-        r.availablePoints = el.availablePoints;
-        if (el.availablePoints == null || el.availablePoints < MIN_AVAILABLE_POINTS) {
-            r.notEligibleMessage = MSG_NOT_ELIGIBLE;
+        if (isBelowMinAvailablePoints(el.availablePoints)) {
+            applyNotEligibleBelowMinPoints(r, el.availablePoints);
             return r;
         }
         r.expectedProductType = resolveProductType(effectiveSub);
@@ -134,33 +290,26 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (tier == null || String.isBlank(tier.productType) || tier.redeemTypeId == null || tier.price == null) {
             throw new AuraHandledException(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
         }
-        List<Case> cases = [
-            SELECT Id, CaseNumber, FEC_SubCode__r.FEC_Code__c, FEC_Account_or_Contract__c,
-                FEC_Account_or_Contract__r.FEC_Account_Number__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
+        Case c = loadCase(caseId);
+        if (c == null) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Case' }));
         }
-        Case c = cases[0];
-        String codeFromCase = c.FEC_SubCode__r != null && c.FEC_SubCode__r.FEC_Code__c != null ? c.FEC_SubCode__r.FEC_Code__c : FEC_ConstantCommon.STR_EMPTY;
-        String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
+        String effectiveSub = resolveEffectiveSubCode(c, subCodeCode);
         String expectedType = resolveProductType(effectiveSub);
         if (String.isBlank(expectedType) || expectedType != tier.productType) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ 'Sub Code' }));
         }
-        if (c.FEC_Account_or_Contract__r == null || String.isBlank(c.FEC_Account_or_Contract__r.FEC_Account_Number__c)) {
+        String accountNumber = resolveAccountNumberForCase(c);
+        if (String.isBlank(accountNumber)) {
             throw new AuraHandledException(System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG);
         }
-        EligibilityParse el = callAndParseEligibility(c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim());
+        EligibilityParse el = callAndParseEligibility(accountNumber.trim());
         if (el == null || el.sysCode == null || el.sysCode != 0 || el.availablePoints == null ||
             el.availablePoints < MIN_AVAILABLE_POINTS) {
             throw new AuraHandledException(MSG_NOT_ELIGIBLE);
         }
         FEC_CMSRewardRedeemService.RedeemRequest req = new FEC_CMSRewardRedeemService.RedeemRequest();
-        req.accountNumber = c.FEC_Account_or_Contract__r.FEC_Account_Number__c.trim();
+        req.accountNumber = accountNumber.trim();
         req.customerName = FEC_CommonUltils.defaultToEmpty(el.customerName);
         req.customerMobile = FEC_CommonUltils.defaultToEmpty(el.customerMobile);
         req.ticketId = c.CaseNumber != null ? c.CaseNumber : String.valueOf(c.Id);
@@ -200,19 +349,11 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (tier == null || tier.price == null || String.isBlank(tier.productType)) {
             return;
         }
-        List<Case> cases = [
-            SELECT Id, FEC_SubCode__r.FEC_Code__c
-            FROM Case
-            WHERE Id = :caseId
-            LIMIT 1
-        ];
-        if (cases.isEmpty()) {
+        Case c = loadCase(caseId);
+        if (c == null) {
             return;
         }
-        String codeFromCase = cases[0].FEC_SubCode__r != null && cases[0].FEC_SubCode__r.FEC_Code__c != null
-            ? cases[0].FEC_SubCode__r.FEC_Code__c
-            : FEC_ConstantCommon.STR_EMPTY;
-        String effectiveSub = mergeSubCode(codeFromCase, subCodeCode);
+        String effectiveSub = resolveEffectiveSubCode(c, subCodeCode);
         String expectedType = resolveProductType(effectiveSub);
         if (String.isBlank(expectedType) || expectedType != tier.productType) {
             return;

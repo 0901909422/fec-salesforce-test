@@ -11,6 +11,12 @@
           <lightning-layout-item size="12" padding="around-small">
             <p class="fec-fc-noti fec-fc-noti-below-title validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
           </lightning-layout-item>
+          <lightning-layout-item size="12" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblFastCashStatus}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayFastCashStatus}</div>
+            </div>
+          </lightning-layout-item>
           <lightning-layout-item size="6" padding="around-small">
             <div class="slds-form-element">
               <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblErrorCode}</label>
@@ -58,7 +64,7 @@
           </lightning-layout-item>
           <lightning-layout-item size="12" padding="around-small">
             <template if:true={showBlockButton}>
-              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={isReadOnly}>
+              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={blockAmountButtonDisabled}>
               </lightning-button>
             </template>
             <template if:true={showNoti09BelowButton}>
