@@ -75,6 +75,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         const wasReadOnly = this.readOnlyRemovePhone;
         this._lockAfterRevertToDefaultStage = next;
         if (this.readOnlyRemovePhone && !wasReadOnly) {
+            this._syncSelectedRowIdsFromCheckRemovePhone();
             this._bumpTableKey();
         }
     }
@@ -96,6 +97,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             const stageName = getFieldValue(data, CASE_FEC_STAGE_NAME) || STR_EMPTY;
             this._caseIsPastStage1 = stageName.length > 0 && !stageName.includes('Stage 1');
             if (this.readOnlyRemovePhone && !wasReadOnly) {
+                this._syncSelectedRowIdsFromCheckRemovePhone();
                 this._bumpTableKey();
             }
         } else if (error) {
@@ -122,6 +124,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     @api notifyCaseSubmitted() {
         this._caseIsSubmited = true;
+        this._syncSelectedRowIdsFromCheckRemovePhone();
         this._bumpTableKey();
     }
 
@@ -255,6 +258,13 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     _bumpTableKey() {
         this.tableKey = (this.tableKey || 0) + 1;
+    }
+
+    _syncSelectedRowIdsFromCheckRemovePhone() {
+        const ids = (this.rows || [])
+            .filter((r) => r && r.checkRemovePhone === true)
+            .map((r) => String(r.id));
+        this.selectedRowIds = [...ids];
     }
 
     _syncCheckRemovePhoneFromSelection() {
