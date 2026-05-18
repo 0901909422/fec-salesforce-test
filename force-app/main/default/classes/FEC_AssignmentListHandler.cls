@@ -1,4 +1,4 @@
-public with sharing class FEC_AssignmentListHandler {
+public without sharing class FEC_AssignmentListHandler {
     
     @AuraEnabled
     public static String getUserDepartment() {
