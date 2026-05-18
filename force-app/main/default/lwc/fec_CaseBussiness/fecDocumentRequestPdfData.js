@@ -1,68 +1,59 @@
 /**
  * fecDocumentRequestPdfData.js
- * Utility: build PDF template data cho Document Request từ business object.
- * Mỗi template (LSTT, TBCV_LTN) có hàm riêng map field business → key PDF placeholder.
+ * Utility: build PDF template data cho Document Request từ header data đã query sẵn theo Case.
+ * Mỗi template (LSTT, TBCV_LTN) có hàm riêng map key headerData → key PDF placeholder.
  *
- * Cách lấy field:
- *   getFieldValue(business, objectName, apiName)
- *   → duyệt business.sectionlst > subSectionlst > objlst > fieldlst
- *   → trả về field.value (hoặc '' nếu không tìm thấy)
+ * Nguồn dữ liệu (headerData):
+ *   - Apex: FEC_PaymentHistoryValidationService.getDocumentRequestPdfHeaderData(caseId)
+ *     query Case → FEC_Customer_History__c (qua FEC_Account_or_Contract__c)
+ *     và FEC_Address_Info__c (Address Type = Current Address) để build CustomerAddress.
+ *   - Key có sẵn: ContractNumber, NationalID, CustomerName, DateOfIssue, PlaceOfIssue,
+ *     TotalLoanAmount, MaturityDate2, CustomerAddress.
+ *
+ * Lưu ý: MonthlyRate / YearlyRate hiện để trống — chờ FEC chốt mapping.
  */
 
 const SUB_CODE_RL0402 = 'RL04.02';
 const SUB_CODE_RL0403 = 'RL04.03';
 
-/**
- * Lấy giá trị field từ business object theo objectName + apiName.
- * Duyệt toàn bộ sectionlst → subSectionlst → objlst → fieldlst.
- */
-function getFieldValue(business, objectName, apiName) {
-  for (const section of business?.sectionlst ?? []) {
-    for (const sub of section.subSectionlst ?? []) {
-      for (const obj of sub.objlst ?? []) {
-        if (obj.name !== objectName) continue;
-        const f = obj.fieldlst?.find((x) => x.apiName === apiName);
-        if (f != null) {
-          const v = f.value;
-          return typeof v === 'string' ? v.trim() : (v ?? '');
-        }
-      }
-    }
-  }
-  return '';
+function pick(headerData, key) {
+  const v = headerData?.[key];
+  if (v == null) return '';
+  return typeof v === 'string' ? v.trim() : v;
 }
 
 /**
  * LSTT — Lịch Sử Thanh Toán (RL04.03)
  *
- * Placeholder          | Object                    | Field API Name
- * ---------------------|---------------------------|----------------------------------
- * CurrentDay           | (computed)                | new Date().getDate()
- * CurrentMonth         | (computed)                | new Date().getMonth() + 1
- * CurrentYear          | (computed)                | new Date().getFullYear()
- * ContractNumber       | FEC_Customer_History__c   | FEC_Contract_Number__c
- * NationalID           | FEC_Customer_History__c   | FEC_National_ID_Passport_ID__c
- * FullName             | FEC_Customer_History__c   | FEC_Customer_Name__c
- * logoUrl              | (static)                  | /resource/Logo
- * _rows                | FEC_Payment_History__c    | Apex getPaymentHistoryRows (RemovalNote, BankAddress, PaymentAmount)
+ * Query: Case.FEC_Account_or_Contract__c → FEC_Customer_History__c (getDocumentRequestPdfHeaderData)
  *
- * @param {Object} business - business object từ getByCase
- * @param {Array}  paymentRows - kết quả từ Apex getPaymentHistoryRows
+ * Placeholder    | Trường nguồn (object.field)
+ * ---------------|----------------------------------------------------------
+ * CurrentDay     | (computed) ngày hiện tại
+ * CurrentMonth   | (computed) tháng hiện tại
+ * CurrentYear    | (computed) năm hiện tại
+ * ContractNumber | FEC_Customer_History__c.Name
+ * NationalID     | FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
+ * FullName       | FEC_Customer_History__c.FEC_Customer_Name__c
+ * logoUrl        | (static) /resource/Logo
+ * _rows          | FEC_Payment_History__c theo Customer History (getPaymentHistoryRows):
+ *                  RemovalNote ← FEC_Payment_No__c,
+ *                  BankAddress ← FEC_Payment_Date__c (dd/MM/yyyy),
+ *                  PaymentAmount ← FEC_Payment_Amount__c
+ *
+ * @param {Object} headerData  - kết quả Apex getDocumentRequestPdfHeaderData
+ * @param {Array}  paymentRows - kết quả Apex getPaymentHistoryRows
  */
-function buildLsttData(business, paymentRows) {
+function buildLsttData(headerData, paymentRows) {
   const now = new Date();
   return {
     CurrentDay: now.getDate(),
     CurrentMonth: now.getMonth() + 1,
     CurrentYear: now.getFullYear(),
-    // FEC_Customer_History__c.FEC_Contract_Number__c
-    ContractNumber: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Contract_Number__c'),
-    // FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
-    NationalID: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_National_ID_Passport_ID__c'),
-    // FEC_Customer_History__c.FEC_Customer_Name__c
-    FullName: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Customer_Name__c'),
+    ContractNumber: pick(headerData, 'ContractNumber'),
+    NationalID: pick(headerData, 'NationalID'),
+    FullName: pick(headerData, 'CustomerName'),
     logoUrl: '/resource/Logo',
-    // FEC_Payment_History__c — query bởi Apex theo Case.FEC_Account_or_Contract__c
     _rows: paymentRows || []
   };
 }
@@ -70,50 +61,47 @@ function buildLsttData(business, paymentRows) {
 /**
  * TBCV_LTN — Thông Báo Cho Vay / Lịch Trả Nợ (RL04.02)
  *
- * Placeholder          | Object                    | Field API Name
- * ---------------------|---------------------------|----------------------------------
- * ContractNumber       | FEC_Customer_History__c   | FEC_Contract_Number__c
- * CustomerName         | FEC_Customer_History__c   | FEC_Customer_Name__c
- * CustomerAddress      | Case                      | FEC_Customer_Address__c
- * NationalID           | FEC_Customer_History__c   | FEC_National_ID_Passport_ID__c
- * DateOfIssue          | Case                      | FEC_Date_Of_Issue__c
- * PlaceOfIssue         | Case                      | FEC_Place_Of_Issue__c
- * TotalLoanAmount      | FEC_Customer_History__c   | FEC_Total_Balance__c
- * LoanAmountInVNText   | (TODO)                    | Chuyển số → chữ tiếng Việt — tạm để trống
- * MonthlyRate          | FEC_Customer_History__c   | FEC_Monthly_Rate__c
- * YearlyRate           | FEC_Customer_History__c   | FEC_Yearly_Rate__c
- * MaturityDate2        | FEC_Customer_History__c   | FEC_Expiry_Date__c
- * _rows                | FEC_Repayment_Schedule__c | Apex getRepaymentScheduleRows (InstallmentDueDate, Principal, Interest, ClosingPrincipal, RepaymentFees, InstallmentAmount)
+ * Query header: Case.FEC_Account_or_Contract__c → FEC_Customer_History__c (getDocumentRequestPdfHeaderData)
+ * Query địa chỉ: FEC_Address_Info__c (cùng Customer History, FEC_Address_Type__c = 'Current Address')
  *
- * @param {Object} business       - business object từ getByCase
+ * Placeholder        | Trường nguồn (object.field)
+ * -------------------|----------------------------------------------------------
+ * ContractNumber     | FEC_Customer_History__c.Name
+ * CustomerName       | FEC_Customer_History__c.FEC_Customer_Name__c
+ * CustomerAddress    | FEC_Address_Info__c.FEC_Full_Address__c
+ * NationalID         | FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
+ * DateOfIssue        | FEC_Customer_History__c.FEC_Date_of_Issue__c (format dd/MM/yyyy)
+ * PlaceOfIssue       | FEC_Customer_History__c.FEC_Place_of_Issue__c
+ * TotalLoanAmount    | FEC_Customer_History__c.FEC_Total_Balance__c (format tiền)
+ * LoanAmountInVNText | TODO: convert TotalLoanAmount → chữ tiếng Việt
+ * MonthlyRate        | TODO: chờ FEC chốt field
+ * YearlyRate         | TODO: chờ FEC chốt field
+ * MaturityDate2      | FEC_Customer_History__c.FEC_Expiry_Date__c (format dd/MM/yyyy)
+ * _rows              | FEC_Repayment_Schedule__c theo Customer History (getRepaymentScheduleRows):
+ *                      InstallmentDueDate ← FEC_Installment_Due_Date__c,
+ *                      Principal ← FEC_Principal__c,
+ *                      Interest ← FEC_Interest__c,
+ *                      ClosingPrincipal ← FEC_Closing_Principal__c,
+ *                      RepaymentFees ← FEC_Repayment_Fee__c,
+ *                      InstallmentAmount ← FEC_Installment_Amount__c
+ *
+ * @param {Object} headerData     - kết quả Apex getDocumentRequestPdfHeaderData
  * @param {Array}  _paymentRows   - (không dùng cho template này)
- * @param {Array}  repaymentRows  - kết quả từ Apex getRepaymentScheduleRows
+ * @param {Array}  repaymentRows  - kết quả Apex getRepaymentScheduleRows
  */
-function buildTbcvLtnData(business, _paymentRows, repaymentRows) {
+function buildTbcvLtnData(headerData, _paymentRows, repaymentRows) {
   return {
-    // FEC_Customer_History__c.FEC_Contract_Number__c
-    ContractNumber: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Contract_Number__c'),
-    // FEC_Customer_History__c.FEC_Customer_Name__c
-    CustomerName: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Customer_Name__c'),
-    // Case.FEC_Customer_Address__c
-    CustomerAddress: getFieldValue(business, 'Case', 'FEC_Customer_Address__c'),
-    // FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
-    NationalID: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_National_ID_Passport_ID__c'),
-    // Case.FEC_Date_Of_Issue__c
-    DateOfIssue: getFieldValue(business, 'Case', 'FEC_Date_Of_Issue__c'),
-    // Case.FEC_Place_Of_Issue__c
-    PlaceOfIssue: getFieldValue(business, 'Case', 'FEC_Place_Of_Issue__c'),
-    // FEC_Customer_History__c.FEC_Total_Balance__c
-    TotalLoanAmount: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Total_Balance__c'),
-    // TODO: cần convert TotalLoanAmount sang chữ tiếng Việt
+    ContractNumber: pick(headerData, 'ContractNumber'),
+    CustomerName: pick(headerData, 'CustomerName'),
+    CustomerAddress: pick(headerData, 'CustomerAddress'),
+    NationalID: pick(headerData, 'NationalID'),
+    DateOfIssue: pick(headerData, 'DateOfIssue'),
+    PlaceOfIssue: pick(headerData, 'PlaceOfIssue'),
+    TotalLoanAmount: pick(headerData, 'TotalLoanAmount'),
     LoanAmountInVNText: '',
-    // FEC_Customer_History__c.FEC_Monthly_Rate__c
-    MonthlyRate: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Monthly_Rate__c'),
-    // FEC_Customer_History__c.FEC_Yearly_Rate__c
-    YearlyRate: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Yearly_Rate__c'),
-    // FEC_Customer_History__c.FEC_Expiry_Date__c
-    MaturityDate2: getFieldValue(business, 'FEC_Customer_History__c', 'FEC_Expiry_Date__c'),
-    // FEC_Repayment_Schedule__c — query bởi Apex theo Case.FEC_Account_or_Contract__c
+    MonthlyRate: '',
+    YearlyRate: '',
+    MaturityDate2: pick(headerData, 'MaturityDate2'),
     _rows: repaymentRows || []
   };
 }
@@ -124,7 +112,7 @@ const PDF_CONFIG_MAP = {
 };
 
 /**
- * Trả config cho sub-code (templateCode + cờ needsPaymentRows).
+ * Trả config cho sub-code (templateCode + cờ needsPaymentRows / needsRepaymentRows).
  * Trả null nếu sub-code không match RL04.02/RL04.03.
  */
 export function getPdfConfigForSubCode(subCodeCode) {
@@ -134,17 +122,17 @@ export function getPdfConfigForSubCode(subCodeCode) {
 /**
  * Build { templateCode, data } với dữ liệu thực.
  *
- * @param {string} subCodeCode  - business.subCodeCode (e.g. 'RL04.02')
- * @param {Object} business        - business object từ getByCase (chứa sectionlst)
- * @param {Array}  paymentRows     - kết quả từ Apex getPaymentHistoryRows (cho LSTT)
- * @param {Array}  repaymentRows   - kết quả từ Apex getRepaymentScheduleRows (cho TBCV_LTN)
+ * @param {string} subCodeCode    - business.subCodeCode (e.g. 'RL04.02')
+ * @param {Object} headerData     - kết quả Apex getDocumentRequestPdfHeaderData(caseId)
+ * @param {Array}  paymentRows    - kết quả Apex getPaymentHistoryRows (cho LSTT)
+ * @param {Array}  repaymentRows  - kết quả Apex getRepaymentScheduleRows (cho TBCV_LTN)
  * @returns {{ templateCode: string, data: Object } | null}
  */
-export function buildPdfDataForSubCode(subCodeCode, business, paymentRows, repaymentRows) {
+export function buildPdfDataForSubCode(subCodeCode, headerData, paymentRows, repaymentRows) {
   const config = PDF_CONFIG_MAP[subCodeCode];
   if (!config) return null;
   return {
     templateCode: config.templateCode,
-    data: config.buildData(business, paymentRows, repaymentRows)
+    data: config.buildData(headerData, paymentRows, repaymentRows)
   };
 }

@@ -73,6 +73,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearchFromParent(newCases, null);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, null);
     }
 
     /**
@@ -89,6 +90,7 @@ public without sharing class FEC_CaseTriggerHandler {
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
         syncGlobalSearchFromParent(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, oldMap);
     }
 
     /**
@@ -106,6 +108,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
         redirectEmailReplyToCustomerCase(newCases);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, null);
         
         isExecuting = false;
     }
@@ -132,6 +135,7 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
         // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
         // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
