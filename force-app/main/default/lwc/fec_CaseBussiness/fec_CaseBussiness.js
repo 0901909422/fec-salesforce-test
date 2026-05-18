@@ -1,6 +1,5 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
-import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
@@ -50,7 +49,6 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
-import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -316,33 +314,6 @@ function shouldSkipPointsRedemptionLwcDynCmp(prHideTarget, dynSubKey) {
   return false;
 }
 
-//linhdev fix jira FECREDIT_CSM_2025_KH-1366 — reload sau Có/Không: getData với bộ NOC session (Case DB có thể chưa có Category/Sub)
-function isFastCashNocSelectionComplete(sel) {
-  return !!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId);
-}
-
-function readFastCashNocSelectionFromStorage(caseId) {
-  try {
-    if (!caseId) {
-      return null;
-    }
-    if (sessionStorage.getItem(FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) !== "1") {
-      return null;
-    }
-    const raw = sessionStorage.getItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + caseId);
-    if (!raw) {
-      return null;
-    }
-    const sel = JSON.parse(raw);
-    if (!isFastCashNocSelectionComplete(sel)) {
-      return null;
-    }
-    return sel;
-  } catch (e) {
-    return null;
-  }
-}
-
 const SLDS_MEDIUM_SIZE_OF_12 = {
   1: 'slds-medium-size_1-of-12',
   2: 'slds-medium-size_2-of-12',
@@ -600,7 +571,7 @@ function normalizeMasterDataLwcEntry(entry) {
   };
 }
 
-export default class Fec_CaseBussiness extends NavigationMixin(LightningElement) {
+export default class Fec_CaseBussiness extends LightningElement {
 
   @api recordId;
 
@@ -1112,33 +1083,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
     confirmLabel: FEC_Confirm_Label,
-    mrcDupOpenCaseBtn: "Mở Case trước",
   };
-
-  get showMrcRl0502DupBanner() {
-    const v = this.business?.mrcRl0502DuplicateOpenCaseId;
-    return typeof v === "string" && v.length >= 15;
-  }
-
-  get mrcRl0502DupBannerText() {
-    const num = this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY;
-    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
-  }
-
-  handleOpenMrcDupCase() {
-    const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
-    if (!rid) {
-      return;
-    }
-    this[NavigationMixin.Navigate]({
-      type: "standard__recordPage",
-      attributes: {
-        recordId: rid,
-        objectApiName: "Case",
-        actionName: "view",
-      },
-    });
-  }
 
   @api getNatureOfCaseId() {
     return this.business?.natureOfCase || null;
@@ -1328,18 +1273,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       (message) => this._handleCaseNOCMessage(message),
       { scope: APPLICATION_SCOPE }
     );
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-    const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
-    if (fastCashNocSel && fastCashNocSel.productTypeId) {
-      this.getData(
-        fastCashNocSel.productTypeId,
-        fastCashNocSel.categoryId,
-        fastCashNocSel.subCategoryId,
-        fastCashNocSel.subCodeId
-      );
-    } else {
-      this.getData();
-    }
+    this.getData();
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
     }
@@ -1388,11 +1322,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
     // Chỉ xử lý message dành cho case này, tránh cross-tab interference
     if (message.caseId != null && message.caseId !== this.recordId) return;
-
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — message khóa NOC chỉ dành cho fec_CaseEditNOC, không reload business
-    if (message.fastCashNocLocked === true) {
-      return;
-    }
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
       // Existing behavior: account type change — không xử lý ở đây
@@ -1902,18 +1831,6 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   //linhdev fix jira FECREDIT_CSM_2025_KH-1367
   handleFastCashBlockConfirmed() {
     this.removeRoutingActions([ACTION_REJECT, ACTION_CANCEL]);
-  }
-
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1366
-  handleFastCashNocLocked(event) {
-    const rid = event.detail && event.detail.recordId;
-    if (rid && this.recordId && rid !== this.recordId) {
-      return;
-    }
-    const nocEl = this.template.querySelector("c-fec_-case-edit-n-o-c");
-    if (nocEl && typeof nocEl.applyFastCashBlockNocLock === "function") {
-      nocEl.applyFastCashBlockNocLock();
-    }
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
