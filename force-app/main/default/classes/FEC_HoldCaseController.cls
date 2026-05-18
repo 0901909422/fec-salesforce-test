@@ -27,6 +27,13 @@ public with sharing class FEC_HoldCaseController {
         @AuraEnabled public String  message;
         @AuraEnabled public Id      recordId;
         @AuraEnabled public Boolean isSuccess;
+        // tungnm37: NFU info để hiển thị trong Case Information
+        @AuraEnabled public String  nfuStatus;
+        @AuraEnabled public String  nfuCode;
+        @AuraEnabled public String  nfuStartedDate;
+        @AuraEnabled public String  nfuExpiryDate;
+        @AuraEnabled public String  nfuReason;
+        @AuraEnabled public String  collectionsResponse;
 
         public ResponseModel success(Id recId, String msg) {
             this.status    = FEC_ConstantCommon.STATUS_SUCCESS;
@@ -146,35 +153,25 @@ public with sharing class FEC_HoldCaseController {
             // → tìm config theo Stage để lấy NFU codes
             List<FEC_Hold_Case_Config__c> configs;
             if (nocId != null) {
-                if (currentStageId != null) {
-                    configs = [
-                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
-                        FROM FEC_Hold_Case_Config__c
-                        WHERE FEC_Nature_of_Cases__c = :nocId
-                          AND FEC_Active__c = true
-                          AND Hold_Case_Type__c = 'Manual'
-                          AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
-                        WITH SECURITY_ENFORCED
-                    ];
-                } else {
-                    configs = [
-                        SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
-                        FROM FEC_Hold_Case_Config__c
-                        WHERE FEC_Nature_of_Cases__c = :nocId
-                          AND FEC_Active__c = true
-                          AND Hold_Case_Type__c = 'Manual'
-                        WITH SECURITY_ENFORCED
-                    ];
-                }
+                configs = [
+                    SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
+                    FROM FEC_Hold_Case_Config__c
+                    WHERE FEC_Nature_of_Cases__c = :nocId
+                      AND FEC_Active__c = true
+                      AND Hold_Case_Type__c = 'Manual'
+                      AND FEC_Case_Stage__c != null
+                      AND FEC_Case_Stage__c = :currentStageId
+                    WITH SECURITY_ENFORCED
+                ];
             } else if (currentStageId != null) {
                 // tungnm37: fallback 4 - query theo Stage khi không có nocId
-                // include cả config không gắn stage cụ thể (FEC_Case_Stage__c = null)
                 configs = [
                     SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
                     FROM FEC_Hold_Case_Config__c
                     WHERE FEC_Active__c = true
                       AND Hold_Case_Type__c = 'Manual'
-                      AND (FEC_Case_Stage__c = :currentStageId OR FEC_Case_Stage__c = null)
+                      AND FEC_Case_Stage__c != null
+                      AND FEC_Case_Stage__c = :currentStageId
                     WITH SECURITY_ENFORCED
                 ];
             } else {
@@ -334,6 +331,13 @@ public with sharing class FEC_HoldCaseController {
         }
     }
 
+    private static final String RESULT_ALREADY_MARKED = 'ALREADY_MARKED';
+    private static final String RESULT_SUCCESS        = 'SUCCESS';
+    private static final String RESULT_ERROR          = 'ERROR';
+    private static final String NFU_STATUS_YES        = 'Yes';
+    private static final String DESC_ALREADY_MARKED   = 'Contract has already marked as NFU';
+    private static final String DESC_SUCCESS            = 'Success';
+
     // ─────────────────────────────────────────────────────
     // METHOD: saveHoldCase
     // tungnm37: gọi API MarkNFU trước, sau đó mới DML (không dùng Savepoint vì callout)
@@ -343,7 +347,8 @@ public with sharing class FEC_HoldCaseController {
         Id      caseId,
         String  nfuReason,
         String  nfuCode,
-        Integer holdDuration
+        Integer holdDuration,
+        Integer attemptNumber
     ) {
         HoldCaseModel model = new HoldCaseModel();
         model.caseId       = caseId;
@@ -352,6 +357,8 @@ public with sharing class FEC_HoldCaseController {
         model.holdDuration = holdDuration;
 
         validateModel(model);
+
+        Integer attempt = attemptNumber == null || attemptNumber < 1 ? 1 : attemptNumber;
 
         try {
             // tungnm37: query Case lấy ContractNumber
@@ -365,6 +372,7 @@ public with sharing class FEC_HoldCaseController {
 
             // tungnm37: lấy email user hiện tại
             String userEmail = [SELECT Email FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1].Email;
+            String nfuReasonLabel = resolveNfuReasonLabel(model.nfuCode);
 
             // tungnm37: gọi API MarkNFU TRƯỚC khi DML (callout không được sau savepoint/DML)
             FEC_MarkNFU.MarkNFURequest req = new FEC_MarkNFU.MarkNFURequest();
@@ -373,38 +381,239 @@ public with sharing class FEC_HoldCaseController {
             req.NFUUpdatedBy   = userEmail;
 
             FEC_MarkNFU.MarkNFUResult markResult = FEC_MarkNFU.markNFU(req);
-            System.debug('[saveHoldCase] MarkNFU result: ' + JSON.serialize(markResult));
+            System.debug('[saveHoldCase] caseId=' + caseId + ' attempt=' + attempt
+                + ' MarkNFU=' + JSON.serialize(markResult));
 
-            ResponseModel resp = new ResponseModel();
+            DateTime expiryDate = parseNfuTillDate(markResult != null ? markResult.nfuTillDate : null);
 
             // tungnm37: TH1 - Contract đã được mark NFU trước đó (code 203)
-            if (markResult.code == FEC_ConstantCommon.SUCCESS_CODE_203) {
-                resp.status    = 'ALREADY_MARKED';
-                resp.message   = markResult.description;
+            // Description = Contract has already marked as NFU
+            if (isTh1AlreadyMarked(markResult)) {
+                updateCaseAfterManualHold(
+                    c.Id,
+                    RESULT_ALREADY_MARKED,
+                    model.nfuCode,
+                    nfuReasonLabel,
+                    null,
+                    expiryDate,
+                    System.Label.FEC_STOP_IMPACT_ALREADY_MARKED_MSG,
+                    null
+                );
+                ResponseModel resp = new ResponseModel();
+                resp.status    = RESULT_ALREADY_MARKED;
+                resp.message   = System.Label.FEC_STOP_IMPACT_ALREADY_MARKED_MSG;
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
+                populateResponseFromCase(resp, c.Id);
                 return resp;
             }
 
             // tungnm37: TH2 - Thành công → update Case Status = On Hold
-            if (markResult.success) {
-                c.Status = FEC_ConstantCommon.CASE_STATUS_ON_HOLD;
-                update c;
-                resp.status    = 'SUCCESS';
-                resp.message   = System.Label.FEC_Succes_Hold_Case;
+            // Description = Success
+            if (isTh2Success(markResult)) {
+                DateTime startedNow = DateTime.now();
+                updateCaseAfterManualHold(
+                    c.Id,
+                    RESULT_SUCCESS,
+                    model.nfuCode,
+                    nfuReasonLabel,
+                    startedNow,
+                    expiryDate,
+                    System.Label.FEC_MSG_SUCCESS,
+                    FEC_ConstantCommon.CASE_STATUS_ON_HOLD
+                );
+                ResponseModel resp = new ResponseModel();
+                resp.status    = RESULT_SUCCESS;
+                resp.message   = System.Label.FEC_MSG_SUCCESS;
                 resp.isSuccess = true;
                 resp.recordId  = c.Id;
+                populateResponseFromCase(resp, c.Id);
                 return resp;
             }
 
             // tungnm37: TH3 - API lỗi → trả về error (không cần rollback vì chưa DML)
-            resp.status    = 'ERROR';
-            resp.message   = markResult.errorMessage;
+            // response khác Contract has already marked as NFU / Success → ghi ERROR lên Case sau lần thử thứ 3
+            ResponseModel resp = new ResponseModel();
+            resp.status    = RESULT_ERROR;
+            resp.message   = String.isNotBlank(markResult != null ? markResult.errorMessage : null)
+                ? markResult.errorMessage
+                : System.Label.FEC_MSG_ERROR;
             resp.isSuccess = false;
+            resp.recordId  = c.Id;
+
+            if (attempt >= 3) {
+                updateCaseAfterManualHold(
+                    c.Id,
+                    RESULT_ERROR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    System.Label.FEC_MSG_ERROR,
+                    null
+                );
+            }
+
             return resp;
 
         } catch (Exception e) {
             return new ResponseModel().error(e.getMessage());
+        }
+    }
+
+    /** Ghi ERROR lên Case khi LWC hết 3 lần thử (fallback khi callout exception). */
+    @AuraEnabled
+    public static void persistManualHoldCaseError(Id caseId) {
+        if (caseId == null) {
+            return;
+        }
+        updateCaseAfterManualHold(
+            caseId,
+            RESULT_ERROR,
+            null,
+            null,
+            null,
+            null,
+            System.Label.FEC_MSG_ERROR,
+            null
+        );
+    }
+
+    @TestVisible
+    private static Boolean isTh1AlreadyMarked(FEC_MarkNFU.MarkNFUResult markResult) {
+        if (markResult == null) {
+            return false;
+        }
+        if (markResult.code == FEC_ConstantCommon.SUCCESS_CODE_203) {
+            return true;
+        }
+        return String.isNotBlank(markResult.description)
+            && markResult.description.toLowerCase().contains(DESC_ALREADY_MARKED.toLowerCase());
+    }
+
+    @TestVisible
+    private static Boolean isTh2Success(FEC_MarkNFU.MarkNFUResult markResult) {
+        if (markResult == null) {
+            return false;
+        }
+        if (isTh1AlreadyMarked(markResult)) {
+            return false;
+        }
+        if (String.isNotBlank(markResult.description)
+            && markResult.description.trim().equalsIgnoreCase(DESC_SUCCESS)) {
+            return true;
+        }
+        return markResult.success == true;
+    }
+
+    @TestVisible
+    private static String resolveNfuReasonLabel(String nfuCode) {
+        if (String.isBlank(nfuCode)) {
+            return '';
+        }
+        List<FEC_Hold_Case__c> rows = [
+            SELECT FEC_NFU_Reason_VN__c
+            FROM FEC_Hold_Case__c
+            WHERE FEC_NFU_Code__c = :nfuCode
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? nfuCode : rows[0].FEC_NFU_Reason_VN__c;
+    }
+
+    @TestVisible
+    private static void updateCaseAfterManualHold(
+        Id caseId,
+        String resultType,
+        String nfuCode,
+        String nfuReasonLabel,
+        DateTime startedDate,
+        DateTime expiryDate,
+        String collectionsResponse,
+        String caseStatus
+    ) {
+        if (resultType == RESULT_ERROR) {
+            saveCasePatch(new Case(
+                Id = caseId,
+                FEC_NFU_Description_Result__c = resultType
+            ));
+            return;
+        }
+
+        Case patch = new Case(
+            Id = caseId,
+            FEC_NFU_Description_Result__c = resultType,
+            FEC_Collections_Response__c = collectionsResponse
+        );
+
+        if (String.isNotBlank(caseStatus)) {
+            patch.Status = caseStatus;
+        }
+
+        patch.FEC_NFU_Status__c = NFU_STATUS_YES;
+        patch.FEC_NFU_Code__c = nfuCode;
+        patch.FEC_NFU_Reason__c = nfuReasonLabel;
+        patch.FEC_NFU_Started_Date__c = startedDate;
+        patch.FEC_NFU_Expiry_Date__c = expiryDate;
+        saveCasePatch(patch);
+    }
+
+    /** Giống FEC_AutoHoldCaseService — tránh FLS chặn ghi Case patch. */
+    private static void saveCasePatch(Case patch) {
+        Database.SaveResult sr = Database.update(patch, false, AccessLevel.SYSTEM_MODE);
+        if (!sr.isSuccess()) {
+            String err = sr.getErrors().isEmpty()
+                ? 'Update Case failed'
+                : sr.getErrors()[0].getMessage();
+            System.debug('[saveHoldCase] saveCasePatch FAILED caseId=' + patch.Id + ' err=' + err);
+            throw new AuraHandledException(err);
+        }
+        System.debug('[saveHoldCase] saveCasePatch OK caseId=' + patch.Id
+            + ' result=' + patch.FEC_NFU_Description_Result__c);
+    }
+
+    @TestVisible
+    private static void populateResponseFromCase(ResponseModel resp, Id caseId) {
+        // tungnm37: query NFU info từ Case để hiển thị trong Case Information
+        Case refreshed = [
+            SELECT FEC_NFU_Status__c, FEC_NFU_Code__c,
+                   FEC_NFU_Started_Date__c, FEC_NFU_Expiry_Date__c,
+                   FEC_NFU_Reason__c, FEC_Collections_Response__c
+            FROM Case
+            WHERE Id = :caseId
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+        resp.nfuStatus      = refreshed.FEC_NFU_Status__c;
+        resp.nfuCode        = refreshed.FEC_NFU_Code__c;
+        resp.nfuStartedDate = refreshed.FEC_NFU_Started_Date__c != null
+            ? refreshed.FEC_NFU_Started_Date__c.format()
+            : '';
+        resp.nfuExpiryDate  = refreshed.FEC_NFU_Expiry_Date__c != null
+            ? refreshed.FEC_NFU_Expiry_Date__c.format()
+            : '';
+        resp.nfuReason      = refreshed.FEC_NFU_Reason__c;
+        resp.collectionsResponse = refreshed.FEC_Collections_Response__c;
+    }
+
+    @TestVisible
+    private static DateTime parseNfuTillDate(String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        try {
+            String normalized = raw.replace('T', ' ').replace('Z', '');
+            Integer dotIdx = normalized.indexOf('.');
+            if (dotIdx > 0) {
+                normalized = normalized.substring(0, dotIdx);
+            }
+            if (normalized.length() > 19) {
+                normalized = normalized.substring(0, 19);
+            }
+            return DateTime.valueOfGmt(normalized);
+        } catch (Exception ex) {
+            System.debug('[FEC_HoldCaseController] parseNfuTillDate failed: ' + ex.getMessage());
+            return null;
         }
     }
 

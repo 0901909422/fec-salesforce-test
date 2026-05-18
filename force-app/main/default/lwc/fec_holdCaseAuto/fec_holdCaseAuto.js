@@ -2,7 +2,7 @@ import { LightningElement, api, wire } from "lwc";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import { refreshApex } from "@salesforce/apex";
 
-import FEC_AUTO_HOLD_CASE_RESULT from "@salesforce/schema/Case.FEC_Auto_Hold_Case_Result__c";
+import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
 import FEC_NFU_STATUS from "@salesforce/schema/Case.FEC_NFU_Status__c";
 import FEC_NFU_CODE from "@salesforce/schema/Case.FEC_NFU_Code__c";
 import FEC_NFU_STARTED_DATE from "@salesforce/schema/Case.FEC_NFU_Started_Date__c";
@@ -22,7 +22,7 @@ import { formatDateTimeVN } from "c/fec_CommonUtils";
 import { STR_EMPTY } from "c/fec_CommonConst";
 
 const CASE_FIELDS = [
-  FEC_AUTO_HOLD_CASE_RESULT,
+  FEC_NFU_DESCRIPTION_RESULT,
   FEC_NFU_STATUS,
   FEC_NFU_CODE,
   FEC_NFU_STARTED_DATE,
@@ -37,6 +37,8 @@ const RESULT_ERROR = "ERROR";
 
 export default class Fec_holdCaseAuto extends LightningElement {
   @api recordId;
+  /** Fallback từ Manual Hold (sessionStorage) khi LDS chưa refresh field trên Case. */
+  @api resultOverride;
 
   wiredCaseResult;
 
@@ -69,7 +71,10 @@ export default class Fec_holdCaseAuto extends LightningElement {
   }
 
   get resultType() {
-    return getFieldValue(this.wiredCaseResult?.data, FEC_AUTO_HOLD_CASE_RESULT) || STR_EMPTY;
+    if (this.resultOverride) {
+      return this.resultOverride;
+    }
+    return getFieldValue(this.wiredCaseResult?.data, FEC_NFU_DESCRIPTION_RESULT) || STR_EMPTY;
   }
 
   get nfuStatus() {

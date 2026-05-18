@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_Auto_Hold_Case_Result__c</fullName>
-    <description>Auto Hold Case outcome after Mark NFU API (ALREADY_MARKED, SUCCESS, ERROR, PENDING).</description>
-    <label>Auto Hold Case Result</label>
+    <fullName>FEC_NFU_Description_Result__c</fullName>
+    <label>NFU Description Result</label>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>

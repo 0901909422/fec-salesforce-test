@@ -1,6 +1,6 @@
 /**
  * Auto Hold Case: sau khi tạo Routing Action History, match NOC → Hold Case Config (Auto)
- * → gọi Mark NFU API (retry tối đa 3 lần) → cập nhật Case + FEC_Auto_Hold_Case_Result__c.
+ * → gọi Mark NFU API (retry tối đa 3 lần) → cập nhật Case (+ FEC_NFU_Description_Result__c khi field đã deploy).
  */
 public with sharing class FEC_AutoHoldCaseService {
     public static final String RESULT_PENDING = 'PENDING';
@@ -212,7 +212,7 @@ public with sharing class FEC_AutoHoldCaseService {
         Database.update(
             new Case(
                 Id = caseId,
-                FEC_Auto_Hold_Case_Result__c = RESULT_PENDING
+                FEC_NFU_Description_Result__c = RESULT_PENDING
             ),
             AccessLevel.SYSTEM_MODE
         );
@@ -229,7 +229,7 @@ public with sharing class FEC_AutoHoldCaseService {
     ) {
         Case patch = new Case(
             Id = caseId,
-            FEC_Auto_Hold_Case_Result__c = resultType
+            FEC_NFU_Description_Result__c = resultType
         );
 
         if (resultType == RESULT_ERROR) {

@@ -1,11 +1,9 @@
 <template>
-    <template if:true={showHoldCaseAuto}>
-        <c-fec_hold-case-auto record-id={recordId}></c-fec_hold-case-auto>
-    </template>
-
-    <template if:true={showHoldCaseManual}>
-        <c-fec_hold-case-manual record-id={recordId}>
-        </c-fec_hold-case-manual>
+    <template if:true={showHoldCaseSection}>
+        <c-fec_hold-case-auto
+            record-id={recordId}
+            result-override={holdCaseResultOverride}>
+        </c-fec_hold-case-auto>
     </template>
 
     <template if:true={showRemovePhone}>
