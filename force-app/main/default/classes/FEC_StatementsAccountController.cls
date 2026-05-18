@@ -71,7 +71,9 @@ public without sharing class FEC_StatementsAccountController {
 
         /* ================= LOAD CASE ================= */
         Case c = [
-            SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name
+            SELECT FEC_Account_or_Contract__c,
+                FEC_Product_Type__r.Name,
+                FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -113,7 +115,8 @@ public without sharing class FEC_StatementsAccountController {
                     FEC_CommonUltils.generateTransactionId(),
                     FEC_ConstantCommon.REQUESTOR_CRM,
                     Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
-                    accountNumber
+                    accountNumber,
+                    c.FEC_Is_Test_API__c
                 );
         } catch (Exception e) {
             throw new AuraHandledException(String.format(System.Label.FEC_MSG_API_Error, new List<String>{e.getMessage()}));

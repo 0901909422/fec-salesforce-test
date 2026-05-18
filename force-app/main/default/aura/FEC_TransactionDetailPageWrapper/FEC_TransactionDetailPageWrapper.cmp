@@ -1,0 +1,7 @@
+<aura:component implements="lightning:isUrlAddressable,force:appHostable" access="global">
+    <aura:attribute name="recordId" type="String" />
+    <aura:attribute name="transactionCode" type="String" />
+    <aura:attribute name="recordData" type="String" />
+
+    <c:fec_TransactionsAccountTabView />
+</aura:component>
