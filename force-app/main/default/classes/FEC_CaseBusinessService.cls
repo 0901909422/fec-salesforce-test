@@ -143,7 +143,6 @@ public without sharing class FEC_CaseBusinessService {
             List<Case> caselst = [
         SELECT
           Id,
-          CreatedDate,
           FEC_Product_Type__c,
           FEC_Category__c,
           FEC_SubCategory__c,
@@ -203,6 +202,7 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
           FEC_SubCode__r.Name,
+          FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
@@ -329,6 +329,14 @@ public without sharing class FEC_CaseBusinessService {
         } catch (Exception e) {
           System.debug('getByCase subCodeCode: ' + e.getMessage());
         }
+      }
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — fallback subCodeCode từ Case khi chưa resolve từ subCodeId
+      if (
+        String.isBlank(result.subCodeCode) &&
+        selectedCase.FEC_SubCode__r != null &&
+        String.isNotBlank(selectedCase.FEC_SubCode__r.FEC_Code__c)
+      ) {
+        result.subCodeCode = selectedCase.FEC_SubCode__r.FEC_Code__c.trim();
       }
 
       result.subCategoryCode = FEC_ConstantCommon.STR_EMPTY;
@@ -810,6 +818,11 @@ public without sharing class FEC_CaseBusinessService {
               selectedCase.FEC_Account_or_Contract__r?.FEC_Fast_Cash_Status__c
             )
           ) {
+            continue;
+          }
+
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 / Property
+          if (shouldSkipPointsRedemptionSubSection(result.subCodeCode, sectionNameTemp, subSectionNameTemp)) {
             continue;
           }
 
@@ -2554,6 +2567,7 @@ public without sharing class FEC_CaseBusinessService {
       ];
       history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
       Database.update(history, AccessLevel.SYSTEM_MODE);
+      FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
     } catch (Exception e) {
       throw new CaseBusinessServiceException(e.getMessage());
     }
@@ -2619,6 +2633,7 @@ public without sharing class FEC_CaseBusinessService {
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
+      FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
         'FEC_DEBUG CaseBusinessService.createRoutingActionHis corrId=' + corrId +
         ' inserted historyId=' + history.Id +
@@ -4468,6 +4483,23 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
+  private static Boolean shouldSkipPointsRedemptionSubSection(
+    String subCodeCode,
+    String sectionName,
+    String subSectionName
+  ) {
+    if (String.isBlank(subCodeCode)) {
+      return false;
+    }
+    String s = subCodeCode.toUpperCase();
+    if (!s.contains('RC33.01') && !s.contains('RC33.02') && !s.contains('RC33.03')) {
+      return false;
+    }
+    return ('Account Information'.equals(sectionName) && 'C360 Info'.equals(subSectionName))
+      || ('Case Information'.equals(sectionName) && 'Property Info'.equals(subSectionName));
+  }
+
   /**
    * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
    * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
@@ -5089,7 +5121,7 @@ public without sharing class FEC_CaseBusinessService {
    * Khi user đổi bộ NOC (FEC_Nature_of_Cases__c khác), map stage đang có trên case
    * sang bản ghi FEC_Case_Stage__c tương đương trên NOC mới để MDS và FEC_Current_Case_Stage__c
    * vẫn đúng "tầng" (vd Stage 2 → Stage 2 của NOC mới): khớp số stage trong Name (regex),
-   * rồi cờ default; cuối cùng mới lấy bản ghi đầu theo Name.
+   * rồi cờ default; không dùng FEC_Order__c.
    */
   private static FEC_Case_Stage__c resolveCaseStageForNewNatureOfCase(
     Id priorCaseStageId,
