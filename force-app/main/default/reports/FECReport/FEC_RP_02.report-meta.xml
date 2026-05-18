@@ -52,13 +52,13 @@
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Original_Category__c</field>
     </columns>
     <columns>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Original_Sub_Category__c</field>
+    </columns>
+    <columns>
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Original_Sub_Code__c</field>
     </columns>
     <columns>
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Category__c</field>
-    </columns>
-    <columns>
-        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Original_Sub_Category__c</field>
     </columns>
     <columns>
         <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_SubCategory__c</field>

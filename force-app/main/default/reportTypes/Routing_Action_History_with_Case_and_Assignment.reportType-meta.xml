@@ -24,6 +24,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Updated Case Status</displayNameOverride>
             <field>FEC_Changed_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -39,6 +40,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Case Status</displayNameOverride>
             <field>FEC_Current_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>

@@ -49,6 +49,12 @@
         <field>Case.FEC_Created_by__c</field>
     </columns>
     <columns>
+        <field>Case.FEC_Last_Updated_On__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Last_Updated_By__c</field>
+    </columns>
+    <columns>
         <field>Case.FEC_Channel__c</field>
     </columns>
     <columns>
@@ -88,12 +94,6 @@
         <field>Case.FEC_Case_Created_By__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Last_Updated_On__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Last_Updated_By__c</field>
-    </columns>
-    <columns>
         <field>Case.FEC_Complain_Type__c</field>
     </columns>
     <columns>
@@ -101,9 +101,6 @@
     </columns>
     <columns>
         <field>Case.FEC_Original_Category__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Category__c</field>
     </columns>
     <columns>
         <field>Case.FEC_Original_Sub_Category__c</field>
@@ -162,6 +159,38 @@
     <columns>
         <field>Case.FEC_Case_Remarks_Entered_On_3__c</field>
     </columns>
+    <filter>
+        <booleanFilter>(1 OR 2 OR 3) AND 4</booleanFilter>
+        <criteriaItems>
+            <column>Case.FEC_Case_Created_On__c</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>YESTERDAY</value>
+        </criteriaItems>
+        <criteriaItems>
+            <column>Case.FEC_Created_On__c</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>YESTERDAY</value>
+        </criteriaItems>
+        <criteriaItems>
+            <column>Case.FEC_Last_Updated_On__c</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>YESTERDAY</value>
+        </criteriaItems>
+        <criteriaItems>
+            <column>RECORDTYPE</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>Case.Customer_Case,Case.Interaction,Case.Internal_Case</value>
+        </criteriaItems>
+        <language>en_US</language>
+    </filter>
     <format>Tabular</format>
     <name>Interactions &amp; Service Cases Summary</name>
     <params>
