@@ -1304,7 +1304,7 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Case.ArchiveExternalId__c</field>
+        <field>FEC_Address_Info__c.ArchiveExternalId__c</field>
         <readable>true</readable>
     </fieldPermissions>
 </PermissionSet>
