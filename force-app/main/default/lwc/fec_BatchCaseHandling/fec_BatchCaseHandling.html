@@ -403,6 +403,7 @@
               <table class="fec-table">
                 <thead>
                   <tr>
+                    <th class="fec-th-num"></th>
                     <th>
                       <a href="javascript:void(0);" class="fec-case-sort-link" data-key="fileName" onclick={handleBulkSort}>
                         <span class="fec-th-inner">
@@ -481,6 +482,7 @@
                   <template if:true={hasRows}>
                     <template for:each={pagedRows} for:item="row">
                       <tr key={row.id}>
+                        <td class="fec-td-num">{row.rowIndex}</td>
                         <td>
                           <template if:true={row.fileDownloadUrl}>
                             <a
@@ -521,7 +523,7 @@
                   </template>
                   <template if:false={hasRows}>
                     <tr>
-                      <td colspan="9" class="fec-empty">{batchUi.noRecordsFound}</td>
+                      <td colspan="10" class="fec-empty">{batchUi.noRecordsFound}</td>
                     </tr>
                   </template>
                 </tbody>

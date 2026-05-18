@@ -438,6 +438,8 @@
   min-width: 0;
 }
 
+.fec-table .fec-th-num,
+.fec-table .fec-td-num,
 .fec-bp-table .fec-th-num,
 .fec-bp-table .fec-td-num {
   width: 3rem;

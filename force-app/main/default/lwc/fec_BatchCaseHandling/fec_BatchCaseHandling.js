@@ -2237,7 +2237,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   rebuildPageRows() {
     const size = Number(this.pageSize) || 10;
     const start = (this.currentPage - 1) * size;
-    this.pagedRows = this.rows.slice(start, start + size);
+    const slice = this.rows.slice(start, start + size);
+    this.pagedRows = slice.map((row, idx) => ({
+      ...row,
+      rowIndex: start + idx + 1
+    }));
     this.goToPageInput = String(this.currentPage);
   }
 
