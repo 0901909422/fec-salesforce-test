@@ -220,12 +220,13 @@ public with sharing class FEC_PaymentHistoryValidationService {
    *   - Customer Address: FEC_Address_Info__c có cùng Customer History & FEC_Address_Type__c = 'Current Address'
    *
    * Mapping key trả về tương ứng placeholder PDF (xem fecDocumentRequestPdfData.js):
-   *   ContractNumber   : FEC_Customer_History__c.FEC_Contract_Number__c
+   *   ContractNumber   : FEC_Customer_History__c.Name
    *   NationalID       : FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
    *   CustomerName     : FEC_Customer_History__c.FEC_Customer_Name__c
    *   DateOfIssue      : FEC_Customer_History__c.FEC_Date_of_Issue__c (format dd/MM/yyyy)
    *   PlaceOfIssue     : FEC_Customer_History__c.FEC_Place_of_Issue__c
    *   TotalLoanAmount  : FEC_Customer_History__c.FEC_Total_Balance__c
+   *   MaturityDate2    : FEC_Customer_History__c.FEC_Expiry_Date__c (format dd/MM/yyyy)
    *   CustomerAddress  : FEC_Address_Info__c.FEC_Full_Address__c (Address Type = Current Address)
    *
    * Trả Map rỗng nếu Case không có Customer History.
@@ -246,7 +247,8 @@ public with sharing class FEC_PaymentHistoryValidationService {
         FEC_Account_or_Contract__r.FEC_Customer_Name__c,
         FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
         FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
-        FEC_Account_or_Contract__r.FEC_Total_Balance__c
+        FEC_Account_or_Contract__r.FEC_Total_Balance__c,
+        FEC_Account_or_Contract__r.FEC_Expiry_Date__c
       FROM Case
       WHERE Id = :caseId
       LIMIT 1
@@ -276,6 +278,16 @@ public with sharing class FEC_PaymentHistoryValidationService {
       data.put('DateOfIssue', issueDt.format('dd/MM/yyyy'));
     } else {
       data.put('DateOfIssue', FEC_ConstantCommon.STR_EMPTY);
+    }
+    if (h.FEC_Expiry_Date__c != null) {
+      DateTime expiryDt = DateTime.newInstance(
+        h.FEC_Expiry_Date__c.year(),
+        h.FEC_Expiry_Date__c.month(),
+        h.FEC_Expiry_Date__c.day()
+      );
+      data.put('MaturityDate2', expiryDt.format('dd/MM/yyyy'));
+    } else {
+      data.put('MaturityDate2', FEC_ConstantCommon.STR_EMPTY);
     }
 
     List<FEC_Address_Info__c> addrRows = [
