@@ -17,6 +17,8 @@ import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.get
 export default class Fec_SubProcessContainer extends LightningElement {
   @api recordId;
 
+  @api lockApiLwcsAfterRevertToDefaultStage;
+
   @wire(MessageContext)
   messageContext;
 
@@ -212,6 +214,14 @@ export default class Fec_SubProcessContainer extends LightningElement {
       return el.validateForSubmit();
     }
     return true;
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  @api notifyRemovePhoneCaseSubmitted() {
+    const el = this._findRemovePhoneFormEl();
+    if (el && typeof el.notifyCaseSubmitted === "function") {
+      el.notifyCaseSubmitted();
+    }
   }
 
   async initializeCase() {

@@ -574,6 +574,10 @@
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
+        <members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
+		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
         <name>CustomField</name>
     </types>
     <types>

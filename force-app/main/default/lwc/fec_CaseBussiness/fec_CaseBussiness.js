@@ -1281,7 +1281,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
       (componentName === "fec_IPPConversionRetailForm" ||
-        componentName === "fec_CardClosureRefundForm")
+        componentName === "fec_CardClosureRefundForm" ||
+        componentName === "fec_RemovePhoneForm")
     ) {
       return false;
     }
@@ -1799,6 +1800,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         );
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
+        this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
         //linhdev fix section Account Info + Case Info
@@ -2804,6 +2806,23 @@ export default class Fec_CaseBussiness extends LightningElement {
     return host.saveRemovePhoneForSubmitIfApplicable();
   }
 
+  _notifyRemovePhoneCaseSubmitted() {
+    const host = this._getSubProcessContainerEl();
+    if (host && typeof host.notifyRemovePhoneCaseSubmitted === "function") {
+      host.notifyRemovePhoneCaseSubmitted();
+    }
+    this._syncRemovePhoneLockAfterRevert();
+  }
+
+  _syncRemovePhoneLockAfterRevert() {
+    const host = this._getSubProcessContainerEl();
+    if (!host) {
+      return;
+    }
+    host.lockApiLwcsAfterRevertToDefaultStage =
+      this.business?.lockApiLwcsAfterRevertToDefaultStage === true;
+  }
+
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
@@ -3202,6 +3221,8 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    this._notifyRemovePhoneCaseSubmitted();
     return true;
   }
 
