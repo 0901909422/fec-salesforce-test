@@ -743,8 +743,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
-  //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
-  handleMessageDoNotBother(message) {
+  handleMessageResetPin(message) {
     this.handleDisableResetPinSuccess("category");
     this.handleDisableResetPinSuccess("sub-category");
     this.handleDisableResetPinSuccess("sub-code");
