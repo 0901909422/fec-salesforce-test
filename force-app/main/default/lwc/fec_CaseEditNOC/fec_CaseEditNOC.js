@@ -33,6 +33,9 @@ import getSubCategorylst from "@salesforce/apex/FEC_CaseEditNOCController.getSub
 import getSubCodelst from "@salesforce/apex/FEC_CaseEditNOCController.getSubCodelst";
 //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
 import saveNOC from "@salesforce/apex/FEC_CaseEditNOCController.saveNOC";
+import saveCaseNOC from "@salesforce/apex/FEC_CaseBusinessService.saveCaseNOC";
+//Toannd61
+import clearCaseNOC from "@salesforce/apex/FEC_CaseEditNOCController.clearCaseNOC";
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import { updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
@@ -68,6 +71,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
   
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,...
   isDisableNOC = false;
+  _lastPersistedNatureOfCaseId = null;
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1366
   @track isNocLockedAfterFastCashBlock = false;
@@ -308,6 +312,82 @@ export default class Fec_CaseEditNOC extends LightningElement {
     }
   }
 
+  /** Case draft: reload trang → xóa NOC DB + UI; đã submit / sau API success → giữ nguyên. 
+   * Toannd61
+   */
+  _shouldClearNocOnPageLoad(caseRecord) {
+    return (
+      caseRecord &&
+      caseRecord.FEC_Is_Submited__c !== true &&
+      caseRecord.FEC_Is_Call_API_Success__c !== true
+    );
+  }
+
+  _stripNocFieldsOnCaseRecord(caseRecord) {
+    caseRecord.FEC_Category__c = null;
+    caseRecord.FEC_SubCategory__c = null;
+    caseRecord.FEC_SubCode__c = null;
+    return caseRecord;
+  }
+
+  _resetNocUiState(preservedProductTypeId) {
+    this.productTypeSelectedId = preservedProductTypeId || null;
+    this.categorySelectedId = null;
+    this.subCategorySelectedId = null;
+    this.subCodeSelectedId = null;
+    this.natureOfCase = null;
+    this.disableProdType = !!preservedProductTypeId;
+    this._lastPersistedNatureOfCaseId = null;
+    this.categoryOptionlst = [];
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
+
+    ["category", "sub-category", "sub-code"].forEach((id) => {
+      const el = this.template.querySelector(`c-fec_-combo-box[data-id="${id}"]`);
+      if (el && typeof el.clear === "function") {
+        el.clear();
+      }
+    });
+    if (!preservedProductTypeId) {
+      const prodEl = this.template.querySelector(`c-fec_-combo-box[data-id="prod-type"]`);
+      if (prodEl && typeof prodEl.clear === "function") {
+        prodEl.clear();
+      }
+    }
+    this.handleDisable("category");
+    this.handleDisable("sub-category");
+    this.handleDisable("sub-code");
+    if (preservedProductTypeId) {
+      this.handleEnable("category");
+    }
+  }
+
+  _publishEmptyNocMessage(preservedProductTypeId) {
+    if (!this.messageContext) {
+      return;
+    }
+    publish(this.messageContext, CASE_NOC, {
+      caseId: this.recordId,
+      productTypeId: preservedProductTypeId || null,
+      categoryId: null,
+      subCategoryId: null,
+      subCodeId: null,
+      natureOfCaseId: null,
+      nocClearedOnPageLoad: true
+    });
+  }
+
+  async _clearNocOnPageLoad(caseRecord) {
+    const preservedProductTypeId = caseRecord?.FEC_Product_Type__c ?? null;
+    this._clearFastCashBlockSessionStorage();
+    this._clearSubProcessNocSessionStorage();
+    await clearCaseNOC({ recordId: this.recordId });
+    this.isNocLockedAfterFastCashBlock = false;
+    this._fastCashLockCombosApplied = false;
+    this._resetNocUiState(preservedProductTypeId);
+    this._publishEmptyNocMessage(preservedProductTypeId);
+  }
+
   async connectedCallback() {
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — phục hồi lock trước resetViewMode để isEdit không rơi output-field khi reload
     this._restoreFastCashNocLockFromStorage();
@@ -326,17 +406,33 @@ export default class Fec_CaseEditNOC extends LightningElement {
     this.subscribeToMessageChannel();
     
     getCase({ recordId: this.recordId })
-      .then((res) => {
-        this.productTypeSelectedId = res.FEC_Product_Type__c;
-        this.disableProdType = !!this.productTypeSelectedId;
+    /** Toannd61: clear NOC on page load */
+      .then(async (res) => {
+        let nocClearedOnLoad = false;
+        if (this._shouldClearNocOnPageLoad(res)) {
+          try {
+            await this._clearNocOnPageLoad(res);
+            res = this._stripNocFieldsOnCaseRecord(res);
+            nocClearedOnLoad = true;
+          } catch (err) {
+            console.error("clearCaseNOC on page load failed:", err);
+          }
+        }
 
-        this.categorySelectedId = res.FEC_Category__c;
+        if (!nocClearedOnLoad) {
+          this.productTypeSelectedId = res.FEC_Product_Type__c;
+          this.disableProdType = !!this.productTypeSelectedId;
 
-        this.subCategorySelectedId = res.FEC_SubCategory__c;
+          this.categorySelectedId = res.FEC_Category__c;
 
-        this.subCodeSelectedId = res.FEC_SubCode__c;
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — NOC chọn trên UI chưa ghi Case: overlay từ session sau Có/Không
-        this._applyFastCashNocSelectionFromStorage();
+          this.subCategorySelectedId = res.FEC_SubCategory__c;
+
+          this.subCodeSelectedId = res.FEC_SubCode__c;
+          //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — NOC chọn trên UI chưa ghi Case: overlay từ session sau Có/Không
+          this._applyFastCashNocSelectionFromStorage();
+        } else {
+          this.disableProdType = !!this.productTypeSelectedId;
+        }
 
         this.isSubmited = res.FEC_Is_Submited__c;
         this.interactionViewMode = res.FEC_Interaction_View_Mode__c;
@@ -440,6 +536,17 @@ export default class Fec_CaseEditNOC extends LightningElement {
       sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX + this.recordId);
       sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX + this.recordId);
       sessionStorage.removeItem(FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX + this.recordId);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  _clearSubProcessNocSessionStorage() {
+    try {
+      if (!this.recordId) {
+        return;
+      }
+      sessionStorage.removeItem("fec_case_noc_" + this.recordId);
     } catch (e) {
       /* ignore */
     }
@@ -743,6 +850,51 @@ export default class Fec_CaseEditNOC extends LightningElement {
     });
   }
 
+  //HieuTT74 Cập nhật ngày  17-5-2026: Bổ sung message channel để disable các combobox khi call api tạo DNB thành công
+  handleMessageDoNotBother(message) {
+    this.handleDisableResetPinSuccess("category");
+    this.handleDisableResetPinSuccess("sub-category");
+    this.handleDisableResetPinSuccess("sub-code");
+
+    saveNOC({
+        recordId: this.recordId,
+        productTypeId: this.productTypeSelectedId,
+        categoryId: this.categorySelectedId,
+        subCategoryId: this.subCategorySelectedId,
+        subCodeId: this.subCodeSelectedId
+    })
+    .then(() => {
+        console.log('Save NOC success');
+    })
+    .catch(error => {
+        console.error('Save NOC failed:', error);
+    });
+  }
+
+  /**
+   * Ghi bộ NOC đã chọn lên Case (cùng Apex saveCaseNOC như Submit).
+   * Chỉ gọi khi đã resolve natureOfCaseId; không dùng saveNOC (tránh FEC_Is_Call_API_Success__c).
+   */
+  _persistSelectedNocToDatabase(natureOfCaseId) {
+    if (!this.recordId || !natureOfCaseId || this.isDisableNOC) {
+      return Promise.resolve();
+    }
+    const nocId = String(natureOfCaseId);
+    if (nocId === this._lastPersistedNatureOfCaseId) {
+      return Promise.resolve();
+    }
+    return saveCaseNOC({
+      caseId: this.recordId,
+      natureOfCaseId: nocId
+    })
+      .then(() => {
+        this._lastPersistedNatureOfCaseId = nocId;
+      })
+      .catch((error) => {
+        console.error("persistSelectedNocToDatabase failed:", error);
+      });
+  }
+
   async handlePublishMessageChanel() {
     const payload = {
       caseId: this.recordId,
@@ -754,6 +906,13 @@ export default class Fec_CaseEditNOC extends LightningElement {
     };
 
     publish(this.messageContext, CASE_NOC, payload);
+  }
+
+  _publishCaseNocAfterPersist(payload) {
+    const nocId = payload?.natureOfCaseId ?? null;
+    return this._persistSelectedNocToDatabase(nocId).then(() => {
+      publish(this.messageContext, CASE_NOC, payload);
+    });
   }
 
   handleMessage(message) {
@@ -1064,6 +1223,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
           })
             .then((noc) => {
               this.natureOfCase = noc;
+              return this._persistSelectedNocToDatabase(noc?.Id);
+            })
+            .then(() => {
               this.handlePublishMessageChanel();
             })
             .catch((e) => {
@@ -1199,6 +1361,9 @@ export default class Fec_CaseEditNOC extends LightningElement {
       })
         .then((result) => {
           this.natureOfCase = result;
+          return this._persistSelectedNocToDatabase(result?.Id);
+        })
+        .then(() => {
           this.handlePublishMessageChanel();
         })
         .catch((error) => {
@@ -1339,7 +1504,7 @@ export default class Fec_CaseEditNOC extends LightningElement {
                   subCodeId: null,
                   natureOfCaseId: noc?.Id ?? null
                 };
-                publish(this.messageContext, CASE_NOC, payload);
+                return this._publishCaseNocAfterPersist(payload);
               })
               .catch((err) => {
                 console.error("getNatureOfCaseWithoutSubCode error (Updated section):", err);
@@ -1384,6 +1549,6 @@ export default class Fec_CaseEditNOC extends LightningElement {
       natureOfCaseId: natureOfCaseId
     };
 
-    publish(this.messageContext, CASE_NOC, payload);
+    this._publishCaseNocAfterPersist(payload);
   }
 }

@@ -27,6 +27,11 @@
                 <default>false</default>
                 <label>Văn phòng</label>
             </value>
+            <value>
+                <fullName>POS</fullName>
+                <default>false</default>
+                <label>POS</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
     <visibleLines>4</visibleLines>
