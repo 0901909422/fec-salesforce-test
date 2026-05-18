@@ -769,7 +769,8 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
-        if (isGsrStage1Revert) {
+        // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
+        if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
           FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
             masterDatalst,
             masterDataSettingObj,
