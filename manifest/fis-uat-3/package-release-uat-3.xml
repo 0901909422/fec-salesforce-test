@@ -578,9 +578,7 @@
         <members>FEC_Template_Import__c</members>
         <members>FEC_HoldCaseConfiguration</members>
 		<members>FEC_Case_Assignment__c</members>
-        <members>Batch_Case_Creation</members>
 		<members>Batch_Case_Handling</members>
-		<members>Batch_Data_Creation</members>
         <name>CustomTab</name>
     </types>
 	<types>
