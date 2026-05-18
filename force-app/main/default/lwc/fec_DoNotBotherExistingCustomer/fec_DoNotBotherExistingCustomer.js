@@ -176,6 +176,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   }
 
   handleMessage(message) {
+    console.log(
+      "Received message on IS_MODE_EDIT channel:",
+      JSON.stringify(message),
+    );
     if (!message || typeof message.isModeEdit === "undefined") return;
 
     if (message.caseId != null && message.caseId !== this.recordId) {
@@ -200,6 +204,7 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
       this.retryCount = result.processActionCount || 0;
 
       this.isMaxRetryReached = this.retryCount >= 3;
+      this.modeEditCase = result.viewMode === "handling" ? true : false;
     } catch (e) {
       console.error("Load data error", e);
     }

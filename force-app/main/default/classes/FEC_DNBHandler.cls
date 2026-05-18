@@ -17,6 +17,7 @@ public without sharing class FEC_DNBHandler {
         @AuraEnabled public String channel;
         @AuraEnabled public String contractId;
         @AuraEnabled public Integer processActionCount;
+        @AuraEnabled public String viewMode;
     }
     
     public class CaseInfoNonExistingResponse{
@@ -29,6 +30,7 @@ public without sharing class FEC_DNBHandler {
         @AuraEnabled public String channel;
         @AuraEnabled public String contractId;
         @AuraEnabled public Integer processActionCount;
+        @AuraEnabled public String viewMode;
     }
     
     public class DNBResponseItem {
@@ -45,7 +47,7 @@ public without sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoResponse getCaseData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c, FEC_Interaction_View_Mode__c
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -67,6 +69,7 @@ public without sharing class FEC_DNBHandler {
             caseRecord
             .FEC_Process_Action_Count__c
             );
+        response.viewMode = caseRecord.FEC_Interaction_View_Mode__c;
         return response;
         
     }
@@ -75,7 +78,7 @@ public without sharing class FEC_DNBHandler {
     @AuraEnabled
     public static CaseInfoNonExistingResponse getCaseNonExistingData(Id caseId) {
         // Simulate fetching data from server
-        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c 
+        Case caseRecord =  [SELECT Id, FEC_Customer_Name__c ,FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c  ,FEC_Phone_Number__c,  FEC_Interaction__r.FEC_Phone_Number__c, FEC_Interaction__r.FEC_Interaction_Masked_Phone__c  , FEC_Interaction__r.FEC_Interaction_Email__c, FEC_Interaction__r.FEC_Interaction_Masked_Email__c, FEC_Channel__c , FEC_Account_Contract_Number_Text__c, FEC_Process_Action_Count__c, FEC_Interaction_View_Mode__c
                             FROM Case
                             WHERE Id = :caseId
                             LIMIT 1];
@@ -96,6 +99,7 @@ public without sharing class FEC_DNBHandler {
             caseRecord
             .FEC_Process_Action_Count__c
             );
+        response.viewMode = caseRecord.FEC_Interaction_View_Mode__c;
         return response;
         
     }

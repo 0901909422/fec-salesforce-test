@@ -204,6 +204,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       this.retryCount = result.processActionCount || 0;
 
       this.isMaxRetryReached = this.retryCount >= 3;
+      this.modeEditCase = result.viewMode === "handling" ? true : false;
       this.data = this.prepareData(rows);
       this.updatePagedData();
     } catch (e) {
