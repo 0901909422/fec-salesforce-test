@@ -1,6 +1,8 @@
 <template>
     <template if:true={showRemovePhone}>
-        <c-fec_-remove-phone-form record-id={recordId}>
+        <c-fec_-remove-phone-form
+            record-id={recordId}
+            lock-after-revert-to-default-stage={lockApiLwcsAfterRevertToDefaultStage}>
         </c-fec_-remove-phone-form>
     </template>
 

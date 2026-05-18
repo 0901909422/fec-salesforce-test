@@ -35,6 +35,7 @@
           key-field="id"
           data={pagedRows}
           columns={columns}
+          hide-checkbox-column={readOnlyRemovePhone}
           selected-rows={selectedRowIds}
           onrowselection={handleRowSelection}>
         </lightning-datatable>
@@ -47,6 +48,7 @@
               value={pageSizeStr}
               options={pageSizeOptions}
               onchange={handlePageSizeChange}
+              disabled={readOnlyRemovePhone}
               variant="label-hidden">
             </lightning-combobox>
           </div>
@@ -56,7 +58,7 @@
               icon-name="utility:chevronleft"
               alternative-text={paginationLabels.prevLabel}
               onclick={handlePrevPage}
-              disabled={isFirstPage}>
+              disabled={disablePaginationPrevPage}>
             </lightning-button-icon>
             <span class="page-number">{currentPage}</span>
             <lightning-button-icon
@@ -64,7 +66,7 @@
               icon-name="utility:chevronright"
               alternative-text={paginationLabels.nextLabel}
               onclick={handleNextPage}
-              disabled={isLastPage}>
+              disabled={disablePaginationNextPage}>
             </lightning-button-icon>
           </div>
           <div class="go-to-page slds-grid slds-grid_vertical-align-center">
@@ -76,6 +78,7 @@
               max={totalPages}
               variant="label-hidden"
               class="page-input"
+              disabled={readOnlyRemovePhone}
               onchange={handleGoToPageInput}>
             </lightning-input>
             <span class="slds-m-horizontal_x-small">of {totalPages}</span>
@@ -83,6 +86,7 @@
               class="square-go-btn"
               label={paginationLabels.goBtnLabel}
               onclick={handleGoToPage}
+              disabled={readOnlyRemovePhone}
               variant="brand">
             </lightning-button>
           </div>

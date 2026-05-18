@@ -5,6 +5,7 @@ import saveRemovePhoneSelections from '@salesforce/apex/FEC_RemovePhoneControlle
 import loadRemovePhoneDraft from '@salesforce/apex/FEC_RemovePhoneController.loadRemovePhoneDraft';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import CASE_FEC_IS_SUBMITED from '@salesforce/schema/Case.FEC_Is_Submited__c';
+import CASE_FEC_STAGE_NAME from '@salesforce/schema/Case.FEC_Stage_Name__c';
 import FEC_Customer_Name_Label from '@salesforce/label/c.FEC_Customer_Name_Label';
 import FEC_Account_Contract_Number from '@salesforce/label/c.FEC_Account_Contract_Number';
 import FEC_Account_Contract_Status from '@salesforce/label/c.FEC_Account_Contract_Status';
@@ -60,18 +61,46 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     @api caseSubmitted;
 
+    _lockAfterRevertToDefaultStage = false;
+
+    @api
+    get lockAfterRevertToDefaultStage() {
+        return this._lockAfterRevertToDefaultStage;
+    }
+    set lockAfterRevertToDefaultStage(value) {
+        const next = value === true;
+        if (this._lockAfterRevertToDefaultStage === next) {
+            return;
+        }
+        const wasReadOnly = this.readOnlyRemovePhone;
+        this._lockAfterRevertToDefaultStage = next;
+        if (this.readOnlyRemovePhone && !wasReadOnly) {
+            this._bumpTableKey();
+        }
+    }
+
     @track _caseIsSubmited = false;
 
-    @wire(getRecord, { recordId: '$recordId', fields: [CASE_FEC_IS_SUBMITED] })
+    @track _caseIsPastStage1 = false;
+
+    @wire(getRecord, { recordId: '$recordId', fields: [CASE_FEC_IS_SUBMITED, CASE_FEC_STAGE_NAME] })
     wiredCaseForSubmitted({ data, error }) {
         if (!this._recordId) {
             this._caseIsSubmited = false;
+            this._caseIsPastStage1 = false;
             return;
         }
         if (data) {
+            const wasReadOnly = this.readOnlyRemovePhone;
             this._caseIsSubmited = getFieldValue(data, CASE_FEC_IS_SUBMITED) === true;
+            const stageName = getFieldValue(data, CASE_FEC_STAGE_NAME) || STR_EMPTY;
+            this._caseIsPastStage1 = stageName.length > 0 && !stageName.includes('Stage 1');
+            if (this.readOnlyRemovePhone && !wasReadOnly) {
+                this._bumpTableKey();
+            }
         } else if (error) {
             this._caseIsSubmited = false;
+            this._caseIsPastStage1 = false;
         }
     }
 
@@ -82,7 +111,18 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         if (this.caseSubmitted === false) {
             return false;
         }
-        return this._caseIsSubmited === true;
+        if (this._lockAfterRevertToDefaultStage === true) {
+            return true;
+        }
+        if (this._caseIsSubmited === true) {
+            return true;
+        }
+        return this._caseIsPastStage1 === true;
+    }
+
+    @api notifyCaseSubmitted() {
+        this._caseIsSubmited = true;
+        this._bumpTableKey();
     }
 
     @track phone = STR_EMPTY;
@@ -337,7 +377,8 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get datatableMountRows() {
-        return [{ mountKey: String(this.tableKey || 0) }];
+        const ro = this.readOnlyRemovePhone ? '1' : '0';
+        return [{ mountKey: String(this.tableKey || 0) + '_' + ro }];
     }
 
     get totalPages() {
@@ -384,6 +425,14 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     get isLastPage() {
         return this.currentPage >= this.totalPages;
+    }
+
+    get disablePaginationPrevPage() {
+        return this.isFirstPage || this.readOnlyRemovePhone;
+    }
+
+    get disablePaginationNextPage() {
+        return this.isLastPage || this.readOnlyRemovePhone;
     }
 
     handleRowSelection(event) {
@@ -434,6 +483,9 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handlePageSizeChange(event) {
+        if (this.readOnlyRemovePhone) {
+            return;
+        }
         this.pageSize = parseInt(event.detail.value, 10);
         this.currentPage = 1;
         this.goToPageValue = 1;
@@ -442,7 +494,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handlePrevPage() {
-        if (this.isFirstPage) {
+        if (this.readOnlyRemovePhone || this.isFirstPage) {
             return;
         }
         this.currentPage -= 1;
@@ -452,7 +504,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleNextPage() {
-        if (this.isLastPage) {
+        if (this.readOnlyRemovePhone || this.isLastPage) {
             return;
         }
         this.currentPage += 1;
@@ -462,10 +514,16 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleGoToPageInput(event) {
+        if (this.readOnlyRemovePhone) {
+            return;
+        }
         this.goToPageValue = parseInt(event.target.value, 10);
     }
 
     handleGoToPage() {
+        if (this.readOnlyRemovePhone) {
+            return;
+        }
         let targetPage = this.goToPageValue;
         if (!targetPage || isNaN(targetPage)) {
             targetPage = 1;
