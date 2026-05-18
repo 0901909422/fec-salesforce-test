@@ -42,6 +42,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_Stage_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_B2_Contract__c.FEC_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>

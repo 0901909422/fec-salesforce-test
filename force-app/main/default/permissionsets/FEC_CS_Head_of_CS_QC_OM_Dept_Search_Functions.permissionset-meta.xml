@@ -175,6 +175,11 @@
         <field>Case.FEC_Assigment_Mode__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_Stage_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Head of CS QC &amp; OM Dept - Search Functions</label>
     <license>Salesforce</license>
