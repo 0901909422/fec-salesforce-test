@@ -1740,7 +1740,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>
