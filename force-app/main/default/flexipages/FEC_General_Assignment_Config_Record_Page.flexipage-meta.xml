@@ -3,8 +3,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_GeneralAssignmentConfigActions</componentName>
-                <identifier>c_fec_GeneralAssignmentConfigActions_header</identifier>
+                <componentName>force:highlightsPanel</componentName>
+                <identifier>flexipage_highlightPanel</identifier>
             </componentInstance>
         </itemInstances>
         <name>header</name>
@@ -13,14 +13,26 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_GeneralAssignmentConfigDetail</componentName>
-                <identifier>c_fec_GeneralAssignmentConfigDetail</identifier>
+                <componentName>flexipage:fieldSection</componentName>
+                <identifier>flexipage_recordDetail</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_GeneralAssignmentHistory</componentName>
-                <identifier>c_fec_GeneralAssignmentHistory</identifier>
+                <componentInstanceProperties>
+                    <name>relatedListComponentOverride</name>
+                    <value>NONE</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>rowsToDisplay</name>
+                    <value>10</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>showActionBar</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentName>force:relatedListContainer</componentName>
+                <identifier>force_relatedListContainer</identifier>
             </componentInstance>
         </itemInstances>
         <name>Facet-detail-and-history</name>
