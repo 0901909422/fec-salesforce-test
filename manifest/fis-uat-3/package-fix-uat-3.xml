@@ -76,7 +76,6 @@
 		<members>FEC_SalesChannelFromApplicationService</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
-		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
 		<name>Apexclass</name>

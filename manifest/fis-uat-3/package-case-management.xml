@@ -69,6 +69,10 @@
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
 		<members>FEC_NewAssignmentController</members>
+		<members>FEC_AutoHoldCaseApi</members>
+		<members>FEC_AutoHoldCaseHistoryService</members>
+		<members>FEC_AutoHoldCaseExpireBatch</members>
+		<members>FEC_AutoHoldCaseExpireSchedulable</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -472,9 +476,18 @@
         <members>Case.FEC_Assigment_Mode__c</members>
         <members>Case.FEC_Is_Owner_Or_Assigned__c</members>
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
-        <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
         <members>Case.FEC_Is_DNB__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
+		<members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Case__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Start_Time__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_End_Time__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Status__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Type__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Release_Case_Status__c</members>
+		<members>FEC_Case_Hold_History__c.FEC_Hold_Case_Config__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -507,6 +520,7 @@
         <members>FEC_Batch_Case_Handling__c</members>
         <members>FEC_Template_Import__c</members>
         <members>FEC_Hold_Case_Config__c</members>
+        <members>FEC_Case_Hold_History__c</members>
         <members>FEC_Sales_Logic__c</members>
         <members>FEC_Case_Assignment_Log_Detail__c</members>
 		<members>FEC_Case_Assignment_Logs__c</members>
@@ -1163,6 +1177,8 @@
         <members>FEC_RD_Payment_User_Customer_360</members>
         <members>FEC_RD_Telesales_User_1_Customer_360</members>
         <members>FEC_RD_Telesales_User_2_Customer_360</members>
+        <!-- Auto hold case (history / config fields) -->
+        <members>FEC_Case_Auto_Hold_Administration</members>
         <!-- Batch Case Handling -->
         <members>FEC_Batch_Case_Handling</members>
         <!-- Case Assignment -->
