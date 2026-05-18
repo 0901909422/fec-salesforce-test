@@ -1132,8 +1132,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
-    confirmLabel: FEC_Confirm_Label
-  }
+    confirmLabel: FEC_Confirm_Label,
+  };
 
   @api getNatureOfCaseId() {
     return this.business?.natureOfCase || null;
@@ -2823,7 +2823,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true;
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
@@ -3221,6 +3221,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     this._notifyRemovePhoneCaseSubmitted();
     return true;
   }
@@ -4009,6 +4010,21 @@ export default class Fec_CaseBussiness extends LightningElement {
   @api
   refreshFileUploadCards() {
     this._scheduleRefreshFileUploadCards();
+  }
+
+  /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
+  @api
+  refreshAutoHoldCase() {
+    const delays = [2000, 5000, 8000];
+    delays.forEach((delayMs) => {
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      setTimeout(() => {
+        const subprocess =
+          this.template.querySelector("c-fec_-sub-process-container") ||
+          this.template.querySelector("c-fec-sub-process-container");
+        subprocess?.refreshAutoHoldCase?.();
+      }, delayMs);
+    });
   }
 
   applyDraft() {

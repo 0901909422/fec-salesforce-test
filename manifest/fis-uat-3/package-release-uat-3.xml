@@ -154,6 +154,9 @@
 		<members>FEC_HoldCaseInheritanceService</members>
 		<members>FEC_UpdateTransferInfoRestService</members>
 		<members>FEC_NewAssignmentController</members>
+		<members>FEC_AutoHoldCaseQueueable</members>
+		<members>FEC_AutoHoldCaseService</members>
+		<members>FEC_AutoHoldCaseServiceTest</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -570,6 +573,7 @@
 		<members>FEC_Sales_Logic__c.FEC_DSA_Code__c</members>
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
+        <members>Case.FEC_NFU_Description_Result__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -703,6 +707,7 @@
         <members>fec_RemovePhoneForm</members>
         <members>fec_IPPConversionRetailForm</members>
         <members>fec_NewAssignmentAction</members>
+        <members>fec_holdCaseAuto</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -1108,6 +1113,9 @@
         <members>FEC_TransferCall_Field_CollRemarks</members>
         <members>FEC_TransferCall_Field_CollActionDate</members>
         <members>FEC_TransferCall_Field_CollAgent</members>
+        <members>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</members>
+        <members>FEC_MSG_SUCCESS</members>
+        <members>FEC_MSG_ERROR</members>
         <name>CustomLabel</name>
     </types>
 	<types>
