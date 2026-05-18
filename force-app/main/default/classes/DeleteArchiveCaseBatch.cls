@@ -10,7 +10,7 @@ History
 global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Database.Stateful, Schedulable {
 
     // All other objects use IsArchiveTemp__c = true.
-    // Deletion order: Case + Attachment first (they reference lookup objects), then lookup objects.
+    // Deletion order: Case first (they reference lookup objects), then lookup objects.
     private static final List<String> DELETION_ORDER = new List<String>{
         'Case',
         'FEC_Actual_Nature_of_Case__c',
@@ -20,6 +20,13 @@ global class DeleteArchiveCaseBatch implements Database.Batchable<sObject>, Data
         'FEC_Sub_Category__c',
         'FEC_Sub_Code__c',
         'FEC_Business_Process__c'
+
+        // Lookup relationships to Case
+        // >> Thêm field IsArchiveTemp__c vào các field này để delete dc
+        'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
+        'FEC_Card_Payment__c' => 'FEC_Case__c',
+        'FEC_Process_Action__c' => 'FEC_Linked_Case__c',
+        'FEC_Integration_Case__c' => 'FEC_Integrate_Case_ID__c'
     };
 
     private Integer currentObjectIndex = 0;
