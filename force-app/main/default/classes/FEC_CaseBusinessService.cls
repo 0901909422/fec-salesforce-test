@@ -436,7 +436,9 @@ public without sharing class FEC_CaseBusinessService {
       String selectedNatureOfCaseId = selectedCase.FEC_Actual_Nature_of_Case__c;
       // GSR: luôn áp dụng rule subsection (ẩn Property Info khi NOC không đổi so với history) kể cả lần tải đầu không truyền NOC từ UI.
       Boolean isGsrCofNocDisplayMode = isActualNatureGsrCof;
-      Boolean isGsrNocOnlyDisplayMode = isActualNatureGsrOnly;
+      Boolean isGsrNocOnlyDisplayMode =
+        isActualNatureGsrOnly &&
+        (getCaseAssignmentCountByCaseId(selectedCase.Id) == 0);
       Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
       if (isGsrCofNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
         // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
@@ -1795,6 +1797,23 @@ public without sharing class FEC_CaseBusinessService {
       incoming == null ? null : String.valueOf(incoming),
       baseline
     );
+  }
+
+  /** Lấy FEC_Assignment_Count__c (roll-up summary) trên Case theo caseId. */
+  private static Decimal getCaseAssignmentCountByCaseId(Id caseId) {
+    if (caseId == null) {
+      return 0;
+    }
+    List<Case> caselst = [
+      SELECT FEC_Assignment_Count__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty() || caselst[0].FEC_Assignment_Count__c == null) {
+      return 0;
+    }
+    return caselst[0].FEC_Assignment_Count__c;
   }
 
   //thangtv: khi Owner hiện tại là Queue, tra FEC_Routing_Action_History__c để tìm User thực sự
