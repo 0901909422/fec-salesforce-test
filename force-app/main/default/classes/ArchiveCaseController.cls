@@ -14,41 +14,15 @@ public with sharing class ArchiveCaseController {
     public Boolean hasError { get; set; }
     public AthenaCases__x athenaCaseRecord;
 
-    // Map of child/related object API name → Case lookup field name
-    // Used for both parsing (to distinguish child records from lookup relationships)
-    // and for inserting child records after Case creation
-    private static final Map<String, String> CHILD_OBJECT_CASE_FIELD = new Map<String, String>{
-        // Master-Detail relationships
-        'FEC_Additional_Info__c' => 'FEC_Case__c',
-        'FEC_Assignment__c' => 'FEC_Case__c',
-        'FEC_Case_Flow_History__c' => 'FEC_Case__c',
-        'FEC_Case_Refund_Details__c' => 'FEC_Case__c',
-        'FEC_Case_Remarks__c' => 'FEC_Case__c',
-        'FEC_Customer_History__c' => 'FEC_Case__c',
-        'FEC_KYC_Result__c' => 'FEC_Case_Interaction__c',
-        'FEC_Incorrect_Payment_Info__c' => 'FEC_Case__c',
-        'FEC_Pending_Disbursement__c' => 'FEC_Case__c',
-        'FEC_Process_Action_History__c' => 'Case__c',
-        'FEC_Relevant_Ticket__c' => 'FEC_Interaction__c',
-        'FEC_Routing_Action_History__c' => 'FEC_Case__c',
-        'FEC_Sensitive_Data__c' => 'FEC_Case__c',
-        'FEC_Watcher__c' => 'FEC_Case__c',
-        
-        // FIS does not list these objects
-        // 'FEC_RePayment_Schedule__c' => 'FEC_Case__c',
-        // 'FEC_Notification_History__c' => 'FEC_Case__c',
-        // 'FEC_Do_Not_Bother__c' => 'FEC_Case__c',
-        // 'FEC_ChatHistory__c' => 'FEC_Case__c',
-        // 'FEC_Card_Delivery__c' => 'FEC_Case__c',
-        // 'FEC_Asset__c' => 'FEC_Case__c',
-        // 'FEC_Application_History__c' => 'FEC_Case__c',
-        
-        // Lookup relationships to Case
-        'FEC_IPP__c' => 'FEC_IPP_Closure_Case__c',
-        'FEC_Card_Payment__c' => 'FEC_Case__c',
-        'FEC_Process_Action__c' => 'FEC_Linked_Case__c',
-        'FEC_Integration_Case__c' => 'FEC_Integrate_Case_ID__c'
-    };
+    // Lookup relationships to Case: FEC_IPP__c, FEC_Card_Payment__c, FEC_Process_Action__c, FEC_Integration_Case__c
+    public static Map<String, String> masterDetailFieldsToCase = getMasterDetailOrLookupFieldsToCase(label.TECH_LIST_OBJ_IS_MASTER_DETAIL.split(','), true);
+    public static List<String> listObjIsArchiveTemp = label.TECH_LIST_OBJ_IS_ARCHIVE_TEMP.split(',');
+    public static Map<String, String> lookupFieldsToCase = getMasterDetailOrLookupFieldsToCase(listObjIsArchiveTemp, false);
+    public static Map<String, String> CHILD_OBJECT_CASE_FIELD = new Map<String, String>();
+    static {
+        CHILD_OBJECT_CASE_FIELD.putAll(masterDetailFieldsToCase);
+        CHILD_OBJECT_CASE_FIELD.putAll(lookupFieldsToCase);
+    }
 
     public ArchiveCaseController(ApexPages.StandardController stdController) {
         this.athenaCaseRecord = (AthenaCases__x) stdController.getRecord();
@@ -1009,6 +983,7 @@ public with sharing class ArchiveCaseController {
         for (Map<String, Object> childData : childDataList) {
             SObject rec = sObjType.newSObject();
             rec.put(caseFieldName, caseId);
+            if (listObjIsArchiveTemp.contains(sObjectApiName)) rec.put('IsArchiveTemp__c', true);
 
             for (String key : childData.keySet()) {
                 Object val = childData.get(key);
@@ -1290,6 +1265,47 @@ public with sharing class ArchiveCaseController {
         }
 
         return mapAddrInfoAndId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Master-Detail / Lookup fields to Case for a list of child objects.
+    Returns:       Map<String, String>
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/18      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Map<String, String> getMasterDetailOrLookupFieldsToCase(List<String> objectApiNames, 
+                                                                        Boolean checkMasterDetail) {
+        Map<String, String> result = new Map<String, String>();
+
+        for (String objName : objectApiNames) {
+            String trimmedName = objName.trim();
+            Schema.SObjectType sObjType = Schema.getGlobalDescribe().get(trimmedName);
+            if (sObjType == null) continue;
+
+            Map<String, Schema.SObjectField> fieldMap = sObjType.getDescribe().fields.getMap();
+            for (Schema.SObjectField field : fieldMap.values()) {
+                Schema.DescribeFieldResult fieldRs = field.getDescribe();
+                if (fieldRs.getType() != Schema.DisplayType.REFERENCE) continue;
+
+                // Master-Detail is NOT nillable
+                // Lookup IS nillable
+                if (checkMasterDetail && fieldRs.isNillable()) continue;
+                else if (!checkMasterDetail && !fieldRs.isNillable()) continue;
+
+                for (Schema.SObjectType refTo : fieldRs.getReferenceTo()) {
+                    if (refTo == Case.SObjectType) {
+                        result.put(trimmedName, fieldRs.getName());
+                        break;
+                    }
+                }
+                if (result.containsKey(trimmedName)) break;
+            }
+        }
+
+        return result;
     }
 
     // public static String jsonOfResponse() {

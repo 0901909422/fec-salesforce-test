@@ -74,6 +74,8 @@
         <members>CS_DOWNLOAD_ATTACHMENT</members>
         <members>CS_NO_ARCHIVE_ATTACHMENT</members>
         <members>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</members>
+        <members>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</members>
+        <members>TECH_LIST_OBJ_IS_MASTER_DETAIL</members>
         <name>CustomLabel</name>
     </types>
 
