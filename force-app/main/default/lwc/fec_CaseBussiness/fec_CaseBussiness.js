@@ -88,6 +88,7 @@ import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_
 import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
+//PhongBT 18/05/26: Document Request sử dụng cục routing action mới
 import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_CaseBusinessService.getDocumentRequestStageChangeRouting";
 import { getDocumentRequestRoutingContext } from "./fecDocumentRequestStageChangeRouting";
 //PhongBT 14/05/26: Document Request — save PDF to Case
@@ -632,9 +633,10 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track activeRoutingSectionlst = [];
 
   routingAccordionSectionKey = "routing-action";
-  /** Document Request RL04/RC04: routing từ FEC_Stage_Change__c — ẩn block routing cũ. */
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _documentRequestStageChangeRoutingActive = false;
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   static DOC_REQ_FIELD_DELIVERY = "FEC_Delivery_Option_2__c";
   static DOC_REQ_FIELD_DOCUMENT_TYPE = "FEC_Document_Type__c";
 
@@ -1579,6 +1581,7 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
         // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
+        //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         const docReqRoutingCtx = getDocumentRequestRoutingContext(this.business);
         this.business.hasRoutingAction =
           (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
@@ -1825,6 +1828,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
           this._pendingPropertySnapshot = null;
         }
+        //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
         this._loadDocumentRequestStageChangeRouting().then(() => {
           this._syncActiveRoutingSection();
         });
@@ -2169,6 +2173,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._rebuildAllSectionSortedRows();
     }
 
+    //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
     if (
       fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY ||
       fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DOCUMENT_TYPE
@@ -4051,10 +4056,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business = { ...this.business };
   }
   //Thangtv update logic only show routing action when mode = handling
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   get showRoutingSection() {
     return this.showLegacyRoutingSection || this.showDocumentRequestStageChangeRoutingSection;
   }
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   get showLegacyRoutingSection() {
     return (
       this.isEdit &&
@@ -4063,10 +4070,12 @@ export default class Fec_CaseBussiness extends LightningElement {
     );
   }
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   get showDocumentRequestStageChangeRoutingSection() {
     return this.isEdit && this._documentRequestStageChangeRoutingActive;
   }
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _syncActiveRoutingSection() {
     if (this.showDocumentRequestStageChangeRoutingSection) {
       this.activeRoutingSectionlst = ["routing-action-doc-request"];
@@ -4077,6 +4086,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   _loadDocumentRequestStageChangeRouting() {
     const ctx = getDocumentRequestRoutingContext(this.business);
     if (!ctx.eligible || !ctx.team) {

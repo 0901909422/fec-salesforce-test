@@ -5134,10 +5134,7 @@ public without sharing class FEC_CaseBusinessService {
   public class CaseBusinessServiceException extends Exception {
   }
 
-  /**
-   * Document Request (RL04/RC04): Team/Queue Route to từ FEC_Stage_Change__c.
-   * Query: FEC_Previous_Stage__c = Case.FEC_Current_Case_Stage__c AND FEC_Team_User_Group__c = teamUserGroup.
-   */
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   public class DocumentRequestStageRoutingResult {
     @AuraEnabled
     public String nextTeam { get; set; }
@@ -5147,6 +5144,7 @@ public without sharing class FEC_CaseBusinessService {
     public String nextQueueId { get; set; }
   }
 
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   @AuraEnabled
   public static DocumentRequestStageRoutingResult getDocumentRequestStageChangeRouting(
     Id caseId,

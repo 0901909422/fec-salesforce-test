@@ -251,6 +251,7 @@
   <!--END: Hieutt74: Update ngày 12/5/2026-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới — ẩn block cũ khi bộ mới active-->
     <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
@@ -321,7 +322,7 @@
       </div>
     </lightning-accordion-section>
 
-    <!-- Document Request RL04/RC04: routing Team/Queue từ FEC_Stage_Change__c (thay block routing cũ) -->
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
     <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
       name="routing-action-doc-request" label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
