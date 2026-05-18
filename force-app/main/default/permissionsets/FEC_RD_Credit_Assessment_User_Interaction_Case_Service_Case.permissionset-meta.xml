@@ -4106,6 +4106,11 @@
         <field>Case.FEC_Full_Remarks__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>RD - Credit Assessment User - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

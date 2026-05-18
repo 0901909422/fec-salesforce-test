@@ -474,6 +474,7 @@
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>Case.FEC_Is_DNB__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -600,6 +601,7 @@
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
 		<members>fec_NewAssignmentAction</members>
+        <members>fec_DoNotBotherResultView</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -611,6 +613,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+        <members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>

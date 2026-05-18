@@ -11844,6 +11844,14 @@
         <value>Dịch vụ lỗi, vui lòng thử lại</value>
     </labels>
     <labels>
+        <fullName>FEC_Account_Contract_Status</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Status (Remove Phone datatable)</shortDescription>
+        <value>Account/ Contract Status</value>
+    </labels>
+    <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
         <categories>Remove Phone LWC</categories>
         <language>en_US</language>
@@ -17589,5 +17597,13 @@
         <protected>false</protected>
         <shortDescription>FEC MSG ERROR</shortDescription>
         <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
     </labels>
 </CustomLabels>

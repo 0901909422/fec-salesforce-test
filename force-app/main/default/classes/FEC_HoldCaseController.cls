@@ -152,25 +152,13 @@ public with sharing class FEC_HoldCaseController {
             // Trường hợp: Case chưa save NOC, Stage chưa gắn NOC, nhưng button đã hiện
             // → tìm config theo Stage để lấy NFU codes
             List<FEC_Hold_Case_Config__c> configs;
-            if (nocId != null) {
-                configs = [
-                    SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
-                    FROM FEC_Hold_Case_Config__c
-                    WHERE FEC_Nature_of_Cases__c = :nocId
-                      AND FEC_Active__c = true
-                      AND Hold_Case_Type__c = 'Manual'
-                      AND FEC_Case_Stage__c != null
-                      AND FEC_Case_Stage__c = :currentStageId
-                    WITH SECURITY_ENFORCED
-                ];
-            } else if (currentStageId != null) {
-                // tungnm37: fallback 4 - query theo Stage khi không có nocId
+            // tungnm37: chỉ check FEC_Case_Stage__c, không cần FEC_Nature_of_Cases__c
+            if (currentStageId != null) {
                 configs = [
                     SELECT FEC_NFU_Code__c, FEC_Active__c, Hold_Case_Type__c
                     FROM FEC_Hold_Case_Config__c
                     WHERE FEC_Active__c = true
                       AND Hold_Case_Type__c = 'Manual'
-                      AND FEC_Case_Stage__c != null
                       AND FEC_Case_Stage__c = :currentStageId
                     WITH SECURITY_ENFORCED
                 ];
@@ -542,8 +530,7 @@ public with sharing class FEC_HoldCaseController {
 
         Case patch = new Case(
             Id = caseId,
-            FEC_NFU_Description_Result__c = resultType,
-            FEC_Collections_Response__c = collectionsResponse
+            FEC_NFU_Description_Result__c = resultType
         );
 
         if (String.isNotBlank(caseStatus)) {
@@ -578,7 +565,7 @@ public with sharing class FEC_HoldCaseController {
         Case refreshed = [
             SELECT FEC_NFU_Status__c, FEC_NFU_Code__c,
                    FEC_NFU_Started_Date__c, FEC_NFU_Expiry_Date__c,
-                   FEC_NFU_Reason__c, FEC_Collections_Response__c
+                   FEC_NFU_Reason__c
             FROM Case
             WHERE Id = :caseId
             WITH SECURITY_ENFORCED
@@ -593,7 +580,6 @@ public with sharing class FEC_HoldCaseController {
             ? refreshed.FEC_NFU_Expiry_Date__c.format()
             : '';
         resp.nfuReason      = refreshed.FEC_NFU_Reason__c;
-        resp.collectionsResponse = refreshed.FEC_Collections_Response__c;
     }
 
     @TestVisible
