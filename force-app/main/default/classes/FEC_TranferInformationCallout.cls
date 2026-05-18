@@ -1,10 +1,7 @@
 public without sharing class FEC_TranferInformationCallout {
-  public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
   public static FEC_ResponseLog responseLog;
 
-  // ============================================================
-  // 1. Cấu trúc JSON Request Body
-  // ============================================================
+  // --- Request DTO (Pega body + map từ Case) ---
 
   public class TransferCallInput {
     @AuraEnabled
@@ -15,7 +12,7 @@ public without sharing class FEC_TranferInformationCallout {
     public Map<String, String> callData { get; set; }
   }
 
-  /** Phần tử mảng body.data — chỉ fieldKey / fieldValue theo contract API */
+  /** Một phần tử trong body.data (fieldKey / fieldValue). */
   public class TransferDataEntry {
     public String fieldKey;
     public String fieldValue;
@@ -26,32 +23,15 @@ public without sharing class FEC_TranferInformationCallout {
     }
   }
 
-  /** Body JSON gửi Pega: genesysId, data[], csCaseID — không bọc headers trong body. */
+  /** Body POST: genesysId, data[], csCaseID (header tách riêng). */
   public class TransferCallRequestBody {
     public String genesysId;
     public List<TransferDataEntry> data;
     public String csCaseID;
   }
 
-  private static final List<String> CALL_DATA_FIELD_ORDER = new List<String>{
-    'productType',
-    'extAppId',
-    'phoneNumber',
-    'category',
-    'subCategory',
-    'subCode',
-    'remark'
-  };
-
-  /** DateTime trên HTTP header — khớp Postman/Pega: yyyyMMddTHHmmss.SSS GMT */
-  private static String formatTransferRequestDateTime(Datetime dt) {
-    Datetime useDt = dt == null ? Datetime.now() : dt;
-    return useDt.formatGMT('yyyyMMdd\'T\'HHmmss.SSS') + ' GMT';
-  }
-
-  // Wrapper for case data mapped to call request fields
   public class CaseCallData {
-    /** Genesys id: trên Case Interaction là chính record; Case KH lấy từ Interaction cha (lookup). */
+    /** Genesys ID: Case Interaction = FEC_External_Interaction_ID__c; Customer Case = Interaction cha. */
     @AuraEnabled public String genesysId { get; set; }
     @AuraEnabled public String productType { get; set; }
     @AuraEnabled public String extAppId { get; set; }
@@ -79,8 +59,9 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_Category__r.Name,
         FEC_SubCategory__r.Name,
         FEC_SubCode__r.Name,
-        FEC_Transfer_Call_to_Collections_Remarks__c,
-        FEC_Case_ID__c
+        FEC_Remark_for_Collections__c,
+        FEC_Case_ID__c,
+        FEC_ID_Search__c
       FROM Case
       WHERE Id = :caseId
       WITH SECURITY_ENFORCED
@@ -93,7 +74,7 @@ public without sharing class FEC_TranferInformationCallout {
       : c.FEC_Interaction__r?.FEC_External_Interaction_ID__c;
     data.productType = c.FEC_Product_Type__r?.Name;
     data.extAppId = c.FEC_Account_Contract_Number_Text__c;
-    // Interaction Phone trên Case; nếu trống lấy từ Interaction cha; cuối cùng Phone Number (nghiệp vụ Case).
+    // Phone: Case → Interaction cha → FEC_Case_Phone_Number__c
     if (String.isNotBlank(c.FEC_Phone_Number__c)) {
       data.phoneNumber = c.FEC_Phone_Number__c;
     } else if (String.isNotBlank(c.FEC_Interaction__r?.FEC_Phone_Number__c)) {
@@ -104,17 +85,49 @@ public without sharing class FEC_TranferInformationCallout {
     data.category = c.FEC_Category__r?.Name;
     data.subCategory = c.FEC_SubCategory__r?.Name;
     data.subCode = c.FEC_SubCode__r?.Name;
-    data.remark = c.FEC_Transfer_Call_to_Collections_Remarks__c;
-    data.csCaseID = c.FEC_Case_ID__c;
+    data.remark = c.FEC_Remark_for_Collections__c;
+    data.csCaseID = c.FEC_ID_Search__c; // mã Case (S-xxxx), không dùng hyperlink formula
     return data;
   }
 
-  /**
-   * LWC: transfer chỉ cần Case Id — lấy Genesys ID từ Interaction, RequestorID chuẩn CSM.
-   */
+  /** LWC: Case Id + remark; RequestorID = CSM constant. */
   @AuraEnabled
-  public static TransferCallResponse transferCallFromCase(Id caseId) {
+  public static TransferCallResponse transferCallFromCase(Id caseId, String remark) {
     try {
+      if (caseId == null) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Case ID' }
+        );
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
+      List<Case> submittedCheck = [
+        SELECT FEC_Is_Submited__c
+        FROM Case
+        WHERE Id = :caseId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+      if (submittedCheck.isEmpty()) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = String.format(
+          System.Label.FEC_MSG_Param_Required,
+          new List<String>{ 'Case ID' }
+        );
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
+      if (submittedCheck[0].FEC_Is_Submited__c == true) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = 'Case has been submitted. Transfer Call is readonly.';
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
       CaseCallData data = getCaseCallData(caseId);
       if (data == null) {
         TransferCallResponse res = new TransferCallResponse();
@@ -126,11 +139,48 @@ public without sharing class FEC_TranferInformationCallout {
         res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
         return res;
       }
-      return transferCallByCase(
+      TransferCallResponse result = transferCallByCase(
         caseId,
         data.genesysId,
-        FEC_ConstantCommon.API_REQUESTOR_ID
+        FEC_ConstantCommon.TRANSFER_CALL_REQUESTOR_ID_CSM,
+        remark
       );
+      if (result != null && result.success == true) {
+        try {
+          String transferTime = Datetime.now().format('dd/MM/yyyy HH:mm:ss', 'Asia/Ho_Chi_Minh');
+          Case c = new Case(
+            Id = caseId,
+            FEC_Transfer_Data_to_Collections__c = 'Yes',
+            FEC_Remark_for_Collections__c = remark,
+            FEC_Transfer_Time__c = transferTime,
+            FEC_Transfer_Status__c = 'Success',
+            FEC_Failure_Reason__c = null
+          );
+          update c;
+        } catch (Exception updateEx) {
+          System.debug(LoggingLevel.WARN,
+            '[TransferCall] Could not update Case fields (success): ' + updateEx.getMessage());
+        }
+      } else if (result != null && result.success == false) {
+        localizeTransferCallFailure(result);
+        try {
+          String failReason = String.isNotBlank(result.errorMessage)
+            ? result.errorMessage
+            : (String.isNotBlank(result.Reason) ? result.Reason : result.ResultOfClass);
+          Case c = new Case(
+            Id = caseId,
+            FEC_Transfer_Data_to_Collections__c = 'No',
+            FEC_Remark_for_Collections__c = remark,
+            FEC_Transfer_Status__c = 'Failure',
+            FEC_Failure_Reason__c = failReason
+          );
+          update c;
+        } catch (Exception updateEx) {
+          System.debug(LoggingLevel.WARN,
+            '[TransferCall] Could not update Case fields (failure): ' + updateEx.getMessage());
+        }
+      }
+      return result;
     } catch (Exception e) {
       System.debug(LoggingLevel.ERROR, e.getMessage() + '\n' + e.getStackTraceString());
       TransferCallResponse err = new TransferCallResponse();
@@ -138,6 +188,7 @@ public without sharing class FEC_TranferInformationCallout {
       err.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
       err.errorMessage = formatExceptionDetail(e);
       err.ResultOfClass = err.errorMessage;
+      localizeTransferCallFailure(err);
       return err;
     }
   }
@@ -146,7 +197,8 @@ public without sharing class FEC_TranferInformationCallout {
   public static TransferCallResponse transferCallByCase(
     Id caseId,
     String genesysId,
-    String requestorId
+    String requestorId,
+    String remark
   ) {
     try {
       CaseCallData data = getCaseCallData(caseId);
@@ -161,18 +213,22 @@ public without sharing class FEC_TranferInformationCallout {
         return res;
       }
 
+      String resolvedProductType = normalizeProductType(data.productType);
+
       TransferCallInput reqObj = new TransferCallInput();
-      reqObj.genesysId = genesysId;
+      reqObj.genesysId = String.isNotBlank(genesysId)
+        ? genesysId
+        : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_GENESYS_ID;
       reqObj.requestorId = requestorId;
       reqObj.callData = new Map<String, String>{
-        'productType' => data.productType,
-        'extAppId' => data.extAppId,
-        'phoneNumber' => data.phoneNumber,
-        'category' => data.category,
-        'subCategory' => data.subCategory,
-        'subCode' => data.subCode,
-        'remark' => data.remark,
-        'csCaseID' => data.csCaseID
+        'productType' => String.isNotBlank(resolvedProductType) ? resolvedProductType : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_PRODUCT_TYPE,
+        'extAppId' => String.isNotBlank(data.extAppId) ? data.extAppId : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_EXT_APP_ID,
+        'phoneNumber' => String.isNotBlank(data.phoneNumber) ? data.phoneNumber : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_PHONE,
+        'category' => String.isNotBlank(data.category) ? data.category : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_CATEGORY,
+        'subCategory' => String.isNotBlank(data.subCategory) ? data.subCategory : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_SUB_CATEGORY,
+        'subCode' => String.isNotBlank(data.subCode) ? data.subCode : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_SUB_CODE,
+        'remark' => String.isNotBlank(remark) ? remark : data.remark,
+        'csCaseID' => String.isNotBlank(data.csCaseID) ? data.csCaseID : FEC_ConstantCommon.TRANSFER_CALL_DEFAULT_CS_CASE_ID
       };
 
       return transferCall(reqObj);
@@ -183,11 +239,81 @@ public without sharing class FEC_TranferInformationCallout {
       err.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
       err.errorMessage = formatExceptionDetail(e);
       err.ResultOfClass = err.errorMessage;
+      localizeTransferCallFailure(err);
       return err;
     }
   }
 
+  /**
+   * Tra FEC_Transfer_Call_Error__c theo FEC_Error_Message_EN__c (khớp chính xác),
+   * trả FEC_Error_Message_VI__c để hiển thị. Không có bản ghi → giữ nguyên EN.
+   */
+  @TestVisible
+  private static String resolveTransferCallErrorMessageVi(String englishMessage) {
+    if (String.isBlank(englishMessage)) {
+      return englishMessage;
+    }
+    String vi = queryTransferCallErrorVi(englishMessage.trim());
+    return vi != null ? vi : englishMessage.trim();
+  }
+
+  private static String queryTransferCallErrorVi(String enLookupKey) {
+    if (String.isBlank(enLookupKey)) {
+      return null;
+    }
+    try {
+      List<FEC_Transfer_Call_Error__c> rows = [
+        SELECT FEC_Error_Message_VI__c
+        FROM FEC_Transfer_Call_Error__c
+        WHERE FEC_Error_Message_EN__c = :enLookupKey
+        LIMIT 1
+      ];
+      if (
+        !rows.isEmpty() &&
+        String.isNotBlank(rows[0].FEC_Error_Message_VI__c)
+      ) {
+        return rows[0].FEC_Error_Message_VI__c.trim();
+      }
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.WARN,
+        '[TransferCall] FEC_Transfer_Call_Error__c lookup failed: ' +
+          ex.getMessage()
+      );
+    }
+    return null;
+  }
+
+  @TestVisible
+  private static void localizeTransferCallFailure(TransferCallResponse res) {
+    if (res == null || res.success == true) {
+      return;
+    }
+    String rawEn = String.isNotBlank(res.errorMessage)
+      ? res.errorMessage
+      : (String.isNotBlank(res.Reason)
+          ? res.Reason
+          : res.ResultOfClass);
+    if (String.isBlank(rawEn)) {
+      return;
+    }
+    String vi = resolveTransferCallErrorMessageVi(rawEn);
+    res.errorMessage = vi;
+    if (String.isNotBlank(res.ResultOfClass)) {
+      res.ResultOfClass = vi;
+    }
+    if (String.isNotBlank(res.Reason)) {
+      res.Reason = vi;
+    }
+  }
+
   private static String formatExceptionDetail(Exception e) {
+    // FEC_APIServiceException: chỉ getMessage (không nối type/cause cho user).
+    if (e instanceof FEC_APIServiceException) {
+      return String.isNotBlank(e.getMessage())
+        ? e.getMessage().trim()
+        : '[' + e.getTypeName() + ']';
+    }
     List<String> parts = new List<String>();
     if (String.isNotBlank(e.getMessage())) {
       parts.add(e.getMessage());
@@ -204,18 +330,66 @@ public without sharing class FEC_TranferInformationCallout {
     return String.isNotBlank(msg) ? msg : '[' + e.getTypeName() + ']';
   }
 
-  // ============================================================
-  // 2. Cấu trúc JSON Response Body
-  // ============================================================
+  /**
+   * Parse chuỗi ngày giờ từ service thành Datetime.
+   * Hỗ trợ ISO 8601 (JSON deserialize) và "dd/MM/yyyy HH:mm:ss".
+   * Trả về null nếu không parse được.
+   */
+  @TestVisible
+  private static Datetime parseCollActionDatetime(String raw) {
+    if (String.isBlank(raw)) {
+      return null;
+    }
+    String trimmed = raw.trim();
+    // ISO 8601 (e.g. "2026-04-21T08:13:36.000Z")
+    try {
+      return (Datetime) JSON.deserialize('"' + trimmed + '"', Datetime.class);
+    } catch (Exception ignore) {}
+    // dd/MM/yyyy HH:mm:ss
+    try {
+      if (trimmed.length() >= 19
+          && trimmed.substring(2, 3) == '/'
+          && trimmed.substring(5, 6) == '/') {
+        String isoLike = trimmed.substring(6, 10) + '-'
+            + trimmed.substring(3, 5) + '-'
+            + trimmed.substring(0, 2) + 'T'
+            + trimmed.substring(11, 19);
+        return (Datetime) JSON.deserialize('"' + isoLike + '"', Datetime.class);
+      }
+    } catch (Exception ignore) {}
+    return null;
+  }
+
+  /** Chuẩn hóa productType cho Pega (uppercase). */
+  private static String normalizeProductType(String rawValue) {
+    if (String.isBlank(rawValue)) {
+      return rawValue;
+    }
+    return rawValue.trim().toUpperCase();
+  }
+
+  // --- Response DTO ---
   public class TransferCallResponse {
     @AuraEnabled
-    public String Code; // Mã kết quả (ví dụ: 'Y')
+    public String Code;
 
     @AuraEnabled
-    public String ResultOfClass; // Mô tả kết quả
+    public String SubActionCode;
 
     @AuraEnabled
-    public String TransID; // ID giao dịch phản hồi
+    public String ResultOfClass;
+
+    @AuraEnabled
+    public String Reason;
+
+    @AuraEnabled
+    public String TransID;
+
+    @AuraEnabled
+    public String ActionDate;
+
+    @AuraEnabled
+    public String Agent;
 
     @AuraEnabled
     public Integer httpStatus;
@@ -230,14 +404,18 @@ public without sharing class FEC_TranferInformationCallout {
     public String errorMessage;
   }
 
-  // ============================================================
-  // 3. Hàm tạo Transaction ID (UUID)
-  // ============================================================
+  // --- Callout ---
 
-  // ============================================================
-  // 4. Các Phương thức Gọi API (Refactored like FEC_GetLoanApplicationHistory)
-  // ============================================================
-  /** Chỉ body JSON (genesysId, data, csCaseID) — TransID/RequestorID/DateTime là HTTP header. */
+  private static String resolveTransferEndpoint() {
+    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
+      FEC_ConstantCommon.API_CONFIG_NAME
+    );
+    return apiSetting?.FEC_Call_Mock__c
+      ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
+      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+  }
+  /** Serialize body; TransID / RequestorID / DateTime ở header. */
   public static String buildRequestBodyJson(TransferCallInput reqObj) {
     TransferCallRequestBody reqBody = new TransferCallRequestBody();
     reqBody.genesysId = reqObj.genesysId;
@@ -247,7 +425,7 @@ public without sharing class FEC_TranferInformationCallout {
     reqBody.data = new List<TransferDataEntry>();
 
     if (reqObj.callData != null) {
-      for (String key : CALL_DATA_FIELD_ORDER) {
+      for (String key : FEC_ConstantCommon.TRANSFER_CALL_DATA_FIELD_ORDER) {
         reqBody.data.add(
           new TransferDataEntry(key, reqObj.callData.get(key))
         );
@@ -258,20 +436,12 @@ public without sharing class FEC_TranferInformationCallout {
   }
 
   public static HttpResponse sendRequest(
+    String endpoint,
     String jsonBody,
     String transId,
     String requestorId,
     String dateTimeHeader
   ) {
-    FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-    FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(
-      API_CONFIG_NAME
-    );
-
-    String endpoint = apiSetting?.FEC_Call_Mock__c
-      ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
-      : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-
     Map<String, String> headers = new Map<String, String>{
       'Content-Type' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
       'Accept' => FEC_ConstantCommon.API_CONTENT_TYPE_JSON,
@@ -280,12 +450,72 @@ public without sharing class FEC_TranferInformationCallout {
       'DateTime' => dateTimeHeader
     };
 
-    return FEC_CommonUltils.calloutApiWithHeaders(
+    HttpResponse response = FEC_CommonUltils.calloutApiWithHeaders(
       endpoint,
       FEC_ConstantCommon.API_METHOD_POST,
       headers,
       jsonBody
     );
+
+    if (response != null && response.getStatusCode() >= 400) {
+      String b = response.getBody();
+      if (String.isBlank(b)) {
+        System.debug(
+          LoggingLevel.WARN,
+          '[TransferCall] HTTP ' +
+            response.getStatusCode() +
+            ' body=(empty)'
+        );
+      } else {
+        String logBody = FEC_CommonUltils.truncateForLog(
+          b,
+          FEC_ConstantCommon.TRANSFER_CALL_DEBUG_BODY_MAX_LEN,
+          '...[truncated]'
+        );
+        System.debug(
+          LoggingLevel.WARN,
+          '[TransferCall] HTTP ' + response.getStatusCode() + ' body=' + logBody
+        );
+      }
+    }
+    return response;
+  }
+
+  /** Lấy chuỗi lỗi từ body khi schema không khớp TransferCallResponse. */
+  private static String extractApiErrorHint(String jsonResponse) {
+    if (String.isBlank(jsonResponse)) {
+      return null;
+    }
+    String trimmed = jsonResponse.trim();
+    Integer maxRaw = FEC_ConstantCommon.TRANSFER_CALL_API_HINT_RAW_MAX_LEN;
+    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+      return trimmed.length() > maxRaw ? trimmed.substring(0, maxRaw) + '…' : trimmed;
+    }
+    try {
+      Object root = JSON.deserializeUntyped(trimmed);
+      if (root instanceof Map<String, Object>) {
+        Map<String, Object> m = (Map<String, Object>) root;
+        for (String k : FEC_ConstantCommon.TRANSFER_CALL_JSON_ERROR_HINT_KEYS) {
+          Object v = m.get(k);
+          if (v != null && v instanceof String && String.isNotBlank((String) v)) {
+            return ((String) v).trim();
+          }
+        }
+        Object errs = m.get('errors');
+        if (errs instanceof List<Object>) {
+          List<Object> errList = (List<Object>) errs;
+          if (!errList.isEmpty() && errList[0] instanceof Map<String, Object>) {
+            Map<String, Object> first = (Map<String, Object>) errList[0];
+            Object em = first.get('message');
+            if (em instanceof String && String.isNotBlank((String) em)) {
+              return ((String) em).trim();
+            }
+          }
+        }
+      }
+    } catch (Exception ignore) {
+    }
+    return null;
   }
 
   public static TransferCallResponse parseResponse(
@@ -299,7 +529,8 @@ public without sharing class FEC_TranferInformationCallout {
     if (String.isBlank(jsonResponse)) {
       result.errorMessage = System.Label.FEC_MSG_Response_Null;
       result.success = false;
-      result.Code = 'E';
+      result.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+      localizeTransferCallFailure(result);
       return result;
     }
 
@@ -309,18 +540,40 @@ public without sharing class FEC_TranferInformationCallout {
         TransferCallResponse.class
       );
       result.Code = parsed.Code;
+      result.SubActionCode = parsed.SubActionCode;
       result.ResultOfClass = parsed.ResultOfClass;
+      result.Reason = parsed.Reason;
       result.TransID = parsed.TransID;
+      result.ActionDate = parsed.ActionDate;
+      result.Agent = parsed.Agent;
 
       result.success = (result.Code == FEC_ConstantCommon.SUCCESS_CODE_1 ||
       result.Code == FEC_ConstantCommon.SUCCESS_CODE_Y ||
       result.Code == FEC_ConstantCommon.SUCCESS_MESSAGE);
+      if (!result.success) {
+        if (String.isNotBlank(result.Reason)) {
+          result.errorMessage = result.Reason;
+          if (String.isBlank(result.ResultOfClass)) {
+            result.ResultOfClass = result.Reason;
+          }
+        } else if (
+          String.isBlank(result.errorMessage) &&
+          String.isNotBlank(result.ResultOfClass)
+        ) {
+          result.errorMessage = result.ResultOfClass;
+        }
+      }
+      Boolean httpBad = httpStatus != null && httpStatus >= 400;
       if (
-        !result.success &&
+        (!result.success || httpBad) &&
         String.isBlank(result.errorMessage) &&
-        String.isNotBlank(result.ResultOfClass)
+        String.isBlank(result.ResultOfClass)
       ) {
-        result.errorMessage = result.ResultOfClass;
+        String apiErrHint = extractApiErrorHint(jsonResponse);
+        if (String.isNotBlank(apiErrHint)) {
+          result.errorMessage = apiErrHint;
+          result.ResultOfClass = apiErrHint;
+        }
       }
     } catch (Exception ex) {
       result.errorMessage = String.format(
@@ -330,7 +583,13 @@ public without sharing class FEC_TranferInformationCallout {
       result.success = false;
       result.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
       result.ResultOfClass = result.errorMessage;
+      String apiErrHint = extractApiErrorHint(jsonResponse);
+      if (String.isNotBlank(apiErrHint)) {
+        result.errorMessage = result.errorMessage + ' | API hint: ' + apiErrHint;
+        result.ResultOfClass = result.ResultOfClass + ' | API hint: ' + apiErrHint;
+      }
     }
+    localizeTransferCallFailure(result);
     return result;
   }
 
@@ -341,10 +600,12 @@ public without sharing class FEC_TranferInformationCallout {
     try {
       String transId = FEC_CommonUltils.generateTransactionUUID();
       Datetime nowDt = Datetime.now();
-      String timestamp = formatTransferRequestDateTime(nowDt);
+      String timestamp = FEC_CommonUltils.formatTransferCallRequestDateTime(nowDt);
       String jsonPayload = buildRequestBodyJson(reqObj);
+      String endpoint = resolveTransferEndpoint();
 
       HttpResponse res = sendRequest(
+        endpoint,
         jsonPayload,
         transId,
         reqObj.requestorId,
@@ -352,12 +613,6 @@ public without sharing class FEC_TranferInformationCallout {
       );
       Integer status = (res == null) ? null : res.getStatusCode();
       String body = (res == null) ? null : res.getBody();
-
-      FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-      FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance(API_CONFIG_NAME);
-      String endpoint = apiSetting?.FEC_Call_Mock__c
-        ? FEC_MockupEndpoint.UPDATE_CUSTOMER_CONTACT_ENDPOINT_MOCKUP
-        : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
 
       responseLog = new FEC_ResponseLog(
         'FEC_TranferInformationCallout',
@@ -369,6 +624,7 @@ public without sharing class FEC_TranferInformationCallout {
       );
 
       finalResult = parseResponse(body, status);
+      localizeTransferCallFailure(finalResult);
 
       if (finalResult.TransID == null)
         finalResult.TransID = transId;
@@ -397,21 +653,23 @@ public without sharing class FEC_TranferInformationCallout {
         );
       }
     } catch (Exception ex) {
-      finalResult.errorMessage = ex.getMessage();
+      finalResult.errorMessage = formatExceptionDetail(ex);
       finalResult.success = false;
       finalResult.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
-      finalResult.ResultOfClass = ex.getMessage();
+      finalResult.ResultOfClass = finalResult.errorMessage;
+      localizeTransferCallFailure(finalResult);
     }
     return finalResult;
   }
 
+  private static void throwTransferValidationError(String enLookupKey) {
+    throw new FEC_APIServiceException(enLookupKey);
+  }
+
   private static void validate(TransferCallInput reqObj) {
     if (String.isBlank(reqObj.genesysId)) {
-      throw new FEC_APIServiceException(
-        String.format(
-          System.Label.FEC_MSG_Param_Required,
-          new List<String>{ 'Genesys ID' }
-        )
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_GENESYS_ID_NULL
       );
     }
     if (String.isBlank(reqObj.requestorId)) {
@@ -422,7 +680,7 @@ public without sharing class FEC_TranferInformationCallout {
         )
       );
     }
-    
+
     if (reqObj.callData == null || reqObj.callData.isEmpty()) {
       throw new FEC_APIServiceException(
         String.format(
@@ -432,26 +690,90 @@ public without sharing class FEC_TranferInformationCallout {
       );
     }
 
-    Map<String, String> requiredFields = new Map<String, String>{
-      'productType' => 'Product Type',
-      'extAppId' => 'Ext App ID',
-      'phoneNumber' => 'Phone Number',
-      'category' => 'Category',
-      'subCategory' => 'Sub Category',
-      'subCode' => 'Sub Code',
-      'remark' => 'Remark',
-      'csCaseID' => 'CS Case ID'
-    };
+    Map<String, String> m = reqObj.callData;
 
-    for (String key : requiredFields.keySet()) {
-      if (String.isBlank(reqObj.callData.get(key))) {
-        throw new FEC_APIServiceException(
-          String.format(
-            System.Label.FEC_MSG_Param_Required,
-            new List<String>{ requiredFields.get(key) }
-          )
-        );
-      }
+    if (String.isBlank(m.get('phoneNumber'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_PHONE_NUMBER_NULL
+      );
     }
+    if (!isTransferPhoneFormatValid(m.get('phoneNumber'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_PHONE_NUMBER_INVALID
+      );
+    }
+
+    if (String.isBlank(m.get('csCaseID'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_CS_CASE_ID_NULL
+      );
+    }
+    if (String.isBlank(m.get('extAppId'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_EXT_APP_ID_NULL
+      );
+    }
+
+    String productTypeRaw = m.get('productType');
+    if (String.isBlank(productTypeRaw)) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_PRODUCT_TYPE_NULL
+      );
+    }
+    String productTypeNorm = normalizeProductType(productTypeRaw);
+    if (!isTransferProductTypeValid(productTypeNorm)) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_PRODUCT_TYPE_INVALID
+      );
+    }
+
+    if (String.isBlank(m.get('category'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_CATEGORY_NULL
+      );
+    }
+    if (String.isBlank(m.get('subCategory'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_SUB_CATEGORY_NULL
+      );
+    }
+    if (String.isBlank(m.get('subCode'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_SUB_CODE_NULL
+      );
+    }
+    if (String.isBlank(m.get('remark'))) {
+      throwTransferValidationError(
+        FEC_ConstantCommon.TRANSFER_ERR_EN_REMARK_NULL
+      );
+    }
+  }
+
+  private static Boolean isTransferPhoneFormatValid(String rawPhone) {
+    if (String.isBlank(rawPhone)) {
+      return false;
+    }
+    String normalized = FEC_CommonUltils.normalizePhone(rawPhone);
+    return FEC_CommonUltils.isPhone(normalized);
+  }
+
+  private static Boolean isTransferProductTypeValid(String normalizedProductType) {
+    if (String.isBlank(normalizedProductType)) {
+      return false;
+    }
+    Set<String> allowedCodes = new Set<String>{
+      FEC_ConstantCommon.PRODUCT_TYPE_CARD,
+      FEC_ConstantCommon.PRODUCT_TYPE_LOAN,
+      FEC_ConstantCommon.PRODUCT_TYPE_INSURANCE,
+      FEC_ConstantCommon.PRODUCT_TYPE_UBANK.toUpperCase(),
+      FEC_ConstantCommon.PRODUCT_NON_EXISTING_CUSTOMER.toUpperCase()
+    };
+    if (allowedCodes.contains(normalizedProductType)) {
+      return true;
+    }
+    return Pattern.matches(
+      FEC_ConstantCommon.TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN,
+      normalizedProductType
+    );
   }
 }
