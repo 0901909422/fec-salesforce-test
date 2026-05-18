@@ -4,19 +4,13 @@
         <field>Case.FEC_Customer_Name__c</field>
     </columns>
     <columns>
-        <field>FEC_Customer_History__c.FEC_User_ID__c</field>
-    </columns>
-    <columns>
         <field>Case.FEC_Account_Number__c</field>
     </columns>
     <columns>
         <field>FEC_Customer_History__c.FEC_Contract_Number__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Application_ID__c</field>
-    </columns>
-    <columns>
-        <field>FEC_Customer_History__c.FEC_Top_Up_Old_Account_App_ID__c</field>
+        <field>FEC_Customer_History__c.FEC_Application_ID__c</field>
     </columns>
     <columns>
         <field>FEC_Customer_History__c.FEC_Account_Status__c</field>
@@ -43,7 +37,7 @@
         <field>FEC_Customer_History__c.FEC_Tenure__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Interaction__c</field>
+        <field>Case.FEC_Interaction_ID__c</field>
     </columns>
     <columns>
         <field>Case.FEC_Interaction_Status__c</field>
@@ -53,12 +47,6 @@
     </columns>
     <columns>
         <field>Case.FEC_Created_by__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Last_Updated_On__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Last_Updated_By__c</field>
     </columns>
     <columns>
         <field>Case.FEC_Channel__c</field>
@@ -100,10 +88,10 @@
         <field>Case.FEC_Case_Created_By__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Last_Updated_On_View__c</field>
+        <field>Case.FEC_Last_Updated_On__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Last_Updated_By_View__c</field>
+        <field>Case.FEC_Last_Updated_By__c</field>
     </columns>
     <columns>
         <field>Case.FEC_Complain_Type__c</field>
@@ -112,7 +100,16 @@
         <field>Case.FEC_Complaint_Source__c</field>
     </columns>
     <columns>
+        <field>Case.FEC_Original_Category__c</field>
+    </columns>
+    <columns>
         <field>Case.FEC_Category__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Original_Sub_Category__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Original_Sub_Code__c</field>
     </columns>
     <columns>
         <field>Case.FEC_SubCategory__c</field>
@@ -121,22 +118,13 @@
         <field>Case.FEC_SubCode__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_New_Category__c</field>
+        <field>Case.FEC_Case_Status_History_1__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_New_SubCategory__c</field>
+        <field>Case.FEC_Case_Status_History_2__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_New_SubCode__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Case_Remarks_Entered_By_Role__c</field>
-    </columns>
-    <columns>
-        <field>Case.FEC_Case_Remarks_Entered_On__c</field>
+        <field>Case.FEC_Case_Status_History_3__c</field>
     </columns>
     <columns>
         <field>Case.FEC_Case_Remarks_1__c</field>
@@ -148,10 +136,34 @@
         <field>Case.FEC_Case_Remarks_3__c</field>
     </columns>
     <columns>
-        <field>Case.FEC_Case_Status_History__c</field>
+        <field>Case.FEC_Case_Remarks_Entered_By_1__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_By_2__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_By_3__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_By_Role_1__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_By_Role_2__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_By_Role_3__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_On_1__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_On_2__c</field>
+    </columns>
+    <columns>
+        <field>Case.FEC_Case_Remarks_Entered_On_3__c</field>
     </columns>
     <format>Tabular</format>
-    <name>FEC_RP_01</name>
+    <name>Interactions &amp; Service Cases Summary</name>
     <params>
         <name>units</name>
         <value>h</value>

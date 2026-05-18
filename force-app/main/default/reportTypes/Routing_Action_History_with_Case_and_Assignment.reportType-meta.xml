@@ -8,37 +8,13 @@
     <sections>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>Id</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>true</checkedByDefault>
-            <field>Name</field>
+            <field>FEC_Assigned_On__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>CreatedDate</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>CreatedBy</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>LastModifiedDate</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>LastModifiedBy</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>LastActivityDate</field>
+            <displayNameOverride>Assignment ID</displayNameOverride>
+            <field>FEC_Assignment__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -48,7 +24,67 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Changed_Status__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>CreatedBy</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>CreatedDate</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Current_Status__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Custom_Action_Button_Label__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Date_Time__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Decision__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Description__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_TAT_by_Assignment_Hrs__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_IsReverted__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>LastActivityDate</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>LastModifiedBy</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>LastModifiedDate</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -59,6 +95,11 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Original_User_Queue__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Original_User_Queue_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -78,67 +119,12 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Stage_Name__c</field>
+            <field>Name</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Updated_User_Queue__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_User_Role__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_User__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Updated_User_Queue_ID__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Description__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Original_User_Queue_ID__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Date_Time__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Current_Status__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Changed_Status__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Custom_Action_Button_Label__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_IsReverted__c</field>
+            <field>Id</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -148,7 +134,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assigned_On__c</field>
+            <field>FEC_Stage_Name__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -158,7 +144,24 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_TAT_by_Assignment_Hrs__c</field>
+            <field>FEC_Updated_User_Queue__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Updated_User_Queue_ID__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Submitted By User</displayNameOverride>
+            <field>FEC_User__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Submitted By Role</displayNameOverride>
+            <field>FEC_User_Role__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <masterLabel>Routing Action History</masterLabel>
@@ -166,11 +169,13 @@
     <sections>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Assignment ID</displayNameOverride>
             <field>FEC_Assignment__c.Id</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Assignment ID</displayNameOverride>
             <field>FEC_Assignment__c.Name</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -181,17 +186,34 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Assignment Owner</displayNameOverride>
             <field>FEC_Assignment__c.FEC_Assignment_Owner__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Assignment Status</displayNameOverride>
             <field>FEC_Assignment__c.FEC_Assignment_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Assignment__c.FEC_Assignment_Type__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Assignment__c.FEC_Case__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Assignment__c.CreatedBy</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Assignment__c.CreatedDate</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -206,12 +228,12 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c.CreatedDate</field>
+            <field>FEC_Assignment__c.LastModifiedBy</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c.LastModifiedBy</field>
+            <field>FEC_Assignment__c.LastModifiedDate</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -226,17 +248,8 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c.LastModifiedDate</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c.CreatedBy</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Assignment__c.FEC_Case__c</field>
+            <displayNameOverride>Assignment Remark</displayNameOverride>
+            <field>FEC_Assignment__c.FEC_Assignment_Remark__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <masterLabel>Assignemnts</masterLabel>
@@ -244,7 +257,12 @@
     <sections>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Full_Remarks__c</field>
+            <field>FEC_Case__c.Account</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Account_Number__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -254,22 +272,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Account/ Contract Number</displayNameOverride>
             <field>FEC_Case__c.FEC_Account_Contract_Number_Text__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Account_Contract_Number_PL__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.Account</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Account_Number__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -369,21 +378,25 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Created By</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Created_By__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Created On</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Created_On__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case ID</displayNameOverride>
             <field>FEC_Case__c.Id</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case ID</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -419,11 +432,31 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks 1</displayNameOverride>
+            <field>FEC_Case__c.FEC_Case_Remarks_1__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks 2</displayNameOverride>
+            <field>FEC_Case__c.FEC_Case_Remarks_2__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Remarks 3</displayNameOverride>
+            <field>FEC_Case__c.FEC_Case_Remarks_3__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case Status</displayNameOverride>
             <field>FEC_Case__c.FEC_Case_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Updated Category</displayNameOverride>
             <field>FEC_Case__c.FEC_Category__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -469,11 +502,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Complaint Source</displayNameOverride>
             <field>FEC_Case__c.FEC_Complaint_Source__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Complaint Type</displayNameOverride>
             <field>FEC_Case__c.FEC_Complain_Type__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -515,6 +550,11 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Contract_Number__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Conversion_Fee__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -584,6 +624,11 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_CS_Decision__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_CS_Support_Assessment_Type__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -599,6 +644,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Customer Name</displayNameOverride>
             <field>FEC_Case__c.FEC_Customer_Name__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -644,6 +690,16 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Disbursed_Amount__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Disbursement_Approval_Date__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Disbursement_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -679,6 +735,11 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_EMI__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.Entitlement</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -704,11 +765,6 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_RD_Card_Ops_Assessment_Type__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Interaction_View_Mode__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -725,6 +781,11 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Follow_Up_User__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Full_Remarks__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -759,6 +820,16 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Hold_Case_Retry_Count__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Hold_Case_Status__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Link_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -789,17 +860,32 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Channel</displayNameOverride>
             <field>FEC_Case__c.FEC_Channel__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case: Interaction Created By</displayNameOverride>
             <field>FEC_Case__c.FEC_Created_by__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Created By</displayNameOverride>
+            <field>FEC_Case__c.FEC_Interaction__c.FEC_Created_by__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Case: Interaction Created On</displayNameOverride>
             <field>FEC_Case__c.FEC_Created_On__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Created On</displayNameOverride>
+            <field>FEC_Case__c.FEC_Interaction__c.FEC_Created_On__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -824,6 +910,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction ID</displayNameOverride>
             <field>FEC_Case__c.FEC_Interaction_ID__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -864,12 +951,19 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Status</displayNameOverride>
             <field>FEC_Case__c.FEC_Interaction_Status__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Interaction Sub Channel</displayNameOverride>
             <field>FEC_Case__c.FEC_Interaction_Subchannel__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_IPP_Interest__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -899,17 +993,22 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Is_FEC_Email__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Is_In_Create_new_mode__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Is_MyCaseAPI_Interaction__c</field>
+            <field>FEC_Case__c.FEC_Is_My_Follow_Up__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Is_My_Follow_Up__c</field>
+            <field>FEC_Case__c.FEC_Is_MyCaseAPI_Interaction__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -969,11 +1068,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Last Updated By</displayNameOverride>
             <field>FEC_Case__c.FEC_Last_Updated_By__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Last Updated On</displayNameOverride>
             <field>FEC_Case__c.FEC_Last_Updated_On__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -1009,21 +1110,6 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_New_Category__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_New_SubCategory__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_New_SubCode__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_NFU_Code__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -1050,6 +1136,12 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_On_Hold__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Category</displayNameOverride>
+            <field>FEC_Case__c.FEC_Original_Category__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1105,6 +1197,18 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Original_Info_Place_of_Issue__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Category</displayNameOverride>
+            <field>FEC_Case__c.FEC_Original_Sub_Category__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Original Sub Code</displayNameOverride>
+            <field>FEC_Case__c.FEC_Original_Sub_Code__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1174,6 +1278,11 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_RD_Card_Ops_Assessment_Type__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_RD_Payment_Assessment_Type__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -1205,6 +1314,11 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Remarks__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Remarks_for_Collections__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1294,6 +1408,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Service Case Owner</displayNameOverride>
             <field>FEC_Case__c.FEC_Service_Case_Owner__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -1389,17 +1504,19 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Updated Sub Category</displayNameOverride>
             <field>FEC_Case__c.FEC_SubCategory__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Sub_Channel__c</field>
+            <displayNameOverride>Updated Sub Code</displayNameOverride>
+            <field>FEC_Case__c.FEC_SubCode__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_SubCode__c</field>
+            <field>FEC_Case__c.FEC_Sub_Channel__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1410,6 +1527,12 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Task__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>TAT Full Process (Hrs)</displayNameOverride>
+            <field>FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1509,17 +1632,17 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <field>FEC_Case__c.FEC_Updated_Info_Place_of_Issue__c</field>
+            <table>FEC_Routing_Action_History__c</table>
+        </columns>
+        <columns>
+            <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Updated_Info_Phone_Number__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Updated_Info_Phone_Type__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Updated_Info_Place_of_Issue__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
@@ -1550,31 +1673,6 @@
         <columns>
             <checkedByDefault>false</checkedByDefault>
             <field>FEC_Case__c.FEC_Zip_Code__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Account_or_Contract__c.FEC_User_ID__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Case_Remarks_1__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Case_Remarks_2__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_Case_Remarks_3__c</field>
-            <table>FEC_Routing_Action_History__c</table>
-        </columns>
-        <columns>
-            <checkedByDefault>false</checkedByDefault>
-            <field>FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <masterLabel>Cases</masterLabel>
