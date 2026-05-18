@@ -255,13 +255,15 @@
               </div>
               <div class="fec-footer__center">
                 <lightning-button-icon
+                  class="fec-footer__nav-btn"
                   icon-name="utility:chevronleft"
                   alternative-text={batchUi.previous}
                   onclick={handleCasePreviousPage}
                   disabled={casePreviousDisabled}
                 ></lightning-button-icon>
-                <span class="fec-footer__page">{caseSearchPage}</span>
+                <span class="fec-footer__page-btn">{caseSearchPage}</span>
                 <lightning-button-icon
+                  class="fec-footer__nav-btn"
                   icon-name="utility:chevronright"
                   alternative-text={batchUi.next}
                   onclick={handleCaseNextPage}
@@ -278,7 +280,10 @@
                   class="fec-footer__goto-input"
                   onchange={handleCaseGoToPageInput}
                 ></lightning-input>
+                <span class="fec-footer__of">{batchUi.footerOf} {caseTotalPages}</span>
                 <lightning-button
+                  class="fec-footer__go-btn"
+                  variant="brand"
                   label={batchUi.go}
                   onclick={handleCaseGoToPage}
                 ></lightning-button>
@@ -517,13 +522,15 @@
               </div>
               <div class="fec-footer__center">
                 <lightning-button-icon
+                  class="fec-footer__nav-btn"
                   icon-name="utility:chevronleft"
                   alternative-text={batchUi.previous}
                   onclick={handlePreviousPage}
                   disabled={previousDisabled}
                 ></lightning-button-icon>
-                <span class="fec-footer__page">{currentPage}</span>
+                <span class="fec-footer__page-btn">{currentPage}</span>
                 <lightning-button-icon
+                  class="fec-footer__nav-btn"
                   icon-name="utility:chevronright"
                   alternative-text={batchUi.next}
                   onclick={handleNextPage}
@@ -540,7 +547,10 @@
                   class="fec-footer__goto-input"
                   onchange={handleGoToPageInput}
                 ></lightning-input>
+                <span class="fec-footer__of">{batchUi.footerOf} {totalPages}</span>
                 <lightning-button
+                  class="fec-footer__go-btn"
+                  variant="brand"
                   label={batchUi.go}
                   onclick={handleGoToPage}
                 ></lightning-button>
@@ -638,13 +648,15 @@
             </div>
             <div class="fec-footer__center">
               <lightning-button-icon
+                class="fec-footer__nav-btn"
                 icon-name="utility:chevronleft"
                 alternative-text={batchUi.previous}
                 onclick={handleBpPreviousPage}
                 disabled={bpPreviousDisabled}
               ></lightning-button-icon>
-              <span class="fec-footer__page">{bpCurrentPage}</span>
+              <span class="fec-footer__page-btn">{bpCurrentPage}</span>
               <lightning-button-icon
+                class="fec-footer__nav-btn"
                 icon-name="utility:chevronright"
                 alternative-text={batchUi.next}
                 onclick={handleBpNextPage}
@@ -661,8 +673,13 @@
                 class="fec-footer__goto-input"
                 onchange={handleBpGoToPageInput}
               ></lightning-input>
-              <span class="fec-footer__label">{batchUi.footerOf} {bpTotalPages}</span>
-              <lightning-button label={batchUi.go} onclick={handleBpGoToPage}></lightning-button>
+              <span class="fec-footer__of">{batchUi.footerOf} {bpTotalPages}</span>
+              <lightning-button
+                class="fec-footer__go-btn"
+                variant="brand"
+                label={batchUi.go}
+                onclick={handleBpGoToPage}
+              ></lightning-button>
             </div>
           </div>
           <div class="fec-bp-modal__props">

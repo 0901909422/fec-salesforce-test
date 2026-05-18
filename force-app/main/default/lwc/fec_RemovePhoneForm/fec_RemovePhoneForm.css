@@ -52,7 +52,13 @@
 }
 
 .page-input {
-    width: 60px;
+    width: 3.5rem;
+}
+
+.page-of {
+    font-size: 13px;
+    color: #3e3e3c;
+    white-space: nowrap;
 }
 
 .square-icon {
@@ -71,19 +77,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0176d3;
-    color: white;
+    background-color: #0176d3;
+    border: 1px solid #0176d3;
+    color: #ffffff;
     border-radius: 4px;
     font-weight: 700;
 }
 
 .square-go-btn {
+    --sds-c-button-brand-color-background: #0176d3;
+    --sds-c-button-brand-color-background-hover: #014486;
+    --sds-c-button-brand-color-border: #0176d3;
+    --sds-c-button-brand-color-border-hover: #014486;
+    --slds-c-button-brand-color-background: #0176d3;
+    --slds-c-button-brand-color-background-hover: #014486;
+    --slds-c-button-brand-color-border: #0176d3;
+    --slds-c-button-brand-color-border-hover: #014486;
     --slds-c-button-radius-border: 4px;
-    --slds-c-button-sizing-border: 0.5px;
-    --slds-c-button-color-border: #0176d3;
-    --slds-c-button-color-background: #0176d3;
-    --slds-c-button-color-background-hover: #0176d3;
-    color: white;
-    width: 32px;
-    height: 32px;
 }

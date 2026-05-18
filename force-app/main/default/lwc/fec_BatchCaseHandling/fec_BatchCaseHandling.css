@@ -187,6 +187,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e5e5;
+  background: #fafaf9;
 }
 
 .fec-footer__label {
@@ -208,15 +211,53 @@
   max-width: 6rem;
 }
 
-.fec-footer__page {
-  min-width: 1.5rem;
-  text-align: center;
+.fec-footer__nav-btn {
+  --slds-c-button-radius-border: 4px;
+  --slds-c-button-sizing-border: 0.5px;
+  --slds-c-button-color-border: #d8dde6;
+  --slds-c-button-color-background: #ffffff;
+  --slds-c-button-color-background-hover: #f3f3f3;
+  width: 32px;
+  height: 32px;
+}
+
+.fec-footer__page-btn {
+  min-width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0176d3;
+  border: 1px solid #0176d3;
+  color: #ffffff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1;
+  padding: 0 0.35rem;
+  box-sizing: border-box;
+}
+
+.fec-footer__of {
   font-size: 0.8125rem;
   color: #3e3e3c;
+  white-space: nowrap;
 }
 
 .fec-footer__goto-input {
   width: 3.5rem;
+}
+
+.fec-footer__go-btn {
+  --sds-c-button-brand-color-background: #0176d3;
+  --sds-c-button-brand-color-background-hover: #014486;
+  --sds-c-button-brand-color-border: #0176d3;
+  --sds-c-button-brand-color-border-hover: #014486;
+  --slds-c-button-brand-color-background: #0176d3;
+  --slds-c-button-brand-color-background-hover: #014486;
+  --slds-c-button-brand-color-border: #0176d3;
+  --slds-c-button-brand-color-border-hover: #014486;
+  --slds-c-button-radius-border: 4px;
 }
 
 .fec-session-body--filters {

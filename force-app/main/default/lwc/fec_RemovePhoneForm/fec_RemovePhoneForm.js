@@ -521,7 +521,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     handleGoToPageInput(event) {
-        this.goToPageValue = parseInt(event.target.value, 10);
+        this.goToPageValue = parseInt(event.detail.value, 10);
     }
 
     handleGoToPage() {
