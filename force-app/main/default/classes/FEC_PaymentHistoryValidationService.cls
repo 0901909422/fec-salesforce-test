@@ -212,6 +212,87 @@ public with sharing class FEC_PaymentHistoryValidationService {
     return null;
   }
 
+  /**
+   * Document Request — lấy header data cho PDF (LSTT / TBCV_LTN) theo Case.
+   *
+   * Nguồn dữ liệu:
+   *   - Customer History: Case.FEC_Account_or_Contract__r (relationship -> FEC_Customer_History__c)
+   *   - Customer Address: FEC_Address_Info__c có cùng Customer History & FEC_Address_Type__c = 'Current Address'
+   *
+   * Mapping key trả về tương ứng placeholder PDF (xem fecDocumentRequestPdfData.js):
+   *   ContractNumber   : FEC_Customer_History__c.FEC_Contract_Number__c
+   *   NationalID       : FEC_Customer_History__c.FEC_National_ID_Passport_ID__c
+   *   CustomerName     : FEC_Customer_History__c.FEC_Customer_Name__c
+   *   DateOfIssue      : FEC_Customer_History__c.FEC_Date_of_Issue__c (format dd/MM/yyyy)
+   *   PlaceOfIssue     : FEC_Customer_History__c.FEC_Place_of_Issue__c
+   *   TotalLoanAmount  : FEC_Customer_History__c.FEC_Total_Balance__c
+   *   CustomerAddress  : FEC_Address_Info__c.FEC_Full_Address__c (Address Type = Current Address)
+   *
+   * Trả Map rỗng nếu Case không có Customer History.
+   */
+  @AuraEnabled
+  public static Map<String, Object> getDocumentRequestPdfHeaderData(String caseId) {
+    Map<String, Object> data = new Map<String, Object>();
+    if (String.isBlank(caseId)) {
+      return data;
+    }
+    List<Case> cases = [
+      SELECT
+        FEC_Account_or_Contract__c,
+        FEC_Account_or_Contract__r.Name,
+        FEC_Account_or_Contract__r.FEC_Contract_Number__c,
+        FEC_Account_or_Contract__r.FEC_Account_Number__c,
+        FEC_Account_or_Contract__r.FEC_National_ID_Passport_ID__c,
+        FEC_Account_or_Contract__r.FEC_Customer_Name__c,
+        FEC_Account_or_Contract__r.FEC_Date_of_Issue__c,
+        FEC_Account_or_Contract__r.FEC_Place_of_Issue__c,
+        FEC_Account_or_Contract__r.FEC_Total_Balance__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    if (cases.isEmpty() || cases[0].FEC_Account_or_Contract__c == null) {
+      return data;
+    }
+    FEC_Customer_History__c h = cases[0].FEC_Account_or_Contract__r;
+    Id customerHistoryId = cases[0].FEC_Account_or_Contract__c;
+
+    data.put('ContractNumber', h.Name);
+    data.put('NationalID', h.FEC_National_ID_Passport_ID__c);
+    data.put('CustomerName', h.FEC_Customer_Name__c);
+    data.put('PlaceOfIssue', h.FEC_Place_of_Issue__c);
+    data.put(
+      'TotalLoanAmount',
+      h.FEC_Total_Balance__c != null
+        ? FEC_CommonUltils.formatCurrency(h.FEC_Total_Balance__c, 0)
+        : FEC_ConstantCommon.STR_EMPTY
+    );
+    if (h.FEC_Date_of_Issue__c != null) {
+      DateTime issueDt = DateTime.newInstance(
+        h.FEC_Date_of_Issue__c.year(),
+        h.FEC_Date_of_Issue__c.month(),
+        h.FEC_Date_of_Issue__c.day()
+      );
+      data.put('DateOfIssue', issueDt.format('dd/MM/yyyy'));
+    } else {
+      data.put('DateOfIssue', FEC_ConstantCommon.STR_EMPTY);
+    }
+
+    List<FEC_Address_Info__c> addrRows = [
+      SELECT FEC_Full_Address__c
+      FROM FEC_Address_Info__c
+      WHERE FEC_Customer_History__c = :customerHistoryId
+        AND FEC_Address_Type__c = 'Current Address'
+      ORDER BY LastModifiedDate DESC
+      LIMIT 1
+    ];
+    data.put(
+      'CustomerAddress',
+      addrRows.isEmpty() ? FEC_ConstantCommon.STR_EMPTY : addrRows[0].FEC_Full_Address__c
+    );
+    return data;
+  }
+
   @AuraEnabled
   public static List<Map<String, Object>> getPaymentHistoryRows(String caseId) {
     List<Map<String, Object>> rows = new List<Map<String, Object>>();
