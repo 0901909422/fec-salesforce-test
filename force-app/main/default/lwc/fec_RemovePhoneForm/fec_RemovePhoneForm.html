@@ -47,7 +47,6 @@
               value={pageSizeStr}
               options={pageSizeOptions}
               onchange={handlePageSizeChange}
-              disabled={readOnlyRemovePhone}
               variant="label-hidden">
             </lightning-combobox>
           </div>
@@ -77,7 +76,6 @@
               max={totalPages}
               variant="label-hidden"
               class="page-input"
-              disabled={readOnlyRemovePhone}
               onchange={handleGoToPageInput}>
             </lightning-input>
             <span class="slds-m-horizontal_x-small">of {totalPages}</span>
@@ -85,7 +83,6 @@
               class="square-go-btn"
               label={paginationLabels.goBtnLabel}
               onclick={handleGoToPage}
-              disabled={readOnlyRemovePhone}
               variant="brand">
             </lightning-button>
           </div>
