@@ -1,6 +1,6 @@
 /**
  * Apex REST Service: Update Call Transfer Information (inbound from Pega Collections)
- * URL    : POST /services/apexrest/UpdateServiceCases/v1/Update_Transfer_Information
+ * URL    : POST /services/apexrest/collections/v1/call-transfer
  * Caller : Pega Collection system
  *
  * Request:
@@ -18,7 +18,7 @@
  *   Status      – "Success" / "Error"
  *   TransID     – UUID giao dịch
  */
-@RestResource(urlMapping='/UpdateServiceCases/v1/Update_Transfer_Information')
+@RestResource(urlMapping='/collections/v1/call-transfer')
 global without sharing class FEC_UpdateTransferInfoRestService {
 
     // ─── Request DTO ─────────────────────────────────────────────────────────
