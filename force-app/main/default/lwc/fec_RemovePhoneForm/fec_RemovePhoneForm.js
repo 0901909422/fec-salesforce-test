@@ -24,11 +24,13 @@ import FEC_Go_Button_Label from '@salesforce/label/c.FEC_Go_Button_Label';
 import Loading from '@salesforce/label/c.Loading';
 import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation_Title';
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
-import { STR_EMPTY, RESULT_ERROR, PAGE_SIZE_OPTIONS_MAP } from 'c/fec_CommonConst';
+import { STR_EMPTY, RESULT_ERROR } from 'c/fec_CommonConst';
 import { validateUpdatedInfoPhone } from 'c/fec_CommonUtils';
 
 const DT_SELECT_ALL = 'selectallrows';
 const DT_DESELECT_ALL = 'deselectallrows';
+
+const REMOVE_PHONE_PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 
 const REMOVE_PHONE_TABLE_COLUMNS = [
     { label: FEC_Customer_Name_Label, fieldName: 'customerName', type: 'text' },
@@ -297,10 +299,14 @@ export default class Fec_RemovePhoneForm extends LightningElement {
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1368
     get disableCheckButton() {
-        if (this.isLoading || this.readOnlyRemovePhone || !this.phone) {
+        if (this.isLoading || this.readOnlyRemovePhone) {
             return true;
         }
-        if (this._getPhoneValidationError(this.phone)) {
+        const p = (this.phone || STR_EMPTY).trim();
+        if (!p) {
+            return false;
+        }
+        if (this._getPhoneValidationError(p)) {
             return true;
         }
         return this.isEligibilityChecked;
@@ -366,9 +372,9 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get pageSizeOptions() {
-        return Array.from(PAGE_SIZE_OPTIONS_MAP, ([value, label]) => ({
-            label,
-            value: value.toString()
+        return REMOVE_PHONE_PAGE_SIZE_OPTIONS.map((size) => ({
+            label: String(size),
+            value: String(size)
         }));
     }
 
