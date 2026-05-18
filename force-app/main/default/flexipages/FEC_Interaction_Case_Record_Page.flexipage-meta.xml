@@ -1442,7 +1442,7 @@
         <itemInstances>
             <componentInstance>
                 <componentName>fecInteractionChatConversations</componentName>
-                <identifier>c_fecInteractionChatConversations</identifier>
+                <identifier>c_fecInteractionChatConversations2</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Channel__c}</leftValue>
