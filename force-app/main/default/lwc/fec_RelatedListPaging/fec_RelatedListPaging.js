@@ -268,6 +268,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             isLink: true,
                             label: row[col.fieldName],
                             recordId: row[col.recordIdField],
+                            actionKey: col.actionKey || col.fieldName,
                            hoverTitle: col.hasOwnProperty('hoverTitle') ? col.hoverTitle : null,
                             hoverItems,
                             hasHover: hoverItems.length > 0,
@@ -733,7 +734,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     handleLinkClick(event) {
         event.preventDefault();
+
         const recordId = event.currentTarget.dataset.recordId;
+        const fieldName = event.currentTarget.dataset.field;
+        const actionKey = event.currentTarget.dataset.actionKey; 
 
         if (!recordId) {
             console.error('Missing recordId on link click');
@@ -742,7 +746,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
         this.dispatchEvent(
             new CustomEvent('rowselect', {
-                detail: { recordId },
+                detail: {
+                    recordId,
+                    fieldName,
+                    actionKey
+                },
                 bubbles: true,
                 composed: true
             })
