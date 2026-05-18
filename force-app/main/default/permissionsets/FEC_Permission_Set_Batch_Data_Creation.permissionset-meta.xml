@@ -74,6 +74,10 @@
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <tabSettings>
+        <tab>Batch_Data_Creation</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Template_Import__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
