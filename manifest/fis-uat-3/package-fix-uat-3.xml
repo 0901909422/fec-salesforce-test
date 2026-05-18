@@ -129,6 +129,7 @@
         <members>fec_PointsRedemptionCaseForm</members>
         <members>fec_TransferCall</members>
         <members>fec_CaseNocUpdatedSection</members>
+        <members>fec_holdCaseManual</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
