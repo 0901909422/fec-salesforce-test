@@ -368,19 +368,19 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (caseRecord == null || history == null) {
       return;
     }
-    String action = history.FEC_Routing_Action__c;
-    switch on action {
-      when FEC_CaseBusinessService.CANCEL {
+    FEC_CaseBusinessService.Method actionMethod = FEC_CaseBusinessService.METHOD_MAP.get(history?.FEC_Routing_Action__c);
+    switch on actionMethod {
+      when CANCEL {
         caseRecord.FEC_Team__c = null;
       }
-      when FEC_CaseBusinessService.REJECT, FEC_CaseBusinessService.RESOLVE {
+      when REJECT, RESOLVE {
         if (caseRecord.FEC_Assignment_Count__c > 0) {
           caseRecord.FEC_Team__c = null;
         } else {
           updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
         }
       }
-      when FEC_CaseBusinessService.UPDATEACTION {
+      when UPDATEACTION {
         if (caseRecord.FEC_Assignment_Count__c == 0) {
           updateTeamForUpdateAction(caseRecord, history);
         }
