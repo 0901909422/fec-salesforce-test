@@ -128,6 +128,13 @@ public without sharing class FEC_TranferInformationCallout {
         res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
         return res;
       }
+      if (String.isBlank(remark)) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = System.Label.FEC_Transfer_Err_Remark_Null;
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
       CaseCallData data = getCaseCallData(caseId);
       if (data == null) {
         TransferCallResponse res = new TransferCallResponse();
@@ -190,6 +197,37 @@ public without sharing class FEC_TranferInformationCallout {
       err.ResultOfClass = err.errorMessage;
       localizeTransferCallFailure(err);
       return err;
+    }
+  }
+
+  /**
+   * LWC: mở popup Transfer — xóa remark cũ trên Case để lần transfer sau ghi đè bằng giá trị mới.
+   */
+  @AuraEnabled
+  public static void prepareRemarkForCollectionsTransfer(Id caseId) {
+    if (caseId == null) {
+      return;
+    }
+    List<Case> rows = [
+      SELECT FEC_Is_Submited__c
+      FROM Case
+      WHERE Id = :caseId
+      WITH SECURITY_ENFORCED
+      LIMIT 1
+    ];
+    if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
+      return;
+    }
+    ensureCaseNocForTransfer(caseId);
+    try {
+      update new Case(Id = caseId, FEC_Remark_for_Collections__c = null);
+    } catch (Exception updateEx) {
+      System.debug(
+        LoggingLevel.WARN,
+        '[TransferCall] Could not clear FEC_Remark_for_Collections__c: ' +
+        updateEx.getMessage()
+      );
+      throw new AuraHandledException(updateEx.getMessage());
     }
   }
 
