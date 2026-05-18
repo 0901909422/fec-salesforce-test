@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>FEC_TAT_Full_Process_Hrs__c</fullName>
+    <description>Tổng thời gian xử lý của Case theo giờ làm việc: Resolved = Last Updated On - Case Created On; Pending = Now - Case Created On. Dùng Business Hours &quot;FEC Business Hours&quot;.</description>
+    <externalId>false</externalId>
+    <label>TAT Full Process (Hrs)</label>
+    <precision>16</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

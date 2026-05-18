@@ -870,10 +870,15 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab27</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
                         <operator>NE</operator>
                         <rightValue>Insurance</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Account_Contract_Number_Text__c}</leftValue>
+                        <operator>EQUAL</operator>
                     </criteria>
                 </visibilityRule>
             </componentInstance>

@@ -14130,7 +14130,8 @@
   &quot;FEC_Service_Case_Owner__c&quot;: &quot;ArchiveServiceCaseOwner__c&quot;,
   &quot;FEC_Case_Created_By__c&quot;: &quot;ArchiveCaseCreatedBy__c&quot;,
   &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;,
-  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;
+  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;,
+  &quot;FEC_Selected_Address__c&quot;: &quot;ArchiveSelectedAddress__c&quot;
 }</value>
     </labels>
     <labels>
@@ -14758,6 +14759,70 @@
         <protected>false</protected>
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_TITLE</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Assignment modal title</shortDescription>
+        <value>New Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_REQUIRED_INFO</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required information label</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_CALL_NAME</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Name value for Call type</shortDescription>
+        <value>Click to Call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_TYPE_REQUIRED</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when Assignment Type not selected</shortDescription>
+        <value>Vui lòng chọn Assignment Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_NAME_REQUIRED</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when Assignment Name not selected</shortDescription>
+        <value>Vui lòng chọn Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after creating assignment</shortDescription>
+        <value>Đã tạo Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_CREATE</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message when creating assignment fails</shortDescription>
+        <value>Lỗi khi tạo Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_CASE_NOT_FOUND</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when case not found during assignment creation</shortDescription>
+        <value>Case not found</value>
     </labels>
     <labels>
         <fullName>CS_TITLE_NAME_OF_ATTACHMENT</fullName>

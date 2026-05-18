@@ -895,9 +895,73 @@ public with sharing class ArchiveCaseController {
                 if (!recordsToInsert.isEmpty()) {
                     insert recordsToInsert;
                     System.debug('insertChildRecords: Inserted ' + recordsToInsert.size() + ' records for ' + sObjectApiName);
+
+                    // Handle nested child records (e.g. FEC_Address_Info__c inside FEC_Customer_History__c)
+                    if (sObjectApiName == 'FEC_Customer_History__c') {
+                        insertNestedAddressInfo(recordsToInsert, childDataList, listSpecialArchiveObject);
+                    }
                 }
             } catch (Exception ex) {
                 System.debug('insertChildRecords failed for ' + sObjectApiName + ': ' + ex.getMessage());
+            }
+        }
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Insert FEC_Address_Info__c records nested inside FEC_Customer_History__c.
+                   FEC_Address_Info__c has a Master-Detail to FEC_Customer_History__c.
+                   After FEC_Customer_History__c records are inserted, extract nested
+                   FEC_Address_Info__c arrays and insert them with the correct parent Id.
+    Returns:       void
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2026/05/18      Thanh Van           Init
+    ------------------------------------------------------------*/
+    private static void insertNestedAddressInfo(List<SObject> insertedCustHistRecords, 
+                                                 List<Map<String, Object>> custHistDataList,
+                                                 List<String> listSpecialArchiveObject) {
+        // insertedCustHistRecords and custHistDataList are in the same order
+        for (Integer i = 0; i < custHistDataList.size(); i++) {
+            Map<String, Object> custHistData = custHistDataList[i];
+            Object addressInfoObj = custHistData.get('FEC_Address_Info__c');
+            if (addressInfoObj == null) continue;
+
+            List<Map<String, Object>> addressInfoList = new List<Map<String, Object>>();
+            if (addressInfoObj instanceof List<Object>) {
+                for (Object item : (List<Object>) addressInfoObj) {
+                    if (item instanceof Map<String, Object>) {
+                        addressInfoList.add((Map<String, Object>) item);
+                    }
+                }
+            } else if (addressInfoObj instanceof Map<String, Object>) {
+                // Single record case
+                addressInfoList.add((Map<String, Object>) addressInfoObj);
+            }
+
+            if (addressInfoList.isEmpty()) continue;
+
+            Id custHistId = insertedCustHistRecords[i].Id;
+            try {
+                // FEC_Address_Info__c Master-Detail field to FEC_Customer_History__c
+                List<SObject> addressRecords = buildChildSObjects('FEC_Address_Info__c', 
+                                                                   'FEC_Customer_History__c', 
+                                                                   custHistId, addressInfoList,
+                                                                   listSpecialArchiveObject);
+                if (!addressRecords.isEmpty()) {
+                    Object caseRef = insertedCustHistRecords[i].get('FEC_Case__c');
+                    if (caseRef != null) {
+                        for (SObject addrRec : addressRecords) {
+                            addrRec.put('FEC_Case__c', (Id) caseRef);
+                        }
+                    }
+
+                    insert addressRecords;
+                    System.debug('insertNestedAddressInfo: Inserted ' + addressRecords.size() + ' FEC_Address_Info__c for CustHist ' + custHistId);
+                }
+            } catch (Exception ex) {
+                System.debug('insertNestedAddressInfo failed for CustHist ' + custHistId + ': ' + ex.getMessage());
             }
         }
     }
@@ -1115,21 +1179,26 @@ public with sharing class ArchiveCaseController {
             String archiveInteractionId = interactionIns.ArchiveInteractionId__c;
             List<Case> listAllCases = new List<Case>();
             List<String> listArchiveAccOrContract = new List<String>();
+            List<String> listArchiveSelectedAddr = new List<String>();
             Map<String, String> mapCusHistoryAndId = new Map<String, String>();
+            Map<String, String> mapAddrInfoAndId = new Map<String, String>();
             String cusHistoryId = '';
+            String addrInfoId = '';
 
             for (Case caseIns : [SELECT Id, FEC_Interaction__c, RecordTypeId, 
                                 FEC_Account_or_Contract__c, FEC_Selected_Address__c, 
-                                ArchiveAccOrContract__c 
+                                ArchiveAccOrContract__c, ArchiveSelectedAddress__c 
                                 FROM Case 
                                 WHERE ArchiveInteractionId__c = :archiveInteractionId 
                                 AND Id != :caseId]) {
 
                 listAllCases.add(caseIns);
                 listArchiveAccOrContract.add(caseIns.ArchiveAccOrContract__c);
+                listArchiveSelectedAddr.add(caseIns.ArchiveSelectedAddress__c);
             }
 
             mapCusHistoryAndId = getMapCusHistoryArchiveId(listArchiveAccOrContract);
+            mapAddrInfoAndId = getMapAddrInfoArchiveId(listArchiveSelectedAddr);
 
             for (Case caseIns : listAllCases) {
                 if (caseIns.RecordTypeId != interactionRtId 
@@ -1139,6 +1208,10 @@ public with sharing class ArchiveCaseController {
                 cusHistoryId = mapCusHistoryAndId.get(caseIns.ArchiveAccOrContract__c);
                 if (String.isNotBlank(cusHistoryId)) 
                     caseIns.FEC_Account_or_Contract__c = cusHistoryId;
+
+                addrInfoId = mapAddrInfoAndId.get(caseIns.ArchiveSelectedAddress__c);
+                if (String.isNotBlank(addrInfoId)) 
+                    caseIns.FEC_Selected_Address__c = addrInfoId;
 
                 listCaseUpdated.add(caseIns);
             }
@@ -1197,6 +1270,26 @@ public with sharing class ArchiveCaseController {
         }
 
         return mapCusHistoryAndId;
+    }
+
+    /*------------------------------------------------------------
+    Author:        Thanh Van
+    Company:       Amaris
+    Description:   Get Map Address Info Archive Id
+    Returns:       
+    History
+    <Date>          <Authors Name>      <Brief Description of Change>
+    2025/04/01      Thanh Van           Init
+    ------------------------------------------------------------*/
+    public static Map<String, String> getMapAddrInfoArchiveId(List<String> listArchiveSelectedAddr) {
+        Map<String, String> mapAddrInfoAndId = new Map<String, String>();
+        for (FEC_Address_Info__c addrInfoIns : [SELECT Id, ArchiveExternalId__c 
+                                                FROM FEC_Address_Info__c 
+                                                WHERE ArchiveExternalId__c IN :listArchiveSelectedAddr]) {
+            mapAddrInfoAndId.put(addrInfoIns.ArchiveExternalId__c, addrInfoIns.Id);
+        }
+
+        return mapAddrInfoAndId;
     }
 
     // public static String jsonOfResponse() {
@@ -1445,7 +1538,7 @@ public with sharing class ArchiveCaseController {
     //         '      "url": "/services/data/v66.0/sobjects/RecordType/01285000000CMMXAA4"' +
     //         '    },' +
     //         '    "Id": "01285000000CMMXAA4",' +
-    //         '    "Name": "Customer Case",' +
+    //         '    "Name": "Interaction",' +
     //         '    "DeveloperName": "Customer_Case",' +
     //         '    "BusinessProcessId": "01985000001LjkjAAC",' +
     //         '    "SobjectType": "Case",' +
@@ -1521,12 +1614,12 @@ public with sharing class ArchiveCaseController {
     //         '  "FEC_Integration_Case__c": null,' +
     //         '  "FEC_IPP__c": null,' +
     //         '  "FEC_Do_Not_Bother__c": null,' +
-    //         '  "FEC_Customer_History__c": {' +
+    //         '  "FEC_Customer_History__c": [{' +
     //         '    "attributes": {' +
     //         '      "type": "FEC_Customer_History__c",' +
-    //         '      "url": "/services/data/v66.0/sobjects/FEC_Customer_History__c/a0h85000002dAOAAA2"' +
+    //         '      "url": "/services/data/v66.0/sobjects/FEC_Customer_History__c/RecordCaseI-308515"' +
     //         '    },' +
-    //         '    "Id": "a0h85000002dAOAAA2",' +
+    //         '    "Id": "RecordCaseI-308515",' +
     //         '    "IsDeleted": false,' +
     //         '    "Name": "0001500010000005476",' +
     //         '    "CreatedDate": "2026-05-06T03:16:33.000+0000",' +
@@ -1534,8 +1627,21 @@ public with sharing class ArchiveCaseController {
     //         '    "LastModifiedDate": "2026-05-06T06:06:00.000+0000",' +
     //         '    "LastModifiedById": "00585000004yJVKAA2",' +
     //         '    "SystemModstamp": "2026-05-06T06:06:00.000+0000",' +
-    //         '    "FEC_Case__c": "5008500000HiXjLAAV"' +
-    //         '  },' +
+    //         '    "FEC_Case__c": "5008500000HiXjLAAV",' +
+    //         '    "FEC_Address_Info__c": [' +
+    //         '      {' +
+    //         '        "attributes": {' +
+    //         '          "type": "FEC_Address_Info__c",' +
+    //         '          "url": "/services/data/v66.0/sobjects/FEC_Address_Info__c/a1A850000012345678"' +
+    //         '        },' +
+    //         '        "Id": "a1A850000012345678",' +
+    //         '        "Name": "ADR-0001",' +
+    //         '        "FEC_Customer_History__c": "RecordCaseI-308515",' +
+    //         '        "FEC_Case__c": "5008500000HigGOAAZ",' +
+    //         '        "FEC_Mailing_Address__c": "abc"' +
+    //         '      }' +
+    //         '    ]' +
+    //         '  }],' +
     //         '  "FEC_ChatHistory__c": null,' +
     //         '  "FEC_Case_Remarks__c": [' +
     //         '    {' +
@@ -1661,7 +1767,7 @@ public with sharing class ArchiveCaseController {
     //         '    "LastModifiedById": "005d50000049NeDAAU",' +
     //         '    "SystemModstamp": "2026-05-06T06:29:45.000+0000",' +
     //         '    "FEC_Account_Number__c": "0001500010000005476",' +
-    //         '    "FEC_Account_or_Contract__c": "a0h85000002dAOAAA2",' +
+    //         '    "FEC_Account_or_Contract__c": "aaa",' +
     //         '    "FEC_CS_Support__c": false,' +
     //         '    "FEC_Category__c": "a0T85000004BTHYEA4",' +
     //         '    "FEC_Channel__c": "Outbound",' +
@@ -1720,8 +1826,16 @@ public with sharing class ArchiveCaseController {
     //         '    "FEC_Assignment_Count__c": 0,' +
     //         '    "FEC_Is_Call_API_Success__c": false,' +
     //         '    "MilestoneStatus": ""' +
-    //         '  }' +
-    //         '}';
+    //         '  },' +
+    //         '  "FEC_Case_Attachments": [' +
+    //             '    {' +
+    //             '      "s3Path": "case-files/S-79587/7df289ce95651df0_Screenshot_2026-05-06_at_11.06.33.png",' +
+    //             '      "filename": "contract.pdf",' +
+    //             '      "contentType": "application/pdf",' +
+    //             '      "uploadedAt": "2026-03-01T08:00:00Z"' +
+    //             '    }' +
+    //             '  ]' +
+    //     '}';
     //     return res;
     // }
 }
