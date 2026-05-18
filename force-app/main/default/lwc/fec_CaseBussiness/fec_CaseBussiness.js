@@ -85,15 +85,13 @@ import FEC_Confirm_Label from "@salesforce/label/c.FEC_Confirm_Label";
 import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_Name";
 import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
-import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn"; // RL05.02 dup Case — nút mở Case trước
+import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
 import { getPdfConfigForSubCode, buildPdfDataForSubCode } from "./fecDocumentRequestPdfData";
 import getPaymentHistoryRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getPaymentHistoryRows";
 import getRepaymentScheduleRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getRepaymentScheduleRows";
-import validatePaymentHistoryRequestForSubCode from "@salesforce/apex/FEC_PaymentHistoryValidationService.validatePaymentHistoryRequestForSubCode";
-import getDocumentRequestPdfHeaderData from "@salesforce/apex/FEC_PaymentHistoryValidationService.getDocumentRequestPdfHeaderData";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -984,8 +982,6 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // tungnm37 thêm: track manual items từ fec_RoutingAssignment (Stage 2)
   _manualItems = [];
-  /** Chặn gen PDF trùng khi đang tạo file. */
-  _pdfGenerateInFlight = false;
   // tungnm37 thêm: remarkContent từ parent để truyền vào Apex khi submit COF/GSR
   @api remarkContent = '';
   handleManualItemsChange(event) {
@@ -1316,7 +1312,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         fastCashNocSel.subCodeId
       );
     } else {
-    this.getData();
+      this.getData();
     }
     if (this.isEdit) {
       this.updateRoutingActionDisplay(STR_EMPTY);
@@ -1419,7 +1415,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._pendingPropertySnapshot = snapshot;
 
         // Reload business với NOC mới
-        return this.getData(
+        this.getData(
           message.productTypeId,
           message.categoryId,
           message.subCategoryId,
@@ -1431,19 +1427,13 @@ export default class Fec_CaseBussiness extends LightningElement {
         console.error('[NOC-UPDATE] getPropertyFieldsFromFlowHistory error:', err);
         // Fallback: reload business mà không merge (không block flow)
         this._pendingPropertySnapshot = null;
-        return this.getData(
+        this.getData(
           message.productTypeId,
           message.categoryId,
           message.subCategoryId,
           message.subCodeId,
           message.natureOfCaseId
         );
-      })
-      .then(() => {
-        // PhongBT: Document Request — gen PDF sau khi chọn sub-code (chỉ trên luồng CASE_NOC)
-        if (message.subCodeId != null) {
-          void this._generateAndSavePdfIfApplicable(message.subCodeId);
-        }
       });
   }
 
@@ -1524,7 +1514,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
 
-    return getByCase({
+    getByCase({
       caseId: this.recordId,
       productTypeId,
       categoryId,
@@ -2967,7 +2957,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         // PhuongNT add handle save data for fields readonly were changed data by another field
         this.handleSaveFieldReadOnly();
       });
-      });
+    });
   }
 
   /** false = bị chặn (đã show toast), true = submit thành công. */
@@ -3184,33 +3174,19 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
+    //PhongBT 14/05/26: Document Request — gen PDF + save vào Case sau submit thành công
+    await this._generateAndSavePdfIfApplicable();
     return true;
   }
 
   /**
-   * PhongBT: Document Request — gen PDF theo sub-code RL04.02/RL04.03 và lưu vào Case.
-   * Chỉ gọi từ _handleNOCUpdate khi user chọn sub-code (CASE_NOC), không gọi trong getData/submit.
-   * Bỏ qua nếu FEC_PaymentHistoryValidationService không cho phép (allowed = false).
-   * Header data lấy trực tiếp qua Apex getDocumentRequestPdfHeaderData(caseId)
-   * (Case → FEC_Customer_History__c + FEC_Address_Info__c), không còn duyệt business.sectionlst.
+   * PhongBT 14/05/26: Document Request — gen PDF theo sub-code RL04.02/RL04.03 và lưu vào Case.
+   * Data lấy từ business object (sectionlst → field value), mapping xem fecDocumentRequestPdfData.js.
    */
-  async _generateAndSavePdfIfApplicable(subCodeId) {
+  async _generateAndSavePdfIfApplicable() {
     const config = getPdfConfigForSubCode(this.business?.subCodeCode);
-    if (!config || subCodeId == null) return;
-    if (this._pdfGenerateInFlight) return;
-
+    if (!config) return;
     try {
-      const validation = await validatePaymentHistoryRequestForSubCode({
-        caseId: this.recordId,
-        subCodeId
-      });
-      if (!validation?.allowed) {
-        return;
-      }
-
-      this._pdfGenerateInFlight = true;
-
-      const headerData = await getDocumentRequestPdfHeaderData({ caseId: this.recordId });
       let paymentRows = [];
       let repaymentRows = [];
       if (config.needsPaymentRows) {
@@ -3219,7 +3195,7 @@ export default class Fec_CaseBussiness extends LightningElement {
       if (config.needsRepaymentRows) {
         repaymentRows = await getRepaymentScheduleRows({ caseId: this.recordId });
       }
-      const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, headerData, paymentRows, repaymentRows);
+      const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, this.business, paymentRows, repaymentRows);
       const generator = this.template.querySelector('c-fec-pdf-generator');
       if (!generator) return;
       const { base64, fileName } = await generator.generatePdf(pdfConfig.templateCode, pdfConfig.data);
@@ -3230,8 +3206,6 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     } catch (err) {
       console.error('PDF generation/save failed:', err);
-    } finally {
-      this._pdfGenerateInFlight = false;
     }
   }
 
