@@ -1,4 +1,4 @@
-public with sharing class FEC_AssignmentExecuteService {
+public without sharing class FEC_AssignmentExecuteService {
 
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
