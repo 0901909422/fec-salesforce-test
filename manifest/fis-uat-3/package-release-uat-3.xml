@@ -150,6 +150,7 @@
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
         <members>FEC_CurrencyCodeLookup</members>
 		<members>FEC_HoldCaseInheritanceService</members>
+		<members>FEC_UpdateTransferInfoRestService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -541,6 +542,8 @@
         <members>FEC_Additional_Info__c.FEC_Customer_Service_Staff_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Status__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Original_Reason__c</members>
+        <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
+		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</members>
         <members>Case.FEC_Is_PIN_Reset_Success__c</members>
         <members>Case.FEC_CMS_Phone__c</members>
@@ -601,6 +604,7 @@
 		<members>FEC_Case_Assignment_Logs__c</members>
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
+        <members>FEC_Transfer_Call_Error__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -1088,6 +1092,16 @@
         <members>FEC_No_Data_Found_Hold_Case</members>
         <members>FEC_MSG_IPP_Noti_10</members>
         <members>FEC_Points_Redemption_Available_Points_Below_Min</members>
+        <members>FEC_TransferCall_Details_Title</members>
+        <members>FEC_TransferCall_Field_TransferDataToCollections</members>
+        <members>FEC_TransferCall_Field_TransferTime</members>
+        <members>FEC_TransferCall_Field_TransferStatus</members>
+        <members>FEC_TransferCall_Field_FailureReason</members>
+        <members>FEC_TransferCall_Field_CollActionCode</members>
+        <members>FEC_TransferCall_Field_CollSubActionCode</members>
+        <members>FEC_TransferCall_Field_CollRemarks</members>
+        <members>FEC_TransferCall_Field_CollActionDate</members>
+        <members>FEC_TransferCall_Field_CollAgent</members>
         <name>CustomLabel</name>
     </types>
 	<types>
