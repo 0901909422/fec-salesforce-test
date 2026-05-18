@@ -825,7 +825,6 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-<<<<<<< HEAD
         <apexClass>FEC_BatchCustomSync</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -860,14 +859,16 @@
     <classAccesses>
         <apexClass>FEC_BatchCustomSyncByIds</apexClass>
         <enabled>true</enabled>
-    </classAccesses> 
+    </classAccesses>
     <classAccesses>
         <apexClass>FEC_BatchCustomSyncByIdsTest</apexClass>
         <enabled>true</enabled>
-    </classAccesses> 
+    </classAccesses>
     <classAccesses>
         <apexClass>FEC_QueueReportCustomSyncBix</apexClass>
-=======
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_UpdateDisbursementStatusRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -893,7 +894,6 @@
     </classAccesses>
     <classAccesses>
         <apexClass>ArchiveCaseAttachmentController_Test</apexClass>
->>>>>>> review-sit
         <enabled>true</enabled>
     </classAccesses>
     <customMetadataTypeAccesses>
@@ -1043,6 +1043,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>CustomSync__c.SyncTo__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>CustomSync__c.CaseBusinessCode__c</field>
         <readable>true</readable>
     </fieldPermissions>  
     <fieldPermissions>
@@ -1247,53 +1252,6 @@
         <enabled>true</enabled>
         <name>TransferAnyEntity</name>
     </userPermissions>
-<<<<<<< HEAD
-=======
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.ActionName__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.ApexClass__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.ApexMethod__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.Message__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.Response__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.Success__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomLog__c.TargetObjectId__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Team__c.FEC_Team_Description__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Team__c.FEC_Team_Label__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Team__c.FEC_Team_Active__c</field>
@@ -1409,5 +1367,4 @@
         <field>Case.ArchiveMigrationSource__c</field>
         <readable>true</readable>
     </fieldPermissions>
->>>>>>> review-sit
 </PermissionSet>

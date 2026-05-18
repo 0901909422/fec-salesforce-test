@@ -28,7 +28,9 @@
         <members>FEC_integration_service_log__c.FEC_Method__c</members>
         <members>FEC_integration_service_log__c.FEC_Status_Code__c</members>
         <members>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</members>
-        <members>FEC_integration_service_log__c.FEC_Error_Message__c</members> 
+        <members>FEC_integration_service_log__c.FEC_Error_Message__c</members>
+        <members>FEC_integration_service_log__c.FEC_Request_Data__c</members>
+        <members>FEC_integration_service_log__c.FEC_Response_Data__c</members>
 
         <members>CustomSyncSetting__c.Endpoint__c</members> 
         <members>CustomSyncSetting__c.ApiKey__c</members>
