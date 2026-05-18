@@ -1216,4 +1216,5 @@
     <tabSettings>
         <tab>FEC_General_Assignment__c</tab>
         <visibility>Visible</visibility>
-    </tabSettings></PermissionSet>
+    </tabSettings>
+</PermissionSet>
