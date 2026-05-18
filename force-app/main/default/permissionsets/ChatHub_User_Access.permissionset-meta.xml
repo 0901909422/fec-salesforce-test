@@ -15,11 +15,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Stage_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>FEC_ChatHistory__c.FEC_Message__c</field>
         <readable>true</readable>
