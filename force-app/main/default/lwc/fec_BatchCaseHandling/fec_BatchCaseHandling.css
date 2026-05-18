@@ -169,6 +169,10 @@
   text-decoration: underline;
 }
 
+.fec-table th .fec-case-sort-link {
+  cursor: pointer;
+}
+
 .fec-sort-icon {
   --sds-c-icon-color-foreground-default: #706e6b;
   opacity: 0.85;

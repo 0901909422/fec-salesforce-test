@@ -407,6 +407,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track caseSetRequiredError = false;
   @track caseSortBy = "caseCreatedOn";
   @track caseSortDir = "asc";
+  @track bulkSortBy = "uploadedOn";
+  @track bulkSortDir = "desc";
   @track exportSuccessMessage = STR_EMPTY;
   @track exportErrorMessage = STR_EMPTY;
   @track importSuccessMessage = STR_EMPTY;
@@ -828,6 +830,49 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get caseSortIconAttachmentDownloaded() {
     return "utility:arrowdown";
+  }
+
+  bulkSortIconFor(key) {
+    if (this.bulkSortBy !== key) {
+      return "utility:arrowdown";
+    }
+    return this.bulkSortDir === "desc" ? "utility:arrowdown" : "utility:arrowup";
+  }
+
+  get bulkSortIconFileName() {
+    return this.bulkSortIconFor("fileName");
+  }
+
+  get bulkSortIconUploadedOn() {
+    return this.bulkSortIconFor("uploadedOn");
+  }
+
+  get bulkSortIconUploadedBy() {
+    return this.bulkSortIconFor("uploadedBy");
+  }
+
+  get bulkSortIconTotalRecords() {
+    return this.bulkSortIconFor("totalRecordsCount");
+  }
+
+  get bulkSortIconTotalSuccess() {
+    return this.bulkSortIconFor("totalSuccessRecords");
+  }
+
+  get bulkSortIconTotalFailed() {
+    return this.bulkSortIconFor("totalFailedRecords");
+  }
+
+  get bulkSortIconStatus() {
+    return this.bulkSortIconFor("status");
+  }
+
+  get bulkSortIconFailureReason() {
+    return this.bulkSortIconFor("failureReason");
+  }
+
+  get bulkSortIconResult() {
+    return this.bulkSortIconFor("result");
   }
 
   get hasCaseRows() {
@@ -2084,7 +2129,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       if (this.currentPage > this.totalPages) {
         this.currentPage = this.totalPages;
       }
-      this.rebuildPageRows();
+      this.applyBulkSort();
     } catch (error) {
       this.rows = [];
       this.pagedRows = [];
@@ -2137,6 +2182,56 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     } catch (e) {
       return value;
     }
+  }
+
+  handleBulkSort(event) {
+    const key = event.currentTarget?.dataset?.key || STR_EMPTY;
+    if (!key) {
+      return;
+    }
+    if (this.bulkSortBy === key) {
+      this.bulkSortDir = this.bulkSortDir === "asc" ? "desc" : "asc";
+    } else {
+      this.bulkSortBy = key;
+      this.bulkSortDir = key === "uploadedOn" ? "desc" : "asc";
+    }
+    this.currentPage = 1;
+    this.applyBulkSort();
+  }
+
+  applyBulkSort() {
+    const key = this.bulkSortBy;
+    const dir = this.bulkSortDir === "desc" ? -1 : 1;
+    const valueOf = (row) => {
+      if (key === "uploadedOn") {
+        const v = row.uploadedOn;
+        if (v == null || v === STR_EMPTY) {
+          return 0;
+        }
+        const t = new Date(v).getTime();
+        return Number.isNaN(t) ? 0 : t;
+      }
+      if (
+        key === "totalRecordsCount" ||
+        key === "totalSuccessRecords" ||
+        key === "totalFailedRecords"
+      ) {
+        return Number(row[key]) || 0;
+      }
+      return String(row[key] || STR_EMPTY).toLowerCase();
+    };
+    this.rows = [...this.rows].sort((a, b) => {
+      const av = valueOf(a);
+      const bv = valueOf(b);
+      if (av > bv) {
+        return 1 * dir;
+      }
+      if (av < bv) {
+        return -1 * dir;
+      }
+      return 0;
+    });
+    this.rebuildPageRows();
   }
 
   rebuildPageRows() {
