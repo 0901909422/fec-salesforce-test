@@ -33,6 +33,7 @@
 	    <members>FEC_HoldCaseController</members>
 	    <members>FEC_AssignmentController</members>
 	    <members>FEC_AssignmentExecuteService</members>
+        <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
@@ -79,6 +80,7 @@
 		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
 		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
@@ -90,6 +92,7 @@
 		<name>Apexclass</name>
 	</types>
     <types>
+        <members>FEC_AssignmentTrigger</members>
         <members>FEC_CaseAssignmentNOCTrigger</members>
         <members>FEC_CaseAssignmentTrigger</members>
         <name>ApexTrigger</name>
@@ -158,6 +161,8 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
         <members>fec_DoNotBotherResultView</members>
+        <members>fec_Banca</members>
+        <members>fec_CommonDetailView</members>
         <members>fec_CaseAssignmentConfig</members>
         <members>fec_CaseAssignmentDetailSummary</members>
         <members>fec_CaseAssignmentNocConfig</members>

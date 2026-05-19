@@ -108,6 +108,7 @@
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_AssignmentExecuteService</members>
+        <members>FEC_AssignmentCaseShareService</members>
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
@@ -162,6 +163,7 @@
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <name>ApexClass</name>
     </types>
 	<types>

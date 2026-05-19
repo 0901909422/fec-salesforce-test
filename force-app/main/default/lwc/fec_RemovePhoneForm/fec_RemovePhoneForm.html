@@ -28,7 +28,7 @@
     </template>
   </div>
   <template if:true={showDataTable}>
-    <div class="slds-box slds-m-top_medium">
+    <div class="slds-box slds-m-top_medium remove-phone-datatable">
       <template for:each={datatableMountRows} for:item="mountRow">
         <lightning-datatable
           key={mountRow.mountKey}
@@ -36,6 +36,7 @@
           data={pagedRows}
           columns={columns}
           selected-rows={selectedRowIds}
+          disabled-rows={disabledRowIds}
           onrowselection={handleRowSelection}>
         </lightning-datatable>
       </template>
@@ -47,7 +48,6 @@
               value={pageSizeStr}
               options={pageSizeOptions}
               onchange={handlePageSizeChange}
-              disabled={readOnlyRemovePhone}
               variant="label-hidden">
             </lightning-combobox>
           </div>
@@ -72,20 +72,18 @@
             <span class="slds-m-right_x-small">{paginationLabels.goToPageLabel}</span>
             <lightning-input
               type="number"
-              value={currentPage}
+              value={goToPageValue}
               min="1"
               max={totalPages}
               variant="label-hidden"
               class="page-input"
-              disabled={readOnlyRemovePhone}
               onchange={handleGoToPageInput}>
             </lightning-input>
-            <span class="slds-m-horizontal_x-small">of {totalPages}</span>
+            <span class="page-of">of {totalPages}</span>
             <lightning-button
               class="square-go-btn"
               label={paginationLabels.goBtnLabel}
               onclick={handleGoToPage}
-              disabled={readOnlyRemovePhone}
               variant="brand">
             </lightning-button>
           </div>

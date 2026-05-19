@@ -61,10 +61,10 @@ export default class Fec_Banca extends NavigationMixin(LightningElement) {
         },
 
         { label: 'Buyer Name', fieldName: 'buyerName' },
-        { label: 'Date of Birth', fieldName: 'dateofBirth' },
-        { label: 'Buyer NID', fieldName: 'buyerNID' },
+        { label: 'Date of Birth', fieldName: 'dateofBirth', cellAlign: 'center'},
+        { label: 'Buyer NID', fieldName: 'buyerNID', cellAlign: 'center',  type: 'eye'},
         { label: 'Product Name', fieldName: 'productName' },
-        { label: 'Premium Free', fieldName: 'premiumFree' },
+        { label: 'Premium Free', fieldName: 'premiumFree', cellAlign: 'right' },
         { label: 'Status', fieldName: 'status' }
     ];
 
@@ -105,7 +105,7 @@ export default class Fec_Banca extends NavigationMixin(LightningElement) {
                     ? formatDateVNI(row.dateofBirth)
                     : '',
 
-                buyerNID: maskValue(row.buyerNID, false),
+                buyerNID: row.buyerNID,
 
                 productName: row.productName,
                 premiumFree: row.premiumFree,
