@@ -33,6 +33,7 @@ public without sharing class FEC_TransactionsController {
      * (integration / non-prod only; prefer Case-resolved account).
      */
     private static final String M_FAS_UNBILLED_ACCOUNT_NUMBER = '0001500040000597830';
+    private static final String M_FAS_PENDING_ACCOUNT_NUMBER = '0001500060000003944';
 
     public class TransactionDTO {
         @AuraEnabled public Map<String, String> helpTexts;
@@ -116,6 +117,8 @@ public without sharing class FEC_TransactionsController {
 
         List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> fasAuthRows =
             callMfasAuthsTableSafe(accNumber);
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> pendingFasAuthRows =
+            callMfasAuthsTableSafe(M_FAS_PENDING_ACCOUNT_NUMBER);
 
         List<FEC_GetCardFinancialTransactions.FinancialTransaction> financial =
             callFinancialSafe(accNumber);
@@ -138,7 +141,7 @@ public without sharing class FEC_TransactionsController {
         /* ===============================
            PENDING - CALL OUT
            =============================== */
-        res.pendingTransactions = buildPendingDtosFromAuthRows(fasAuthRows);
+        res.pendingTransactions = buildPendingDtosFromAuthRows(pendingFasAuthRows);
 
         /* ===============================
            HISTORY
