@@ -10,7 +10,7 @@ History
 global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
      
     private String query;
-	private CustomSync__c cus;
+	private FEC_Custom_Sync__c cus;
 	private Integer countSuccess = 0;
 	private Integer countFail = 0;
 	private Integer totalSize = 0;
@@ -18,7 +18,7 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     private DateTime startTime ;
     private Boolean isEndJob = false ;
     private List<FEC_integration_service_log__c> logs = new List<FEC_integration_service_log__c>();
-    public FEC_BatchCustomSync(CustomSync__c recordCustom,Boolean isEndd) { 
+    public FEC_BatchCustomSync(FEC_Custom_Sync__c recordCustom,Boolean isEndd) { 
         this.cus = recordCustom;
         this.isEndJob = isEndd; // noti
     }
@@ -35,8 +35,8 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
             0, 
             0 
         );  
-        startTime  = cus.EndAt__c ?? toDate.addHours(-1);
-        String whatName = cus.CaseBusinessCode__c; 
+        startTime  = cus.FEC_End_At__c ?? toDate.addHours(-1);
+        String whatName = cus.FEC_Case_Business_Code__c; 
         return Database.getQueryLocator(getFields(cus));
     } 
     global void execute(Database.BatchableContext bc, List<sObject> scope) { 
@@ -70,11 +70,11 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
     }
  
     global void finish(Database.BatchableContext bc) { 
-        cus.StartAt__c = cus.EndAt__c ?? toDate.addHours(-1);
-        cus.EndAt__c = toDate;
-        cus.SyncSuccessFully__c = countSuccess;
-        cus.SyncFailed__c = countFail;
-        cus.TotalRecordSync__c = totalSize;
+        cus.FEC_Start_At__c = cus.FEC_End_At__c ?? toDate.addHours(-1);
+        cus.FEC_End_At__c = toDate;
+        cus.FEC_Sync_Successfully__c = countSuccess;
+        cus.FEC_Sync_Failed__c = countFail;
+        cus.FEC_Total_Record_Sync__c = totalSize;
         update cus; 
         if(!logs.isEmpty()){
             upsert logs;
@@ -92,14 +92,14 @@ global class FEC_BatchCustomSync implements Database.Batchable<sObject>, Databas
         }
     }
 
-    public static String getFields(CustomSync__c cus) { 
-        String fieldList = extractFieldsFromMapping(cus.RequestBodyMapping__c);
-        if (Test.isRunningTest()) return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c; 
-        String caseType = cus.CaseBusinessCode__c != null  ? ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ' : '';
+    public static String getFields(FEC_Custom_Sync__c cus) { 
+        String fieldList = extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+        if (Test.isRunningTest()) return 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c; 
+        String caseType = cus.FEC_Case_Business_Code__c != null  ? ' and FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = :whatName ' : '';
         String wherePart = ' WHERE ((LastModifiedDate > :startTime AND LastModifiedDate <= :toDate) ' +
                            ' OR (CreatedDate > :startTime AND CreatedDate <= :toDate) )' + 
                            caseType;  
-        return 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c + wherePart;
+        return 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c + wherePart;
     }
 
     public static String extractFieldsFromMapping(String mappingJson) {

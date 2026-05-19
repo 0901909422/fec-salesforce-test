@@ -55,16 +55,16 @@ private class FEC_BatchCustomSyncByIdsTest {
         FEC_Business_Process__c bp = new FEC_Business_Process__c(FEC_Code__c = 'Phone Update');
         insert bp;
 
-        CustomSync__c cus = new CustomSync__c(
+        FEC_Custom_Sync__c cus = new FEC_Custom_Sync__c(
             Name = 'Test Sync ByIds',
-            TableName__c = 'BIX_TEST',
-            CaseBusinessCode__c = 'Phone Update',
-            ProcessingQuantity__c = 10,
-            Active__c = true,
-            SyncTo__c = 'Bix',
-            RequestBodyMapping__c = mappingJson,
-            MappingDataType__c = dataTypeJson,
-            TargetObject__c = 'Case'
+            FEC_Table_Name__c = 'BIX_TEST',
+            FEC_Case_Business_Code__c = 'Phone Update',
+            FEC_Processing_Quantity__c = 10,
+            FEC_Active__c = true,
+            FEC_Sync_To__c = 'Bix',
+            FEC_Request_Body_Mapping__c = mappingJson,
+            FEC_Mapping_Data_Type__c = dataTypeJson,
+            FEC_Target_Object__c = 'Case'
         );
         insert cus;
 
@@ -84,7 +84,7 @@ private class FEC_BatchCustomSyncByIdsTest {
     static void testBatchSuccess() {
         Test.setMock(HttpCalloutMock.class, new MockSuccess());
 
-        CustomSync__c cus = [SELECT Id FROM CustomSync__c LIMIT 1];
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
         Case cse = [SELECT Id FROM Case LIMIT 1];
 
         Test.startTest();
@@ -97,17 +97,17 @@ private class FEC_BatchCustomSyncByIdsTest {
         System.assert(!logs.isEmpty(), 'Logs should be created');
         System.assertEquals(cus.Id, logs[0].FEC_Custom_Sync__c);
 
-        // Verify CustomSync__c NOT updated
-        CustomSync__c cusAfter = [SELECT StartAt__c, EndAt__c, SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c FROM CustomSync__c WHERE Id = :cus.Id];
-        System.assertEquals(null, cusAfter.StartAt__c, 'CustomSync__c should NOT be updated');
-        System.assertEquals(null, cusAfter.EndAt__c, 'CustomSync__c should NOT be updated');
+        // Verify FEC_Custom_Sync__c NOT updated
+        FEC_Custom_Sync__c cusAfter = [SELECT FEC_Start_At__c, FEC_End_At__c, FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c FROM FEC_Custom_Sync__c WHERE Id = :cus.Id];
+        System.assertEquals(null, cusAfter.FEC_Start_At__c, 'FEC_Custom_Sync__c should NOT be updated');
+        System.assertEquals(null, cusAfter.FEC_End_At__c, 'FEC_Custom_Sync__c should NOT be updated');
     }
 
     @isTest
     static void testBatchCalloutFail() {
         Test.setMock(HttpCalloutMock.class, new MockFail());
 
-        CustomSync__c cus = [SELECT Id FROM CustomSync__c LIMIT 1];
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
         Case cse = [SELECT Id FROM Case LIMIT 1];
 
         Test.startTest();
@@ -124,7 +124,7 @@ private class FEC_BatchCustomSyncByIdsTest {
     static void testBatchPartialFail() {
         Test.setMock(HttpCalloutMock.class, new MockPartialFail());
 
-        CustomSync__c cus = [SELECT Id FROM CustomSync__c LIMIT 1];
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
         Case cse = [SELECT Id FROM Case LIMIT 1];
 
         Test.startTest();
@@ -140,7 +140,7 @@ private class FEC_BatchCustomSyncByIdsTest {
     static void testBatchNoRecordsFound() {
         Test.setMock(HttpCalloutMock.class, new MockSuccess());
 
-        CustomSync__c cus = [SELECT Id FROM CustomSync__c LIMIT 1];
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
         // Fake Id that won't match any Case - batch query returns empty, execute won't be called
         Id fakeId = Case.SObjectType.getDescribe().getKeyPrefix() + '000000000001';
 
@@ -158,7 +158,7 @@ private class FEC_BatchCustomSyncByIdsTest {
     static void testNoRecallTriggered() {
         Test.setMock(HttpCalloutMock.class, new MockFail());
 
-        CustomSync__c cus = [SELECT Id FROM CustomSync__c LIMIT 1];
+        FEC_Custom_Sync__c cus = [SELECT Id FROM FEC_Custom_Sync__c LIMIT 1];
         Case cse = [SELECT Id FROM Case LIMIT 1];
 
         Test.startTest();

@@ -1,7 +1,7 @@
 /*------------------------------------------------------------
 Author:        DuanNguyen
 Company:       Isobar
-Description:   Batch sync specific records by IDs without updating CustomSync__c and without recall
+Description:   Batch sync specific records by IDs without updating FEC_Custom_Sync__c and without recall
 Test Class:    FEC_BatchCustomSyncByIdsTest
 History
 <Date>         <Authors Name>     <Brief Description of Change>
@@ -17,7 +17,7 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
 
     private Id customSyncId;
     private Set<Id> recordIds;
-    private CustomSync__c cus;
+    private FEC_Custom_Sync__c cus;
     private List<FEC_integration_service_log__c> logs = new List<FEC_integration_service_log__c>();
 
     public FEC_BatchCustomSyncByIds(Id customSyncId, Set<Id> recordIds) {
@@ -27,16 +27,16 @@ global class FEC_BatchCustomSyncByIds implements Database.Batchable<sObject>, Da
 
     global Database.QueryLocator start(Database.BatchableContext bc) {
         this.cus = [
-            SELECT Id, Name, CaseBusinessCode__c, TableName__c, TargetObject__c,
-                   RequestBodyMapping__c, MappingDataType__c,
-                   ProcessingQuantity__c
-            FROM CustomSync__c
+            SELECT Id, Name, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c,
+                   FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Processing_Quantity__c
+            FROM FEC_Custom_Sync__c
             WHERE Id = :customSyncId
             LIMIT 1
         ];
 
-        String fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.RequestBodyMapping__c);
-        String queryString = 'SELECT ' + fieldList + ' FROM ' + cus.TargetObject__c + ' WHERE Id IN :recordIds';
+        String fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
+        String queryString = 'SELECT ' + fieldList + ' FROM ' + cus.FEC_Target_Object__c + ' WHERE Id IN :recordIds';
         return Database.getQueryLocator(queryString);
     }
 

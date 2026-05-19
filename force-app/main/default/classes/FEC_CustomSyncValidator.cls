@@ -1,26 +1,26 @@
 public class FEC_CustomSyncValidator {
 
-    public static void validate(List<CustomSync__c> records) {
+    public static void validate(List<FEC_Custom_Sync__c> records) {
         // Collect CaseBusinessCodes to validate against FEC_Business_Process__c
         Set<String> caseBusinessCodes = new Set<String>();
         Set<String> targetObjects = new Set<String>();
         Map<String, Set<String>> fieldsByTargetObject = new Map<String, Set<String>>();
 
-        for (CustomSync__c rec : records) {
-            if (String.isNotBlank(rec.CaseBusinessCode__c)) {
-                caseBusinessCodes.add(rec.CaseBusinessCode__c);
+        for (FEC_Custom_Sync__c rec : records) {
+            if (String.isNotBlank(rec.FEC_Case_Business_Code__c)) {
+                caseBusinessCodes.add(rec.FEC_Case_Business_Code__c);
             }
             // Collect target objects and their RequestBodyMapping values for field validation
-            if (String.isNotBlank(rec.TargetObject__c) && String.isNotBlank(rec.RequestBodyMapping__c)) {
-                targetObjects.add(rec.TargetObject__c);
+            if (String.isNotBlank(rec.FEC_Target_Object__c) && String.isNotBlank(rec.FEC_Request_Body_Mapping__c)) {
+                targetObjects.add(rec.FEC_Target_Object__c);
                 try {
-                    Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.RequestBodyMapping__c);
-                    if (!fieldsByTargetObject.containsKey(rec.TargetObject__c)) {
-                        fieldsByTargetObject.put(rec.TargetObject__c, new Set<String>());
+                    Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Request_Body_Mapping__c);
+                    if (!fieldsByTargetObject.containsKey(rec.FEC_Target_Object__c)) {
+                        fieldsByTargetObject.put(rec.FEC_Target_Object__c, new Set<String>());
                     }
                     for (Object val : bodyMap.values()) {
                         if (val != null && val instanceof String) {
-                            fieldsByTargetObject.get(rec.TargetObject__c).add((String) val);
+                            fieldsByTargetObject.get(rec.FEC_Target_Object__c).add((String) val);
                         }
                     }
                 } catch (Exception e) {
@@ -59,23 +59,23 @@ public class FEC_CustomSyncValidator {
         }
 
         // Per-record validation
-        for (CustomSync__c rec : records) {
+        for (FEC_Custom_Sync__c rec : records) {
             // Rule 1: CaseBusinessCode != null => TargetObject must be 'Case'
-            if (String.isNotBlank(rec.CaseBusinessCode__c) 
-                && rec.TargetObject__c != 'Case' && rec.TargetObject__c != 'case') {
+            if (String.isNotBlank(rec.FEC_Case_Business_Code__c) 
+                && rec.FEC_Target_Object__c != 'Case' && rec.FEC_Target_Object__c != 'case') {
                 rec.addError('CaseBusinessCode is only applicable when Target Object is "Case".');
             }
 
             // Rule 2: ProcessingQuantity must be > 0
-            if (rec.ProcessingQuantity__c == null || rec.ProcessingQuantity__c <= 0) {
+            if (rec.FEC_Processing_Quantity__c == null || rec.FEC_Processing_Quantity__c <= 0) {
                 rec.addError('ProcessingQuantity must be greater than 0.');
             }
 
             // Rule 3: Compare keys between RequestBodyMapping and MappingDataType
-            if (String.isNotBlank(rec.RequestBodyMapping__c) && String.isNotBlank(rec.MappingDataType__c)) {
+            if (String.isNotBlank(rec.FEC_Request_Body_Mapping__c) && String.isNotBlank(rec.FEC_Mapping_Data_Type__c)) {
                 try {
-                    Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.RequestBodyMapping__c);
-                    Map<String, Object> typeMap = (Map<String, Object>) JSON.deserializeUntyped(rec.MappingDataType__c);
+                    Map<String, Object> bodyMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Request_Body_Mapping__c);
+                    Map<String, Object> typeMap = (Map<String, Object>) JSON.deserializeUntyped(rec.FEC_Mapping_Data_Type__c);
 
                     Set<String> bodyKeys = bodyMap.keySet();
                     Set<String> typeKeys = typeMap.keySet();
@@ -100,13 +100,13 @@ public class FEC_CustomSyncValidator {
             }
 
             // Rule 4: Check if dynamic SOQL query failed for this record's TargetObject
-            if (String.isNotBlank(rec.TargetObject__c) && queryErrorByObject.containsKey(rec.TargetObject__c)) {
-                rec.addError('Invalid fields in RequestBodyMapping for object "' + rec.TargetObject__c + '": ' + queryErrorByObject.get(rec.TargetObject__c));
+            if (String.isNotBlank(rec.FEC_Target_Object__c) && queryErrorByObject.containsKey(rec.FEC_Target_Object__c)) {
+                rec.addError('Invalid fields in RequestBodyMapping for object "' + rec.FEC_Target_Object__c + '": ' + queryErrorByObject.get(rec.FEC_Target_Object__c));
             }
 
             // Rule 5: CaseBusinessCode must exist in FEC_Business_Process__c
-            if (String.isNotBlank(rec.CaseBusinessCode__c) && !validCodes.contains(rec.CaseBusinessCode__c)) {
-                rec.addError('Case Business Code "' + rec.CaseBusinessCode__c + '" does not exist in FEC_Business_Process__c.');
+            if (String.isNotBlank(rec.FEC_Case_Business_Code__c) && !validCodes.contains(rec.FEC_Case_Business_Code__c)) {
+                rec.addError('Case Business Code "' + rec.FEC_Case_Business_Code__c + '" does not exist in FEC_Business_Process__c.');
             }
         }
     }

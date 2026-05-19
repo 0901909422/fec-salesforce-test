@@ -21,24 +21,24 @@ global class FEC_ScheduledSyncDataToBix implements  Schedulable {
         }
     }
     public static void run(){
-        List<CustomSync__c> lst = [Select id, Name,
-                                        SyncFailed__c,
-                                        SyncSuccessFully__c,
-                                        SyncTo__c,
-                                        Active__c, 
-                                        StartAt__c,
-                                        EndAt__c,
-                                        ProcessingQuantity__c,
-                                        CaseBusinessCode__c, 
-                                        TableName__c,
-                                        TotalRecordSync__c,
-                                        TargetObject__c,
-                                        RequestBodyMapping__c,
-                                        MappingDataType__c
-                                        from CustomSync__c
-                                        where SyncTo__c = 'Bix' and Active__c = true]; 
+        List<FEC_Custom_Sync__c> lst = [Select id, Name,
+                                        FEC_Sync_Failed__c,
+                                        FEC_Sync_Successfully__c,
+                                        FEC_Sync_To__c,
+                                        FEC_Active__c, 
+                                        FEC_Start_At__c,
+                                        FEC_End_At__c,
+                                        FEC_Processing_Quantity__c,
+                                        FEC_Case_Business_Code__c, 
+                                        FEC_Table_Name__c,
+                                        FEC_Total_Record_Sync__c,
+                                        FEC_Target_Object__c,
+                                        FEC_Request_Body_Mapping__c,
+                                        FEC_Mapping_Data_Type__c
+                                        from FEC_Custom_Sync__c
+                                        where FEC_Sync_To__c = 'Bix' and FEC_Active__c = true]; 
             if(!lst.isEmpty()){  
-                Map<Id, CustomSync__c> mapCustomSync = new Map<Id, CustomSync__c>(lst); // ReSync
+                Map<Id, FEC_Custom_Sync__c> mapCustomSync = new Map<Id, FEC_Custom_Sync__c>(lst); // ReSync
                 // Sync New
                 FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(lst);  
                 System.enqueueJob(nextJob);   

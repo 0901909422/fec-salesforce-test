@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>ProcessingQuantity__c</fullName>
-    <defaultValue>10</defaultValue>
-    <description>Processing quantity run on batch</description>
+    <fullName>FEC_Sync_Failed__c</fullName>
+    <defaultValue>0</defaultValue>
+    <description>Số lượng sync Fail</description>
     <externalId>false</externalId>
-    <label>Processing Quantity</label>
+    <label>Sync Failed</label>
     <precision>18</precision>
     <required>false</required>
     <scale>0</scale>

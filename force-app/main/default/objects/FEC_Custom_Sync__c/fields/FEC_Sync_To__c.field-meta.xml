@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>SyncTo__c</fullName>
+    <fullName>FEC_Sync_To__c</fullName>
     <label>Sync To</label>
     <required>false</required>
     <trackTrending>false</trackTrending>

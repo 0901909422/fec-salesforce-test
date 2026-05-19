@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>CustomSync__c</members> 
+        <members>FEC_Custom_Sync__c</members> 
         <members>CustomSyncSetting__c</members> 
         <name>CustomObject</name>
     </types>
     <types>  
-        <members>CustomSync__c.StartAt__c</members>
-        <members>CustomSync__c.EndAt__c</members>
-        <members>CustomSync__c.Active__c</members> 
-        <members>CustomSync__c.TotalRecordSync__c</members> 
-        <members>CustomSync__c.SyncTo__c</members>
-        <members>CustomSync__c.SyncSuccessFully__c</members>
-        <members>CustomSync__c.SyncFailed__c</members>
-        <members>CustomSync__c.ProcessingQuantity__c</members>
-        <members>CustomSync__c.CaseBusinessCode__c</members>
-        <members>CustomSync__c.TargetObject__c</members> 
-        <members>CustomSync__c.RequestBodyMapping__c</members>
-        <members>CustomSync__c.TableName__c</members>
-        <members>CustomSync__c.MappingDataType__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Start_At__c</members>
+        <members>FEC_Custom_Sync__c.FEC_End_At__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Active__c</members> 
+        <members>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</members> 
+        <members>FEC_Custom_Sync__c.FEC_Sync_To__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Sync_Successfully__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Sync_Failed__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Processing_Quantity__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Case_Business_Code__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Target_Object__c</members> 
+        <members>FEC_Custom_Sync__c.FEC_Request_Body_Mapping__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Table_Name__c</members>
+        <members>FEC_Custom_Sync__c.FEC_Mapping_Data_Type__c</members>
 
         <members>FEC_integration_service_log__c.FEC_Quantity_Call__c</members> 
         <members>FEC_integration_service_log__c.FEC_Custom_Sync__c</members>
@@ -40,13 +40,9 @@
     <types> 
         <members>FEC_API_Config.FEC_Custom_Sync_Bix</members> 
         <name>CustomMetadata</name>
-    </types>
+    </types> 
     <types>
-        <members>CustomSync__c</members> 
-        <name>CustomTab</name>
-    </types>
-    <types>
-        <members>CustomSync__c-Sync Bix Layout</members>
+        <members>FEC_Custom_Sync__c-FEC Custom Sync Layout</members>
         <name>Layout</name>
     </types>
     <types>
@@ -71,10 +67,6 @@
         <members>CustomSyncTrigger</members>
         <name>ApexTrigger</name>
     </types> 
-    
-    <types>
-        <members>FEC_Common_System_Setting</members>
-        <name>PermissionSet</name>
-    </types>
+     
     <version>65.0</version>
 </Package>

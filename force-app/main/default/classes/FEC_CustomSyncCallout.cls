@@ -9,7 +9,7 @@ History
 ------------------------------------------------------------*/
 public with sharing class FEC_CustomSyncCallout { 
     
-    public static List<FEC_integration_service_log__c> sendRequest(CustomSync__c cus, FEC_integration_service_log__c log, List<SObject> scope) {
+    public static List<FEC_integration_service_log__c> sendRequest(FEC_Custom_Sync__c cus, FEC_integration_service_log__c log, List<SObject> scope) {
         List<FEC_integration_service_log__c> resultLogs = new List<FEC_integration_service_log__c>();
         log.FEC_Quantity_Call__c = (log.FEC_Quantity_Call__c ?? 0) + 1;
         try {   
@@ -151,10 +151,10 @@ public with sharing class FEC_CustomSyncCallout {
         resultLogs.add(log);
         return resultLogs;
     } 
-    private static String toJson(CustomSync__c cus, List<SObject> scope) {
-        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cus.RequestBodyMapping__c);
-        Map<String, Object> dataTypeMap = String.isNotBlank(cus.MappingDataType__c)
-            ? (Map<String, Object>) JSON.deserializeUntyped(cus.MappingDataType__c)
+    private static String toJson(FEC_Custom_Sync__c cus, List<SObject> scope) {
+        Map<String, Object> mapping = (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Request_Body_Mapping__c);
+        Map<String, Object> dataTypeMap = String.isNotBlank(cus.FEC_Mapping_Data_Type__c)
+            ? (Map<String, Object>) JSON.deserializeUntyped(cus.FEC_Mapping_Data_Type__c)
             : new Map<String, Object>();
         List<Map<String, Object>> mappedRecords = new List<Map<String, Object>>();
 
@@ -185,7 +185,7 @@ public with sharing class FEC_CustomSyncCallout {
         }
 
         Map<String, Object> finalWrapper = new Map<String, Object>();
-        finalWrapper.put('tableName', cus.TableName__c);
+        finalWrapper.put('tableName', cus.FEC_Table_Name__c);
         finalWrapper.put('records', mappedRecords);
         return JSON.serialize(finalWrapper);
     }

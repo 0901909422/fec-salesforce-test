@@ -3,7 +3,7 @@
     <fullName>FEC_Custom_Sync__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Custom Sync</label>
-    <referenceTo>CustomSync__c</referenceTo>
+    <referenceTo>FEC_Custom_Sync__c</referenceTo>
     <relationshipLabel>API Logs</relationshipLabel>
     <relationshipName>API_Logs</relationshipName>
     <required>false</required>

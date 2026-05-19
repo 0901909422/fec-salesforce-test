@@ -11,11 +11,11 @@ History
 public class FEC_QueueReportCustomSyncBix implements Queueable {   
 
     public void execute(QueueableContext context) { 
-        List<CustomSync__c> records = [
-            SELECT name, CaseBusinessCode__c, StartAt__c, EndAt__c, SyncFailed__c,
-                   SyncSuccessFully__c, TotalRecordSync__c, Active__c,ProcessingQuantity__c
-            FROM CustomSync__c
-            WHERE Active__c = true
+        List<FEC_Custom_Sync__c> records = [
+            SELECT name, FEC_Case_Business_Code__c, FEC_Start_At__c, FEC_End_At__c, FEC_Sync_Failed__c,
+                   FEC_Sync_Successfully__c, FEC_Total_Record_Sync__c, FEC_Active__c, FEC_Processing_Quantity__c
+            FROM FEC_Custom_Sync__c
+            WHERE FEC_Active__c = true
             ORDER BY name DESC 
         ];
 
@@ -25,7 +25,7 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
         sendEmail(htmlBody, records.size());
     }
 
-    private String buildHtmlTable(List<CustomSync__c> records) {
+    private String buildHtmlTable(List<FEC_Custom_Sync__c> records) {
         List<String> htmlRows = new List<String>();
     
         htmlRows.add('<html><body>');
@@ -46,11 +46,11 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
 
         Integer count = 1;
 
-        for (CustomSync__c rec : records) {
+        for (FEC_Custom_Sync__c rec : records) {
             htmlRows.add('<tr>'); 
-            Decimal failed = rec.SyncFailed__c != null ? rec.SyncFailed__c : 0;
-            Decimal success = rec.SyncSuccessFully__c != null ? rec.SyncSuccessFully__c : 0;
-            Decimal total = rec.TotalRecordSync__c != null ? rec.TotalRecordSync__c : 0;  
+            Decimal failed = rec.FEC_Sync_Failed__c != null ? rec.FEC_Sync_Failed__c : 0;
+            Decimal success = rec.FEC_Sync_Successfully__c != null ? rec.FEC_Sync_Successfully__c : 0;
+            Decimal total = rec.FEC_Total_Record_Sync__c != null ? rec.FEC_Total_Record_Sync__c : 0;  
             String statusHtml = '';
 
             if (failed > 0) {
@@ -71,8 +71,8 @@ public class FEC_QueueReportCustomSyncBix implements Queueable {
             count++; 
             
             htmlRows.add('<td style="font-weight:bold;">' + rec.Name + '</td>');
-            htmlRows.add('<td>' + (rec.StartAt__c != null ? rec.StartAt__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
-            htmlRows.add('<td>' + (rec.EndAt__c != null ? rec.EndAt__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
+            htmlRows.add('<td>' + (rec.FEC_Start_At__c != null ? rec.FEC_Start_At__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
+            htmlRows.add('<td>' + (rec.FEC_End_At__c != null ? rec.FEC_End_At__c.format('dd/MM/yyyy HH:mm') : '') + '</td>');
              
             htmlRows.add('<td style="text-align:center;">' + statusHtml + '</td>');
             

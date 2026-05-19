@@ -7,7 +7,7 @@ History
 <Date>         <Authors Name>     <Brief Description of Change>
 2026/03/31     Duan Nguyen          Init
 2026/04/08     Duan Nguyen          Rewrite - increase coverage FEC_BatchCustomSync
-2026/04/21     Duan Nguyen          Update for List<FEC_integration_service_log__c> return, Records__c, MappingDataType__c
+2026/04/21     Duan Nguyen          Update for List<FEC_integration_service_log__c> return, Records__c, FEC_Mapping_Data_Type__c
 2026/04/29     Kiro                 Add coverage: FEC_QueueReportCustomSyncBix, Recall partial fail, extractFieldsFromMapping
 ------------------------------------------------------------*/
 @isTest
@@ -60,29 +60,29 @@ private class FEC_CustomSyncAllInOneTest {
         codeType.FEC_Code__c = 'Phone Update';
         insert codeType;
 
-        CustomSync__c cus = new CustomSync__c(
+        FEC_Custom_Sync__c cus = new FEC_Custom_Sync__c(
             Name = 'Test Sync',
-            TableName__c = 'BIX_TEST',
-            CaseBusinessCode__c = 'Phone Update',
-            ProcessingQuantity__c = 1,
-            Active__c = true,
-            SyncTo__c = 'Bix',
-            RequestBodyMapping__c = mappingJson,
-            MappingDataType__c = dataTypeJson,
-            TargetObject__c = 'Case'
+            FEC_Table_Name__c = 'BIX_TEST',
+            FEC_Case_Business_Code__c = 'Phone Update',
+            FEC_Processing_Quantity__c = 1,
+            FEC_Active__c = true,
+            FEC_Sync_To__c = 'Bix',
+            FEC_Request_Body_Mapping__c = mappingJson,
+            FEC_Mapping_Data_Type__c = dataTypeJson,
+            FEC_Target_Object__c = 'Case'
         );
         insert cus;
 
-        CustomSync__c cus2 = new CustomSync__c(
+        FEC_Custom_Sync__c cus2 = new FEC_Custom_Sync__c(
             Name = 'Test Sync 2',
-            TableName__c = 'BIX_TEST',
-            CaseBusinessCode__c = 'Phone Update',
-            ProcessingQuantity__c = 1,
-            Active__c = true,
-            SyncTo__c = 'Bix',
-            RequestBodyMapping__c = mappingJson,
-            MappingDataType__c = dataTypeJson,
-            TargetObject__c = 'Case'
+            FEC_Table_Name__c = 'BIX_TEST',
+            FEC_Case_Business_Code__c = 'Phone Update',
+            FEC_Processing_Quantity__c = 1,
+            FEC_Active__c = true,
+            FEC_Sync_To__c = 'Bix',
+            FEC_Request_Body_Mapping__c = mappingJson,
+            FEC_Mapping_Data_Type__c = dataTypeJson,
+            FEC_Target_Object__c = 'Case'
         );
         insert cus2;
 
@@ -125,10 +125,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testQueueableAndBatch() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        List<CustomSync__c> cusList = [
-            SELECT Id, TableName__c, CaseBusinessCode__c, RequestBodyMapping__c, MappingDataType__c,
-                   TargetObject__c, ProcessingQuantity__c, EndAt__c
-            FROM CustomSync__c
+        List<FEC_Custom_Sync__c> cusList = [
+            SELECT Id, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Target_Object__c, FEC_Processing_Quantity__c, FEC_End_At__c
+            FROM FEC_Custom_Sync__c
         ];
 
         Test.startTest();
@@ -140,7 +140,7 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testQueueableEmptyList() {
         Test.startTest();
-        FEC_QueueRunBatchSync queueJob = new FEC_QueueRunBatchSync(new List<CustomSync__c>());
+        FEC_QueueRunBatchSync queueJob = new FEC_QueueRunBatchSync(new List<FEC_Custom_Sync__c>());
         System.enqueueJob(queueJob);
         Test.stopTest();
     }
@@ -151,10 +151,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testRecallBatch() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
-            SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c
+        Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
+            SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c
         ]);
 
         Test.startTest();
@@ -167,10 +167,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testRecallBatchFailResponse() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockFail());
 
-        Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
-            SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c
+        Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
+            SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c
         ]);
 
         Test.startTest();
@@ -183,10 +183,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testRecallBatchPartialFail() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockPartialFail());
 
-        Map<Id, CustomSync__c> mCus = new Map<Id, CustomSync__c>([
-            SELECT Id, CaseBusinessCode__c, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c
+        Map<Id, FEC_Custom_Sync__c> mCus = new Map<Id, FEC_Custom_Sync__c>([
+            SELECT Id, FEC_Case_Business_Code__c, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c
         ]);
 
         Test.startTest();
@@ -201,12 +201,12 @@ private class FEC_CustomSyncAllInOneTest {
     static void testBatchCustomSyncSuccess() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        CustomSync__c cus = [
-            SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
-                   EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   SyncTo__c, Active__c,
-                   SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
-            FROM CustomSync__c
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
+                   FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Sync_To__c, FEC_Active__c,
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+            FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
 
@@ -220,23 +220,23 @@ private class FEC_CustomSyncAllInOneTest {
     static void testBatchCustomSyncWithEndAt() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        CustomSync__c cus = [
-            SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
-                   EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   SyncTo__c, Active__c,
-                   SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
-            FROM CustomSync__c
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
+                   FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Sync_To__c, FEC_Active__c,
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+            FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
-        cus.EndAt__c = DateTime.now().addHours(-2);
+        cus.FEC_End_At__c = DateTime.now().addHours(-2);
         update cus;
 
         cus = [
-            SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
-                   EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   SyncTo__c, Active__c,
-                   SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
-            FROM CustomSync__c
+            SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
+                   FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Sync_To__c, FEC_Active__c,
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+            FROM FEC_Custom_Sync__c
             WHERE Id = :cus.Id
         ];
 
@@ -250,12 +250,12 @@ private class FEC_CustomSyncAllInOneTest {
     static void testBatchCustomSyncCalloutFail() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockFail());
 
-        CustomSync__c cus = [
-            SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
-                   EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   SyncTo__c, Active__c,
-                   SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
-            FROM CustomSync__c
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
+                   FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Sync_To__c, FEC_Active__c,
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+            FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
 
@@ -269,12 +269,12 @@ private class FEC_CustomSyncAllInOneTest {
     static void testBatchCustomSyncPartialFail() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockPartialFail());
 
-        CustomSync__c cus = [
-            SELECT Id, Name, TableName__c, CaseBusinessCode__c, ProcessingQuantity__c,
-                   EndAt__c, TargetObject__c, RequestBodyMapping__c, MappingDataType__c,
-                   SyncTo__c, Active__c,
-                   SyncSuccessFully__c, SyncFailed__c, TotalRecordSync__c, StartAt__c
-            FROM CustomSync__c
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, Name, FEC_Table_Name__c, FEC_Case_Business_Code__c, FEC_Processing_Quantity__c,
+                   FEC_End_At__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c, FEC_Mapping_Data_Type__c,
+                   FEC_Sync_To__c, FEC_Active__c,
+                   FEC_Sync_Successfully__c, FEC_Sync_Failed__c, FEC_Total_Record_Sync__c, FEC_Start_At__c
+            FROM FEC_Custom_Sync__c
             LIMIT 1
         ];
 
@@ -286,9 +286,9 @@ private class FEC_CustomSyncAllInOneTest {
 
     @isTest
     static void testGetFields() {
-        CustomSync__c cus = new CustomSync__c(
-            RequestBodyMapping__c = '{"CaseID":"Id","CaseName":"CaseNumber","PXURGENCYWORK":1}',
-            TargetObject__c = 'Case'
+        FEC_Custom_Sync__c cus = new FEC_Custom_Sync__c(
+            FEC_Request_Body_Mapping__c = '{"CaseID":"Id","CaseName":"CaseNumber","PXURGENCYWORK":1}',
+            FEC_Target_Object__c = 'Case'
         );
         String query = FEC_BatchCustomSync.getFields(cus);
         System.assert(query.contains('Id'));
@@ -312,10 +312,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testCalloutSuccess() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        CustomSync__c cus = [
-            SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c LIMIT 1
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
         List<Case> scope = [SELECT Id, CaseNumber, FEC_ID_Search__c FROM Case];
@@ -331,10 +331,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testCalloutFail() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockFail());
 
-        CustomSync__c cus = [
-            SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c LIMIT 1
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
         List<Case> scope = [SELECT Id, CaseNumber, FEC_ID_Search__c FROM Case];
@@ -350,10 +350,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testCalloutPartialFail() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockPartialFail());
 
-        CustomSync__c cus = [
-            SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c LIMIT 1
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
         log.FEC_Custom_Sync__c = cus.Id;
@@ -373,10 +373,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testCalloutPartialFailRecallPath() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMockPartialFail());
 
-        CustomSync__c cus = [
-            SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c LIMIT 1
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c LIMIT 1
         ];
 
         // Use existing log (has Id) to trigger the Recall path
@@ -401,10 +401,10 @@ private class FEC_CustomSyncAllInOneTest {
     static void testCalloutEmptyScope() {
         Test.setMock(HttpCalloutMock.class, new FEC_CustomSyncMock());
 
-        CustomSync__c cus = [
-            SELECT Id, TableName__c, TargetObject__c, RequestBodyMapping__c,
-                   MappingDataType__c
-            FROM CustomSync__c LIMIT 1
+        FEC_Custom_Sync__c cus = [
+            SELECT Id, FEC_Table_Name__c, FEC_Target_Object__c, FEC_Request_Body_Mapping__c,
+                   FEC_Mapping_Data_Type__c
+            FROM FEC_Custom_Sync__c LIMIT 1
         ];
         FEC_integration_service_log__c log = new FEC_integration_service_log__c();
 
@@ -420,13 +420,13 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testQueueReportCustomSyncBix() {
         // Update CustomSync records with sync stats so the report has data
-        List<CustomSync__c> cusList = [SELECT Id FROM CustomSync__c];
-        for (CustomSync__c c : cusList) {
-            c.SyncSuccessFully__c = 10;
-            c.SyncFailed__c = 2;
-            c.TotalRecordSync__c = 12;
-            c.StartAt__c = DateTime.now().addHours(-1);
-            c.EndAt__c = DateTime.now();
+        List<FEC_Custom_Sync__c> cusList = [SELECT Id FROM FEC_Custom_Sync__c];
+        for (FEC_Custom_Sync__c c : cusList) {
+            c.FEC_Sync_Successfully__c = 10;
+            c.FEC_Sync_Failed__c = 2;
+            c.FEC_Total_Record_Sync__c = 12;
+            c.FEC_Start_At__c = DateTime.now().addHours(-1);
+            c.FEC_End_At__c = DateTime.now();
         }
         update cusList;
 
@@ -437,13 +437,13 @@ private class FEC_CustomSyncAllInOneTest {
 
     @isTest
     static void testQueueReportAllSuccess() {
-        List<CustomSync__c> cusList = [SELECT Id FROM CustomSync__c];
-        for (CustomSync__c c : cusList) {
-            c.SyncSuccessFully__c = 5;
-            c.SyncFailed__c = 0;
-            c.TotalRecordSync__c = 5;
-            c.StartAt__c = DateTime.now().addHours(-1);
-            c.EndAt__c = DateTime.now();
+        List<FEC_Custom_Sync__c> cusList = [SELECT Id FROM FEC_Custom_Sync__c];
+        for (FEC_Custom_Sync__c c : cusList) {
+            c.FEC_Sync_Successfully__c = 5;
+            c.FEC_Sync_Failed__c = 0;
+            c.FEC_Total_Record_Sync__c = 5;
+            c.FEC_Start_At__c = DateTime.now().addHours(-1);
+            c.FEC_End_At__c = DateTime.now();
         }
         update cusList;
 
@@ -455,9 +455,9 @@ private class FEC_CustomSyncAllInOneTest {
     @isTest
     static void testQueueReportNoRecords() {
         // Deactivate all CustomSync records so report query returns empty
-        List<CustomSync__c> cusList = [SELECT Id FROM CustomSync__c];
-        for (CustomSync__c c : cusList) {
-            c.Active__c = false;
+        List<FEC_Custom_Sync__c> cusList = [SELECT Id FROM FEC_Custom_Sync__c];
+        for (FEC_Custom_Sync__c c : cusList) {
+            c.FEC_Active__c = false;
         }
         update cusList;
 

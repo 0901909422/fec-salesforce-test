@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>TotalRecordSync__c</fullName>
-    <defaultValue>0</defaultValue>
+    <fullName>FEC_Processing_Quantity__c</fullName>
+    <defaultValue>10</defaultValue>
+    <description>Processing quantity run on batch</description>
     <externalId>false</externalId>
-    <label>Total Record Sync</label>
+    <label>Processing Quantity</label>
     <precision>18</precision>
     <required>false</required>
     <scale>0</scale>

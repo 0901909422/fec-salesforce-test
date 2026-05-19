@@ -9,9 +9,9 @@ History
 ------------------------------------------------------------*/ 
 global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, Database.AllowsCallouts, Database.Stateful {
       
-	private Map<Id, CustomSync__c> mCus;  
+	private Map<Id, FEC_Custom_Sync__c> mCus;  
     private List<FEC_integration_service_log__c> uLog = new List<FEC_integration_service_log__c>();
-    public FEC_BatchReCallCustomSync(  Map<Id, CustomSync__c> mCusSync) {  
+    public FEC_BatchReCallCustomSync(  Map<Id, FEC_Custom_Sync__c> mCusSync) {  
         this.mCus = mCusSync; 
     }
     
@@ -30,13 +30,13 @@ global class FEC_BatchReCallCustomSync  implements Database.Batchable<sObject>, 
         if(scope == null || scope.isEmpty() || scope[0].Records__c == null) return;
         FEC_integration_service_log__c log = scope[0];  
         try{ 
-            CustomSync__c cus = mCus.get(log.FEC_Custom_Sync__c); 
+            FEC_Custom_Sync__c cus = mCus.get(log.FEC_Custom_Sync__c); 
               String fieldList = '';
                List<String> recordIdObject = new List<String>();
             if (Test.isRunningTest()){
                 fieldList = 'Id';
             }else{ 
-              fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.RequestBodyMapping__c);
+              fieldList = FEC_BatchCustomSync.extractFieldsFromMapping(cus.FEC_Request_Body_Mapping__c);
               String cleanRecords = log.Records__c.stripHtmlTags().unescapeHtml4();
               recordIdObject = (List<String>) JSON.deserialize(cleanRecords, List<String>.class);
             }

@@ -3,9 +3,9 @@
     <fullName>FEC_Custom_Sync__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Custom Sync</label>
-    <referenceTo>CustomSync__c</referenceTo>
-    <relationshipLabel>Integration Service Logs</relationshipLabel>
-    <relationshipName>Integration_Service_Logs</relationshipName>
+    <referenceTo>FEC_Custom_Sync__c</referenceTo>
+    <relationshipLabel>FEC integration service logs</relationshipLabel>
+    <relationshipName>FEC_integration_service_logs</relationshipName>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
