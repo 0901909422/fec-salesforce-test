@@ -20,5 +20,10 @@
 		<name>ApexClass</name>
 	</types>
 
+    <types>
+		<members>FEC_CSM_SERVICE</members>
+		<name>RemoteSiteSetting</name>
+	</types>
+
     <version>65.0</version>
 </Package>
