@@ -17614,4 +17614,68 @@
         <shortDescription>FEC Batch Msg Select Template</shortDescription>
         <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
     </labels>
+    <labels>
+        <fullName>FEC_Download_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Download Report</shortDescription>
+        <value>Download Report</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Export_View</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Export View</shortDescription>
+        <value>Export View</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Formatted_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Formatted Report</shortDescription>
+        <value>Formatted Report</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Title_Context_Report</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Title Context Report</shortDescription>
+        <value>Export the report, including the report header, groupings, and filter settings.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Details_Only</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Details Only</shortDescription>
+        <value>Details Only</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Export_Detail</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Export Detail</shortDescription>
+        <value>Export only the detail rows. Use this to do further calculations or for uploading to other systems.</value>
+    </labels>
+     <labels>
+        <fullName>FEC_Format</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Format</shortDescription>
+        <value>Format</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Format_Excel</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Format Exce</shortDescription>
+        <value> Excel Format .xlsx</value>
+    </labels>
 </CustomLabels>
