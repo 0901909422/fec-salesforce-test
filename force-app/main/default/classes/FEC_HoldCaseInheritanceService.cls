@@ -31,7 +31,9 @@ public with sharing class FEC_HoldCaseInheritanceService {
                 FEC_Case_Stage__c,
                 FEC_NFU_Code__c,
                 FEC_Active__c,
-                FEC_Nature_of_Cases__c
+                FEC_Nature_of_Cases__c,
+                FEC_Auto_Hold_Duration_Minutes__c,
+                FEC_Auto_Hold_Release_Case_Status__c
             FROM FEC_Hold_Case_Config__c
             WHERE Id = :holdCaseConfigId
             LIMIT 1
