@@ -276,7 +276,7 @@ global with sharing class ArchiveCaseController_Test {
                 '      "url": "/services/data/v66.0/sobjects/RecordType/01285000000CMMXAA4"' +
                 '    },' +
                 '    "Id": "01285000000CMMXAA4",' +
-                '    "Name": "Customer Case",' +
+                '    "Name": "Interaction",' +
                 '    "DeveloperName": "Customer_Case",' +
                 '    "BusinessProcessId": "01985000001LjkjAAC",' +
                 '    "SobjectType": "Case",' +
@@ -352,7 +352,34 @@ global with sharing class ArchiveCaseController_Test {
                 '  "FEC_Integration_Case__c": null,' +
                 '  "FEC_IPP__c": null,' +
                 '  "FEC_Do_Not_Bother__c": null,' +
-                '  "FEC_Customer_History__c": null,' +
+                '  "FEC_Customer_History__c": [{' +
+                '    "attributes": {' +
+                '      "type": "FEC_Customer_History__c",' +
+                '      "url": "/services/data/v66.0/sobjects/FEC_Customer_History__c/RecordCaseI-308515"' +
+                '    },' +
+                '    "Id": "RecordCaseI-308515",' +
+                '    "IsDeleted": false,' +
+                '    "Name": "0001500010000005476",' +
+                '    "CreatedDate": "2026-05-06T03:16:33.000+0000",' +
+                '    "CreatedById": "00585000004yJVKAA2",' +
+                '    "LastModifiedDate": "2026-05-06T06:06:00.000+0000",' +
+                '    "LastModifiedById": "00585000004yJVKAA2",' +
+                '    "SystemModstamp": "2026-05-06T06:06:00.000+0000",' +
+                '    "FEC_Case__c": "5008500000HiXjLAAV",' +
+                '    "FEC_Address_Info__c": [' +
+                '      {' +
+                '        "attributes": {' +
+                '          "type": "FEC_Address_Info__c",' +
+                '          "url": "/services/data/v66.0/sobjects/FEC_Address_Info__c/a1A850000012345678"' +
+                '        },' +
+                '        "Id": "a1A850000012345678",' +
+                '        "Name": "ADR-0001",' +
+                '        "FEC_Customer_History__c": "RecordCaseI-308515",' +
+                '        "FEC_Case__c": "5008500000HigGOAAZ",' +
+                '        "FEC_Mailing_Address__c": "abc"' +
+                '      }' +
+                '    ]' +
+                '  }],' +
                 '  "FEC_ChatHistory__c": null,' +
                 '  "FEC_Case_Remarks__c": [' +
                 '    {' +
@@ -478,7 +505,7 @@ global with sharing class ArchiveCaseController_Test {
                 '    "LastModifiedById": "005d50000049NeDAAU",' +
                 '    "SystemModstamp": "2026-05-06T06:29:45.000+0000",' +
                 '    "FEC_Account_Number__c": "0001500010000005476",' +
-                '    "FEC_Account_or_Contract__c": "RecordCaseI-308515",' +
+                '    "FEC_Account_or_Contract__c": "aaa",' +
                 '    "FEC_CS_Support__c": false,' +
                 '    "FEC_Category__c": "a0T85000004BTHYEA4",' +
                 '    "FEC_Channel__c": "Outbound",' +
@@ -539,13 +566,13 @@ global with sharing class ArchiveCaseController_Test {
                 '    "MilestoneStatus": ""' +
                 '  },' +
                 '  "FEC_Case_Attachments": [' +
-                '    {' +
-                '      "s3Path": "a0Q8500000Hn9d4EAB",' +
-                '      "filename": "contract.pdf",' +
-                '      "contentType": "application.pdf",' +
-                '      "uploadedAt": "2026-03-01T08:00:00Z"' +
-                '    }' +
-                '  ]' +
+                    '    {' +
+                    '      "s3Path": "case-files/S-79587/7df289ce95651df0_Screenshot_2026-05-06_at_11.06.33.png",' +
+                    '      "filename": "contract.pdf",' +
+                    '      "contentType": "application/pdf",' +
+                    '      "uploadedAt": "2026-03-01T08:00:00Z"' +
+                    '    }' +
+                    '  ]' +
                 '}';
             
             res.setBody(body);

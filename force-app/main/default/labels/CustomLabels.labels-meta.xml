@@ -14187,7 +14187,8 @@
   &quot;FEC_Service_Case_Owner__c&quot;: &quot;ArchiveServiceCaseOwner__c&quot;,
   &quot;FEC_Case_Created_By__c&quot;: &quot;ArchiveCaseCreatedBy__c&quot;,
   &quot;FEC_Last_Updated_By__c&quot;: &quot;ArchiveLastUpdatedBy__c&quot;,
-  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;
+  &quot;FEC_Account_or_Contract__c&quot;: &quot;ArchiveAccOrContract__c&quot;,
+  &quot;FEC_Selected_Address__c&quot;: &quot;ArchiveSelectedAddress__c&quot;
 }</value>
     </labels>
     <labels>
@@ -17455,6 +17456,20 @@
         <protected>false</protected>
         <shortDescription>TransferCall: nhãn Coll Agent</shortDescription>
         <value>Coll Agent</value>
+    </labels>
+    <labels>
+        <fullName>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</shortDescription>
+        <value>FEC_IPP__c,FEC_Card_Payment__c,FEC_Process_Action__c,FEC_Integration_Case__c</value>
+    </labels>
+    <labels>
+        <fullName>TECH_LIST_OBJ_IS_MASTER_DETAIL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TECH_LIST_OBJ_IS_MASTER_DETAIL</shortDescription>
+        <value>FEC_Additional_Info__c,FEC_Assignment__c,FEC_Case_Flow_History__c,FEC_Case_Refund_Details__c,FEC_Case_Remarks__c,FEC_Customer_History__c,FEC_KYC_Result__c,FEC_Incorrect_Payment_Info__c,FEC_Pending_Disbursement__c,FEC_Process_Action_History__c,FEC_Relevant_Ticket__c,FEC_Routing_Action_History__c,FEC_Sensitive_Data__c,FEC_Watcher__c,FEC_RePayment_Schedule__c,FEC_Notification_History__c,FEC_Do_Not_Bother__c,FEC_ChatHistory__c,FEC_Card_Delivery__c,FEC_Asset__c,FEC_Application_History__c</value>
     </labels>
     <labels>
         <fullName>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</fullName>

@@ -17,6 +17,8 @@
         <members>Case.ArchiveLastUpdatedBy__c</members>
         <members>Case.FEC_Last_Updated_By__c</members>
         <members>Case.ArchiveMigrationSource__c</members>
+        <members>Case.ArchiveAccOrContract__c</members>
+        <members>Case.ArchiveSelectedAddress__c</members>
         <members>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</members>
         <members>FEC_Customer_History__c.IsArchiveTemp__c</members>
         <members>FEC_Customer_History__c.ArchiveExternalId__c</members>
@@ -25,6 +27,11 @@
         <members>FEC_Sub_Category__c.IsArchiveTemp__c</members>
         <members>FEC_Sub_Code__c.IsArchiveTemp__c</members>
         <members>FEC_Business_Process__c.IsArchiveTemp__c</members>
+        <members>FEC_Address_Info__c.ArchiveExternalId__c</members>
+        <members>FEC_IPP__c.IsArchiveTemp__c</members>
+        <members>FEC_Card_Payment__c.IsArchiveTemp__c</members>
+        <members>FEC_Process_Action__c.IsArchiveTemp__c</members>
+        <members>FEC_Integration_Case__c.IsArchiveTemp__c</members>
         <name>CustomField</name>
     </types>
 
@@ -67,6 +74,8 @@
         <members>CS_DOWNLOAD_ATTACHMENT</members>
         <members>CS_NO_ARCHIVE_ATTACHMENT</members>
         <members>TECH_LIST_SPECIAL_ARCHIVE_FIELD_AND_OBJECT</members>
+        <members>TECH_LIST_OBJ_IS_ARCHIVE_TEMP</members>
+        <members>TECH_LIST_OBJ_IS_MASTER_DETAIL</members>
         <name>CustomLabel</name>
     </types>
 
