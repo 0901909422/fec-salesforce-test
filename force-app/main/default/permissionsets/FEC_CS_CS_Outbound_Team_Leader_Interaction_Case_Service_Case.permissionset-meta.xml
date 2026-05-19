@@ -2312,6 +2312,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_NFU_Description_Result__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_NFU_Expiry_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -4157,6 +4162,11 @@
         <readable>true</readable>
     </fieldPermissions>
 
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - CS Outbound Team Leader - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>

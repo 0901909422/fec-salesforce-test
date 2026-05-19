@@ -2,19 +2,24 @@
     <template if:true={hasData}>
         <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}>
 
-            <c-fec_-common-record-detail-section section-title={customLabel.originalMRCLabel} fields={originalMrcFields}
-                columns="3">
-            </c-fec_-common-record-detail-section>
+            <template if:true={showOriginalMrcBlock}>
+                <c-fec_-common-record-detail-section section-title={customLabel.originalMRCLabel} fields={originalMrcFields}
+                    columns="3">
+                </c-fec_-common-record-detail-section>
+            </template>
 
-            <c-fec_-common-record-detail-section section-title={customLabel.notarizedMRCLabel}
-                fields={notarizedMrcFields} columns="3">
-            </c-fec_-common-record-detail-section>
+            <template if:true={showNotarizedMrcBlock}>
+                <c-fec_-common-record-detail-section section-title={customLabel.notarizedMRCLabel}
+                    fields={notarizedMrcFields} columns="3">
+                </c-fec_-common-record-detail-section>
+            </template>
 
         </lightning-accordion>
     </template>
 
     <template if:false={hasData}>
         <div class="slds-accordion">
+            <template if:true={showOriginalMrcBlock}>
             <section class="slds-accordion__section slds-is-open">
                 <div class="slds-accordion__summary">
                     <h3 class="slds-accordion__summary-heading">
@@ -30,7 +35,9 @@
                 </div>
                 <div class="slds-accordion__content slds-hide"></div>
             </section>
+            </template>
 
+            <template if:true={showNotarizedMrcBlock}>
             <section class="slds-accordion__section slds-is-open">
                 <div class="slds-accordion__summary">
                     <h3 class="slds-accordion__summary-heading">
@@ -46,6 +53,7 @@
                 </div>
                 <div class="slds-accordion__content slds-hide"></div>
             </section>
+            </template>
         </div>
     </template>
 </template>

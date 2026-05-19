@@ -27,6 +27,7 @@
 		<members>fec_BatchCaseCreation</members>
 		<members>fec_BatchDataCreation</members>
 		<members>fec_CommonConst</members>
+		<members>fec_CommonUtils</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>
@@ -81,6 +82,7 @@
         <members>FEC_Batch_Import_Data_End_In_Past</members>
         <members>FEC_Batch_Import_Data_Absence_Duplicate_In_System</members>
         <members>FEC_Batch_Import_Data_Absence_Duplicate_In_File</members>
+		<members>FEC_Batch_Msg_Select_Template</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
