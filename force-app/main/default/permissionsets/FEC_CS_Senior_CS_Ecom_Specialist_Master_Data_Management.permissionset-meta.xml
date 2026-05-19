@@ -935,7 +935,7 @@
         <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>
-<fieldPermissions>
+    <fieldPermissions>
         <editable>true</editable>
         <field>Case.FEC_Assigment_Mode__c</field>
         <readable>true</readable>
