@@ -1813,8 +1813,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   // PhuongNT add set hidden field
                   field.isHidden = !this.cardReplacementReason;
                 } else if (
-                  field.apiName === FIELD_LOAN_AMOUNT &&
-                  row.sub?.name === SUBSECTION_NAME_C360_INFO
+                  field.apiName === FIELD_LOAN_AMOUNT
+                  // field.apiName === FIELD_LOAN_AMOUNT &&
+                  // row.sub?.name === SUBSECTION_NAME_C360_INFO
                 ) {
                   field.displayValue = formatCurrency2(field.value);
                   field.readonlyDisplayValue = field.displayValue;
