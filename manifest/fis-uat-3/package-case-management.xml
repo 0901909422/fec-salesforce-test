@@ -66,6 +66,7 @@
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
 		<members>FEC_NewAssignmentController</members>
+        <members>FEC_AssignmentCaseShareService</members>
         <name>ApexClass</name>
     </types>
 	<types>

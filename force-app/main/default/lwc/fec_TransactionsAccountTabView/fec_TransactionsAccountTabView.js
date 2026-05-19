@@ -16,10 +16,13 @@
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import loadTransactionDetail from '@salesforce/apex/FEC_TransactionsController.loadTransactionDetail';
-import { setConsoleTab } from 'c/fec_CommonUtils';
-import { LOCALE_ENG, LOCALE_VN } from 'c/fec_CommonConst';
+import { setConsoleTab, formatDateTime, formatDateVNI, isNegative } from 'c/fec_CommonUtils';
+import { LOCALE_ENG } from 'c/fec_CommonConst';
 
 import FEC_Transaction from '@salesforce/label/c.FEC_Transaction';
+import FEC_Billed_Transactions from '@salesforce/label/c.FEC_Billed_Transactions';
+import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
+import FEC_Pending_Transactions from '@salesforce/label/c.FEC_Pending_Transactions';
 import FEC_MSG_No_transaction_selected from '@salesforce/label/c.FEC_MSG_No_transaction_selected';
 import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
 import FEC_Effective_Date from '@salesforce/label/c.FEC_Effective_Date';
@@ -41,11 +44,17 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     /* ================= STATE ================= */
     @track transaction = null;
     transactionId;
+    transactionCodeFromState;
     sectionType;
+    navUid;
     isLoading = false;
+    activeSectionName = 'detail';
 
     customLabel = {
         transactionLabel: FEC_Transaction,
+        billedTransactionsLabel: FEC_Billed_Transactions,
+        unbilledTransactionsLabel: FEC_Unbilled_Transactions,
+        pendingTransactionsLabel: FEC_Pending_Transactions,
         msgNoTransactionSelected: FEC_MSG_No_transaction_selected,
         transactionCodeLabel: FEC_Transaction_Code,
         effectiveDateLabel: FEC_Effective_Date,
@@ -109,14 +118,24 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     handlePageRef(pageRef) {
         if (!pageRef?.state) return;
 
-        const { c__transactionId, c__sectionType } = pageRef.state;
+        const { c__transactionId, c__sectionType, c__transactionCode, uid } =
+            pageRef.state;
 
         this.sectionType = c__sectionType || 'unbilled';
+        this.transactionCodeFromState = c__transactionCode || this.transactionCodeFromState;
 
-        if (c__transactionId && c__transactionId !== this.transactionId) {
-            this.transactionId = c__transactionId;
-            this.loadDetail();
+        if (!c__transactionId) {
+            return;
         }
+
+        if (c__transactionId === this.transactionId && uid === this.navUid) {
+            return;
+        }
+
+        this.transactionId = c__transactionId;
+        this.navUid = uid;
+        this.transaction = null;
+        this.loadDetail();
     }
 
     /* ================= LOAD DETAIL ================= */
@@ -127,7 +146,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
 
         loadTransactionDetail({ transactionId: this.transactionId })
             .then(res => {
-                this.transaction = res;
+                this.transaction = res || null;
                 setConsoleTab('Transactions Detail', 'standard:record');
             })
             .catch(() => {
@@ -138,61 +157,77 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             });
     }
 
-    /* ================= SECTIONS ================= */
-    get sections() {
-        if (!this.transaction) return [];
+    get transactionSubTitle() {
+        return this.transaction?.transactionCode || this.transactionCodeFromState || '';
+    }
 
-        let fields;
-        let label;
-
+    get sectionLabel() {
         switch (this.sectionType) {
             case 'pending':
-                fields = this.pendingFields;
-                label = 'Pending Transaction';
-                break;
+                return this.customLabel.pendingTransactionsLabel;
             case 'billed':
-                fields = this.billedFields;
-                label = 'Billed Transaction';
-                break;
+                return this.customLabel.billedTransactionsLabel;
             default:
-                fields = this.unbilledFields;
-                label = 'Unbilled Transaction';
+                return this.customLabel.unbilledTransactionsLabel;
         }
+    }
+
+    get fieldConfig() {
+        switch (this.sectionType) {
+            case 'pending':
+                return this.pendingFields;
+            case 'billed':
+                return this.billedFields;
+            default:
+                return this.unbilledFields;
+        }
+    }
+
+    get detailFields() {
+        if (!this.transaction) return [];
 
         const helpTexts = this.transaction.helpTexts || {};
 
-        return [
-            {
-                name: this.sectionType,
-                label,
-                fields: fields.map(f => {
-                    const helpText = f.apiName
-                        ? helpTexts[f.apiName]
-                        : null;
+        return this.fieldConfig.map(f => {
+            const dualRaw =
+                f.dualFieldName != null
+                    ? this.transaction[f.dualFieldName]
+                    : null;
+            const useDual =
+                f.dualFieldName != null &&
+                dualRaw != null &&
+                String(dualRaw).trim() !== '';
+            const value = useDual
+                ? dualRaw
+                : this.formatValue(f.fieldName, this.transaction[f.fieldName]);
+            const helpText = f.apiName ? helpTexts[f.apiName] : null;
 
-                    const dualRaw =
-                        f.dualFieldName != null
-                            ? this.transaction[f.dualFieldName]
-                            : null;
-                    const useDual =
-                        f.dualFieldName != null &&
-                        dualRaw != null &&
-                        String(dualRaw).trim() !== '';
+            return {
+                key: f.fieldName,
+                fieldName: f.fieldName,
+                label: f.label,
+                value,
+                hasHelpText: !!helpText,
+                helpText,
+                valueClass: isNegative(value) ? 'slds-truncate text-red' : 'slds-wrap'
+            };
+        });
+    }
 
-                    return {
-                        label: f.label,
-                        value: useDual
-                            ? dualRaw
-                            : this.formatValue(
-                                  f.fieldName,
-                                  this.transaction[f.fieldName]
-                              ),
-                        hasHelpText: !!helpText,
-                        helpText
-                    };
-                })
-            }
+    /** 4 columns — row-major field order (matches spec layout). */
+    get fieldColumns() {
+        const columns = [
+            { key: 'col-0', fields: [] },
+            { key: 'col-1', fields: [] },
+            { key: 'col-2', fields: [] },
+            { key: 'col-3', fields: [] }
         ];
+
+        this.detailFields.forEach((field, index) => {
+            columns[index % 4].fields.push(field);
+        });
+
+        return columns;
     }
 
     get hasData() {
@@ -205,8 +240,16 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             return '-';
         }
 
+        if (fieldName === 'effectiveDate') {
+            return formatDateTime(value) || '-';
+        }
+
+        if (fieldName === 'postingDate') {
+            return formatDateVNI(value) || '-';
+        }
+
         if (this.isDateField(fieldName)) {
-            return this.formatDate(value);
+            return formatDateVNI(value) || '-';
         }
 
         if (this.isNumberField(fieldName)) {
@@ -233,17 +276,6 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             'total',
             'payment'
         ].some(key => fieldName.toLowerCase().includes(key));
-    }
-
-    formatDate(value) {
-        const d = new Date(value);
-        if (isNaN(d)) return value;
-
-        return new Intl.DateTimeFormat(LOCALE_VN, {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(d);
     }
 
     formatNumber(value) {

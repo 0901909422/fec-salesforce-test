@@ -36,6 +36,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
     @api renderEmptyTableChrome = false;
     @api selectionMode = 'multiple'; 
     @api enableCheckboxColumn = false;
+    @api showRefreshWhenEmpty = false;
 
     /* ================= STATE ================= */
     _records = [];
@@ -144,6 +145,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     get showCheckboxColumn() {
         return this.enableCheckboxColumn;
+    }
+
+    get shouldShowRefresh() {
+        return this.showRefresh && (this.hasRecords || this.showRefreshWhenEmpty);
     }
     /* ================= SORTED BY LABEL ================= */
     /**
@@ -269,7 +274,6 @@ export default class Fec_RelatedListPaging extends LightningElement {
                                         }))
                                     }))
                                     : [{
-                                        key: 'default-section',
                                         section: null,
                                         showSectionTitle: false,
                                         items: col.hoverFields.map(h => ({
