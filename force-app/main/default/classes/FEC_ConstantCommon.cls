@@ -619,6 +619,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DECISION_USER = 'USER';
     public static final String DECISION_QUEUE = 'QUEUE';
     public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
+    public static final String DECISION_USER_TEAM_QUEUE = 'USER_TEAM_QUEUE';
     
     public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
     
