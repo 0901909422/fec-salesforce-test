@@ -57,6 +57,7 @@ public with sharing class Fec_HoldCaseConfigurationController {
             item.nfuCode        = hc.FEC_NFU_Code__c;
             item.active         = hc.FEC_Active__c ? 'Yes' : 'No';
             item.lastModifiedDate = FEC_CommonUltils.formatTimestamp(hc.LastModifiedDate, 'dd/MM/yyyy, HH:mm');
+            item.userId = hc.LastModifiedBy.Id;
             item.lastModifiedBy = hc.LastModifiedBy.Name;
 
             results.add(item);
@@ -401,6 +402,7 @@ public with sharing class Fec_HoldCaseConfigurationController {
         @AuraEnabled public String active;
         @AuraEnabled public String lastModifiedDate;
         @AuraEnabled public String lastModifiedBy;
+        @AuraEnabled public String userId;
     }
 
     public class HoldCaseConfigHistoryWrapper {
