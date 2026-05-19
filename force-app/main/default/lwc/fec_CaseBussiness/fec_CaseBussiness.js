@@ -89,7 +89,7 @@ import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Su
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
 //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
-import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_CaseBusinessService.getDocumentRequestStageChangeRouting";
+import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_DocumentRequestRoutingService.getStageChangeRouting";
 import { getDocumentRequestRoutingContext } from "./fecDocumentRequestStageChangeRouting";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
@@ -757,6 +757,15 @@ export default class Fec_CaseBussiness extends LightningElement {
   /** Mỗi Case một key — tránh tab Case khác ghi đè / xóa draft khi đổi tab Console. */
   get draftStorageKey() {
     return this.recordId ? `fec_case_business_draft_${this.recordId}` : "fec_case_business_draft";
+  }
+
+  //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+  handleDocReqRoutingFieldChange(event) {
+    const { fieldName, value } = event.detail || {};
+    this.handleChange({
+      target: { name: fieldName },
+      detail: { value },
+    });
   }
 
   handleChange(event) {
@@ -2357,9 +2366,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           break;
       }
 
-      let routeToEle = this.template.querySelector(
-        'lightning-select[data-id="routing-action"]',
-      );
+      //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+      let routeToEle = this._getRoutingActionSelectEl();
 
       if (routeToEle) {
         if (toRouteTo === true) {
@@ -2483,9 +2491,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
 
-    let routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    let routeToEle = this._getRoutingActionSelectEl();
 
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
@@ -3016,9 +3023,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
-    let routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    let routeToEle = this._getRoutingActionSelectEl();
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
@@ -4327,15 +4333,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
   }
 
+  //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+  _getRoutingActionSelectEl() {
+    if (this.showDocumentRequestStageChangeRoutingSection) {
+      const child = this.template.querySelector(
+        "c-fec_-document-request-routing-action",
+      );
+      return child?.getRoutingActionSelect?.() ?? null;
+    }
+    return this.template.querySelector(
+      'lightning-select[data-id="routing-action"]',
+    );
+  }
+
   _setActionValueByCode(code) {
     const optionValue = this._getRoutingActionValueByCode(code);
     if (!optionValue) {
       return;
     }
     this.actionValue = optionValue;
-    const routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    const routeToEle = this._getRoutingActionSelectEl();
     if (routeToEle) {
       routeToEle.value = optionValue;
     }

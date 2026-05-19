@@ -325,54 +325,17 @@
     <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
     <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
       name="routing-action-doc-request" label={customLabel.routingActionLabel}>
-      <div class="slds-grid slds-wrap">
-        <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
-          <lightning-select data-id="routing-action" label={customLabel.actionLabel} value={actionValue}
-            options={business.routingActionlst} onchange={handleChangeAction} disabled={isRoutingActionDisabled}
-            required={isEdit}></lightning-select>
-        </div>
-        <div if:true={showRouteTo} class={routingAssignmentContainerClass}>
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <p class="label">{customLabel.teamLabel}</p>
-            <p class="value">{business.nextTeam}</p>
-          </div>
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <p class="label">{customLabel.queueLabel}</p>
-            <p class="value">{routeToQueueDisplayLabel}</p>
-          </div>
-        </div>
-        <div if:true={showRevert} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <p class="label">{customLabel.decisionLabel}</p>
-            <p class="value">{revertDecisionDisplayLabel}</p>
-          </div>
-        </div>
-        <div if:true={showTransfer} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <lightning-combobox name="decision" label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
-              options={decisionOptions} required>
-            </lightning-combobox>
-          </div>
-          <div if:true={decisionValue}
-            class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <template if:true={isSubDecisionOptionsDisplay}>
-              <lightning-combobox name="sub-decision" label={customLabel.subDecisionLabel}
-                placeholder={customLabel.chooseSubDecisionLabel} value={subDecisionValue} onchange={handleChange}
-                options={subDecisionOptions} required>
-              </lightning-combobox>
-            </template>
-          </div>
-        </div>
-        <div if:true={showUpdate} class="route-to-info slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
-          <div class="route-to-info__item read slds-border--bottom slds-m-around--small slds-p-around--x-small">
-            <lightning-combobox name="decision" label={customLabel.decisionLabel}
-              placeholder={customLabel.chooseDecisionLabel} value={decisionValue} onchange={handleChange}
-              options={decisionUpdateOptions} required>
-            </lightning-combobox>
-          </div>
-        </div>
-      </div>
+      <c-fec_-document-request-routing-action is-edit={isEdit}
+        action-value={actionValue} routing-action-options={business.routingActionlst}
+        is-routing-action-disabled={isRoutingActionDisabled} show-route-to={showRouteTo}
+        next-team={business.nextTeam} route-to-queue-display-label={routeToQueueDisplayLabel}
+        show-revert={showRevert} revert-decision-display-label={revertDecisionDisplayLabel}
+        show-transfer={showTransfer} show-update={showUpdate} decision-value={decisionValue}
+        sub-decision-value={subDecisionValue} decision-options={decisionOptions}
+        sub-decision-options={subDecisionOptions} decision-update-options={decisionUpdateOptions}
+        is-sub-decision-options-display={isSubDecisionOptionsDisplay} onactionchange={handleChangeAction}
+        onroutingfieldchange={handleDocReqRoutingFieldChange}>
+      </c-fec_-document-request-routing-action>
     </lightning-accordion-section>
   </lightning-accordion>
 
