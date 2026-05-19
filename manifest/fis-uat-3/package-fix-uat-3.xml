@@ -78,6 +78,7 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
