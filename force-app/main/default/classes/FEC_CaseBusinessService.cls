@@ -200,7 +200,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_Category__r.Name,
           FEC_SubCategory__r.Name,
           FEC_SubCode__r.Name,
-          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
+          FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c,
+          FEC_Assignment_Count__c
         FROM Case
         WHERE Id = :caseId
       ];
@@ -437,8 +438,7 @@ public without sharing class FEC_CaseBusinessService {
       // GSR: luôn áp dụng rule subsection (ẩn Property Info khi NOC không đổi so với history) kể cả lần tải đầu không truyền NOC từ UI.
       Boolean isGsrCofNocDisplayMode = isActualNatureGsrCof;
       Boolean isGsrNocOnlyDisplayMode =
-        isActualNatureGsrOnly &&
-        (getCaseAssignmentCountByCaseId(selectedCase.Id) == 0);
+        isActualNatureGsrOnly;
       Boolean useActualNatureAndSettingObj = String.isNotBlank(selectedNatureOfCaseId);
       if (isGsrCofNocDisplayMode && isUpdatedNocDifferentFromCurrent) {
         // GSR + chọn bộ NOC mới khác bộ cũ: dùng NOC thường + Master Data Setting.
@@ -771,6 +771,15 @@ public without sharing class FEC_CaseBusinessService {
           isGsrBusinessProcess &&
           checkStageName(selectedStage.Name, FEC_ConstantCommon.STAGE_ONE);
         result.contextFlags.put('isGsrStage1Revert', isGsrStage1Revert);
+        // GSR Stage 3 (code Stage 2 + đã có Assignment): Property Info chỉ khi Updated NOC khác Original → read-only.
+        Boolean isGsrStage3PropertyInfoReadonly =
+          isActualNatureGsrOnly &&
+          isUpdatedNocDifferentFromCurrent &&
+          getCaseAssignmentCountByCaseId(selectedCase) > 0;
+        result.contextFlags.put(
+          'isGsrStage3PropertyInfoReadonly',
+          isGsrStage3PropertyInfoReadonly
+        );
         // Chỉ chèn LWC Original Info (Stage 2) khi Updated NOC trùng Original (so với flow history).
         if (isGsrStage1Revert && !isUpdatedNocDifferentFromCurrent) {
           FEC_GsrStage1RevertMasterDataHelper.appendStage2OriginalInfoLwc(
@@ -957,12 +966,15 @@ public without sharing class FEC_CaseBusinessService {
                   if (String.isBlank(cObjectItem.id))
                     cObjectItem.id = (String) objTemp.get('Id');
 
+                  Boolean forceGsrPropertyInfoReadonly =
+                    isGsrStage3PropertyInfoReadonly &&
+                    'Property Info'.equals(subSectionItem.name);
                   fieldTemp = transform(
                     masterDataItem,
                     objTemp,
                     currentUser.FEC_User_Group__c,
                     isRevert,
-                    isGsrStage1Revert
+                    isGsrStage1Revert || forceGsrPropertyInfoReadonly
                   );
 
                   if (fieldTemp == null)
@@ -1814,6 +1826,14 @@ public without sharing class FEC_CaseBusinessService {
       return 0;
     }
     return caselst[0].FEC_Assignment_Count__c;
+  }
+
+  /** Dùng field đã query trên Case nếu có; không thì query theo Id. */
+  private static Decimal getCaseAssignmentCountByCaseId(Case caseRec) {
+    if (caseRec != null && caseRec.FEC_Assignment_Count__c != null) {
+      return caseRec.FEC_Assignment_Count__c;
+    }
+    return getCaseAssignmentCountByCaseId(caseRec?.Id);
   }
 
   //thangtv: khi Owner hiện tại là Queue, tra FEC_Routing_Action_History__c để tìm User thực sự
