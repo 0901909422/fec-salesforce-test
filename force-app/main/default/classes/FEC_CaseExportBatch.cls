@@ -13,6 +13,9 @@ public class FEC_CaseExportBatch
     private Integer failCount    = 0;
     private List<String> failedInfo = new List<String>();
 
+    // ── Stateful data accumulator — gom toàn bộ data qua các batch ────────
+    private List<Map<String, Object>> allCaseData = new List<Map<String, Object>>();
+
     // ── start() ──────────────────────────────────────────────────────────────
     public Database.QueryLocator start(Database.BatchableContext bc) {
         Datetime threshold = System.now().addDays(-CLOSED_DAYS_THRESHOLD);
@@ -72,6 +75,9 @@ public class FEC_CaseExportBatch
                 return;
             }
 
+            // Tích lũy data cho JSON report cuối cùng
+            allCaseData.addAll(batchPayload);
+
             // 5. Lưu JSON file
             String jsonPayload = JSON.serializePretty(batchPayload);
             
@@ -101,6 +107,33 @@ public class FEC_CaseExportBatch
             for (String info : failedInfo) {
                 System.debug('  ✗ ' + info);
             }
+        }
+
+        // Render JSON report và lưu vào Salesforce dưới dạng ContentVersion
+        // saveJsonReport(bc.getJobId());
+    }
+
+    /**
+     * Tạo JSON file chứa toàn bộ data đã query và lưu vào Salesforce (ContentVersion).
+     */
+    private void saveJsonReport(Id jobId) {
+        try {
+            String jsonContent = JSON.serializePretty(allCaseData);
+            String fileName = 'CaseExportBatch_'
+                + System.now().format('yyyyMMdd_HHmmss') + '.json';
+
+            ContentVersion cv = new ContentVersion();
+            cv.Title          = fileName;
+            cv.PathOnClient   = fileName;
+            cv.VersionData    = Blob.valueOf(jsonContent);
+            cv.Description    = 'FEC Case Export Batch Data - Job: ' + jobId;
+            insert cv;
+
+            System.debug('[CaseExportBatch] JSON report saved: ' + fileName
+                + ' (ContentVersion Id: ' + cv.Id + ')');
+        } catch (Exception ex) {
+            System.debug(LoggingLevel.ERROR,
+                '[CaseExportBatch] Failed to save JSON report: ' + ex.getMessage());
         }
     }
 
@@ -306,7 +339,10 @@ public class FEC_CaseExportBatch
         // Build output
         for (String objectName : recordsByType.keySet()) {
             List<SObject> records = recordsByType.get(objectName);
-            if (records.size() == 1) {
+            if (objectName == 'FEC_Customer_History__c') {
+                // Luôn trả về array cho FEC_Customer_History__c
+                lookupMap.put(objectName, records);
+            } else if (records.size() == 1) {
                 lookupMap.put(objectName, records[0]);
             } else {
                 lookupMap.put(objectName, records);
