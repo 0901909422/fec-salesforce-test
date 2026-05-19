@@ -10418,7 +10418,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Label</shortDescription>
-        <value>Do you want to save change for this Queue. If you change Queue Team, the page will be refresh to update Org Tree?</value>
+        <value>Do you want to save change for this Queue?</value>
     </labels>
     <labels>
         <fullName>CS_OrgChart_Text_EditQueueModal_Save_Success_Message</fullName>
@@ -11509,7 +11509,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Team phục vụ hiển thị tại trạng thái của Case (vd: Pending-CSIB01)</shortDescription>
-        <value>Team phục vụ hiển thị tại trạng thái của Case</value>
+        <value>Team is displayed in the Case status</value>
     </labels>
     <labels>
         <fullName>CS_OrgChart_Text_EditQueueModal_Warning_No_Changes_Detected</fullName>
