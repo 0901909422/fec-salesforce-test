@@ -873,15 +873,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   showValueInput(line) {
-    const op = (line?.operatorKey || STR_EMPTY).toLowerCase();
-    if (op === "is_null" || op === "is_not_null") {
+    if (!this.operatorNeedsValue(line)) {
+      return false;
+    }
+    if (
+      this.showAttachmentValueCombobox(line) ||
+      this.showBooleanValueCombobox(line) ||
+      this.showValuePicklistCombobox(line) ||
+      this.showMultiPicklistValue(line) ||
+      this.showDefaultValueInput(line)
+    ) {
       return false;
     }
     const meta = this.lineMeta(line);
-    if (meta?.valueType === "checkbox") {
+    if (!meta || meta.valueType === "checkbox") {
       return false;
     }
-    return true;
+    return meta.valueType === "date" || meta.valueType === "text";
   }
 
   lineMeta(line) {
