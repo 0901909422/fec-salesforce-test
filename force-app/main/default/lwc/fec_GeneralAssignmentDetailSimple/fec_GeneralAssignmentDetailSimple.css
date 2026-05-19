@@ -1,0 +1,99 @@
+/* Card: rounded, bordered - same as History */
+.slds-card {
+    border-radius: 0.5rem;
+    border: 1px solid #dddbda;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+/* Only override background and ensure proper height - let SLDS handle font/color */
+.slds-card__header {
+    background-color: #f3f3f3;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.75rem 1rem !important;
+    min-height: 3rem;
+}
+
+/* Field rows */
+.detail-grid {
+    padding: 0;
+    background: #ffffff;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    min-height: 2.5rem;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    width: 40%;
+    color: #3e3e3c;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    flex: 1;
+    font-size: 0.8125rem;
+    color: #706e6b;
+}
+
+/* Edit mode 2-column grid */
+.ga-edit-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding: 0.5rem 0;
+    width: 100%;
+}
+.ga-edit-col {
+    width: calc(50% - 0.5rem);
+    flex: 0 0 calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* 4-column form grid: label | input | label | input */
+.form-grid {
+    display: grid;
+    grid-template-columns: 15% 35% 15% 35%;
+    gap: 0.75rem 0;
+    align-items: center;
+    padding: 0.5rem 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+.form-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #3e3e3c;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+    align-self: start;
+    padding-top: 0.5rem;
+}
+.form-value {
+    font-size: 0.8125rem;
+    min-width: 0;
+    padding-right: 1rem;
+    box-sizing: border-box;
+}
+.ga-search-wrap { position: relative; }
+.ga-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    z-index: 9001; background: #fff;
+    border: 1px solid #dddbda; border-radius: 0.25rem;
+    box-shadow: 0 2px 3px rgba(0,0,0,.16);
+    max-height: 200px; overflow-y: auto;
+}
+.ga-option { cursor: pointer; padding: 0.5rem 0.75rem; list-style: none; font-size: 0.875rem; }
+.ga-option:hover { background: #f3f3f3; }
