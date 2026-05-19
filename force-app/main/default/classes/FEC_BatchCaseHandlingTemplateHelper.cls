@@ -57,6 +57,14 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             selectParts.add('FEC_Active__c');
             whereParts.add('FEC_Active__c = TRUE');
         }
+        if (templateFields.containsKey('FEC_Business_Process__c')) {
+            selectParts.add('FEC_Business_Process__c');
+            selectParts.add('FEC_Business_Process__r.Name');
+            selectParts.add('FEC_Business_Process__r.FEC_Code__c');
+        }
+        if (templateFields.containsKey('FEC_User_Group__c')) {
+            selectParts.add('FEC_User_Group__c');
+        }
         String soql =
             'SELECT ' + String.join(selectParts, ', ') +
             ' FROM ' + TEMPLATE_OBJECT_API_NAME +
@@ -73,6 +81,115 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (activeTemplates == null || activeTemplates.isEmpty()) {
             return null;
         }
+        SObject fieldMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates);
+        if (fieldMatch != null) {
+            return fieldMatch;
+        }
+        return resolveTemplateByName(businessProcessCode, userGroup, activeTemplates);
+    }
+
+    private static SObject resolveTemplateByFields(
+        String businessProcessCode,
+        String userGroup,
+        List<SObject> activeTemplates
+    ) {
+        SObject bestMatch;
+        Integer bestScore = -1;
+        for (SObject tr : activeTemplates) {
+            Boolean hasBpField = tr.get('FEC_Business_Process__c') != null;
+            String templateUg = tr.get('FEC_User_Group__c') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(tr.get('FEC_User_Group__c')).trim();
+            Boolean hasUgField = String.isNotBlank(templateUg);
+            if (!hasBpField && !hasUgField) {
+                continue;
+            }
+            Boolean bpMatches = !hasBpField || businessProcessFieldMatches(tr, businessProcessCode);
+            Boolean ugMatches = !hasUgField || userGroupFieldMatches(tr, businessProcessCode, userGroup);
+            if (!bpMatches || !ugMatches) {
+                continue;
+            }
+            Integer score = 0;
+            if (hasBpField) {
+                score += 1;
+            }
+            if (hasUgField) {
+                score += 1;
+            }
+            if (hasBpField && hasUgField) {
+                score += 1;
+            }
+            if (bestMatch == null || score > bestScore) {
+                bestMatch = tr;
+                bestScore = score;
+            }
+        }
+        return bestMatch;
+    }
+
+    private static Boolean businessProcessFieldMatches(SObject templateRow, String businessProcessInput) {
+        if (templateRow.get('FEC_Business_Process__c') == null) {
+            return true;
+        }
+        if (String.isBlank(businessProcessInput)) {
+            return false;
+        }
+        String inputNorm = businessProcessInput.trim().toUpperCase();
+        SObject bpRel = templateRow.getSObject('FEC_Business_Process__r');
+        if (bpRel != null) {
+            String bpName = bpRel.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('Name')).trim();
+            if (String.isNotBlank(bpName) && bpName.trim().toUpperCase() == inputNorm) {
+                return true;
+            }
+            String bpCode = bpRel.get('FEC_Code__c') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('FEC_Code__c')).trim();
+            if (String.isNotBlank(bpCode) && bpCode.trim().toUpperCase() == inputNorm) {
+                return true;
+            }
+        }
+        String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessInput);
+        if (String.isNotBlank(namePrefix) && bpRel != null) {
+            String bpName = bpRel.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('Name')).trim();
+            String bpPrefix = mapBusinessProcessToTemplatePrefix(bpName);
+            if (String.isNotBlank(bpPrefix) && bpPrefix.equalsIgnoreCase(namePrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean userGroupFieldMatches(SObject templateRow, String businessProcessCode, String userGroupInput) {
+        String templateUg = templateRow.get('FEC_User_Group__c') == null
+            ? FEC_ConstantCommon.STR_EMPTY
+            : String.valueOf(templateRow.get('FEC_User_Group__c')).trim();
+        if (String.isBlank(templateUg)) {
+            return true;
+        }
+        if (String.isBlank(userGroupInput)) {
+            return false;
+        }
+        String inputNorm = userGroupInput.trim().toUpperCase();
+        String templateNorm = templateUg.toUpperCase();
+        if (templateNorm == inputNorm) {
+            return true;
+        }
+        for (String suffix : mapUserGroupToTemplateSuffixes(businessProcessCode, userGroupInput)) {
+            if (String.isNotBlank(suffix) && templateNorm == suffix.toUpperCase()) {
+                return true;
+            }
+        }
+        for (String suffix : mapUserGroupToTemplateSuffixes(businessProcessCode, templateUg)) {
+            if (String.isNotBlank(suffix) && suffix.toUpperCase() == inputNorm) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static SObject resolveTemplateByName(
+        String businessProcessCode,
+        String userGroup,
+        List<SObject> activeTemplates
+    ) {
         String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessCode);
         if (String.isBlank(namePrefix)) {
             return null;

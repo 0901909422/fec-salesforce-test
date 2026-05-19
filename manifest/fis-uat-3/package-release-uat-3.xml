@@ -587,6 +587,8 @@
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
+		<members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <name>CustomField</name>
     </types>
     <types>
