@@ -147,6 +147,7 @@
         <members>fec_MRC</members>
         <members>fec_DoNotBotherResultView</members>
         <members>fec_Banca</members>
+        <members>fec_CommonDetailView</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
