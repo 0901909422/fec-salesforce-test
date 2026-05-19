@@ -30,6 +30,11 @@ public without sharing class FEC_CaseBusinessService {
   public static final String DOCUMENT_REQUEST = 'Document Request';
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294 — FEC_Business_Process__r.FEC_Code__c (quy trình Fast Card / RC11…)
   public static final String FAST_CARD = 'Fast Cash';
+  public static final String MRC_RETURN = 'MRC Return';
+  private static final Set<String> MRC_RETURN_STAGE1_HIDDEN_FIELDS = new Set<String>{
+    'FEC_Customer_Confirmation__c',
+    'FEC_Contract_Processing_Assessment_Type__c'
+  };
   // tungnm37 thêm: COF/GSR route string constant
   public static final String ROUTE_TO_COF_GSR_ACTION = 'Route to COF/GSR';
 
@@ -855,6 +860,18 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
+          // MRC Return Stage 1: ẩn Customer Confirmation / Contract Processing Assessment Type.
+          if (
+            shouldSkipMrcReturnStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              selectedStage.Name,
+              fieldApiNameTemp
+            )
+          ) {
+            continue;
+          }
+
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
@@ -929,7 +946,7 @@ public without sharing class FEC_CaseBusinessService {
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
-              subSectionNameTemp = (isCOFStage1Revert && subSectionNameTemp == FEC_ConstantCommon.PROPERTY_INFO) ? FEC_ConstantCommon.UPDATED_INFO : subSectionNameTemp;
+              subSectionNameTemp = (isCOFStage1Revert && subSectionNameTemp == 'Property Info') ? FEC_ConstantCommon.UPDATED_INFO : subSectionNameTemp;
               subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
               if (subSectionTemp == null) {
@@ -4561,6 +4578,27 @@ public without sharing class FEC_CaseBusinessService {
     } catch (DmlException e) {
       throw new AuraHandledException(e.getMessage());
     }
+  }
+
+  private static Boolean shouldSkipMrcReturnStage1Field(
+    String businessProcessCode,
+    String subCategoryCode,
+    String stageName,
+    String fieldApiName
+  ) {
+    if (String.isBlank(fieldApiName) || !MRC_RETURN_STAGE1_HIDDEN_FIELDS.contains(fieldApiName)) {
+      return false;
+    }
+    if (!checkStageName(stageName, FEC_ConstantCommon.STAGE_ONE)) {
+      return false;
+    }
+    Boolean isMrcReturnProcess =
+      String.isNotBlank(businessProcessCode) &&
+      MRC_RETURN.equalsIgnoreCase(businessProcessCode.trim());
+    Boolean isMrcRl05Branch =
+      String.isNotBlank(subCategoryCode) &&
+      subCategoryCode.toUpperCase().contains('RL05');
+    return isMrcReturnProcess || isMrcRl05Branch;
   }
 
   //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
