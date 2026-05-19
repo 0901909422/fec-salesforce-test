@@ -19,10 +19,6 @@
 
 .fec-session-accordion {
   overflow: visible;
-  --sds-c-accordion-summary-color-background: #eff0f0;
-  --sds-c-accordion-heading-font-size: 0.875rem;
-  --sds-c-accordion-heading-font-weight: 600;
-  --sds-c-accordion-heading-text-color: #16325c;
 }
 
 .fec-session-body {
@@ -148,9 +144,38 @@
 
 .fec-table th {
   background: #f3f3f2;
-  color: #16325c;
+  color: #3e3e3c;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.fec-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.fec-case-sort-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #3e3e3c;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.fec-case-sort-link:hover {
+  color: #0176d3;
+  text-decoration: underline;
+}
+
+.fec-table th .fec-case-sort-link {
+  cursor: pointer;
+}
+
+.fec-sort-icon {
+  --sds-c-icon-color-foreground-default: #706e6b;
+  opacity: 0.85;
 }
 
 .fec-empty {
@@ -166,6 +191,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e5e5;
+  background: #fafaf9;
+}
+
+.fec-footer__label {
+  font-size: 0.8125rem;
+  color: #3e3e3c;
+  margin-right: 0.35rem;
 }
 
 .fec-footer__left,
@@ -174,6 +208,60 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.fec-footer__left lightning-combobox {
+  min-width: 4.5rem;
+  max-width: 6rem;
+}
+
+.fec-footer__nav-btn {
+  --slds-c-button-radius-border: 4px;
+  --slds-c-button-sizing-border: 0.5px;
+  --slds-c-button-color-border: #d8dde6;
+  --slds-c-button-color-background: #ffffff;
+  --slds-c-button-color-background-hover: #f3f3f3;
+  width: 32px;
+  height: 32px;
+}
+
+.fec-footer__page-btn {
+  min-width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0176d3;
+  border: 1px solid #0176d3;
+  color: #ffffff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  line-height: 1;
+  padding: 0 0.35rem;
+  box-sizing: border-box;
+}
+
+.fec-footer__of {
+  font-size: 0.8125rem;
+  color: #3e3e3c;
+  white-space: nowrap;
+}
+
+.fec-footer__goto-input {
+  width: 3.5rem;
+}
+
+.fec-footer__go-btn {
+  --sds-c-button-brand-color-background: #0176d3;
+  --sds-c-button-brand-color-background-hover: #014486;
+  --sds-c-button-brand-color-border: #0176d3;
+  --sds-c-button-brand-color-border-hover: #014486;
+  --slds-c-button-brand-color-background: #0176d3;
+  --slds-c-button-brand-color-background-hover: #014486;
+  --slds-c-button-brand-color-border: #0176d3;
+  --slds-c-button-brand-color-border-hover: #014486;
+  --slds-c-button-radius-border: 4px;
 }
 
 .fec-session-body--filters {
@@ -286,12 +374,6 @@
   margin-top: 0.5rem;
 }
 
-.fec-case-total-label {
-  font-size: 0.8125rem;
-  color: #16325c;
-  margin-left: 0.35rem;
-}
-
 .fec-export-success {
   margin: 0.75rem 0 0;
   font-size: 0.875rem;
@@ -356,6 +438,8 @@
   min-width: 0;
 }
 
+.fec-table .fec-th-num,
+.fec-table .fec-td-num,
 .fec-bp-table .fec-th-num,
 .fec-bp-table .fec-td-num {
   width: 3rem;

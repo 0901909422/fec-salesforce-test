@@ -1,4 +1,4 @@
-c-fec_-case-detail_-interation_-edit .slds-accordion__summary,
+﻿c-fec_-case-detail_-interation_-edit .slds-accordion__summary,
 c-fec_-case-detail_-customer_-edit .slds-accordion__summary,
 c-fec_-case-detail_-customer .slds-accordion__summary,
 c-fec_-search .slds-accordion__summary,
@@ -37,6 +37,11 @@ c-fec_-card-replacement-address .slds-accordion__summary,
 c-fec_-assignment-list .slds-accordion__summary,
 c-fec_-banca .slds-accordion__summary,
 c-fec_-hold-case-configuration .slds-accordion__summary {
+c-fec_-card-replacement-address .slds-accordion__summary,
+c-fec_-assignment-list .slds-accordion__summary,
+c-fec_-banca .slds-accordion__summary,
+c-fec_-hold-case-configuration .slds-accordion__summary,
+c-fec_-batch-case-handling .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;
 }
@@ -215,3 +220,4 @@ c-fec_-file-upload-card
 c-fec_-case-bussiness .hide-help-icon lightning-helptext {
   display: none;
 }
+

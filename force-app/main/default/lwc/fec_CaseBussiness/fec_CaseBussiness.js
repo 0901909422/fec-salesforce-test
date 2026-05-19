@@ -38,6 +38,7 @@ import {
   findPicklistOptionByRaw,
   isOnlyNumber,
   formatCurrencyIncludeTax,
+  formatCurrency2,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER } from "c/fec_CommonConst";
@@ -404,6 +405,7 @@ const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
 const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+const FIELD_LOAN_AMOUNT = 'FEC_Loan_Amount__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 const FIELD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
 const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
@@ -1280,19 +1282,27 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return false;
   }
 
+  /** COF/GSR Stage 1 sau Revert: toàn bộ field master data read-only. */
+  _isStage1RevertMasterReadonly() {
+    const flags = this.business?.contextFlags;
+    return (
+      flags?.isCOFStage1Revert === true || flags?.isGsrStage1Revert === true
+    );
+  }
+
   /**
    * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
    * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
    */
   _applyEditModeToBusiness() {
     if (!this.business?.sectionlst) return;
-    const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
+    const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = isCOFStage1Revert ? true : !this._isEdit;
-            field.editable = isCOFStage1Revert ? false : this._isEdit;
+            field.readonly = stage1RevertReadonly ? true : !this._isEdit;
+            field.editable = stage1RevertReadonly ? false : this._isEdit;
           });
         });
       });
@@ -1308,6 +1318,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   _resolveDynCmpMasterIsEdit(componentName, fecMasterDataSettingIsEdit) {
     const master =
       typeof fecMasterDataSettingIsEdit === "boolean" ? fecMasterDataSettingIsEdit : true;
+    if (this.business?.contextFlags?.isGsrStage1Revert === true) {
+      return false;
+    }
     if (
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
       (componentName === "fec_IPPConversionRetailForm" ||
@@ -1698,8 +1711,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 }
                 // }
 
-                const isCOFStage1Revert = this.business?.contextFlags?.isCOFStage1Revert === true;
-                if (!this.isEdit || isCOFStage1Revert) {
+                if (!this.isEdit || this._isStage1RevertMasterReadonly()) {
                   field.readonly = true;
                   field.editable = false;
                 }
@@ -1781,6 +1793,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   field.readonlyDisplayValue = field.displayValue;
                   // PhuongNT add set hidden field
                   field.isHidden = !this.cardReplacementReason;
+                } else if (
+                  field.apiName === FIELD_LOAN_AMOUNT &&
+                  row.sub?.name === SUBSECTION_NAME_C360_INFO
+                ) {
+                  field.displayValue = formatCurrency2(field.value);
+                  field.readonlyDisplayValue = field.displayValue;
                 }
                 // PhuongNT add set newBlockCode
                 else if (field.apiName === FIELD_NEW_BLOCK_CODE) {

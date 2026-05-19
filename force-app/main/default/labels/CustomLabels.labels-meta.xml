@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -17913,5 +17913,13 @@
         <protected>false</protected>
         <shortDescription>Label Search Channel Placeholder</shortDescription>
         <value>Search Channel...</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_Select_Template</fullName>
+        <categories>LWC fec_BatchCaseCreation, fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg Select Template</shortDescription>
+        <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
     </labels>
 </CustomLabels>
