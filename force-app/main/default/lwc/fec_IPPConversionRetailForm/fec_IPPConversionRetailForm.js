@@ -25,8 +25,15 @@ import FEC_Success_Title from '@salesforce/label/c.FEC_Success_Title';
 import FEC_Toast_Error_Generic from '@salesforce/label/c.FEC_Toast_Error_Generic';
 import FEC_Toast_Validation_Message from '@salesforce/label/c.FEC_Toast_Validation_Message';
 import FEC_MSG_Param_Required from '@salesforce/label/c.FEC_MSG_Param_Required';
+import FEC_BCH_PageSize from '@salesforce/label/c.FEC_BCH_PageSize';
+import FEC_Go_to_page_label from '@salesforce/label/c.FEC_Go_to_page_label';
+import FEC_Go_Button_Label from '@salesforce/label/c.FEC_Go_Button_Label';
+import FEC_Btn_Previous from '@salesforce/label/c.FEC_Btn_Previous';
+import FEC_Btn_Next from '@salesforce/label/c.FEC_Btn_Next';
 import { STR_EMPTY, FORM_STATE_LOADING, FORM_STATE_NONE, FORM_STATE_HAS_DATA } from 'c/fec_CommonConst';
 import { formatToDDMMYYYY } from 'c/fec_CommonUtils';
+
+const IPP_RETAIL_PAGE_SIZE_OPTIONS = [10, 20, 30, 40, 50];
 
 function parseIppRetailUiBundled(raw) {
     const p = (raw || STR_EMPTY).split('##');
@@ -85,6 +92,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     }
 
     @track transactions = [];
+    @track pagedTransactions = [];
+    @track currentPage = 1;
+    @track tableKey = 0;
     @track selectedTransactionId = null;
     @track details = null;
     @track tenorOptions = [];
@@ -120,6 +130,18 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
     @track manualSubmitLoading = false;
 
     ippRetailUi = IPP_RETAIL_UI;
+
+    pageSize = 20;
+
+    goToPageValue = 1;
+
+    paginationLabels = {
+        pageSizeLabel: FEC_BCH_PageSize,
+        goToPageLabel: FEC_Go_to_page_label,
+        goBtnLabel: FEC_Go_Button_Label,
+        prevLabel: FEC_Btn_Previous,
+        nextLabel: FEC_Btn_Next
+    };
 
     verificationInfoOptions = [
         { label: IPP_RETAIL_UI.plSuccess, value: IPP_RETAIL_UI.plSuccess },
@@ -201,6 +223,9 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 } else {
                     this.state = FORM_STATE_HAS_DATA;
                 }
+                this.currentPage = 1;
+                this.goToPageValue = 1;
+                this._rebuildPagedTransactions();
             })
             .catch((err) => {
                 this.state = FORM_STATE_NONE;
@@ -217,6 +242,117 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
         this.details = null;
         this.selectedTenor = null;
         this.tenorBlockReady = false;
+    }
+
+    get selectedRowIds() {
+        return this.selectedTransactionId ? [this.selectedTransactionId] : [];
+    }
+
+    get datatableRenderKey() {
+        return 'ipp-retail-tx-' + String(this.tableKey || 0);
+    }
+
+    get totalPages() {
+        const len = (this.transactions || []).length;
+        if (!len) {
+            return 1;
+        }
+        return Math.ceil(len / this.pageSize);
+    }
+
+    get showPagination() {
+        return (this.transactions || []).length > 0;
+    }
+
+    get pageSizeStr() {
+        return String(this.pageSize);
+    }
+
+    get pageSizeOptions() {
+        return IPP_RETAIL_PAGE_SIZE_OPTIONS.map((size) => ({
+            label: String(size),
+            value: String(size)
+        }));
+    }
+
+    get disablePaginationPrevPage() {
+        return this.currentPage <= 1;
+    }
+
+    get disablePaginationNextPage() {
+        return this.currentPage >= this.totalPages;
+    }
+
+    _rebuildPagedTransactions() {
+        const all = this.transactions || [];
+        if (!all.length) {
+            this.pagedTransactions = [];
+            return;
+        }
+        const tp = Math.ceil(all.length / this.pageSize);
+        const safePage = Math.min(Math.max(1, this.currentPage), Math.max(1, tp));
+        if (this.currentPage !== safePage) {
+            this.currentPage = safePage;
+        }
+        const start = (this.currentPage - 1) * this.pageSize;
+        this.pagedTransactions = all.slice(start, start + this.pageSize);
+        this.goToPageValue = this.currentPage;
+    }
+
+    _bumpTableKey() {
+        this.tableKey = (this.tableKey || 0) + 1;
+    }
+
+    handlePageSizeChange(event) {
+        this.pageSize = parseInt(event.detail.value, 10);
+        this.currentPage = 1;
+        this.goToPageValue = 1;
+        this._rebuildPagedTransactions();
+        this._bumpTableKey();
+    }
+
+    handlePrevPage() {
+        if (this.disablePaginationPrevPage) {
+            return;
+        }
+        this.currentPage -= 1;
+        this.goToPageValue = this.currentPage;
+        this._rebuildPagedTransactions();
+        this._bumpTableKey();
+    }
+
+    handleNextPage() {
+        if (this.disablePaginationNextPage) {
+            return;
+        }
+        this.currentPage += 1;
+        this.goToPageValue = this.currentPage;
+        this._rebuildPagedTransactions();
+        this._bumpTableKey();
+    }
+
+    handleGoToPageInput(event) {
+        this.goToPageValue = parseInt(event.detail.value, 10);
+    }
+
+    handleGoToPage() {
+        let targetPage = this.goToPageValue;
+        if (!targetPage || isNaN(targetPage)) {
+            targetPage = 1;
+        }
+        if (targetPage < 1) {
+            targetPage = 1;
+        }
+        if (targetPage > this.totalPages) {
+            targetPage = this.totalPages;
+        }
+        if (this.currentPage === targetPage) {
+            return;
+        }
+        this.currentPage = targetPage;
+        this.goToPageValue = targetPage;
+        this._rebuildPagedTransactions();
+        this._bumpTableKey();
     }
 
     handleCheckIPPDetails() {
