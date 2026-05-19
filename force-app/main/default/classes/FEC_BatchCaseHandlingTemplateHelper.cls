@@ -81,44 +81,51 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (activeTemplates == null || activeTemplates.isEmpty()) {
             return null;
         }
-        SObject fieldMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates);
-        if (fieldMatch != null) {
-            return fieldMatch;
+        SObject bothFieldsMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, true);
+        if (bothFieldsMatch != null) {
+            return bothFieldsMatch;
         }
-        return resolveTemplateByName(businessProcessCode, userGroup, activeTemplates);
+        SObject nameExactMatch = resolveTemplateByName(businessProcessCode, userGroup, activeTemplates, false);
+        if (nameExactMatch != null) {
+            return nameExactMatch;
+        }
+        SObject bpOnlyFieldMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, false);
+        if (bpOnlyFieldMatch != null) {
+            return bpOnlyFieldMatch;
+        }
+        return resolveTemplateByName(businessProcessCode, userGroup, activeTemplates, true);
     }
 
     private static SObject resolveTemplateByFields(
         String businessProcessCode,
         String userGroup,
-        List<SObject> activeTemplates
+        List<SObject> activeTemplates,
+        Boolean requireBothFields
     ) {
         SObject bestMatch;
         Integer bestScore = -1;
         for (SObject tr : activeTemplates) {
             Boolean hasBpField = tr.get('FEC_Business_Process__c') != null;
+            if (!hasBpField) {
+                continue;
+            }
             String templateUg = tr.get('FEC_User_Group__c') == null
                 ? FEC_ConstantCommon.STR_EMPTY
                 : String.valueOf(tr.get('FEC_User_Group__c')).trim();
             Boolean hasUgField = String.isNotBlank(templateUg);
-            if (!hasBpField && !hasUgField) {
+            if (requireBothFields && !hasUgField) {
                 continue;
             }
-            Boolean bpMatches = !hasBpField || businessProcessFieldMatches(tr, businessProcessCode);
-            Boolean ugMatches = !hasUgField || userGroupFieldMatches(tr, businessProcessCode, userGroup);
-            if (!bpMatches || !ugMatches) {
+            if (!requireBothFields && hasUgField) {
                 continue;
             }
-            Integer score = 0;
-            if (hasBpField) {
-                score += 1;
+            if (!businessProcessFieldMatches(tr, businessProcessCode)) {
+                continue;
             }
-            if (hasUgField) {
-                score += 1;
+            if (hasUgField && !userGroupFieldMatches(tr, businessProcessCode, userGroup)) {
+                continue;
             }
-            if (hasBpField && hasUgField) {
-                score += 1;
-            }
+            Integer score = hasUgField ? 3 : 1;
             if (bestMatch == null || score > bestScore) {
                 bestMatch = tr;
                 bestScore = score;
@@ -188,7 +195,8 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     private static SObject resolveTemplateByName(
         String businessProcessCode,
         String userGroup,
-        List<SObject> activeTemplates
+        List<SObject> activeTemplates,
+        Boolean allowPrefixFallback
     ) {
         String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessCode);
         if (String.isBlank(namePrefix)) {
@@ -198,6 +206,9 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         String prefixLower = namePrefix.toLowerCase();
         SObject prefixFallback;
         for (SObject tr : activeTemplates) {
+            if (tr.get('FEC_Business_Process__c') != null && !businessProcessFieldMatches(tr, businessProcessCode)) {
+                continue;
+            }
             String name = tr.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(tr.get('Name'));
             if (String.isBlank(name)) {
                 continue;
@@ -211,11 +222,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
                     return tr;
                 }
             }
-            if (prefixFallback == null) {
+            if (allowPrefixFallback && prefixFallback == null) {
                 prefixFallback = tr;
             }
         }
-        return prefixFallback;
+        return allowPrefixFallback ? prefixFallback : null;
     }
 
     private static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
