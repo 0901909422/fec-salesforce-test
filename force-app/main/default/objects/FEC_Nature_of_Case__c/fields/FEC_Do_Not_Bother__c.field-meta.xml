@@ -3,7 +3,7 @@
     <fullName>FEC_Do_Not_Bother__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Do Not Bother</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

@@ -12,6 +12,7 @@ import FEC_Batch_FileMaxSize150MB from "@salesforce/label/c.FEC_Batch_FileMaxSiz
 import FEC_Batch_TemplateNoAttachment from "@salesforce/label/c.FEC_Batch_TemplateNoAttachment";
 import FEC_Batch_Msg_InvalidImportData from "@salesforce/label/c.FEC_Batch_Msg_InvalidImportData";
 import FEC_Batch_Msg_CannotReadExcelContent from "@salesforce/label/c.FEC_Batch_Msg_CannotReadExcelContent";
+import FEC_Batch_Msg_Select_Template from "@salesforce/label/c.FEC_Batch_Msg_Select_Template";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
 import {
   normalizeHeaderCell,
@@ -62,6 +63,8 @@ const RESULT_FILE_HEADERS = [
 ];
 
 export default class Fec_BatchCaseCreation extends LightningElement {
+  labelSelectTemplate = FEC_Batch_Msg_Select_Template;
+
   @track activeSettingSections = ["setting"];
   @track activeProcessedSections = ["processed"];
 

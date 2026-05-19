@@ -2282,6 +2282,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>Case.FEC_NFU_Description_Result__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>Case.FEC_NFU_Expiry_Date__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -4004,6 +4009,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>FEC_Transfer_Call_Error__c.FEC_Error_Message_VI__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>

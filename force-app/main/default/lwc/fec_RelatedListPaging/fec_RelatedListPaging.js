@@ -39,6 +39,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     /* ================= STATE ================= */
     _records = [];
+    _preSelectedIds = [];
     @track currentPage = 1;
     @track selectedRecordIds = new Set();
     _gotoPage;
@@ -70,9 +71,17 @@ export default class Fec_RelatedListPaging extends LightningElement {
     get records() {
         return this._records;
     }
+    @api
+    get preSelectedIds() {
+        return this._preSelectedIds;
+    }
     set records(value) {
         this._records = Array.isArray(value) ? [...value] : [];
         this.currentPage = 1;
+
+        if (this.preSelectedIds && this.preSelectedIds.length > 0) {
+            this.selectedRecordIds = new Set(this.preSelectedIds);
+        }
 
         // Re-apply existing sort if any
         if (this.sortedBy) {
@@ -80,6 +89,15 @@ export default class Fec_RelatedListPaging extends LightningElement {
         }
 
         this.eyeStates = {};
+    }
+
+    set preSelectedIds(value) {
+        this._preSelectedIds = Array.isArray(value) ? value : [];
+        if (this._preSelectedIds.length > 0) {
+            this.selectedRecordIds = new Set(this._preSelectedIds);
+        } else {
+            this.selectedRecordIds = new Set();
+        }
     }
 
     /* ================= GETTERS ================= */
@@ -268,6 +286,7 @@ export default class Fec_RelatedListPaging extends LightningElement {
                             isLink: true,
                             label: row[col.fieldName],
                             recordId: row[col.recordIdField],
+                            actionKey: col.actionKey || col.fieldName,
                            hoverTitle: col.hasOwnProperty('hoverTitle') ? col.hoverTitle : null,
                             hoverItems,
                             hasHover: hoverItems.length > 0,
@@ -733,7 +752,10 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
     handleLinkClick(event) {
         event.preventDefault();
+
         const recordId = event.currentTarget.dataset.recordId;
+        const fieldName = event.currentTarget.dataset.field;
+        const actionKey = event.currentTarget.dataset.actionKey; 
 
         if (!recordId) {
             console.error('Missing recordId on link click');
@@ -742,7 +764,11 @@ export default class Fec_RelatedListPaging extends LightningElement {
 
         this.dispatchEvent(
             new CustomEvent('rowselect', {
-                detail: { recordId },
+                detail: {
+                    recordId,
+                    fieldName,
+                    actionKey
+                },
                 bubbles: true,
                 composed: true
             })

@@ -7269,6 +7269,55 @@
         <value>ID</value>
     </labels>
     <labels>
+        <fullName>FEC_MRC_Return_Case_Info_Block_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return — tiêu đề khi không hiển thị Case Information</shortDescription>
+        <value>Yêu cầu MRC Return không thể nhập Case Information trong trường hợp này.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Return_Msg_Product_Not_TW</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return — sản phẩm không phải TW</shortDescription>
+        <value>Yêu cầu liên quan MRC (RL05) chỉ áp dụng khi Product Code của hợp đồng là TW.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return RL05.03 — DPD từ 15 ngày</shortDescription>
+        <value>Hợp đồng có số ngày quá hạn (DPD) từ 15 trở lên: không được tiếp tục với Sub Code gửi mẫu đơn RL05.03.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Banner</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — banner trùng Case RL05 cùng hợp đồng</shortDescription>
+        <value>Đã phát hiện yêu cầu MRC Return (RL05) đang xử lý trên cùng hợp đồng: Case trước {0}. Chọn &quot;MRC Request Handling Option&quot; và lưu để hệ thống tự động hủy đúng nhánh.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Dup_Remark_Cancel_Prev</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark khi chọn hủy yêu cầu cũ RL05.02</shortDescription>
+        <value>Tự động hủy (Resolved-AutoCancelled): hủy yêu cầu RL05 trước đó — giữ Case mới {0}.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Dup_Remark_Cancel_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark khi chọn hủy Case mới RL05.02</shortDescription>
+        <value>Tự động hủy (Resolved-AutoCancelled): hủy Case mới — tiếp tục xử lý Case RL05 trước đó {0}.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Open_Case_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — nhãn nút mở Case trùng đang xử lý</shortDescription>
+        <value>Mở Case trước</value>
+    </labels>
+    <labels>
         <fullName>FEC_MRC_Zone</fullName>
         <categories>fec_MRC</categories>
         <language>en_US</language>
@@ -9970,6 +10019,14 @@
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
         <value>Dịch vụ lỗi, vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Contract_Status</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Status (Remove Phone datatable)</shortDescription>
+        <value>Account/ Contract Status</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
@@ -17413,5 +17470,45 @@
         <protected>false</protected>
         <shortDescription>TECH_LIST_OBJ_IS_MASTER_DETAIL</shortDescription>
         <value>FEC_Additional_Info__c,FEC_Assignment__c,FEC_Case_Flow_History__c,FEC_Case_Refund_Details__c,FEC_Case_Remarks__c,FEC_Customer_History__c,FEC_KYC_Result__c,FEC_Incorrect_Payment_Info__c,FEC_Pending_Disbursement__c,FEC_Process_Action_History__c,FEC_Relevant_Ticket__c,FEC_Routing_Action_History__c,FEC_Sensitive_Data__c,FEC_Watcher__c,FEC_RePayment_Schedule__c,FEC_Notification_History__c,FEC_Do_Not_Bother__c,FEC_ChatHistory__c,FEC_Card_Delivery__c,FEC_Asset__c,FEC_Application_History__c</value>
+    </labels>
+    <labels>
+        <fullName>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC STOP IMPACT ALREADY MARKED MSG</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã có thông tin ngưng tác động trước đó</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SUCCESS</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG SUCCESS</shortDescription>
+        <value>Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ERROR</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG ERROR</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_Select_Template</fullName>
+        <categories>LWC fec_BatchCaseCreation, fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg Select Template</shortDescription>
+        <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
     </labels>
 </CustomLabels>
