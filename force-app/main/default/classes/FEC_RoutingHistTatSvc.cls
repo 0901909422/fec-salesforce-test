@@ -35,12 +35,12 @@ public without sharing class FEC_RoutingHistTatSvc {
         Map<Id, FEC_Assignment__c> assignmentById = assignmentIds.isEmpty()
             ? new Map<Id, FEC_Assignment__c>()
             : new Map<Id, FEC_Assignment__c>([
-                  SELECT Id, FEC_Manual__c, CreatedDate, FEC_Submitted_On__c
+                  SELECT Id, FEC_Manual__c, CreatedDate
                   FROM FEC_Assignment__c
                   WHERE Id IN :assignmentIds
               ]);
 
-        applySubmittedOn(newRows, assignmentById, oldMap);
+        applySubmittedOn(newRows, oldMap);
 
         Set<Id> updatingIds = oldMap != null ? oldMap.keySet() : new Set<Id>();
         List<FEC_Routing_Action_History__c> poolFromDb = caseIds.isEmpty()
@@ -81,12 +81,12 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * TH1: FEC_Submitted_On__c = FEC_Date_Time__c (≈ CreatedDate). TH2: = Assignment.FEC_Submitted_On__c.
-     * Insert: offset giây trong batch để thứ tự strict < khi suy Assigned On.
+     * Code duoi nay cua hoangnm107
+     * FEC_Submitted_On__c = thời điểm khởi tạo RAH (FEC_Date_Time__c ≈ CreatedDate).
+     * Insert: offset giây trong batch để thứ tự strict &lt; khi suy Assigned On (TH1/TH2.1).
      */
     private static void applySubmittedOn(
         List<FEC_Routing_Action_History__c> newRows,
-        Map<Id, FEC_Assignment__c> assignmentById,
         Map<Id, FEC_Routing_Action_History__c> oldMap
     ) {
         Datetime base = System.now();
@@ -102,19 +102,9 @@ public without sharing class FEC_RoutingHistTatSvc {
                 continue;
             }
 
-            if (h.FEC_Assignment__c == null) {
-                h.FEC_Submitted_On__c = h.FEC_Date_Time__c != null
-                    ? h.FEC_Date_Time__c
-                    : base.addSeconds(secOffset++);
-                continue;
-            }
-
-            FEC_Assignment__c a = assignmentById.get(h.FEC_Assignment__c);
-            if (a != null && a.FEC_Submitted_On__c != null) {
-                h.FEC_Submitted_On__c = a.FEC_Submitted_On__c;
-            } else {
-                h.FEC_Submitted_On__c = base.addSeconds(secOffset++);
-            }
+            h.FEC_Submitted_On__c = h.FEC_Date_Time__c != null
+                ? h.FEC_Date_Time__c
+                : base.addSeconds(secOffset++);
         }
     }
 

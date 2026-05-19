@@ -1306,6 +1306,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     );
   }
 
+  /** GSR Stage 3 (đã có Assignment): subsection Property Info read-only. */
+  _isGsrStage3PropertyInfoFieldReadonly(subSectionName) {
+    return (
+      this.business?.contextFlags?.isGsrStage3PropertyInfoReadonly === true &&
+      subSectionName === SUBSECTION_NAME_PROPERTY_INFO
+    );
+  }
+
   /**
    * Cập nhật readonly/editable cho toàn bộ field khi isEdit đổi.
    * Không gọi Apex, chỉ sửa dữ liệu đã có trong memory.
@@ -1315,10 +1323,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     const stage1RevertReadonly = this._isStage1RevertMasterReadonly();
     this.business.sectionlst.forEach((section) => {
       section.subSectionlst?.forEach((sub) => {
+        const gsrPropertyInfoReadonly = this._isGsrStage3PropertyInfoFieldReadonly(
+          sub.name
+        );
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
-            field.readonly = stage1RevertReadonly ? true : !this._isEdit;
-            field.editable = stage1RevertReadonly ? false : this._isEdit;
+            const forceReadonly = stage1RevertReadonly || gsrPropertyInfoReadonly;
+            field.readonly = forceReadonly ? true : !this._isEdit;
+            field.editable = forceReadonly ? false : this._isEdit;
           });
         });
       });
@@ -1730,7 +1742,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                 }
                 // }
 
-                if (!this.isEdit || this._isStage1RevertMasterReadonly()) {
+                if (
+                  !this.isEdit ||
+                  this._isStage1RevertMasterReadonly() ||
+                  this._isGsrStage3PropertyInfoFieldReadonly(sub.name)
+                ) {
                   field.readonly = true;
                   field.editable = false;
                 }
