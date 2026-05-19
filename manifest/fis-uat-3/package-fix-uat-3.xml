@@ -146,6 +146,7 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
         <members>fec_DoNotBotherResultView</members>
+        <members>fec_Banca</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
