@@ -37,6 +37,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return;
         }
 
+        List<Id> dueAssignmentIds = new List<Id>();
         for (FEC_Case_Assignment__c assignmentRecord : activeAssignments) {
             if (!isDueToRun(assignmentRecord, nowTime)) {
                 continue;
@@ -44,7 +45,16 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             if (hasLogInCurrentMinute(assignmentRecord.Id, nowTime)) {
                 continue;
             }
-            System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(assignmentRecord.Id));
+            dueAssignmentIds.add(assignmentRecord.Id);
+        }
+
+        /*
+         * Một synchronous transaction chỉ được enqueue tối đa ~50 Queueable — không được gọi
+         * enqueueJob trong loop theo số assignment. Một queue job duy nhất nhận full list và
+         * chain từng assignment (FEC_CaseAssignmentAutoDistQueueJob).
+         */
+        if (!dueAssignmentIds.isEmpty()) {
+            System.enqueueJob(new FEC_CaseAssignmentAutoDistQueueJob(dueAssignmentIds));
         }
     }
 
