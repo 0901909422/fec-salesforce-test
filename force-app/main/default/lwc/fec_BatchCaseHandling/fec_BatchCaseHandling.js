@@ -397,8 +397,8 @@ const OPERATOR_LABELS = {
 };
 
 const ATTACHMENT_VALUE_OPTIONS = [
-  { label: "True: L\u1ecdc c\u00e1c case c\u00f3 ch\u1ee9a t\u1ec7p \u0111\u00ednh k\u00e8m", value: "true" },
-  { label: "False: L\u1ecdc c\u00e1c case kh\u00f4ng c\u00f3 t\u1ec7p \u0111\u00ednh k\u00e8m", value: "false" }
+  { label: FEC_BCH_AttachHas, value: "true" },
+  { label: FEC_BCH_AttachNo, value: "false" }
 ];
 
 const FILTERED_CASE_EXPORT_HEADERS = [

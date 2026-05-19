@@ -494,9 +494,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
 
         String countSoql = 'SELECT COUNT() FROM Case WHERE ' + whereClause;
@@ -559,9 +557,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
 
         Id cursorId;
         if (String.isNotBlank(afterCaseId)) {
@@ -598,9 +594,8 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static List<CaseSetRangeOption> getAttachmentCaseSetOptions(String filtersJson) {
         List<CaseSetRangeOption> out = new List<CaseSetRangeOption>();
         Integer total = 0;
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
         total = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
         if (total < 1) {
@@ -635,9 +630,8 @@ public without sharing class FEC_BatchCaseHandlingController {
     @AuraEnabled
     public static List<BusinessProcessExportRow> getBusinessProcessExportRows(String filtersJson) {
         List<BusinessProcessExportRow> out = new List<BusinessProcessExportRow>();
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         List<String> allowedBpNames = FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
         whereParts.add('FEC_Business_Process__r.Name IN :allowedBpNames');
         String whereClause = String.join(whereParts, ' AND ');

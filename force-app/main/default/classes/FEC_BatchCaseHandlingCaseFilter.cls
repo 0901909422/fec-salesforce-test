@@ -52,9 +52,112 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {
+        AttachmentFilterSpec attachmentFilter = extractAttachmentFilter(filterMaps);
+        List<Map<String, Object>> otherFilters = filterMapsWithoutAttachment(filterMaps);
         List<String> whereParts = buildBaseCaseWhere();
-        whereParts.addAll(buildDynamicWhereFromFilters(filterMaps));
+        whereParts.addAll(buildDynamicWhereFromFilters(otherFilters));
+        if (attachmentFilter != null && attachmentFilter.wantHas != null) {
+            String attachmentClause = buildAttachmentWhereClause(attachmentFilter.wantHas, whereParts);
+            if (String.isNotBlank(attachmentClause)) {
+                whereParts.add(attachmentClause);
+            }
+        }
         return whereParts;
+    }
+
+    private class AttachmentFilterSpec {
+        Boolean wantHas;
+    }
+
+    private static AttachmentFilterSpec extractAttachmentFilter(List<Map<String, Object>> filterMaps) {
+        if (filterMaps == null || filterMaps.isEmpty()) {
+            return null;
+        }
+        for (Map<String, Object> fm : filterMaps) {
+            String prop = normalizePropertyKey(fm.get('propertyKey'));
+            if (prop != 'ATTACHMENTS') {
+                continue;
+            }
+            String op = normalizeOperatorKey(fm.get('operatorKey'));
+            String vText = fm.get('valueText') == null
+                ? FEC_ConstantCommon.STR_EMPTY
+                : String.valueOf(fm.get('valueText')).trim();
+            Boolean wantHas = interpretBoolean(vText);
+            if (wantHas == null) {
+                return null;
+            }
+            AttachmentFilterSpec spec = new AttachmentFilterSpec();
+            if (op == 'equals') {
+                spec.wantHas = wantHas;
+            } else if (op == 'not_equal_to') {
+                spec.wantHas = !wantHas;
+            } else {
+                return null;
+            }
+            return spec;
+        }
+        return null;
+    }
+
+    private static List<Map<String, Object>> filterMapsWithoutAttachment(List<Map<String, Object>> filterMaps) {
+        List<Map<String, Object>> out = new List<Map<String, Object>>();
+        if (filterMaps == null) {
+            return out;
+        }
+        for (Map<String, Object> fm : filterMaps) {
+            if (fm == null) {
+                continue;
+            }
+            if (normalizePropertyKey(fm.get('propertyKey')) == 'ATTACHMENTS') {
+                continue;
+            }
+            out.add(fm);
+        }
+        return out;
+    }
+
+    private static String buildAttachmentWhereClause(Boolean wantHas, List<String> scopeWhereParts) {
+        if (wantHas == null || scopeWhereParts == null || scopeWhereParts.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        String scopeWhere = String.join(scopeWhereParts, ' AND ');
+        Set<Id> caseIdsWithAttachment = new Set<Id>();
+        String linkSoql =
+            'SELECT LinkedEntityId FROM ContentDocumentLink ' +
+            'WHERE LinkedEntityId IN (SELECT Id FROM Case WHERE ' +
+            scopeWhere +
+            ')';
+        for (ContentDocumentLink cdl : (List<ContentDocumentLink>) Database.query(linkSoql)) {
+            if (cdl.LinkedEntityId != null) {
+                caseIdsWithAttachment.add(cdl.LinkedEntityId);
+            }
+        }
+        if (wantHas) {
+            if (caseIdsWithAttachment.isEmpty()) {
+                return 'Id = null';
+            }
+            return formatIdInClause(caseIdsWithAttachment);
+        }
+        if (caseIdsWithAttachment.isEmpty()) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        return formatIdNotInClause(caseIdsWithAttachment);
+    }
+
+    private static String formatIdInClause(Set<Id> recordIds) {
+        List<String> literals = new List<String>();
+        for (Id recordId : recordIds) {
+            literals.add('\'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'');
+        }
+        return 'Id IN (' + String.join(literals, ',') + ')';
+    }
+
+    private static String formatIdNotInClause(Set<Id> recordIds) {
+        List<String> literals = new List<String>();
+        for (Id recordId : recordIds) {
+            literals.add('\'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'');
+        }
+        return 'Id NOT IN (' + String.join(literals, ',') + ')';
     }
 
     public static List<String> buildDynamicWhereFromFilters(List<Map<String, Object>> filterMaps) {
@@ -64,6 +167,9 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         for (Map<String, Object> fm : filterMaps) {
             String prop = normalizePropertyKey(fm.get('propertyKey'));
+            if (prop == 'ATTACHMENTS') {
+                continue;
+            }
             String op = normalizeOperatorKey(fm.get('operatorKey'));
             if (String.isBlank(prop) || String.isBlank(op)) {
                 continue;
@@ -171,21 +277,6 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         }
         if (prop == 'CASE_CREATED_ON') {
             return buildDateClause('FEC_Case_Created_On__c', op, vText);
-        }
-        if (prop == 'ATTACHMENTS') {
-            Boolean wantHas = interpretBoolean(vText);
-            if (op == 'equals' && wantHas != null) {
-                if (wantHas) {
-                    return 'Id IN (SELECT LinkedEntityId FROM ContentDocumentLink)';
-                }
-                return 'Id NOT IN (SELECT LinkedEntityId FROM ContentDocumentLink)';
-            }
-            if (op == 'not_equal_to' && wantHas != null) {
-                if (wantHas) {
-                    return 'Id NOT IN (SELECT LinkedEntityId FROM ContentDocumentLink)';
-                }
-                return 'Id IN (SELECT LinkedEntityId FROM ContentDocumentLink)';
-            }
         }
         return buildGenericCaseFieldClause(prop, op, vText);
     }
