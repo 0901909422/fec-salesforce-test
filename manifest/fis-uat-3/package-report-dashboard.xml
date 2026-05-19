@@ -89,6 +89,9 @@
         <members>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</members>
         <members>FEC_RD_Telesales_User_2_Interaction_Case_Service_Case</members>
         <members>RD_IT_User_Interaction_Case_Service_Case</members>
+        <!-- Report -->
+        <members>RD_IT_User_Report_Dashboard</members>
+        <members>FEC_Manage_Report</members>
         <name>PermissionSet</name>
     </types>
     <types>
