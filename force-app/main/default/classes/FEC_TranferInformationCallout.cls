@@ -47,6 +47,7 @@ public without sharing class FEC_TranferInformationCallout {
     if (caseId == null) {
       return null;
     }
+    ensureCaseNocForTransfer(caseId);
     Case c = [
       SELECT
         FEC_External_Interaction_ID__c,
@@ -61,7 +62,15 @@ public without sharing class FEC_TranferInformationCallout {
         FEC_SubCode__r.Name,
         FEC_Remark_for_Collections__c,
         FEC_Case_ID__c,
-        FEC_ID_Search__c
+        FEC_ID_Search__c,
+        FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__r.FEC_Product_Type__r.Name,
+        FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__r.FEC_Category__r.Name,
+        FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__r.FEC_Sub_Category__r.Name,
+        FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__r.FEC_Sub_Code__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Product_Type__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Category__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Sub_Category__r.Name,
+        FEC_Actual_Nature_of_Case__r.FEC_Sub_Code__r.Name
       FROM Case
       WHERE Id = :caseId
       WITH SECURITY_ENFORCED
@@ -85,9 +94,196 @@ public without sharing class FEC_TranferInformationCallout {
     data.category = c.FEC_Category__r?.Name;
     data.subCategory = c.FEC_SubCategory__r?.Name;
     data.subCode = c.FEC_SubCode__r?.Name;
+    applyNocLabelFallbacks(c, data);
     data.remark = c.FEC_Remark_for_Collections__c;
     data.csCaseID = c.FEC_ID_Search__c; // mã Case (S-xxxx), không dùng hyperlink formula
     return data;
+  }
+
+  /**
+   * Transfer Call đọc Category/Sub-Category/Sub-Code từ Case, nhưng UI chọn NOC chỉ set
+   * FEC_Current_Case_Stage__c (getByCase) — chưa ghi lookup NOC lên Case trước submit.
+   * Đồng bộ từ Actual NOC hoặc Nature of Case trên Case Stage trước khi build payload Pega.
+   */
+  @TestVisible
+  private static void ensureCaseNocForTransfer(Id caseId) {
+    if (caseId == null) {
+      return;
+    }
+    List<Case> rows = [
+      SELECT
+        Id,
+        FEC_Is_Submited__c,
+        FEC_Product_Type__c,
+        FEC_Category__c,
+        FEC_SubCategory__c,
+        FEC_SubCode__c,
+        FEC_Actual_Nature_of_Case__c,
+        FEC_Current_Case_Stage__r.FEC_Nature_of_Cases__c
+      FROM Case
+      WHERE Id = :caseId
+      WITH SECURITY_ENFORCED
+      LIMIT 1
+    ];
+    if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
+      return;
+    }
+    Case c = rows[0];
+    if (!caseNeedsNocSync(c)) {
+      return;
+    }
+
+    Id actualNatureId = c.FEC_Actual_Nature_of_Case__c;
+    Id templateNatureId = c.FEC_Current_Case_Stage__r?.FEC_Nature_of_Cases__c;
+    Case patch = new Case(Id = caseId);
+    Boolean patched = false;
+
+    if (actualNatureId != null) {
+      List<FEC_Actual_Nature_of_Case__c> actuals = [
+        SELECT
+          FEC_Product_Type__c,
+          FEC_Category__c,
+          FEC_Sub_Category__c,
+          FEC_Sub_Code__c
+        FROM FEC_Actual_Nature_of_Case__c
+        WHERE Id = :actualNatureId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+      if (!actuals.isEmpty()) {
+        applyNocIdsToCasePatch(
+          patch,
+          actuals[0].FEC_Product_Type__c,
+          actuals[0].FEC_Category__c,
+          actuals[0].FEC_Sub_Category__c,
+          actuals[0].FEC_Sub_Code__c
+        );
+        patched = true;
+      }
+    }
+
+    if (!patched && templateNatureId != null) {
+      List<FEC_Nature_of_Case__c> templates = [
+        SELECT
+          FEC_Product_Type__c,
+          FEC_Category__c,
+          FEC_Sub_Category__c,
+          FEC_Sub_Code__c
+        FROM FEC_Nature_of_Case__c
+        WHERE Id = :templateNatureId
+        WITH SECURITY_ENFORCED
+        LIMIT 1
+      ];
+      if (!templates.isEmpty()) {
+        applyNocIdsToCasePatch(
+          patch,
+          templates[0].FEC_Product_Type__c,
+          templates[0].FEC_Category__c,
+          templates[0].FEC_Sub_Category__c,
+          templates[0].FEC_Sub_Code__c
+        );
+        patched = true;
+      }
+    }
+
+    if (!patched || !Schema.sObjectType.Case.isUpdateable()) {
+      return;
+    }
+    try {
+      FEC_CaseTriggerHandler.isSystemUpdate = true;
+      update patch;
+    } catch (Exception ex) {
+      System.debug(
+        LoggingLevel.WARN,
+        '[TransferCall] ensureCaseNocForTransfer: ' + ex.getMessage()
+      );
+    }
+  }
+
+  @TestVisible
+  private static Boolean caseNeedsNocSync(Case c) {
+    return c == null
+      || c.FEC_Product_Type__c == null
+      || c.FEC_Category__c == null
+      || c.FEC_SubCategory__c == null;
+  }
+
+  private static void applyNocIdsToCasePatch(
+    Case patch,
+    Id productTypeId,
+    Id categoryId,
+    Id subCategoryId,
+    Id subCodeId
+  ) {
+    if (productTypeId != null) {
+      patch.FEC_Product_Type__c = productTypeId;
+    }
+    if (categoryId != null) {
+      patch.FEC_Category__c = categoryId;
+    }
+    if (subCategoryId != null) {
+      patch.FEC_SubCategory__c = subCategoryId;
+    }
+    if (subCodeId != null) {
+      patch.FEC_SubCode__c = subCodeId;
+    }
+  }
+
+  /** Fallback tên NOC khi Case lookup trống nhưng Stage/Actual NOC đã có (vd. update Case thất bại). */
+  @TestVisible
+  private static void applyNocLabelFallbacks(Case c, CaseCallData data) {
+    if (c == null || data == null) {
+      return;
+    }
+    FEC_Nature_of_Case__c stageNoc = c.FEC_Current_Case_Stage__r?.FEC_Nature_of_Cases__r;
+    FEC_Actual_Nature_of_Case__c actualNoc = c.FEC_Actual_Nature_of_Case__r;
+
+    data.productType = firstNonBlank(
+      data.productType,
+      c.FEC_Product_Type__r?.Name,
+      stageNoc?.FEC_Product_Type__r?.Name,
+      actualNoc?.FEC_Product_Type__r?.Name
+    );
+    data.category = firstNonBlank(
+      data.category,
+      c.FEC_Category__r?.Name,
+      stageNoc?.FEC_Category__r?.Name,
+      actualNoc?.FEC_Category__r?.Name
+    );
+    data.subCategory = firstNonBlank(
+      data.subCategory,
+      c.FEC_SubCategory__r?.Name,
+      stageNoc?.FEC_Sub_Category__r?.Name,
+      actualNoc?.FEC_Sub_Category__r?.Name
+    );
+    data.subCode = firstNonBlank(
+      data.subCode,
+      c.FEC_SubCode__r?.Name,
+      stageNoc?.FEC_Sub_Code__r?.Name,
+      actualNoc?.FEC_Sub_Code__r?.Name
+    );
+  }
+
+  @TestVisible
+  private static String firstNonBlank(
+    String primary,
+    String secondary,
+    String tertiary,
+    String quaternary
+  ) {
+    if (String.isNotBlank(primary)) {
+      return primary.trim();
+    }
+    if (String.isNotBlank(secondary)) {
+      return secondary.trim();
+    }
+    if (String.isNotBlank(tertiary)) {
+      return tertiary.trim();
+    }
+    if (String.isNotBlank(quaternary)) {
+      return quaternary.trim();
+    }
+    return null;
   }
 
   /** LWC: Case Id + remark; RequestorID = CSM constant. */
@@ -125,6 +321,13 @@ public without sharing class FEC_TranferInformationCallout {
         TransferCallResponse res = new TransferCallResponse();
         res.success = false;
         res.errorMessage = 'Case has been submitted. Transfer Call is readonly.';
+        res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
+        return res;
+      }
+      if (String.isBlank(remark)) {
+        TransferCallResponse res = new TransferCallResponse();
+        res.success = false;
+        res.errorMessage = System.Label.FEC_Transfer_Err_Remark_Null;
         res.Code = FEC_ConstantCommon.SUCCESS_CODE_E;
         return res;
       }
@@ -190,6 +393,37 @@ public without sharing class FEC_TranferInformationCallout {
       err.ResultOfClass = err.errorMessage;
       localizeTransferCallFailure(err);
       return err;
+    }
+  }
+
+  /**
+   * LWC: mở popup Transfer — xóa remark cũ trên Case để lần transfer sau ghi đè bằng giá trị mới.
+   */
+  @AuraEnabled
+  public static void prepareRemarkForCollectionsTransfer(Id caseId) {
+    if (caseId == null) {
+      return;
+    }
+    List<Case> rows = [
+      SELECT FEC_Is_Submited__c
+      FROM Case
+      WHERE Id = :caseId
+      WITH SECURITY_ENFORCED
+      LIMIT 1
+    ];
+    if (rows.isEmpty() || rows[0].FEC_Is_Submited__c == true) {
+      return;
+    }
+    ensureCaseNocForTransfer(caseId);
+    try {
+      update new Case(Id = caseId, FEC_Remark_for_Collections__c = null);
+    } catch (Exception updateEx) {
+      System.debug(
+        LoggingLevel.WARN,
+        '[TransferCall] Could not clear FEC_Remark_for_Collections__c: ' +
+        updateEx.getMessage()
+      );
+      throw new AuraHandledException(updateEx.getMessage());
     }
   }
 
