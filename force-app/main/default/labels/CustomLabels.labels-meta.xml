@@ -8646,7 +8646,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC RL05.02 — banner trùng Case RL05 cùng hợp đồng</shortDescription>
-        <value>Đã phát hiện yêu cầu MRC Return (RL05) đang xử lý trên cùng hợp đồng: Case trước {0}. Chọn &quot;MRC Request Handling Option&quot; và lưu để hệ thống tự động hủy đúng nhánh.</value>
+        <value>Đang tồn tại một yêu cầu hoàn trả MRC gốc mã {0} chờ xử lý. Bạn có chắc chắn muốn hủy yêu cầu cũ, tạo yêu cầu mới không?</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_Dup_Remark_Cancel_Prev</fullName>
