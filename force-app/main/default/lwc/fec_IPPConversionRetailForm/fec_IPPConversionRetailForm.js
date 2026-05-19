@@ -218,6 +218,10 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                     effectiveDateStr: formatToDDMMYYYY(t.effectiveDateStr) || t.effectiveDateStr || STR_EMPTY,
                     postingDateStr: formatToDDMMYYYY(t.postingDateStr) || t.postingDateStr || STR_EMPTY
                 }));
+                this.selectedTransactionId = null;
+                this.details = null;
+                this.selectedTenor = null;
+                this.tenorBlockReady = false;
                 if (this.transactions.length === 0) {
                     this.state = FORM_STATE_NONE;
                 } else {
@@ -226,6 +230,7 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
                 this.currentPage = 1;
                 this.goToPageValue = 1;
                 this._rebuildPagedTransactions();
+                this._bumpTableKey();
             })
             .catch((err) => {
                 this.state = FORM_STATE_NONE;
@@ -238,14 +243,32 @@ export default class Fec_IPPConversionRetailForm extends NavigationMixin(Lightni
 
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows || [];
-        this.selectedTransactionId = selectedRows.length === 1 ? selectedRows[0].transactionId : null;
-        this.details = null;
-        this.selectedTenor = null;
-        this.tenorBlockReady = false;
+        const pageIds = new Set(
+            (this.pagedTransactions || []).map((t) => String(t.transactionId))
+        );
+        if (selectedRows.length === 1) {
+            this.selectedTransactionId = selectedRows[0].transactionId;
+            this.details = null;
+            this.selectedTenor = null;
+            this.tenorBlockReady = false;
+            return;
+        }
+        if (selectedRows.length === 0) {
+            if (
+                this.selectedTransactionId &&
+                !pageIds.has(String(this.selectedTransactionId))
+            ) {
+                return;
+            }
+            this.selectedTransactionId = null;
+            this.details = null;
+            this.selectedTenor = null;
+            this.tenorBlockReady = false;
+        }
     }
 
     get selectedRowIds() {
-        return this.selectedTransactionId ? [this.selectedTransactionId] : [];
+        return this.selectedTransactionId ? [String(this.selectedTransactionId)] : [];
     }
 
     get datatableRenderKey() {
