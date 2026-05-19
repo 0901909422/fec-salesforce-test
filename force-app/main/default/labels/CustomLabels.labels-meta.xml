@@ -16231,7 +16231,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_NoDataFound</shortDescription>
-        <value>Không tìm thấy dữ liệu.</value>
+        <value>No data found</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ExportSuccess</fullName>
@@ -16703,7 +16703,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterGroupCaseFields</shortDescription>
-        <value>Case Fields</value>
+        <value>All Cases</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterPropertyField</fullName>
@@ -16728,6 +16728,30 @@
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterColValue</shortDescription>
         <value>Filter Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeField</shortDescription>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopePreDefine</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopePreDefine</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeAllCase</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeAllCase</shortDescription>
+        <value>All Cases</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_PropertyPlaceholder</fullName>
