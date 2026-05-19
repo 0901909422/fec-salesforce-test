@@ -23,9 +23,8 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             offsetRows = 2000;
         }
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
 
         List<Case> cases = Database.query(

@@ -16455,7 +16455,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickProperty</shortDescription>
-        <value>--Chọn thuộc tính--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterPickOperator</fullName>
@@ -16463,7 +16463,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickOperator</shortDescription>
-        <value>--Chọn toán tử--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_NoticeTitle</fullName>
@@ -16663,7 +16663,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterResetHint</shortDescription>
-        <value>Chưa thêm bộ lọc.</value>
+        <value>No filters added</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AddFilterRow</fullName>
@@ -16671,7 +16671,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AddFilterRow</shortDescription>
-        <value>Add filter row</value>
+        <value>Add Filter</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterData</fullName>
@@ -16690,12 +16690,44 @@
         <value>Reset</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_FilterGroupPredefined</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupPredefined</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterGroupCaseFields</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupCaseFields</shortDescription>
+        <value>Case Fields</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_FilterPropertyField</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPropertyField</shortDescription>
-        <value>Filter property</value>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColCondition</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColCondition</shortDescription>
+        <value>Condition</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColValue</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColValue</shortDescription>
+        <value>Filter Value</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_PropertyPlaceholder</fullName>
@@ -16703,7 +16735,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_PropertyPlaceholder</shortDescription>
-        <value>Property</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_OperatorField</fullName>

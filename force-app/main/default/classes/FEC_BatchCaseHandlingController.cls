@@ -4,11 +4,20 @@ public without sharing class FEC_BatchCaseHandlingController {
     private static final Integer MAX_ATTACHMENT_CASE_SET = 1000;
     private static final Integer MAX_EXPORT_ROWS = 100000;
     private static final Integer EXPORT_CURSOR_PAGE_SIZE = 1000;
+    public class FilterPicklistOption {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
+    }
+
     public class FilterPropertyMeta {
         @AuraEnabled public String propertyKey;
         @AuraEnabled public String label;
         @AuraEnabled public String valueType;
         @AuraEnabled public List<String> operators;
+        @AuraEnabled public String propertyGroup;
+        @AuraEnabled public String fieldApiName;
+        @AuraEnabled public Boolean multiValue;
+        @AuraEnabled public List<FilterPicklistOption> picklistOptions;
     }
 
     public class BulkCaseSearchResult {
@@ -54,30 +63,322 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public String resultRowsJson;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata() {
         List<FilterPropertyMeta> out = new List<FilterPropertyMeta>();
-        out.add(buildMeta('CUSTOMER_TYPE', 'Customer Type', 'picklist', new List<String>{ 'equals', 'not_equal_to' }));
-        out.add(buildMeta('CASE_ID', 'Case ID', 'text', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_CREATED_BY', 'Case Created By', 'text', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_CREATED_BY_ROLE', 'Case Created By Role', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_STATUS', 'Case Status', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('PRODUCT_TYPE', 'Product Type', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('CATEGORY', 'Category', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('SUB_CATEGORY', 'Sub Category', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('SUB_CODE', 'Sub Code', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('CASE_CREATED_ON', 'Case Created On', 'date', new List<String>{ 'equals', 'not_equal_to', 'less_than', 'greater_than', 'less_or_equal', 'greater_or_equal' }));
-        out.add(buildMeta('ATTACHMENTS', 'Attachments', 'checkbox', new List<String>{ 'equals', 'not_equal_to' }));
+        appendPredefinedFilterMeta(out);
+        appendCaseFieldFilterMeta(out);
         return out;
     }
 
-    private static FilterPropertyMeta buildMeta(String key, String label, String valueType, List<String> ops) {
+    private static void appendPredefinedFilterMeta(List<FilterPropertyMeta> out) {
+        out.add(buildPredefinedMeta('CUSTOMER_TYPE', 'Customer Type', 'FEC_Customer_Type__c', 'picklist', new List<String>{ 'equals', 'not_equal_to' }, true, loadCustomerTypeOptions()));
+        out.add(buildPredefinedMeta('QUEUE', 'Queue', null, 'picklist', new List<String>{ 'equals', 'not_equal_to' }, true, loadQueueOptions()));
+        out.add(buildPredefinedMeta('PRODUCT_TYPE', 'Product Type', 'FEC_Product_Type__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }, false, loadMasterDataCodeOptions('FEC_Product_Type__c')));
+        out.add(buildPredefinedMeta('CATEGORY', 'Category', 'FEC_Category__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }, false, loadMasterDataCodeOptions('FEC_Category__c')));
+        out.add(buildPredefinedMeta('SUB_CATEGORY', 'Sub Category', 'FEC_SubCategory__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }, false, loadMasterDataCodeOptions('FEC_Sub_Category__c')));
+        out.add(buildPredefinedMeta('SUB_CODE', 'Sub Code', 'FEC_SubCode__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }, false, loadMasterDataCodeOptions('FEC_Sub_Code__c')));
+        out.add(buildPredefinedMeta('CASE_ID', 'Case ID', 'FEC_ID_Search__c', 'text', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }, false, null));
+        out.add(buildPredefinedMeta('CASE_CREATED_ON', 'Case Created On', 'FEC_Case_Created_On__c', 'date', new List<String>{ 'equals', 'not_equal_to', 'less_than', 'greater_than', 'less_or_equal', 'greater_or_equal' }, false, null));
+        out.add(buildPredefinedMeta('CASE_CREATED_BY', 'Case Created By', 'FEC_Case_Created_By__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }, true, loadCaseCreatedByOptions()));
+        out.add(buildPredefinedMeta('CASE_CREATED_BY_ROLE', 'Case Created By Role', 'CreatedBy.FEC_User_Group__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }, true, loadUserGroupOptions()));
+        out.add(buildPredefinedMeta('CASE_STATUS', 'Case Status', 'FEC_Final_Status__c', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }, true, loadCaseStatusOptions()));
+        out.add(buildPredefinedMeta('ATTACHMENTS', 'Attachments', null, 'checkbox', new List<String>{ 'equals', 'not_equal_to' }, false, null));
+    }
+
+    private static FilterPropertyMeta buildPredefinedMeta(
+        String key,
+        String label,
+        String fieldApiName,
+        String valueType,
+        List<String> ops,
+        Boolean multiValue,
+        List<FilterPicklistOption> picklistOptions
+    ) {
         FilterPropertyMeta m = new FilterPropertyMeta();
         m.propertyKey = key;
         m.label = label;
         m.valueType = valueType;
         m.operators = ops;
+        m.propertyGroup = 'PREDEFINED';
+        m.fieldApiName = String.isBlank(fieldApiName) ? FEC_ConstantCommon.STR_EMPTY : fieldApiName;
+        m.multiValue = multiValue == true;
+        m.picklistOptions = picklistOptions == null ? new List<FilterPicklistOption>() : picklistOptions;
         return m;
+    }
+
+    private static List<FilterPicklistOption> toFilterPicklistOptions(List<FEC_CommonUltils.PicklistOption> src) {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        if (src == null) {
+            return out;
+        }
+        for (FEC_CommonUltils.PicklistOption o : src) {
+            if (o == null || String.isBlank(o.value)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = String.isBlank(o.label) ? o.value : o.label;
+            item.value = o.value;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadCustomerTypeOptions() {
+        return toFilterPicklistOptions(
+            FEC_CommonUltils.getPicklistOptionsWithAccess('Case', 'FEC_Customer_Type__c')
+        );
+    }
+
+    private static List<FilterPicklistOption> loadCaseStatusOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        for (FEC_CommonUltils.PicklistOption o : FEC_CommonUltils.getPicklistOptionsWithAccess('Case', 'FEC_Final_Status__c')) {
+            if (o == null || String.isBlank(o.value)) {
+                continue;
+            }
+            String v = o.value;
+            if (v == 'Open' || v.startsWith('Pending')) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = String.isBlank(o.label) ? v : o.label;
+                item.value = v;
+                out.add(item);
+            }
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadCaseCreatedByOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        Map<String, String> seen = new Map<String, String>();
+        for (Case row : [
+            SELECT FEC_Case_Created_By__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            AND FEC_Case_Created_By__c != null
+            ORDER BY FEC_Case_Created_By__c
+            LIMIT 5000
+        ]) {
+            String v = row.FEC_Case_Created_By__c == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(row.FEC_Case_Created_By__c).trim();
+            if (String.isBlank(v) || seen.containsKey(v)) {
+                continue;
+            }
+            seen.put(v, v);
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = v;
+            item.value = v;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadUserGroupOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_User_Group__c')) {
+            return out;
+        }
+        for (AggregateResult ar : [
+            SELECT FEC_User_Group__c grp
+            FROM User
+            WHERE FEC_User_Group__c != null
+            GROUP BY FEC_User_Group__c
+            ORDER BY FEC_User_Group__c
+            LIMIT 500
+        ]) {
+            String v = ar.get('grp') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('grp'));
+            if (String.isBlank(v)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = v;
+            item.value = v;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadQueueOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        FilterPicklistOption myPending = new FilterPicklistOption();
+        myPending.label = 'My Pending Cases';
+        myPending.value = 'MY_PENDING_CASES';
+        out.add(myPending);
+        Id currentUserId = UserInfo.getUserId();
+        for (GroupMember gm : [
+            SELECT Group.Name
+            FROM GroupMember
+            WHERE UserOrGroupId = :currentUserId AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            ORDER BY Group.Name
+        ]) {
+            if (gm.Group == null || String.isBlank(gm.Group.Name)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = gm.Group.Name;
+            item.value = gm.Group.Name;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadMasterDataCodeOptions(String objectApi) {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        if (objectApi == 'FEC_Product_Type__c') {
+            for (FEC_Product_Type__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Product_Type__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Category__c') {
+            for (FEC_Category__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Category__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Sub_Category__c') {
+            for (FEC_Sub_Category__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Sub_Category__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Sub_Code__c') {
+            for (FEC_Sub_Code__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Sub_Code__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        }
+        return out;
+    }
+
+    private static final Set<String> PREDEFINED_CASE_FIELD_APIS = new Set<String>{
+        'FEC_Customer_Type__c',
+        'FEC_ID_Search__c',
+        'FEC_Case_Created_By__c',
+        'FEC_Final_Status__c',
+        'FEC_Product_Type__c',
+        'FEC_Category__c',
+        'FEC_SubCategory__c',
+        'FEC_SubCode__c',
+        'FEC_Case_Created_On__c',
+        'FEC_Last_Updated_On__c',
+        'FEC_Is_Owner_Or_Assigned__c',
+        'OwnerId',
+        'RecordTypeId',
+        'IsClosed',
+        'Status',
+        'CaseNumber',
+        'CreatedById'
+    };
+
+    private static void appendCaseFieldFilterMeta(List<FilterPropertyMeta> out) {
+        Map<String, Schema.SObjectField> fieldMap = Schema.SObjectType.Case.fields.getMap();
+        List<String> fieldNames = new List<String>(fieldMap.keySet());
+        fieldNames.sort();
+        for (String key : fieldNames) {
+            Schema.DescribeFieldResult dfr = fieldMap.get(key).getDescribe();
+            String api = dfr.getName();
+            if (!dfr.isAccessible() || !dfr.isFilterable() || PREDEFINED_CASE_FIELD_APIS.contains(api)) {
+                continue;
+            }
+            Schema.DisplayType dt = dfr.getType();
+            String valueType = mapDisplayTypeToValueType(dt);
+            if (String.isBlank(valueType)) {
+                continue;
+            }
+            FilterPropertyMeta m = new FilterPropertyMeta();
+            m.propertyKey = 'CASE_FIELD:' + api;
+            m.label = dfr.getLabel();
+            m.valueType = valueType;
+            m.operators = operatorsForValueType(valueType, dt);
+            m.propertyGroup = 'CASE_FIELD';
+            m.fieldApiName = api;
+            m.multiValue = dt == Schema.DisplayType.MULTIPICKLIST;
+            m.picklistOptions = new List<FilterPicklistOption>();
+            if (valueType == 'picklist' || valueType == 'multipicklist') {
+                m.picklistOptions = toFilterPicklistOptions(
+                    FEC_CommonUltils.getPicklistOptionsWithAccess('Case', api)
+                );
+            }
+            out.add(m);
+        }
+    }
+
+    private static String mapDisplayTypeToValueType(Schema.DisplayType dt) {
+        if (dt == Schema.DisplayType.PICKLIST) {
+            return 'picklist';
+        }
+        if (dt == Schema.DisplayType.MULTIPICKLIST) {
+            return 'multipicklist';
+        }
+        if (dt == Schema.DisplayType.BOOLEAN) {
+            return 'checkbox';
+        }
+        if (dt == Schema.DisplayType.DATE) {
+            return 'date';
+        }
+        if (dt == Schema.DisplayType.DATETIME) {
+            return 'datetime';
+        }
+        if (
+            dt == Schema.DisplayType.DOUBLE ||
+            dt == Schema.DisplayType.CURRENCY ||
+            dt == Schema.DisplayType.INTEGER ||
+            dt == Schema.DisplayType.PERCENT
+        ) {
+            return 'number';
+        }
+        if (
+            dt == Schema.DisplayType.STRING ||
+            dt == Schema.DisplayType.TEXTAREA ||
+            dt == Schema.DisplayType.EMAIL ||
+            dt == Schema.DisplayType.PHONE ||
+            dt == Schema.DisplayType.URL
+        ) {
+            return 'text';
+        }
+        return FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static List<String> operatorsForValueType(String valueType, Schema.DisplayType dt) {
+        if (valueType == 'multipicklist') {
+            return new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain' };
+        }
+        if (valueType == 'picklist' || valueType == 'checkbox') {
+            return new List<String>{ 'equals', 'not_equal_to' };
+        }
+        if (valueType == 'date' || valueType == 'datetime' || valueType == 'number') {
+            return new List<String>{ 'equals', 'not_equal_to', 'less_than', 'greater_than', 'less_or_equal', 'greater_or_equal' };
+        }
+        return new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' };
     }
 
     @AuraEnabled(cacheable=true)
@@ -191,9 +492,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
 
         String countSoql = 'SELECT COUNT() FROM Case WHERE ' + whereClause;
@@ -256,9 +555,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
 
         Id cursorId;
         if (String.isNotBlank(afterCaseId)) {
@@ -295,9 +592,8 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static List<CaseSetRangeOption> getAttachmentCaseSetOptions(String filtersJson) {
         List<CaseSetRangeOption> out = new List<CaseSetRangeOption>();
         Integer total = 0;
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
         total = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
         if (total < 1) {
@@ -332,9 +628,8 @@ public without sharing class FEC_BatchCaseHandlingController {
     @AuraEnabled
     public static List<BusinessProcessExportRow> getBusinessProcessExportRows(String filtersJson) {
         List<BusinessProcessExportRow> out = new List<BusinessProcessExportRow>();
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         List<String> allowedBpNames = FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
         whereParts.add('FEC_Business_Process__r.Name IN :allowedBpNames');
         String whereClause = String.join(whereParts, ' AND ');
