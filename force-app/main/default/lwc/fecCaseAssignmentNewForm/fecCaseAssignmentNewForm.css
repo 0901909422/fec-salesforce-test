@@ -1,14 +1,3 @@
-.page-wrap {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.page-heading {
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
 .section-box {
   background: #f3f3f3;
   border-radius: 0.5rem;
@@ -51,6 +40,12 @@
 
 .queue-trigger:hover {
   border-color: #747474;
+}
+
+.queue-trigger_error,
+.queue-trigger_error:hover {
+  border-color: #c23934;
+  box-shadow: #c23934 0 0 0 1px inset;
 }
 
 .queue-trigger-text {

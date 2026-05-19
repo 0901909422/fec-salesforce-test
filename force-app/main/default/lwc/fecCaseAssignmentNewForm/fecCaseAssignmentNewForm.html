@@ -63,7 +63,9 @@
         <template if:true={isContinuousMethod}>
           <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
             <lightning-combobox
+              data-field="businessHours"
               label="Business Hours"
+              required
               value={businessHoursId}
               options={businessHourOptions}
               onchange={handleBusinessHoursChange}
@@ -74,7 +76,6 @@
               data-field="scheduledTime"
               type="number"
               label="Scheduled Time"
-              required
               min="1"
               value={scheduledTime}
               onchange={handleScheduledTimeChange}
@@ -84,7 +85,9 @@
         <template if:true={isTimeBasedMethod}>
           <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
             <lightning-combobox
+              data-field="businessHours"
               label="Business Hours"
+              required
               value={businessHoursId}
               options={businessHourOptions}
               onchange={handleBusinessHoursChange}
@@ -106,7 +109,9 @@
         <template if:false={showSchedulingPairRow}>
           <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
             <lightning-combobox
+              data-field="businessHours"
               label="Business Hours"
+              required
               value={businessHoursId}
               options={businessHourOptions}
               onchange={handleBusinessHoursChange}
@@ -120,8 +125,11 @@
       <div class="section-title">Queue Information</div>
       <div class="slds-grid slds-wrap slds-gutters">
         <div class="slds-col slds-size_1-of-1">
-          <div class="slds-form-element">
-            <label class="slds-form-element__label" for="queue-multiselect-trigger">Select Queues</label>
+          <div class="slds-form-element" class:slds-has-error={queueHasError}>
+            <label class="slds-form-element__label" for="queue-multiselect-trigger">
+              <abbr class="slds-required" title="required">*</abbr>
+              Select Queues
+            </label>
             <div
               class="queue-trigger-wrap slds-is-relative"
               class:queue-dropdown-open={queueDropdownOpen}
@@ -130,6 +138,7 @@
                 id="queue-multiselect-trigger"
                 type="button"
                 class="queue-trigger"
+                class:queue-trigger_error={queueHasError}
                 onclick={toggleQueueDropdown}
                 aria-expanded={queueDropdownOpen}
                 aria-haspopup="listbox"
@@ -172,6 +181,9 @@
                 </div>
               </template>
             </div>
+            <template if:true={queueHasError}>
+              <div class="slds-form-element__help">Select Queues can't be blank</div>
+            </template>
           </div>
         </div>
         <div class="slds-col slds-size_1-of-1">
@@ -213,7 +225,6 @@
           <lightning-input
             type="number"
             label="Scale"
-            required
             min="1"
             step="1"
             value={selectedScale}
