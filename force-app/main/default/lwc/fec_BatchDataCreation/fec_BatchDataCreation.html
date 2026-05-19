@@ -30,9 +30,7 @@
                   onchange={handleTemplateChange}
                 ></lightning-combobox>
                 <template if:true={templateRequiredError}>
-                  <p class="fec-template-error" role="alert">
-                    Vui lòng chọn mẫu
-                  </p>
+                  <p class="fec-template-error" role="alert">{labelSelectTemplate}</p>
                 </template>
               </div>
               <div class="fec-field-actions-top">
@@ -191,6 +189,7 @@
                     <th>Total Success Records</th>
                     <th>Total Failed Records</th>
                     <th>Status</th>
+                    <th>Failure Reason</th>
                     <th>Result</th>
                   </tr>
                 </thead>
@@ -218,6 +217,7 @@
                         <td>{row.totalSuccessRecords}</td>
                         <td>{row.totalFailedRecords}</td>
                         <td>{row.status}</td>
+                        <td>{row.failureReason}</td>
                         <td>
                           <template if:true={row.resultDownloadUrl}>
                             <a
@@ -237,7 +237,7 @@
                   </template>
                   <template if:false={hasRows}>
                     <tr>
-                      <td colspan="8" class="fec-empty">No records found.</td>
+                      <td colspan="9" class="fec-empty">No records found.</td>
                     </tr>
                   </template>
                 </tbody>
