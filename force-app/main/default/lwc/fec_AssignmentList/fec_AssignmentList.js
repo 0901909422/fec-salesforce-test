@@ -15,6 +15,8 @@ import CASE_ID from "@salesforce/schema/Case.Id";
 import USER_ID from "@salesforce/user/Id";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.execute";
+//thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
+import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
 import {
   subscribe,
   unsubscribe,
@@ -485,6 +487,10 @@ export default class Fec_AssignmentList extends LightningElement {
       );
       // reload data
       await this.initData();
+
+      //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
+      await refreshExecuteVisibility({ caseId: this.recordId });
+
       // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {
         this.modeEditCase = false;

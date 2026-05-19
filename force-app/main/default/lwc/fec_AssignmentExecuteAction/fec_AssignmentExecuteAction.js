@@ -3,6 +3,7 @@ import { LightningElement, api, wire } from "lwc";
 import { publish, MessageContext } from "lightning/messageService";
 
 import { CloseActionScreenEvent } from "lightning/actions";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 
@@ -52,11 +53,24 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
        * STEP 1
        * Execute assignment ownership
        */
-      await executeAssignment({
+      const executeResult = await executeAssignment({
         caseId: this.recordId,
       });
 
-      console.log("executeAssignment SUCCESS");
+      console.log("executeAssignment SUCCESS", JSON.stringify(executeResult));
+
+      if (!executeResult?.claimedCount) {
+        this.isPublished = false;
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Execute Assignment",
+            message:
+              "No assignment was claimed for your queue. Please contact your administrator.",
+            variant: "warning",
+          }),
+        );
+        return;
+      }
 
       const storageKey = `assignment-${this.recordId}`;
 
@@ -99,7 +113,20 @@ export default class Fec_AssignmentExecuteAction extends LightningElement {
 
       publish(this.messageContext, ASSIGNMENT_MODE, payload);
     } catch (error) {
+      this.isPublished = false;
       console.error("ERROR:", JSON.stringify(error));
+      const message =
+        error?.body?.pageErrors?.[0]?.message ||
+        error?.body?.message ||
+        error?.message ||
+        "Execute Assignment failed.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Execute Assignment",
+          message,
+          variant: "error",
+        }),
+      );
     } finally {
       /*
        * STEP 5
