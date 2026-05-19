@@ -1,12 +1,7 @@
 <template>
-    <!-- Accordion "Transfer Call" — ẩn hoàn toàn sau khi transfer thành công -->
+    <!-- Transfer Call — không accordion header -->
     <template if:false={showTransferSuccessView}>
-        <lightning-accordion
-            allow-multiple-sections-open
-            active-section-name={activeSections}
-            onsectiontoggle={handleSectionToggle}>
-            <lightning-accordion-section name="caseInformation" label={labelSectionCaseInfo}>
-                <div class="fec-transfer-call slds-p-around_small">
+        <div class="fec-transfer-call slds-p-around_small">
                     <h3 class="fec-transfer-call__subtitle slds-m-bottom_small">
                         {labelSubtitle}
                     </h3>
@@ -23,7 +18,7 @@
                     </template>
                 </div>
 
-                <!-- Call Transfer Details — chỉ hiện trong accordion khi thất bại -->
+        <!-- Call Transfer Details — chỉ hiện khi thất bại -->
                 <template if:true={showCallTransferDetails}>
                     <div class="fec-transfer-details slds-p-around_small slds-m-top_small">
                         <h3 class="fec-transfer-details__title slds-m-bottom_x-small">{labelDetailsTitle}</h3>
@@ -78,9 +73,7 @@
                             </div>
                         </div>
                     </div>
-                </template>
-            </lightning-accordion-section>
-        </lightning-accordion>
+        </template>
     </template>
 
     <!-- Call Transfer Details — chỉ hiện sau khi transfer thành công, không có accordion header -->
