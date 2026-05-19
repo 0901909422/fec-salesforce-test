@@ -35,10 +35,11 @@
                   label={batchUi.filterPropertyField}
                   variant="label-hidden"
                   value={fline.propertyKey}
-                  options={propertyOptionsForFilter}
+                  options={fline.propertyOptions}
                   placeholder={batchUi.propertyPlaceholder}
                   onchange={handleFilterPropertyChange}
                 ></lightning-combobox>
+                <template if:true={fline.showFilterCriteria}>
                 <lightning-combobox
                   data-rowid={fline.rowId}
                   label={batchUi.filterColCondition}
@@ -129,6 +130,7 @@
                   data-rowid={fline.rowId}
                   onclick={handleRemoveFilterLine}
                 ></lightning-button-icon>
+                </template>
               </div>
             </template>
             </div>

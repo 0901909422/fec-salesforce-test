@@ -89,6 +89,10 @@ import FEC_BCH_Reset from "@salesforce/label/c.FEC_BCH_Reset";
 import FEC_BCH_FilterPropertyField from "@salesforce/label/c.FEC_BCH_FilterPropertyField";
 import FEC_BCH_FilterScopePreDefine from "@salesforce/label/c.FEC_BCH_FilterScopePreDefine";
 import FEC_BCH_FilterScopeAllCase from "@salesforce/label/c.FEC_BCH_FilterScopeAllCase";
+import FEC_BCH_FilterGroupPredefined from "@salesforce/label/c.FEC_BCH_FilterGroupPredefined";
+import FEC_BCH_FilterGroupCaseFields from "@salesforce/label/c.FEC_BCH_FilterGroupCaseFields";
+import FEC_BCH_FilterColCondition from "@salesforce/label/c.FEC_BCH_FilterColCondition";
+import FEC_BCH_FilterColValue from "@salesforce/label/c.FEC_BCH_FilterColValue";
 import FEC_BCH_PropertyPlaceholder from "@salesforce/label/c.FEC_BCH_PropertyPlaceholder";
 import FEC_BCH_OperatorField from "@salesforce/label/c.FEC_BCH_OperatorField";
 import FEC_BCH_ValueField from "@salesforce/label/c.FEC_BCH_ValueField";
@@ -142,6 +146,11 @@ const BATCH_UI = Object.freeze({
   filterData: FEC_BCH_FilterData,
   reset: FEC_BCH_Reset,
   filterPropertyField: FEC_BCH_FilterPropertyField,
+  filterColCondition: FEC_BCH_FilterColCondition,
+  filterColValue: FEC_BCH_FilterColValue,
+  noFiltersAdded: FEC_BCH_FilterResetHint,
+  valueAvailable: FEC_BCH_ValueField,
+  valueSelected: FEC_BCH_ValueField,
   propertyPlaceholder: FEC_BCH_PropertyPlaceholder,
   operatorField: FEC_BCH_OperatorField,
   operatorPlaceholder: FEC_BCH_OperatorField,
@@ -366,6 +375,12 @@ const FILTER_SCOPE_ALL_CASE = "ALL_CASE";
 const FILTER_PROPERTY_SCOPE_PRE_DEFINE = "__SCOPE_PRE_DEFINE__";
 const FILTER_PROPERTY_SCOPE_ALL_CASE = "__SCOPE_ALL_CASE__";
 const FILTER_SCOPE_ROW_ID = "filter-scope-row";
+const ATTACHMENTS_PROPERTY_KEY = "ATTACHMENTS";
+
+const BOOLEAN_VALUE_OPTIONS = [
+  { label: "True", value: "true" },
+  { label: "False", value: "false" }
+];
 
 const OPERATOR_LABELS = {
   equals: "Equals",
@@ -696,33 +711,67 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.ensureScopeRow();
   }
 
+  toBoldUnicode(text) {
+    if (!text) {
+      return text;
+    }
+    let out = STR_EMPTY;
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i];
+      const code = ch.charCodeAt(0);
+      if (code >= 65 && code <= 90) {
+        out += String.fromCodePoint(0x1d400 + (code - 65));
+      } else if (code >= 97 && code <= 122) {
+        out += String.fromCodePoint(0x1d41a + (code - 97));
+      } else if (code >= 48 && code <= 57) {
+        out += String.fromCodePoint(0x1d7ce + (code - 48));
+      } else {
+        out += ch;
+      }
+    }
+    return out;
+  }
+
   buildFieldPropertyOptions() {
-    return (this.filterPropertyMeta || [])
+    const fieldOptions = (this.filterPropertyMeta || [])
       .filter((m) => m?.propertyKey)
       .map((m) => ({
         label: m.label || m.propertyKey,
         value: m.propertyKey
       }));
+    if (!fieldOptions.length) {
+      return [{ label: FEC_BCH_FilterPickProperty, value: STR_EMPTY }];
+    }
+    const groupLabel =
+      this.filterPropertyScope === FILTER_SCOPE_ALL_CASE
+        ? this.toBoldUnicode(FEC_BCH_FilterGroupCaseFields)
+        : this.toBoldUnicode(FEC_BCH_FilterGroupPredefined);
+    return [
+      {
+        label: groupLabel,
+        options: [
+          { label: FEC_BCH_FilterPickProperty, value: STR_EMPTY },
+          ...fieldOptions
+        ]
+      }
+    ];
   }
 
   get propertyOptionsForScopeRow() {
     return [
       {
-        label: FEC_BCH_FilterScopePreDefine,
+        label: this.toBoldUnicode(FEC_BCH_FilterScopePreDefine),
         value: FILTER_PROPERTY_SCOPE_PRE_DEFINE
       },
       {
-        label: FEC_BCH_FilterScopeAllCase,
+        label: this.toBoldUnicode(FEC_BCH_FilterScopeAllCase),
         value: FILTER_PROPERTY_SCOPE_ALL_CASE
       }
     ];
   }
 
   get propertyOptionsForFieldRow() {
-    return [
-      { label: FEC_BCH_FilterPickProperty, value: STR_EMPTY },
-      ...this.buildFieldPropertyOptions()
-    ];
+    return this.buildFieldPropertyOptions();
   }
 
   operatorOptionsForLine(line) {
@@ -806,16 +855,126 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return true;
   }
 
+  lineMeta(line) {
+    return line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+  }
+
+  operatorNeedsValue(line) {
+    const op = (line?.operatorKey || STR_EMPTY).toLowerCase();
+    return op !== "is_null" && op !== "is_not_null";
+  }
+
   showAttachmentValueCombobox(line) {
-    const meta = line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+    const meta = this.lineMeta(line);
     if (!meta || meta.valueType !== "checkbox") {
       return false;
     }
-    const op = (line?.operatorKey || STR_EMPTY).toLowerCase();
-    if (op === "is_null" || op === "is_not_null") {
+    return this.operatorNeedsValue(line);
+  }
+
+  showBooleanValueCombobox(line) {
+    const meta = this.lineMeta(line);
+    if (!meta || meta.valueType !== "checkbox") {
       return false;
     }
-    return true;
+    if (line?.propertyKey === ATTACHMENTS_PROPERTY_KEY) {
+      return false;
+    }
+    return this.operatorNeedsValue(line);
+  }
+
+  showValuePicklistCombobox(line) {
+    const meta = this.lineMeta(line);
+    if (!meta || !this.operatorNeedsValue(line)) {
+      return false;
+    }
+    if (meta.multiValue === true) {
+      return false;
+    }
+    return meta.valueType === "picklist" && (meta.picklistOptions || []).length > 0;
+  }
+
+  showMultiPicklistValue(line) {
+    const meta = this.lineMeta(line);
+    if (!meta || !this.operatorNeedsValue(line)) {
+      return false;
+    }
+    return (
+      meta.multiValue === true ||
+      meta.valueType === "multipicklist"
+    ) && (meta.picklistOptions || []).length > 0;
+  }
+
+  showDefaultValueInput(line) {
+    const meta = this.lineMeta(line);
+    if (!meta || !this.operatorNeedsValue(line)) {
+      return false;
+    }
+    if (
+      meta.valueType === "checkbox" ||
+      meta.valueType === "picklist" ||
+      meta.valueType === "multipicklist" ||
+      meta.multiValue === true
+    ) {
+      return false;
+    }
+    return meta.valueType === "text";
+  }
+
+  valueInputDisabled(line) {
+    return !this.operatorNeedsValue(line);
+  }
+
+  valuePicklistOptionsForLine(line) {
+    const meta = this.lineMeta(line);
+    const opts = [{ label: FEC_BCH_FilterPickProperty, value: STR_EMPTY }];
+    (meta?.picklistOptions || []).forEach((o) => {
+      if (o?.value) {
+        opts.push({ label: o.label || o.value, value: o.value });
+      }
+    });
+    return opts;
+  }
+
+  multiPicklistOptionsForLine(line) {
+    return (this.lineMeta(line)?.picklistOptions || [])
+      .filter((o) => o?.value)
+      .map((o) => ({ label: o.label || o.value, value: o.value }));
+  }
+
+  multiPicklistSizeForLine(line) {
+    const count = this.multiPicklistOptionsForLine(line).length;
+    if (count <= 3) {
+      return 3;
+    }
+    if (count <= 6) {
+      return count;
+    }
+    return 6;
+  }
+
+  filterRowClass(line) {
+    let cls = "fec-filter-row fec-filter-table__row";
+    if (this.showMultiPicklistValue(line)) {
+      cls += " fec-filter-table__row--multi";
+    }
+    if (line?.isScopeRow === true || line?.rowId === FILTER_SCOPE_ROW_ID) {
+      cls += " fec-filter-table__row--scope";
+    }
+    return cls;
+  }
+
+  handleFilterValueListChange(event) {
+    this.filterResetHint = false;
+    const rowId = event.currentTarget?.dataset?.rowid;
+    const valueList = event.detail?.value || [];
+    this.filterLines = this.filterLines.map((l) =>
+      l.rowId === rowId ? { ...l, valueList: [...valueList], valueText: STR_EMPTY } : l
+    );
+  }
+
+  get booleanPicklistOptions() {
+    return BOOLEAN_VALUE_OPTIONS;
   }
 
   get filterLinesView() {
@@ -824,6 +983,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return {
         ...line,
         isScopeRow,
+        filterRowClass: this.filterRowClass(line),
         propertyOptions: isScopeRow
           ? this.propertyOptionsForScopeRow
           : this.propertyOptionsForFieldRow,
@@ -831,6 +991,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         showFilterCriteria: !isScopeRow,
         showValueBox: !isScopeRow && this.showValueInput(line),
         showAttachCombo: !isScopeRow && this.showAttachmentValueCombobox(line),
+        showBooleanCombo: !isScopeRow && this.showBooleanValueCombobox(line),
+        showValuePicklist: !isScopeRow && this.showValuePicklistCombobox(line),
+        showValueMultiPicklist: !isScopeRow && this.showMultiPicklistValue(line),
+        showValueDefault: !isScopeRow && this.showDefaultValueInput(line),
+        valuePicklistOptions: this.valuePicklistOptionsForLine(line),
+        multiPicklistOptions: this.multiPicklistOptionsForLine(line),
+        multiPicklistSize: this.multiPicklistSizeForLine(line),
+        valueList: Array.isArray(line.valueList) ? line.valueList : [],
+        valueInputDisabled: this.valueInputDisabled(line),
         valueTypeAttr: this.valueInputType(line)
       };
     });
@@ -855,7 +1024,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const needsValue = op !== "is_null" && op !== "is_not_null";
       let valueText = (line.valueText || STR_EMPTY).trim();
       let valueList = null;
-      if (
+      if (Array.isArray(line.valueList) && line.valueList.length) {
+        valueList = line.valueList.filter((v) => v);
+        valueText = STR_EMPTY;
+      } else if (
         (line.propertyKey === "CUSTOMER_TYPE" || line.propertyKey === "QUEUE") &&
         valueText.includes(",")
       ) {
@@ -1074,6 +1246,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get filterDataDisabled() {
     return this.caseSearchLoading || !this.hasValidFilterPayload;
+  }
+
+  get showNoFiltersAdded() {
+    return !(this.filterLines || []).some(
+      (line) => line.isScopeRow !== true && line.rowId !== FILTER_SCOPE_ROW_ID
+    );
   }
 
   get showNoFiltersAddedHint() {
