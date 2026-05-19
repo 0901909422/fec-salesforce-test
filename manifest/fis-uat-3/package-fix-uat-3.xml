@@ -33,6 +33,7 @@
 	    <members>FEC_HoldCaseController</members>
 	    <members>FEC_AssignmentController</members>
 	    <members>FEC_AssignmentExecuteService</members>
+        <members>FEC_AssignmentCaseShareService</members>
 	    <members>FEC_CaseExecuteService</members>
 	    <members>FEC_SubProcessService</members>
 	    <members>FEC_CheckEligibleController</members>
@@ -82,6 +83,10 @@
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<name>Apexclass</name>
 	</types>
+    <types>
+        <members>FEC_AssignmentTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
     <types>
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>

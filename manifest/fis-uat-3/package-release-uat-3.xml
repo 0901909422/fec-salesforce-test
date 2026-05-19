@@ -108,6 +108,7 @@
         <members>FEC_AssignmentListHandler</members>
         <members>FEC_AssignmentRoutingActionHandler</members>
 		<members>FEC_AssignmentExecuteService</members>
+        <members>FEC_AssignmentCaseShareService</members>
         <members>FEC_CaseExecuteService</members>
         <members>FEC_RoutingActionHistoryTriggerHandler</members>
         <members>FEC_RelevantTicketTriggerHandler</members>
