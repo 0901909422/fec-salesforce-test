@@ -146,11 +146,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Submitted By User</displayNameOverride>
             <field>FEC_User__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Submitted By Role</displayNameOverride>
             <field>FEC_User_Role__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -238,11 +240,13 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>User</displayNameOverride>
             <field>FEC_Assignment__c.FEC_User__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>User Role</displayNameOverride>
             <field>FEC_Assignment__c.FEC_User_Role__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
@@ -553,6 +557,7 @@
         </columns>
         <columns>
             <checkedByDefault>false</checkedByDefault>
+            <displayNameOverride>Service Case Owner</displayNameOverride>
             <field>FEC_Case__c.FEC_Service_Case_Owner__c</field>
             <table>FEC_Routing_Action_History__c</table>
         </columns>
