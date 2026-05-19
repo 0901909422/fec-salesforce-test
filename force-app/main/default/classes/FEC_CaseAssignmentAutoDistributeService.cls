@@ -37,9 +37,17 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return;
         }
 
+        Set<Id> assignmentIdsActive = new Set<Id>();
+        for (FEC_Case_Assignment__c row : activeAssignments) {
+            assignmentIdsActive.add(row.Id);
+        }
+        Map<Id, Datetime> lastLogUtcByAssignmentId =
+            fetchLatestAssignmentLogCreatedDateByAssignments(assignmentIdsActive);
+
         List<Id> dueAssignmentIds = new List<Id>();
         for (FEC_Case_Assignment__c assignmentRecord : activeAssignments) {
-            if (!isDueToRun(assignmentRecord, nowTime)) {
+            Datetime latestLogUtc = lastLogUtcByAssignmentId.get(assignmentRecord.Id);
+            if (!isDueToRun(assignmentRecord, nowTime, latestLogUtc)) {
                 continue;
             }
             if (hasLogInCurrentMinute(assignmentRecord.Id, nowTime)) {
@@ -296,7 +304,6 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
 
     /**
      * Picklist từng gõ nhầm \"Continous\"; bản ghi cũ có thể vẫn giữ giá trị đó.
-     * Execute Immediately bỏ qua isDueToRun nên chạy tay vẫn OK; scheduled thì isDueToRun trả false và không enqueue.
      */
     private static String normalizedAssignmentMethod(FEC_Case_Assignment__c assignmentRecord) {
         String raw = assignmentRecord == null ? null : assignmentRecord.FEC_Assignment_Method__c;
@@ -310,23 +317,58 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         return trimmed;
     }
 
-    private static Boolean isDueToRun(FEC_Case_Assignment__c assignmentRecord, DateTime nowTime) {
+    /**
+     * Một Aggregate query cho toàn Active assignment — tránh N lần subquery trong vòng executeNow.
+     */
+    private static Map<Id, Datetime> fetchLatestAssignmentLogCreatedDateByAssignments(
+        Set<Id> assignmentIds
+    ) {
+        Map<Id, Datetime> out = new Map<Id, Datetime>();
+        if (assignmentIds == null || assignmentIds.isEmpty()) {
+            return out;
+        }
+        for (AggregateResult ar : [
+            SELECT FEC_Case_Assignment_Name__c aidKey, MAX(CreatedDate) lastCreatedUtc
+            FROM FEC_Case_Assignment_Logs__c
+            WHERE FEC_Case_Assignment_Name__c IN :assignmentIds
+            GROUP BY FEC_Case_Assignment_Name__c
+        ]) {
+            Id aid = (Id) ar.get('aidKey');
+            Datetime lc = (Datetime) ar.get('lastCreatedUtc');
+            if (aid != null && lc != null) {
+                out.put(aid, lc);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Continuous:FEC_Scheduled_Time__c = khoảng thời gian (phút) tối thiểu sau lần ghi FEC_Case_Assignment_Logs__c gần nhất mới được chạy tiếp
+     * (schedule ngoài chỉ polling ~vài phút — không căn modulus theo đồng hồ cả ngày).
+     * Execute Immediately không gọi hàm này (chạy ngay được).
+     */
+    private static Boolean isDueToRun(
+        FEC_Case_Assignment__c assignmentRecord,
+        DateTime nowTime,
+        Datetime latestSuccessfulLogUtc
+    ) {
         String method = normalizedAssignmentMethod(assignmentRecord);
         String tz = userTimezoneSid();
+
         if (method == METHOD_CONTINUOUS) {
-            Integer scheduledMinutes;
-            if (assignmentRecord.FEC_Scheduled_Time__c == null) {
-                scheduledMinutes = 30;
-            } else {
-                scheduledMinutes = assignmentRecord.FEC_Scheduled_Time__c.intValue();
-            }
+            Integer scheduledMinutes =
+                assignmentRecord.FEC_Scheduled_Time__c == null
+                    ? 30
+                    : assignmentRecord.FEC_Scheduled_Time__c.intValue();
             if (scheduledMinutes <= 0) {
                 scheduledMinutes = 30;
             }
-            String[] hmParts = nowTime.format('HH:mm', tz).split(':');
-            Integer minutesSinceMidnight =
-                (Integer.valueOf(hmParts[0]) * 60) + Integer.valueOf(hmParts[1]);
-            return Math.mod(minutesSinceMidnight, scheduledMinutes) == 0;
+
+            /* Lần đầu hoặc chưa có log thành công trước đó — không chặn theo cooldown. */
+            if (latestSuccessfulLogUtc == null) {
+                return true;
+            }
+            return nowTime >= latestSuccessfulLogUtc.addMinutes(scheduledMinutes);
         }
 
         if (method == METHOD_TIME_BASED) {
