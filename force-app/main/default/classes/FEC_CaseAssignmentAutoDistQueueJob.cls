@@ -24,9 +24,10 @@ public without sharing class FEC_CaseAssignmentAutoDistQueueJob implements Queue
         }
 
         Id head = assignmentIds[0];
-        List<Id> tail = new List<Id>();
-        for (Integer i = 1; i < assignmentIds.size(); i++) {
-            tail.add(assignmentIds[i]);
+        // Không có SOQL ở đây — chỉ tách list (tránh enqueue >50/job); tail = bản clone bỏ phần tử đầu.
+        List<Id> tail = assignmentIds.clone();
+        if (!tail.isEmpty()) {
+            tail.remove(0);
         }
 
         FEC_CaseAssignmentAutoDistributeService.executeImmediatelyForAssignmentId(head);

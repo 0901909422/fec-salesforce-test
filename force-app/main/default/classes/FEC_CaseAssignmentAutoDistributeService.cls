@@ -1015,14 +1015,23 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         if (targetCases == null || eligibleUsers == null || eligibleUsers.isEmpty()) {
             return;
         }
+        Integer eligibleCount = eligibleUsers.size();
+        /* Tiền tính scale + count vào List — không lookup scale/map lặp lại trong vòng Case×User */
+        List<Integer> scaleByIndex = new List<Integer>();
+        List<Integer> runCountByIndex = new List<Integer>();
+        for (Integer idx = 0; idx < eligibleCount; idx++) {
+            User candidateUser = eligibleUsers[idx];
+            scaleByIndex.add(scaleForUser(candidateUser, roleScaleMap));
+            runCountByIndex.add(getCountValue(historicalCountByUser, candidateUser.Id));
+        }
+
         for (Case targetCaseRecord : targetCases) {
             Integer bestIdx = -1;
             Integer bestCnt = 0;
             Integer bestScale = 1;
-            for (Integer idx = 0; idx < eligibleUsers.size(); idx++) {
-                User candidateUser = eligibleUsers[idx];
-                Integer sc = scaleForUser(candidateUser, roleScaleMap);
-                Integer cnt = getCountValue(historicalCountByUser, candidateUser.Id);
+            for (Integer idx = 0; idx < eligibleCount; idx++) {
+                Integer sc = scaleByIndex[idx];
+                Integer cnt = runCountByIndex[idx];
                 if (bestIdx < 0) {
                     bestIdx = idx;
                     bestCnt = cnt;
@@ -1043,7 +1052,9 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             User chosenUser = eligibleUsers[bestIdx];
             Id chosenId = chosenUser.Id;
             targetCaseRecord.OwnerId = chosenId;
-            historicalCountByUser.put(chosenId, getCountValue(historicalCountByUser, chosenId) + 1);
+            Integer newCnt = bestCnt + 1;
+            runCountByIndex[bestIdx] = newCnt;
+            historicalCountByUser.put(chosenId, newCnt);
             numberByUser.put(
                 chosenId,
                 numberByUser.containsKey(chosenId) ? numberByUser.get(chosenId) + 1 : 1
