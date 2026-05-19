@@ -9,6 +9,7 @@ import searchBulkCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingCont
 import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingController.getAttachmentCaseSetOptions";
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
+import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessNames";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
@@ -368,6 +369,24 @@ const EXPORT_PROPERTY_OPTIONS = [
   { label: FEC_BCH_ExportYes, value: EXPORT_PROPERTY_YES }
 ];
 
+const ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES = [
+  "COF (Complaint or Feedback)",
+  "GSR (General Service Request)",
+  "Address Update",
+  "Phone Update",
+  "Document Request",
+  "MRC Return",
+  "Refund Request (Loan)",
+  "Incorrect Payment Handling (Loan)",
+  "IPP Closure",
+  "Card Unblock",
+  "Contract Closure",
+  "Card Closure & Refund Request (Card)",
+  "Card Replacement",
+  "IPP Conversion",
+  "Points Redemption"
+];
+
 const FILTER_SCOPE_PRE_DEFINE = "PRE_DEFINE";
 const FILTER_SCOPE_ALL_CASE = "ALL_CASE";
 const FILTER_PROPERTY_SCOPE_PRE_DEFINE = "__SCOPE_PRE_DEFINE__";
@@ -481,6 +500,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   filterMetaByKey = {};
   preDefineMetaByKey = {};
   allCaseMetaByKey = {};
+  allowedBulkExportBpSet = null;
   filterUid = 0;
   bpExportUseSelected = false;
   bpExportSourceRows = [];
@@ -518,9 +538,42 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return v;
   }
 
+  buildAllowedBulkExportBpSet(names) {
+    const set = new Set();
+    const list =
+      Array.isArray(names) && names.length
+        ? names
+        : ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES;
+    list.forEach((n) => {
+      const k = String(n || STR_EMPTY).trim().toLowerCase();
+      if (k) {
+        set.add(k);
+      }
+    });
+    this.allowedBulkExportBpSet = set;
+  }
+
+  isAllowedBulkExportBusinessProcess(name) {
+    if (!this.allowedBulkExportBpSet) {
+      this.buildAllowedBulkExportBpSet(ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES);
+    }
+    const k = String(name || STR_EMPTY).trim().toLowerCase();
+    return Boolean(k) && this.allowedBulkExportBpSet.has(k);
+  }
+
+  async loadBulkExportAllowedBusinessProcesses() {
+    try {
+      const names = await getBulkExportAllowedBusinessProcessNames();
+      this.buildAllowedBulkExportBpSet(names);
+    } catch {
+      this.buildAllowedBulkExportBpSet(ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES);
+    }
+  }
+
   async connectedCallback() {
     loadStyle(this, COMMON_STYLES).catch(() => {});
     this.loadAttachmentDownloadedState();
+    await this.loadBulkExportAllowedBusinessProcesses();
     await this.loadFilterMetadata();
     this.refreshRows();
   }
@@ -1648,18 +1701,22 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
     this.bpTemplateMetaByCode = templateMetaByCode;
 
-    const keysFromSource = new Set();
+    const keysFromSource = new Map();
     sourceRows.forEach((r) => {
       const k = this.rowBusinessProcessKey(r);
-      if (k) {
-        keysFromSource.add(k);
+      if (k && this.isAllowedBulkExportBusinessProcess(k)) {
+        keysFromSource.set(k.toLowerCase(), k);
       }
     });
 
     let list = (Array.isArray(bpInfo) ? bpInfo : [])
       .filter((b) => {
         const n = String(b.businessProcessCode || STR_EMPTY).trim();
-        return n && keysFromSource.has(n);
+        return (
+          n &&
+          this.isAllowedBulkExportBusinessProcess(n) &&
+          keysFromSource.has(n.toLowerCase())
+        );
       })
       .map((b) => {
         const code = String(b.businessProcessCode || STR_EMPTY).trim();
@@ -1672,7 +1729,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       });
 
     if (!list.length && keysFromSource.size) {
-      list = Array.from(keysFromSource)
+      list = Array.from(keysFromSource.values())
+        .filter((code) => this.isAllowedBulkExportBusinessProcess(code))
         .sort((a, b) => String(a).localeCompare(String(b)))
         .map((code) => ({
           rowKey: `bp-${code}`,

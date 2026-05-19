@@ -20,6 +20,27 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         'Points Redemption'
     };
 
+    public static Boolean isAllowedBusinessProcessName(String businessProcessName) {
+        if (String.isBlank(businessProcessName)) {
+            return false;
+        }
+        String trimmed = businessProcessName.trim();
+        for (String allowed : ALLOWED_BUSINESS_PROCESS_NAMES) {
+            if (allowed.equalsIgnoreCase(trimmed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String buildAllowedBusinessProcessNameInClause() {
+        List<String> literals = new List<String>();
+        for (String n : ALLOWED_BUSINESS_PROCESS_NAMES) {
+            literals.add('\'' + String.escapeSingleQuotes(n) + '\'');
+        }
+        return 'FEC_Business_Process__r.Name IN (' + String.join(literals, ',') + ')';
+    }
+
     public static List<SObject> queryActiveBatchCaseHandlingTemplates() {
         Schema.SObjectType templateType = Schema.getGlobalDescribe().get(TEMPLATE_OBJECT_API_NAME);
         if (templateType == null) {

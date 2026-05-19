@@ -627,13 +627,17 @@ public without sharing class FEC_BatchCaseHandlingController {
         return FEC_BatchCaseHandlingZipService.downloadCaseAttachmentsZip(caseId);
     }
 
+    @AuraEnabled(cacheable=true)
+    public static List<String> getBulkExportAllowedBusinessProcessNames() {
+        return FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
+    }
+
     @AuraEnabled
     public static List<BusinessProcessExportRow> getBusinessProcessExportRows(String filtersJson) {
         List<BusinessProcessExportRow> out = new List<BusinessProcessExportRow>();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
         List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
-        List<String> allowedBpNames = FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
-        whereParts.add('FEC_Business_Process__r.Name IN :allowedBpNames');
+        whereParts.add(FEC_BatchCaseHandlingTemplateHelper.buildAllowedBusinessProcessNameInClause());
         String whereClause = String.join(whereParts, ' AND ');
         List<AggregateResult> grouped = Database.query(
             'SELECT FEC_Business_Process__r.Name bpName, COUNT(Id) cnt ' +
@@ -678,7 +682,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         for (AggregateResult ar : grouped) {
             String bpName = ar.get('bpName') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpName'));
-            if (String.isBlank(bpName)) {
+            if (String.isBlank(bpName) || !FEC_BatchCaseHandlingTemplateHelper.isAllowedBusinessProcessName(bpName)) {
                 continue;
             }
             BusinessProcessExportRow item = new BusinessProcessExportRow();

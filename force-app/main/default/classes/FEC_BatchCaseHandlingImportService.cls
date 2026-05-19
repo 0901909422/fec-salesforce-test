@@ -476,7 +476,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 String message = saveResults[i].getErrors().isEmpty() ? null : saveResults[i].getErrors()[0].getMessage();
                 if (rowsByCaseId.containsKey(caseId)) {
                     for (FEC_BatchCaseHandlingImportRow rr : rowsByCaseId.get(caseId)) {
-                        rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
+                    rr.status = System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed;
                         rr.errors = appendError(rr.errors, message);
                     }
                 }
