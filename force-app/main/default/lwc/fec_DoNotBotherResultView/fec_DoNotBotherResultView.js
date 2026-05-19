@@ -217,30 +217,22 @@ export default class Fec_DoNotBotherResultView extends LightningElement {
     );
   }
 
-  subscribeToMessageChannel() {
-    if (this.subscription) {
-      return;
-    }
-
-    this.subscription = subscribe(
-      this.messageContext,
-
-      DO_NOT_BOTHER_CHANNEL,
-
-      (message) => this.handleMessage(message),
-
-      {
-        scope: APPLICATION_SCOPE,
-      },
-    );
-  }
-
   disconnectedCallback() {
     unsubscribe(this.subscription);
 
     this.subscription = null;
   }
-  
+  handleMessage(message) {
+    console.log("DO_NOT_BOTHER_CHANNEL:", JSON.stringify(message));
+
+    /*
+     * Refresh after DNB updated
+     */
+    if (message?.status === "SUCCESS" && message?.caseId === this.recordId) {
+      this.fetchDNBData();
+    }
+  }
+
   async fetchDNBData() {
     this.errorMessage = "";
 
