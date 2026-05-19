@@ -736,7 +736,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         out.success = false;
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
-            out.message = 'Vui lòng đính kèm tệp dữ liệu';
+            out.message = System.Label.FEC_BCH_RequireFile;
             upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
@@ -746,7 +746,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
-                out.message = 'Vui lòng đính kèm tệp dữ liệu';
+                out.message = System.Label.FEC_BCH_RequireFile;
                 upsertFailedBatchHandling(fileName, templateName, out.message);
                 return out;
             }
@@ -793,10 +793,10 @@ public without sharing class FEC_BatchCaseHandlingController {
             String failureReason = FEC_ConstantCommon.STR_EMPTY;
             if (totalCount == 0) {
                 finalStatus = 'Failure';
-                failureReason = 'Vui lòng đính kèm tệp dữ liệu';
+                failureReason = System.Label.FEC_BCH_RequireFile;
             } else if (failedCount == totalCount) {
                 finalStatus = 'Failure';
-                failureReason = 'Một hoặc nhiều dòng import không hợp lệ.';
+                failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
             } else {
                 finalStatus = 'Processed';
             }
@@ -808,7 +808,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             update batchRow;
 
             out.success = true;
-            out.message = 'Import request has been submitted.';
+            out.message = System.Label.FEC_BCH_Import_Submitted;
             out.batchRecordId = (Id) batchRow.get('Id');
             out.contentDocumentId = insertedCv.ContentDocumentId;
             out.status = finalStatus;
@@ -827,7 +827,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             } else {
                 upsertFailedBatchHandling(fileName, templateName, ex.getMessage());
             }
-            out.message = ex.getMessage();
+            out.message = System.Label.FEC_BCH_ImportFailed;
             return out;
         }
     }

@@ -16266,6 +16266,22 @@
         <value>Import dữ liệu thất bại</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_Import_Submitted</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Submitted</shortDescription>
+        <value>Import request has been submitted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Rows_Invalid</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Rows_Invalid</shortDescription>
+        <value>Một hoặc nhiều dòng import không hợp lệ.</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_RequireFile</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>

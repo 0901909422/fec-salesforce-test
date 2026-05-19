@@ -1,4 +1,4 @@
-public class FEC_BCH_FilterPropertyService {
+public without sharing class FEC_BCH_FilterPropertyService {
 
     public static final String SCOPE_PRE_DEFINE = 'PRE_DEFINE';
     public static final String SCOPE_ALL_CASE = 'ALL_CASE';

@@ -1,4 +1,4 @@
-public class FEC_BatchCaseHandlingImportRow {
+public without sharing class FEC_BatchCaseHandlingImportRow {
     @AuraEnabled public String caseIdSearch;
     @AuraEnabled public String routingAction;
     @AuraEnabled public String inputtedRemarks;

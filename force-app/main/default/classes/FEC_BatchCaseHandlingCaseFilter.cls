@@ -1,4 +1,4 @@
-public class FEC_BatchCaseHandlingCaseFilter {
+public without sharing class FEC_BatchCaseHandlingCaseFilter {
 
     private static final List<String> RESOLVED_SERVICE_CASE_STATUSES = new List<String>{
         FEC_ConstantCommon.CASE_STATUS_RESOLVED,
