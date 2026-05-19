@@ -38,6 +38,7 @@ import {
   findPicklistOptionByRaw,
   isOnlyNumber,
   formatCurrencyIncludeTax,
+  formatCurrency2,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER } from "c/fec_CommonConst";
@@ -404,6 +405,7 @@ const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
 const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+const FIELD_LOAN_AMOUNT = 'FEC_Loan_Amount__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 const FIELD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
 const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
@@ -1791,6 +1793,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
                   field.readonlyDisplayValue = field.displayValue;
                   // PhuongNT add set hidden field
                   field.isHidden = !this.cardReplacementReason;
+                } else if (
+                  field.apiName === FIELD_LOAN_AMOUNT &&
+                  row.sub?.name === SUBSECTION_NAME_C360_INFO
+                ) {
+                  field.displayValue = formatCurrency2(field.value);
+                  field.readonlyDisplayValue = field.displayValue;
                 }
                 // PhuongNT add set newBlockCode
                 else if (field.apiName === FIELD_NEW_BLOCK_CODE) {
