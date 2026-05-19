@@ -85,15 +85,11 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         if (bothFieldsMatch != null) {
             return bothFieldsMatch;
         }
-        SObject nameExactMatch = resolveTemplateByName(businessProcessCode, userGroup, activeTemplates, false);
+        SObject nameExactMatch = resolveTemplateByName(businessProcessCode, userGroup, activeTemplates);
         if (nameExactMatch != null) {
             return nameExactMatch;
         }
-        SObject bpOnlyFieldMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, false);
-        if (bpOnlyFieldMatch != null) {
-            return bpOnlyFieldMatch;
-        }
-        return resolveTemplateByName(businessProcessCode, userGroup, activeTemplates, true);
+        return resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, false);
     }
 
     private static SObject resolveTemplateByFields(
@@ -195,16 +191,17 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     private static SObject resolveTemplateByName(
         String businessProcessCode,
         String userGroup,
-        List<SObject> activeTemplates,
-        Boolean allowPrefixFallback
+        List<SObject> activeTemplates
     ) {
         String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessCode);
         if (String.isBlank(namePrefix)) {
             return null;
         }
         List<String> suffixCandidates = mapUserGroupToTemplateSuffixes(businessProcessCode, userGroup);
+        if (suffixCandidates.isEmpty()) {
+            return null;
+        }
         String prefixLower = namePrefix.toLowerCase();
-        SObject prefixFallback;
         for (SObject tr : activeTemplates) {
             if (tr.get('FEC_Business_Process__c') != null && !businessProcessFieldMatches(tr, businessProcessCode)) {
                 continue;
@@ -222,11 +219,8 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
                     return tr;
                 }
             }
-            if (allowPrefixFallback && prefixFallback == null) {
-                prefixFallback = tr;
-            }
         }
-        return allowPrefixFallback ? prefixFallback : null;
+        return null;
     }
 
     private static String mapBusinessProcessToTemplatePrefix(String businessProcessCode) {
