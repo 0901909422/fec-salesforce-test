@@ -1,6 +1,7 @@
 import { LightningElement, track } from "lwc";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
-import { loadScript } from "lightning/platformResourceLoader";
+import { loadScript, loadStyle } from "lightning/platformResourceLoader";
+import COMMON_STYLES from "@salesforce/resourceUrl/FEC_CommonCss";
 import getRecentRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getRecentRows";
 import getCaseFilterPropertyMetadata from "@salesforce/apex/FEC_BatchCaseHandlingController.getCaseFilterPropertyMetadata";
 import searchBulkCases from "@salesforce/apex/FEC_BatchCaseHandlingController.searchBulkCases";
@@ -8,6 +9,7 @@ import searchBulkCasesForExport from "@salesforce/apex/FEC_BatchCaseHandlingCont
 import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingController.getAttachmentCaseSetOptions";
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
+import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
@@ -228,6 +230,82 @@ const HEADERS_ROUTING_ACTION = ["routingaction"];
 const HEADERS_REMARKS = ["inputtedremarks", "remark", "remarks"];
 const HEADERS_ASSIGNMENT_ID = ["assignmentid"];
 const HEADERS_ASSIGNMENT_ROUTING_ACTION = ["assignmentroutingaction"];
+const EXPORT_USER_FILL_HEADERS = new Set([
+  ...HEADERS_ROUTING_ACTION,
+  ...HEADERS_REMARKS,
+  ...HEADERS_ASSIGNMENT_ROUTING_ACTION
+]);
+const EXPORT_HEADER_FIELD_MAP = {
+  customername: "customerName",
+  accountcontractnumber: "accountContractNumber",
+  appid: "appId",
+  interactionid: "interactionId",
+  interactionchannel: "interactionChannel",
+  interactionsubchannel: "interactionSubChannel",
+  interactionphone: "interactionPhone",
+  interactionemail: "interactionEmail",
+  casestatus: "caseStatus",
+  casecreatedon: "caseCreatedOnLabel",
+  lastupdatedon: "lastUpdatedOnLabel",
+  complainttype: "complaintType",
+  complaintsource: "complaintSource",
+  producttype: "productType",
+  originalcategory: "originalCategoryDisplay",
+  originalsubcategory: "originalSubCategoryDisplay",
+  originalsubcode: "originalSubCodeDisplay",
+  updatedcategory: "categoryDisplay",
+  updatedsubcategory: "subCategoryDisplay",
+  updatedsubcode: "subCodeDisplay",
+  category: "categoryDisplay",
+  subcategory: "subCategoryDisplay",
+  subcode: "subCodeDisplay",
+  caseremarks: "caseRemarks",
+  caseremarksenteredby: "caseRemarksEnteredBy",
+  caseremarksenteredbyrole: "caseRemarksEnteredByRole",
+  caseremarksenteredon: "caseRemarksEnteredOn",
+  assignmentid: "assignmentId",
+  assignmentowner: "assignmentOwner",
+  assignmentremarks: "assignmentRemarks",
+  assignmentremarksenteredby: "assignmentRemarksEnteredBy",
+  assignmentremarksenteredbyrole: "assignmentRemarksEnteredByRole",
+  assignmentremarksenteredon: "assignmentRemarksEnteredOn",
+  customertype: "customerType",
+  attachments: "hasAttachmentLabel",
+  attachment: "hasAttachmentLabel",
+  businessprocess: "businessProcessName",
+  businessprocessname: "businessProcessName",
+  businessprocesscode: "businessProcessCode",
+  blocklimitdate: "blockLimitDateLabel",
+  blocklimitamount: "blockLimitAmount",
+  cccode: "ccCode",
+  ccname: "ccName",
+  dsacode: "dsaCode",
+  dsaname: "dsaName",
+  tsacode: "tsaCode",
+  tsaname: "tsaName",
+  saleschannel: "salesChannel",
+  salessubchannel: "salesSubChannel",
+  classificationbycs: "classificationByCs",
+  evaluationbycs: "evaluationByCs",
+  finalproduct: "finalProduct",
+  evaluationbysales: "evaluationBySales",
+  disciplineresult: "disciplineResult",
+  contactpoint: "contactPoint",
+  teamleader: "teamLeader",
+  supervisor: "supervisor",
+  pendingcssupport: "pendingCsSupportLabel"
+};
+const FILTERED_EXPORT_EXTRA_COLUMNS = [
+  { header: FEC_BCH_Col_CustomerType, field: "customerType" },
+  { header: FEC_BCH_Col_CaseId, field: "caseIdSearch" },
+  { header: FEC_BCH_Col_Category, field: "categoryCode" },
+  { header: FEC_BCH_Col_SubCategory, field: "subCategoryCode" },
+  { header: FEC_BCH_Col_SubCode, field: "subCodeCode" },
+  { header: FEC_BCH_Col_CaseStatus, field: "caseStatus" },
+  { header: FEC_BCH_Col_CaseCreatedOn, field: "caseCreatedOnLabel" },
+  { header: FEC_BCH_Col_LastUpdatedOn, field: "lastUpdatedOnLabel" },
+  { header: FEC_BCH_Col_Attachments, field: "hasAttachmentLabel" }
+];
 const RESULT_HEADERS_BASIC = [
   FEC_BCH_Col_CaseId,
   FEC_BCH_ResultHdr_RoutingAction,
@@ -316,8 +394,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track filterLines = [];
   @track caseRows = [];
   @track caseTotalCount = 0;
-  @track casePageSize = "20";
+  @track casePageSize = "10";
   @track caseSearchPage = 1;
+  @track caseGoToPageInput = "1";
   @track caseSearchLoading = false;
   @track caseSearchHasRun = false;
   @track filterResetHint = false;
@@ -328,6 +407,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track caseSetRequiredError = false;
   @track caseSortBy = "caseCreatedOn";
   @track caseSortDir = "asc";
+  @track bulkSortBy = "uploadedOn";
+  @track bulkSortDir = "desc";
   @track exportSuccessMessage = STR_EMPTY;
   @track exportErrorMessage = STR_EMPTY;
   @track importSuccessMessage = STR_EMPTY;
@@ -347,13 +428,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track bpSubmitLoading = false;
 
   currentPage = 1;
-  pageSize = "20";
+  pageSize = "10";
   sheetJsReady = false;
   filterMetaByKey = {};
   filterUid = 0;
   bpExportUseSelected = false;
   bpExportSourceRows = [];
-  bpTemplateByCode = {};
+  bpTemplateMetaByCode = {};
+  templateFileCache = {};
   selectedImportFile = null;
 
   pageSizeOptions = PAGE_SIZE_OPTIONS;
@@ -387,6 +469,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   async connectedCallback() {
+    loadStyle(this, COMMON_STYLES).catch(() => {});
     this.loadAttachmentDownloadedState();
     await this.loadFilterMetadata();
     this.refreshRows();
@@ -611,9 +694,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return out;
   }
 
+  syncCaseGoToPageInput() {
+    this.caseGoToPageInput = String(this.caseSearchPage);
+  }
+
   async handleFilterData() {
     this.filterResetHint = false;
     this.caseSearchPage = 1;
+    this.syncCaseGoToPageInput();
     this.exportSuccessMessage = STR_EMPTY;
     this.exportErrorMessage = STR_EMPTY;
     await this.runCaseSearch();
@@ -627,6 +715,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseRows = [];
     this.caseTotalCount = 0;
     this.caseSearchPage = 1;
+    this.syncCaseGoToPageInput();
     this.exportSuccessMessage = STR_EMPTY;
     this.exportErrorMessage = STR_EMPTY;
   }
@@ -643,7 +732,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseSearchLoading = true;
     try {
       const filtersJson = JSON.stringify(payload);
-      const ps = Number(this.casePageSize) || 20;
+      const ps = Number(this.casePageSize) || 10;
       const res = await searchBulkCases({
         filtersJson,
         pageSize: ps,
@@ -662,6 +751,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }));
       this.applyCaseSort();
       this.caseSearchHasRun = true;
+      this.syncCaseGoToPageInput();
     } catch (error) {
       this.caseRows = [];
       this.caseTotalCount = 0;
@@ -680,7 +770,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get casePageSizeNum() {
-    return Number(this.casePageSize) || 20;
+    return Number(this.casePageSize) || 10;
   }
 
   get caseTotalPages() {
@@ -693,6 +783,96 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   get caseNextDisabled() {
     return this.caseSearchPage >= this.caseTotalPages;
+  }
+
+  caseSortIconFor(key) {
+    if (this.caseSortBy !== key) {
+      return "utility:arrowdown";
+    }
+    return this.caseSortDir === "desc" ? "utility:arrowdown" : "utility:arrowup";
+  }
+
+  get caseSortIconCustomerType() {
+    return this.caseSortIconFor("customerType");
+  }
+
+  get caseSortIconCaseId() {
+    return this.caseSortIconFor("caseIdSearch");
+  }
+
+  get caseSortIconCategory() {
+    return this.caseSortIconFor("categoryCode");
+  }
+
+  get caseSortIconSubCategory() {
+    return this.caseSortIconFor("subCategoryCode");
+  }
+
+  get caseSortIconSubCode() {
+    return this.caseSortIconFor("subCodeCode");
+  }
+
+  get caseSortIconCaseStatus() {
+    return this.caseSortIconFor("caseStatus");
+  }
+
+  get caseSortIconCaseCreatedOn() {
+    return this.caseSortIconFor("caseCreatedOn");
+  }
+
+  get caseSortIconLastUpdatedOn() {
+    return this.caseSortIconFor("lastUpdatedOn");
+  }
+
+  get caseSortIconAttachments() {
+    return this.caseSortIconFor("hasAttachment");
+  }
+
+  get caseSortIconAttachmentDownloaded() {
+    return "utility:arrowdown";
+  }
+
+  bulkSortIconFor(key) {
+    if (this.bulkSortBy !== key) {
+      return "utility:arrowdown";
+    }
+    return this.bulkSortDir === "desc" ? "utility:arrowdown" : "utility:arrowup";
+  }
+
+  get bulkSortIconFileName() {
+    return this.bulkSortIconFor("fileName");
+  }
+
+  get bulkSortIconUploadedOn() {
+    return this.bulkSortIconFor("uploadedOn");
+  }
+
+  get bulkSortIconUploadedBy() {
+    return this.bulkSortIconFor("uploadedBy");
+  }
+
+  get bulkSortIconTotalRecords() {
+    return this.bulkSortIconFor("totalRecordsCount");
+  }
+
+  get bulkSortIconTotalSuccess() {
+    return this.bulkSortIconFor("totalSuccessRecords");
+  }
+
+  get bulkSortIconTotalFailed() {
+    return this.bulkSortIconFor("totalFailedRecords");
+  }
+
+  get bulkSortIconStatus() {
+    return this.bulkSortIconFor("status");
+  }
+
+  get bulkSortIconFailureReason() {
+    return this.bulkSortIconFor("failureReason");
+  }
+
+  get bulkSortIconResult() {
+    return this.bulkSortIconFor("result");
   }
 
   get hasCaseRows() {
@@ -728,6 +908,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   handleCasePageSizeChange(event) {
     this.casePageSize = event.detail.value;
     this.caseSearchPage = 1;
+    this.syncCaseGoToPageInput();
     this.runCaseSearch();
   }
 
@@ -736,6 +917,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return;
     }
     this.caseSearchPage -= 1;
+    this.caseGoToPageInput = String(this.caseSearchPage);
     this.runCaseSearch();
   }
 
@@ -744,6 +926,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return;
     }
     this.caseSearchPage += 1;
+    this.caseGoToPageInput = String(this.caseSearchPage);
+    this.runCaseSearch();
+  }
+
+  handleCaseGoToPageInput(event) {
+    this.caseGoToPageInput = event.detail.value;
+  }
+
+  handleCaseGoToPage() {
+    const n = parseInt(this.caseGoToPageInput, 10);
+    if (Number.isNaN(n) || n < 1) {
+      this.showInfo(FEC_BCH_InvalidPageTitle, FEC_BCH_InvalidPageBody);
+      return;
+    }
+    const target = Math.min(Math.max(1, n), this.caseTotalPages);
+    this.caseSearchPage = target;
+    this.caseGoToPageInput = String(target);
     this.runCaseSearch();
   }
 
@@ -888,9 +1087,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       raw.forEach((r) => {
         all.push({
           ...r,
-          caseCreatedOnLabel: this.formatDateTimeSafe(r.caseCreatedOn),
-          lastUpdatedOnLabel: this.formatDateTimeSafe(r.lastUpdatedOn),
-          hasAttachmentLabel: r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY
+          caseCreatedOnLabel:
+            r.caseCreatedOnLabel || this.formatDateTimeSafe(r.caseCreatedOn),
+          lastUpdatedOnLabel:
+            r.lastUpdatedOnLabel || this.formatDateTimeSafe(r.lastUpdatedOn),
+          hasAttachmentLabel:
+            r.hasAttachmentLabel ||
+            (r.hasAttachment ? FEC_BCH_DocumentLinkLabel : STR_EMPTY)
         });
       });
       afterCaseId = String(raw[raw.length - 1]?.caseId || STR_EMPTY);
@@ -1009,13 +1212,17 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     this.isLoading = false;
 
-    const templateByCode = {};
+    const templateMetaByCode = {};
     (Array.isArray(bpInfo) ? bpInfo : []).forEach((b) => {
       if (b?.businessProcessCode) {
-        templateByCode[b.businessProcessCode] = b.templateName || STR_EMPTY;
+        templateMetaByCode[b.businessProcessCode] = {
+          templateName: b.templateName || STR_EMPTY,
+          templateDownloadUrl: b.templateDownloadUrl || STR_EMPTY,
+          templateContentVersionId: b.templateContentVersionId || null
+        };
       }
     });
-    this.bpTemplateByCode = templateByCode;
+    this.bpTemplateMetaByCode = templateMetaByCode;
 
     const keysFromSource = new Set();
     sourceRows.forEach((r) => {
@@ -1035,7 +1242,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         return {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
-          templateName: templateByCode[code] || STR_EMPTY,
+          templateName: (templateMetaByCode[code] || {}).templateName || STR_EMPTY,
           selected: true
         };
       });
@@ -1189,7 +1396,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.bpRows = [];
     this.bpPagedRows = [];
     this.bpExportSourceRows = [];
-    this.bpTemplateByCode = {};
+    this.bpTemplateMetaByCode = {};
+    this.templateFileCache = {};
     this.bpSubmitLoading = false;
   }
 
@@ -1230,11 +1438,17 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const bpKeys = Object.keys(groups);
       for (let i = 0; i < bpKeys.length; i += 1) {
         const bp = bpKeys[i];
-        const tmplName = this.bpTemplateByCode[bp];
-        const fileName =
-          tmplName && tmplName.length ? tmplName : `${bp || "Other"}.xlsx`;
+        const tmplMeta = this.bpTemplateMetaByCode[bp] || {};
+        const fileName = this.resolveExportFileName(
+          tmplMeta.templateName,
+          bp
+        );
         const file = await this.withTimeout(
-          this.buildExcelFile(groups[bp], fileName),
+          this.buildExcelFileFromTemplate(
+            groups[bp],
+            fileName,
+            tmplMeta.templateContentVersionId
+          ),
           EXCEL_FILE_TIMEOUT_MS,
           EXCEL_FILE_TIMEOUT_MESSAGE
         );
@@ -1654,7 +1868,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get totalPages() {
-    const size = Number(this.pageSize) || 20;
+    const size = Number(this.pageSize) || 10;
     return Math.max(1, Math.ceil(this.rows.length / size));
   }
 
@@ -1670,8 +1884,205 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.sheetJsReady) {
       return;
     }
-    await loadScript(this, FEC_SheetJS);
+    await loadScript(this, FEC_SheetJS + "/xlsx.full.min.js");
     this.sheetJsReady = true;
+  }
+
+  resolveExportFileName(templateName, businessProcessCode) {
+    const base =
+      templateName && templateName.length
+        ? templateName
+        : `${businessProcessCode || "Other"}`;
+    return base.toLowerCase().endsWith(VALID_FILE_EXTENSION)
+      ? base
+      : `${base}${VALID_FILE_EXTENSION}`;
+  }
+
+  normalizeExportHeader(cell) {
+    return (cell == null ? STR_EMPTY : String(cell))
+      .replace(/[\s_\-\/]+/g, STR_EMPTY)
+      .toLowerCase();
+  }
+
+  resolveTemplateSheetLayout(aoa) {
+    const rows = Array.isArray(aoa) ? aoa : [];
+    let headerRowIndex = 0;
+    let sectionRow = null;
+    for (let i = 0; i < Math.min(rows.length, 6); i++) {
+      const row = rows[i] || [];
+      const normalized = row.map((h) => this.normalizeExportHeader(h));
+      const hasCaseId =
+        normalized.indexOf("caseid") >= 0 ||
+        normalized.indexOf("caseidsearch") >= 0;
+      if (hasCaseId) {
+        headerRowIndex = i;
+        if (i > 0) {
+          sectionRow = Array.isArray(rows[i - 1]) ? [...rows[i - 1]] : null;
+        }
+        break;
+      }
+    }
+    const headerRow = Array.isArray(rows[headerRowIndex])
+      ? [...rows[headerRowIndex]]
+      : [];
+    return { sectionRow, headerRow, headerRowIndex };
+  }
+
+  resolveExportFieldKey(normalizedHeader) {
+    if (!normalizedHeader) {
+      return null;
+    }
+    if (EXPORT_USER_FILL_HEADERS.has(normalizedHeader)) {
+      return null;
+    }
+    if (HEADERS_CASE_ID.indexOf(normalizedHeader) >= 0) {
+      return "caseIdSearch";
+    }
+    if (EXPORT_HEADER_FIELD_MAP[normalizedHeader]) {
+      return EXPORT_HEADER_FIELD_MAP[normalizedHeader];
+    }
+    return null;
+  }
+
+  buildExportColumnMappings(headerRow) {
+    const mappings = [];
+    const normalized = (headerRow || []).map((h) =>
+      this.normalizeExportHeader(h)
+    );
+    for (let i = 0; i < normalized.length; i++) {
+      mappings.push(this.resolveExportFieldKey(normalized[i]));
+    }
+    return mappings;
+  }
+
+  appendExtraExportColumns(headerRow, mappings) {
+    if (this.includeAllProperties !== EXPORT_PROPERTY_YES) {
+      return { headerRow, mappings };
+    }
+    const outHeader = Array.isArray(headerRow) ? [...headerRow] : [];
+    const outMappings = Array.isArray(mappings) ? [...mappings] : [];
+    const existing = new Set(
+      outHeader.map((h) => this.normalizeExportHeader(h))
+    );
+    FILTERED_EXPORT_EXTRA_COLUMNS.forEach((col) => {
+      const norm = this.normalizeExportHeader(col.header);
+      if (existing.has(norm)) {
+        return;
+      }
+      outHeader.push(col.header);
+      outMappings.push(col.field);
+      existing.add(norm);
+    });
+    return { headerRow: outHeader, mappings: outMappings };
+  }
+
+  mapCaseRowToExportCells(caseRow, mappings) {
+    return (mappings || []).map((fieldKey) => {
+      if (!fieldKey) {
+        return STR_EMPTY;
+      }
+      const val = caseRow[fieldKey];
+      return val == null ? STR_EMPTY : String(val);
+    });
+  }
+
+  base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  async loadTemplateSheetData(contentVersionId) {
+    const cacheKey = String(contentVersionId || STR_EMPTY);
+    if (cacheKey && this.templateFileCache[cacheKey]) {
+      return this.templateFileCache[cacheKey];
+    }
+    const base64 = await getTemplateFileBase64({
+      contentVersionId
+    });
+    if (!base64) {
+      return null;
+    }
+    const arrayBuffer = this.base64ToArrayBuffer(base64);
+    const workbook = window.XLSX.read(arrayBuffer, {
+      type: "array",
+      cellText: false
+    });
+    const sheetName =
+      Array.isArray(workbook.SheetNames) && workbook.SheetNames.length > 0
+        ? workbook.SheetNames[0]
+        : STR_EMPTY;
+    if (!sheetName) {
+      return null;
+    }
+    const sheet = workbook.Sheets[sheetName];
+    const aoa = window.XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: STR_EMPTY,
+      raw: false
+    });
+    if (!Array.isArray(aoa) || !aoa.length) {
+      return null;
+    }
+    const parsed = { sheetName, aoa };
+    if (cacheKey) {
+      this.templateFileCache[cacheKey] = parsed;
+    }
+    return parsed;
+  }
+
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId) {
+    await this.ensureSheetJsLoaded();
+    if (!contentVersionId) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    let templateData;
+    try {
+      templateData = await this.loadTemplateSheetData(contentVersionId);
+    } catch (e) {
+      templateData = null;
+    }
+    if (!templateData || !templateData.aoa || !templateData.aoa.length) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    const layout = this.resolveTemplateSheetLayout(templateData.aoa);
+    const headerRow = layout.headerRow;
+    if (!headerRow.length) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    let mappings = this.buildExportColumnMappings(headerRow);
+    const extended = this.appendExtraExportColumns(headerRow, mappings);
+    const finalHeader = extended.headerRow;
+    const finalMappings = extended.mappings;
+    const list = Array.isArray(rows) ? rows : [];
+    const dataRows = list.map((r) =>
+      this.mapCaseRowToExportCells(r, finalMappings)
+    );
+    const sheetData = [];
+    if (
+      layout.sectionRow &&
+      layout.sectionRow.some((cell) => String(cell || STR_EMPTY).trim().length)
+    ) {
+      sheetData.push(layout.sectionRow);
+    }
+    sheetData.push(finalHeader, ...dataRows);
+    const workbook = window.XLSX.utils.book_new();
+    const sheet = window.XLSX.utils.aoa_to_sheet(sheetData);
+    window.XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      templateData.sheetName || "Sheet1"
+    );
+    const wbout = window.XLSX.write(workbook, {
+      type: "array",
+      bookType: "xlsx",
+      compression: true
+    });
+    const base64 = arrayBufferToBase64(wbout);
+    return { fileName, base64Body: base64 };
   }
 
   buildExcelFile(rows, fileName) {
@@ -1718,7 +2129,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       if (this.currentPage > this.totalPages) {
         this.currentPage = this.totalPages;
       }
-      this.rebuildPageRows();
+      this.applyBulkSort();
     } catch (error) {
       this.rows = [];
       this.pagedRows = [];
@@ -1773,10 +2184,64 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
+  handleBulkSort(event) {
+    const key = event.currentTarget?.dataset?.key || STR_EMPTY;
+    if (!key) {
+      return;
+    }
+    if (this.bulkSortBy === key) {
+      this.bulkSortDir = this.bulkSortDir === "asc" ? "desc" : "asc";
+    } else {
+      this.bulkSortBy = key;
+      this.bulkSortDir = key === "uploadedOn" ? "desc" : "asc";
+    }
+    this.currentPage = 1;
+    this.applyBulkSort();
+  }
+
+  applyBulkSort() {
+    const key = this.bulkSortBy;
+    const dir = this.bulkSortDir === "desc" ? -1 : 1;
+    const valueOf = (row) => {
+      if (key === "uploadedOn") {
+        const v = row.uploadedOn;
+        if (v == null || v === STR_EMPTY) {
+          return 0;
+        }
+        const t = new Date(v).getTime();
+        return Number.isNaN(t) ? 0 : t;
+      }
+      if (
+        key === "totalRecordsCount" ||
+        key === "totalSuccessRecords" ||
+        key === "totalFailedRecords"
+      ) {
+        return Number(row[key]) || 0;
+      }
+      return String(row[key] || STR_EMPTY).toLowerCase();
+    };
+    this.rows = [...this.rows].sort((a, b) => {
+      const av = valueOf(a);
+      const bv = valueOf(b);
+      if (av > bv) {
+        return 1 * dir;
+      }
+      if (av < bv) {
+        return -1 * dir;
+      }
+      return 0;
+    });
+    this.rebuildPageRows();
+  }
+
   rebuildPageRows() {
-    const size = Number(this.pageSize) || 20;
+    const size = Number(this.pageSize) || 10;
     const start = (this.currentPage - 1) * size;
-    this.pagedRows = this.rows.slice(start, start + size);
+    const slice = this.rows.slice(start, start + size);
+    this.pagedRows = slice.map((row, idx) => ({
+      ...row,
+      rowIndex: start + idx + 1
+    }));
     this.goToPageInput = String(this.currentPage);
   }
 

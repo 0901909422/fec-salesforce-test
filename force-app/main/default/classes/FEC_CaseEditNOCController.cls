@@ -524,6 +524,48 @@ public without sharing class FEC_CaseEditNOCController {
     }
   }
   
+  /**
+   * Xóa bộ NOC trên Case khi reload màn (chỉ Case chưa submit).
+   * Toannd61
+   */
+  @AuraEnabled
+  public static void clearCaseNOC(String recordId) {
+    if (String.isBlank(recordId)) {
+      return;
+    }
+
+    Id currentUserId = UserInfo.getUserId();
+    List<Case> caselst = [
+      SELECT Id, OwnerId, FEC_Is_Submited__c, FEC_Is_Call_API_Success__c
+      FROM Case
+      WHERE Id = :recordId
+      LIMIT 1
+    ];
+    if (caselst.isEmpty()) {
+      return;
+    }
+
+    Case c = caselst[0];
+    if (c.OwnerId != currentUserId) {
+      throw new AuraHandledException(System.Label.FEC_MSG_Edit_Owner_Only);
+    }
+    if (c.FEC_Is_Submited__c == true || c.FEC_Is_Call_API_Success__c == true) {
+      return;
+    }
+
+    try {
+      update new Case(
+        Id = recordId,
+        FEC_Category__c = null,
+        FEC_SubCategory__c = null,
+        FEC_SubCode__c = null,
+        FEC_Actual_Nature_of_Case__c = null
+      );
+    } catch (Exception e) {
+      throw new AuraHandledException('Clear NOC failed: ' + e.getMessage());
+    }
+  }
+
   //HieuTT74-[UPDATE - 5/5/2026]: Lưu NOC sau khi call api Reset Pin,....
   @AuraEnabled
   public static void saveNOC(

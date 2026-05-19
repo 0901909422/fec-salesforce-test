@@ -100,7 +100,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED, 
         FEC_OwnerID__c = null // unassigned
             );
         
@@ -583,6 +583,10 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     new Case(Id = caseId, FEC_Assignment_Users__c = userValue),
                 AccessLevel.SYSTEM_MODE
                     );
+                // tungnm37: nếu Owner là User → share Case với quyền Edit
+                if (a.FEC_Assignment_Owner__c != null) {
+                    shareCaseToUser(caseId, a.FEC_Assignment_Owner__c);
+                }
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG syncAssignmentUsersToCase error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -694,5 +698,30 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         return parts.isEmpty()
             ? email.trim()
             : parts[0].trim();
+    }
+
+    // tungnm37: Share Case với User khi assign Assignment Owner → User (quyền Edit)
+    private static void shareCaseToUser(Id caseId, Id userId) {
+        try {
+            // Kiểm tra đã share chưa để tránh duplicate
+            List<CaseShare> existing = [
+                SELECT Id FROM CaseShare
+                WHERE CaseId = :caseId
+                  AND UserOrGroupId = :userId
+                  AND RowCause = 'Manual'
+                LIMIT 1
+            ];
+            if (!existing.isEmpty()) return;
+
+            CaseShare share = new CaseShare(
+                CaseId = caseId,
+                UserOrGroupId = userId,
+                CaseAccessLevel = 'Edit',
+                RowCause = 'Manual'
+            );
+            Database.insert(share, false); // false = không throw nếu đã tồn tại
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG shareCaseToUser error: ' + e.getMessage());
+        }
     }
 }
