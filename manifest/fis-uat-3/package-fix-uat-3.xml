@@ -79,8 +79,21 @@
 		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_AssignAutoDistribSched</members>
+		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
+		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
+		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentMutationGuard</members>
+		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
+		<members>FEC_CaseAssignmentNocController</members>
+		<members>FEC_CaseManagerListService</members>
 		<name>Apexclass</name>
 	</types>
+    <types>
+        <members>FEC_CaseAssignmentNOCTrigger</members>
+        <members>FEC_CaseAssignmentTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
     <types>
 	    <members>fec_CaseBussiness</members>
 	    <members>fec_CaseDetail_Customer</members>
@@ -145,6 +158,10 @@
         <members>fec_holdCaseAuto</members>
         <members>fec_MRC</members>
         <members>fec_DoNotBotherResultView</members>
+        <members>fec_CaseAssignmentConfig</members>
+        <members>fec_CaseAssignmentDetailSummary</members>
+        <members>fec_CaseAssignmentNocConfig</members>
+        <members>fec_CaseAssignmentNocNew</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -183,8 +200,14 @@
     <types>
 		<members>FEC_Currency_Code__c</members>
 		<members>FEC_Transfer_Call_Error__c</members>
+		<members>FEC_Case_Assignment_NOC__c</members>
+		<members>FEC_Case_Assignment__c</members>
 		<name>CustomObject</name>
 	</types>
+    <types>
+        <members>fec_CaseAssignmentNocNewOverride</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
