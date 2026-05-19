@@ -391,6 +391,15 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         return [{ mountKey: String(this.tableKey || 0) + '_' + ro }];
     }
 
+    get disabledRowIds() {
+        if (!this.readOnlyRemovePhone) {
+            return [];
+        }
+        return (this.rows || [])
+            .filter((r) => r && r.id != null)
+            .map((r) => String(r.id));
+    }
+
     get totalPages() {
         const len = (this.rows || []).length;
         if (!len) {

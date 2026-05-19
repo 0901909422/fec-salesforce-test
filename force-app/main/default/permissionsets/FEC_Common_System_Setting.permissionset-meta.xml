@@ -37,6 +37,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_AssignmentCaseShareService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_AssignmentExecuteService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -190,6 +194,22 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_CaseAssignmentAutoDistributeService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AssignAutoDistribSched</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentApplyOwnerBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentAutoDistQueueJob</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentMutationGuard</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>

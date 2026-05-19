@@ -22,7 +22,16 @@
                             -->
                         </div>
 
-                        <template if:true={showRefresh}>
+                        <!-- Real-time payment -->
+                        <template if:true={showRealtimePayment}>
+                            <button
+                                class="new-btn slds-m-right_small"
+                                onclick={handleRealtimePayment}>
+                                Real-time payment
+                            </button>
+                        </template>
+
+                        <template if:true={shouldShowRefresh}>
                             <div class="table-info-right">
                                 <button class="refresh-btn" onclick={handleRefresh}>
                                     Refresh
@@ -136,7 +145,7 @@
                                                                         for:item="section"
                                                                     >
                                                                         <div
-                                                                            key={section.key}
+                                                                            key={section.section}
                                                                             class="hover-section"
                                                                         >
 
