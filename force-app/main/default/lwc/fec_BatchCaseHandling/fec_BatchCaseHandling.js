@@ -87,8 +87,6 @@ import FEC_BCH_AddFilterRow from "@salesforce/label/c.FEC_BCH_AddFilterRow";
 import FEC_BCH_FilterData from "@salesforce/label/c.FEC_BCH_FilterData";
 import FEC_BCH_Reset from "@salesforce/label/c.FEC_BCH_Reset";
 import FEC_BCH_FilterPropertyField from "@salesforce/label/c.FEC_BCH_FilterPropertyField";
-import FEC_BCH_FilterScopePreDefine from "@salesforce/label/c.FEC_BCH_FilterScopePreDefine";
-import FEC_BCH_FilterScopeAllCase from "@salesforce/label/c.FEC_BCH_FilterScopeAllCase";
 import FEC_BCH_FilterGroupPredefined from "@salesforce/label/c.FEC_BCH_FilterGroupPredefined";
 import FEC_BCH_FilterGroupCaseFields from "@salesforce/label/c.FEC_BCH_FilterGroupCaseFields";
 import FEC_BCH_FilterColCondition from "@salesforce/label/c.FEC_BCH_FilterColCondition";
@@ -374,7 +372,8 @@ const FILTER_SCOPE_PRE_DEFINE = "PRE_DEFINE";
 const FILTER_SCOPE_ALL_CASE = "ALL_CASE";
 const FILTER_PROPERTY_SCOPE_PRE_DEFINE = "__SCOPE_PRE_DEFINE__";
 const FILTER_PROPERTY_SCOPE_ALL_CASE = "__SCOPE_ALL_CASE__";
-const FILTER_SCOPE_ROW_ID = "filter-scope-row";
+const PROPERTY_GROUP_PREDEFINED = "PREDEFINED";
+const PROPERTY_GROUP_CASE_FIELD = "CASE_FIELD";
 const ATTACHMENTS_PROPERTY_KEY = "ATTACHMENTS";
 
 const BOOLEAN_VALUE_OPTIONS = [
@@ -480,6 +479,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   pageSize = "10";
   sheetJsReady = false;
   filterMetaByKey = {};
+  preDefineMetaByKey = {};
+  allCaseMetaByKey = {};
   filterUid = 0;
   bpExportUseSelected = false;
   bpExportSourceRows = [];
@@ -552,18 +553,30 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
-  syncActiveFilterPropertyMeta() {
-    const activeMeta =
-      this.filterPropertyScope === FILTER_SCOPE_ALL_CASE
-        ? this.allCasePropertyMeta
-        : this.preDefinePropertyMeta;
-    this.filterPropertyMeta = Array.isArray(activeMeta) ? activeMeta : [];
+  syncFilterMetaMaps() {
+    this.preDefineMetaByKey = {};
+    this.allCaseMetaByKey = {};
     this.filterMetaByKey = {};
-    this.filterPropertyMeta.forEach((m) => {
+    (this.preDefinePropertyMeta || []).forEach((m) => {
       if (m?.propertyKey) {
+        this.preDefineMetaByKey[m.propertyKey] = m;
         this.filterMetaByKey[m.propertyKey] = m;
       }
     });
+    (this.allCasePropertyMeta || []).forEach((m) => {
+      if (m?.propertyKey) {
+        this.allCaseMetaByKey[m.propertyKey] = m;
+        if (!this.filterMetaByKey[m.propertyKey]) {
+          this.filterMetaByKey[m.propertyKey] = m;
+        }
+      }
+    });
+    this.filterPropertyMeta = [
+      ...(this.preDefinePropertyMeta || []),
+      ...(this.allCasePropertyMeta || []).filter(
+        (m) => m?.propertyGroup === PROPERTY_GROUP_CASE_FIELD
+      )
+    ];
   }
 
   async loadFilterMetadata() {
@@ -575,14 +588,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       this.allCasePropertyMeta = Array.isArray(bundle?.allCaseProperties)
         ? bundle.allCaseProperties
         : [];
-      this.syncActiveFilterPropertyMeta();
+      this.syncFilterMetaMaps();
       this.pruneFilterLinesForScope();
-      this.ensureScopeRow();
     } catch (error) {
       this.preDefinePropertyMeta = [];
       this.allCasePropertyMeta = [];
       this.filterPropertyMeta = [];
       this.filterMetaByKey = {};
+      this.preDefineMetaByKey = {};
+      this.allCaseMetaByKey = {};
       this.showInfo(
         FEC_BCH_NoticeTitle,
         `${FEC_BCH_FilterMetaLoadFailed} ${this.extractError(error)}`
@@ -590,43 +604,13 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
-  ensureScopeRow() {
-    const scopeKey = this.scopePropertyKeyForScope(this.filterPropertyScope);
-    const lines = Array.isArray(this.filterLines) ? [...this.filterLines] : [];
-    const scopeIndex = lines.findIndex((line) => line.isScopeRow === true);
-    if (scopeIndex >= 0) {
-      lines[scopeIndex] = {
-        ...lines[scopeIndex],
-        rowId: FILTER_SCOPE_ROW_ID,
-        isScopeRow: true,
-        propertyKey: scopeKey,
-        operatorKey: STR_EMPTY,
-        valueText: STR_EMPTY
-      };
-      this.filterLines = lines;
-      return;
-    }
-    this.filterLines = [
-      {
-        rowId: FILTER_SCOPE_ROW_ID,
-        isScopeRow: true,
-        propertyKey: scopeKey,
-        operatorKey: STR_EMPTY,
-        valueText: STR_EMPTY
-      },
-      ...lines.filter((line) => line.isScopeRow !== true)
-    ];
-  }
-
   addFilterLine() {
     this.filterUid += 1;
     this.filterResetHint = false;
-    this.ensureScopeRow();
     this.filterLines = [
       ...this.filterLines,
       {
         rowId: `fl-${this.filterUid}`,
-        isScopeRow: false,
         propertyKey: STR_EMPTY,
         operatorKey: STR_EMPTY,
         valueText: STR_EMPTY
@@ -648,9 +632,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   pruneFilterLinesForScope() {
     const validKeys = new Set(Object.keys(this.filterMetaByKey || {}));
     this.filterLines = (this.filterLines || []).map((line) => {
-      if (line.isScopeRow === true) {
-        return line;
-      }
       if (!line.propertyKey || !validKeys.has(line.propertyKey)) {
         return {
           ...line,
@@ -663,52 +644,23 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
-  scopePropertyKeyForScope(scope) {
-    return scope === FILTER_SCOPE_ALL_CASE
-      ? FILTER_PROPERTY_SCOPE_ALL_CASE
-      : FILTER_PROPERTY_SCOPE_PRE_DEFINE;
-  }
-
-  async applyFilterPropertyScope(nextScope, rowId) {
-    const scope =
-      nextScope === FILTER_SCOPE_ALL_CASE
-        ? FILTER_SCOPE_ALL_CASE
-        : FILTER_SCOPE_PRE_DEFINE;
-    const scopePropertyKey = this.scopePropertyKeyForScope(scope);
-    if (scope !== this.filterPropertyScope) {
-      this.filterPropertyScope = scope;
-      this.caseRows = [];
-      this.caseTotalCount = 0;
-      this.caseSearchHasRun = false;
-      this.caseSearchPage = 1;
-      this.syncCaseGoToPageInput();
-      this.syncActiveFilterPropertyMeta();
-      this.pruneFilterLinesForScope();
+  resolveFilterScopeForPropertyKey(propertyKey) {
+    if (this.preDefineMetaByKey[propertyKey]) {
+      return FILTER_SCOPE_PRE_DEFINE;
     }
-    this.filterLines = (this.filterLines || []).map((line) => {
-      if (line.isScopeRow === true) {
-        return {
-          ...line,
-          propertyKey: scopePropertyKey,
-          operatorKey: STR_EMPTY,
-          valueText: STR_EMPTY
-        };
-      }
-      return line;
-    });
+    if (this.allCaseMetaByKey[propertyKey]) {
+      return FILTER_SCOPE_ALL_CASE;
+    }
+    return this.filterPropertyScope;
   }
 
   handleRemoveFilterLine(event) {
     const rowId = event.currentTarget?.dataset?.rowid;
-    if (!rowId || rowId === FILTER_SCOPE_ROW_ID) {
+    if (!rowId) {
       return;
     }
-    const next = this.filterLines.filter(
-      (l) => l.rowId !== rowId && l.isScopeRow !== true
-    );
     this.filterResetHint = false;
-    this.filterLines = next;
-    this.ensureScopeRow();
+    this.filterLines = this.filterLines.filter((l) => l.rowId !== rowId);
   }
 
   toBoldUnicode(text) {
@@ -732,50 +684,46 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return out;
   }
 
-  buildFieldPropertyOptions() {
-    const fieldOptions = (this.filterPropertyMeta || [])
+  buildCombinedPropertyOptions() {
+    const preDefineOptions = (this.preDefinePropertyMeta || [])
       .filter((m) => m?.propertyKey)
       .map((m) => ({
         label: m.label || m.propertyKey,
         value: m.propertyKey
       }));
-    if (!fieldOptions.length) {
-      return [{ label: FEC_BCH_FilterPickProperty, value: STR_EMPTY }];
-    }
-    const groupLabel =
-      this.filterPropertyScope === FILTER_SCOPE_ALL_CASE
-        ? this.toBoldUnicode(FEC_BCH_FilterGroupCaseFields)
-        : this.toBoldUnicode(FEC_BCH_FilterGroupPredefined);
-    return [
-      {
-        label: groupLabel,
+    const allCaseOptions = (this.allCasePropertyMeta || [])
+      .filter(
+        (m) =>
+          m?.propertyKey && m.propertyGroup === PROPERTY_GROUP_CASE_FIELD
+      )
+      .map((m) => ({
+        label: m.label || m.propertyKey,
+        value: m.propertyKey
+      }));
+    const groups = [];
+    if (preDefineOptions.length) {
+      groups.push({
+        label: this.toBoldUnicode(FEC_BCH_FilterGroupPredefined),
         options: [
           { label: FEC_BCH_FilterPickProperty, value: STR_EMPTY },
-          ...fieldOptions
+          ...preDefineOptions
         ]
-      }
-    ];
-  }
-
-  get propertyOptionsForScopeRow() {
-    return [
-      {
-        label: this.toBoldUnicode(FEC_BCH_FilterScopePreDefine),
-        value: FILTER_PROPERTY_SCOPE_PRE_DEFINE
-      },
-      {
-        label: this.toBoldUnicode(FEC_BCH_FilterScopeAllCase),
-        value: FILTER_PROPERTY_SCOPE_ALL_CASE
-      }
-    ];
-  }
-
-  get propertyOptionsForFieldRow() {
-    return this.buildFieldPropertyOptions();
+      });
+    }
+    if (allCaseOptions.length) {
+      groups.push({
+        label: this.toBoldUnicode(FEC_BCH_FilterGroupCaseFields),
+        options: allCaseOptions
+      });
+    }
+    if (!groups.length) {
+      return [{ label: FEC_BCH_FilterPickProperty, value: STR_EMPTY }];
+    }
+    return groups;
   }
 
   operatorOptionsForLine(line) {
-    const meta = line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+    const meta = this.lineMeta(line);
     const ops = meta?.operators || [];
     const opts = [{ label: FEC_BCH_FilterPickOperator, value: STR_EMPTY }];
     ops.forEach((op) => {
@@ -787,27 +735,36 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return opts;
   }
 
-  async handleFilterPropertyChange(event) {
+  handleFilterPropertyChange(event) {
     this.filterResetHint = false;
     const rowId = event.currentTarget?.dataset?.rowid;
     const value = event.detail?.value || STR_EMPTY;
-    const line = (this.filterLines || []).find((l) => l.rowId === rowId);
-    if (line?.isScopeRow === true || rowId === FILTER_SCOPE_ROW_ID) {
-      if (value === FILTER_PROPERTY_SCOPE_PRE_DEFINE) {
-        await this.applyFilterPropertyScope(FILTER_SCOPE_PRE_DEFINE, rowId);
-        return;
-      }
-      if (value === FILTER_PROPERTY_SCOPE_ALL_CASE) {
-        await this.applyFilterPropertyScope(FILTER_SCOPE_ALL_CASE, rowId);
-        return;
-      }
+    if (
+      value === FILTER_PROPERTY_SCOPE_PRE_DEFINE ||
+      value === FILTER_PROPERTY_SCOPE_ALL_CASE
+    ) {
       return;
+    }
+    const nextScope = value
+      ? this.resolveFilterScopeForPropertyKey(value)
+      : this.filterPropertyScope;
+    if (nextScope !== this.filterPropertyScope) {
+      this.filterPropertyScope = nextScope;
+      this.caseRows = [];
+      this.caseTotalCount = 0;
+      this.caseSearchHasRun = false;
+      this.caseSearchPage = 1;
+      this.syncCaseGoToPageInput();
     }
     this.filterLines = this.filterLines.map((l) => {
       if (l.rowId !== rowId) {
         return l;
       }
-      const meta = value ? this.filterMetaByKey[value] : null;
+      const meta = value
+        ? this.preDefineMetaByKey[value] ||
+          this.allCaseMetaByKey[value] ||
+          this.filterMetaByKey[value]
+        : null;
       const firstOp =
         meta?.operators && meta.operators.length ? meta.operators[0] : STR_EMPTY;
       return { ...l, propertyKey: value, operatorKey: firstOp, valueText: STR_EMPTY };
@@ -833,7 +790,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   valueInputType(line) {
-    const meta = line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+    const meta = this.lineMeta(line);
     if (!meta) {
       return "text";
     }
@@ -848,7 +805,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (op === "is_null" || op === "is_not_null") {
       return false;
     }
-    const meta = line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+    const meta = this.lineMeta(line);
     if (meta?.valueType === "checkbox") {
       return false;
     }
@@ -856,7 +813,16 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   lineMeta(line) {
-    return line?.propertyKey ? this.filterMetaByKey[line.propertyKey] : null;
+    if (!line?.propertyKey) {
+      return null;
+    }
+    if (this.preDefineMetaByKey[line.propertyKey]) {
+      return this.preDefineMetaByKey[line.propertyKey];
+    }
+    if (this.allCaseMetaByKey[line.propertyKey]) {
+      return this.allCaseMetaByKey[line.propertyKey];
+    }
+    return this.filterMetaByKey[line.propertyKey] || null;
   }
 
   operatorNeedsValue(line) {
@@ -958,9 +924,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.showMultiPicklistValue(line)) {
       cls += " fec-filter-table__row--multi";
     }
-    if (line?.isScopeRow === true || line?.rowId === FILTER_SCOPE_ROW_ID) {
-      cls += " fec-filter-table__row--scope";
-    }
     return cls;
   }
 
@@ -978,23 +941,20 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get filterLinesView() {
+    const propertyOptions = this.buildCombinedPropertyOptions();
     return (this.filterLines || []).map((line) => {
-      const isScopeRow = line.isScopeRow === true || line.rowId === FILTER_SCOPE_ROW_ID;
       return {
         ...line,
-        isScopeRow,
         filterRowClass: this.filterRowClass(line),
-        propertyOptions: isScopeRow
-          ? this.propertyOptionsForScopeRow
-          : this.propertyOptionsForFieldRow,
+        propertyOptions,
         operatorOptions: this.operatorOptionsForLine(line),
-        showFilterCriteria: !isScopeRow,
-        showValueBox: !isScopeRow && this.showValueInput(line),
-        showAttachCombo: !isScopeRow && this.showAttachmentValueCombobox(line),
-        showBooleanCombo: !isScopeRow && this.showBooleanValueCombobox(line),
-        showValuePicklist: !isScopeRow && this.showValuePicklistCombobox(line),
-        showValueMultiPicklist: !isScopeRow && this.showMultiPicklistValue(line),
-        showValueDefault: !isScopeRow && this.showDefaultValueInput(line),
+        showFilterCriteria: true,
+        showValueBox: this.showValueInput(line),
+        showAttachCombo: this.showAttachmentValueCombobox(line),
+        showBooleanCombo: this.showBooleanValueCombobox(line),
+        showValuePicklist: this.showValuePicklistCombobox(line),
+        showValueMultiPicklist: this.showMultiPicklistValue(line),
+        showValueDefault: this.showDefaultValueInput(line),
         valuePicklistOptions: this.valuePicklistOptionsForLine(line),
         multiPicklistOptions: this.multiPicklistOptionsForLine(line),
         multiPicklistSize: this.multiPicklistSizeForLine(line),
@@ -1013,7 +973,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const out = [];
     for (const line of this.filterLines) {
       if (
-        line.isScopeRow === true ||
         !line.propertyKey ||
         !line.operatorKey ||
         this.isFilterScopePropertyKey(line.propertyKey)
@@ -1071,8 +1030,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.caseSearchHasRun = false;
     this.filterPropertyScope = FILTER_SCOPE_PRE_DEFINE;
     this.filterLines = [];
-    this.syncActiveFilterPropertyMeta();
-    this.ensureScopeRow();
+    this.syncFilterMetaMaps();
     this.caseRows = [];
     this.caseTotalCount = 0;
     this.caseSearchPage = 1;
@@ -1249,9 +1207,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   get showNoFiltersAdded() {
-    return !(this.filterLines || []).some(
-      (line) => line.isScopeRow !== true && line.rowId !== FILTER_SCOPE_ROW_ID
-    );
+    return !(this.filterLines || []).length;
   }
 
   get showNoFiltersAddedHint() {
