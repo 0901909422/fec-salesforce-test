@@ -79,6 +79,7 @@
 		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
+		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<name>Apexclass</name>
 	</types>
     <types>
