@@ -31,14 +31,16 @@
               <div class="detail-label">Status</div>
               <div class="detail-value-row">
                 <span class="detail-value">{displayStatus}</span>
-                <lightning-button-icon
-                  icon-name="utility:edit"
-                  alternative-text="Edit Status"
-                  variant="bare"
-                  class="edit-pencil"
-                  data-field="FEC_Status__c"
-                  onclick={handleFieldEditClick}
-                ></lightning-button-icon>
+                <template if:true={canEditStatusControl}>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Status"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="FEC_Status__c"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </template>
               </div>
             </div>
             <div class="detail-cell">
@@ -50,28 +52,32 @@
                 <template if:false={businessHoursId}>
                   <span class="detail-value">{displayBusinessHours}</span>
                 </template>
-                <lightning-button-icon
-                  icon-name="utility:edit"
-                  alternative-text="Edit Business Hours"
-                  variant="bare"
-                  class="edit-pencil"
-                  data-field="FEC_Business_Hours__c"
-                  onclick={handleFieldEditClick}
-                ></lightning-button-icon>
+                <template if:true={canEditDraftDetailFields}>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Business Hours"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="FEC_Business_Hours__c"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </template>
               </div>
             </div>
             <div class="detail-cell">
               <div class="detail-label">Assignment Method</div>
               <div class="detail-value-row">
                 <span class="detail-value">{displayMethod}</span>
-                <lightning-button-icon
-                  icon-name="utility:edit"
-                  alternative-text="Edit Assignment Method"
-                  variant="bare"
-                  class="edit-pencil"
-                  data-field="FEC_Assignment_Method__c"
-                  onclick={handleFieldEditClick}
-                ></lightning-button-icon>
+                <template if:true={canEditDraftDetailFields}>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Assignment Method"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="FEC_Assignment_Method__c"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </template>
               </div>
             </div>
             <template if:true={isContinuousMethod}>
@@ -79,14 +85,16 @@
                 <div class="detail-label">Scheduled Time</div>
                 <div class="detail-value-row">
                   <span class="detail-value">{displayScheduledTime}</span>
-                  <lightning-button-icon
-                    icon-name="utility:edit"
-                    alternative-text="Edit Scheduled Time"
-                    variant="bare"
-                    class="edit-pencil"
-                    data-field="FEC_Scheduled_Time__c"
-                    onclick={handleFieldEditClick}
-                  ></lightning-button-icon>
+                  <template if:true={canEditDraftDetailFields}>
+                    <lightning-button-icon
+                      icon-name="utility:edit"
+                      alternative-text="Edit Scheduled Time"
+                      variant="bare"
+                      class="edit-pencil"
+                      data-field="FEC_Scheduled_Time__c"
+                      onclick={handleFieldEditClick}
+                    ></lightning-button-icon>
+                  </template>
                 </div>
               </div>
             </template>
@@ -95,14 +103,16 @@
                 <div class="detail-label">Time Slots</div>
                 <div class="detail-value-row">
                   <span class="detail-value">{displayTimeSlots}</span>
-                  <lightning-button-icon
-                    icon-name="utility:edit"
-                    alternative-text="Edit Time Slots"
-                    variant="bare"
-                    class="edit-pencil"
-                    data-field="FEC_Time_Slots__c"
-                    onclick={handleFieldEditClick}
-                  ></lightning-button-icon>
+                  <template if:true={canEditDraftDetailFields}>
+                    <lightning-button-icon
+                      icon-name="utility:edit"
+                      alternative-text="Edit Time Slots"
+                      variant="bare"
+                      class="edit-pencil"
+                      data-field="FEC_Time_Slots__c"
+                      onclick={handleFieldEditClick}
+                    ></lightning-button-icon>
+                  </template>
                 </div>
               </div>
             </template>
@@ -230,7 +240,35 @@
                 ></lightning-button>
               </div>
             </template>
-            <template if:false={isEditingBusinessHours}>
+            <template if:true={isEditingActiveToArchive}>
+              <p class="slds-text-body_small slds-m-bottom_small">
+                Case Assignment đang Active: chỉ có thể chuyển Status sang Archived.
+              </p>
+              <lightning-combobox
+                name="fecStatusArchiveOnly"
+                label="Status"
+                value={activeToArchiveValue}
+                options={archivedStatusOptions}
+                disabled={isSavingActiveArchive}
+                onchange={handleActiveToArchiveChange}
+              ></lightning-combobox>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isSavingActiveArchive}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveActiveToArchive}
+                  disabled={isSavingActiveArchive}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
+            <template if:true={showGenericFieldEditForm}>
               <lightning-record-edit-form
                 key={modalFormRenderKey}
                 record-id={recordId}

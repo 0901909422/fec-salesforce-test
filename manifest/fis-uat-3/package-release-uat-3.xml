@@ -143,7 +143,11 @@
         <members>FEC_ApplicationListTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
+		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
+		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
+		<members>FEC_CaseAssignmentMutationGuard</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
@@ -169,6 +173,7 @@
 		<members>FEC_NatureOfCaseTrigger</members>
         <members>FEC_ApplicationListTrigger</members>
 		<members>FEC_CaseAssignmentNOCTrigger</members>
+		<members>FEC_CaseAssignmentTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -627,6 +632,7 @@
     <types>
         <members>fecNewRelevantTicketAction</members>
 		<members>fecCaseAssignmentNewOverride</members>
+		<members>fec_CaseAssignmentNocNewOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
@@ -712,6 +718,7 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+		<members>fec_CaseAssignmentNocNew</members>
         <members>fec_RemovePhoneForm</members>
         <members>fec_IPPConversionRetailForm</members>
         <members>fec_NewAssignmentAction</members>
@@ -1307,6 +1314,7 @@
         <members>FEC_Batch_Case_Handling</members>
         <!--Common System Setting-->
         <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
         <!-- Case Assignment -->
         <members>FEC_Case_Assignment_Management</members>
         <name>PermissionSet</name>
