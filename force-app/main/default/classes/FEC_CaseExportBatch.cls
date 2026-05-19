@@ -24,8 +24,9 @@ public class FEC_CaseExportBatch
         return Database.getQueryLocator([
             SELECT Id, CaseNumber, FEC_ID_Search__c 
             FROM Case
+            WHERE Status = 'Closed'
+            AND ClosedDate <= :threshold
             ORDER BY ClosedDate ASC
-            LIMIT 100
         ]);
     }
 
