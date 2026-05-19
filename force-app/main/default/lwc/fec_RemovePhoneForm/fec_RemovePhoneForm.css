@@ -84,6 +84,18 @@
     font-weight: 700;
 }
 
+/* Disabled unchecked: empty box (white fill + grey border), not solid grey block. */
+.remove-phone-datatable lightning-datatable .slds-checkbox [type="checkbox"]:disabled:not(:checked) + .slds-checkbox_faux {
+    background-color: #ffffff;
+    border-color: #939393;
+}
+
+/* Disabled checked: darker than brand blue, keep white tick visible. */
+.remove-phone-datatable lightning-datatable .slds-checkbox [type="checkbox"]:disabled:checked + .slds-checkbox_faux {
+    background-color: #514f4d;
+    border-color: #514f4d;
+}
+
 .square-go-btn {
     --sds-c-button-brand-color-background: #0176d3;
     --sds-c-button-brand-color-background-hover: #014486;
