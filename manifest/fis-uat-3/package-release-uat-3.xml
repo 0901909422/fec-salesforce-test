@@ -26,6 +26,10 @@
         <members>FEC_DownloadReportJob</members>
         <members>FEC_DownloadReportController</members>
         <members>FEC_DownloadReportService</members>
+		<members>FEC_AutoHoldCaseApi</members>
+		<members>FEC_AutoHoldCaseExpireBatch</members>
+		<members>FEC_AutoHoldCaseExpireSchedulable</members>
+		<members>FEC_AutoHoldCaseHistoryService</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -173,7 +177,6 @@
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
-		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <name>ApexClass</name>
@@ -599,6 +602,15 @@
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Case__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_End_Time__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Hold_Case_Config__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Release_Case_Status__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Start_Time__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Status__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Type__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -640,7 +652,7 @@
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
 		<members>Download_Report__c</members>
-         <members></members>
+		<members>FEC_Case_Hold_History__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
