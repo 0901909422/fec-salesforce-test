@@ -36,6 +36,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   assignmentName = "";
   ownerName = "";
   isSaving = false;
+  pageErrors = [];
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
   objectInfo;
@@ -102,17 +103,8 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this._assignmentMethodOptions = value;
   }
 
-  get isSaveDisabled() {
-    return (
-      this.isSaving ||
-      !this.assignmentName ||
-      !this.status ||
-      !this.assignmentMethod ||
-      !this.selectedQueues.length ||
-      (this.isContinuousMethod && !this.scheduledTime) ||
-      (this.isTimeBasedMethod && !this.selectedTimeSlots.length) ||
-      !this.roleRows.length
-    );
+  get hasPageErrors() {
+    return (this.pageErrors || []).length > 0;
   }
 
   get isContinuousMethod() {
@@ -210,23 +202,41 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       if (!this.roleOptions.some((item) => item.value === this.selectedRole)) {
         this.selectedRole = "";
       }
+      this.pruneRoleRowsToAvailableOptions();
     } catch (e) {
       this.roleOptions = [];
       this.selectedRole = "";
+      this.roleRows = [];
       this.showToast("Error", "Cannot load role options.", "error");
+    }
+  }
+
+  pruneRoleRowsToAvailableOptions() {
+    if (!this.selectedQueues.length) {
+      this.roleRows = [];
+      this.selectedRole = "";
+      return;
+    }
+    const allowed = new Set((this.roleOptions || []).map((item) => item.value));
+    this.roleRows = this.roleRows.filter((row) => allowed.has(row.role));
+    if (this.selectedRole && !allowed.has(this.selectedRole)) {
+      this.selectedRole = "";
     }
   }
 
   handleNameChange(event) {
     this.assignmentName = event.detail.value || "";
+    this.clearPageErrors();
   }
 
   handleStatusChange(event) {
     this.status = event.detail.value || "";
+    this.clearPageErrors();
   }
 
   handleAssignmentMethodChange(event) {
     this.assignmentMethod = event.detail.value || "";
+    this.clearPageErrors();
     if (this.isContinuousMethod) {
       this.selectedTimeSlots = [];
     } else if (this.isTimeBasedMethod) {
@@ -323,9 +333,18 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   async saveRecord(stayOnForm) {
+    this.clearPageErrors();
+    const validationErrors = this.validateBeforeSave();
+    if (validationErrors.length) {
+      this.pageErrors = validationErrors;
+      this.reportFieldValidity(validationErrors);
+      return;
+    }
+
     this.isSaving = true;
+    const trimmedName = (this.assignmentName || "").trim();
     const fields = {
-      Name: this.assignmentName,
+      Name: trimmedName,
       FEC_Status__c: this.status,
       FEC_Assignment_Method__c: this.assignmentMethod,
       FEC_Select_Queues__c: this.selectedQueues.join(";"),
@@ -363,8 +382,11 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
         });
       }
     } catch (e) {
-      const message = e?.body?.message || "Create Case Assignment failed.";
-      this.showToast("Error", message, "error");
+      const messages = this.extractRecordErrors(e);
+      this.pageErrors = messages.length
+        ? messages
+        : [e?.body?.message || "Create Case Assignment failed."];
+      this.reportFieldValidity(this.pageErrors);
     } finally {
       this.isSaving = false;
     }
@@ -391,6 +413,78 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this.scheduledTime = "";
     this.selectedTimeSlots = [];
     this.businessHoursId = "";
+    this.clearPageErrors();
+  }
+
+  validateBeforeSave() {
+    const errors = [];
+    const trimmedName = (this.assignmentName || "").trim();
+
+    if (!trimmedName) {
+      errors.push("Case Assignment Name can't be blank");
+    }
+    if (!this.status) {
+      errors.push("Status can't be blank");
+    }
+    if (!this.assignmentMethod) {
+      errors.push("Assignment Method can't be blank");
+    }
+    if (!this.selectedQueues.length) {
+      errors.push("Select Queues can't be blank");
+    }
+    if (this.isContinuousMethod && (this.scheduledTime === "" || this.scheduledTime == null)) {
+      errors.push("Scheduled Time can't be blank");
+    }
+    if (this.isTimeBasedMethod && !this.selectedTimeSlots.length) {
+      errors.push("Time Slots can't be blank");
+    }
+    if (!this.roleRows.length) {
+      errors.push("Role can't be blank");
+    }
+    return errors;
+  }
+
+  extractRecordErrors(error) {
+    const messages = [];
+    const output = error?.body?.output;
+    if (output?.fieldErrors) {
+      Object.values(output.fieldErrors).forEach((entries) => {
+        (entries || []).forEach((entry) => {
+          if (entry?.message) {
+            messages.push(entry.message);
+          }
+        });
+      });
+    }
+    if (output?.errors) {
+      output.errors.forEach((entry) => {
+        if (entry?.message) {
+          messages.push(entry.message);
+        }
+      });
+    }
+    return [...new Set(messages)];
+  }
+
+  clearPageErrors() {
+    this.pageErrors = [];
+    this.template.querySelectorAll("[data-field]").forEach((field) => {
+      if (typeof field.setCustomValidity === "function") {
+        field.setCustomValidity("");
+        field.reportValidity();
+      }
+    });
+  }
+
+  reportFieldValidity(messages) {
+    const blankName = messages.some((msg) => msg.includes("Case Assignment Name"));
+    if (blankName) {
+      const nameInput = this.template.querySelector('[data-field="assignmentName"]');
+      if (nameInput) {
+        nameInput.setCustomValidity("Case Assignment Name can't be blank");
+        nameInput.reportValidity();
+      }
+    }
   }
 
   handleAddRole() {
