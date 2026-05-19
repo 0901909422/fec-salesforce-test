@@ -214,32 +214,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         return null;
     }
 
-    _isRowRemovable(row) {
-        if (!row) {
-            return false;
-        }
-        const v = (row.removable || STR_EMPTY).trim().toLowerCase();
-        return v === 'yes' || v === 'y' || v === 'true' || v === '1';
-    }
-
-    _pruneNonRemovableFromSelection() {
-        if (this.readOnlyRemovePhone) {
-            return;
-        }
-        const allowed = new Set(
-            (this.rows || [])
-                .filter((r) => r && this._isRowRemovable(r))
-                .map((r) => String(r.id))
-        );
-        const next = (this.selectedRowIds || [])
-            .map((id) => String(id))
-            .filter((id) => allowed.has(id));
-        if (next.length !== (this.selectedRowIds || []).length) {
-            this.selectedRowIds = [...next];
-            this._syncCheckRemovePhoneFromSelection();
-        }
-    }
-
     /**
      * Table row shape matches RemovePhoneRowSaveDTO -> FEC_Contract_List_for_Remove_Phone__c text fields; FEC_Check_Remove_Phone__c is derived from row selection when saving (not shown in datatable).
      */
@@ -332,7 +306,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                 this.lastCheckedPhone = phone;
                 this.currentPage = 1;
                 this._recomputePagedRows();
-                this._pruneNonRemovableFromSelection();
                 this._bumpTableKey();
             })
             .catch(() => {
@@ -419,12 +392,11 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     }
 
     get disabledRowIds() {
-        const rows = this.rows || [];
-        if (this.readOnlyRemovePhone) {
-            return rows.filter((r) => r && r.id != null).map((r) => String(r.id));
+        if (!this.readOnlyRemovePhone) {
+            return [];
         }
-        return rows
-            .filter((r) => r && r.id != null && !this._isRowRemovable(r))
+        return (this.rows || [])
+            .filter((r) => r && r.id != null)
             .map((r) => String(r.id));
     }
 
@@ -496,7 +468,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
         if (action === DT_SELECT_ALL) {
             const merged = new Set((this.selectedRowIds || []).map((id) => String(id)));
             (this.rows || []).forEach((item) => {
-                if (item && item.id != null && item.id !== STR_EMPTY && this._isRowRemovable(item)) {
+                if (item && item.id != null && item.id !== STR_EMPTY) {
                     merged.add(String(item.id));
                 }
             });
@@ -523,10 +495,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
             merged.delete(id);
         });
         selectedFromTable.forEach((id) => {
-            const row = (this.rows || []).find((r) => r && String(r.id) === id);
-            if (row && this._isRowRemovable(row)) {
-                merged.add(id);
-            }
+            merged.add(id);
         });
         this.selectedRowIds = Array.from(merged);
         this._syncCheckRemovePhoneFromSelection();
@@ -616,7 +585,6 @@ export default class Fec_RemovePhoneForm extends LightningElement {
                     this.currentPage = 1;
                     this.resultMessage = STR_EMPTY;
                     this._recomputePagedRows();
-                    this._pruneNonRemovableFromSelection();
                     this._bumpTableKey();
                     return;
                 }
