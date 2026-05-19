@@ -100,8 +100,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
-        // , FEC_OwnerID__c = null // unassigned
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED, 
+        FEC_OwnerID__c = null // unassigned
             );
         
         update assignmentToUpdate;
@@ -119,8 +119,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         // ===== UPDATE ASSIGNMENT =====
         update new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED
-        // ,FEC_Assignment_Owner__c = null
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Owner__c = null
             );
         
         // ===== HISTORY =====
@@ -379,7 +379,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FROM FEC_Assignment__c
         WHERE Id = :assignmentId
     ];
-        
+
         Case c = [
         SELECT FEC_Current_Case_Stage__r.FEC_Code__c
         FROM Case
