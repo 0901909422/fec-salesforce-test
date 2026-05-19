@@ -2,6 +2,7 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
 		<members>FEC_CaseBusinessService</members>
+		<members>FEC_DocumentRequestRoutingService</members>
 		<members>FEC_ClientPDFService</members>
 		<members>FEC_ClientPDFServiceTest</members>
 		<members>FEC_PaymentHistoryValidationService</members>
@@ -34,6 +35,7 @@
 		<members>fecPdfGenerator</members>
 		<members>fecPdfGeneratorDemo</members>
 		<members>fec_CaseBussiness</members>
+		<members>fec_DocumentRequestRoutingAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<types>

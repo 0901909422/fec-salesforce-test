@@ -58,6 +58,9 @@
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
+		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
+		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
@@ -66,6 +69,7 @@
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
 		<members>FEC_NewAssignmentController</members>
+        <members>FEC_AssignmentCaseShareService</members>
         <name>ApexClass</name>
     </types>
 	<types>
