@@ -142,16 +142,11 @@ public without sharing class FEC_CaseExecuteService {
       System.debug('CHECK BY User Owner');
       
       return isCurrentUserOwner(c.OwnerId, currentUserId);
-    }
-    
-    /*
-     * CASE 2:
-     * Owner is Queue
-     */
-    if (isQueueOwner(c.OwnerId)) {
+    }else if (isQueueOwner(c.OwnerId)) {
       System.debug('CHECK BY Queue Owner');
       
-      return isUserInQueue(currentUserId, c.OwnerId) || isUserRoleInQueue(currentUserId, c.OwnerId);
+      // return isUserInQueue(currentUserId, c.OwnerId) || isUserRoleInQueue(currentUserId, c.OwnerId);
+      return isUserRoleInQueue(currentUserId, c.OwnerId);
     }
     
     return false;

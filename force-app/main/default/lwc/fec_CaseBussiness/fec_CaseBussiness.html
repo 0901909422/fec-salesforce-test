@@ -1,9 +1,25 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
+  <template if:true={businessLoaded}>
+    <template if:true={showMrcRl0502DupBanner}>
+      <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-around_small" role="alert">
+        <span class="slds-assistive-text">warning</span>
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+          <div class="slds-col">
+            <h2 class="slds-text-heading_small">{mrcRl0502DupBannerText}</h2>
+          </div>
+          <div class="slds-col slds-no-flex">
+            <lightning-button variant="neutral" label={customLabel.mrcDupOpenCaseBtn} onclick={handleOpenMrcDupCase}>
+            </lightning-button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
-  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1366-->
-  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1393-->
+  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecpointsredemptionsectionvisibility={handlePointsRedemptionSectionVisibility}>
     <!-- section -->
     <template for:each={business.sectionlst} for:item="section">
@@ -247,11 +263,13 @@
     </template>
   </lightning-accordion>
   <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
-  <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+  <c-fec_-sub-process-container record-id={recordId} lock-api-lwcs-after-revert-to-default-stage={business.lockApiLwcsAfterRevertToDefaultStage}>
+  </c-fec_-sub-process-container>
   <!--END: Hieutt74: Update ngày 12/5/2026-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
-    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới — ẩn block cũ khi bộ mới active-->
+    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
@@ -319,6 +337,22 @@
           </div>
         </div>
       </div>
+    </lightning-accordion-section>
+
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
+    <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
+      name="routing-action-doc-request" label={customLabel.routingActionLabel}>
+      <c-fec_-document-request-routing-action is-edit={isEdit}
+        action-value={actionValue} routing-action-options={business.routingActionlst}
+        is-routing-action-disabled={isRoutingActionDisabled} show-route-to={showRouteTo}
+        next-team={business.nextTeam} route-to-queue-display-label={routeToQueueDisplayLabel}
+        show-revert={showRevert} revert-decision-display-label={revertDecisionDisplayLabel}
+        show-transfer={showTransfer} show-update={showUpdate} decision-value={decisionValue}
+        sub-decision-value={subDecisionValue} decision-options={decisionOptions}
+        sub-decision-options={subDecisionOptions} decision-update-options={decisionUpdateOptions}
+        is-sub-decision-options-display={isSubDecisionOptionsDisplay} onactionchange={handleChangeAction}
+        onroutingfieldchange={handleDocReqRoutingFieldChange}>
+      </c-fec_-document-request-routing-action>
     </lightning-accordion-section>
   </lightning-accordion>
 

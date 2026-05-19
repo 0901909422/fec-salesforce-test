@@ -84,6 +84,10 @@ public with sharing class FEC_SalesChannelFromApplicationService {
         return resolve(cc, dsa, tsa);
     }
 
+    public static SalesChannelResult resolveSalesChannelFromApplicationCodes(String ccCode, String dsaCode, String tsaCode) {
+        return resolve(ccCode, dsaCode, tsaCode);
+    }
+
     private static SalesChannelResult resolve(String cc, String dsa, String tsa) {
         String c = norm(cc);
         String d = norm(dsa);

@@ -1,10 +1,12 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
+import { getRecordNotifyChange } from 'lightning/uiRecordApi';
 import { subscribe, unsubscribe, APPLICATION_SCOPE, MessageContext } from 'lightning/messageService';
 import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
 import getNFUReasons from '@salesforce/apex/FEC_HoldCaseController.getNFUReasons';
 import saveHoldCase from '@salesforce/apex/FEC_HoldCaseController.saveHoldCase';
+import persistManualHoldCaseError from '@salesforce/apex/FEC_HoldCaseController.persistManualHoldCaseError';
 
 import FEC_NFU_Reason from '@salesforce/label/c.FEC_NFU_Reason';
 import FEC_Hold_Case from '@salesforce/label/c.FEC_Hold_Case';
@@ -17,6 +19,9 @@ import FEC_Show_Action_Hold_Case from '@salesforce/label/c.FEC_Show_Action_Hold_
 import FEC_Failed_To_Load_NFU from '@salesforce/label/c.FEC_Failed_To_Load_NFU';
 import FEC_Please_Select_An_NFU from '@salesforce/label/c.FEC_Please_Select_An_NFU';
 import FEC_An_Unexpected_Error from '@salesforce/label/c.FEC_An_Unexpected_Error';
+import FEC_MSG_SUCCESS from '@salesforce/label/c.FEC_MSG_SUCCESS';
+import FEC_STOP_IMPACT_ALREADY_MARKED_MSG from '@salesforce/label/c.FEC_STOP_IMPACT_ALREADY_MARKED_MSG';
+import FEC_MSG_ERROR from '@salesforce/label/c.FEC_MSG_ERROR';
 import {
     STR_EMPTY, ERROR_TOAST_TYPE, WARNING_HOLD_CASE,
     WARNING_HOLD_TOAST, SUCCESS_MODAL_TITLE, ERROR_MODAL_TITLE
@@ -69,6 +74,13 @@ export default class Fec_holdCaseManual extends LightningElement {
     @track nfuStartedDate = STR_EMPTY;
     @track nfuExpiryDate = STR_EMPTY;
     @track nfuReason = STR_EMPTY;
+    // tungnm37: NFU result sau khi thành công
+    @track nfuStatusResult = STR_EMPTY;
+    @track nfuCodeResult = STR_EMPTY;
+    @track nfuStartedDateResult = STR_EMPTY;
+    @track nfuExpiryDateResult = STR_EMPTY;
+    @track nfuReasonResult = STR_EMPTY;
+    @track isCompleted = false; // tungnm37: true khi SUCCESS hoặc ALREADY_MARKED
 
     _nfuReasonMap = {};
     _retryCount = 0;
@@ -171,9 +183,8 @@ export default class Fec_holdCaseManual extends LightningElement {
                         nfuCode: item.nfuCode
                     };
                 });
-            } else if (!isInitial) {
-                // tungnm37 fix: chỉ đóng popup khi không phải lần load đầu tiên
-                // (lần đầu có thể chưa có NOC IDs từ message channel)
+            } else {
+                // tungnm37 fix: không có config hold case → hiện thông báo và đóng popup
                 this._showToast(STR_EMPTY, this.customLabel.showActionHoldCase, ERROR_TOAST_TYPE);
                 this.handleCancel();
             }
@@ -198,6 +209,11 @@ export default class Fec_holdCaseManual extends LightningElement {
         return this.responseType === 'ERROR';
     }
 
+    get showNfuDetailsInPopup() {
+        return this.isCompleted
+            && (this.responseType === 'SUCCESS' || this.responseType === 'ALREADY_MARKED');
+    }
+
     handleReasonChange(event) {
         this.selectedReason = event.detail.value;
         const meta = this._nfuReasonMap[this.selectedReason];
@@ -213,8 +229,55 @@ export default class Fec_holdCaseManual extends LightningElement {
         this.responseType = STR_EMPTY;
     }
 
-    handleCancel() {
+    async handleCancel() {
+        if (this.responseType === 'ERROR' && this._retryCount >= this._maxRetries) {
+            try {
+                await persistManualHoldCaseError({ caseId: this._recordId });
+            } catch (persistErr) {
+                // ignore
+            }
+            await this._notifyCaseRefresh('ERROR');
+        }
         this.dispatchEvent(new CloseActionScreenEvent());
+    }
+
+    _setHoldCaseDisplayFlag(resultType) {
+        if (!this._recordId || !resultType) {
+            return;
+        }
+        try {
+            sessionStorage.setItem('fec_hold_case_display_' + this._recordId, resultType);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    async _notifyCaseRefresh(resultType) {
+        if (!this._recordId) {
+            return;
+        }
+        if (resultType) {
+            this._setHoldCaseDisplayFlag(resultType);
+        }
+        try {
+            sessionStorage.setItem('fec_hold_case_refresh_' + this._recordId, Date.now().toString());
+        } catch (e) {
+            // ignore
+        }
+        getRecordNotifyChange([{ recordId: this._recordId }]);
+        // Đợi LDS propagate trước khi user đóng popup
+        await new Promise((resolve) => {
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(resolve, 400);
+        });
+    }
+
+    _applyNfuResultFromResponse(response) {
+        this.nfuCodeResult = response.nfuCode || this.nfuCode || STR_EMPTY;
+        this.nfuStatusResult = response.nfuStatus || STR_EMPTY;
+        this.nfuStartedDateResult = response.nfuStartedDate || STR_EMPTY;
+        this.nfuExpiryDateResult = response.nfuExpiryDate || STR_EMPTY;
+        this.nfuReasonResult = response.nfuReason || STR_EMPTY;
     }
 
     async handleHoldCase() {
@@ -224,34 +287,44 @@ export default class Fec_holdCaseManual extends LightningElement {
         }
         if (this._retryCount >= this._maxRetries) return;
 
+        const attemptNumber = this._retryCount + 1;
         this.isLoading = true;
         try {
             const response = await saveHoldCase({
                 caseId: this._recordId,
                 nfuReason: this.selectedReason,
                 nfuCode: this.nfuCode,
-                holdDuration: this.nfuHoldDayDuration
+                holdDuration: this.nfuHoldDayDuration,
+                attemptNumber
             });
 
             if (response?.status === 'SUCCESS') {
-                // tungnm37: TH2 - Success
                 this.responseType = 'SUCCESS';
-                this.responseMessage = this.customLabel.messengerSuccessHoldCase;
-                this.nfuCode = this.nfuCode;
+                this.responseMessage = response.message || FEC_MSG_SUCCESS;
                 this._retryCount = 0;
+                this.isCompleted = true;
+                this._applyNfuResultFromResponse(response);
+                await this._notifyCaseRefresh('SUCCESS');
 
             } else if (response?.status === 'ALREADY_MARKED') {
-                // tungnm37: TH1 - Contract has already marked as NFU
                 this.responseType = 'ALREADY_MARKED';
-                this.responseMessage = response.message || STR_EMPTY;
+                this.responseMessage = response.message || FEC_STOP_IMPACT_ALREADY_MARKED_MSG;
                 this._retryCount = 0;
+                this.isCompleted = true;
+                this._applyNfuResultFromResponse(response);
+                await this._notifyCaseRefresh('ALREADY_MARKED');
 
             } else {
-                // tungnm37: TH3 - Error - tăng retry count
                 this._retryCount += 1;
                 this.responseType = 'ERROR';
                 if (this._retryCount >= this._maxRetries) {
-                    this.responseMessage = this.customLabel.errorMessageErrorHoldCase;
+                    this.responseMessage = FEC_MSG_ERROR;
+                    try {
+                        await persistManualHoldCaseError({ caseId: this._recordId });
+                    } catch (persistErr) {
+                        // ignore
+                    }
+                    await this._notifyCaseRefresh('ERROR');
                 } else {
                     this.responseMessage = response?.message || this.customLabel.errorMessageMaxretris;
                 }
@@ -262,7 +335,13 @@ export default class Fec_holdCaseManual extends LightningElement {
             this.responseType = 'ERROR';
             const msg = error?.body?.message ?? this.customLabel.anUnexpectedError;
             if (this._retryCount >= this._maxRetries) {
-                this.responseMessage = this.customLabel.errorMessageErrorHoldCase;
+                this.responseMessage = FEC_MSG_ERROR;
+                try {
+                    await persistManualHoldCaseError({ caseId: this._recordId });
+                } catch (persistErr) {
+                    // ignore persist failure
+                }
+                await this._notifyCaseRefresh('ERROR');
             } else {
                 this.responseMessage = msg;
             }

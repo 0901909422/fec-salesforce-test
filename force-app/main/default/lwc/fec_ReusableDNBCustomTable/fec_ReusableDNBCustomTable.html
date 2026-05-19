@@ -5,7 +5,7 @@
         <thead>
             <tr>
                 <template for:each={columns} for:item="col">
-                    <th key={col.fieldName}>
+                    <th key={col.fieldName} class={col.headerClass}>
                         {col.label}
                     </th>
                 </template>
@@ -22,12 +22,14 @@
 
                             <!-- TEXT -->
                             <template if:true={cell.isText}>
-                                {cell.value}
+                                <!-- <div class="readonly-text"> -->
+                                    {cell.value}
+                                <!-- </div> -->
                             </template>
 
                             <!-- CHECKBOX -->
                             <template if:true={cell.isCheckbox}>
-                                <div class="slds-grid slds-align_absolute-center">
+                                <div class="checkbox-wrapper">
                                     <lightning-input type="checkbox" checked={cell.value} data-id={row.id}
                                         data-field={cell.fieldName} onchange={handleCheckboxChange}
                                         disabled={cell.isActionDisabled}>
@@ -42,7 +44,7 @@
                             <!-- CONTACT -->
                             <template if:true={cell.isContact}>
                                 <div class="slds-grid slds-align_absolute-center">
-                                    <span>
+                                    <span class="readonly-text">
                                         {cell.displayValue}
                                     </span>
                                     <template if:true={cell.hasContact}>
@@ -57,21 +59,25 @@
                             <template if:true={cell.isPicklist}>
                                 <!-- READ ONLY -->
                                 <template if:true={cell.isDisabled}>
-                                    <span>-</span>
+                                    <div class="readonly-text">
+                                        {cell.displayValue}
+                                    </div>
                                 </template>
 
                                 <!-- EDITABLE -->
                                 <template if:false={cell.isDisabled}>
-                                    <lightning-combobox value={cell.value} options={cell.options} required={cell.isRequired}
-                                        placeholder="Select an Option" data-id={row.id} data-field={cell.fieldName}
-                                        onchange={handlePicklistChange}>
+                                    <lightning-combobox value={cell.value} options={cell.options}
+                                        required={cell.isRequired} placeholder="Select an Option" data-id={row.id}
+                                        data-field={cell.fieldName} onchange={handlePicklistChange}>
                                     </lightning-combobox>
                                 </template>
                             </template>
 
                             <template if:true={cell.isTextarea}>
                                 <template if:true={cell.isDisabledText}>
-                                    <span>-</span>
+                                    <div class="readonly-text">
+                                        {cell.displayValue}
+                                    </div>
                                 </template>
                                 <template if:false={cell.isDisabledText}>
                                     <lightning-textarea value={cell.value} data-id={row.id} data-field={cell.fieldName}

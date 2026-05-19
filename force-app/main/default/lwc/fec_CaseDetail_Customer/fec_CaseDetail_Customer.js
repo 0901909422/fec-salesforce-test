@@ -223,11 +223,67 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
 
       this.subscribeToMessageChannel();
       this.loadRemarkHistory();
+      this._syncCaseBusinessWithNocOnLoad();
     } catch (err) {
       console.error("Failed to reset view mode:", err);
     } finally {
       this.isLoaded = true;
     }
+  }
+
+  disconnectedCallback() {
+    if (this._nocReloadSyncTimer) {
+      clearTimeout(this._nocReloadSyncTimer);
+      this._nocReloadSyncTimer = null;
+    }
+  }
+
+  _isDraftCaseForNocReload(caseRecord) {
+    return (
+      caseRecord &&
+      caseRecord.FEC_Is_Submited__c !== true &&
+      caseRecord.FEC_Is_Call_API_Success__c !== true
+    );
+  }
+
+  _getCaseBusinessEl() {
+    return this.template.querySelector("c-fec_-case-bussiness");
+  }
+
+  _refreshCaseBusinessForClearedNoc(productTypeId) {
+    this.lastNatureOfCaseIdFromNOC = null;
+    const caseBusinessEle = this._getCaseBusinessEl();
+    if (caseBusinessEle) {
+      caseBusinessEle.getData(productTypeId || null, null, null, null, null);
+    }
+  }
+
+  /** Reload trang: đồng bộ Case Detail với NOC sau khi fec_CaseEditNOC clear (draft). */
+  _syncCaseBusinessWithNocOnLoad() {
+    if (!this.recordId) {
+      return;
+    }
+    getCase({ recordId: this.recordId })
+      .then((res) => {
+        if (!this._isDraftCaseForNocReload(res)) {
+          return;
+        }
+        if (!res.FEC_Category__c) {
+          this._refreshCaseBusinessForClearedNoc(res.FEC_Product_Type__c);
+          return;
+        }
+        // Case vẫn còn Category: fec_CaseEditNOC đang clear async — đọc lại sau một nhịp.
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        this._nocReloadSyncTimer = window.setTimeout(() => {
+          this._nocReloadSyncTimer = null;
+          getCase({ recordId: this.recordId }).then((res2) => {
+            if (this._isDraftCaseForNocReload(res2) && !res2.FEC_Category__c) {
+              this._refreshCaseBusinessForClearedNoc(res2.FEC_Product_Type__c);
+            }
+          });
+        }, 300);
+      })
+      .catch(() => {});
   }
 
   subscribeToMessageChannel() {
@@ -314,11 +370,19 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (message.fastCashNocLocked === true) {
       return;
     }
+    const isNocCleared =
+      !message.categoryId &&
+      !message.subCategoryId &&
+      !message.subCodeId &&
+      !message.natureOfCaseId;
     //PhongBT: fix th đổi từ bộ noc đủ subcode sang bộ thiếu subcode thì updatedNoc lại hiển thị bộ đủ subcode
     // Always sync latest NOC natureOfCase (including null) to avoid stale fallback.
     // this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId ?? null;
-    if (message.natureOfCaseId)
-    this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
+    if (isNocCleared) {
+      this.lastNatureOfCaseIdFromNOC = null;
+    } else if (message.natureOfCaseId) {
+      this.lastNatureOfCaseIdFromNOC = message.natureOfCaseId;
+    }
 
     // Chỉ bật edit mode khi đây là hành động thực sự của user (không phải initial load)
     if (message.isUserAction && !this.modeEditCase) {
@@ -333,13 +397,17 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     );
 
     if (caseBusinessEle) {
-      caseBusinessEle.getData(
-        message.productTypeId ?? null,
-        message.categoryId ?? null,
-        message.subCategoryId ?? null,
-        message.subCodeId ?? null,
-        message.natureOfCaseId,
-      );
+      if (isNocCleared) {
+        caseBusinessEle.getData(message.productTypeId ?? null, null, null, null, null);
+      } else {
+        caseBusinessEle.getData(
+          message.productTypeId ?? null,
+          message.categoryId ?? null,
+          message.subCategoryId ?? null,
+          message.subCodeId ?? null,
+          message.natureOfCaseId,
+        );
+      }
       // tungnm37 thêm: track COF/GSR sau khi getData
       setTimeout(() => {
         this._isCofGsr = !!caseBusinessEle.isRoutingAssignmentMode;
@@ -543,9 +611,6 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
         typeof caseBusinessEle.refreshFileUploadCards === "function"
       ) {
         caseBusinessEle.refreshFileUploadCards();
-      }
-      if (typeof caseBusinessEle?.refreshAutoHoldCase === "function") {
-        caseBusinessEle.refreshAutoHoldCase();
       }
       // tungnm37: COF/GSR Stage 2 + Route to → Apex đã tạo Case Remark → skip submitRemarkDirect
       // tungnm37 fix: action khác Route to → không skip, LWC tạo Case Remark

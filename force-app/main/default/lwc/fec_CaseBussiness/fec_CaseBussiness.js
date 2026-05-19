@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from "lwc";
 import Toast from "lightning/toast";
+import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getByCase from "@salesforce/apex/FEC_CaseBusinessService.getByCase";
 import getTransferUsers from "@salesforce/apex/FEC_CaseBusinessService.getTransferUsers";
@@ -21,6 +22,8 @@ import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
 import IS_ROUTING_ACTION_DISPLAY_FIELD from "@salesforce/schema/Case.FEC_Is_Routing_Action_Display__c";
+// PhuongNT add field FEC_Stage_Name__c
+import STAGE_NAME_FIELD from "@salesforce/schema/Case.FEC_Stage_Name__c";
 import {
   mask,
   maskValue,
@@ -35,6 +38,7 @@ import {
   findPicklistOptionByRaw,
   isOnlyNumber,
   formatCurrencyIncludeTax,
+  formatCurrency2,
 } from "c/fec_CommonUtils";
 
 import { MASKING_TYPE_PHONE, MASKING_TYPE_PASSPORT, STR_EMPTY, ICON_HIDE, ICON_PREVIEW, INTERNAL_REQUEST, CASE_OBJECT_API_NAME, FIELD_CUSTOMER_PHONE_NUMBER, FIELD_RECEIVING_PHONE_NUMBER } from "c/fec_CommonConst";
@@ -49,6 +53,8 @@ import FEC_MSG_ACTION_PHONE_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTIO
 import FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_MAX_FAIL";
 import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR";
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
+import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
+import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -86,11 +92,17 @@ import FEC_CS_Support_Queue_Name from "@salesforce/label/c.FEC_CS_Support_Queue_
 import FEC_Confirm_Before_Submit from "@salesforce/label/c.FEC_Confirm_Before_Submit"; // tungnm37 thêm
 import FEC_Duplicate_Queue_Error from "@salesforce/label/c.FEC_Duplicate_Queue_Error"; // tungnm37 thêm
 import getTeamQueueOptions from "@salesforce/apex/FEC_CaseBusinessService.getTeamQueueOptions";
+//PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+import getDocumentRequestStageChangeRouting from "@salesforce/apex/FEC_DocumentRequestRoutingService.getStageChangeRouting";
+import { getDocumentRequestRoutingContext } from "./fecDocumentRequestStageChangeRouting";
 //PhongBT 14/05/26: Document Request — save PDF to Case
 import savePdfToCase from "@salesforce/apex/FEC_ClientPDFService.savePdfToCase";
 import { getPdfConfigForSubCode, buildPdfDataForSubCode } from "./fecDocumentRequestPdfData";
 import getPaymentHistoryRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getPaymentHistoryRows";
 import getRepaymentScheduleRows from "@salesforce/apex/FEC_PaymentHistoryValidationService.getRepaymentScheduleRows";
+//PhongBT 18/05/26: fix Document Request
+import validatePaymentHistoryRequestForSubCode from "@salesforce/apex/FEC_PaymentHistoryValidationService.validatePaymentHistoryRequestForSubCode";
+import getDocumentRequestPdfHeaderData from "@salesforce/apex/FEC_PaymentHistoryValidationService.getDocumentRequestPdfHeaderData";
 import { publish, MessageContext } from "lightning/messageService";
 import CASE_NOC from "@salesforce/messageChannel/FEC_Case_NOC__c";
 import CASE_NOTIFICATION from "@salesforce/messageChannel/FEC_Case_Notification__c";
@@ -156,7 +168,6 @@ const PHONE_MASK_FIELD_APIS = new Set([
   FIELD_REGISTERED_PHONE_NUMBER,
   FIELD_CASE_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
-  FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
 ]);
@@ -167,7 +178,6 @@ const PHONE_VALIDATED_FIELD_APIS = new Set([
   FIELD_CASE_PHONE_NUMBER,
   FIELD_RECIPIENT_PHONE_NUMBER,
   FIELD_INVITED_PHONE,
-  FIELD_ZALO_USED,
   FIELD_DEBT_COLLECTION_PHONE,
   FIELD_UNBLOCK_PHONE,
   CUSTOMER_PHONE_NUMBER_SUB,
@@ -269,13 +279,49 @@ const SECTION_NAME_CASE_INFORMATION = 'Case Information';
 const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
 
-//linhdev fix jira FECREDIT_CSM_2025_KH-1393
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
 function isPointsRedemptionHideC360AndProperty(subCode) {
   if (!subCode) {
     return false;
   }
   const s = String(subCode).trim().toUpperCase();
   return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
+}
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+function pointsRedemptionHideTargetForSection(sectionName, hide) {
+  if (!hide) {
+    return null;
+  }
+  if (sectionName === SECTION_NAME_ACCOUNT_INFORMATION) {
+    return 'c360';
+  }
+  if (sectionName === SECTION_NAME_CASE_INFORMATION) {
+    return 'property';
+  }
+  return null;
+}
+
+function shouldHidePointsRedemptionSubSection(sectionName, subName, hide) {
+  if (!hide) {
+    return false;
+  }
+  return (
+    (sectionName === SECTION_NAME_ACCOUNT_INFORMATION && subName === SUBSECTION_NAME_C360_INFO) ||
+    (sectionName === SECTION_NAME_CASE_INFORMATION && subName === SUBSECTION_NAME_PROPERTY_INFO)
+  );
+}
+
+function shouldSkipPointsRedemptionLwcDynCmp(prHideTarget, dynSubKey) {
+  if (!prHideTarget || !dynSubKey) {
+    return false;
+  }
+  if (prHideTarget === 'c360') {
+    return dynSubKey === normalizeSubSectionName(SUBSECTION_NAME_C360_INFO);
+  }
+  if (prHideTarget === 'property') {
+    return dynSubKey === normalizeSubSectionName(SUBSECTION_NAME_PROPERTY_INFO);
+  }
+  return false;
 }
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — reload sau Có/Không: getData với bộ NOC session (Case DB có thể chưa có Category/Sub)
@@ -360,6 +406,7 @@ const FIELD_NEW_BLOCK_CODE = 'FEC_New_Block_Code__c';
 const FIELD_CARD_REPLACEMENT_REASON = 'FEC_Card_Replacement_Reason__c';
 const FIELD_NEW_BLOCK_CODE_CARD_REPLACE = 'FEC_New_Block_Code_Card_Replace__c';
 const FIELD_CARD_REPLACEMENT_FEE = 'FEC_Card_Replacement_Fee__c';
+const FIELD_LOAN_AMOUNT = 'FEC_Loan_Amount__c';
 const FIELD_CURRENT_CARD_STATUS = 'FEC_Current_Card_Status__c';
 const FIELD_RECIPIENT_NAME = 'FEC_Recipient_Name__c';
 const FIELD_LAST_4_DIGIT = 'FEC_Last_4_Digits__c';
@@ -397,6 +444,7 @@ const DYNAMIC_COMPONENT_REGISTRY = {
   fec_CardReplacementAddress: () => import('c/fec_CardReplacementAddress'),
   fec_IncorrectPaymentForm: () => import('c/fec_IncorrectPaymentForm'),
   fec_IPPConversionRetailForm: () => import('c/fec_IPPConversionRetailForm'),
+  fec_MRC: () => import('c/fec_MRC'),
   fec_RefundRequestForm: () => import('c/fec_RefundRequestForm'),
   fec_ContractClosureForm: () => import('c/fec_ContractClosureForm'),
   fec_BeneficiaryBankInfoBlock: () => import('c/fec_BeneficiaryBankInfoBlock'),
@@ -455,7 +503,7 @@ function mergeSectionSortedRows(section) {
     if (sub._hideForFastCash) {
       return;
     }
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
     if (sub._hideForPointsRedemption) {
       return;
     }
@@ -487,6 +535,11 @@ function mergeSectionSortedRows(section) {
   });
 
   (section.resolvedComponentlst || []).forEach((dynCmp, idx) => {
+    const dynSubKey = normalizeSubSectionName(dynCmp?.subSectionName);
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn LWC C360 / Property
+    if (shouldSkipPointsRedemptionLwcDynCmp(section._pointsRedemptionHideTarget, dynSubKey)) {
+      return;
+    }
     const fecOrd = readFecSubSectionOrder(dynCmp);
     const subSectionNameKey = normalizeSubSectionName(dynCmp?.subSectionName);
     const matchedFieldOrder = subSectionNameKey
@@ -557,7 +610,7 @@ function normalizeMasterDataLwcEntry(entry) {
   };
 }
 
-export default class Fec_CaseBussiness extends LightningElement {
+export default class Fec_CaseBussiness extends NavigationMixin(LightningElement) {
 
   @api recordId;
 
@@ -586,6 +639,12 @@ export default class Fec_CaseBussiness extends LightningElement {
   @track activeRoutingSectionlst = [];
 
   routingAccordionSectionKey = "routing-action";
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  _documentRequestStageChangeRoutingActive = false;
+
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  static DOC_REQ_FIELD_DELIVERY = "FEC_Delivery_Option_2__c";
+  static DOC_REQ_FIELD_DOCUMENT_TYPE = "FEC_Document_Type__c";
 
   @track addressUpdateClickCount = 0;
   @track addressUpdateFailCount = 0;
@@ -595,7 +654,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   //linhdev fix jira FECREDIT_CSM_2025_KH-1294
   _hidePropertyInfoForFastCash = false;
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   _hideC360AndPropertyForPointsRedemption = false;
 
   // get eyeIcon() {
@@ -615,6 +674,7 @@ export default class Fec_CaseBussiness extends LightningElement {
   cardReplacementFee;
   last4Digit;
   isHiddenLwc = false;
+  currentStageName;
 
   @wire(getRecord, { recordId: USER_ID, fields: [USER_GROUP_FIELD] })
   wiredUser({ error, data }) {
@@ -623,6 +683,20 @@ export default class Fec_CaseBussiness extends LightningElement {
     } else if (error) {
       console.error("Error fetching user group", error);
     }
+  }
+
+  // PhuongNT add get Case data
+  @wire(getRecord, { recordId: '$recordId', fields: [STAGE_NAME_FIELD] })
+  wiredCase({ error, data }) {
+    if (data) {
+      this.currentStageName = getFieldValue(data, STAGE_NAME_FIELD);
+    } else if (error) {
+      console.error("Get Case record error:", error);
+    }
+  }
+
+  get isStage1() {
+    return (this.currentStageName || '').includes('Stage 1');
   }
 
   @wire(MessageContext)
@@ -689,6 +763,15 @@ export default class Fec_CaseBussiness extends LightningElement {
   /** Mỗi Case một key — tránh tab Case khác ghi đè / xóa draft khi đổi tab Console. */
   get draftStorageKey() {
     return this.recordId ? `fec_case_business_draft_${this.recordId}` : "fec_case_business_draft";
+  }
+
+  //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+  handleDocReqRoutingFieldChange(event) {
+    const { fieldName, value } = event.detail || {};
+    this.handleChange({
+      target: { name: fieldName },
+      detail: { value },
+    });
   }
 
   handleChange(event) {
@@ -940,6 +1023,9 @@ export default class Fec_CaseBussiness extends LightningElement {
 
   // tungnm37 thêm: track manual items từ fec_RoutingAssignment (Stage 2)
   _manualItems = [];
+  //PhongBT 18/05/26: fix Document Request
+  /** Chặn gen PDF trùng khi đang tạo file. */
+  _pdfGenerateInFlight = false;
   // tungnm37 thêm: remarkContent từ parent để truyền vào Apex khi submit COF/GSR
   @api remarkContent = '';
   handleManualItemsChange(event) {
@@ -1068,7 +1154,33 @@ export default class Fec_CaseBussiness extends LightningElement {
     chooseSubDecisionLabel: FEC_Choose_Sub_Decision_Label,
     addItemLabel: FEC_Add_Item_Label,
     assignmentRemarkLabel: FEC_Assignment_Remark_Label,
-    confirmLabel: FEC_Confirm_Label
+    confirmLabel: FEC_Confirm_Label,
+    mrcDupOpenCaseBtn: FEC_MRC_RL0502_Dup_Open_Case_Btn,
+  }
+
+  get showMrcRl0502DupBanner() {
+    const v = this.business?.mrcRl0502DuplicateOpenCaseId;
+    return typeof v === "string" && v.length >= 15;
+  }
+
+  get mrcRl0502DupBannerText() {
+    const num = String(this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY);
+    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
+  }
+
+  handleOpenMrcDupCase() {
+    const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
+    if (!rid) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: rid,
+        objectApiName: "Case",
+        actionName: "view",
+      },
+    });
   }
 
   @api getNatureOfCaseId() {
@@ -1240,7 +1352,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (
       this.business?.lockApiLwcsAfterRevertToDefaultStage === true &&
       (componentName === "fec_IPPConversionRetailForm" ||
-        componentName === "fec_CardClosureRefundForm")
+        componentName === "fec_CardClosureRefundForm" ||
+        componentName === "fec_RemovePhoneForm")
     ) {
       return false;
     }
@@ -1395,7 +1508,7 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._pendingPropertySnapshot = snapshot;
 
         // Reload business với NOC mới
-        this.getData(
+        return this.getData(
           message.productTypeId,
           message.categoryId,
           message.subCategoryId,
@@ -1407,13 +1520,20 @@ export default class Fec_CaseBussiness extends LightningElement {
         console.error('[NOC-UPDATE] getPropertyFieldsFromFlowHistory error:', err);
         // Fallback: reload business mà không merge (không block flow)
         this._pendingPropertySnapshot = null;
-        this.getData(
+        return this.getData(
           message.productTypeId,
           message.categoryId,
           message.subCategoryId,
           message.subCodeId,
           message.natureOfCaseId
         );
+      })
+      .then(() => {
+        //PhongBT 18/05/26: fix Document Request
+        // PhongBT: Document Request — gen PDF sau khi chọn sub-code (chỉ trên luồng CASE_NOC)
+        if (message.subCodeId != null) {
+          void this._generateAndSavePdfIfApplicable(message.subCodeId);
+        }
       });
   }
 
@@ -1489,7 +1609,7 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.businessLoaded = false;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1294
     this._hidePropertyInfoForFastCash = false;
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
     this._hideC360AndPropertyForPointsRedemption = false;
     this._ippClosureHasEligibleRows = false;
     this._fetchRdPaymentQueues(); // Toannd61
@@ -1526,10 +1646,13 @@ export default class Fec_CaseBussiness extends LightningElement {
 
         // Hiện section Routing khi Apex trả ít nhất một option; chế độ xem vẫn thấy Action, chỉ khóa dropdown (isRoutingActionDisabled).
         // tungnm37: COF/GSR luôn hiện section dù routingActionlst rỗng (chưa có stage)
+        //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+        const docReqRoutingCtx = getDocumentRequestRoutingContext(this.business);
         this.business.hasRoutingAction =
           (typeof this.business.code === 'string' && (this.business.code.startsWith('COF') || this.business.code.startsWith('GSR'))) ||
           (Array.isArray(this.business.routingActionlst) &&
-            this.business.routingActionlst.length > 0);
+            this.business.routingActionlst.length > 0) ||
+          docReqRoutingCtx.eligible;
 
         // Ưu tiên draft đã lưu, nếu không có hoặc không hợp lệ thì dùng option đầu tiên
         const draftCode = this.business.draftRoutingActionCode;
@@ -1705,6 +1828,13 @@ export default class Fec_CaseBussiness extends LightningElement {
                   field.readonlyDisplayValue = field.displayValue;
                   // PhuongNT add set hidden field
                   field.isHidden = !this.cardReplacementReason;
+                } else if (
+                  field.apiName === FIELD_LOAN_AMOUNT
+                  // field.apiName === FIELD_LOAN_AMOUNT &&
+                  // row.sub?.name === SUBSECTION_NAME_C360_INFO
+                ) {
+                  field.displayValue = formatCurrency2(field.value);
+                  field.readonlyDisplayValue = field.displayValue;
                 }
                 // PhuongNT add set newBlockCode
                 else if (field.apiName === FIELD_NEW_BLOCK_CODE) {
@@ -1728,7 +1858,7 @@ export default class Fec_CaseBussiness extends LightningElement {
           this.showProcessAction = true;
         }
         // PhuongNT add show button process action with process Card Replacement
-        if (this.business?.code === PROCESS_CARD_REPLACEMENT && this._isEdit) {
+        if (this.business?.code === PROCESS_CARD_REPLACEMENT && this._isEdit && this.isStage1) {
           this.handleCheckProcessAction();
         }
 
@@ -1748,21 +1878,19 @@ export default class Fec_CaseBussiness extends LightningElement {
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1393
-        this._hideC360AndPropertyForPointsRedemption = isPointsRedemptionHideC360AndProperty(
-          this.business?.subCodeCode
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+        this._setPointsRedemptionHideFlag(
+          isPointsRedemptionHideC360AndProperty(this.business?.subCodeCode)
         );
-        this._applyPointsRedemptionSectionVisibility();
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
+        this._syncRemovePhoneLockAfterRevert();
         //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — mỗi accordion chỉ nhận đúng tên section của nó.
         this.activeMainSectionlst = [...sectionlst];
         //linhdev fix section Account Info + Case Info
         Promise.resolve().then(() => {
           this._ensureAccountCaseSectionsExpanded();
         });
-        this.activeRoutingSectionlst = this.showRoutingSection ? ["routing-action"] : [];
-
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business:", JSON.stringify(this.business))
         this.applyDraft();
         this._applyCsSupportAssessmentRoutingActionSync();
@@ -1776,6 +1904,10 @@ export default class Fec_CaseBussiness extends LightningElement {
           this._mergePropertyFieldSnapshot(this._pendingPropertySnapshot);
           this._pendingPropertySnapshot = null;
         }
+        //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+        this._loadDocumentRequestStageChangeRouting().then(() => {
+          this._syncActiveRoutingSection();
+        });
         // PhuongNT add get current card status for Card Block/Unblock
         if (this.business?.code === PROCESS_BLOCK_CARD || this.business?.code === PROCESS_UNBLOCK_CARD) {
           this.handleGetCardStatus();
@@ -1888,14 +2020,18 @@ export default class Fec_CaseBussiness extends LightningElement {
     }
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   handlePointsRedemptionSectionVisibility(event) {
-    const hide = !!(event.detail && event.detail.hideC360AndProperty);
-    this._hideC360AndPropertyForPointsRedemption = hide;
+    this._setPointsRedemptionHideFlag(!!(event.detail && event.detail.hideC360AndProperty));
+  }
+
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+  _setPointsRedemptionHideFlag(hide) {
+    this._hideC360AndPropertyForPointsRedemption = !!hide;
     this._applyPointsRedemptionSectionVisibility();
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
   _applyPointsRedemptionSectionVisibility() {
     if (!this.business?.sectionlst) {
       return;
@@ -1903,18 +2039,16 @@ export default class Fec_CaseBussiness extends LightningElement {
     let changed = false;
     const hide = !!this._hideC360AndPropertyForPointsRedemption;
     this.business.sectionlst.forEach((section) => {
-      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
-        return;
+      const sectionName = section.name;
+      const nextTarget = pointsRedemptionHideTargetForSection(sectionName, hide);
+      if (section._pointsRedemptionHideTarget !== nextTarget) {
+        section._pointsRedemptionHideTarget = nextTarget;
+        changed = true;
       }
       section.subSectionlst?.forEach((sub) => {
-        if (
-          sub.name !== SUBSECTION_NAME_C360_INFO &&
-          sub.name !== SUBSECTION_NAME_PROPERTY_INFO
-        ) {
-          return;
-        }
-        if (sub._hideForPointsRedemption !== hide) {
-          sub._hideForPointsRedemption = hide;
+        const shouldHideSub = shouldHidePointsRedemptionSubSection(sectionName, sub.name, hide);
+        if (sub._hideForPointsRedemption !== shouldHideSub) {
+          sub._hideForPointsRedemption = shouldHideSub;
           changed = true;
         }
       });
@@ -2115,6 +2249,16 @@ export default class Fec_CaseBussiness extends LightningElement {
       this._rebuildAllSectionSortedRows();
     }
 
+    //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+    if (
+      fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DELIVERY ||
+      fieldName === Fec_CaseBussiness.DOC_REQ_FIELD_DOCUMENT_TYPE
+    ) {
+      this._loadDocumentRequestStageChangeRouting().then(() => {
+        this._syncActiveRoutingSection();
+      });
+    }
+
     if (PHONE_VALIDATED_FIELD_APIS.has(fieldName) && field) {
       field.customError = validateUpdatedInfoPhone(value) || null;
       field.editWrapperClass =
@@ -2289,9 +2433,8 @@ export default class Fec_CaseBussiness extends LightningElement {
           break;
       }
 
-      let routeToEle = this.template.querySelector(
-        'lightning-select[data-id="routing-action"]',
-      );
+      //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+      let routeToEle = this._getRoutingActionSelectEl();
 
       if (routeToEle) {
         if (toRouteTo === true) {
@@ -2415,9 +2558,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     });
 
-    let routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    let routeToEle = this._getRoutingActionSelectEl();
 
     if (routeToEle)
       isAllValid = routeToEle && routeToEle.reportValidity() && isAllValid;
@@ -2758,7 +2900,24 @@ export default class Fec_CaseBussiness extends LightningElement {
     return host.saveRemovePhoneForSubmitIfApplicable();
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+  _notifyRemovePhoneCaseSubmitted() {
+    const host = this._getSubProcessContainerEl();
+    if (host && typeof host.notifyRemovePhoneCaseSubmitted === "function") {
+      host.notifyRemovePhoneCaseSubmitted();
+    }
+    this._syncRemovePhoneLockAfterRevert();
+  }
+
+  _syncRemovePhoneLockAfterRevert() {
+    const host = this._getSubProcessContainerEl();
+    if (!host) {
+      return;
+    }
+    host.lockApiLwcsAfterRevertToDefaultStage =
+      this.business?.lockApiLwcsAfterRevertToDefaultStage === true;
+  }
+
+  //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
@@ -2948,9 +3107,8 @@ export default class Fec_CaseBussiness extends LightningElement {
     if (!this._validateIPPClosureForSubmit()) return false;
 
     // Có routing thì mới chặn khi chưa đổi thông tin Updated; không có routing cho phép chỉ submit remarks.
-    let routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    let routeToEle = this._getRoutingActionSelectEl();
     const noUpdate = checkNoUpdateInSubmit(
       this._getCaseFieldOriginalValue.bind(this),
       this._getCaseFieldValue.bind(this),
@@ -3156,19 +3314,36 @@ export default class Fec_CaseBussiness extends LightningElement {
         }
       }
     }
-    //PhongBT 14/05/26: Document Request — gen PDF + save vào Case sau submit thành công
-    await this._generateAndSavePdfIfApplicable();
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1368
+    this._notifyRemovePhoneCaseSubmitted();
     return true;
   }
 
+  //PhongBT 18/05/26: fix Document Request
   /**
-   * PhongBT 14/05/26: Document Request — gen PDF theo sub-code RL04.02/RL04.03 và lưu vào Case.
-   * Data lấy từ business object (sectionlst → field value), mapping xem fecDocumentRequestPdfData.js.
+   * PhongBT: Document Request — gen PDF theo sub-code RL04.02/RL04.03 và lưu vào Case.
+   * Chỉ gọi từ _handleNOCUpdate khi user chọn sub-code (CASE_NOC), không gọi trong getData/submit.
+   * Bỏ qua nếu FEC_PaymentHistoryValidationService không cho phép (allowed = false).
+   * Header data lấy trực tiếp qua Apex getDocumentRequestPdfHeaderData(caseId)
+   * (Case → FEC_Customer_History__c + FEC_Address_Info__c), không còn duyệt business.sectionlst.
    */
-  async _generateAndSavePdfIfApplicable() {
+  async _generateAndSavePdfIfApplicable(subCodeId) {
     const config = getPdfConfigForSubCode(this.business?.subCodeCode);
-    if (!config) return;
+    if (!config || subCodeId == null) return;
+    if (this._pdfGenerateInFlight) return;
+
     try {
+      const validation = await validatePaymentHistoryRequestForSubCode({
+        caseId: this.recordId,
+        subCodeId
+      });
+      if (!validation?.allowed) {
+        return;
+      }
+
+      this._pdfGenerateInFlight = true;
+
+      const headerData = await getDocumentRequestPdfHeaderData({ caseId: this.recordId });
       let paymentRows = [];
       let repaymentRows = [];
       if (config.needsPaymentRows) {
@@ -3177,9 +3352,18 @@ export default class Fec_CaseBussiness extends LightningElement {
       if (config.needsRepaymentRows) {
         repaymentRows = await getRepaymentScheduleRows({ caseId: this.recordId });
       }
-      const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, this.business, paymentRows, repaymentRows);
+      const pdfConfig = buildPdfDataForSubCode(this.business.subCodeCode, headerData, paymentRows, repaymentRows);
+      if (!pdfConfig) {
+        console.warn('[PDF] buildPdfDataForSubCode returned null, subCodeCode=', this.business?.subCodeCode);
+        return;
+      }
+      console.log('[PDF] headerData', JSON.stringify(headerData));
+      console.log('[PDF] data', JSON.stringify(pdfConfig.data));
       const generator = this.template.querySelector('c-fec-pdf-generator');
-      if (!generator) return;
+      if (!generator) {
+        console.warn('[PDF] c-fec-pdf-generator not found in template');
+        return;
+      }
       const { base64, fileName } = await generator.generatePdf(pdfConfig.templateCode, pdfConfig.data);
       await savePdfToCase({
         base64Data: base64,
@@ -3188,6 +3372,8 @@ export default class Fec_CaseBussiness extends LightningElement {
       });
     } catch (err) {
       console.error('PDF generation/save failed:', err);
+    } finally {
+      this._pdfGenerateInFlight = false;
     }
   }
 
@@ -3919,6 +4105,21 @@ export default class Fec_CaseBussiness extends LightningElement {
     this._scheduleRefreshFileUploadCards();
   }
 
+  /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
+  @api
+  refreshAutoHoldCase() {
+    const delays = [2000, 5000, 8000];
+    delays.forEach((delayMs) => {
+      // eslint-disable-next-line @lwc/lwc/no-async-operation
+      setTimeout(() => {
+        const subprocess =
+          this.template.querySelector("c-fec_-sub-process-container") ||
+          this.template.querySelector("c-fec-sub-process-container");
+        subprocess?.refreshAutoHoldCase?.();
+      }, delayMs);
+    });
+  }
+
   applyDraft() {
     const draft = JSON.parse(localStorage.getItem(this.draftStorageKey));
     if (!draft || !this.business) return;
@@ -3962,8 +4163,79 @@ export default class Fec_CaseBussiness extends LightningElement {
     this.business = { ...this.business };
   }
   //Thangtv update logic only show routing action when mode = handling
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
   get showRoutingSection() {
-    return this.isEdit && this.business?.hasRoutingAction;
+    return this.showLegacyRoutingSection || this.showDocumentRequestStageChangeRoutingSection;
+  }
+
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  get showLegacyRoutingSection() {
+    return (
+      this.isEdit &&
+      this.business?.hasRoutingAction &&
+      !this._documentRequestStageChangeRoutingActive
+    );
+  }
+
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  get showDocumentRequestStageChangeRoutingSection() {
+    return this.isEdit && this._documentRequestStageChangeRoutingActive;
+  }
+
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  _syncActiveRoutingSection() {
+    if (this.showDocumentRequestStageChangeRoutingSection) {
+      this.activeRoutingSectionlst = ["routing-action-doc-request"];
+    } else if (this.showLegacyRoutingSection) {
+      this.activeRoutingSectionlst = ["routing-action"];
+    } else {
+      this.activeRoutingSectionlst = [];
+    }
+  }
+
+  //PhongBT 18/05/26: Document Request sử dụng cục routing action mới
+  _loadDocumentRequestStageChangeRouting() {
+    const ctx = getDocumentRequestRoutingContext(this.business);
+    if (!ctx.eligible || !ctx.team) {
+      this._documentRequestStageChangeRoutingActive = false;
+      return Promise.resolve();
+    }
+
+    return getDocumentRequestStageChangeRouting({
+      caseId: this.recordId,
+      teamUserGroup: ctx.team,
+    })
+      .then((res) => {
+        if (res?.nextQueueId) {
+          this._documentRequestStageChangeRoutingActive = true;
+          this.business = {
+            ...this.business,
+            nextTeam: res.nextTeam || ctx.team,
+            nextQueue: {
+              label: res.nextQueueLabel || STR_EMPTY,
+              value: res.nextQueueId,
+            },
+          };
+          this._setActionValueByCode(ACTION_ROUTE_TO);
+        } else {
+          this._documentRequestStageChangeRoutingActive = false;
+          this.dispatchEvent(
+            new ShowToastEvent({
+              title: FEC_Warning_Title,
+              message: FEC_MSG_Can_Not_Find_Next_Stage,
+              variant: "warning",
+            }),
+          );
+        }
+        this.business = { ...this.business };
+      })
+      .catch((err) => {
+        console.error(
+          "[DocumentRequestStageChangeRouting]",
+          JSON.stringify(err),
+        );
+        this._documentRequestStageChangeRoutingActive = false;
+      });
   }
 
   // tungnm37 thêm: hiển thị Assignment List khi COF/GSR và Case đã submit
@@ -4162,15 +4434,27 @@ export default class Fec_CaseBussiness extends LightningElement {
     return this._findRoutingActionByValueOrCode(this.actionValue)?.code || this.actionValue;
   }
 
+  //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+  _getRoutingActionSelectEl() {
+    if (this.showDocumentRequestStageChangeRoutingSection) {
+      const child = this.template.querySelector(
+        "c-fec_-document-request-routing-action",
+      );
+      return child?.getRoutingActionSelect?.() ?? null;
+    }
+    return this.template.querySelector(
+      'lightning-select[data-id="routing-action"]',
+    );
+  }
+
   _setActionValueByCode(code) {
     const optionValue = this._getRoutingActionValueByCode(code);
     if (!optionValue) {
       return;
     }
     this.actionValue = optionValue;
-    const routeToEle = this.template.querySelector(
-      'lightning-select[data-id="routing-action"]',
-    );
+    //PhongBT 19/05/26: Fix mr chuyển routing action của document request sang lwc con
+    const routeToEle = this._getRoutingActionSelectEl();
     if (routeToEle) {
       routeToEle.value = optionValue;
     }

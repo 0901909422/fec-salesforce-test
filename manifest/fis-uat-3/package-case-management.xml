@@ -7,6 +7,7 @@
         <members>FEC_FetchCollectionDataServiceCallout</members>
         <members>FEC_FetchCollectionDataService_Test</members>
         <members>FEC_CaseBusinessService</members>
+        <members>FEC_MrcDuplicateCaseService</members>
         <members>FEC_CaseRemarkController</members>
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
@@ -64,6 +65,7 @@
 		<members>FEC_CaseAssignmentNOCTriggerHandler</members>
 		<members>FEC_CaseAssignmentNocController</members>
 		<members>FEC_CaseAssignmentQueueRoleResolver</members>
+		<members>FEC_NewAssignmentController</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -401,6 +403,7 @@
 		<members>FEC_Assignment__c.FEC_OwnerID__c</members>
 		<members>FEC_Assignment__c.FEC_Team__c</members>
 		<members>FEC_Assignment__c.FEC_Assignment_Type__c</members>
+		<members>FEC_Assignment__c.FEC_Assignment_Name__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Assignment__c</members>
 		<members>FEC_Case_Remarks__c.FEC_Case_Remarks__c</members>
@@ -468,6 +471,7 @@
         <members>Case.FEC_Owner_In_Assignment_Users__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Changed_Status__c</members>
 		<members>FEC_Hold_Case_Config__c.FEC_Current_Status__c</members>
+        <members>Case.FEC_Is_DNB__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -593,6 +597,8 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+		<members>fec_NewAssignmentAction</members>
+        <members>fec_DoNotBotherResultView</members>
 		<name>LightningComponentBundle</name>
     </types>
     <types>
@@ -604,6 +610,7 @@
         <members>FEC_Collection_Date_Filter</members>
         <members>FEC_Assignment_Mode</members>
         <members>FEC_CaseAction</members>
+        <members>FEC_DoNotBother</members>
         <name>LightningMessageChannel</name>
     </types>
     <types>
@@ -1217,6 +1224,8 @@
 	</types>
 	<types>
         <members>Case.FEC_Execute_Assigment</members>
+        <members>Case.FEC_New_Assignment_LWC</members>
+        <members>Case.New_Assignment</members>
         <name>QuickAction</name>
     </types>
     <types>
