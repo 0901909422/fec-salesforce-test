@@ -79,7 +79,7 @@ export default class Fec_CaseRemarks extends LightningElement {
   @api validate() {
     const textarea = this.template.querySelector('lightning-textarea');
 
-    if (!textarea || !textarea.value) {
+    if (!textarea || !textarea.value || !textarea.value.trim()) {
       return false;
     }
 
