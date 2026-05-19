@@ -1,52 +1,92 @@
-// Scheduled Apex gọi FEC_CaseAssignmentAutoDistributeService.executeNow().
-//
-// Mỗi lần chạy service soát toàn bộ FEC_Case_Assignment__c Active và chỉ phân bổ khi isDueToRun
-// (Continuous: FEC_Scheduled_Time__c khớp “bội phút trong ngày”; Time-Based: khớp FEC_Time_Slots__c HH:mm).
-//
-// Hạn chế cron Salesforce: không dùng được liệt kê phút (0,5,10,...) hoặc */5 trong một số biểu thức —
-// đăng ký 12 Scheduled Job (mỗi phút lệch 5: :00,:05,…,:55) tương đương quét 5 phút một lần.
-//
-// Sau deploy (chọn một):
-//   FEC_AssignAutoDistribSched.scheduleEveryFiveMinutes();  // 12 job
-// hoặc (legacy — 2 job mỗi :00 và :30):
-//   FEC_AssignAutoDistribSched.scheduleHalfHourlyJobs();
-//
-public without sharing class FEC_AssignAutoDistribSched implements Schedulable {
-    public static final String CRON_HOURLY_AT_MIN_0 = '0 0 * * * ?';
-
-    public static final String CRON_HOURLY_AT_MIN_30 = '0 30 * * * ?';
-
-    public static final String JOB_NAME_MIN0 = 'FEC Case Assignment Auto Distribute :00';
-
-    public static final String JOB_NAME_MIN30 = 'FEC Case Assignment Auto Distribute :30';
-
-    public static final String JOB_NAME_EVERY_FIVE_PREFIX = 'FEC Case Assignment Auto Distribute 5m :';
-
-    public void execute(SchedulableContext sc) {
-        FEC_CaseAssignmentAutoDistributeService.executeNow();
-    }
-
-    /**
-     * Đăng ký 12 job (một phút mỗi 5 phút trong giờ).
-     * Trùng tên: Setup → Scheduled Jobs → Abort các job cũ cùng prefix rồi gọi lại.
-     *
-     * @return Id CronTrigger của 12 job đã schedule
-     */
-    public static List<String> scheduleEveryFiveMinutes() {
-        List<String> jobIds = new List<String>();
-        for (Integer minuteVal = 0; minuteVal < 60; minuteVal += 5) {
-            String mm = minuteVal < 10 ? '0' + String.valueOf(minuteVal) : String.valueOf(minuteVal);
-            String cron = '0 ' + String.valueOf(minuteVal) + ' * * * ?';
-            jobIds.add(System.schedule(JOB_NAME_EVERY_FIVE_PREFIX + mm, cron, new FEC_AssignAutoDistribSched()));
-        }
-        return jobIds;
-    }
-
-    /** Đăng ký 2 job. Trùng tên: Scheduled Jobs → Abort rồi chạy lại. */
-    public static List<String> scheduleHalfHourlyJobs() {
-        return new List<String>{
-            System.schedule(JOB_NAME_MIN0, CRON_HOURLY_AT_MIN_0, new FEC_AssignAutoDistribSched()),
-            System.schedule(JOB_NAME_MIN30, CRON_HOURLY_AT_MIN_30, new FEC_AssignAutoDistribSched())
-        };
-    }
-}
+// Scheduled Apex: gọi FEC_CaseAssignmentAutoDistributeService.executeNow() mỗi 5 phút.
+// Một job duy nhất tự schedule lần chạy kế tiếp (không cần 12 Cron như trước).
+//
+// Sau deploy, chạy một lần (Anonymous / Developer Console):
+//   FEC_AssignAutoDistribSched.startFiveMinuteChain();
+// (Có thể gọi scheduleEveryFiveMinutes() — giờ alias cùng hành vi trên.)
+//
+public without sharing class FEC_AssignAutoDistribSched implements Schedulable {
+    /** Prefix tên job chain mới; dùng để LIKE khi abort bản ghi trùng / chain hỏng. */
+    public static final String JOB_NAME_PREFIX = 'FEC_AssignAutoDistribSched';
+
+    /**
+     * Tên job cũ (12 job mỗi :00,:05,…) và :00/:30 — dùng khi bootstrap để dọn trước khi gắn chain mới.
+     */
+    public static final String LEGACY_NAME_PATTERN = 'FEC Case Assignment Auto Distribute%';
+
+    public void execute(SchedulableContext context) {
+        FEC_CaseAssignmentAutoDistributeService.executeNow();
+
+        Id selfCronTriggerId = context != null ? context.getTriggerId() : null;
+
+        String chainLike = JOB_NAME_PREFIX + ':%';
+        for (CronTrigger cronJob : [
+            SELECT Id
+            FROM CronTrigger
+            WHERE CronJobDetail.Name LIKE :chainLike
+        ]) {
+            if (selfCronTriggerId != null && cronJob.Id == selfCronTriggerId) {
+                continue;
+            }
+            System.abortJob(cronJob.Id);
+        }
+
+        scheduleNextRun();
+    }
+
+    /**
+     * Khởi chạy chuỗi 5 phút: hủy mọi job Case Assignment auto distribute (legacy + chain cũ), rồi đăng ký lần chạy kế tiếp sau 5 phút.
+     */
+    public static void startFiveMinuteChain() {
+        String chainLike = JOB_NAME_PREFIX + ':%';
+        List<CronTrigger> toAbort = [
+            SELECT Id
+            FROM CronTrigger
+            WHERE CronJobDetail.Name LIKE :LEGACY_NAME_PATTERN OR CronJobDetail.Name LIKE :chainLike
+        ];
+        for (CronTrigger ct : toAbort) {
+            System.abortJob(ct.Id);
+        }
+        scheduleNextRun();
+    }
+
+    /**
+     * Lên lịch một lần chạy tại now+5 phút; tên job unique để không trùng quota tên.
+     * Cron 7 tham số (kèm năm) — một thời điểm cụ thể theo timezone ngữ cảnh Apex.
+     */
+    public static void scheduleNextRun() {
+        DateTime fiveMinutesLater = System.now().addMinutes(5);
+        String uniqueName =
+            JOB_NAME_PREFIX +
+            ':' +
+            String.valueOf(fiveMinutesLater.getTime());
+        String cronExpression = String.format(
+            '{0} {1} {2} {3} {4} ? {5}',
+            new List<String>{
+                String.valueOf(fiveMinutesLater.second()),
+                String.valueOf(fiveMinutesLater.minute()),
+                String.valueOf(fiveMinutesLater.hour()),
+                String.valueOf(fiveMinutesLater.day()),
+                String.valueOf(fiveMinutesLater.month()),
+                String.valueOf(fiveMinutesLater.year())
+            }
+        );
+        System.schedule(uniqueName, cronExpression, new FEC_AssignAutoDistribSched());
+    }
+
+    /**
+     * @deprecated Dùng startFiveMinuteChain(). Giữ để script cũ không vỡ — không còn tạo 12 job.
+     */
+    public static List<String> scheduleEveryFiveMinutes() {
+        startFiveMinuteChain();
+        return new List<String>();
+    }
+
+    /**
+     * @deprecated Dùng startFiveMinuteChain().
+     */
+    public static List<String> scheduleHalfHourlyJobs() {
+        startFiveMinuteChain();
+        return new List<String>();
+    }
+}
