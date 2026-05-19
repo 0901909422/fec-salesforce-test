@@ -109,6 +109,9 @@
         <field>Case.FEC_Original_Sub_Code__c</field>
     </columns>
     <columns>
+        <field>Case.FEC_Category__c</field>
+    </columns>
+    <columns>
         <field>Case.FEC_SubCategory__c</field>
     </columns>
     <columns>
