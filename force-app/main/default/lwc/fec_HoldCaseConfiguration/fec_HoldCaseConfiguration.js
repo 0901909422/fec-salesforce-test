@@ -21,7 +21,6 @@ import { STR_EMPTY } from 'c/fec_CommonConst';
 
 import saveHoldCaseConfig from '@salesforce/apex/Fec_HoldCaseConfigurationController.saveHoldCaseConfig';
 import getHoldCaseConfigurations from '@salesforce/apex/Fec_HoldCaseConfigurationController.getHoldCaseConfigurations';
-import getParentHoldCaseConfigurations from '@salesforce/apex/Fec_HoldCaseConfigurationController.getParentHoldCaseConfigurations';
 import searchChannels from '@salesforce/apex/Fec_HoldCaseConfigurationController.searchChannels';
 import searchCaseStatus from '@salesforce/apex/Fec_HoldCaseConfigurationController.searchCaseStatus';
 import getNfuCodes from '@salesforce/apex/Fec_HoldCaseConfigurationController.getNfuCodes';
@@ -127,7 +126,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         { label: this.customLabel.caseStage, fieldName: 'caseStage' },
         { label: this.customLabel.active, fieldName: 'active', type: 'checkbox' },
         { label: 'Last Modified Date', fieldName: 'lastModifiedDate' },
-        { label: 'Last Modified By', fieldName: 'lastModifiedBy' }
+        { label: 'Last Modified By', fieldName: 'lastModifiedBy', type: 'link',recordIdField: 'userId' }
     ];
 
     nfuCodeColumns = [
@@ -242,7 +241,7 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
         Promise.all([
             getHoldCaseConfigurations({ recordId: this.recordId }),
         ])
-        .then(([childResult, parentResult]) => {
+        .then(([childResult]) => {
             this.holdCase = childResult;
         })
         .finally(() => {
@@ -770,49 +769,66 @@ export default class Fec_HoldCaseConfiguration extends NavigationMixin(Lightning
     }
 
     async handleHoldCaseConfigurationSelect(event) {
+        const { recordId, fieldName, actionKey } = event.detail || {};
 
-    const recordId = event.detail.recordId;
+        if (!recordId) {
+            console.error('Missing recordId from rowselect event');
+            return;
+        }
 
-    const row = this.holdCase.find(
-        r => r.Id === recordId
-    );
+        try {
+            const tabInfo = await getFocusedTabInfo();
+            const parentTabId = tabInfo.isSubtab
+                ? tabInfo.parentTabId
+                : tabInfo.tabId;
 
-    if (!row) {
-        console.error('Hold Case not found:', recordId);
-        return;
+            // ================= USER LINK =================
+            if (recordId.startsWith('005') || actionKey === 'lastModifiedBy') {
+
+                await openSubtab(parentTabId, {
+                    pageReference: {
+                        type: 'standard__recordPage',
+                        attributes: {
+                            recordId: recordId,
+                            objectApiName: 'User',
+                            actionName: 'view'
+                        }
+                    },
+                    focus: true,
+                    label: 'User'
+                });
+
+                return;
+            }
+
+            // ================= HOLD CASE NAME =================
+            if (actionKey === 'name' || fieldName === 'name') {
+
+                const existingTabId = `${recordId}_name`;
+
+                await openSubtab(parentTabId, {
+                    pageReference: {
+                        type: 'standard__navItemPage',
+                        attributes: {
+                            apiName: 'FEC_HoldCaseConfiguration'
+                        },
+                        state: {
+                            c__recordId: recordId,
+                            c__mode: 'view',
+                            uid: existingTabId
+                        }
+                    },
+                    focus: true,
+                    label: 'Hold Case'
+                });
+
+                return;
+            }
+
+        } catch (error) {
+            console.error('Navigation error:', error);
+        }
     }
-
-    try {
-
-        const tabInfo = await getFocusedTabInfo();
-
-        const parentTabId = tabInfo.isSubtab
-            ? tabInfo.parentTabId
-            : tabInfo.tabId;
-
-        await openSubtab(parentTabId, {
-
-            pageReference: {
-                type: 'standard__navItemPage',
-
-                attributes: {
-                    apiName: 'FEC_HoldCaseConfiguration'
-                },
-
-                state: {
-                    c__recordId: row.Id,
-                    uid: row.Id + '_' + Date.now()
-                }
-            },
-
-            focus: true,
-            label: row.name
-        });
-
-    } catch (error) {
-        console.error(error);
-    }
-}
 
     // ================= TOAST =================
 
