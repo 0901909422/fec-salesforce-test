@@ -79,9 +79,6 @@ public without sharing class FEC_StatementsAccountController {
 
         /* ================= LOAD CASE ================= */
         Case c = [
-            SELECT FEC_Account_or_Contract__c,
-                FEC_Product_Type__r.Name,
-                FEC_Is_Test_API__c
             SELECT FEC_Account_or_Contract__c, FEC_Product_Type__r.Name, FEC_Is_Test_API__c
             FROM Case
             WHERE Id = :caseId

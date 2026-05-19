@@ -189,7 +189,17 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
         const helpTexts = this.transaction.helpTexts || {};
 
         return this.fieldConfig.map(f => {
-            const value = this.formatValue(f.fieldName, this.transaction[f.fieldName]);
+            const dualRaw =
+                f.dualFieldName != null
+                    ? this.transaction[f.dualFieldName]
+                    : null;
+            const useDual =
+                f.dualFieldName != null &&
+                dualRaw != null &&
+                String(dualRaw).trim() !== '';
+            const value = useDual
+                ? dualRaw
+                : this.formatValue(f.fieldName, this.transaction[f.fieldName]);
             const helpText = f.apiName ? helpTexts[f.apiName] : null;
 
             return {
@@ -211,28 +221,6 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             { key: 'col-1', fields: [] },
             { key: 'col-2', fields: [] },
             { key: 'col-3', fields: [] }
-                    const dualRaw =
-                        f.dualFieldName != null
-                            ? this.transaction[f.dualFieldName]
-                            : null;
-                    const useDual =
-                        f.dualFieldName != null &&
-                        dualRaw != null &&
-                        String(dualRaw).trim() !== '';
-
-                    return {
-                        label: f.label,
-                        value: useDual
-                            ? dualRaw
-                            : this.formatValue(
-                                  f.fieldName,
-                                  this.transaction[f.fieldName]
-                              ),
-                        hasHelpText: !!helpText,
-                        helpText
-                    };
-                })
-            }
         ];
 
         this.detailFields.forEach((field, index) => {

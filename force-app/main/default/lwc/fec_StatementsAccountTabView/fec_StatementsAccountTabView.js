@@ -149,7 +149,8 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', type: 'text', cellAlign: 'center' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', type: 'text', cellAlign: 'center' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', type: 'text', cellAlign: 'center' },
-        { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', type: 'text', cellAlign: 'center' }
+        { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', type: 'text', cellAlign: 'center' },
+        {
             label: this.customLabel.billedColTxnCode,
             fieldName: 'transactionCode',
             type: 'text',
