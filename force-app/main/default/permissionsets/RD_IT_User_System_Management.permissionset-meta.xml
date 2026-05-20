@@ -137,6 +137,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_CaseAssignmentTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CMSIPPBlockWS</apexClass>
         <enabled>true</enabled>
     </classAccesses>

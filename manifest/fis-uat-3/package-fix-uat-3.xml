@@ -109,6 +109,7 @@
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseAssignmentTriggerHandler</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -234,6 +235,8 @@
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
+        <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <name>CustomField</name>
     </types>
     <types>
