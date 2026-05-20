@@ -61,6 +61,8 @@ export default class fec_TeamQueueTree extends LightningElement {
                     name: team.teamLabel,
                     id: team.teamId,
                     teamQueueID: team.teamId,
+                    description: team.teamDescription,
+                    apiname: team.teamName,
                     expanded: false,
                     _children: [],
                     hasChildren: true
@@ -90,21 +92,27 @@ export default class fec_TeamQueueTree extends LightningElement {
         let teamQueueID = '';
         let teamQueueRecordID = '';
         let rowId = '';
+        let teamApiName = '';
+        let teamDescription = '';
+        let queueLabelStatus = '';
         
         // Check if it's an expand/collapse event (from onexpand/oncollapse)
        if (event.detail && event.detail.row) {
             let detailRow = event.detail.row;
             rowName = detailRow.name ? detailRow.name : '';
+            teamApiName = detailRow.apiname ? detailRow.apiname : '';
+            teamDescription = detailRow.description ? detailRow.description : '';
             rowType = detailRow.rowType ? detailRow.rowType : '';
             queueId = detailRow.queueId ? detailRow.queueId : '';
             teamQueueID = detailRow.teamQueueID ? detailRow.teamQueueID : '';
             teamQueueRecordID = detailRow.teamQueueRecordID ? detailRow.teamQueueRecordID : '';
             rowId = detailRow.id ? detailRow.id : '';
+            queueLabelStatus = detailRow.queueLabelStatus ? detailRow.queueLabelStatus : '';
         }
-        console.log('rowId: ', rowId, ' rowName:', rowName, ' rowType:', rowType, ' queueId:', queueId, ' teamQueueID:', teamQueueID, ' ;teamQueueRecordID: ', teamQueueRecordID);
+        console.log('rowId: ', rowId, ' rowName:', rowName, ' rowType:', rowType, ' teamApiName:', teamApiName, ' teamDescription:', teamDescription, ' queueId:', queueId, ' teamQueueID:', teamQueueID, ' ;teamQueueRecordID: ', teamQueueRecordID);
         if (rowType === 'QUEUE' && queueId) {
             // New custom event to get queue users show on parent LWC
-            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID} }));
+            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID, queueLabelStatus: queueLabelStatus} }));
         } else if (rowType === 'ADD_QUEUE' && teamQueueID) {
             // Handle show model Add queue form
             this.openModal(teamQueueID);
@@ -114,7 +122,7 @@ export default class fec_TeamQueueTree extends LightningElement {
             // Expand row
             this.expandedTeams = [...this.expandedTeams, rowId];
             // Call loadHistory
-            this.dispatchEvent(new CustomEvent('selectteam', { detail: { teamId: rowId, teamName: rowName} }));
+            this.dispatchEvent(new CustomEvent('selectteam', { detail: { teamId: rowId, teamName: rowName, teamApiName: teamApiName, teamDescription: teamDescription } }));
             this.loadQueuesForTeam(rowId);
         } else if (this.expandedTeams.includes(rowId)) {
             // Handle collapse row
@@ -133,7 +141,8 @@ export default class fec_TeamQueueTree extends LightningElement {
                 rowType: 'QUEUE',
                 teamQueueID: teamID,
                 teamQueueRecordID: queue.id,
-                queueId: queue.queueId
+                queueId: queue.queueId,
+                queueLabelStatus: queue.queueLabelStatus
             }));
            
             // Record Add Queue in Team

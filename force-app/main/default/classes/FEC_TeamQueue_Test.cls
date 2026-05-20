@@ -65,10 +65,38 @@ public class FEC_TeamQueue_Test {
     @isTest
     static void testGetListTeam() {
         FEC_Team__c team = createSampleTeam();
+        // Also create an inactive team that should NOT be returned
+        FEC_Team__c inactiveTeam = new FEC_Team__c(
+            Name = 'InactiveTeam',
+            FEC_Team_Label__c = 'Inactive Label',
+            FEC_Team_Description__c = 'Inactive Desc',
+            FEC_Team_Active__c = false
+        );
+        insert inactiveTeam;
+
         Test.startTest();
         List<FEC_TeamQueue.TeamQueueWrapper> teams = FEC_TeamQueue.getListTeam();
         Test.stopTest();
-        System.assert(teams.size() > 0, 'Should return at least one team');
+
+        // Should return at least the active team
+        System.assert(teams.size() >= 1, 'Should return at least one active team');
+
+        // Verify the active team is in the result with correct field mapping
+        Boolean foundActive = false;
+        Boolean foundInactive = false;
+        for (FEC_TeamQueue.TeamQueueWrapper w : teams) {
+            if (w.teamId == team.Id) {
+                foundActive = true;
+                System.assertEquals('TestTeam', w.teamName, 'teamName should map to FEC_Team__c.Name');
+                System.assertEquals('Test Label', w.teamLabel, 'teamLabel should map to FEC_Team_Label__c');
+                System.assertEquals('Test Description', w.teamDescription, 'teamDescription should map to FEC_Team_Description__c');
+            }
+            if (w.teamId == inactiveTeam.Id) {
+                foundInactive = true;
+            }
+        }
+        System.assertEquals(true, foundActive, 'Active team should be in the result');
+        System.assertEquals(false, foundInactive, 'Inactive team should NOT be in the result');
     }
 
     @isTest
@@ -93,7 +121,8 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Select_Team__c = team.Id,
-            FEC_Queue_Name__c = 'TestQueueDevName'
+            FEC_Queue_Name__c = 'TestQueueDevName',
+            FEC_Team__c = 'Active'
         );
         insert tq;
 
@@ -101,6 +130,15 @@ public class FEC_TeamQueue_Test {
         List<FEC_TeamQueue.ListQueueDto> queues = FEC_TeamQueue.getQueuesForTeam(team.Id);
         Test.stopTest();
         System.assertNotEquals(null, queues, 'Queues list should not be null');
+        // Note: result size depends on whether DepartmentAdmin.getQueueValidBaseNameOrId
+        // finds a matching Group record. In unit tests without a real Queue Group,
+        // the list may be empty. We verify the method executes without error.
+        // If a queue IS returned, verify queueLabelStatus mapping
+        for (FEC_TeamQueue.ListQueueDto q : queues) {
+            if (q.id == tq.Id) {
+                System.assertEquals('Active', q.queueLabelStatus, 'queueLabelStatus should map to FEC_Team__c field');
+            }
+        }
     }
 
     @isTest
