@@ -8,12 +8,14 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-10     Quangdv7             Create
+   1.1      2026-05-12     Agent                Billed tx: GetCardFinancialTransactions; VN column labels; sort by effectiveSortEpoch
  
 ****************************************************************************************/
 
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import { NavigationMixin } from 'lightning/navigation';
+import { getFocusedTabInfo, openSubtab } from 'lightning/platformWorkspaceApi';
 import { setConsoleTab } from 'c/fec_CommonUtils';
 
 import loadStatementDetails from '@salesforce/apex/FEC_StatementsAccountController.loadStatementDetails';
@@ -34,6 +36,29 @@ import FEC_Total_Past_Due from '@salesforce/label/c.FEC_Total_Past_Due';
 import FEC_Current_Payment_Due from '@salesforce/label/c.FEC_Current_Payment_Due';
 import FEC_IPP_Interest from '@salesforce/label/c.FEC_IPP_Interest';
 import FEC_Statement_Details from '@salesforce/label/c.FEC_Statement_Details';
+import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
+import FEC_Transaction_Plan from '@salesforce/label/c.FEC_Transaction_Plan';
+import FEC_Effective_Date from '@salesforce/label/c.FEC_Effective_Date';
+import FEC_Authorization_Code from '@salesforce/label/c.FEC_Authorization_Code';
+import FEC_Post_Date from '@salesforce/label/c.FEC_Post_Date';
+import FEC_Credit_Debit_Flag from '@salesforce/label/c.FEC_Credit_Debit_Flag';
+import FEC_Transaction_Amount from '@salesforce/label/c.FEC_Transaction_Amount';
+import FEC_Currency_Code from '@salesforce/label/c.FEC_Currency_Code';
+import FEC_Merchant_Description from '@salesforce/label/c.FEC_Merchant_Description';
+import FEC_OTP_Sent from '@salesforce/label/c.FEC_OTP_Sent';
+import FEC_Merchant_Category_Code from '@salesforce/label/c.FEC_Merchant_Category_Code';
+
+import FEC_BilledTx_Col_EffectiveDate from '@salesforce/label/c.FEC_BilledTx_Col_EffectiveDate';
+import FEC_BilledTx_Col_PostDate from '@salesforce/label/c.FEC_BilledTx_Col_PostDate';
+import FEC_BilledTx_Col_Amount from '@salesforce/label/c.FEC_BilledTx_Col_Amount';
+import FEC_BilledTx_Col_Merchant from '@salesforce/label/c.FEC_BilledTx_Col_Merchant';
+import FEC_BilledTx_Col_DebitCredit from '@salesforce/label/c.FEC_BilledTx_Col_DebitCredit';
+import FEC_BilledTx_Col_Plan from '@salesforce/label/c.FEC_BilledTx_Col_Plan';
+import FEC_BilledTx_Col_TxnCode from '@salesforce/label/c.FEC_BilledTx_Col_TxnCode';
+import FEC_BilledTx_Col_AuthCode from '@salesforce/label/c.FEC_BilledTx_Col_AuthCode';
+import FEC_BilledTx_Col_MCC from '@salesforce/label/c.FEC_BilledTx_Col_MCC';
+import FEC_BilledTx_Col_Currency from '@salesforce/label/c.FEC_BilledTx_Col_Currency';
+import FEC_BilledTx_Col_OTP from '@salesforce/label/c.FEC_BilledTx_Col_OTP';
 
 export default class Fec_StatementsAccountTabView extends NavigationMixin(LightningElement) {
 
@@ -48,38 +73,8 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
     activeSections = ['statementDetail', 'billedTx'];
 
     // ==============================
-    // COLUMNS
+    // LABELS (must be before columns that reference this.customLabel)
     // ==============================
-    billedTransactionsColumns = [
-        {
-            label: 'Transaction Code',
-            fieldName: 'transactionCode',
-            type: 'link',
-            recordIdField: 'Id',
-            hoverTitle: 'Billed Transactions',
-            cellAlign: 'center',
-            hoverFields: [
-                { label: 'Effective Date', fieldName: 'effectiveDate' },
-                { label: 'Post Date', fieldName: 'postDate' },
-                { label: 'Transaction Amount', fieldName: 'transactionAmount' },
-                { label: 'Merchant Description', fieldName: 'merchantDescription' },
-                { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag' },
-                { label: 'Transaction Plan', fieldName: 'transactionPlan' },
-                { label: 'Transaction Code', fieldName: 'transactionCode' },
-                { label: 'Authorization Code', fieldName: 'authorizationCode' },
-                { label: 'Merchant Category Code', fieldName: 'merchantCategoryCode' },
-                { label: 'Currency Code', fieldName: 'currencyCode' },
-                { label: 'OTP Sent', fieldName: 'otpSent' }
-
-            ]
-        },
-        { label: 'Effective Date', fieldName: 'effectiveDate', type: 'text', cellAlign: 'center' },
-        { label: 'Post Date', fieldName: 'postDate', type: 'text', cellAlign: 'center' },
-        { label: 'Transaction Amount', fieldName: 'transactionAmount', type: 'text', cellAlign: 'right' },
-        { label: 'Merchant Description', fieldName: 'merchantDescription', type: 'text' },
-        { label: 'Credit Debit Flag', fieldName: 'creditDebitFlag', type: 'text', cellAlign: 'center' }
-    ];
-
     customLabel = {
         statementLabel: FEC_Statement,
         billedTransactionsLabel: FEC_Billed_Transactions,
@@ -95,8 +90,144 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
         totalPastDueLabel: FEC_Total_Past_Due,
         currentPaymentDueLabel: FEC_Current_Payment_Due,
         ippInterestLabel: FEC_IPP_Interest,
-        statementDetailsLabel: FEC_Statement_Details
-    }
+        statementDetailsLabel: FEC_Statement_Details,
+        transactionCodeLabel: FEC_Transaction_Code,
+        transactionPlanLabel: FEC_Transaction_Plan,
+        effectiveDateLabel: FEC_Effective_Date,
+        authorizationCodeLabel: FEC_Authorization_Code,
+        postDateLabel: FEC_Post_Date,
+        creditDebitFlagLabel: FEC_Credit_Debit_Flag,
+        transactionAmountLabel: FEC_Transaction_Amount,
+        currencyCodeLabel: FEC_Currency_Code,
+        merchantDescriptionLabel: FEC_Merchant_Description,
+        otpSentLabel: FEC_OTP_Sent,
+        merchantCategoryCodeLabel: FEC_Merchant_Category_Code,
+        billedColEffectiveDate: FEC_BilledTx_Col_EffectiveDate,
+        billedColPostDate: FEC_BilledTx_Col_PostDate,
+        billedColAmount: FEC_BilledTx_Col_Amount,
+        billedColMerchant: FEC_BilledTx_Col_Merchant,
+        billedColDebitCredit: FEC_BilledTx_Col_DebitCredit,
+        billedColPlan: FEC_BilledTx_Col_Plan,
+        billedColTxnCode: FEC_BilledTx_Col_TxnCode,
+        billedColAuthCode: FEC_BilledTx_Col_AuthCode,
+        billedColMcc: FEC_BilledTx_Col_MCC,
+        billedColCurrency: FEC_BilledTx_Col_Currency,
+        billedColOtp: FEC_BilledTx_Col_OTP
+    };
+
+    // ==============================
+    // COLUMNS
+    // ==============================
+    billedTransactionsColumns = [
+        {
+            label: this.customLabel.transactionCodeLabel,
+            fieldName: 'transactionCode',
+            type: 'link',
+            recordIdField: 'Id',
+            hoverTitle: this.customLabel.billedTransactionsLabel,
+            cellAlign: 'center',
+            hoverFields: [
+                { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate' },
+                { label: this.customLabel.postDateLabel, fieldName: 'postDate' },
+                { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount' },
+                { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription' },
+                { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag' },
+                { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan' },
+                { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode' },
+                { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode' },
+                { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode' },
+                { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode' },
+                { label: this.customLabel.otpSentLabel, fieldName: 'otpSent' }
+            ]
+        },
+        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.postDateLabel, fieldName: 'postDate', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', type: 'text', cellAlign: 'right' },
+        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', type: 'text', width: '240px' },
+        { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', type: 'text', cellAlign: 'center' },
+        { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', type: 'text', cellAlign: 'center' },
+        {
+            label: this.customLabel.billedColTxnCode,
+            fieldName: 'transactionCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.billedColEffectiveDate,
+            fieldName: 'effectiveDate',
+            sortFieldName: 'effectiveSortEpoch',
+            type: 'text',
+            cellAlign: 'center',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.billedColPostDate,
+            fieldName: 'postDate',
+            type: 'text',
+            cellAlign: 'center',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.billedColAmount,
+            fieldName: 'transactionAmount',
+            type: 'text',
+            cellAlign: 'right',
+            width: '140px'
+        },
+        {
+            label: this.customLabel.billedColMerchant,
+            fieldName: 'merchantDescription',
+            type: 'text',
+            width: '220px'
+        },
+        {
+            label: this.customLabel.billedColDebitCredit,
+            fieldName: 'creditDebitFlag',
+            type: 'text',
+            cellAlign: 'center',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.billedColPlan,
+            fieldName: 'transactionPlan',
+            type: 'text',
+            cellAlign: 'left',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.billedColAuthCode,
+            fieldName: 'authorizationCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '120px'
+        },
+        {
+            label: this.customLabel.billedColMcc,
+            fieldName: 'merchantCategoryCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.billedColCurrency,
+            fieldName: 'currencyCode',
+            type: 'text',
+            cellAlign: 'center',
+            width: '100px'
+        },
+        {
+            label: this.customLabel.billedColOtp,
+            fieldName: 'otpSent',
+            type: 'text',
+            cellAlign: 'center',
+            width: '88px'
+        }
+    ];
 
     // ==============================
     // PAGE STATE
@@ -184,10 +315,11 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
     formatBilledTransactions(records) {
         if (!Array.isArray(records)) return [];
 
-        return records.map(tx => ({
+        return records.map((tx) => ({
             ...tx,
             effectiveDate: this.formatDate(tx.effectiveDate),
             postDate: this.formatDate(tx.postDate),
+            postingDate: this.formatDate(tx.postDate),
             transactionAmount: this.formatNumber(tx.transactionAmount)
         }));
     }
@@ -240,19 +372,45 @@ export default class Fec_StatementsAccountTabView extends NavigationMixin(Lightn
     // ==============================
     // NAVIGATION
     // ==============================
-    handleTransactionSelect(event) {
-        const transactionId = event.detail.recordId;
-        if (!transactionId) return;
+    /**
+     * Mở subtab Transaction detail (giống Statement Date → FEC_Statements).
+     */
+    async handleTransactionSelect(event) {
+        const recordId = event.detail.recordId;
+        if (!recordId) return;
 
-        this[NavigationMixin.Navigate]({
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'FEC_Transactions'
-            },
-            state: {
-                c__transactionId: transactionId,
-                c__sectionType: 'billed'
-            }
-        });
+        const row = this.billedTransactions.find((r) => r.Id === recordId);
+        if (!row) return;
+
+        const state = {
+            c__transactionId: recordId,
+            c__transactionCode: row.transactionCode,
+            c__sectionType: 'billed',
+            uid: recordId + '_' + Date.now()
+        };
+
+        try {
+            const tabInfo = await getFocusedTabInfo();
+            const parentTabId = tabInfo.isSubtab ? tabInfo.parentTabId : tabInfo.tabId;
+
+            await openSubtab(parentTabId, {
+                pageReference: {
+                    type: 'standard__navItemPage',
+                    attributes: {
+                        apiName: 'FEC_Transactions'
+                    },
+                    state
+                },
+                focus: true,
+                label: 'Transaction ' + row.transactionCode
+            });
+        } catch (e) {
+            console.error('openSubtab Transaction failed', e);
+            this[NavigationMixin.Navigate]({
+                type: 'standard__navItemPage',
+                attributes: { apiName: 'FEC_Transactions' },
+                state
+            });
+        }
     }
 }

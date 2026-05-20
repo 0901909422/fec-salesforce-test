@@ -40,32 +40,33 @@ public with sharing class FEC_IPPController {
             return new List<IPPRecordDTO>();
         }
 
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        Boolean isMockMode = apiSetting == null || apiSetting.FEC_Call_Mock__c != false;
+
+        if (isMockMode) {
+            List<IPPRecordDTO> result = FEC_MockData.getHardcodedIPPRecordsForUI();
+            sortByOpenDate(result);
+            Map<String, String> helpTextMap = getIPPHelpTextMap();
+            for (IPPRecordDTO dto : result) {
+                dto.helpTexts = helpTextMap;
+            }
+            return result;
+        }
+
         String accountNumber = getAccountNumberFromCase(caseId);
         if (String.isBlank(accountNumber)) {
             return new List<IPPRecordDTO>();
         }
 
-        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        if (apiSetting != null && apiSetting.FEC_Call_Mock__c == false) {
-            List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
-            sortByOpenDate(result);
-            saveIPPRecordsToDatabase(caseId, result);
-
-            Map<String, String> helpTextMap = getIPPHelpTextMap();
-            for (IPPRecordDTO dto : result) {
-                dto.helpTexts = helpTextMap;
-            }
-
-            return result;
-        }
-
-        // Mock mode hoặc apiSetting null: trả về dữ liệu IPP từ DB (nếu có)
-        List<IPPRecordDTO> result = loadIPPRecordsFromDatabase(caseId);
+        List<IPPRecordDTO> result = fetchIPPRecordsFromAPI(caseId, accountNumber);
         sortByOpenDate(result);
-        Map<String, String> helpTextMap = getIPPHelpTextMap();
+        saveIPPRecordsToDatabase(caseId, result);
+
+        Map<String, String> helpTextMapLive = getIPPHelpTextMap();
         for (IPPRecordDTO dto : result) {
-            dto.helpTexts = helpTextMap;
+            dto.helpTexts = helpTextMapLive;
         }
+
         return result;
     }
 

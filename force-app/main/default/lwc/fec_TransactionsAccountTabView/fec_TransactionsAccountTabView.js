@@ -8,16 +8,21 @@
  * Ver      Date           Author              Modification
  * ===============================================================
    1.0      2025-01-16     Quangdv7             Create
+   1.1      2026-05-12     Agent                Unbilled detail: show dual-source strings when Apex provides *DualDisplay
+   1.2      2026-05-12     Agent                Pending detail fields: sheet columns + dual *Display; drop removed pending fields
  
 ****************************************************************************************/
 
 import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import loadTransactionDetail from '@salesforce/apex/FEC_TransactionsController.loadTransactionDetail';
-import { setConsoleTab } from 'c/fec_CommonUtils';
-import { LOCALE_ENG, LOCALE_VN } from 'c/fec_CommonConst';
+import { setConsoleTab, formatDateTime, formatDateVNI, isNegative } from 'c/fec_CommonUtils';
+import { LOCALE_ENG } from 'c/fec_CommonConst';
 
 import FEC_Transaction from '@salesforce/label/c.FEC_Transaction';
+import FEC_Billed_Transactions from '@salesforce/label/c.FEC_Billed_Transactions';
+import FEC_Unbilled_Transactions from '@salesforce/label/c.FEC_Unbilled_Transactions';
+import FEC_Pending_Transactions from '@salesforce/label/c.FEC_Pending_Transactions';
 import FEC_MSG_No_transaction_selected from '@salesforce/label/c.FEC_MSG_No_transaction_selected';
 import FEC_Transaction_Code from '@salesforce/label/c.FEC_Transaction_Code';
 import FEC_Effective_Date from '@salesforce/label/c.FEC_Effective_Date';
@@ -39,11 +44,17 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     /* ================= STATE ================= */
     @track transaction = null;
     transactionId;
+    transactionCodeFromState;
     sectionType;
+    navUid;
     isLoading = false;
+    activeSectionName = 'detail';
 
     customLabel = {
         transactionLabel: FEC_Transaction,
+        billedTransactionsLabel: FEC_Billed_Transactions,
+        unbilledTransactionsLabel: FEC_Unbilled_Transactions,
+        pendingTransactionsLabel: FEC_Pending_Transactions,
         msgNoTransactionSelected: FEC_MSG_No_transaction_selected,
         transactionCodeLabel: FEC_Transaction_Code,
         effectiveDateLabel: FEC_Effective_Date,
@@ -64,30 +75,28 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     /* ================= FIELD CONFIG ================= */
     unbilledFields = [
         { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode', apiName: 'FEC_Transaction_Code__c' },
-        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
+        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', dualFieldName: 'effectiveDateDualDisplay', apiName: 'FEC_Effective_Date__c' },
         { label: this.customLabel.creditDebitFlagLabel, fieldName: 'creditDebitFlag', apiName: 'FEC_Credit_Debit_Flag__c' },
         { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: this.customLabel.postDateLabel, fieldName: 'postingDate', apiName: 'FEC_Post_Date__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', dualFieldName: 'transactionPlanDualDisplay', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.postDateLabel, fieldName: 'postingDate', dualFieldName: 'postDateDualDisplay', apiName: 'FEC_Post_Date__c' },
         { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' },
         { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', dualFieldName: 'authorizationCodeDualDisplay', apiName: 'FEC_Authorization_Code__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', dualFieldName: 'transactionAmountDualDisplay', apiName: 'FEC_Transaction_Amount__c' },
         { label: this.customLabel.otpSentLabel, fieldName: 'otpSent', apiName: 'FEC_OTP_Sent__c' }
     ];
 
     pendingFields = [
-        { label: this.customLabel.transactionCodeLabel, fieldName: 'transactionCode', apiName: 'FEC_Transaction_Code__c' },
-        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', apiName: 'FEC_Effective_Date__c' },
-        { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse', apiName: 'FEC_Authorization_Response__c' },
-        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', apiName: 'FEC_Merchant_Description__c' },
-        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', apiName: 'FEC_Transaction_Plan__c' },
-        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', apiName: 'FEC_Transaction_Amount__c' },
-        { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription', apiName: 'FEC_Decline_Description__c' },
-        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', apiName: 'FEC_Merchant_Category_Code__c' },
-        { label: this.customLabel.authorizationCodeLabel, fieldName: 'authorizationCode', apiName: 'FEC_Authorization_Code__c' },
-        { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode', apiName: 'FEC_Approval_Code__c' },
-        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', apiName: 'FEC_Currency_Code__c' }
+        { label: this.customLabel.effectiveDateLabel, fieldName: 'effectiveDate', dualFieldName: 'effectiveDateDualDisplay', apiName: 'FEC_Effective_Date__c' },
+        { label: this.customLabel.transactionAmountLabel, fieldName: 'transactionAmount', dualFieldName: 'transactionAmountDualDisplay', apiName: 'FEC_Transaction_Amount__c' },
+        { label: this.customLabel.merchantDescriptionLabel, fieldName: 'merchantDescription', dualFieldName: 'merchantDescriptionDualDisplay', apiName: 'FEC_Merchant_Description__c' },
+        { label: this.customLabel.transactionPlanLabel, fieldName: 'transactionPlan', dualFieldName: 'transactionPlanDualDisplay', apiName: 'FEC_Transaction_Plan__c' },
+        { label: this.customLabel.merchantCategoryCodeLabel, fieldName: 'merchantCategoryCode', dualFieldName: 'merchantCategoryDualDisplay', apiName: 'FEC_Merchant_Category_Code__c' },
+        { label: this.customLabel.currencyCodeLabel, fieldName: 'currencyCode', dualFieldName: 'currencyCodeDualDisplay', apiName: 'FEC_Currency_Code__c' },
+        { label: this.customLabel.approvalCodeLabel, fieldName: 'approvalCode', dualFieldName: 'approvalCodeDualDisplay', apiName: 'FEC_Approval_Code__c' },
+        { label: this.customLabel.authorizationResponseLabel, fieldName: 'authorizationResponse', dualFieldName: 'authorizationResponseDualDisplay', apiName: 'FEC_Authorization_Response__c' },
+        { label: this.customLabel.declineDescriptionLabel, fieldName: 'declineDescription', dualFieldName: 'declineDescriptionDualDisplay', apiName: 'FEC_Decline_Description__c' }
     ];
 
     billedFields = [
@@ -109,14 +118,24 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     handlePageRef(pageRef) {
         if (!pageRef?.state) return;
 
-        const { c__transactionId, c__sectionType } = pageRef.state;
+        const { c__transactionId, c__sectionType, c__transactionCode, uid } =
+            pageRef.state;
 
         this.sectionType = c__sectionType || 'unbilled';
+        this.transactionCodeFromState = c__transactionCode || this.transactionCodeFromState;
 
-        if (c__transactionId && c__transactionId !== this.transactionId) {
-            this.transactionId = c__transactionId;
-            this.loadDetail();
+        if (!c__transactionId) {
+            return;
         }
+
+        if (c__transactionId === this.transactionId && uid === this.navUid) {
+            return;
+        }
+
+        this.transactionId = c__transactionId;
+        this.navUid = uid;
+        this.transaction = null;
+        this.loadDetail();
     }
 
     /* ================= LOAD DETAIL ================= */
@@ -127,7 +146,7 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
 
         loadTransactionDetail({ transactionId: this.transactionId })
             .then(res => {
-                this.transaction = res;
+                this.transaction = res || null;
                 setConsoleTab('Transactions Detail', 'standard:record');
             })
             .catch(() => {
@@ -138,50 +157,77 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             });
     }
 
-    /* ================= SECTIONS ================= */
-    get sections() {
-        if (!this.transaction) return [];
+    get transactionSubTitle() {
+        return this.transaction?.transactionCode || this.transactionCodeFromState || '';
+    }
 
-        let fields;
-        let label;
-
+    get sectionLabel() {
         switch (this.sectionType) {
             case 'pending':
-                fields = this.pendingFields;
-                label = 'Pending Transaction';
-                break;
+                return this.customLabel.pendingTransactionsLabel;
             case 'billed':
-                fields = this.billedFields;
-                label = 'Billed Transaction';
-                break;
+                return this.customLabel.billedTransactionsLabel;
             default:
-                fields = this.unbilledFields;
-                label = 'Unbilled Transaction';
+                return this.customLabel.unbilledTransactionsLabel;
         }
+    }
+
+    get fieldConfig() {
+        switch (this.sectionType) {
+            case 'pending':
+                return this.pendingFields;
+            case 'billed':
+                return this.billedFields;
+            default:
+                return this.unbilledFields;
+        }
+    }
+
+    get detailFields() {
+        if (!this.transaction) return [];
 
         const helpTexts = this.transaction.helpTexts || {};
 
-        return [
-            {
-                name: this.sectionType,
-                label,
-                fields: fields.map(f => {
-                    const helpText = f.apiName
-                        ? helpTexts[f.apiName]
-                        : null;
+        return this.fieldConfig.map(f => {
+            const dualRaw =
+                f.dualFieldName != null
+                    ? this.transaction[f.dualFieldName]
+                    : null;
+            const useDual =
+                f.dualFieldName != null &&
+                dualRaw != null &&
+                String(dualRaw).trim() !== '';
+            const value = useDual
+                ? dualRaw
+                : this.formatValue(f.fieldName, this.transaction[f.fieldName]);
+            const helpText = f.apiName ? helpTexts[f.apiName] : null;
 
-                    return {
-                        label: f.label,
-                        value: this.formatValue(
-                            f.fieldName,
-                            this.transaction[f.fieldName]
-                        ),
-                        hasHelpText: !!helpText,
-                        helpText
-                    };
-                })
-            }
+            return {
+                key: f.fieldName,
+                fieldName: f.fieldName,
+                label: f.label,
+                value,
+                hasHelpText: !!helpText,
+                helpText,
+                valueClass: isNegative(value) ? 'slds-truncate text-red' : 'slds-wrap'
+            };
+        });
+    }
+
+    /** 4 columns — row-major field order (matches spec layout). */
+    get fieldColumns() {
+        const columns = [
+            { key: 'col-0', fields: [] },
+            { key: 'col-1', fields: [] },
+            { key: 'col-2', fields: [] },
+            { key: 'col-3', fields: [] }
         ];
+
+        this.detailFields.forEach((field, index) => {
+            columns[index % 4].fields.push(field);
+        });
+
+        return columns;
     }
 
     get hasData() {
@@ -194,8 +240,16 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
             return '-';
         }
 
+        if (fieldName === 'effectiveDate') {
+            return formatDateTime(value) || '-';
+        }
+
+        if (fieldName === 'postingDate') {
+            return formatDateVNI(value) || '-';
+        }
+
         if (this.isDateField(fieldName)) {
-            return this.formatDate(value);
+            return formatDateVNI(value) || '-';
         }
 
         if (this.isNumberField(fieldName)) {
@@ -206,27 +260,22 @@ export default class Fec_TransactionsAccountTabView extends LightningElement {
     }
 
     isDateField(fieldName) {
+        if (fieldName.endsWith('DualDisplay')) {
+            return false;
+        }
         return fieldName.toLowerCase().includes('date');
     }
 
     isNumberField(fieldName) {
+        if (fieldName.endsWith('DualDisplay')) {
+            return false;
+        }
         return [
             'amount',
             'balance',
             'total',
             'payment'
         ].some(key => fieldName.toLowerCase().includes(key));
-    }
-
-    formatDate(value) {
-        const d = new Date(value);
-        if (isNaN(d)) return value;
-
-        return new Intl.DateTimeFormat(LOCALE_VN, {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        }).format(d);
     }
 
     formatNumber(value) {

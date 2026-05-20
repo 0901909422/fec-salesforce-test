@@ -3,7 +3,7 @@
     <fullName>FEC_Remove_Phone__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Remove Phone</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

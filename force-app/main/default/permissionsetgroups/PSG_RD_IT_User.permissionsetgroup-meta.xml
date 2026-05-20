@@ -6,8 +6,14 @@
     <permissionSets>RD_IT_User_Customer_360</permissionSets>
     <permissionSets>RD_IT_User_Interaction_Case_Service_Case</permissionSets>
     <permissionSets>RD_IT_User_Master_Data_Management</permissionSets>
+    <permissionSets>RD_IT_User_Report_Dashboard</permissionSets>
     <permissionSets>RD_IT_User_Search_Functions</permissionSets>
     <permissionSets>RD_IT_User_System_Management</permissionSets>
     <permissionSets>RD_IT_User_User_Management</permissionSets>
+    <permissionSets>FEC_Permission_Set_Customer_Data_Management_Admin</permissionSets>
+    <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Batch_Case_Handling</permissionSets>
+    <permissionSets>FEC_Batch_Case_Creation</permissionSets>
+    <permissionSets>FEC_Permission_Set_Batch_Data_Creation</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

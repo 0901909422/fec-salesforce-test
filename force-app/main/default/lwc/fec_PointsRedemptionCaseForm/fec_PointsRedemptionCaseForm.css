@@ -2,3 +2,12 @@
     color: #ba0517;
     font-weight: bold;
 }
+.fec-pr-not-eligible-reason {
+    color: #3e3e3c;
+    font-weight: bold;
+}
+/* linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 */
+.fec-pr-redeem-fail {
+    color: #c23934;
+    font-weight: bold;
+}

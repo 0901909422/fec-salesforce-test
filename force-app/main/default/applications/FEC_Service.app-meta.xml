@@ -557,7 +557,11 @@
     </profileActionOverrides>
     <tabs>FEC_Customer_Search</tabs>
     <tabs>FEC_Account_Contract_Search</tabs>
+    <tabs>Batch_Case_Creation</tabs>
+    <tabs>Batch_Data_Creation</tabs>
+    <tabs>Batch_Case_Handling</tabs>
     <tabs>standard-Case</tabs>
+    <tabs>standard-report</tabs>
     <tabs>FEC_Product_Type__c</tabs>
     <tabs>FEC_Category__c</tabs>
     <tabs>FEC_Sub_Category__c</tabs>
@@ -570,6 +574,7 @@
     <tabs>FEC_Action_Button__c</tabs>
     <tabs>FEC_Master_Data_Setting__c</tabs>
     <tabs>FEC_Hold_Case__c</tabs>
+    <tabs>FEC_Case_Assignment__c</tabs>
     <tabs>FEC_KYC__c</tabs>
     <tabs>FEC_Channel__c</tabs>
     <tabs>FEC_Notification_Channel__c</tabs>
@@ -581,6 +586,15 @@
     <uiType>Lightning</uiType>
     <utilityBar>FEC_Service_UtilityBar</utilityBar>
     <workspaceConfig>
+        <mappings>
+            <tab>Batch_Case_Creation</tab>
+        </mappings>
+        <mappings>
+            <tab>Batch_Case_Handling</tab>
+        </mappings>
+        <mappings>
+            <tab>Batch_Data_Creation</tab>
+        </mappings>
         <mappings>
             <tab>FEC_Account_Contract_Search</tab>
         </mappings>
@@ -610,6 +624,9 @@
         </mappings>
         <mappings>
             <tab>FEC_Hold_Case__c</tab>
+        </mappings>
+        <mappings>
+            <tab>FEC_Case_Assignment__c</tab>
         </mappings>
         <mappings>
             <tab>FEC_KYC__c</tab>
@@ -649,6 +666,9 @@
         </mappings>
         <mappings>
             <tab>standard-ServiceResource</tab>
+        </mappings>
+        <mappings>
+            <tab>standard-report</tab>
         </mappings>
     </workspaceConfig>
 </CustomApplication>

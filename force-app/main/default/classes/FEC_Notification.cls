@@ -79,8 +79,8 @@ public without sharing class FEC_Notification {
                        FEC_Channel__c, 
                        FEC_Product_Type__c, FEC_Product_Type__r.Name,
                        FEC_Category__c, FEC_Category__r.Name,
-                       FEC_SubCategory__c, FEC_SubCategory__r.Name,
-                       FEC_SubCode__c, FEC_SubCode__r.Name,
+                    //    FEC_SubCategory__c, FEC_SubCategory__r.Name,
+                    //    FEC_SubCode__c, FEC_SubCode__r.Name,
                        FEC_Current_Status__c, FEC_Changed_Status__c,
                        FEC_Notification_Template__c,
                        FEC_Assigned_to_Queue__c
@@ -263,12 +263,12 @@ public without sharing class FEC_Notification {
         if (String.isNotBlank(categoryId)) {
             query += ' AND FEC_Category__c = :categoryId';
         }
-        if (String.isNotBlank(subCategoryId)) {
-            query += ' AND FEC_SubCategory__c = :subCategoryId';
-        }
-        if (String.isNotBlank(subCodeId)) {
-            query += ' AND FEC_SubCode__c = :subCodeId';
-        }
+        // if (String.isNotBlank(subCategoryId)) {
+        //     query += ' AND FEC_SubCategory__c = :subCategoryId';
+        // }
+        // if (String.isNotBlank(subCodeId)) {
+        //     query += ' AND FEC_SubCode__c = :subCodeId';
+        // }
 
         List<FEC_Notification__c> queried = Database.query(query);
         System.debug('--- [getAvailableNotifications] queried: ' + queried);

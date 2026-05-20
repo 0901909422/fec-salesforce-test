@@ -13,45 +13,130 @@ export default class Fec_ReusableDNBCustomTable extends LightningElement {
         isContact: col.type === "contact",
         isPicklist: col.type === "picklist",
         isTextarea: col.type === "textarea",
-        checkboxLabel: col.checkboxLabel || "",
       };
     });
   }
+  // get processedData() {
+  //   return this.data.map((row) => {
+  //     return {
+  //       id: row.id,
+  //       cells: this.processedColumns.map((col) => {
+  //         let displayValue = row[col.fieldName];
+  //         let iconName = null;
+
+  //         // ✅ HANDLE CONTACT HERE
+  //         if (col.isContact) {
+  //           displayValue = row.isHidden ? row.maskedContact : row.contact;
+
+  //           iconName = row.isHidden ? "utility:hide" : "utility:preview";
+  //         }
+
+  //         return {
+  //           fieldName: col.fieldName,
+  //           value: row[col.fieldName],
+  //           displayValue,
+  //           iconName,
+  //           rowId: row.id,
+
+  //           isText: col.isText,
+  //           isTextarea: col.isTextarea,
+  //           isCheckbox: col.isCheckbox,
+  //           isContact: col.isContact,
+  //           isPicklist: col.isPicklist,
+
+  //           options: row.reasonOptionsFormatted || [],
+  //           isDisabled: col.isPicklist
+  //             ? !row.active || row.isReadonly
+  //             : row.isReadonly,
+
+  //           isDisabledText: col.isTextarea
+  //             ? !row.active || row.isReadonly
+  //             : row.isReadonly,
+  //           isRequired: row.active,
+  //           checkboxLabel:
+  //             row[col.checkboxLabelField] || col.checkboxLabel || "",
+  //           hasContact: row.hasContact,
+  //           isActionDisabled: row.isActionDisabled,
+
+  //           cellClass: this.getCellClass(col),
+  //         };
+  //       }),
+  //     };
+  //   });
+  // }
+
   get processedData() {
     return this.data.map((row) => {
       return {
         id: row.id,
+
         cells: this.processedColumns.map((col) => {
           let displayValue = row[col.fieldName];
+
           let iconName = null;
 
-          // ✅ HANDLE CONTACT HERE
+          /*
+           * CONTACT DISPLAY
+           */
           if (col.isContact) {
             displayValue = row.isHidden ? row.maskedContact : row.contact;
 
             iconName = row.isHidden ? "utility:hide" : "utility:preview";
           }
 
+          /*
+           * READONLY DISPLAY
+           */
+          if (row.isReadonly && col.fieldName === "updateReasonLabel") {
+            displayValue = row.updateReasonLabel || "-";
+          }
+
+          if (row.isReadonly && col.fieldName === "remarks") {
+            displayValue = row.remarks || "-";
+          }
+
           return {
             fieldName: col.fieldName,
+
             value: row[col.fieldName],
+
             displayValue,
+
             iconName,
+
             rowId: row.id,
 
             isText: col.isText,
+
             isTextarea: col.isTextarea,
+
             isCheckbox: col.isCheckbox,
+
             isContact: col.isContact,
+
             isPicklist: col.isPicklist,
 
             options: row.reasonOptionsFormatted || [],
-            isDisabled: col.isPicklist ? !row.active : false,
-            isDisabledText: col.isTextarea ? !row.active : false,
+
+            /*
+             * DISABLE STATES
+             */
+            isDisabled: col.isPicklist
+              ? !row.active || row.isReadonly
+              : row.isReadonly,
+
+            isDisabledText: col.isTextarea
+              ? !row.active || row.isReadonly
+              : row.isReadonly,
+
             isRequired: row.active,
-            checkboxLabel: col.checkboxLabel,
+
+            checkboxLabel:
+              row[col.checkboxLabelField] || col.checkboxLabel || "",
+
             hasContact: row.hasContact,
-            isActionDisabled: row.isActionDisabled,
+
+            isActionDisabled: row.isActionDisabled || row.isReadonly,
 
             cellClass: this.getCellClass(col),
           };

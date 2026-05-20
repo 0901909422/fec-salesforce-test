@@ -221,6 +221,200 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_MainInfoLoanAccount</componentName>
+                <identifier>c_fec_MainInfoLoanAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-e86cc39b-6a73-4de9-a6fb-e0f029a270c2</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_SecondaryInfoLoanAccount</componentName>
+                <identifier>c_fec_SecondaryInfoLoanAccount</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-5d3e4157-62b3-4f96-8c44-ccdc7842e467</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Termination</componentName>
+                <identifier>c_fec_Termination</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-a1c9cf75-8e21-4bcb-868b-2cd549a2346e</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_RepaymentSchedulePaymentHistory</componentName>
+                <identifier>c_fec_RepaymentSchedulePaymentHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4029d6b1-0ccd-459c-a277-50b63fca40ae</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_MRC</componentName>
+                <identifier>c_fec_MRC</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-adff6adf-8ad8-4efa-a7f2-4d1f0ef87d3f</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Asset</componentName>
+                <identifier>c_fec_Asset</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4yb546l8g7b</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_AppInfo</componentName>
+                <identifier>c_fec_AppInfo</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-a0fda9b7-7334-41ef-83ff-7464f81b72ea</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>active</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-e86cc39b-6a73-4de9-a6fb-e0f029a270c2</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Main Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab22</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-5d3e4157-62b3-4f96-8c44-ccdc7842e467</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Secondary Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab24</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-a1c9cf75-8e21-4bcb-868b-2cd549a2346e</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Termination</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab23</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4029d6b1-0ccd-459c-a277-50b63fca40ae</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Repayment Schedule &amp; Payment History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab25</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-adff6adf-8ad8-4efa-a7f2-4d1f0ef87d3f</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>MRC</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab16</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-4yb546l8g7b</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Asset</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab17</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-a0fda9b7-7334-41ef-83ff-7464f81b72ea</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Application History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab18</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-690c96c5-e309-412b-9b6c-d612d8c9fb79</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-690c96c5-e309-412b-9b6c-d612d8c9fb79</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_tabset5</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-56d90d7e-6960-4734-99f9-f6066b18ba70</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_MainInfo</componentName>
                 <identifier>c_fec_MainInfo</identifier>
             </componentInstance>
@@ -319,11 +513,256 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_CollectionDateFilter</componentName>
+                <identifier>c_fec_CollectionDateFilter</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_allocationHistory</componentName>
+                <identifier>c_fec_allocationHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_communicationHistory</componentName>
+                <identifier>c_fec_communicationHistory</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_CollectionInteractions</componentName>
+                <identifier>c_fec_CollectionInteractions</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>previewSampleData</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>fec_NFU</componentName>
+                <identifier>c_fec_NFU</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_DoNotBotherInformationView</componentName>
+                <identifier>c_fec_DoNotBotherInformationView</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-ba1dc064-1f07-4725-8018-8dfe9986cb59</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_customerAdditionalData</componentName>
+                <identifier>c_fec_customerAdditionalData</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecCheckEligibleLoanSection</componentName>
+                <identifier>c_fecCheckEligibleLoanSection</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>recordId</name>
+                    <value>checkAccountEligibility</value>
+                </componentInstanceProperties>
+                <componentName>fec_CardEligibilitySection</componentName>
+                <identifier>c_fec_CardEligibilitySection</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 OR (2 AND 3)</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Search_Products__c}</leftValue>
+                        <operator>CONTAINS</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-961ba216-521a-4718-b6f1-a6373271902a</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fe_Notification_History</componentName>
+                <identifier>c_fe_Notification_History</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-c3rno06wzwt</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-1446c2e8-c835-4cb9-929a-cb307b5746e4</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Collection Summary</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab28</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-ba1dc064-1f07-4725-8018-8dfe9986cb59</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Do Not Bother</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab31</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-100362dc-d2c9-4737-9a42-5da94c3febab</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Info</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab29</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-961ba216-521a-4718-b6f1-a6373271902a</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Promotion/ Offer</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab32</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-c3rno06wzwt</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Notifications History</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab33</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-6cfaf373-39cd-4b31-9241-7aec8e4a5c61</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Tabs</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>tabs</name>
+                    <value>Facet-6cfaf373-39cd-4b31-9241-7aec8e4a5c61</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tabset</componentName>
+                <identifier>flexipage_tabset6</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-8e053f58-5e65-4077-81b5-7fa1420d4b81</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fecInteractionChatConversations</componentName>
+                <identifier>c_fecInteractionChatConversations2</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-i9z6432zuwn</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentName>fec_Banca</componentName>
                 <identifier>c_fec_Banca</identifier>
             </componentInstance>
         </itemInstances>
-        <name>Facet-d5df7b86-8ee4-4c6f-b125-f1961730ecd6</name>
+        <name>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -340,7 +779,7 @@
                 <componentName>flexipage:tab</componentName>
                 <identifier>flexipage_tab</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -348,8 +787,45 @@
                     </criteria>
                     <criteria>
                         <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Card</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
                         <operator>NE</operator>
-                        <rightValue>Insurance</rightValue>
+                        <rightValue>Non-existing</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-56d90d7e-6960-4734-99f9-f6066b18ba70</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Account</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab26</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>true</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Loan</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -374,9 +850,9 @@
                         <rightValue>true</rightValue>
                     </criteria>
                     <criteria>
-                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <leftValue>{!Record.FEC_Customer_Type__c}</leftValue>
                         <operator>NE</operator>
-                        <rightValue>Insurance</rightValue>
+                        <rightValue>Non-existing</rightValue>
                     </criteria>
                 </visibilityRule>
             </componentInstance>
@@ -385,14 +861,61 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
-                    <value>Facet-d5df7b86-8ee4-4c6f-b125-f1961730ecd6</value>
+                    <value>Facet-8e053f58-5e65-4077-81b5-7fa1420d4b81</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Additional Data</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab27</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Product_Type__r.Name}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Insurance</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Account_Contract_Number_Text__c}</leftValue>
+                        <operator>EQUAL</operator>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-i9z6432zuwn</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Conversions</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab30</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.FEC_Channel__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Chat</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>Facet-56ea2e0f-a56c-443d-b442-3bdc95404681</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>title</name>
                     <value>Banca</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab11</identifier>
+                <identifier>flexipage_tab34</identifier>
                 <visibilityRule>
                     <criteria>
                         <leftValue>{!Record.FEC_Has_Account_or_Contract__c}</leftValue>

@@ -1,8 +1,10 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import updateMRCRecord from '@salesforce/apex/FEC_GetMRCInfo.updateMRCRecord';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { formatDate } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
+import FEC_SUBCODE_ID from '@salesforce/schema/Case.FEC_SubCode__c';
+import FEC_SUBCODE_CODE_FIELD from '@salesforce/schema/FEC_Sub_Code__c.FEC_Code__c';
 
 import FEC_Original_MRC from '@salesforce/label/c.FEC_Original_MRC';
 import FEC_Notarized_MRC from '@salesforce/label/c.FEC_Notarized_MRC';
@@ -26,8 +28,6 @@ const STATUS = {
     ERROR: 'ERROR',
     NONE: 'NONE',
     EMPTY: '-',
-    ERROR_TITLE: 'Error',
-    ERROR_VARIANT: 'error',
     UNKNOWN_ERROR: 'Unknown error'
 };
 
@@ -50,13 +50,46 @@ const MrcFields = {
     PROVIDED_NUMBER: 'FEC_Provided_Number__c'
 };
 
+const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
+
 export default class Fec_MRC extends LightningElement {
     @api recordId;
     @track accountData;
     @track error;
     @track isLoading = false;
 
+    subCodeRecordId;
+    _subCodeCodeUpper = STR_EMPTY;
+
+    @wire(getRecord, { recordId: '$recordId', fields: CASE_SUB_FIELDS })
+    wiredCaseSub({ data }) {
+        this.subCodeRecordId = data ? getFieldValue(data, FEC_SUBCODE_ID) : null;
+        if (!this.subCodeRecordId) {
+            this._subCodeCodeUpper = STR_EMPTY;
+            this.syncAccordionSections();
+        }
+    }
+
+    @wire(getRecord, { recordId: '$subCodeRecordId', fields: [FEC_SUBCODE_CODE_FIELD] })
+    wiredSubCode({ data }) {
+        if (data) {
+            const v = getFieldValue(data, FEC_SUBCODE_CODE_FIELD);
+            this._subCodeCodeUpper = v ? String(v).toUpperCase() : STR_EMPTY;
+        } else {
+            this._subCodeCodeUpper = STR_EMPTY;
+        }
+        this.syncAccordionSections();
+    }
+
     @track activeSections = [FEC_Original_MRC, FEC_Notarized_MRC];
+
+    syncAccordionSections() {
+        const next = [FEC_Original_MRC];
+        if (this.showNotarizedMrcBlock) {
+            next.push(FEC_Notarized_MRC);
+        }
+        this.activeSections = next;
+    }
 
     customLabel = {
         originalMRCLabel: FEC_Original_MRC,
@@ -78,6 +111,18 @@ export default class Fec_MRC extends LightningElement {
         msgErrorAPI: FEC_MSG_Error_API_Label,
 
     };
+
+    get showOriginalMrcBlock() {
+        return true;
+    }
+
+    get showNotarizedMrcBlock() {
+        const s = this._subCodeCodeUpper || STR_EMPTY;
+        if (s.includes('RL05.01')) {
+            return false;
+        }
+        return true;
+    }
 
     /* ================= LIFECYCLE ================= */
     connectedCallback() {
@@ -152,16 +197,5 @@ export default class Fec_MRC extends LightningElement {
     /* ================= ERROR + TOAST ================= */
     handleError(err) {
         this.error = err?.body?.message || err?.message || STATUS.UNKNOWN_ERROR;
-        this.showToast(STATUS.ERROR_TITLE, this.error, STATUS.ERROR_VARIANT);
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title,
-                message,
-                variant
-            })
-        );
     }
 }

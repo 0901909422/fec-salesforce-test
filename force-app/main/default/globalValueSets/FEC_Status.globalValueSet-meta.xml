@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customValue>
+        <fullName>Uploaded</fullName>
+        <default>false</default>
+        <label>Uploaded</label>
+    </customValue>
+    <customValue>
+        <fullName>Processing</fullName>
+        <default>false</default>
+        <label>Processing</label>
+    </customValue>
+    <customValue>
+        <fullName>Processed</fullName>
+        <default>false</default>
+        <label>Processed</label>
+    </customValue>
+    <customValue>
+        <fullName>Failure</fullName>
+        <default>false</default>
+        <label>Failure</label>
+    </customValue>
+    <masterLabel>FEC Status</masterLabel>
+    <sorted>false</sorted>
+</GlobalValueSet>

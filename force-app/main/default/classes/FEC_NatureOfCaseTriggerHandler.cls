@@ -1,88 +1,111 @@
-// tungnm37: Handler kế thừa FEC_Channel__c từ NOC cha xuống NOC con theo hierarchy
+// tungnm37: FEC_Channel__c — cùng FEC_Product_Type__c; cha = nhiều null hơn (ít specificity hơn con).
 public without sharing class FEC_NatureOfCaseTriggerHandler {
+
+    private static final String NOC_CHANNEL_FIELDS = 'Id, FEC_Product_Type__c, FEC_Business_Process__c, '
+        + 'FEC_Category__c, FEC_Sub_Category__c, FEC_Sub_Code__c, FEC_Channel__c, FEC_Active__c';
 
     public static void handleAfterInsertUpdate(
         List<FEC_Nature_of_Case__c> newList,
         Map<Id, FEC_Nature_of_Case__c> oldMap
     ) {
+        if (oldMap == null) {
+            inheritChannelFromParentForNewChildren(newList);
+        }
+
         List<FEC_Nature_of_Case__c> changed = new List<FEC_Nature_of_Case__c>();
         for (FEC_Nature_of_Case__c noc : newList) {
-            if (String.isBlank(noc.FEC_Channel__c)) continue;
-            // tungnm37: chỉ propagate khi channel thay đổi (từ null → có giá trị, hoặc đổi giá trị)
+            if (!FEC_NocInheritanceUtil.isParentCandidate(noc)) {
+                continue;
+            }
+            if (String.isBlank(noc.FEC_Channel__c)) {
+                continue;
+            }
             if (oldMap != null) {
                 FEC_Nature_of_Case__c old = oldMap.get(noc.Id);
-                if (old != null && noc.FEC_Channel__c == old.FEC_Channel__c) continue;
+                if (old != null && noc.FEC_Channel__c == old.FEC_Channel__c) {
+                    continue;
+                }
             }
             changed.add(noc);
         }
-        if (changed.isEmpty()) return;
+        if (changed.isEmpty()) {
+            return;
+        }
 
         propagateChannelToChildren(changed);
     }
 
-    private static void propagateChannelToChildren(List<FEC_Nature_of_Case__c> parents) {
+    private static void inheritChannelFromParentForNewChildren(List<FEC_Nature_of_Case__c> newList) {
+        List<FEC_Nature_of_Case__c> targets = new List<FEC_Nature_of_Case__c>();
+        Set<Id> productTypeIds = new Set<Id>();
+        for (FEC_Nature_of_Case__c noc : newList) {
+            if (noc.FEC_Active__c == true
+                && noc.FEC_Product_Type__c != null
+                && String.isBlank(noc.FEC_Channel__c)
+                && FEC_NocInheritanceUtil.specificityScore(noc) > 0
+            ) {
+                targets.add(noc);
+                productTypeIds.add(noc.FEC_Product_Type__c);
+            }
+        }
+        if (targets.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Nature_of_Case__c> parentCandidates = Database.query(
+            'SELECT ' + NOC_CHANNEL_FIELDS +
+            ' FROM FEC_Nature_of_Case__c WHERE FEC_Active__c = true'
+            + ' AND FEC_Product_Type__c IN :productTypeIds'
+            + ' AND FEC_Sub_Code__c = null'
+            + ' AND FEC_Channel__c != null'
+        );
+
         List<FEC_Nature_of_Case__c> toUpdate = new List<FEC_Nature_of_Case__c>();
+        for (FEC_Nature_of_Case__c child : targets) {
+            FEC_Nature_of_Case__c parent = FEC_NocInheritanceUtil.findImmediateParent(child, parentCandidates);
+            if (parent == null || String.isBlank(parent.FEC_Channel__c)) {
+                continue;
+            }
+            toUpdate.add(new FEC_Nature_of_Case__c(
+                Id = child.Id,
+                FEC_Channel__c = parent.FEC_Channel__c
+            ));
+        }
+        if (!toUpdate.isEmpty()) {
+            Database.update(toUpdate, false);
+        }
+    }
 
+    private static void propagateChannelToChildren(List<FEC_Nature_of_Case__c> parents) {
+        Set<Id> productTypeIds = new Set<Id>();
+        for (FEC_Nature_of_Case__c p : parents) {
+            if (p.FEC_Product_Type__c != null) {
+                productTypeIds.add(p.FEC_Product_Type__c);
+            }
+        }
+        if (productTypeIds.isEmpty()) {
+            return;
+        }
+
+        List<FEC_Nature_of_Case__c> pool = Database.query(
+            'SELECT ' + NOC_CHANNEL_FIELDS +
+            ' FROM FEC_Nature_of_Case__c WHERE FEC_Product_Type__c IN :productTypeIds'
+            + ' AND FEC_Active__c = true'
+        );
+
+        List<FEC_Nature_of_Case__c> toUpdate = new List<FEC_Nature_of_Case__c>();
         for (FEC_Nature_of_Case__c parent : parents) {
-            String channelVal = parent.FEC_Channel__c;
-            Id bpId = parent.FEC_Business_Process__c;
-            Id catId = parent.FEC_Category__c;
-            Id subCatId = parent.FEC_Sub_Category__c;
-            Id subCodeId = parent.FEC_Sub_Code__c;
-
-            List<FEC_Nature_of_Case__c> children;
-
-            // tungnm37: xác định con theo level hierarchy
-            // Level 1 (chỉ BP): con là tất cả NOC cùng BP
-            if (bpId != null && catId == null && subCatId == null && subCodeId == null) {
-                children = [
-                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
-                    WHERE FEC_Business_Process__c = :bpId
-                      AND Id != :parent.Id
-                ];
-            }
-            // Level 2 (BP + Cat): con là NOC cùng BP+Cat
-            else if (bpId != null && catId != null && subCatId == null && subCodeId == null) {
-                children = [
-                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
-                    WHERE FEC_Business_Process__c = :bpId
-                      AND FEC_Category__c = :catId
-                      AND Id != :parent.Id
-                ];
-            }
-            // Level 3 (BP + Cat + SubCat): con là NOC cùng BP+Cat+SubCat
-            else if (bpId != null && catId != null && subCatId != null && subCodeId == null) {
-                children = [
-                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
-                    WHERE FEC_Business_Process__c = :bpId
-                      AND FEC_Category__c = :catId
-                      AND FEC_Sub_Category__c = :subCatId
-                      AND Id != :parent.Id
-                ];
-            }
-            // Level 3b (Cat + SubCat, không có BP): con là NOC cùng Cat+SubCat
-            else if (bpId == null && catId != null && subCatId != null && subCodeId == null) {
-                children = [
-                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
-                    WHERE FEC_Category__c = :catId
-                      AND FEC_Sub_Category__c = :subCatId
-                      AND Id != :parent.Id
-                ];
-            }
-            // Level 2b (chỉ Cat, không có BP): con là NOC cùng Cat
-            else if (bpId == null && catId != null && subCatId == null && subCodeId == null) {
-                children = [
-                    SELECT Id, FEC_Channel__c FROM FEC_Nature_of_Case__c
-                    WHERE FEC_Category__c = :catId
-                      AND Id != :parent.Id
-                ];
-            }
-            // Level 4 (đầy đủ): không có con
-            else {
+            if (!FEC_NocInheritanceUtil.isParentCandidate(parent)
+                || String.isBlank(parent.FEC_Channel__c)
+            ) {
                 continue;
             }
 
-            for (FEC_Nature_of_Case__c child : children) {
+            String channelVal = parent.FEC_Channel__c;
+            for (FEC_Nature_of_Case__c child : FEC_NocInheritanceUtil.findDescendants(parent, pool)) {
+                if (child.Id == parent.Id) {
+                    continue;
+                }
                 toUpdate.add(new FEC_Nature_of_Case__c(
                     Id = child.Id,
                     FEC_Channel__c = channelVal

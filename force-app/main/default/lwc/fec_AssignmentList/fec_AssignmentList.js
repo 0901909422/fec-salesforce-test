@@ -15,6 +15,8 @@ import CASE_ID from "@salesforce/schema/Case.Id";
 import USER_ID from "@salesforce/user/Id";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.execute";
+//thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
+import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
 import {
   subscribe,
   unsubscribe,
@@ -349,10 +351,15 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async loadQueues() {
     const result = await getQueuesForUser();
+
+    console.log("QUEUE RESULT", JSON.stringify(result));
+
     this.queueOptions = result.map((r) => ({
       label: r.label,
       value: r.value,
     }));
+
+    console.log("QUEUE OPTIONS", JSON.stringify(this.queueOptions));
   }
 
   async loadTeams() {
@@ -373,8 +380,8 @@ export default class Fec_AssignmentList extends LightningElement {
       if (item.id === id) {
         return {
           ...item,
-          decision: team,
-          subDecision: null,
+          // decision: team,
+          subDecision: team,
           showQueueByTeam: true,
         };
       }
@@ -399,6 +406,7 @@ export default class Fec_AssignmentList extends LightningElement {
     const id = event.target.dataset.id;
     const value = event.detail.value;
 
+    console.log("Sub decision change", JSON.stringify({ id, value }));
     this.updateField(id, "subDecision", value);
   }
 
@@ -485,6 +493,10 @@ export default class Fec_AssignmentList extends LightningElement {
       );
       // reload data
       await this.initData();
+
+      //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
+      await refreshExecuteVisibility({ caseId: this.recordId });
+
       // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {
         this.modeEditCase = false;

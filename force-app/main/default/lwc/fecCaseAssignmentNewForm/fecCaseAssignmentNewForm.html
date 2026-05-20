@@ -1,0 +1,292 @@
+<template>
+  <div class="page-wrap slds-p-around_medium">
+    <div class="slds-m-bottom_medium slds-text-align_center">
+      <h1 class="page-heading">New Case Assignment</h1>
+    </div>
+
+    <template if:true={hasPageErrors}>
+      <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+        <h2 class="slds-text-heading_small">Review the errors on this page.</h2>
+        <ul class="slds-list_dotted slds-m-top_x-small">
+          <template for:each={pageErrors} for:item="msg">
+            <li key={msg}>{msg}</li>
+          </template>
+        </ul>
+      </div>
+    </template>
+
+    <template if:true={queueDropdownOpen}>
+      <div
+        class="queue-multiselect-backdrop"
+        onclick={handleCloseQueueBackdrop}
+        role="presentation"
+      ></div>
+    </template>
+
+    <div class="section-box slds-m-bottom_medium">
+      <div class="section-title">Case Assignment Information</div>
+      <div class="slds-grid slds-wrap slds-gutters">
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-input label="Owner" value={ownerName} disabled></lightning-input>
+        </div>
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-input
+            data-field="assignmentName"
+            label="Case Assignment Name"
+            required
+            value={assignmentName}
+            onchange={handleNameChange}
+          ></lightning-input>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-combobox
+            data-field="status"
+            label="Status"
+            required
+            value={status}
+            options={availableStatusOptions}
+            onchange={handleStatusChange}
+          ></lightning-combobox>
+        </div>
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-combobox
+            data-field="assignmentMethod"
+            label="Assignment Method"
+            required
+            value={assignmentMethod}
+            options={assignmentMethodOptions}
+            onchange={handleAssignmentMethodChange}
+          ></lightning-combobox>
+        </div>
+
+        <template if:true={isContinuousMethod}>
+          <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+            <lightning-combobox
+              data-field="businessHours"
+              label="Business Hours"
+              required
+              value={businessHoursId}
+              options={businessHourOptions}
+              onchange={handleBusinessHoursChange}
+            ></lightning-combobox>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+            <lightning-input
+              data-field="scheduledTime"
+              type="number"
+              label="Scheduled Time"
+              min="1"
+              value={scheduledTime}
+              onchange={handleScheduledTimeChange}
+            ></lightning-input>
+          </div>
+        </template>
+        <template if:true={isTimeBasedMethod}>
+          <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+            <lightning-combobox
+              data-field="businessHours"
+              label="Business Hours"
+              required
+              value={businessHoursId}
+              options={businessHourOptions}
+              onchange={handleBusinessHoursChange}
+            ></lightning-combobox>
+          </div>
+          <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+            <lightning-dual-listbox
+              data-field="timeSlots"
+              name="timeslots"
+              label="Time Slots"
+              source-label="Available"
+              selected-label="Chosen"
+              options={timeSlotOptions}
+              value={selectedTimeSlots}
+              onchange={handleTimeSlotsChange}
+            ></lightning-dual-listbox>
+          </div>
+        </template>
+        <template if:false={showSchedulingPairRow}>
+          <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+            <lightning-combobox
+              data-field="businessHours"
+              label="Business Hours"
+              required
+              value={businessHoursId}
+              options={businessHourOptions}
+              onchange={handleBusinessHoursChange}
+            ></lightning-combobox>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="section-box slds-m-bottom_medium">
+      <div class="section-title">Queue Information</div>
+      <div class="slds-grid slds-wrap slds-gutters">
+        <div class="slds-col slds-size_1-of-1">
+          <div class="slds-form-element" class:slds-has-error={queueHasError}>
+            <label class="slds-form-element__label" for="queue-multiselect-trigger">
+              <abbr class="slds-required" title="required">*</abbr>
+              Select Queues
+            </label>
+            <div
+              class="queue-trigger-wrap slds-is-relative"
+              class:queue-dropdown-open={queueDropdownOpen}
+            >
+              <button
+                id="queue-multiselect-trigger"
+                type="button"
+                class="queue-trigger"
+                class:queue-trigger_error={queueHasError}
+                onclick={toggleQueueDropdown}
+                aria-expanded={queueDropdownOpen}
+                aria-haspopup="listbox"
+              >
+                <span class="queue-trigger-text">{queueTriggerLabel}</span>
+                <lightning-icon
+                  icon-name="utility:down"
+                  size="x-small"
+                  alternative-text=""
+                  class="queue-trigger-chevron"
+                ></lightning-icon>
+              </button>
+              <template if:true={queueDropdownOpen}>
+                <div class="queue-dropdown" role="listbox" onmousedown={handleQueueDropdownMouseDown}>
+                  <div class="queue-option">
+                    <label class="queue-cb-label">
+                      <input
+                        type="checkbox"
+                        id="queue-select-all"
+                        checked={allQueuesSelected}
+                        onchange={handleToggleAllQueues}
+                      />
+                      <span>All</span>
+                    </label>
+                  </div>
+                  <template for:each={queueCheckboxRows} for:item="row">
+                    <div key={row.key} class="queue-option">
+                      <label class="queue-cb-label">
+                        <input
+                          type="checkbox"
+                          id={row.optionId}
+                          data-queue-value={row.value}
+                          checked={row.checked}
+                          onchange={handleQueueCheckboxChange}
+                        />
+                        <span>{row.label}</span>
+                      </label>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+            <template if:true={queueHasError}>
+              <div class="slds-form-element__help">Select Queues can't be blank</div>
+            </template>
+          </div>
+        </div>
+        <div class="slds-col slds-size_1-of-1">
+          <template if:true={hasSelectedQueues}>
+            <div class="selected-list">
+              <template for:each={selectedQueuePills} for:item="queueItem">
+                <lightning-pill
+                  key={queueItem.value}
+                  label={queueItem.label}
+                  name={queueItem.value}
+                  onremove={handleRemoveQueue}
+                  class="slds-m-right_x-small slds-m-bottom_x-small"
+                ></lightning-pill>
+              </template>
+            </div>
+          </template>
+          <template if:false={hasSelectedQueues}>
+            <div class="hint-text">Please select at least one queue.</div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">User Information</div>
+      <div class="slds-grid slds-wrap slds-gutters">
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-combobox
+            label="Role"
+            required
+            value={selectedRole}
+            options={roleOptions}
+            onchange={handleRoleChange}
+            placeholder="Select role"
+          ></lightning-combobox>
+        </div>
+
+        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+          <lightning-input
+            type="number"
+            label="Scale"
+            min="1"
+            step="1"
+            value={selectedScale}
+            onchange={handleScaleChange}
+          ></lightning-input>
+          <div class="add-button-wrap">
+            <lightning-button
+              variant="brand"
+              label="Add"
+              onclick={handleAddRole}
+              disabled={isAddRoleDisabled}
+            ></lightning-button>
+          </div>
+        </div>
+
+        <template if:true={hasRoleRows}>
+          <div class="slds-col slds-size_1-of-1">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th>Scale</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <template for:each={roleRows} for:item="row">
+                  <tr key={row.key}>
+                    <td>{row.role}</td>
+                    <td>{row.scale}</td>
+                    <td class="slds-text-align_right">
+                      <lightning-button-icon
+                        icon-name="utility:delete"
+                        alternative-text="Remove"
+                        data-role={row.role}
+                        onclick={handleRemoveRole}
+                      ></lightning-button-icon>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div class="slds-m-top_medium slds-text-align_right">
+      <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+      <lightning-button
+        class="slds-m-left_small"
+        label="Save &amp; New"
+        onclick={handleSaveAndNew}
+        disabled={isSaving}
+      ></lightning-button>
+      <lightning-button
+        class="slds-m-left_small"
+        variant="brand"
+        label="Save"
+        onclick={handleSave}
+        disabled={isSaving}
+      ></lightning-button>
+    </div>
+  </div>
+</template>
