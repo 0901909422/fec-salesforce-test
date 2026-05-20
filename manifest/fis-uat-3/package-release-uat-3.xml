@@ -22,6 +22,10 @@
 		<members>FEC_UpdateDisbursementStatusRestService</members>
         <members>FEC_NocInheritanceUtil</members>
 	    <members>FEC_NocInheritanceUtilTest</members>
+		<members>FEC_AutoHoldCaseApi</members>
+		<members>FEC_AutoHoldCaseExpireBatch</members>
+		<members>FEC_AutoHoldCaseExpireSchedulable</members>
+		<members>FEC_AutoHoldCaseHistoryService</members>
 		<name>Apexclass</name>
 	</types>
 	<types>
@@ -143,7 +147,11 @@
         <members>FEC_ApplicationListTriggerHandler</members>
         <members>FEC_CMSRewardRedeemService</members>
 		<members>FEC_CMSRewardRedeemServiceTest</members>
+		<members>FEC_AssignAutoDistribSched</members>
 		<members>FEC_CaseAssignmentAutoDistributeService</members>
+		<members>FEC_CaseAssignmentAutoDistQueueJob</members>
+		<members>FEC_CaseAssignmentApplyOwnerBatch</members>
+		<members>FEC_CaseAssignmentMutationGuard</members>
 		<members>FEC_CaseAssignmentConfigController</members>
 		<members>FEC_CaseAssignmentConflictService</members>
 		<members>FEC_CaseAssignmentConflictServiceTest</members>
@@ -157,7 +165,6 @@
 		<members>FEC_NewAssignmentController</members>
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
-		<members>FEC_AutoHoldCaseServiceTest</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <name>ApexClass</name>
@@ -169,6 +176,7 @@
 		<members>FEC_NatureOfCaseTrigger</members>
         <members>FEC_ApplicationListTrigger</members>
 		<members>FEC_CaseAssignmentNOCTrigger</members>
+		<members>FEC_CaseAssignmentTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>
@@ -582,6 +590,15 @@
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Case__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_End_Time__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Hold_Case_Config__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Release_Case_Status__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Start_Time__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Status__c</members>
+        <members>FEC_Case_Hold_History__c.FEC_Type__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
+        <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -622,11 +639,13 @@
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
+		<members>FEC_Case_Hold_History__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fecNewRelevantTicketAction</members>
 		<members>fecCaseAssignmentNewOverride</members>
+		<members>fec_CaseAssignmentNocNewOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
@@ -712,6 +731,7 @@
 		<members>fec_CaseAssignmentConfig</members>
 		<members>fec_CaseAssignmentDetailSummary</members>
 		<members>fec_CaseAssignmentNocConfig</members>
+		<members>fec_CaseAssignmentNocNew</members>
         <members>fec_RemovePhoneForm</members>
         <members>fec_IPPConversionRetailForm</members>
         <members>fec_NewAssignmentAction</members>
@@ -1307,6 +1327,7 @@
         <members>FEC_Batch_Case_Handling</members>
         <!--Common System Setting-->
         <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
         <!-- Case Assignment -->
         <members>FEC_Case_Assignment_Management</members>
         <name>PermissionSet</name>

@@ -1,6 +1,7 @@
 /**
  * Auto Hold Case: sau khi tạo Routing Action History, match NOC → Hold Case Config (Auto)
- * → gọi Mark NFU API (retry tối đa 3 lần) → cập nhật Case (+ FEC_NFU_Description_Result__c khi field đã deploy).
+ * → gọi Mark NFU qua FEC_AutoHoldCaseApi.markNFU (retry tối đa 3 lần)
+ * → cập nhật Case (+ FEC_NFU_Description_Result__c khi field đã deploy).
  */
 public with sharing class FEC_AutoHoldCaseService {
     public static final String RESULT_PENDING = 'PENDING';
@@ -92,7 +93,7 @@ public with sharing class FEC_AutoHoldCaseService {
 
         FEC_MarkNFU.MarkNFUResult lastResult;
         for (Integer attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-            lastResult = FEC_MarkNFU.markNFU(req);
+            lastResult = FEC_AutoHoldCaseApi.markNFU(req);
 
             if (lastResult != null && lastResult.code == FEC_ConstantCommon.SUCCESS_CODE_203) {
                 updateCaseAfterApi(
@@ -101,7 +102,8 @@ public with sharing class FEC_AutoHoldCaseService {
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
                     null,
-                    parseNfuTillDate(lastResult.nfuTillDate)
+                    parseNfuTillDate(lastResult.nfuTillDate),
+                    config
                 );
                 return;
             }
@@ -113,13 +115,14 @@ public with sharing class FEC_AutoHoldCaseService {
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
                     DateTime.now(),
-                    parseNfuTillDate(lastResult.nfuTillDate)
+                    parseNfuTillDate(lastResult.nfuTillDate),
+                    config
                 );
                 return;
             }
         }
 
-        updateCaseAfterApi(caseId, RESULT_ERROR, null, null, null, null);
+        updateCaseAfterApi(caseId, RESULT_ERROR, null, null, null, null, null);
     }
 
     @TestVisible
@@ -166,7 +169,9 @@ public with sharing class FEC_AutoHoldCaseService {
                 FEC_NFU_Code__c,
                 FEC_Case_Stage__c,
                 FEC_Current_Status__c,
-                FEC_Changed_Status__c
+                FEC_Changed_Status__c,
+                FEC_Auto_Hold_Duration_Minutes__c,
+                FEC_Auto_Hold_Release_Case_Status__c
             FROM FEC_Hold_Case_Config__c
             WHERE FEC_Nature_of_Cases__c = :nocId
               AND Hold_Case_Type__c = :HOLD_CASE_TYPE_AUTO
@@ -225,7 +230,8 @@ public with sharing class FEC_AutoHoldCaseService {
         String nfuCode,
         String nfuReason,
         DateTime startedDate,
-        DateTime expiryDate
+        DateTime expiryDate,
+        FEC_Hold_Case_Config__c matchedHoldConfig
     ) {
         Case patch = new Case(
             Id = caseId,
@@ -242,7 +248,15 @@ public with sharing class FEC_AutoHoldCaseService {
         patch.FEC_NFU_Reason__c = nfuReason;
         patch.FEC_NFU_Started_Date__c = startedDate;
         patch.FEC_NFU_Expiry_Date__c = expiryDate;
-        Database.update(patch, AccessLevel.SYSTEM_MODE);
+        Database.SaveResult sr = Database.update(patch, AccessLevel.SYSTEM_MODE);
+        if (sr.isSuccess() && matchedHoldConfig != null) {
+            FEC_AutoHoldCaseHistoryService.createFromSuccessfulAutoHold(
+                caseId,
+                matchedHoldConfig,
+                startedDate,
+                expiryDate
+            );
+        }
     }
 
     @TestVisible
