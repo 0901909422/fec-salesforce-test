@@ -8,8 +8,9 @@ import QUEUES_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Select_Q
 import ROLE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Role__c";
 import SCALE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Scale__c";
 import ID_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.Id";
+import STATUS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Status__c";
 
-const FIELDS = [QUEUES_FIELD, ROLE_FIELD, SCALE_FIELD];
+const FIELDS = [QUEUES_FIELD, ROLE_FIELD, SCALE_FIELD, STATUS_FIELD];
 
 export default class Fec_CaseAssignmentConfig extends LightningElement {
   @api recordId;
@@ -42,7 +43,37 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   get isAddDisabled() {
-    return !this.selectedRole || !this.selectedScale || Number(this.selectedScale) < 1;
+    return (
+      this.configReadOnly ||
+      !this.selectedRole ||
+      !this.selectedScale ||
+      Number(this.selectedScale) < 1
+    );
+  }
+
+  /** Chỉ Draft được sửa config; chờ wire xong mới mở chỉnh sửa. */
+  _statusFromWire = "";
+
+  get configReadOnly() {
+    if (!this.loaded) {
+      return true;
+    }
+    return this._statusFromWire !== "Draft";
+  }
+
+  get configFrozenHint() {
+    if (!this.loaded || !this.configReadOnly || !this._statusFromWire) {
+      return "";
+    }
+    return "Chỉ khi Case Assignment có Status Draft mới chỉnh sửa được cấu hình Queues và Role.";
+  }
+
+  get configSaveTitle() {
+    return this.configReadOnly ? "Chỉ lưu khi Status = Draft." : "";
+  }
+
+  get disableSaveConfig() {
+    return this.isSaving || this.configReadOnly;
   }
 
   async loadQueueOptions() {
@@ -63,6 +94,7 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   loadFromRecord(recordData) {
+    this._statusFromWire = recordData.fields.FEC_Status__c?.value || "";
     const rawQueues = recordData.fields.FEC_Select_Queues__c?.value || "";
     const rawRoles = recordData.fields.FEC_Role__c?.value || "";
     const rawScale = recordData.fields.FEC_Scale__c?.value;
@@ -111,6 +143,9 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   handleQueuesChange(event) {
+    if (this.configReadOnly) {
+      return;
+    }
     this.selectedQueues = event.detail.value || [];
     this.loadRolesByQueues();
   }
@@ -124,6 +159,9 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   handleAddRole() {
+    if (this.configReadOnly) {
+      return;
+    }
     const scale = Number(this.selectedScale);
     if (!this.selectedRole || !scale || scale < 1) {
       return;
@@ -149,11 +187,17 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   handleRemoveRole(event) {
+    if (this.configReadOnly) {
+      return;
+    }
     const roleName = event.currentTarget.dataset.role;
     this.roleRows = this.roleRows.filter((row) => row.role !== roleName);
   }
 
   async handleSave() {
+    if (this.configReadOnly) {
+      return;
+    }
     if (!this.selectedQueues.length) {
       this.showToast("Warning", "Please select at least one queue.", "warning");
       return;
