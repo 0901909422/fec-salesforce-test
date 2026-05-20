@@ -281,6 +281,8 @@
         <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
         <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
         <members>FEC_MRC_RL0502_Dup_Banner</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>

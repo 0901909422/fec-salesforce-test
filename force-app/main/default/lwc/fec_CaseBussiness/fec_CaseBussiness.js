@@ -55,6 +55,8 @@ import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACT
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
 import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
 import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_New from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_New";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_Prev from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_Prev";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -1186,11 +1188,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   get mrcHandlingRadioOptions() {
     return [
       {
-        label: "Hủy yêu cầu mới, tiếp tục xử lý yêu cầu cũ",
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
         value: MRC_OPT_CANCEL_NEW,
       },
       {
-        label: "Hủy yêu cầu cũ, tạo yêu cầu mới",
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_Prev,
         value: MRC_OPT_CANCEL_PREVIOUS,
       },
     ];

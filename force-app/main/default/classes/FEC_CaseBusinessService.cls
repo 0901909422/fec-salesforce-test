@@ -941,7 +941,7 @@ public without sharing class FEC_CaseBusinessService {
             }
           } else {
             if (String.isNotBlank(subSectionNameTemp)) {
-              subSectionNameTemp = (isCOFStage1Revert && subSectionNameTemp == 'Property Info') ? FEC_ConstantCommon.UPDATED_INFO : subSectionNameTemp;
+              subSectionNameTemp = (isCOFStage1Revert && subSectionNameTemp == FEC_ConstantCommon.PROPERTY_INFO) ? FEC_ConstantCommon.UPDATED_INFO : subSectionNameTemp;
               subSectionTemp = sectionTemp.findSubSection(subSectionNameTemp);
 
               if (subSectionTemp == null) {
