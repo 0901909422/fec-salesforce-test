@@ -103,7 +103,17 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             WHERE FEC_Case_Assignment_Name__c = :assignmentId
         ];
         Integer runNumber = logCount + 1;
-        return executeSingleAssignment(assignmentRecord, runNumber);
+        Integer assignedCount = executeSingleAssignment(assignmentRecord, runNumber);
+        if (assignedCount == 0) {
+            insertAssignmentRunLog(
+                assignmentRecord.Id,
+                assignmentRecord.Name,
+                runNumber,
+                0,
+                new Map<Id, Integer>()
+            );
+        }
+        return assignedCount;
     }
 
     /**
@@ -660,7 +670,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
         Integer totalCasesAssigned,
         Map<Id, Integer> countsByAssignedUserId
     ) {
-        if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned <= 0) {
+        if (assignmentId == null || totalCasesAssigned == null || totalCasesAssigned < 0) {
             return;
         }
         FEC_Case_Assignment_Logs__c logRecord = new FEC_Case_Assignment_Logs__c(
