@@ -5277,6 +5277,17 @@ public without sharing class FEC_CaseBusinessService {
     return null;
   }
 
+  private static Id parseIdSafelyForRouting(String rawId) {
+    if (String.isBlank(rawId)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(rawId.trim());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   public class CaseBusinessServiceException extends Exception {
   }
 }
