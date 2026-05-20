@@ -6,6 +6,7 @@
 	    <members>FEC_CaseBusinessService</members>
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_ContractClosureController</members>
 	    <members>FEC_CheckEligibilityIPPCallout</members>
 	    <members>FEC_CustomerAdditionalDataController</members>
 	    <members>FEC_SearchController</members>
@@ -79,6 +80,7 @@
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcReturnCaseService</members>
+		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -192,6 +194,7 @@
         <members>fec_CaseAssignmentNocNew</members>
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
+        <members>fec_ContractClosureForm</members>
         <members>fec_NotificationOverride</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
@@ -262,6 +265,7 @@
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
+        <members>FEC_Case_Assignment_Log_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
@@ -530,7 +534,9 @@
 		<name>Flow</name>
 	</types>
     <types>
+        <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
+        <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
