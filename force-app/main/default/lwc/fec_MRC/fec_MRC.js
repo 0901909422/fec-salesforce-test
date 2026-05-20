@@ -52,14 +52,20 @@ const MrcFields = {
 
 const CASE_SUB_FIELDS = [FEC_SUBCODE_ID];
 
+/** RL05 MRC Return: ẩn toàn bộ block trên FlexiPage Case (logic nằm trong fec_CaseBussiness). */
+const RL05_HIDE_SUB_CODES = ['RL05.01', 'RL05.02', 'RL05.03'];
+
 export default class Fec_MRC extends LightningElement {
     @api recordId;
+    /** Master data / parent có thể ép ẩn (fec_CaseBussiness). */
+    @api isHiddenLwc;
     @track accountData;
     @track error;
     @track isLoading = false;
 
     subCodeRecordId;
     _subCodeCodeUpper = STR_EMPTY;
+    _mrcLoadStarted = false;
 
     @wire(getRecord, { recordId: '$recordId', fields: CASE_SUB_FIELDS })
     wiredCaseSub({ data }) {
@@ -67,6 +73,7 @@ export default class Fec_MRC extends LightningElement {
         if (!this.subCodeRecordId) {
             this._subCodeCodeUpper = STR_EMPTY;
             this.syncAccordionSections();
+            this._maybeLoadMrc();
         }
     }
 
@@ -75,10 +82,21 @@ export default class Fec_MRC extends LightningElement {
         if (data) {
             const v = getFieldValue(data, FEC_SUBCODE_CODE_FIELD);
             this._subCodeCodeUpper = v ? String(v).toUpperCase() : STR_EMPTY;
+        } else if (this.subCodeRecordId) {
+            return;
         } else {
             this._subCodeCodeUpper = STR_EMPTY;
         }
         this.syncAccordionSections();
+        this._maybeLoadMrc();
+    }
+
+    _maybeLoadMrc() {
+        if (this._mrcLoadStarted || !this.recordId || this.shouldHideComponent) {
+            return;
+        }
+        this._mrcLoadStarted = true;
+        this.loadData();
     }
 
     @track activeSections = [FEC_Original_MRC, FEC_Notarized_MRC];
@@ -112,11 +130,22 @@ export default class Fec_MRC extends LightningElement {
 
     };
 
+    get shouldHideComponent() {
+        if (this.isHiddenLwc === true) {
+            return true;
+        }
+        const s = this._subCodeCodeUpper || STR_EMPTY;
+        return RL05_HIDE_SUB_CODES.some((code) => s.includes(code));
+    }
+
     get showOriginalMrcBlock() {
-        return true;
+        return !this.shouldHideComponent;
     }
 
     get showNotarizedMrcBlock() {
+        if (this.shouldHideComponent) {
+            return false;
+        }
         const s = this._subCodeCodeUpper || STR_EMPTY;
         if (s.includes('RL05.01')) {
             return false;
@@ -124,13 +153,8 @@ export default class Fec_MRC extends LightningElement {
         return true;
     }
 
-    /* ================= LIFECYCLE ================= */
-    connectedCallback() {
-        this.loadData();
-    }
-
     loadData() {
-        if (!this.recordId) return;
+        if (!this.recordId || this.shouldHideComponent) return;
 
         this.isLoading = true;
 
