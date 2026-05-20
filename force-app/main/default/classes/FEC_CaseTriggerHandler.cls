@@ -1049,6 +1049,35 @@ public without sharing class FEC_CaseTriggerHandler {
         }
     }
 
+    /**
+     * Execute Anonymous / dev: gọi trực tiếp sendSLANotifications (method private).
+     * @param caseId Case cần test
+     * @param testWarning true = mô phỏng FEC_SLA_Warning__c đổi; false = FEC_SLA_Violating_Warning__c
+     */
+    public static void debugSendSLANotifications(Id caseId, Boolean testWarning) {
+        if (caseId == null) {
+            System.debug('debugSendSLANotifications: caseId null');
+            return;
+        }
+        Case oldCase = [
+            SELECT Id, CaseNumber, FEC_SLA_Warning__c, FEC_SLA_Violating_Warning__c
+            FROM Case
+            WHERE Id = :caseId
+            LIMIT 1
+        ];
+        Case newCase = oldCase.clone(true, true, true, true);
+        String stamp = String.valueOf(Datetime.now().getTime());
+        if (testWarning == true) {
+            newCase.FEC_SLA_Warning__c = 'TEST_WARNING_' + stamp;
+        } else {
+            newCase.FEC_SLA_Violating_Warning__c = 'TEST_VIOLATING_' + stamp;
+        }
+        sendSLANotifications(
+            new List<Case>{ newCase },
+            new Map<Id, Case>{ caseId => oldCase }
+        );
+    }
+
       private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
         try {
             CustomNotificationType notifType = [
@@ -1056,25 +1085,37 @@ public without sharing class FEC_CaseTriggerHandler {
                 WHERE DeveloperName = 'Custom_Notification' LIMIT 1
             ];
 
+            List<Case> slaCases = new List<Case>();
+            Set<Id> slaCaseIds = new Set<Id>();
+            Map<Id, Boolean> caseIdToIsViolating = new Map<Id, Boolean>();
             for (Case c : newCases) {
                 Case oldCase = oldMap.get(c.Id);
                 Boolean isWarning = String.isNotBlank(c.FEC_SLA_Warning__c)
                     && c.FEC_SLA_Warning__c != oldCase.FEC_SLA_Warning__c;
                 Boolean isViolating = String.isNotBlank(c.FEC_SLA_Violating_Warning__c)
                     && c.FEC_SLA_Violating_Warning__c != oldCase.FEC_SLA_Violating_Warning__c;
-
-                if (!isWarning && !isViolating) continue;
-                if (String.isBlank(c.FEC_Follow_Up_User__c)) continue;
-
-                // Parse recipients tá»« FEC_Follow_Up_User__c
-                Set<String> recipientIds = new Set<String>();
-                for (String entry : c.FEC_Follow_Up_User__c.split(';')) {
-                    String[] parts = entry.trim().split('\\|');
-                    if (parts.size() > 0 && String.isNotBlank(parts[0])) {
-                        recipientIds.add(parts[0].trim());
-                    }
+                if (!isWarning && !isViolating) {
+                    continue;
                 }
-                if (recipientIds.isEmpty()) continue;
+                slaCases.add(c);
+                slaCaseIds.add(c.Id);
+                caseIdToIsViolating.put(c.Id, isViolating);
+            }
+            if (slaCases.isEmpty()) {
+                return;
+            }
+
+            Map<Id, Set<String>> caseIdToRecipientIds = buildRoutingPerformUserRecipientsByCase(
+                slaCaseIds
+            );
+
+            for (Case c : slaCases) {
+                Boolean isViolating = caseIdToIsViolating.get(c.Id);
+
+                Set<String> recipientIds = caseIdToRecipientIds.get(c.Id);
+                if (recipientIds == null || recipientIds.isEmpty()) {
+                    continue;
+                }
 
                 String title;
                 String body;
@@ -1102,5 +1143,27 @@ public without sharing class FEC_CaseTriggerHandler {
         } catch (Exception e) {
             System.debug('FEC_DEBUG sendSLANotifications error: ' + e.getMessage());
         }
+    }
+
+    /**
+     * Distinct FEC_Perform_User__c từ FEC_Routing_Action_History__c theo Case (một query bulk).
+     */
+    private static Map<Id, Set<String>> buildRoutingPerformUserRecipientsByCase(Set<Id> caseIds) {
+        Map<Id, Set<String>> caseIdToRecipientIds = new Map<Id, Set<String>>();
+        if (caseIds == null || caseIds.isEmpty()) {
+            return caseIdToRecipientIds;
+        }
+        for (FEC_Routing_Action_History__c history : [
+            SELECT FEC_Case__c, FEC_Perform_User__c
+            FROM FEC_Routing_Action_History__c
+            WHERE FEC_Case__c IN :caseIds AND FEC_Perform_User__c != NULL
+        ]) {
+            if (!caseIdToRecipientIds.containsKey(history.FEC_Case__c)) {
+                caseIdToRecipientIds.put(history.FEC_Case__c, new Set<String>());
+            }
+            caseIdToRecipientIds.get(history.FEC_Case__c)
+                .add(String.valueOf(history.FEC_Perform_User__c));
+        }
+        return caseIdToRecipientIds;
     }
 }
