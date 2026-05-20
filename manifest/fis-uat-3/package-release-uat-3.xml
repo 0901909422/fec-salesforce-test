@@ -95,6 +95,7 @@
         <members>FEC_FetchCollectionDataServiceCallout</members>
         <members>FEC_FetchCollectionDataService_Test</members>
         <members>FEC_CaseBusinessService</members>
+        <members>FEC_ScopedStageChangeRoutingService</members>
         <members>FEC_CaseRemarkController</members>
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
@@ -686,6 +687,9 @@
         <members>fecInteractionChatConversations</members>
         <members>fecInteractionChatInfo</members>
         <members>fec_CaseBussiness</members>
+        <members>fec_CaseBussinessScopedRoutingIntegration</members>
+        <members>fec_ScopedStageChangeRouting</members>
+        <members>fec_ScopedStageChangeRoutingAction</members>
         <members>fec_CaseDetail_Customer</members>
         <members>fec_CommonConst</members>
         <members>fec_FastCashCaseForm</members>

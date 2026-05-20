@@ -324,7 +324,7 @@
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
     <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới — ẩn block cũ khi bộ mới active-->
-    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSection} name="routing-action"
+    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSectionForDisplay} name="routing-action"
       label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
@@ -392,6 +392,37 @@
           </div>
         </div>
       </div>
+    </lightning-accordion-section>
+
+    <!-- Approach A: Document Request / Original MRC Return — Route to theo FEC_Stage_Change__c (Stage 2+ chọn Team) -->
+    <lightning-accordion-section if:true={showScopedStageChangeRoutingSection}
+      name="routing-action-scoped" label={customLabel.routingActionLabel}>
+      <c-fec_-scoped-stage-change-routing-action
+        record-id={recordId}
+        is-edit={isEdit}
+        action-value={actionValue}
+        routing-action-options={business.routingActionlst}
+        is-routing-action-disabled={isRoutingActionDisabled}
+        stage-name={business.stageName}
+        is-submited={business.isSubmited}
+        route-to-action-id={routeToActionButtonId}
+        show-route-to={showRouteTo}
+        read-only-team={business.nextTeam}
+        route-to-queue-display-label={routeToQueueDisplayLabel}
+        show-revert={showRevert}
+        revert-decision-display-label={revertDecisionDisplayLabel}
+        show-transfer={showTransfer}
+        show-update={showUpdate}
+        decision-value={decisionValue}
+        sub-decision-value={subDecisionValue}
+        decision-options={decisionOptions}
+        sub-decision-options={subDecisionOptions}
+        decision-update-options={decisionUpdateOptions}
+        is-sub-decision-options-display={isSubDecisionOptionsDisplay}
+        onactionchange={handleChangeAction}
+        onroutingfieldchange={handleScopedRoutingFieldChange}
+        onroutingselectionchange={handleScopedRoutingSelectionChange}
+      ></c-fec_-scoped-stage-change-routing-action>
     </lightning-accordion-section>
 
     <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->

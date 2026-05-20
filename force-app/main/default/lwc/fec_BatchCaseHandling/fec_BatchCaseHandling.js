@@ -18,7 +18,7 @@ import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.im
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseHandlingController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
-import { STR_EMPTY } from "c/fec_CommonConst";
+import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
 import { arrayBufferToBase64 } from "c/fec_CommonUtils";
 import FEC_ACTION_CANCEL from "@salesforce/label/c.FEC_ACTION_CANCEL";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
@@ -884,15 +884,52 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         : null;
       const firstOp =
         meta?.operators && meta.operators.length ? meta.operators[0] : STR_EMPTY;
+      const isAttachments = value === ATTACHMENTS_PROPERTY_KEY;
       return {
         ...l,
         filterScope: nextScope,
         propertyKey: value,
-        operatorKey: firstOp,
+        operatorKey: isAttachments ? "equals" : firstOp,
         valueText: STR_EMPTY,
-        valueList: []
+        valueList: [],
+        attachmentChecked: isAttachments ? true : undefined
       };
     });
+  }
+
+  handleFilterAttachmentConditionChange(event) {
+    this.filterResetHint = false;
+    const rowId = event.currentTarget?.dataset?.rowid;
+    const checked = !!event.detail?.checked;
+    this.filterLines = this.filterLines.map((l) =>
+      l.rowId === rowId ? { ...l, attachmentChecked: checked } : l
+    );
+  }
+
+  isAttachmentsFilterLine(line) {
+    return line?.propertyKey === ATTACHMENTS_PROPERTY_KEY;
+  }
+
+  showAttachmentConditionCheckbox(line) {
+    return this.isAttachmentsFilterLine(line);
+  }
+
+  showOperatorCombobox(line) {
+    return !!line?.filterScope && !this.isAttachmentsFilterLine(line);
+  }
+
+  showAttachmentValueLabel(line) {
+    return this.isAttachmentsFilterLine(line);
+  }
+
+  attachmentValueLabelForLine(line) {
+    return line?.attachmentChecked !== false
+      ? FEC_BCH_AttachHas
+      : FEC_BCH_AttachNo;
+  }
+
+  attachmentCheckedForLine(line) {
+    return line?.attachmentChecked !== false;
   }
 
   applyLineFilterScope(rowId, scope) {
@@ -952,6 +989,100 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return "text";
   }
 
+  valueDateStyleForLine(line) {
+    if (this.isDateFilterLine(line)) {
+      return "short";
+    }
+    return null;
+  }
+
+  isDateFilterLine(line) {
+    const meta = this.lineMeta(line);
+    return meta?.valueType === "date";
+  }
+
+  normalizeDatePayloadValue(rawValue) {
+    const value = (rawValue || STR_EMPTY).trim();
+    if (!value) {
+      return STR_EMPTY;
+    }
+    const dmy = this.parseDmyDateParts(value);
+    if (dmy) {
+      return this.formatAsIso(dmy.day, dmy.month, dmy.year);
+    }
+    const iso = this.parseIsoDateParts(value);
+    if (iso) {
+      return this.formatAsIso(iso.day, iso.month, iso.year);
+    }
+    return STR_EMPTY;
+  }
+
+  parseDmyDateParts(value) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+    if (!m) {
+      return null;
+    }
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const year = parseInt(m[3], 10);
+    return this.isValidDateParts(day, month, year)
+      ? { day, month, year }
+      : null;
+  }
+
+  parseIsoDateParts(value) {
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
+    if (!m) {
+      return null;
+    }
+    const year = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const day = parseInt(m[3], 10);
+    return this.isValidDateParts(day, month, year)
+      ? { day, month, year }
+      : null;
+  }
+
+  isValidDateParts(day, month, year) {
+    if (
+      Number.isNaN(day) ||
+      Number.isNaN(month) ||
+      Number.isNaN(year) ||
+      year < 1000 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return false;
+    }
+    const d = new Date(year, month - 1, day);
+    return (
+      d.getFullYear() === year &&
+      d.getMonth() === month - 1 &&
+      d.getDate() === day
+    );
+  }
+
+  twoDigits(value) {
+    return value < 10 ? "0" + String(value) : String(value);
+  }
+
+  formatAsDmy(day, month, year) {
+    return this.twoDigits(day) + "/" + this.twoDigits(month) + "/" + String(year);
+  }
+
+  formatAsIso(day, month, year) {
+    return String(year) + "-" + this.twoDigits(month) + "-" + this.twoDigits(day);
+  }
+
+  valuePlaceholderForLine(line) {
+    if (this.isDateFilterLine(line)) {
+      return DATE_PLACEHOLDER;
+    }
+    return BATCH_UI.valuePlaceholder;
+  }
+
   showValueInput(line) {
     if (!this.operatorNeedsValue(line)) {
       return false;
@@ -1003,11 +1134,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   showAttachmentValueCombobox(line) {
-    const meta = this.lineMeta(line);
-    if (!meta || meta.valueType !== "checkbox") {
-      return false;
-    }
-    return this.operatorNeedsValue(line);
+    return false;
   }
 
   showBooleanValueCombobox(line) {
@@ -1015,7 +1142,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!meta || meta.valueType !== "checkbox") {
       return false;
     }
-    if (line?.propertyKey === ATTACHMENTS_PROPERTY_KEY) {
+    if (this.isAttachmentsFilterLine(line)) {
       return false;
     }
     return this.operatorNeedsValue(line);
@@ -1096,6 +1223,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.showMultiPicklistValue(line)) {
       cls += " fec-filter-table__row--multi";
     }
+    if (this.isAttachmentsFilterLine(line)) {
+      cls += " fec-filter-table__row--attach";
+    }
     return cls;
   }
 
@@ -1121,6 +1251,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         propertyOptions: this.propertyOptionsForLine(line),
         operatorOptions: this.operatorOptionsForLine(line),
         showFilterCriteria: !!line.filterScope,
+        showOperatorCombobox: this.showOperatorCombobox(line),
+        showAttachConditionCheckbox: this.showAttachmentConditionCheckbox(line),
+        attachmentConditionChecked: this.attachmentCheckedForLine(line),
+        showAttachmentValueLabel: this.showAttachmentValueLabel(line),
+        attachmentValueLabel: this.attachmentValueLabelForLine(line),
         showValueBox: this.showValueInput(line),
         showAttachCombo: this.showAttachmentValueCombobox(line),
         showBooleanCombo: this.showBooleanValueCombobox(line),
@@ -1132,7 +1267,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         multiPicklistSize: this.multiPicklistSizeForLine(line),
         valueList: Array.isArray(line.valueList) ? line.valueList : [],
         valueInputDisabled: this.valueInputDisabled(line),
-        valueTypeAttr: this.valueInputType(line)
+        valueTypeAttr: this.valueInputType(line),
+        valueDateStyle: this.valueDateStyleForLine(line),
+        valuePlaceholder: this.valuePlaceholderForLine(line)
       };
     });
   }
@@ -1155,7 +1292,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const op = (line.operatorKey || STR_EMPTY).toLowerCase();
       const needsValue = op !== "is_null" && op !== "is_not_null";
       let valueText = (line.valueText || STR_EMPTY).trim();
+      let operatorKey = line.operatorKey;
       let valueList = null;
+      if (this.isAttachmentsFilterLine(line)) {
+        operatorKey = "equals";
+        valueText = line.attachmentChecked !== false ? "true" : "false";
+      }
       if (Array.isArray(line.valueList) && line.valueList.length) {
         valueList = line.valueList.filter((v) => v);
         valueText = STR_EMPTY;
@@ -1169,12 +1311,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           .filter(Boolean);
         valueText = STR_EMPTY;
       }
+      if (needsValue && this.isDateFilterLine(line)) {
+        valueText = this.normalizeDatePayloadValue(valueText);
+      }
       if (needsValue && !valueText && (!valueList || !valueList.length)) {
         continue;
       }
       const entry = {
         propertyKey: line.propertyKey,
-        operatorKey: line.operatorKey,
+        operatorKey,
         valueText
       };
       if (valueList && valueList.length) {
@@ -2090,7 +2235,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const fileName = this.selectedImportFileName;
     if (!this.sheetJsReady) {
       try {
-        await loadScript(this, FEC_SheetJS + "/xlsx.full.min.js");
+        await loadScript(this, FEC_SheetJS);
         this.sheetJsReady = true;
       } catch (e) {
         this.handleImportFailure(e, fileName);
@@ -2491,7 +2636,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.sheetJsReady) {
       return;
     }
-    await loadScript(this, FEC_SheetJS + "/xlsx.full.min.js");
+    await loadScript(this, FEC_SheetJS);
     this.sheetJsReady = true;
   }
 

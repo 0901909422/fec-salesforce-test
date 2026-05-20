@@ -40,6 +40,7 @@
                   onchange={handleFilterPropertyChange}
                 ></lightning-combobox>
                 <template if:true={fline.showFilterCriteria}>
+                <template if:true={fline.showOperatorCombobox}>
                 <lightning-combobox
                   data-rowid={fline.rowId}
                   label={batchUi.filterColCondition}
@@ -49,6 +50,22 @@
                   placeholder={batchUi.operatorPlaceholder}
                   onchange={handleFilterOperatorChange}
                 ></lightning-combobox>
+                </template>
+                <template if:true={fline.showAttachConditionCheckbox}>
+                  <div class="fec-filter-attach-condition">
+                    <lightning-input
+                      data-rowid={fline.rowId}
+                      type="checkbox"
+                      label={batchUi.filterColCondition}
+                      variant="label-hidden"
+                      checked={fline.attachmentConditionChecked}
+                      onchange={handleFilterAttachmentConditionChange}
+                    ></lightning-input>
+                  </div>
+                </template>
+                <template if:true={fline.showAttachmentValueLabel}>
+                  <div class="fec-filter-attach-value">{fline.attachmentValueLabel}</div>
+                </template>
                 <template if:true={fline.showAttachCombo}>
                   <lightning-combobox
                     data-rowid={fline.rowId}
@@ -117,8 +134,9 @@
                     label={batchUi.filterColValue}
                     variant="label-hidden"
                     type={fline.valueTypeAttr}
+                    date-style={fline.valueDateStyle}
                     value={fline.valueText}
-                    placeholder={batchUi.valuePlaceholder}
+                    placeholder={fline.valuePlaceholder}
                     disabled={fline.valueInputDisabled}
                     onchange={handleFilterValueChange}
                   ></lightning-input>
