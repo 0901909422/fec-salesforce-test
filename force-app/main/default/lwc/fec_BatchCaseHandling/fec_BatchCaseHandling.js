@@ -884,15 +884,52 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         : null;
       const firstOp =
         meta?.operators && meta.operators.length ? meta.operators[0] : STR_EMPTY;
+      const isAttachments = value === ATTACHMENTS_PROPERTY_KEY;
       return {
         ...l,
         filterScope: nextScope,
         propertyKey: value,
-        operatorKey: firstOp,
+        operatorKey: isAttachments ? "equals" : firstOp,
         valueText: STR_EMPTY,
-        valueList: []
+        valueList: [],
+        attachmentChecked: isAttachments ? true : undefined
       };
     });
+  }
+
+  handleFilterAttachmentConditionChange(event) {
+    this.filterResetHint = false;
+    const rowId = event.currentTarget?.dataset?.rowid;
+    const checked = !!event.detail?.checked;
+    this.filterLines = this.filterLines.map((l) =>
+      l.rowId === rowId ? { ...l, attachmentChecked: checked } : l
+    );
+  }
+
+  isAttachmentsFilterLine(line) {
+    return line?.propertyKey === ATTACHMENTS_PROPERTY_KEY;
+  }
+
+  showAttachmentConditionCheckbox(line) {
+    return this.isAttachmentsFilterLine(line);
+  }
+
+  showOperatorCombobox(line) {
+    return !!line?.filterScope && !this.isAttachmentsFilterLine(line);
+  }
+
+  showAttachmentValueLabel(line) {
+    return this.isAttachmentsFilterLine(line);
+  }
+
+  attachmentValueLabelForLine(line) {
+    return line?.attachmentChecked !== false
+      ? FEC_BCH_AttachHas
+      : FEC_BCH_AttachNo;
+  }
+
+  attachmentCheckedForLine(line) {
+    return line?.attachmentChecked !== false;
   }
 
   applyLineFilterScope(rowId, scope) {
@@ -935,10 +972,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   handleFilterValueChange(event) {
     this.filterResetHint = false;
     const rowId = event.currentTarget?.dataset?.rowid;
-    const value = this.normalizeFilterLineValue(
-      rowId,
-      event.detail?.value ?? STR_EMPTY
-    );
+    const value = event.detail?.value ?? STR_EMPTY;
     this.filterLines = this.filterLines.map((l) =>
       l.rowId === rowId ? { ...l, valueText: value } : l
     );
@@ -950,39 +984,21 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return "text";
     }
     if (meta.valueType === "date") {
-      return "text";
+      return "date";
     }
     return "text";
+  }
+
+  valueDateStyleForLine(line) {
+    if (this.isDateFilterLine(line)) {
+      return "short";
+    }
+    return null;
   }
 
   isDateFilterLine(line) {
     const meta = this.lineMeta(line);
     return meta?.valueType === "date";
-  }
-
-  normalizeFilterLineValue(rowId, rawValue) {
-    const value = rawValue === null || rawValue === undefined ? STR_EMPTY : String(rawValue);
-    const line = (this.filterLines || []).find((l) => l.rowId === rowId);
-    if (!line || !this.isDateFilterLine(line)) {
-      return value;
-    }
-    return this.normalizeDateDisplayValue(value);
-  }
-
-  normalizeDateDisplayValue(rawValue) {
-    const value = (rawValue || STR_EMPTY).trim();
-    if (!value) {
-      return STR_EMPTY;
-    }
-    const dmy = this.parseDmyDateParts(value);
-    if (dmy) {
-      return this.formatAsDmy(dmy.day, dmy.month, dmy.year);
-    }
-    const iso = this.parseIsoDateParts(value);
-    if (iso) {
-      return this.formatAsDmy(iso.day, iso.month, iso.year);
-    }
-    return value;
   }
 
   normalizeDatePayloadValue(rawValue) {
@@ -1118,11 +1134,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   showAttachmentValueCombobox(line) {
-    const meta = this.lineMeta(line);
-    if (!meta || meta.valueType !== "checkbox") {
-      return false;
-    }
-    return this.operatorNeedsValue(line);
+    return false;
   }
 
   showBooleanValueCombobox(line) {
@@ -1130,7 +1142,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (!meta || meta.valueType !== "checkbox") {
       return false;
     }
-    if (line?.propertyKey === ATTACHMENTS_PROPERTY_KEY) {
+    if (this.isAttachmentsFilterLine(line)) {
       return false;
     }
     return this.operatorNeedsValue(line);
@@ -1236,6 +1248,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         propertyOptions: this.propertyOptionsForLine(line),
         operatorOptions: this.operatorOptionsForLine(line),
         showFilterCriteria: !!line.filterScope,
+        showOperatorCombobox: this.showOperatorCombobox(line),
+        showAttachConditionCheckbox: this.showAttachmentConditionCheckbox(line),
+        attachmentConditionChecked: this.attachmentCheckedForLine(line),
+        showAttachmentValueLabel: this.showAttachmentValueLabel(line),
+        attachmentValueLabel: this.attachmentValueLabelForLine(line),
         showValueBox: this.showValueInput(line),
         showAttachCombo: this.showAttachmentValueCombobox(line),
         showBooleanCombo: this.showBooleanValueCombobox(line),
@@ -1248,6 +1265,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         valueList: Array.isArray(line.valueList) ? line.valueList : [],
         valueInputDisabled: this.valueInputDisabled(line),
         valueTypeAttr: this.valueInputType(line),
+        valueDateStyle: this.valueDateStyleForLine(line),
         valuePlaceholder: this.valuePlaceholderForLine(line)
       };
     });
@@ -1271,7 +1289,12 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       const op = (line.operatorKey || STR_EMPTY).toLowerCase();
       const needsValue = op !== "is_null" && op !== "is_not_null";
       let valueText = (line.valueText || STR_EMPTY).trim();
+      let operatorKey = line.operatorKey;
       let valueList = null;
+      if (this.isAttachmentsFilterLine(line)) {
+        operatorKey = "equals";
+        valueText = line.attachmentChecked !== false ? "true" : "false";
+      }
       if (Array.isArray(line.valueList) && line.valueList.length) {
         valueList = line.valueList.filter((v) => v);
         valueText = STR_EMPTY;
@@ -1293,7 +1316,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       }
       const entry = {
         propertyKey: line.propertyKey,
-        operatorKey: line.operatorKey,
+        operatorKey,
         valueText
       };
       if (valueList && valueList.length) {
