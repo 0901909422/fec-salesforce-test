@@ -22,9 +22,9 @@
 
                             <!-- TEXT -->
                             <template if:true={cell.isText}>
-                                <!-- <div class="readonly-text"> -->
+                                <div class="readonly-text">
                                     {cell.value}
-                                <!-- </div> -->
+                                </div>
                             </template>
 
                             <!-- CHECKBOX -->
@@ -43,7 +43,7 @@
 
                             <!-- CONTACT -->
                             <template if:true={cell.isContact}>
-                                <div class="slds-grid slds-align_absolute-center">
+                                <div class="slds-grid slds-align_absolute-center contact-wrapper">
                                     <span class="readonly-text">
                                         {cell.displayValue}
                                     </span>

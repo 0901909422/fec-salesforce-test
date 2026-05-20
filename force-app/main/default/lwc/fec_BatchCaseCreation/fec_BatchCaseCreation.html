@@ -159,40 +159,142 @@
               <table class="fec-table">
                 <thead>
                   <tr>
+                    <th class="fec-stt-col">STT</th>
                     <th>
-                      <span class="fec-th-inner">
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="fileName"
+                        onclick={handleSort}
+                      >
                         File Name
                         <lightning-icon
-                          icon-name="utility:arrowup"
+                          icon-name={fileNameSortIcon}
                           size="xx-small"
                           class="fec-sort-icon"
                           alternative-text=""
                         ></lightning-icon>
-                      </span>
+                      </button>
                     </th>
                     <th>
-                      <span class="fec-th-inner">
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="uploadedOn"
+                        onclick={handleSort}
+                      >
                         Uploaded On
                         <lightning-icon
-                          icon-name="utility:arrowup"
+                          icon-name={uploadedOnSortIcon}
                           size="xx-small"
                           class="fec-sort-icon"
                           alternative-text=""
                         ></lightning-icon>
-                      </span>
+                      </button>
                     </th>
-                    <th>Uploaded By</th>
-                    <th>Total Records Count</th>
-                    <th>Total Success Records</th>
-                    <th>Total Failed Records</th>
-                    <th>Status</th>
-                    <th>Result</th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="uploadedBy"
+                        onclick={handleSort}
+                      >
+                        Uploaded By
+                        <lightning-icon
+                          icon-name={uploadedBySortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalRecordsCount"
+                        onclick={handleSort}
+                      >
+                        Total Records Count
+                        <lightning-icon
+                          icon-name={totalRecordsCountSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalSuccessRecords"
+                        onclick={handleSort}
+                      >
+                        Total Success Records
+                        <lightning-icon
+                          icon-name={totalSuccessRecordsSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="totalFailedRecords"
+                        onclick={handleSort}
+                      >
+                        Total Failed Records
+                        <lightning-icon
+                          icon-name={totalFailedRecordsSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="status"
+                        onclick={handleSort}
+                      >
+                        Status
+                        <lightning-icon
+                          icon-name={statusSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
+                    <th>
+                      <button
+                        type="button"
+                        class="fec-sort-button"
+                        data-field="result"
+                        onclick={handleSort}
+                      >
+                        Result
+                        <lightning-icon
+                          icon-name={resultSortIcon}
+                          size="xx-small"
+                          class="fec-sort-icon"
+                          alternative-text=""
+                        ></lightning-icon>
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   <template if:true={hasRows}>
                     <template for:each={pagedRows} for:item="row">
                       <tr key={row.id}>
+                        <td class="fec-stt-col">{row.rowNumber}</td>
                         <td>
                           <template if:true={row.fileDownloadUrl}>
                             <a
@@ -232,7 +334,7 @@
                   </template>
                   <template if:false={hasRows}>
                     <tr>
-                      <td colspan="8" class="fec-empty">No records found.</td>
+                      <td colspan="9" class="fec-empty">No records found.</td>
                     </tr>
                   </template>
                 </tbody>
