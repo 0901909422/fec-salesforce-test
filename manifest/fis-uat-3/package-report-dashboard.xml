@@ -33,6 +33,7 @@
 		<members>Case.FEC_Full_Remarks__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assigned_On__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Submitted_On__c</members>
+        <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment_Hrs__c</members>
         <members>FEC_Routing_Action_History__c.FEC_TAT_by_Assignment__c</members>
         <name>CustomField</name>
     </types>
