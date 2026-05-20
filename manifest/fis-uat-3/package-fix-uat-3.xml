@@ -307,6 +307,7 @@
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
