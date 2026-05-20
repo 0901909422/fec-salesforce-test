@@ -18,7 +18,7 @@ import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.im
 import saveResultFile from "@salesforce/apex/FEC_BatchCaseHandlingController.saveResultFile";
 import logFailedImport from "@salesforce/apex/FEC_BatchCaseHandlingController.logFailedImport";
 import FEC_SheetJS from "@salesforce/resourceUrl/FEC_SheetJS";
-import { STR_EMPTY } from "c/fec_CommonConst";
+import { STR_EMPTY, DATE_PLACEHOLDER } from "c/fec_CommonConst";
 import { arrayBufferToBase64 } from "c/fec_CommonUtils";
 import FEC_ACTION_CANCEL from "@salesforce/label/c.FEC_ACTION_CANCEL";
 import FEC_Button_Submit from "@salesforce/label/c.FEC_Button_Submit";
@@ -935,7 +935,10 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   handleFilterValueChange(event) {
     this.filterResetHint = false;
     const rowId = event.currentTarget?.dataset?.rowid;
-    const value = event.detail?.value ?? STR_EMPTY;
+    const value = this.normalizeFilterLineValue(
+      rowId,
+      event.detail?.value ?? STR_EMPTY
+    );
     this.filterLines = this.filterLines.map((l) =>
       l.rowId === rowId ? { ...l, valueText: value } : l
     );
@@ -947,9 +950,121 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       return "text";
     }
     if (meta.valueType === "date") {
-      return "date";
+      return "text";
     }
     return "text";
+  }
+
+  isDateFilterLine(line) {
+    const meta = this.lineMeta(line);
+    return meta?.valueType === "date";
+  }
+
+  normalizeFilterLineValue(rowId, rawValue) {
+    const value = rawValue === null || rawValue === undefined ? STR_EMPTY : String(rawValue);
+    const line = (this.filterLines || []).find((l) => l.rowId === rowId);
+    if (!line || !this.isDateFilterLine(line)) {
+      return value;
+    }
+    return this.normalizeDateDisplayValue(value);
+  }
+
+  normalizeDateDisplayValue(rawValue) {
+    const value = (rawValue || STR_EMPTY).trim();
+    if (!value) {
+      return STR_EMPTY;
+    }
+    const dmy = this.parseDmyDateParts(value);
+    if (dmy) {
+      return this.formatAsDmy(dmy.day, dmy.month, dmy.year);
+    }
+    const iso = this.parseIsoDateParts(value);
+    if (iso) {
+      return this.formatAsDmy(iso.day, iso.month, iso.year);
+    }
+    return value;
+  }
+
+  normalizeDatePayloadValue(rawValue) {
+    const value = (rawValue || STR_EMPTY).trim();
+    if (!value) {
+      return STR_EMPTY;
+    }
+    const dmy = this.parseDmyDateParts(value);
+    if (dmy) {
+      return this.formatAsIso(dmy.day, dmy.month, dmy.year);
+    }
+    const iso = this.parseIsoDateParts(value);
+    if (iso) {
+      return this.formatAsIso(iso.day, iso.month, iso.year);
+    }
+    return STR_EMPTY;
+  }
+
+  parseDmyDateParts(value) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+    if (!m) {
+      return null;
+    }
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const year = parseInt(m[3], 10);
+    return this.isValidDateParts(day, month, year)
+      ? { day, month, year }
+      : null;
+  }
+
+  parseIsoDateParts(value) {
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
+    if (!m) {
+      return null;
+    }
+    const year = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const day = parseInt(m[3], 10);
+    return this.isValidDateParts(day, month, year)
+      ? { day, month, year }
+      : null;
+  }
+
+  isValidDateParts(day, month, year) {
+    if (
+      Number.isNaN(day) ||
+      Number.isNaN(month) ||
+      Number.isNaN(year) ||
+      year < 1000 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    ) {
+      return false;
+    }
+    const d = new Date(year, month - 1, day);
+    return (
+      d.getFullYear() === year &&
+      d.getMonth() === month - 1 &&
+      d.getDate() === day
+    );
+  }
+
+  twoDigits(value) {
+    return value < 10 ? "0" + String(value) : String(value);
+  }
+
+  formatAsDmy(day, month, year) {
+    return this.twoDigits(day) + "/" + this.twoDigits(month) + "/" + String(year);
+  }
+
+  formatAsIso(day, month, year) {
+    return String(year) + "-" + this.twoDigits(month) + "-" + this.twoDigits(day);
+  }
+
+  valuePlaceholderForLine(line) {
+    if (this.isDateFilterLine(line)) {
+      return DATE_PLACEHOLDER;
+    }
+    return BATCH_UI.valuePlaceholder;
   }
 
   showValueInput(line) {
@@ -1132,7 +1247,8 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         multiPicklistSize: this.multiPicklistSizeForLine(line),
         valueList: Array.isArray(line.valueList) ? line.valueList : [],
         valueInputDisabled: this.valueInputDisabled(line),
-        valueTypeAttr: this.valueInputType(line)
+        valueTypeAttr: this.valueInputType(line),
+        valuePlaceholder: this.valuePlaceholderForLine(line)
       };
     });
   }
@@ -1168,6 +1284,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
           .map((s) => s.trim())
           .filter(Boolean);
         valueText = STR_EMPTY;
+      }
+      if (needsValue && this.isDateFilterLine(line)) {
+        valueText = this.normalizeDatePayloadValue(valueText);
       }
       if (needsValue && !valueText && (!valueList || !valueList.length)) {
         continue;
