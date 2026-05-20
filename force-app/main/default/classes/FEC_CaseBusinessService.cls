@@ -852,8 +852,15 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
-          //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 / Property
-          if (shouldSkipPointsRedemptionSubSection(result.subCodeCode, sectionNameTemp, subSectionNameTemp)) {
+          // MRC Return Stage 1: ẩn Customer Confirmation / Contract Processing Assessment Type.
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              selectedStage.Name,
+              fieldApiNameTemp
+            )
+          ) {
             continue;
           }
 
@@ -4581,23 +4588,6 @@ public without sharing class FEC_CaseBusinessService {
     }
   }
 
-  //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn C360 (Account) / Property (Case)
-  private static Boolean shouldSkipPointsRedemptionSubSection(
-    String subCodeCode,
-    String sectionName,
-    String subSectionName
-  ) {
-    if (String.isBlank(subCodeCode)) {
-      return false;
-    }
-    String s = subCodeCode.toUpperCase();
-    if (!s.contains('RC33.01') && !s.contains('RC33.02') && !s.contains('RC33.03')) {
-      return false;
-    }
-    return ('Account Information'.equals(sectionName) && 'C360 Info'.equals(subSectionName))
-      || ('Case Information'.equals(sectionName) && 'Property Info'.equals(subSectionName));
-  }
-
   /**
    * MRC Return (Batch 7): chặn nhập Case Information khi không đủ điều kiện (giống pattern Phone Update).
    * Áp khi FEC_SubCategory__r.FEC_Code__c chứa RL05; kiểm tra Product Code TW và DPD cho RL05.03.
@@ -5275,6 +5265,17 @@ public without sharing class FEC_CaseBusinessService {
       return Integer.valueOf(m.group(1));
     }
     return null;
+  }
+
+  private static Id parseIdSafelyForRouting(String rawId) {
+    if (String.isBlank(rawId)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(rawId.trim());
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public class CaseBusinessServiceException extends Exception {
