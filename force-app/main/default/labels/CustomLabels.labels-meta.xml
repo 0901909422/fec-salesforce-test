@@ -17913,8 +17913,6 @@
         <shortDescription>Search Channel</shortDescription>
         <value>Search Channel</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Required_Account_Contract_Number</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17923,8 +17921,6 @@
         <shortDescription>Batch Import Required Account Contract Number</shortDescription>
         <value>Account/ Contract Number là bắt buộc</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Interaction_Phone_Format</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17933,8 +17929,6 @@
         <shortDescription>Batch Import Invalid Interaction Phone Format</shortDescription>
         <value>SĐT không đúng định dạng</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Sub_Channel_For_Channel</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17943,8 +17937,6 @@
         <shortDescription>Batch Import Invalid Sub Channel For Channel</shortDescription>
         <value>Giá trị Interaction Sub Channel không chính xác với Interaction Channel đã chọn.</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Required_Case_Remarks</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17953,8 +17945,6 @@
         <shortDescription>Batch Import Required Case Remarks</shortDescription>
         <value>Thiếu giá trị Case Remarks.</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Category_For_Product_Type</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17963,8 +17953,6 @@
         <shortDescription>Batch Import Invalid Category For Product Type</shortDescription>
         <value>Giá trị Category không chính xác với Product Type đã chọn</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Sub_Category_For_Category</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17973,8 +17961,6 @@
         <shortDescription>Batch Import Invalid Sub Category For Category</shortDescription>
         <value>Giá trị Sub Category không chính xác với Category đã chọn</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17983,8 +17969,6 @@
         <shortDescription>Batch Import Invalid Sub Code For Sub Category</shortDescription>
         <value>Giá trị Sub Code không chính xác với Sub Category đã chọn.</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -17993,8 +17977,6 @@
         <shortDescription>Batch Import Sub Category Not In Datagroup</shortDescription>
         <value>Giá trị Sub Category không tồn tại trong Datagroup đã xác định</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</fullName>
         <categories>Apex FEC_BatchImport</categories>
@@ -18003,8 +17985,6 @@
         <shortDescription>Batch Import Sub Code Not In Datagroup</shortDescription>
         <value>Giá trị Sub Code không tồn tại trong Datagroup đã xác định.</value>
     </labels>
-
-
     <labels>
         <fullName>FEC_Batch_Import_Missing_Excel_Column</fullName>
         <categories>Apex FEC_BatchImport,LWC fec_BatchCaseCreation</categories>

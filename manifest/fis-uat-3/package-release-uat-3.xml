@@ -84,16 +84,6 @@
         <members>FEC_BilledTx_Col_Plan</members>
         <members>FEC_BilledTx_Col_PostDate</members>
         <members>FEC_BilledTx_Col_TxnCode</members>
-        <members>FEC_Batch_Import_Required_Account_Contract_Number</members>
-		<members>FEC_Batch_Import_Invalid_Interaction_Phone_Format</members>
-		<members>FEC_Batch_Import_Invalid_Sub_Channel_For_Channel</members>
-		<members>FEC_Batch_Import_Required_Case_Remarks</members>
-		<members>FEC_Batch_Import_Invalid_Category_For_Product_Type</members>
-		<members>FEC_Batch_Import_Invalid_Sub_Category_For_Category</members>
-		<members>FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category</members>
-		<members>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</members>
-		<members>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</members>
-		<members>FEC_Batch_Import_Missing_Excel_Column</members>
         <name>CustomLabel</name>
     </types>
 
