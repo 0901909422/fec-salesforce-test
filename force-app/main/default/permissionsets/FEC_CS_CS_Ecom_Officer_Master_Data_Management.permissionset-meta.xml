@@ -1095,8 +1095,6 @@
     </objectPermissions>
     <objectPermissions>
         <allowCreate>false</allowCreate>
-<<<<<<< HEAD
-=======
         <allowDelete>false</allowDelete>
         <allowEdit>false</allowEdit>
         <allowRead>true</allowRead>
@@ -1106,8 +1104,7 @@
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
-        <allowCreate>true</allowCreate>
->>>>>>> release-uat-3
+        <allowCreate>false</allowCreate>
         <allowDelete>false</allowDelete>
         <allowEdit>false</allowEdit>
         <allowRead>true</allowRead>
