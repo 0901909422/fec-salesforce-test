@@ -71,7 +71,7 @@ public without sharing class FEC_CaseTatFullProcessSvc {
         Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
         FEC_CaseTriggerHandler.isSystemUpdate = true;
         try {
-            update updates;
+            Database.update(updates, AccessLevel.SYSTEM_MODE);
         } finally {
             FEC_CaseTriggerHandler.isSystemUpdate = priorFlag;
         }
