@@ -16,7 +16,9 @@
 
 public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
-    private static final String NS_VMX  = 'http://fecredit.com.vn/cms/ws/v2';
+    private static final String NS_VMX = 'http://fecredit.com.vn/cms/ws/v2';
+    private static final String SERVICE_VMX_AUTH_DETAIL_INQ = 'M_FAS_VMX_AUTH_DETAIL_INQ';
+    private static final String API_CONFIG_VMX_AUTH_DETAIL = 'FEC_MFAS_VMX_AUTH_DETAIL_INQ';
 
     /* =====================================================
        RESPONSE MODELS
@@ -92,9 +94,9 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     }
 
     /* =====================================================
-       PUBLIC METHOD
+       PUBLIC METHOD — Pending: VMX_AUTH_DETAIL_INQ
        ===================================================== */
-    public static ResponseWrapper callService(
+    public static ResponseWrapper callVmxAuthDetailInqService(
         String transID,
         String requestorId,
         String dateTimeStr,
@@ -107,43 +109,57 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
         String soapBody = buildSoapRequest(
-                transID, 
-                requestorId, 
-                dateTimeStr, 
-                vmxVersion,
-                context,
-                signOnName,
-                org,
-                acct
-                );
+            transID,
+            requestorId,
+            dateTimeStr,
+            vmxVersion,
+            context,
+            signOnName,
+            org,
+            acct
+        );
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
-        FEC_API_Config__mdt apiConfig = FEC_API_Config__mdt.getInstance('FEC_MFASOUTSTANDINGAUTHINQ');
-        
+        FEC_API_Config__mdt apiConfig =
+            FEC_API_Config__mdt.getInstance(API_CONFIG_VMX_AUTH_DETAIL);
+
         String endpoint = apiSetting?.FEC_Call_Mock__c
-                ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
-                : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
-            HttpResponse res = FEC_CommonUltils.calloutApi(endpoint, 'POST', FEC_ConstantCommon.API_CONTENT_TYPE, apiConfig?.FEC_SOAP_Action__c, null, soapBody);
-            
+            ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP
+            : (apiSetting?.FEC_Endpoint__c + apiConfig?.FEC_Endpoint__c);
+        HttpResponse res = FEC_CommonUltils.calloutApi(
+            endpoint,
+            'POST',
+            FEC_ConstantCommon.API_CONTENT_TYPE,
+            apiConfig?.FEC_SOAP_Action__c,
+            null,
+            soapBody
+        );
+
         if (res.getStatusCode() != 200 || String.isBlank(res.getBody())) {
-            throw new CalloutException( String.format(System.Label.FEC_MSG_HTTP_Error, new List<String>{res.getStatusCode().toString()}));
+            throw new CalloutException(
+                String.format(
+                    System.Label.FEC_MSG_HTTP_Error,
+                    new List<String>{ res.getStatusCode().toString() }
+                )
+            );
         }
 
         ResponseWrapper response = parseResponse(res.getBody());
 
         if (response.Sys == null || response.Sys.Code != 1) {
             throw new CalloutException(
-                String.format(System.Label.FEC_MSG_API_Error, new List<String>{response.Sys.Description})
+                String.format(
+                    System.Label.FEC_MSG_API_Error,
+                    new List<String>{ response.Sys.Description }
+                )
             );
         }
-        if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F'){
+        if (response.VMXMsgOut != null && response.VMXMsgOut.SVC_RETURN == 'F') {
             String errorMsg = System.Label.FEC_MSG_API_Error;
-            if (response.VMXMsgOut.RC_DATA != null 
+            if (response.VMXMsgOut.RC_DATA != null
                 && !response.VMXMsgOut.RC_DATA.isEmpty()) {
-        
                 errorMsg = response.VMXMsgOut.RC_DATA[0].RETURN_DESC;
             }
-        
             throw new CalloutException(errorMsg);
         }
 
@@ -207,7 +223,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
         // ================= BUSINESS NODE =================
         Dom.XmlNode fasNode =
-            action.addChildElement('M_FAS_OUTSTANDING_AUTH_INQ', null, null);
+            action.addChildElement(SERVICE_VMX_AUTH_DETAIL_INQ, null, null);
 
         Dom.XmlNode vmxRoot =
             fasNode.addChildElement('VMX_ROOT', null, null);
@@ -276,7 +292,13 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     /* ================= VMX_MSGOUT ================= */
 
-    Dom.XmlNode fasNode = FEC_CommonUltils.findChildByName(responseNode, 'M_FAS_OUTSTANDING_AUTH_INQ');
+    Dom.XmlNode fasNode = FEC_CommonUltils.findChildByName(
+        responseNode,
+        SERVICE_VMX_AUTH_DETAIL_INQ
+    );
+    if (fasNode == null) {
+        fasNode = findChildByLocalName(responseNode, SERVICE_VMX_AUTH_DETAIL_INQ);
+    }
     if (fasNode == null) return result;
     Dom.XmlNode rootNode = FEC_CommonUltils.findChildByName(fasNode, 'VMX_ROOT');
     if (rootNode == null) return result;
@@ -477,6 +499,33 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             return v.trim();
         }
         return readAuthTableCell(n, tag);
+    }
+
+    private static Dom.XmlNode findChildByLocalName(Dom.XmlNode root, String localName) {
+        if (root == null || String.isBlank(localName)) {
+            return null;
+        }
+        List<Dom.XmlNode> queue = new List<Dom.XmlNode>{ root };
+        Integer hops = 0;
+        while (!queue.isEmpty() && hops < 500) {
+            hops++;
+            Dom.XmlNode n = queue.remove(0);
+            if (n == null) {
+                continue;
+            }
+            String nm = n.getName();
+            if (nm != null) {
+                Integer colon = nm.indexOf(':');
+                String local = colon >= 0 ? nm.substring(colon + 1) : nm;
+                if (local.equalsIgnoreCase(localName)) {
+                    return n;
+                }
+            }
+            for (Dom.XmlNode c : n.getChildElements()) {
+                queue.add(c);
+            }
+        }
+        return null;
     }
 
     private static Dom.XmlNode findFirstAuthGrpNode(Dom.XmlNode root) {
