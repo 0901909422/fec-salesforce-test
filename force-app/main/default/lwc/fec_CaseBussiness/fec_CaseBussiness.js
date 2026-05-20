@@ -4294,6 +4294,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       // eslint-disable-next-line @lwc/lwc/no-async-operation
       setTimeout(() => {
         this._refreshHoldCaseAutoDisplay();
+        const subprocess = this._getSubProcessContainerEl();
+        subprocess?.refreshAutoHoldCase?.();
       }, delayMs);
     });
   }
