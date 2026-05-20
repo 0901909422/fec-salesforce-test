@@ -14,7 +14,6 @@ public with sharing class FEC_ConstantCommon {
     public static final Integer HTTP_TIMEOUT_DEFAULT = 60000;
     public static final Integer HTTP_STATUS_OK = 200;
     public static final Integer HTTP_STATUS_BAD_REQUEST = 400;
-    public static final Integer HTTP_STATUS_BAD_REQUEST = 400;
 
     /** Múi giờ khi format datetime hiển thị VN (Transfer Call / Pega callback). */
     public static final String USER_TIMEZONE_VIETNAM = 'Asia/Ho_Chi_Minh';
