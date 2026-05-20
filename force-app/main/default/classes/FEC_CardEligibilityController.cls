@@ -312,6 +312,15 @@ public with sharing class FEC_CardEligibilityController {
         result.success = false;
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -360,6 +369,15 @@ public with sharing class FEC_CardEligibilityController {
         result.tenorList  = new List<IPPTenorRow>();
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -402,7 +420,7 @@ public with sharing class FEC_CardEligibilityController {
                 : System.Label.FEC_MSG_Status_Not_Eligible;
             
             // 3. Limit (EligibleAmount)
-            result.creditLimit = formatValue(apiResult.eligibleAmount != null ? String.valueOf(apiResult.eligibleAmount) : null);
+            result.creditLimit = apiResult.eligibleAmount != null ? String.valueOf(apiResult.eligibleAmount) : null;
             
             // 4. Error Code & Description (Only show when NOT eligible)
             if (!isFastCashEligible || !isIPPEligible) {
