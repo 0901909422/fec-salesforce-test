@@ -83,6 +83,16 @@
         <members>FEC_Batch_Import_Data_Absence_Duplicate_In_System</members>
         <members>FEC_Batch_Import_Data_Absence_Duplicate_In_File</members>
 		<members>FEC_Batch_Msg_Select_Template</members>
+        <members>FEC_Batch_Import_Required_Account_Contract_Number</members>
+		<members>FEC_Batch_Import_Invalid_Interaction_Phone_Format</members>
+		<members>FEC_Batch_Import_Invalid_Sub_Channel_For_Channel</members>
+		<members>FEC_Batch_Import_Required_Case_Remarks</members>
+		<members>FEC_Batch_Import_Invalid_Category_For_Product_Type</members>
+		<members>FEC_Batch_Import_Invalid_Sub_Category_For_Category</members>
+		<members>FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category</members>
+		<members>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</members>
+		<members>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</members>
+		<members>FEC_Batch_Import_Missing_Excel_Column</members>
 		<name>CustomLabel</name>
 	</types>
 	<types>
