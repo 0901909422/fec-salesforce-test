@@ -421,6 +421,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (message.fastCashNocLocked === true) {
       return;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Có/Không pop-up Redeem Points: không getData(null) → mất Account/Case Information
+    if (message.pointsRedemptionNocLocked === true) {
+      return;
+    }
     const isNocCleared =
       !message.categoryId &&
       !message.subCategoryId &&
