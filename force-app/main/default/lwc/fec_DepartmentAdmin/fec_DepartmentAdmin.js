@@ -72,6 +72,8 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track editQueueLabelStatus = '';
     @track curentTeamId = null;
     @track currentTeamName = null;
+    @track currentTeamApiName = null;
+    @track currentTeamDescription = null;
     @track editTeamId = null;
     @track teamOptions = [];
     @track editErrorMessage = '';
@@ -123,9 +125,9 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.editQueueLabel = event.target.value;
     }
 
-    handleEditTeamChange(event) {
-        this.editTeamId = event.detail ? event.detail.value : event.target.value;
-    }
+    // handleEditTeamChange(event) {
+    //     this.editTeamId = event.detail ? event.detail.value : event.target.value;
+    // }
 
     handleEditQueueLabelStatusChange(event) {
         this.editQueueLabelStatus = event.target.value;
@@ -558,12 +560,16 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     handleSelectTeam(event) {
         const teamId = event.detail.teamId;
         const teamName = event.detail.teamName;
+        const teamApiName = event.detail.teamApiName;
+        const teamDescription = event.detail.teamDescription;
         this.isLoadQueue = false;
         console.log('Team selected:', teamId, teamName);
         if (teamId) {
             this.curentTeamId = teamId;
             this.currentTeamName = teamName;
             this.selectedQueueId = null;
+            this.currentTeamApiName = teamApiName;
+            this.currentTeamDescription = teamDescription;
             this.refreshHistoryChild(teamId);
         }
 
