@@ -110,6 +110,7 @@
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
+        <members>FEC_ScopedStageChangeRoutingService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -191,6 +192,9 @@
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
         <members>fec_NotificationOverride</members>
+        <members>fec_CaseBussinessScopedRoutingIntegration</members>
+        <members>fec_ScopedStageChangeRouting</members>
+        <members>fec_ScopedStageChangeRoutingAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
