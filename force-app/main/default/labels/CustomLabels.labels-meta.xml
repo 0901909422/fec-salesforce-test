@@ -17717,25 +17717,11 @@
         <value>Lưu thành công</value>
     </labels>
     <labels>
-        <fullName>FEC_GA_Saved_Message</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>GA Saved Message</shortDescription>
-        <value>Dữ liệu đã được lưu</value>
-    </labels>
-    <labels>
         <fullName>FEC_GA_Save_Error</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>GA Save Error</shortDescription>
         <value>Lưu thất bại</value>
-    </labels>
-    <labels>
-        <fullName>FEC_GA_Save_Error_Message</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>GA Save Error Message</shortDescription>
-        <value>Đã xảy ra lỗi khi lưu. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_GA_Create_Success_Message</fullName>
@@ -17764,20 +17750,6 @@
         <protected>false</protected>
         <shortDescription>GA Name Required</shortDescription>
         <value>Vui lòng nhập tên</value>
-    </labels>
-    <labels>
-        <fullName>FEC_GA_Delete_Success_Message</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>GA Delete Success Message</shortDescription>
-        <value>Xóa thành công</value>
-    </labels>
-    <labels>
-        <fullName>FEC_GA_Delete_Error_Message</fullName>
-        <language>en_US</language>
-        <protected>false</protected>
-        <shortDescription>GA Delete Error Message</shortDescription>
-        <value>Xóa thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_GA_Name_Required_Field</fullName>
