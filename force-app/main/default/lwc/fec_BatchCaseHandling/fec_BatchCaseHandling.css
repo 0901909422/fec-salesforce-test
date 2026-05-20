@@ -309,11 +309,11 @@
 
 .fec-filter-table__header {
   margin-bottom: 0.35rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid #e5e5e5;
 }
 
 .fec-filter-table__col {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e5e5e5;
   font-size: 0.8125rem;
   font-weight: 600;
   color: #3e3e3c;
@@ -321,6 +321,7 @@
 
 .fec-filter-table__col--action {
   width: 2.25rem;
+  border-bottom: none;
 }
 
 .fec-filter-toolbar {
