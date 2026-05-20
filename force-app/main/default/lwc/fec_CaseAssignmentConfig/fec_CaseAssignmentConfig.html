@@ -1,6 +1,9 @@
 <template>
   <lightning-card title="Case Assignment Config">
     <div class="slds-p-horizontal_small slds-p-bottom_small">
+      <template if:true={configFrozenHint}>
+        <div class="slds-text-color_weak slds-m-bottom_small">{configFrozenHint}</div>
+      </template>
       <lightning-dual-listbox
         name="queues"
         label="Select Queues"
@@ -8,6 +11,7 @@
         selected-label="Chosen"
         options={queueOptions}
         value={selectedQueues}
+        disabled={configReadOnly}
         onchange={handleQueuesChange}>
       </lightning-dual-listbox>
 
@@ -17,6 +21,7 @@
             label="Role"
             value={selectedRole}
             options={roleOptions}
+            disabled={configReadOnly}
             onchange={handleRoleChange}>
           </lightning-combobox>
         </div>
@@ -27,6 +32,7 @@
             min="1"
             step="1"
             value={selectedScale}
+            disabled={configReadOnly}
             onchange={handleScaleChange}>
           </lightning-input>
         </div>
@@ -59,6 +65,7 @@
                     <lightning-button-icon
                       icon-name="utility:delete"
                       alternative-text="Remove"
+                      disabled={configReadOnly}
                       data-role={row.role}
                       onclick={handleRemoveRole}>
                     </lightning-button-icon>
@@ -75,7 +82,8 @@
           variant="brand"
           label="Save Config"
           onclick={handleSave}
-          disabled={isSaving}>
+          disabled={disableSaveConfig}
+          title={configSaveTitle}>
         </lightning-button>
       </div>
     </div>

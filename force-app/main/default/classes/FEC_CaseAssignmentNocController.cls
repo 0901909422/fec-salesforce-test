@@ -168,7 +168,8 @@ public with sharing class FEC_CaseAssignmentNocController {
         Id productTypeId,
         String categoryKey,
         Id subCategoryId,
-        Id subCodeId
+        Id subCodeId,
+        Id ownerId
     ) {
         if (assignmentId == null) {
             throw new AuraHandledException('Case Assignment is required.');
@@ -201,6 +202,9 @@ public with sharing class FEC_CaseAssignmentNocController {
             FEC_Sub_Category__c = subCategoryId,
             FEC_Sub_Code__c = subCodeId
         );
+        if (ownerId != null) {
+            noc.OwnerId = ownerId;
+        }
         insert noc;
         return noc.Id;
     }
