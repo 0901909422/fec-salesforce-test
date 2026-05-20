@@ -108,6 +108,7 @@
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
+        <members>FEC_CaseTatFullProcessSvc</members>
 		<name>Apexclass</name>
 	</types>
     <types>
