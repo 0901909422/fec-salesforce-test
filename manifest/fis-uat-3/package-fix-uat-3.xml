@@ -93,6 +93,7 @@
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
 		<members>FEC_AutoHoldCaseHistoryService</members>
+		<members>FEC_MarkNFU</members>
 		<members>FEC_CardInfoController</members>
         <members>FEC_IPPController</members>
         <members>FEC_MockData</members>
@@ -205,6 +206,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
+        <members>Case.FEC_Collections_Response__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>

@@ -648,7 +648,16 @@ public with sharing class FEC_ConstantCommon {
 
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
+
+    public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
+    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{
+        'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CA', 'CL', 'CX'
+    };
+    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{
+        'CO', 'PM', 'CP', 'DS', 'IA', 'IT', 'TS'
+    };
     
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';

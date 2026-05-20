@@ -288,6 +288,17 @@
               </template>
             </div>
           </template>
+
+          <template if:true={section.isCaseInformationSection}>
+            <template if:true={showHoldCaseSection}>
+              <div key={section.holdCaseRowKey} class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                <c-fec_hold-case-auto
+                  record-id={recordId}
+                  result-override={holdCaseResultOverride}>
+                </c-fec_hold-case-auto>
+              </div>
+            </template>
+          </template>
         </div>
 
         <!-- process action -->

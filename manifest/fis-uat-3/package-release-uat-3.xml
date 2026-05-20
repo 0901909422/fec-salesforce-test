@@ -200,6 +200,7 @@
         <members>Case.FEC_Sales_Check_Supervisor__c</members>
         <members>Case.FEC_Sales_Check_Discipline_Result__c</members>
         <members>Case.FEC_Complain_Type__c</members>
+        <members>Case.FEC_Collections_Response__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Assignment__c</members>
         <members>FEC_Routing_Action_History__c.FEC_Routing_Action_Type__c</members>
         <members>FEC_Assignment__c.FEC_Assignment_Owner_Text__c</members>
