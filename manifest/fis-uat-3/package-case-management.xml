@@ -8,6 +8,7 @@
         <members>FEC_FetchCollectionDataService_Test</members>
         <members>FEC_CaseBusinessService</members>
         <members>FEC_MrcDuplicateCaseService</members>
+        <members>FEC_MrcReturnCaseService</members>
         <members>FEC_CaseRemarkController</members>
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>

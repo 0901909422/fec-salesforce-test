@@ -1,23 +1,6 @@
 <template>
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
-  <template if:true={businessLoaded}>
-    <template if:true={showMrcRl0502DupBanner}>
-      <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-around_small" role="alert">
-        <span class="slds-assistive-text">warning</span>
-        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
-          <div class="slds-col">
-            <h2 class="slds-text-heading_small">{mrcRl0502DupBannerText}</h2>
-          </div>
-          <div class="slds-col slds-no-flex">
-            <lightning-button variant="neutral" label={customLabel.mrcDupOpenCaseBtn} onclick={handleOpenMrcDupCase}>
-            </lightning-button>
-          </div>
-        </div>
-      </div>
-    </template>
-  </template>
-
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecpointsredemptionsectionvisibility={handlePointsRedemptionSectionVisibility}>
@@ -91,6 +74,42 @@
                                         onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
                                       </lightning-input-field>
                                   </div>
+                                  <template if:true={field.showMrcDupInline}>
+                                    <template if:true={showMrcRl0502DupBanner}>
+                                      <div class="mrc-dup-inline slds-m-top_x-small">
+                                        <p class="mrc-dup-message">
+                                          {mrcDupMessageBeforeLink}
+                                          <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+                                          {mrcDupMessageAfterLink}
+                                        </p>
+                                        <lightning-radio-group
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-obj-name={obj.name}
+                                          name={obj.id}
+                                          label=""
+                                          options={mrcHandlingRadioOptions}
+                                          value={mrcHandlingOptionValue}
+                                          type="radio"
+                                          variant="label-hidden"
+                                          onchange={handleMrcHandlingOptionChange}>
+                                        </lightning-radio-group>
+                                        <lightning-input-field
+                                          class="slds-hide"
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-field="FEC_MRC_Request_Handling_Option__c"
+                                          data-obj-name={obj.name}
+                                          variant="label-hidden"
+                                          field-name="FEC_MRC_Request_Handling_Option__c"
+                                          value={mrcHandlingOptionValue}
+                                          onchange={handleChangeInput}>
+                                        </lightning-input-field>
+                                      </div>
+                                    </template>
+                                  </template>
                                 </template>
                               </template>
                               <div if:true={field.customError}
@@ -174,6 +193,42 @@
                                             onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
                                           </lightning-input-field>
                                       </div>
+                                      <template if:true={field.showMrcDupInline}>
+                                        <template if:true={showMrcRl0502DupBanner}>
+                                          <div class="mrc-dup-inline slds-m-top_x-small">
+                                            <p class="mrc-dup-message">
+                                              {mrcDupMessageBeforeLink}
+                                              <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+                                              {mrcDupMessageAfterLink}
+                                            </p>
+                                            <lightning-radio-group
+                                              data-section={section.id}
+                                              data-sub={row.sub.name}
+                                              data-obj={obj.id}
+                                              data-obj-name={obj.name}
+                                              name={obj.id}
+                                              label=""
+                                              options={mrcHandlingRadioOptions}
+                                              value={mrcHandlingOptionValue}
+                                              type="radio"
+                                              variant="label-hidden"
+                                              onchange={handleMrcHandlingOptionChange}>
+                                            </lightning-radio-group>
+                                            <lightning-input-field
+                                              class="slds-hide"
+                                              data-section={section.id}
+                                              data-sub={row.sub.name}
+                                              data-obj={obj.id}
+                                              data-field="FEC_MRC_Request_Handling_Option__c"
+                                              data-obj-name={obj.name}
+                                              variant="label-hidden"
+                                              field-name="FEC_MRC_Request_Handling_Option__c"
+                                              value={mrcHandlingOptionValue}
+                                              onchange={handleChangeInput}>
+                                            </lightning-input-field>
+                                          </div>
+                                        </template>
+                                      </template>
                                     </template>
                                   </template>
                                   <div if:true={field.customError}

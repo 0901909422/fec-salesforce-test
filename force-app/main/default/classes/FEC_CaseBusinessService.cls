@@ -864,6 +864,18 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
+          // MRC Return Stage 1: ẩn Customer Confirmation / Contract Processing Assessment Type.
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              selectedStage.Name,
+              fieldApiNameTemp
+            )
+          ) {
+            continue;
+          }
+
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
@@ -5253,6 +5265,17 @@ public without sharing class FEC_CaseBusinessService {
       return Integer.valueOf(m.group(1));
     }
     return null;
+  }
+
+  private static Id parseIdSafelyForRouting(String rawId) {
+    if (String.isBlank(rawId)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(rawId.trim());
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public class CaseBusinessServiceException extends Exception {

@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>FEC_TAT_Full_Process_Hrs__c</fullName>
-    <description>Tổng thời gian xử lý của Case
-Tính theo giờ làm việc (trừ đi các ngày lễ, cuối tuần, các khung giờ User không làm việc)</description>
+    <fullName>FEC_TAT_by_Assignment__c</fullName>
     <externalId>false</externalId>
-    <label>TAT Full Process (Hrs)</label>
+    <label>TAT by Assignment (Hrs)</label>
     <length>255</length>
     <required>false</required>
-    <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Text</type>

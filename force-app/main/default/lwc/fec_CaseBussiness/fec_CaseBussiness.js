@@ -55,6 +55,8 @@ import FEC_MSG_ACTION_ADDRESS_UPDATE_ERROR from "@salesforce/label/c.FEC_MSG_ACT
 import FEC_Reason_Label from "@salesforce/label/c.FEC_Reason_Label";
 import FEC_MRC_RL0502_Dup_Banner from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Banner";
 import FEC_MRC_RL0502_Dup_Open_Case_Btn from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Open_Case_Btn";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_New from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_New";
+import FEC_MRC_RL0502_Dup_Opt_Cancel_Prev from "@salesforce/label/c.FEC_MRC_RL0502_Dup_Opt_Cancel_Prev";
 import FEC_MSG_Param_Maxlength from "@salesforce/label/c.FEC_MSG_Param_Maxlength";
 import FEC_Routing_Action_Label from "@salesforce/label/c.FEC_Routing_Action_Label";
 import FEC_Action_Label from "@salesforce/label/c.FEC_Action_Label";
@@ -111,6 +113,11 @@ import PROCESS_ACTION_MESSAGE_CHANNEL from "@salesforce/messageChannel/FEC_Proce
 // [NOC-HANDLING-STAGE-UPDATE]: Import subscribe/unsubscribe để lắng nghe CASE_NOC channel
 import { subscribe, unsubscribe, APPLICATION_SCOPE } from "lightning/messageService";
 
+
+const FIELD_MRC_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
+const FIELD_MRC_HANDLING_OPTION = "FEC_MRC_Request_Handling_Option__c";
+const MRC_OPT_CANCEL_PREVIOUS = "Cancel previous request, create new request";
+const MRC_OPT_CANCEL_NEW = "Cancel new request, continue previous request handling";
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
@@ -1160,6 +1167,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   showProcessAction = false;
   isProcessActionValid = true;
+  mrcHandlingOptionValue = "";
 
   get finalShowProcessAction() {
     return this.showProcessAction && this.isProcessActionValid && this.isEdit;
@@ -1185,12 +1193,35 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return typeof v === "string" && v.length >= 15;
   }
 
-  get mrcRl0502DupBannerText() {
-    const num = String(this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY);
-    return (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).replace(/\{0\}/g, num);
+  get mrcDupCaseNumber() {
+    return String(this.business?.mrcRl0502DuplicateCaseNumber ?? STR_EMPTY);
   }
 
-  handleOpenMrcDupCase() {
+  get mrcDupMessageBeforeLink() {
+    const parts = (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).split("{0}");
+    return parts[0] || STR_EMPTY;
+  }
+
+  get mrcDupMessageAfterLink() {
+    const parts = (FEC_MRC_RL0502_Dup_Banner || STR_EMPTY).split("{0}");
+    return parts.length > 1 ? parts.slice(1).join("{0}") : STR_EMPTY;
+  }
+
+  get mrcHandlingRadioOptions() {
+    return [
+      {
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_New,
+        value: MRC_OPT_CANCEL_NEW,
+      },
+      {
+        label: FEC_MRC_RL0502_Dup_Opt_Cancel_Prev,
+        value: MRC_OPT_CANCEL_PREVIOUS,
+      },
+    ];
+  }
+
+  handleOpenMrcDupCase(event) {
+    event?.preventDefault?.();
     const rid = this.business?.mrcRl0502DuplicateOpenCaseId;
     if (!rid) {
       return;
@@ -1203,6 +1234,64 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         actionName: "view",
       },
     });
+  }
+
+  handleMrcHandlingOptionChange(event) {
+    const el = event.currentTarget;
+    const value = event.detail?.value ?? STR_EMPTY;
+    this.mrcHandlingOptionValue = value;
+
+    const form = el.closest("lightning-record-edit-form");
+    const hiddenField = form?.querySelector(
+      `[data-field="${FIELD_MRC_HANDLING_OPTION}"]`,
+    );
+    if (hiddenField) {
+      hiddenField.value = value;
+    }
+
+    this.handleChangeInput({
+      currentTarget: {
+        dataset: {
+          section: el.dataset.section,
+          sub: el.dataset.sub,
+          obj: el.dataset.obj,
+          objName: el.dataset.objName,
+          field: FIELD_MRC_HANDLING_OPTION,
+        },
+        fieldName: FIELD_MRC_HANDLING_OPTION,
+      },
+      detail: { value },
+    });
+  }
+
+  _applyMrcRl0502DupFieldLayout() {
+    if (!this.business?.sectionlst) {
+      return;
+    }
+
+    this.business.sectionlst.forEach((section) => {
+      section.subSectionlst?.forEach((sub) => {
+        sub.objlst?.forEach((obj) => {
+          obj.fieldlst?.forEach((field) => {
+            if (field.apiName === FIELD_MRC_HANDLING_OPTION) {
+              field.isHidden = this.showMrcRl0502DupBanner;
+              if (this.showMrcRl0502DupBanner && !this.mrcHandlingOptionValue && field.value) {
+                this.mrcHandlingOptionValue = field.value;
+              }
+            }
+            if (field.apiName === FIELD_MRC_CUSTOMER_CONFIRMATION) {
+              field.showMrcDupInline = this.showMrcRl0502DupBanner;
+            }
+          });
+        });
+      });
+    });
+
+    if (!this.showMrcRl0502DupBanner) {
+      this.mrcHandlingOptionValue = STR_EMPTY;
+    }
+
+    this.business = { ...this.business };
   }
 
   @api getNatureOfCaseId() {
@@ -1947,6 +2036,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         }
         // PhuongNT add handle set update field read only
         this.handleSetUpdateFieldReadOnly();
+        this._applyMrcRl0502DupFieldLayout();
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
@@ -2660,6 +2750,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     //     this._lastValidationError = LABEL_ACCOUNT_CONTRACT_NUMBER;
     //   }
     // }
+
+    if (this.showMrcRl0502DupBanner && !this.mrcHandlingOptionValue) {
+      isAllValid = false;
+    }
 
     return isAllValid;
   }
