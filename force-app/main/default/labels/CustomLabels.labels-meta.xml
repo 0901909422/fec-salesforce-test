@@ -16389,7 +16389,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachHas</shortDescription>
-        <value>Lọc các case có chứa tệp đính kèm</value>
+        <value>True: Lọc các case có chứa tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AttachNo</fullName>
@@ -16397,7 +16397,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachNo</shortDescription>
-        <value>Lọc các case không có tệp đính kèm</value>
+        <value>False: Lọc các case không có tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ActionPickPlaceholder</fullName>
