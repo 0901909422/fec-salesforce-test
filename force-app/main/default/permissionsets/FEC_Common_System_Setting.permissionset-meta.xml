@@ -5,31 +5,51 @@
         <visible>true</visible>
     </applicationVisibilities>
     <classAccesses>
-        <apexClass>AsyncPegarulesSoapMycaseService</apexClass>
+        <apexClass>ArchiveCaseAttachmentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>AsyncPegarulesSoapMycaseServices</apexClass>
+        <apexClass>ArchiveCaseAttachmentController_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>CaseStageRoutingService</apexClass>
+        <apexClass>ArchiveCaseController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>EmailFolderService</apexClass>
+        <apexClass>ArchiveCaseController_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>EmailTemplateController</apexClass>
+        <apexClass>ArchiveInteractionCaseController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>EmailTemplateCreatorController</apexClass>
+        <apexClass>ArchiveInteractionCaseRedirectCtrl_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>EmailTemplateService</apexClass>
+        <apexClass>CaseSearchDeletionBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CaseSearchDeletionScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomLog</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DeleteArchiveCaseBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DeleteArchiveCaseBatch_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>DepartmentAdmin</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -37,7 +57,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_AccountOrContractPicklistHanlder</apexClass>
+        <apexClass>FEC_AccountOrContractPicklistHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -45,7 +65,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_AddIPPCallout</apexClass>
+        <apexClass>FEC_ApplicationListTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -53,23 +73,163 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_AutoCloseInteractionHandler</apexClass>
+        <apexClass>FEC_AssignAutoDistribSched</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CMSIPPBlock</apexClass>
+        <apexClass>FEC_AssignmentCaseShareService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CMSIPPBlockCallout</apexClass>
+        <apexClass>FEC_AssignmentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CMSIPPBlockCalloutMock</apexClass>
+        <apexClass>FEC_AssignmentExecuteService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CMSIPPBlockCalloutTest</apexClass>
+        <apexClass>FEC_AssignmentListHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AssignmentRoutingActionHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AssignmentTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseApi</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseExpireBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseExpireSchedulable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseHistoryService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseQueueable</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_AutoHoldCaseService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BancaController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseCreationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingCaseFilter</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingExportRow</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingExportService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportRow</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingImportService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingSObjectUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingTemplateHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingZipResult</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCaseHandlingZipService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCustomSync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCustomSyncByIds</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchCustomSyncByIdsTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchDataCreationController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchImportCommon</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BatchReCallCustomSync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BeneficiaryBankInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_BlockCodeRoutingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSIPPBlockWS</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSIPPBlockWSMock</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSIPPBlockWS_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSRewardRedeemService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CMSRewardRedeemServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_COFFraudRelatedHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -77,19 +237,11 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CancelFraudCase</apexClass>
+        <apexClass>FEC_CardClosureRefundController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CancelFraudCaseCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CancelFraudCase_Test</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CardDeliveryController</apexClass>
+        <apexClass>FEC_CardEligibilityController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -101,7 +253,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CardLockUnlockServiceCallout</apexClass>
+        <apexClass>FEC_CardLockUnLockController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -109,15 +261,51 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CardSecInfo</apexClass>
+        <apexClass>FEC_CardReplacementAddressController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseAccountInfoController</apexClass>
+        <apexClass>FEC_CaseAssignmentApplyOwnerBatch</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseAttachmentController</apexClass>
+        <apexClass>FEC_CaseAssignmentAutoDistQueueJob</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentAutoDistributeService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConfigController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConflictService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentConflictServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentMutationGuard</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNOCDraftTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNOCTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentNocController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseAssignmentQueueRoleResolver</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -125,11 +313,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseDetail_InterationController</apexClass>
+        <apexClass>FEC_CaseEditNOCController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseEditNOCController</apexClass>
+        <apexClass>FEC_CaseExecuteService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseLinkedFilesController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseManagerListService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CasePendingStatusService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CaseRelatedNoteHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -137,11 +341,11 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseSLAWarningService</apexClass>
+        <apexClass>FEC_CaseService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CaseService</apexClass>
+        <apexClass>FEC_CaseTatFullProcessSvc</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -149,7 +353,35 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CheckEligibility</apexClass>
+        <apexClass>FEC_ChannelFunctionService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ChannelFunctionServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_Chathub</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CheckAccountEligibilityCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CheckEligibilityIPPCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CheckEligibleCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CheckEligibleController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ClearSessionController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -157,11 +389,23 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ClientPDFService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ClientPDFServiceTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_CloseInterationSchedulerBatch</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CollectionInteractionController</apexClass>
+        <apexClass>FEC_CofGsrAssignmentService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CofGsrRoutePrepareService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -173,7 +417,35 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ContentDistributionTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentDocumentLinkService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_ContentDocumentLinkTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentDocumentTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentHistorySelector</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentHistoryService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContentVersionTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ContractClosureController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -181,7 +453,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CreateCaseHanlder</apexClass>
+        <apexClass>FEC_CreateCaseHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -189,19 +461,55 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_CreateCaseListViewController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CreateInteractionEmail</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>FEC_CreateInteractionGenesys</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_DNBController</apexClass>
+        <apexClass>FEC_CreateInteractionManualHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CurrencyCodeLookup</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomEmailService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomSyncAllInOneTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomSyncCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomSyncValidator</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomSyncValidatorTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomerAdditionalDataController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_CustomerIntegrationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DNBHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_DocumentRequestRoutingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_EmailMessageTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -209,27 +517,59 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_ExternalAPICallout</apexClass>
+        <apexClass>FEC_EnhancedLetterheadHandler_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_ExternalAPICalloutTest</apexClass>
+        <apexClass>FEC_EnhancedLetterheadTriggerHandler</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_FEOL2DNBServiceCallout</apexClass>
+        <apexClass>FEC_FastCashCaseController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_FetchCollectionData</apexClass>
+        <apexClass>FEC_FetchCollectionDataServiceCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_FileController</apexClass>
+        <apexClass>FEC_FetchCollectionDataService_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_FileControllerTest</apexClass>
+        <apexClass>FEC_FileActionOnReviewService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderController_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderSelector</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderSelector_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderService_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_FolderTriggerHandler_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -237,11 +577,11 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetAccountDetails</apexClass>
+        <apexClass>FEC_FullCustomerIntegrationJob</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetAccountDetailsCallout</apexClass>
+        <apexClass>FEC_GenesysCreateDummyInteraction</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -257,11 +597,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetAssetsListServiceCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetBasicLoanInfoServiceCallout</apexClass>
+        <apexClass>FEC_GetAssetsList</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -269,7 +605,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetCICDataServiceCallout</apexClass>
+        <apexClass>FEC_GetCSAttachedFile</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -293,10 +629,6 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetCardInformationCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>FEC_GetCardPaymentInfo</apexClass>
         <enabled>true</enabled>
     </classAccesses>
@@ -310,18 +642,6 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_GetCardTransactions</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetCardTransactionsCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetCaseInfoAPI</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetCaseInfoAPI_Test</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -341,15 +661,19 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetDNB</apexClass>
+        <apexClass>FEC_GetDNBCalloutService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetDealAPI</apexClass>
+        <apexClass>FEC_GetDeals</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_GetDigitalAccountStatus</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetDisbInfoByAcctCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -361,15 +685,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GetInteractionCases</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetLoanApplicationHistory</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_GetLoanBasicInfo</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetNextWorkController</apexClass>
+        <apexClass>FEC_GetLoanSecInfo</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetNextWorkControllerTest</apexClass>
+        <apexClass>FEC_GetMRCInfo</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetNextWorkController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -385,19 +721,19 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_GetRemovablePhoneStatusCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetRemovedPhoneStatus</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_GetRepaymentScheduleServiceCallout</apexClass>
+        <apexClass>FEC_GetRemovablePhoneStatus</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_GetRewardEligibility</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetSMSInfoFromITTelcoCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_GetServiceCases</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -409,7 +745,27 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_GsrStage1RevertMasterDataHelper</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_HoldCaseController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_HoldCaseInheritanceService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_IPPClosureController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_IPPController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_IPPConversionController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -417,7 +773,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_InteractionCaseAutoCreateService</apexClass>
+        <apexClass>FEC_IncorrectPaymentController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -430,6 +786,14 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_InteractionInforHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_InteractionRoutingController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_InteractionRoutingService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -453,7 +817,7 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_LookupController_Test</apexClass>
+        <apexClass>FEC_MCMSCARDTOCARDINQEMEA</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -469,11 +833,47 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_MainInfoLoanAccountController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MarkNFU</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_MockData</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_MockupEndpoint</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_NFUHistoryController</apexClass>
+        <apexClass>FEC_MrcDuplicateCaseService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NatureOfCaseTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocChannelConfigController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocInheritanceUtil</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocInheritanceUtilTest</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocRemovePhoneInheritanceHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NocRemovePhoneInheritanceHandlerTest</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -485,7 +885,15 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_OtherCardController</apexClass>
+        <apexClass>FEC_NotificationHistoryService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_NotificationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_PDFTemplateSelector</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -497,11 +905,35 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_PreventFileChangesOnClosedCaseTest</apexClass>
+        <apexClass>FEC_PaymentHistoryValidationService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_PreventFileDeleteTest</apexClass>
+        <apexClass>FEC_PinReplacementController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_PinResetHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_PointsRedemptionCaseController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_PsDNBServiceCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_QueueReportCustomSyncBix</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_QueueRunBatchSync</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RDPaymentContractAssessmentService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -509,11 +941,63 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_RefundRequestController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RelevantTicketController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RelevantTicketTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RemovePhoneController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RepaySchedPayHistController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_ReplacementCardCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ResponseLog</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RoutingActionHistoryTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_RoutingHistTatSvc</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SalesChannelFromApplicationService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_SalesInfoController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_ScheduledSyncDataToBix</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SearchByListNIDsServiceCallout</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SearchByListNIDsServiceCallout_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SearchByListPhonesServiceCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -529,19 +1013,87 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_SecondaryInfocontroller</apexClass>
+        <apexClass>FEC_SecondaryInfoLoanAccountController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_SendNotificationController</apexClass>
+        <apexClass>FEC_SendNotificationEmailsQueueable</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_ServiceCaseController</apexClass>
+        <apexClass>FEC_ServiceCaseEmailService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SessionUtil</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_StatementsAccountController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SubProcessService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SyncCaseStatusBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_SyncCaseStatusScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TeamQueue</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateController_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateHistorySelector</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateHistorySelector_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateHistoryService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateSelector</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateSelector_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateService_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateTriggerHandler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TemplateTriggerHandler_Test</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>FEC_TerminationLoanController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -550,10 +1102,6 @@
     </classAccesses>
     <classAccesses>
         <apexClass>FEC_TransactionsController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_TransferCallResource</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -569,107 +1117,15 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_UpdateCustomerDocument</apexClass>
+        <apexClass>FEC_UpdateDisbursementStatusRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_createCaseEmail</apexClass>
+        <apexClass>FEC_UpdateTransferInfoRestService</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>FEC_createCaseEmailTest</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FE_GetIPPDetailsCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>GetCustomerList</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>IPPScheduleController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>SalesInfoController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>TemplateController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>UniversalTemplateController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>fecGetCSAttachedFileService</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>lwcMultiLookupController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>pegarulesSoapMycaseService</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>pegarulesSoapMycaseServiceReqResWrapper</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>pegarulesSoapMycaseServices</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>testParseXML</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_ScheduledSyncDataToBix</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_QueueRunBatchSync</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_BatchCustomSync</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CustomSyncCallout</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_BatchReCallCustomSync</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_QueueReportCustomSyncBix</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CustomSyncAllInOneTest</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CustomSyncValidator</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_CustomSyncValidatorTest</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_BatchCustomSyncByIds</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>FEC_BatchCustomSyncByIdsTest</apexClass>
+        <apexClass>Fec_HoldCaseConfigurationController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <customMetadataTypeAccesses>
@@ -680,101 +1136,6 @@
         <enabled>true</enabled>
         <name>FEC_CaseID_Prefix__mdt</name>
     </customMetadataTypeAccesses>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveAccOrContract__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveAttachment__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveCaseCreatedBy__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveCreatedDate__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveExternalId__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveInteractionId__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveLastModifiedDate__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveLastUpdatedBy__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveMigrationSource__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveSelectedAddress__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.ArchiveServiceCaseOwner__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Account_Contract_Number_Text__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_Account_or_Contract__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Actual_Nature_of_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Case.FEC_External_Interaction_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Genesys_Campaign_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Interaction_Resolved_By__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Interaction__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Case.FEC_Selected_Address__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>CustomLog__c.ActionName__c</field>
@@ -812,12 +1173,127 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Team__c.FEC_Team_Description__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team__c.FEC_Team_Label__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Team__c.FEC_Team_Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveExternalId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveCreatedDate__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveLastModifiedDate__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Case_Created_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Last_Updated_On__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveInteractionId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Interaction_ID__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveAttachment__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveServiceCaseOwner__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Service_Case_Owner__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveCaseCreatedBy__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Case_Created_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveLastUpdatedBy__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveAccOrContract__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Last_Updated_By__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Actual_Nature_of_Case__c.IsArchiveTemp__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Address_Info__c.ArchiveExternalId__c</field>
+        <field>FEC_Customer_History__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Customer_History__c.ArchiveExternalId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Product_Type__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Category__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sub_Category__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Sub_Code__c.IsArchiveTemp__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -827,12 +1303,37 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.ArchiveMigrationSource__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.ArchiveSelectedAddress__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Address_Info__c.ArchiveExternalId__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_IPP__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Card_Payment__c.IsArchiveTemp__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Category__c.IsArchiveTemp__c</field>
+        <field>FEC_Process_Action__c.IsArchiveTemp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Integration_Case__c.IsArchiveTemp__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -890,296 +1391,36 @@
         <field>FEC_Custom_Sync__c.FEC_Total_Record_Sync__c</field>
         <readable>true</readable>
     </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.ArchiveExternalId__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Customer_History__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_IPP__c.FEC_IPP_Closure_Case__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_IPP__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_CS_Remark__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Case_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Case_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Channel_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Created_Time__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Creator_Email__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Customer_User_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Field_API_Name_Value__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Field_API_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Field_Object_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Integrate_Case_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Investigation_Conclusion__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Message_Time__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Parent_CaseID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Product_Type__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Remark__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Service_Case_ID__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sub_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sub_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sys_Channel__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sys_Creator_Email__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sys_Date_Time__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Sys_Transaction_Id__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.FEC_Updated_Time__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Integration_Case__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Process_Action__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Product_Type__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Sub_Category__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Sub_Code__c.IsArchiveTemp__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Transaction__c.DocumentId__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Channel__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Custom_Sync__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Description__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Integration_Case_Id__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Message_Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Request_Data__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Requestor__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Response_Data__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Service_Case_Id__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Service_Name__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Quantity_Call__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.Records__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Endpoint__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Method__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Status_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Bix_Is_Success__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_integration_service_log__c.FEC_Error_Message__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSyncSetting__c.Endpoint__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSyncSetting__c.ApiKey__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>CustomSyncSetting__c.LimitQuanitySync__c</field>
-        <readable>true</readable>
-    </fieldPermissions> 
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Template_Audit_Log__c.Change_Date__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Common System Setting</label>
     <license>Salesforce</license>
     <objectPermissions>
         <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Case_Follow_Update__e</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Interaction_Routed__e</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_integration_service_log__c</object>
+        <object>FEC_Team__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
@@ -1189,22 +1430,44 @@
         <allowEdit>true</allowEdit>
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
-        <object>FEC_Custom_Sync__c</object>
-        <viewAllFields>true</viewAllFields>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
-        <object>CustomSyncSetting__c</object>
+        <object>CustomLog__c</object>
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <tabSettings>
+        <tab>Batch_Case_Creation</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Batch_Case_Handling</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Batch_Data_Creation</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Create_Case</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Account_Contract_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FE_Department_Admin</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Action_Button__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_ApplicationList</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_BancaTabView</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -1225,6 +1488,14 @@
     </tabSettings>
     <tabSettings>
         <tab>FEC_Customer_Search</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_GetNextWork</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_HoldCaseConfiguration</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
@@ -1252,6 +1523,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>FEC_Statements</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>FEC_Sub_Category__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
@@ -1260,11 +1535,11 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>standard-Case</tab>
+        <tab>FEC_Transactions</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
-        <tab>FEC_Custom_Sync__c</tab>
+        <tab>standard-Case</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <userPermissions>
