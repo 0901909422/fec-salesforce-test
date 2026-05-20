@@ -534,6 +534,15 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
+  isRequestTimeoutError(detail) {
+    if (!detail) {
+      return false;
+    }
+    const normalized = String(detail).trim().replace(/\.$/, "");
+    const timeoutNorm = String(FEC_BCH_RequestTimeout).trim().replace(/\.$/, "");
+    return normalized === timeoutNorm;
+  }
+
   rowBusinessProcessKey(row) {
     const v = (row?.businessProcessCode || row?.businessProcessName || STR_EMPTY)
       .trim();
@@ -2003,9 +2012,14 @@ export default class Fec_BatchCaseHandling extends LightningElement {
 
   handleExportFailure(error) {
     this.exportSuccessMessage = STR_EMPTY;
-    this.exportErrorMessage = MSG_EXPORT_FAILED;
     const detail =
       typeof error === "string" ? error : this.extractError(error);
+    if (this.isRequestTimeoutError(detail)) {
+      this.exportErrorMessage = FEC_BCH_RequestTimeout;
+      this.showError(FEC_BCH_ExportToastTitle, FEC_BCH_RequestTimeout);
+      return;
+    }
+    this.exportErrorMessage = MSG_EXPORT_FAILED;
     this.showError(
       MSG_EXPORT_FAILED,
       detail || FEC_BCH_CannotCreateExportFile
@@ -2162,6 +2176,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.importSuccessMessage = STR_EMPTY;
     const detail =
       typeof error === "string" ? error : this.extractError(error);
+    if (this.isRequestTimeoutError(detail)) {
+      this.importErrorMessage = FEC_BCH_RequestTimeout;
+      this.showError(MSG_IMPORT_FAILED, FEC_BCH_RequestTimeout);
+      return;
+    }
     this.importErrorMessage = MSG_IMPORT_FAILED;
     this.showError(
       MSG_IMPORT_FAILED,
