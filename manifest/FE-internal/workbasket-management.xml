@@ -15,6 +15,7 @@
         <members>fec_CustomHistoryLog</members>
         <members>fec_UserQueueDetail</members>
         <members>fec_ResourceHelper</members>
+        <members>fec_CustomDatatable</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

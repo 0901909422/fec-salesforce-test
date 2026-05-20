@@ -189,7 +189,7 @@ public with sharing class DepartmentAdmin {
             ]) {
                 emailAddToQueue.add(u.Email);
             }
-            insertCustomLog(queueId, CLASS_NAME, 'addUsersToQueue', 'Add User Success', '', String.join(emailAddToQueue, ','));
+            insertCustomLog(queueId, CLASS_NAME, 'addUsersToQueue', 'Add User Success', '', String.join(emailAddToQueue, ', '));
             return true;
         } catch (DmlException dmlEx) {
             // All-or-none failed, nothing inserted. Log detailed DML messages.
@@ -257,7 +257,7 @@ public with sharing class DepartmentAdmin {
                     FROM User
                     WHERE Id = :userId
                 ];
-                insertCustomLog(queueId, CLASS_NAME, 'removeUserFromQueue', 'Remove User Success', '', users[0].Email);
+                insertCustomLog(queueId, CLASS_NAME, 'removeUserFromQueue', 'Remove User Success', users[0].Email, users[0].Email);
                 return true;
             }
             return false;

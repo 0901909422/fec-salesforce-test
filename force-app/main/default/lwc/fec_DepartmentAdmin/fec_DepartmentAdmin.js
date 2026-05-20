@@ -221,10 +221,11 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         const qid = event.detail.queueId;
         const teamQueueRecordID = event.detail.teamQueueRecordID;
         const curentTeamId = event.detail.curentTeamId;
+        const queueLabelStatus = event.detail.queueLabelStatus;
         this.curentTeamId = curentTeamId;
         this.selectedQueueId = qid;
         this.isLoadQueue = true;
-        
+
         // Get queue name using the new Apex method
         try {
             const queueInfo = await getQueueValidBaseNameOrId({ developerName: null, queueId: qid });
@@ -232,12 +233,17 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (queueInfo && queueInfo.name) {
                 this.selectedQueueName = queueInfo.name;
                 this.selectedQueueDevName = queueInfo.devname;
+                this.selectedQueueLabelStatus = queueLabelStatus;
             } else {
                 this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
+                this.selectedQueueDevName = '';
+                this.selectedQueueLabelStatus = '';
             }
         } catch (error) {
             console.error('Error fetching queue name:', error);
             this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
+            this.selectedQueueDevName = '';
+            this.selectedQueueLabelStatus = '';
         }
         
         // reset pagination and users

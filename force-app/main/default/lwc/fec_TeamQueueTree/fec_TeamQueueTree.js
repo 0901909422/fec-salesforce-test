@@ -94,6 +94,7 @@ export default class fec_TeamQueueTree extends LightningElement {
         let rowId = '';
         let teamApiName = '';
         let teamDescription = '';
+        let queueLabelStatus = '';
         
         // Check if it's an expand/collapse event (from onexpand/oncollapse)
        if (event.detail && event.detail.row) {
@@ -106,11 +107,12 @@ export default class fec_TeamQueueTree extends LightningElement {
             teamQueueID = detailRow.teamQueueID ? detailRow.teamQueueID : '';
             teamQueueRecordID = detailRow.teamQueueRecordID ? detailRow.teamQueueRecordID : '';
             rowId = detailRow.id ? detailRow.id : '';
+            queueLabelStatus = detailRow.queueLabelStatus ? detailRow.queueLabelStatus : '';
         }
         console.log('rowId: ', rowId, ' rowName:', rowName, ' rowType:', rowType, ' teamApiName:', teamApiName, ' teamDescription:', teamDescription, ' queueId:', queueId, ' teamQueueID:', teamQueueID, ' ;teamQueueRecordID: ', teamQueueRecordID);
         if (rowType === 'QUEUE' && queueId) {
             // New custom event to get queue users show on parent LWC
-            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID} }));
+            this.dispatchEvent(new CustomEvent('getqueueusers', { detail: { queueId: queueId, teamQueueRecordID: teamQueueRecordID, curentTeamId: teamQueueID, queueLabelStatus: queueLabelStatus} }));
         } else if (rowType === 'ADD_QUEUE' && teamQueueID) {
             // Handle show model Add queue form
             this.openModal(teamQueueID);
@@ -139,7 +141,8 @@ export default class fec_TeamQueueTree extends LightningElement {
                 rowType: 'QUEUE',
                 teamQueueID: teamID,
                 teamQueueRecordID: queue.id,
-                queueId: queue.queueId
+                queueId: queue.queueId,
+                queueLabelStatus: queue.queueLabelStatus
             }));
            
             // Record Add Queue in Team
