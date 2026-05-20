@@ -168,6 +168,7 @@
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
+        <members>FEC_BCH_FilterPropertyService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1163,6 +1164,15 @@
 		<members>FEC_Transfer_Err_Remark_Null</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
+        <members>FEC_BCH_FilterColCondition</members>
+        <members>FEC_BCH_FilterColValue</members>
+        <members>FEC_BCH_FilterGroupCaseFields</members>
+        <members>FEC_BCH_FilterGroupPredefined</members>
+        <members>FEC_BCH_FilterScopeAllCase</members>
+        <members>FEC_BCH_FilterScopeField</members>
+        <members>FEC_BCH_FilterScopePreDefine</members>
+        <members>FEC_BCH_Import_Rows_Invalid</members>
+        <members>FEC_BCH_Import_Submitted</members>
         <name>CustomLabel</name>
     </types>
 	<types>
