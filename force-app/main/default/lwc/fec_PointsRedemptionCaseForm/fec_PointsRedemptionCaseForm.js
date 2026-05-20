@@ -3,9 +3,11 @@
  * Description  : Points Redemption — Case Information (RC33.01–03): tiers from initData,
  *                redeem via FEC_PointsRedemptionCaseController.redeem (CMS services).
  ****************************************************************************************/
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
+import { publish, MessageContext } from 'lightning/messageService';
+import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
 import LightningConfirm from 'lightning/confirm';
 import initData from '@salesforce/apex/FEC_PointsRedemptionCaseController.initData';
 import redeem from '@salesforce/apex/FEC_PointsRedemptionCaseController.redeem';
@@ -16,14 +18,18 @@ import FEC_Toast_Validation_Title from '@salesforce/label/c.FEC_Toast_Validation
 import FEC_Complete_This_Field from '@salesforce/label/c.FEC_Complete_This_Field';
 import FEC_Points_Redeem_Button_Label from '@salesforce/label/c.FEC_Points_Redeem_Button_Label';
 import FEC_Points_Redeem_Fail_After_Max from '@salesforce/label/c.FEC_Points_Redeem_Fail_After_Max';
-import FEC_Points_Redeem_Fail_Prefix from '@salesforce/label/c.FEC_Points_Redeem_Fail_Prefix';
+import FEC_Points_Redeem_Fail_Retry from '@salesforce/label/c.FEC_Points_Redeem_Fail_Retry';
 import FEC_Points_Redeem_Success_Message from '@salesforce/label/c.FEC_Points_Redeem_Success_Message';
 import FEC_Points_Redeemed_Points_Label from '@salesforce/label/c.FEC_Points_Redeemed_Points_Label';
 import FEC_Points_Redemption_CMS_Phone_Label from '@salesforce/label/c.FEC_Points_Redemption_CMS_Phone_Label';
 import FEC_Points_Redemption_Confirm_Message from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Message';
 import FEC_Points_Redemption_Confirm_Title from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Title';
 import Loading from '@salesforce/label/c.Loading';
-import { STR_EMPTY } from 'c/fec_CommonConst';
+import {
+    STR_EMPTY,
+    FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX
+} from 'c/fec_CommonConst';
 
 const LS_FAIL = 'fec-pr-fail-';
 const LS_OK = 'fec-pr-ok-';
@@ -39,6 +45,7 @@ function isPointsRedemptionRc33Branch(subCode) {
     return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
 }
 
+//linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — khôi phục Redeemed Points đã lưu sau submit
 function resolveSelectedTierFromSaved(savedRedeemedPoints, tierOptionsUi) {
     if (!savedRedeemedPoints || !tierOptionsUi || !tierOptionsUi.length) {
         return null;
@@ -78,8 +85,15 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     @track selectedTierJson;
     @track redeemDisabled = false;
     @track failCount = 0;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07: thông báo đỏ in đậm dưới nút Redeem Points
+    @track redeemFailMessage;
 
     _lastSub = STR_EMPTY;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — khóa NOC sau Có/Không pop-up Redeem Points
+    _redeemModalConfirmed = false;
+
+    @wire(MessageContext)
+    messageContext;
 
     get isReadOnly() {
         return this.isEdit === false;
@@ -95,6 +109,9 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     connectedCallback() {
         this.restoreLocalState();
+        this._restoreRedeemModalConfirmedFromStorage();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 1: re-publish khóa NOC khi reload tab
+        this._syncNocLockToCaseEditNocIfNeeded();
         this._lastSub = (this.subCodeCode || STR_EMPTY).trim();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
         this._notifyPointsRedemptionSectionVisibility();
@@ -111,7 +128,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — chỉ ẩn C360/Property khi không đủ điều kiện đổi điểm
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — chỉ ẩn C360/Property khi không đủ điều kiện đổi điểm
     _notifyPointsRedemptionSectionVisibility() {
         if (!isPointsRedemptionRc33Branch(this.subCodeCode)) {
             return;
@@ -137,6 +154,8 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
                 this.failCount = isNaN(n) ? 0 : n;
                 if (this.failCount >= MAX_FAIL) {
                     this.redeemDisabled = true;
+                    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 6: hiển thị Noti-07 sau reload
+                    this.redeemFailMessage = FEC_Points_Redeem_Fail_After_Max;
                 }
             }
         } catch (e) {
@@ -155,6 +174,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             label: o.label,
             value: o.valueJson
         }));
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
         const restored = resolveSelectedTierFromSaved(r && r.savedRedeemedPoints, this.tierOptionsUi);
         this.selectedTierJson = restored || null;
         this._notifyPointsRedemptionSectionVisibility();
@@ -188,6 +208,65 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         this.selectedTierJson = e.detail.value;
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
+    _storageRedeemModalConfirmedKey() {
+        return this.recordId ? FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX + this.recordId : null;
+    }
+
+    _storageNocLockKey() {
+        return this.recordId ? FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX + this.recordId : null;
+    }
+
+    _restoreRedeemModalConfirmedFromStorage() {
+        try {
+            const k = this._storageRedeemModalConfirmedKey();
+            this._redeemModalConfirmed = !!(k && sessionStorage.getItem(k) === '1');
+        } catch (e) {
+            this._redeemModalConfirmed = false;
+        }
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 1: fec_CaseEditNOC mount sau vẫn nhận khóa NOC
+    _syncNocLockToCaseEditNocIfNeeded() {
+        if (!this._redeemModalConfirmed || !this.messageContext || !this.recordId) {
+            return;
+        }
+        publish(this.messageContext, CASE_NOC, {
+            caseId: this.recordId,
+            pointsRedemptionNocLocked: true
+        });
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Có/Không pop-up Redeem Points: khóa NOC (giống Fast Cash)
+    applyNocLockAfterRedeemModal() {
+        this._redeemModalConfirmed = true;
+        try {
+            const modalKey = this._storageRedeemModalConfirmedKey();
+            const lockKey = this._storageNocLockKey();
+            if (modalKey) {
+                sessionStorage.setItem(modalKey, '1');
+            }
+            if (lockKey) {
+                sessionStorage.setItem(lockKey, '1');
+            }
+        } catch (e) {
+            // no-op
+        }
+        if (this.messageContext && this.recordId) {
+            publish(this.messageContext, CASE_NOC, {
+                caseId: this.recordId,
+                pointsRedemptionNocLocked: true
+            });
+        }
+        this.dispatchEvent(
+            new CustomEvent('fecpointsredemptionredeemmodalconfirmed', {
+                bubbles: true,
+                composed: true,
+                detail: { recordId: this.recordId }
+            })
+        );
+    }
+
     async handleRedeemClick() {
         if (this.isReadOnly || this.redeemDisabled) {
             return;
@@ -202,9 +281,12 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             label: FEC_Points_Redemption_Confirm_Title,
             theme: 'default'
         });
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
+        this.applyNocLockAfterRedeemModal();
         if (!ok) {
             return;
         }
+        this.redeemFailMessage = null;
         this.loading = true;
         redeem({ caseId: this.recordId, tierJson: this.selectedTierJson, subCodeCode: this.subCodeCode || null })
             .then((res) => {
@@ -214,18 +296,19 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
                     this.toast(FEC_Success_Title, FEC_Points_Redeem_Success_Message, VARIANT.SUCCESS);
                     this.navigateCase();
                 } else {
-                    this.onRedeemFail(res && res.errorMessage ? res.errorMessage : FEC_Toast_Error);
+                    this.onRedeemFail();
                 }
             })
-            .catch((err) => {
-                this.onRedeemFail(this.msg(err));
+            .catch(() => {
+                this.onRedeemFail();
             })
             .finally(() => {
                 this.loading = false;
             });
     }
 
-    onRedeemFail(message) {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 inline, không toast lỗi API
+    onRedeemFail() {
         this.failCount += 1;
         try {
             if (this.lsFailKey) {
@@ -236,10 +319,10 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
         if (this.failCount >= MAX_FAIL) {
             this.redeemDisabled = true;
-            this.toast(FEC_Toast_Error, FEC_Points_Redeem_Fail_After_Max.replace('{0}', String(MAX_FAIL)) + message, VARIANT.ERROR);
+            this.redeemFailMessage = FEC_Points_Redeem_Fail_After_Max;
             this.navigateCase();
         } else {
-            this.toast(FEC_Toast_Error, FEC_Points_Redeem_Fail_Prefix + message, VARIANT.ERROR);
+            this.redeemFailMessage = FEC_Points_Redeem_Fail_Retry;
         }
     }
 
@@ -279,6 +362,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         return true;
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
     @api saveDraftIfApplicable() {
         if (this.isReadOnly || !this.showPanel || !this.selectedTierJson) {
             return Promise.resolve();
@@ -286,6 +370,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         return saveDraftSelection({ caseId: this.recordId, tierJson: this.selectedTierJson, subCodeCode: this.subCodeCode || null });
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — đồng bộ FEC_Redeemed_Points__c lên record form khi submit
     @api getSelectedRedeemedPointsValue() {
         if (!this.selectedTierJson) {
             return null;

@@ -34,6 +34,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
                 FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                 FEC_Account_Number__c,
                 FEC_Account_Contract_Number_Text__c,
+                //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
                 FEC_Redeemed_Points__c,
                 FEC_CMS_Phone__c
             FROM Case
@@ -193,6 +194,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         @AuraEnabled public String subCodeCode;
         @AuraEnabled public String expectedProductType;
         @AuraEnabled public Decimal availablePoints;
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
         @AuraEnabled public String savedRedeemedPoints;
     }
 
@@ -281,6 +283,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (!r.showRedemptionUi) {
             r.notEligibleMessage = MSG_NOT_ELIGIBLE;
         }
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
         if (c != null && String.isNotBlank(c.FEC_Redeemed_Points__c)) {
             r.savedRedeemedPoints = c.FEC_Redeemed_Points__c.trim();
         }
@@ -347,9 +350,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         return res;
     }
 
-    /**
-     * Lưu nháp mệnh giá đã chọn (FEC_Redeemed_Points__c) khi chưa bấm Redeem — gọi từ Save & Close / Submit.
-     */
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Lưu nháp FEC_Redeemed_Points__c khi Save & Close / Submit
     @AuraEnabled
     public static void saveDraftSelection(Id caseId, String tierJson, String subCodeCode) {
         if (caseId == null || String.isBlank(tierJson)) {
@@ -371,6 +372,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         persistRedeemedPoints(caseId, tier.price);
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
     private static void persistRedeemedPoints(Id caseId, Decimal pts) {
         if (caseId == null || !Schema.sObjectType.Case.fields.FEC_Redeemed_Points__c.isUpdateable()) {
             return;

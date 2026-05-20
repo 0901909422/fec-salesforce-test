@@ -1452,6 +1452,10 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (message.fastCashNocLocked === true) {
       return;
     }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
+    if (message.pointsRedemptionNocLocked === true) {
+      return;
+    }
 
     if (Object.prototype.hasOwnProperty.call(message, 'accountType')) {
       // Existing behavior: account type change — không xử lý ở đây
@@ -1870,7 +1874,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — C360/Property: LWC Points Redemption quyết định sau initData
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — C360/Property: LWC Points Redemption quyết định sau initData (đủ điều kiện mới ẩn)
         this._setPointsRedemptionHideFlag(false);
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
@@ -2728,6 +2732,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return el.saveDraftIfApplicable();
   }
 
+  //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — lưu FEC_Redeemed_Points__c qua record form khi submit
   _syncPointsRedemptionFieldToRecordForm() {
     const el = this._getPointsRedemptionCaseFormEl();
     if (!el || typeof el.getSelectedRedeemedPointsValue !== "function") {
@@ -2926,8 +2931,12 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — gap 2: lưu Redeemed Points trước record form submit
     this._syncPointsRedemptionFieldToRecordForm();
-    return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
+    return Promise.all([
+      this._saveRemovePhoneDraftIfApplicable(),
+      this._savePointsRedemptionDraftIfApplicable(),
+    ]);
   }
 
   /*Lấy element của form IPP Closure*/
@@ -3094,6 +3103,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._saveOnlyFormCount = 0;
       this._saveOnlyFormTotal = total;
 
+      //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
       this._syncPointsRedemptionFieldToRecordForm();
       formToSubmit.forEach((item) => {
         this._applyPicklistLabelToApiValue(item);
