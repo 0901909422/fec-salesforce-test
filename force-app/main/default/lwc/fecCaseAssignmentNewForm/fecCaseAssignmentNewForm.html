@@ -4,16 +4,7 @@
       <h1 class="page-heading">New Case Assignment</h1>
     </div>
 
-    <template if:true={hasPageErrors}>
-      <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
-        <h2 class="slds-text-heading_small">Review the errors on this page.</h2>
-        <ul class="slds-list_dotted slds-m-top_x-small">
-          <template for:each={pageErrors} for:item="msg">
-            <li key={msg}>{msg}</li>
-          </template>
-        </ul>
-      </div>
-    </template>
+    <span data-id="page-error-anchor"></span>
 
     <template if:true={queueDropdownOpen}>
       <div
@@ -32,7 +23,7 @@
         <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
           <lightning-input
             data-field="assignmentName"
-            label="Case Assignment Name"
+            label="Name"
             required
             value={assignmentName}
             onchange={handleNameChange}
@@ -45,7 +36,7 @@
             label="Status"
             required
             value={status}
-            options={availableStatusOptions}
+            options={statusOptions}
             onchange={handleStatusChange}
           ></lightning-combobox>
         </div>
@@ -211,14 +202,20 @@
       <div class="section-title">User Information</div>
       <div class="slds-grid slds-wrap slds-gutters">
         <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
-          <lightning-combobox
-            label="Role"
-            required
-            value={selectedRole}
-            options={roleOptions}
-            onchange={handleRoleChange}
-            placeholder="Select role"
-          ></lightning-combobox>
+          <div class="slds-form-element" class:slds-has-error={roleHasError}>
+            <lightning-combobox
+              data-field="role"
+              label="Role"
+              required
+              value={selectedRole}
+              options={roleOptions}
+              onchange={handleRoleChange}
+              placeholder="Select role"
+            ></lightning-combobox>
+            <template if:true={roleHasError}>
+              <div class="slds-form-element__help">Role can't be blank</div>
+            </template>
+          </div>
         </div>
 
         <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
@@ -289,4 +286,33 @@
       ></lightning-button>
     </div>
   </div>
+
+  <template if:true={showErrorModal}>
+    <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <h2 class="slds-modal__title slds-hyphenate">Review the errors on this page</h2>
+          <button
+            type="button"
+            class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+            title="Close"
+            onclick={closeErrorModal}
+          >
+            <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+          </button>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <ul class="slds-list_dotted">
+            <template for:each={pageErrors} for:item="msg">
+              <li key={msg}>{msg}</li>
+            </template>
+          </ul>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label="OK" variant="brand" onclick={closeErrorModal}></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
 </template>

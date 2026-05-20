@@ -166,7 +166,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Case Assignment</label>
     <nameField>
-        <label>Case Assignment Name</label>
+        <label>Name</label>
         <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>
