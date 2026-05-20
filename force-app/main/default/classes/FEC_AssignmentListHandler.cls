@@ -3,31 +3,11 @@ public without sharing class FEC_AssignmentListHandler {
     @AuraEnabled
     public static String getUserDepartment() {
         
-        User u = [
-        SELECT UserRole.Name, Profile.Name, FEC_User_Group__c
-        FROM User
-        WHERE Id = :UserInfo.getUserId()
-        LIMIT 1
-    ];
-        
-        System.debug('=== USER === ' + u);
-        System.debug('=== FEC_User_Group__c === ' + u.FEC_User_Group__c);
-        
-        if (String.isBlank(u.FEC_User_Group__c)) {
-            System.debug('=== RETURN OTHER: group is blank ===');
+        if(isCSSupport() || isCSCustomerCare() ){
+            return 'CS';
+        }else{
             return 'OTHER';
         }
-        
-        if (
-            u.FEC_User_Group__c.contains('SP') ||
-            u.FEC_User_Group__c.contains('CC')
-        ) {
-            System.debug('=== RETURN CS ===');
-            return 'CS';
-        }
-        
-        System.debug('=== RETURN OTHER ===');
-        return 'OTHER';
     }
     
     @AuraEnabled
@@ -448,5 +428,563 @@ public without sharing class FEC_AssignmentListHandler {
         FROM FEC_Assignment__c
         WHERE FEC_Case__c = :caseId
     ];
+    }
+    
+    // public class SelectOptionWrapper {
+        //     @AuraEnabled public String label;
+        //     @AuraEnabled public String value;
+        
+        //     public SelectOptionWrapper(String value, String label) {
+            //         this.value = value;
+            //         this.label = label;
+        //     }
+    // }
+    
+    
+    @AuraEnabled
+    public static List<SelectOptionWrapper> getTeamForRouteToAction(
+    String caseId, String assignmentId) {
+        List<SelectOptionWrapper> teamOptions = new List<SelectOptionWrapper>();
+        
+        List<Case> cases = [
+            SELECT Id, FEC_Business_Process__c, FEC_Stage_Name__c FROM Case WHERE Id = : caseId LIMIT 1
+        ];
+        
+        Case caseRecord = cases.isEmpty() ? null : cases[0];
+        
+        /*
+         * Detect user department
+         */
+        String userDepart;
+        
+        if (isCSSupport()) {
+            userDepart = 'CS Support';
+            
+        } else if (isCSCustomerCare()) {
+            userDepart = 'CS Customer Care';
+            
+        } else {
+            userDepart = 'OTHER';
+        }
+        
+        System.debug('=== User department: ' + userDepart);
+        
+        /*
+         * OTHER DEPT
+         */
+        if (userDepart == 'OTHER') {
+            if (caseRecord != null
+            && String.isNotBlank(caseRecord.FEC_Stage_Name__c)) {
+                /*
+                 * GSR
+                 * Route về CS Support
+                 */
+                if (caseRecord.FEC_Stage_Name__c.contains(
+                FEC_ConstantCommon.BP_GSR)) {
+                    TeamWrapper team = getTeamByName('SP');
+                    
+                    if (team != null) {
+                        teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
+                    }
+                }
+                
+                /*
+                 * COF
+                 * Route về CS Customer Care
+                 */
+                else if (caseRecord.FEC_Stage_Name__c.contains(
+                FEC_ConstantCommon.BP_COF)) {
+                    TeamWrapper team = getTeamByName('CC');
+                    
+                    if (team != null) {
+                        teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
+                    }
+                }
+            }
+        }
+        
+        /*
+         * CS Support / CS Customer Care
+         */
+        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+            /*
+             * Team xử lý ban đầu của assignment
+             */
+            System.debug('test get first team hieutt');
+            TeamWrapper team = getFirstTeamProcessOfAssignment(assignmentId);
+            
+            if (team != null) {
+                teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
+            }
+        }
+        
+        return teamOptions;
+    }
+    
+    
+    
+    
+    
+    @AuraEnabled
+    public static List<SelectOptionWrapper> getQueueForRouteToAction(
+    String caseId, String assignmentId) {
+        List<SelectOptionWrapper> queueOptions = new List<SelectOptionWrapper>();
+        
+        List<Case> cases = [
+            SELECT Id, FEC_Business_Process__c, FEC_Stage_Name__c FROM Case WHERE Id = : caseId LIMIT 1
+        ];
+        
+        Case caseRecord = cases.isEmpty() ? null : cases[0];
+        
+        /*
+         * Detect user department
+         */
+        String userDepart;
+        
+        if (isCSSupport()) {
+            userDepart = 'CS Support';
+            
+        } else if (isCSCustomerCare()) {
+            userDepart = 'CS Customer Care';
+            
+        } else {
+            userDepart = 'OTHER';
+        }
+        
+        System.debug('=== User department: ' + userDepart);
+        
+        /*
+         * OTHER DEPT
+         */
+        if (userDepart == 'OTHER') {
+            if (caseRecord != null
+            && String.isNotBlank(caseRecord.FEC_Stage_Name__c)) {
+                /*
+                 * GSR
+                 * Route về CS Support
+                 */
+                if (caseRecord.FEC_Stage_Name__c.contains(
+                FEC_ConstantCommon.BP_GSR)) {
+                    queueOptions = getQueueByName('DQ - CS Support');
+                }
+                
+                /*
+                 * COF
+                 * Route về CS Customer Care
+                 */
+                else if (caseRecord.FEC_Stage_Name__c.contains(
+                FEC_ConstantCommon.BP_COF)) {
+                    queueOptions = getQueueByName('DQ - CS Customer Care');
+                }
+            }
+        }
+        
+        /*
+         * CS Support / CS Customer Care
+         */
+        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+            /*
+             * Team xử lý ban đầu của assignment
+             */
+            TeamWrapper team = getFirstTeamProcessOfAssignment(assignmentId);
+            
+            if (team != null) {
+                queueOptions = getQueueBelongToTeam(team.teamName);
+            }
+        }
+        
+        return queueOptions;
+    }
+    //Hieutt74: [Update 20/5/2026]
+    
+    
+    private static TeamWrapper getFirstTeamProcessOfAssignment(
+        String assignmentId
+    ) {
+
+        System.debug('test get first team hieutt');
+        
+        List<FEC_Routing_Action_History__c> assignmentRoutingHistory = [
+            SELECT
+                Id,
+                FEC_Assignment__c,
+                FEC_Assignment__r.Name,
+                FEC_Original_User_Queue__c,
+                FEC_Original_User_Queue_ID__c,
+                CreatedDate,
+                FEC_Routing_Action_Type__c
+            FROM FEC_Routing_Action_History__c
+            WHERE
+                FEC_Assignment__r.Name = :assignmentId
+                AND FEC_Routing_Action_Type__c = 'Assignment'
+            ORDER BY CreatedDate ASC
+            LIMIT 1
+        ];
+        
+        if (assignmentRoutingHistory.isEmpty()) {
+            return null;
+        }
+        
+        FEC_Routing_Action_History__c firstAction =
+            assignmentRoutingHistory[0];
+        
+        String originalUserQueueName =
+            firstAction.FEC_Original_User_Queue__c;
+        
+        TeamWrapper team;
+        
+        if (
+            String.isNotBlank(originalUserQueueName)
+        ) {
+            
+            team = getTeamByQueueName(
+                originalUserQueueName
+                );
+            
+            System.debug(
+                '=== Team from Queue === ' +
+                JSON.serialize(team)
+                );
+        }
+        
+        return team;
+    }
+    
+    /*
+     * Get queue name theo:
+     * - UserId
+     * - UserRoleId của user
+     */
+    private static String getQueueNameByUserOrRoleId(
+        String userId
+    ) {
+        
+        /*
+         * 1. Query User + Role
+         */
+        User u = [
+            SELECT
+                Id,
+                UserRoleId
+            FROM User
+            WHERE Id = :userId
+            LIMIT 1
+        ];
+        
+        Set<Id> memberIds = new Set<Id>();
+        
+        // UserId
+        memberIds.add(u.Id);
+        
+        // RoleId
+        if (u.UserRoleId != null) {
+            memberIds.add(u.UserRoleId);
+        }
+        
+        /*
+         * 2. Find queue theo User hoặc Role
+         */
+        List<GroupMember> groupMembers = [
+            SELECT
+                Group.Id,
+                Group.Name,
+                Group.DeveloperName,
+                Group.Type,
+                UserOrGroupId
+            FROM GroupMember
+            WHERE
+                UserOrGroupId IN :memberIds
+                AND Group.Type = 'Queue'
+            LIMIT 1
+        ];
+        
+        if (!groupMembers.isEmpty()) {
+            
+            return groupMembers[0].Group.Name;
+        }
+        
+        return null;
+    }
+    
+    public class TeamWrapper {
+        
+        @AuraEnabled
+        public String teamId;
+        
+        @AuraEnabled
+        public String teamName;
+        
+        public TeamWrapper(String teamId, String teamName) {
+            this.teamId = teamId;
+            this.teamName = teamName;
+        }
+    }
+    
+    private static TeamWrapper getTeamByQueueName(String queueName) {
+        List<Group> groups = [
+            SELECT Id, Name, DeveloperName,
+            Type FROM Group WHERE Name = : queueName AND Group.Type = 'Queue'
+        ];
+        
+        String queueDevName = null;
+        if (!groups.isEmpty()) {
+            queueDevName = groups[0].DeveloperName;
+        }
+        
+        // Get team by queue name
+        List<FEC_Team_Queue__c> teamQueues = [
+            SELECT Id, FEC_Select_Team__r.Id,
+            FEC_Select_Team__r.Name FROM FEC_Team_Queue__c 
+            WHERE FEC_Queue_Name__c = : queueDevName LIMIT 1
+        ];
+        
+        if (!teamQueues.isEmpty()) {
+            FEC_Team_Queue__c teamQueue = teamQueues[0];
+            
+            return new TeamWrapper(String.valueOf(teamQueue.FEC_Select_Team__r.Id),
+            teamQueue.FEC_Select_Team__r.Name);
+        }
+        
+        return null;
+    }
+    
+    private static TeamWrapper getTeamByName(String  teamName) {
+        
+        // Get team by queue name
+        List<FEC_Team__c> teams= [
+            SELECT Id,  Name  FROM FEC_Team__c  WHERE Name = :teamName
+        ];
+        
+        if (!teams.isEmpty()) {
+            
+            FEC_Team__c team = teams[0];
+            
+            return new TeamWrapper(
+                String.valueOf(team.Id),
+            team.Name
+                );
+        }
+        
+        return null;
+    }
+    
+    
+    public static Boolean isCurrentUserInQueue(
+        String queueDeveloperName
+    ) {
+        
+        Id userId = UserInfo.getUserId();
+        
+        User u = [
+        SELECT
+            Id,
+            UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        /*
+         * Queue
+         */
+        Group queueGroup = [
+        SELECT
+            Id,
+            Name
+        FROM Group
+        WHERE
+            Type = 'Queue'
+            AND DeveloperName = :queueDeveloperName
+        LIMIT 1
+    ];
+        
+        /*
+         * Queue members
+         */
+        List<GroupMember> members = [
+        SELECT
+            UserOrGroupId
+        FROM GroupMember
+        WHERE GroupId = :queueGroup.Id
+    ];
+        
+        Set<Id> memberIds = new Set<Id>();
+        
+        for (GroupMember gm : members) {
+            memberIds.add(gm.UserOrGroupId);
+        }
+        
+        /*
+         * Direct user
+         */
+        if (memberIds.contains(userId)) {
+            return true;
+        }
+        
+        /*
+         * Resolve Role Groups
+         */
+        if (u.UserRoleId != null) {
+            
+            List<Group> roleGroups = [
+            SELECT
+                Id,
+                Type,
+                RelatedId
+            FROM Group
+            WHERE
+                RelatedId = :u.UserRoleId
+                AND Type IN (
+                    'Role',
+                    'RoleAndSubordinates'
+                )
+        ];
+            
+            for (Group g : roleGroups) {
+                
+                if (memberIds.contains(g.Id)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    // public static Boolean isCurrentUserInQueue(String queueDeveloperName) {
+        
+        //     Id userId = UserInfo.getUserId();
+        
+        //     User u = [
+        //         SELECT Id, UserRoleId
+        //         FROM User
+        //         WHERE Id = :userId
+        //         LIMIT 1
+        //     ];
+        
+        //     Group queueGroup = [
+        //         SELECT Id
+        //         FROM Group
+        //         WHERE Type = 'Queue'
+        //         AND DeveloperName = :queueDeveloperName
+        //         LIMIT 1
+        //     ];
+        
+        //     List<GroupMember> members = [
+        //         SELECT UserOrGroupId
+        //         FROM GroupMember
+        //         WHERE GroupId = :queueGroup.Id
+        //     ];
+        
+        //     Set<Id> memberIds = new Set<Id>();
+        
+        //     for (GroupMember gm : members) {
+            //         memberIds.add(gm.UserOrGroupId);
+        //     }
+        
+        //     // Direct user
+        //     if (memberIds.contains(userId)) {
+            //         return true;
+        //     }
+        
+        //     // Role
+        //     if (u.UserRoleId != null &&
+        //     memberIds.contains(u.UserRoleId)) {
+            //         return true;
+        //     }
+        
+        //     // Public Group / nested groups
+        //     return isUserInNestedGroups(userId, memberIds);
+    // }
+    
+    private static Boolean isUserInNestedGroups(
+        Id userId,
+    Set<Id> groupIds
+    ) {
+        
+        if (groupIds.isEmpty()) {
+            return false;
+        }
+        
+        List<GroupMember> nested = [
+            SELECT GroupId, UserOrGroupId
+            FROM GroupMember
+            WHERE GroupId IN :groupIds
+        ];
+        
+        for (GroupMember gm :nested) {
+            
+            if (gm.UserOrGroupId == userId) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public static Boolean isCSSupport() {
+        return isCurrentUserInQueue(
+            'FEC_DQ_CS_Support'
+            );
+    }
+    
+    public static Boolean isCSCustomerCare() {
+        return isCurrentUserInQueue(
+            'FEC_DQ_CS_Customer_Care'
+            );
+    }
+    
+    
+    public static List<SelectOptionWrapper> getQueueBelongToTeam(String teamName) {
+        List<SelectOptionWrapper> queueOptions = new List<SelectOptionWrapper>();
+        
+        // Get team by queue name
+        List<FEC_Team_Queue__c> teamQueues = [
+            SELECT
+                Id,
+                FEC_Select_Team__r.Id,
+                FEC_Select_Team__r.Name,
+                FEC_Queue_Name__c  
+            FROM FEC_Team_Queue__c
+            WHERE FEC_Select_Team__r.Name = :teamName
+        ];
+        
+        List<String> queueNames = new List<String>();
+        for (FEC_Team_Queue__c teamQueue : teamQueues) {
+            queueNames.add(teamQueue.FEC_Queue_Name__c);
+        }
+        
+        if (!queueNames.isEmpty()) {
+            List<Group> groups = [
+                SELECT Id, Name
+                FROM Group
+                WHERE DeveloperName IN :queueNames
+                AND Type = 'Queue'
+            ];
+            
+            for (Group g : groups) {
+                queueOptions.add(new SelectOptionWrapper(String.valueOf(g.Id), g.Name));
+            }
+        }
+        
+        return queueOptions;
+    }
+    
+    
+    public static List<SelectOptionWrapper> getQueueByName(String queueName) {
+        List<SelectOptionWrapper> queueOptions = new List<SelectOptionWrapper>();
+        
+        List<Group> groups = [
+                SELECT Id, Name
+                FROM Group
+                WHERE Name = :queueName
+                AND Type = 'Queue'
+            ];
+        
+        for (Group g : groups) {
+            queueOptions.add(new SelectOptionWrapper(String.valueOf(g.Id), g.Name));
+        }
+        
+        return queueOptions;
     }
 }
