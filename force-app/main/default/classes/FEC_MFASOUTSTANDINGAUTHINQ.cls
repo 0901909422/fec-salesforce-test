@@ -18,7 +18,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     private static final String NS_VMX = 'http://fecredit.com.vn/cms/ws/v2';
     private static final String SERVICE_VMX_AUTH_DETAIL_INQ = 'M_FAS_VMX_AUTH_DETAIL_INQ';
-    private static final String API_CONFIG_VMX_AUTH_DETAIL = 'FEC_MFAS_VMX_AUTH_DETAIL_INQ';
+    private static final String API_CONFIG = 'FEC_MFASOUTSTANDINGAUTHINQ';
 
     /* =====================================================
        RESPONSE MODELS
@@ -121,7 +121,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
         FEC_API_Config__mdt apiConfig =
-            FEC_API_Config__mdt.getInstance(API_CONFIG_VMX_AUTH_DETAIL);
+            FEC_API_Config__mdt.getInstance(API_CONFIG);
 
         String endpoint = apiSetting?.FEC_Call_Mock__c
             ? FEC_MockupEndpoint.GET_UNBILLED_TRANSACTION_ENDPOINT_MOCKUP

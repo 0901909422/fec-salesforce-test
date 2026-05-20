@@ -13,8 +13,7 @@
 
 public without sharing class FEC_TransactionsController {
 
-    private static final String M_FAS_API_CONFIG_VMX_AUTH_DETAIL =
-        'FEC_MFAS_VMX_AUTH_DETAIL_INQ';
+    private static final String M_FAS_API_CONFIG = 'FEC_MFASOUTSTANDINGAUTHINQ';
 
     public class TransactionDTO {
         @AuraEnabled public Map<String, String> helpTexts;
@@ -200,7 +199,7 @@ public without sharing class FEC_TransactionsController {
         List<TransactionDTO> result = new List<TransactionDTO>();
         String acctForApi = resolveMfasAccountNumber(
             accNumber,
-            M_FAS_API_CONFIG_VMX_AUTH_DETAIL
+            M_FAS_API_CONFIG
         );
         if (String.isBlank(acctForApi)) {
             return result;
