@@ -4,6 +4,17 @@
       <h1 class="page-heading">{pageTitle}</h1>
     </div>
 
+    <template if:true={hasPageErrors}>
+      <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+        <h2 class="slds-text-heading_small">Review the errors on this page.</h2>
+        <ul class="slds-list_dotted slds-m-top_x-small">
+          <template for:each={pageErrors} for:item="msg">
+            <li key={msg}>{msg}</li>
+          </template>
+        </ul>
+      </div>
+    </template>
+
     <div class="slds-card slds-card_boundary">
       <div class="slds-card__header slds-theme_shade slds-border_bottom">
         <h2 class="slds-card__header-title">{sectionTitle}</h2>
@@ -24,15 +35,7 @@
             ></lightning-record-picker>
 
             <div class="slds-m-top_small">
-              <lightning-record-picker
-                label="Owner"
-                object-api-name="User"
-                value={ownerRecordId}
-                onchange={handleOwnerChange}
-                required
-                placeholder="Search Users..."
-                data-id="picker-owner"
-              ></lightning-record-picker>
+              <lightning-input label="Owner" value={ownerDisplayName} disabled></lightning-input>
             </div>
 
             <div class="slds-m-top_small">
@@ -53,7 +56,14 @@
               <div class="slds-form-element slds-form-element_readonly">
                 <span class="slds-form-element__label">Created By</span>
                 <div class="slds-form-element__control">
-                  <div class="slds-form-element__static">{auditStamp}</div>
+                  <div class="slds-form-element__static">
+                    <template if:true={hasOwnerDisplayName}>
+                      <a href="#" class="entity-link" onclick={handleUserNav}>{ownerDisplayName}</a>, {auditStamp}
+                    </template>
+                    <template if:false={hasOwnerDisplayName}>
+                      {auditStamp}
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
@@ -103,7 +113,14 @@
               <div class="slds-form-element slds-form-element_readonly">
                 <span class="slds-form-element__label">Last Modified By</span>
                 <div class="slds-form-element__control">
-                  <div class="slds-form-element__static">{auditStamp}</div>
+                  <div class="slds-form-element__static">
+                    <template if:true={hasOwnerDisplayName}>
+                      <a href="#" class="entity-link" onclick={handleUserNav}>{ownerDisplayName}</a>, {auditStamp}
+                    </template>
+                    <template if:false={hasOwnerDisplayName}>
+                      {auditStamp}
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
@@ -112,15 +129,15 @@
       </div>
     </div>
 
-    <div class="footer-actions">
-      <lightning-layout horizontal-align="end">
-        <lightning-layout-item padding="horizontal-small">
-          <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
-        </lightning-layout-item>
-        <lightning-layout-item padding="horizontal-small">
-          <lightning-button variant="brand" label="Save" disabled={isSaveDisabled} onclick={handleSave}></lightning-button>
-        </lightning-layout-item>
-      </lightning-layout>
+    <div class="footer-actions slds-text-align_center">
+      <lightning-button label="Cancel" onclick={handleCancel}></lightning-button>
+      <lightning-button
+        class="slds-m-left_small"
+        variant="brand"
+        label="Save"
+        disabled={isSaveDisabled}
+        onclick={handleSave}
+      ></lightning-button>
     </div>
   </div>
 </template>

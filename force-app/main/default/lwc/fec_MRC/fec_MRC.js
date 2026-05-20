@@ -1,6 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import updateMRCRecord from '@salesforce/apex/FEC_GetMRCInfo.updateMRCRecord';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import { formatDate } from 'c/fec_CommonUtils';
 import { STR_EMPTY } from 'c/fec_CommonConst';
@@ -29,8 +28,6 @@ const STATUS = {
     ERROR: 'ERROR',
     NONE: 'NONE',
     EMPTY: '-',
-    ERROR_TITLE: 'Error',
-    ERROR_VARIANT: 'error',
     UNKNOWN_ERROR: 'Unknown error'
 };
 
@@ -200,16 +197,5 @@ export default class Fec_MRC extends LightningElement {
     /* ================= ERROR + TOAST ================= */
     handleError(err) {
         this.error = err?.body?.message || err?.message || STATUS.UNKNOWN_ERROR;
-        this.showToast(STATUS.ERROR_TITLE, this.error, STATUS.ERROR_VARIANT);
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(
-            new ShowToastEvent({
-                title,
-                message,
-                variant
-            })
-        );
     }
 }

@@ -82,6 +82,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         a.FEC_Assignment_Owner__c = managerId;
         a.FEC_OwnerID__c = managerId;
+        a.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         
         update a;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -100,7 +101,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED, 
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
         FEC_OwnerID__c = null // unassigned
             );
         
@@ -160,16 +161,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             assignment.FEC_Assignment_Owner__c = c.CreatedById;
             assignment.FEC_OwnerID__c = c.CreatedById;
             
-        } else if (decision == FEC_ConstantCommon.DECISION_USER_QUEUE) {
+        } else if (decision == FEC_ConstantCommon.DECISION_USER_TEAM_QUEUE) {
             
-            Id queueId = getMainQueueId(c.CreatedById);
+            QueueResult queueResult = getMainQueueId(c.CreatedById);
             
-            if (queueId == null) {
+            if (queueResult == null) {
                 throw new AuraHandledException(System.Label.FEC_ERR_QUEUE_NOT_FOUND);
             }
             
-            assignment.FEC_Assignment_Owner__c = null;
-            assignment.FEC_OwnerID__c = queueId;
+            assignment.FEC_Assignment_Owner__c =  null;
+            assignment.FEC_OwnerID__c = queueResult.queueName;
             
         } else {
             throw new AuraHandledException(System.Label.FEC_ERR_INVALID_INPUT);
@@ -280,11 +281,13 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             // ===== QUEUE =====
         } else if (decision ==  FEC_ConstantCommon.DECISION_QUEUE ) {
             assignment.FEC_Assignment_Owner__c = null;
-            assignment.FEC_OwnerID__c = subDecision;
+            assignment.FEC_OwnerID__c = getQueueNameById(subDecision);
             
         } else {
             throw new AuraHandledException(System.Label.FEC_ERR_INVALID_INPUT);
         }
+        
+        assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
@@ -343,6 +346,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             caseUpdate.Status = status;
         }
         
+        assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
         update caseUpdate;
@@ -379,7 +383,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FROM FEC_Assignment__c
         WHERE Id = :assignmentId
     ];
-
+        
         Case c = [
         SELECT FEC_Current_Case_Stage__r.FEC_Code__c
         FROM Case
@@ -420,25 +424,73 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         insert records;
     }
     
+    public class QueueResult {
+        @AuraEnabled public String queueId;
+        @AuraEnabled public String queueName;
+        
+        public QueueResult(String queueId, String queueName) {
+            this.queueId = queueId;
+            this.queueName = queueName;
+        }
+    }
     
-    private static Id getMainQueueId(Id userId) {
-        User u = [
+    private static QueueResult getMainQueueId(Id userId) {
+        List<User> u = [
         SELECT FEC_Main_Queue__c 
         FROM User
         WHERE Id = :userId
     ];
-        return u.FEC_Main_Queue__c;
+        if (u.isEmpty() || String.isBlank(u[0].FEC_Main_Queue__c)) {
+            return null;
+        }
+        
+        String queueName = u[0].FEC_Main_Queue__c;
+        
+        List<Group> queue = [
+            SELECT Id, Name
+            FROM Group
+            WHERE Type = 'Queue'
+            AND DeveloperName = :queueName
+            LIMIT 1
+        ];
+        
+        return !queue.isEmpty()
+            ? new QueueResult(
+            queue[0].Id,
+        queue[0].Name
+            )
+            : null;
+    }
+    
+    
+    private static String getQueueNameById(Id queueId) {
+        
+        if (queueId == null) {
+            return null;
+        }
+        
+        List<Group> queues = [
+        SELECT Name
+        FROM Group
+        WHERE Id = :queueId
+        AND Type = 'Queue'
+        LIMIT 1
+    ];
+        
+        return queues.isEmpty()
+            ? null
+            : queues[0].Name;
     }
     
     private static Id getQueueIdByName(String queueName) {
-        Group g = [
+        List<Group> g = [
         SELECT Id
         FROM Group
         WHERE Type = 'Queue'
         AND Name = :queueName
         LIMIT 1
     ];
-        return g?.Id;
+        return g != null && !g.isEmpty() ? g.get(0).Id : null;
     }
     
     
@@ -699,7 +751,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             ? email.trim()
             : parts[0].trim();
     }
-
+    
     // tungnm37: Share Case với User khi assign Assignment Owner → User (quyền Edit)
     private static void shareCaseToUser(Id caseId, Id userId) {
         try {
@@ -712,16 +764,39 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 LIMIT 1
             ];
             if (!existing.isEmpty()) return;
-
+            
             CaseShare share = new CaseShare(
                 CaseId = caseId,
-                UserOrGroupId = userId,
-                CaseAccessLevel = 'Edit',
-                RowCause = 'Manual'
-            );
+            UserOrGroupId = userId,
+            CaseAccessLevel = 'Edit',
+            RowCause = 'Manual'
+                );
             Database.insert(share, false); // false = không throw nếu đã tồn tại
         } catch (Exception e) {
             System.debug('FEC_DEBUG shareCaseToUser error: ' + e.getMessage());
         }
     }
+    
+    
+    // private static String getReviewStatus() {
+        
+    //     User u = [
+    //     SELECT FEC_User_Group__c
+    //     FROM User
+    //     WHERE Id = :UserInfo.getUserId()
+    //     LIMIT 1
+    // ];
+        
+    //     if (
+    //         u.FEC_User_Group__c != null &&
+    //         (
+    //         u.FEC_User_Group__c.contains('SP') ||
+    //         u.FEC_User_Group__c.contains('CC')
+    //         )
+    //     ) {
+    //         return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+    //     }
+        
+    //     return FEC_ConstantCommon.STATUS_OTHER_DEPT;
+    // }
 }
