@@ -578,7 +578,8 @@
         <name>CustomTab</name>
     </types>
 	<types>
-        <members>case sla main</members>
+        <members>case sla main v1</members>
+        <members>case sla main v3</members>
         <name>EntitlementProcess</name>
     </types>
 	<version>66.0</version>
