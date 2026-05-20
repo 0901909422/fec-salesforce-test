@@ -209,8 +209,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCategory__r.Name,
           FEC_SubCategory__r.FEC_Code__c,
           FEC_SubCode__r.Name,
-          FEC_SubCode__r.FEC_Code__c,
           FEC_Assignment_Count__c,
+          FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
