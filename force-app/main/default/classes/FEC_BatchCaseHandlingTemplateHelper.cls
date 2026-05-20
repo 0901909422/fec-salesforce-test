@@ -3,21 +3,22 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
     private static final String TEMPLATE_OBJECT_API_NAME = 'FEC_Template_Import__c';
 
     public static final List<String> ALLOWED_BUSINESS_PROCESS_NAMES = new List<String>{
-        'COF (Complaint or Feedback)',
-        'GSR (General Service Request)',
+        'COF - General Flow',
+        'GSR - General Flow',
         'Address Update',
         'Phone Update',
         'Document Request',
-        'MRC Return',
+        'Original MRC Return',
         'Refund Request (Loan)',
-        'Incorrect Payment Handling (Loan)',
+        'Incorrect Payment Handling',
         'IPP Closure',
         'Card Unblock',
         'Contract Closure',
         'Card Closure & Refund Request (Card)',
         'Card Replacement',
         'IPP Conversion',
-        'Points Redemption'
+        'Point Redemption',
+        'PIN Replacement'
     };
 
     public static Boolean isAllowedBusinessProcessName(String businessProcessName) {
@@ -33,12 +34,131 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return false;
     }
 
+    private static Set<String> cachedAllowedBusinessProcessCodes;
+    private static Set<String> cachedAllowedBusinessProcessNames;
+
+    public static Set<String> queryAllowedBusinessProcessCodes() {
+        if (cachedAllowedBusinessProcessCodes != null) {
+            return cachedAllowedBusinessProcessCodes;
+        }
+        Set<String> codes = new Set<String>();
+        for (SObject tr : queryActiveBatchCaseHandlingTemplates()) {
+            SObject bp = tr.getSObject('FEC_Business_Process__r');
+            if (bp == null || bp.get('FEC_Code__c') == null) {
+                continue;
+            }
+            String code = String.valueOf(bp.get('FEC_Code__c')).trim();
+            if (String.isNotBlank(code)) {
+                codes.add(code);
+            }
+        }
+        if (codes.isEmpty()) {
+            for (FEC_Business_Process__c bp : [
+                SELECT FEC_Code__c
+                FROM FEC_Business_Process__c
+                WHERE Name IN :ALLOWED_BUSINESS_PROCESS_NAMES
+                AND FEC_Code__c != null
+            ]) {
+                codes.add(bp.FEC_Code__c.trim());
+            }
+        }
+        cachedAllowedBusinessProcessCodes = codes;
+        return codes;
+    }
+
+    public static Set<String> queryAllowedBusinessProcessNames() {
+        if (cachedAllowedBusinessProcessNames != null) {
+            return cachedAllowedBusinessProcessNames;
+        }
+        Set<String> names = new Set<String>();
+        for (SObject tr : queryActiveBatchCaseHandlingTemplates()) {
+            SObject bp = tr.getSObject('FEC_Business_Process__r');
+            if (bp == null || bp.get('Name') == null) {
+                continue;
+            }
+            String name = String.valueOf(bp.get('Name')).trim();
+            if (String.isNotBlank(name)) {
+                names.add(name);
+            }
+        }
+        if (names.isEmpty()) {
+            names.addAll(ALLOWED_BUSINESS_PROCESS_NAMES);
+        }
+        cachedAllowedBusinessProcessNames = names;
+        return names;
+    }
+
     public static String buildAllowedBusinessProcessNameInClause() {
+        return buildAllowedStageBusinessProcessWhereClause();
+    }
+
+    public static String buildAllowedStageBusinessProcessWhereClause() {
+        Set<String> codes = queryAllowedBusinessProcessCodes();
+        if (!codes.isEmpty()) {
+            List<String> codeLiterals = new List<String>();
+            for (String c : codes) {
+                codeLiterals.add('\'' + String.escapeSingleQuotes(c) + '\'');
+            }
+            return 'FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c IN (' + String.join(codeLiterals, ',') + ')';
+        }
         List<String> literals = new List<String>();
         for (String n : ALLOWED_BUSINESS_PROCESS_NAMES) {
             literals.add('\'' + String.escapeSingleQuotes(n) + '\'');
         }
-        return 'FEC_Business_Process__r.Name IN (' + String.join(literals, ',') + ')';
+        return 'FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c != null AND FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name IN (' + String.join(literals, ',') + ')';
+    }
+
+    public static List<String> buildCaseStageBusinessProcessSelectFields() {
+        return new List<String>{
+            'FEC_Current_Case_Stage__r.FEC_Business_Process__c',
+            'FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c',
+            'FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name'
+        };
+    }
+
+    public static void applyStageBusinessProcessToExportRow(FEC_BatchCaseHandlingExportRow row, Case caseRecord) {
+        if (row == null || caseRecord == null) {
+            return;
+        }
+        SObject stage = caseRecord.getSObject('FEC_Current_Case_Stage__r');
+        if (stage == null) {
+            row.businessProcessCode = null;
+            row.businessProcessName = null;
+            return;
+        }
+        SObject bp = stage.getSObject('FEC_Business_Process__r');
+        if (bp == null) {
+            row.businessProcessCode = null;
+            row.businessProcessName = null;
+            return;
+        }
+        row.businessProcessCode = bp.get('FEC_Code__c') == null ? null : String.valueOf(bp.get('FEC_Code__c')).trim();
+        row.businessProcessName = bp.get('Name') == null ? null : String.valueOf(bp.get('Name')).trim();
+    }
+
+    public static Boolean isAllowedBusinessProcessForExport(String businessProcessCode, String businessProcessName) {
+        Set<String> allowedCodes = queryAllowedBusinessProcessCodes();
+        if (String.isNotBlank(businessProcessCode)) {
+            String codeNorm = businessProcessCode.trim();
+            for (String allowedCode : allowedCodes) {
+                if (allowedCode != null && allowedCode.equalsIgnoreCase(codeNorm)) {
+                    return true;
+                }
+            }
+        }
+        if (String.isNotBlank(businessProcessName)) {
+            String nameNorm = businessProcessName.trim();
+            for (String allowedName : queryAllowedBusinessProcessNames()) {
+                if (allowedName != null && allowedName.equalsIgnoreCase(nameNorm)) {
+                    return true;
+                }
+            }
+            if (isAllowedBusinessProcessName(nameNorm)) {
+                return true;
+            }
+        }
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        return mapBusinessProcessToTemplatePrefix(bpKey) != null;
     }
 
     public static List<SObject> queryActiveBatchCaseHandlingTemplates() {
@@ -78,22 +198,32 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         String userGroup,
         List<SObject> activeTemplates
     ) {
+        return resolveTemplateByBusinessProcessAndUserGroup(businessProcessCode, null, userGroup, activeTemplates);
+    }
+
+    public static SObject resolveTemplateByBusinessProcessAndUserGroup(
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroup,
+        List<SObject> activeTemplates
+    ) {
         if (activeTemplates == null || activeTemplates.isEmpty()) {
             return null;
         }
-        SObject bothFieldsMatch = resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, true);
+        SObject bothFieldsMatch = resolveTemplateByFields(businessProcessCode, businessProcessName, userGroup, activeTemplates, true);
         if (bothFieldsMatch != null) {
             return bothFieldsMatch;
         }
-        SObject nameExactMatch = resolveTemplateByName(businessProcessCode, userGroup, activeTemplates);
+        SObject nameExactMatch = resolveTemplateByName(businessProcessCode, businessProcessName, userGroup, activeTemplates);
         if (nameExactMatch != null) {
             return nameExactMatch;
         }
-        return resolveTemplateByFields(businessProcessCode, userGroup, activeTemplates, false);
+        return resolveTemplateByFields(businessProcessCode, businessProcessName, userGroup, activeTemplates, false);
     }
 
     private static SObject resolveTemplateByFields(
         String businessProcessCode,
+        String businessProcessName,
         String userGroup,
         List<SObject> activeTemplates,
         Boolean requireBothFields
@@ -115,10 +245,10 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             if (!requireBothFields && hasUgField) {
                 continue;
             }
-            if (!businessProcessFieldMatches(tr, businessProcessCode)) {
+            if (!businessProcessFieldMatches(tr, businessProcessCode, businessProcessName)) {
                 continue;
             }
-            if (hasUgField && !userGroupFieldMatches(tr, businessProcessCode, userGroup)) {
+            if (hasUgField && !userGroupFieldMatches(tr, businessProcessCode, businessProcessName, userGroup)) {
                 continue;
             }
             Integer score = hasUgField ? 3 : 1;
@@ -130,58 +260,81 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         return bestMatch;
     }
 
-    private static Boolean businessProcessFieldMatches(SObject templateRow, String businessProcessInput) {
+    private static Boolean businessProcessFieldMatches(SObject templateRow, String businessProcessCode, String businessProcessName) {
         if (templateRow.get('FEC_Business_Process__c') == null) {
             return true;
         }
-        if (String.isBlank(businessProcessInput)) {
+        if (String.isBlank(businessProcessCode) && String.isBlank(businessProcessName)) {
             return false;
         }
-        String inputNorm = businessProcessInput.trim().toUpperCase();
         SObject bpRel = templateRow.getSObject('FEC_Business_Process__r');
         if (bpRel != null) {
-            String bpName = bpRel.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('Name')).trim();
-            if (String.isNotBlank(bpName) && bpName.trim().toUpperCase() == inputNorm) {
+            String templateBpCode = bpRel.get('FEC_Code__c') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('FEC_Code__c')).trim();
+            String templateBpName = bpRel.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('Name')).trim();
+            if (String.isNotBlank(businessProcessCode) && String.isNotBlank(templateBpCode)
+                && businessProcessCode.trim().equalsIgnoreCase(templateBpCode)) {
                 return true;
             }
-            String bpCode = bpRel.get('FEC_Code__c') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('FEC_Code__c')).trim();
-            if (String.isNotBlank(bpCode) && bpCode.trim().toUpperCase() == inputNorm) {
+            if (String.isNotBlank(businessProcessName) && String.isNotBlank(templateBpName)
+                && businessProcessName.trim().equalsIgnoreCase(templateBpName)) {
                 return true;
             }
-        }
-        String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessInput);
-        if (String.isNotBlank(namePrefix) && bpRel != null) {
-            String bpName = bpRel.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(bpRel.get('Name')).trim();
-            String bpPrefix = mapBusinessProcessToTemplatePrefix(bpName);
-            if (String.isNotBlank(bpPrefix) && bpPrefix.equalsIgnoreCase(namePrefix)) {
+            String casePrefix = mapBusinessProcessToTemplatePrefix(
+                String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName
+            );
+            String templatePrefix = mapBusinessProcessToTemplatePrefix(
+                String.isNotBlank(templateBpCode) ? templateBpCode : templateBpName
+            );
+            if (String.isNotBlank(casePrefix) && String.isNotBlank(templatePrefix)
+                && casePrefix.equalsIgnoreCase(templatePrefix)) {
                 return true;
             }
         }
         return false;
     }
 
-    private static Boolean userGroupFieldMatches(SObject templateRow, String businessProcessCode, String userGroupInput) {
+    private static Boolean userGroupFieldMatches(
+        SObject templateRow,
+        String businessProcessCode,
+        String businessProcessName,
+        String userGroupInput
+    ) {
         String templateUg = templateRow.get('FEC_User_Group__c') == null
             ? FEC_ConstantCommon.STR_EMPTY
             : String.valueOf(templateRow.get('FEC_User_Group__c')).trim();
         if (String.isBlank(templateUg)) {
-            return true;
+            return false;
         }
         if (String.isBlank(userGroupInput)) {
             return false;
         }
-        String inputNorm = userGroupInput.trim().toUpperCase();
-        String templateNorm = templateUg.toUpperCase();
-        if (templateNorm == inputNorm) {
+        if (userGroupContainedInTemplateField(templateUg, userGroupInput)) {
             return true;
         }
-        for (String suffix : mapUserGroupToTemplateSuffixes(businessProcessCode, userGroupInput)) {
-            if (String.isNotBlank(suffix) && templateNorm == suffix.toUpperCase()) {
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        for (String suffix : mapUserGroupToTemplateSuffixes(bpKey, userGroupInput)) {
+            if (String.isNotBlank(suffix) && templateUg.toUpperCase() == suffix.toUpperCase()) {
                 return true;
             }
         }
-        for (String suffix : mapUserGroupToTemplateSuffixes(businessProcessCode, templateUg)) {
-            if (String.isNotBlank(suffix) && suffix.toUpperCase() == inputNorm) {
+        for (String suffix : mapUserGroupToTemplateSuffixes(bpKey, templateUg)) {
+            if (String.isNotBlank(suffix) && suffix.equalsIgnoreCase(userGroupInput.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Boolean userGroupContainedInTemplateField(String templateUg, String userGroupInput) {
+        if (String.isBlank(templateUg) || String.isBlank(userGroupInput)) {
+            return false;
+        }
+        String inputNorm = userGroupInput.trim().toUpperCase();
+        if (templateUg.trim().toUpperCase() == inputNorm) {
+            return true;
+        }
+        for (String token : templateUg.split(',')) {
+            if (String.isNotBlank(token) && token.trim().toUpperCase() == inputNorm) {
                 return true;
             }
         }
@@ -190,20 +343,22 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
 
     private static SObject resolveTemplateByName(
         String businessProcessCode,
+        String businessProcessName,
         String userGroup,
         List<SObject> activeTemplates
     ) {
-        String namePrefix = mapBusinessProcessToTemplatePrefix(businessProcessCode);
+        String bpKey = String.isNotBlank(businessProcessCode) ? businessProcessCode : businessProcessName;
+        String namePrefix = mapBusinessProcessToTemplatePrefix(bpKey);
         if (String.isBlank(namePrefix)) {
             return null;
         }
-        List<String> suffixCandidates = mapUserGroupToTemplateSuffixes(businessProcessCode, userGroup);
+        List<String> suffixCandidates = mapUserGroupToTemplateSuffixes(bpKey, userGroup);
         if (suffixCandidates.isEmpty()) {
             return null;
         }
         String prefixLower = namePrefix.toLowerCase();
         for (SObject tr : activeTemplates) {
-            if (tr.get('FEC_Business_Process__c') != null && !businessProcessFieldMatches(tr, businessProcessCode)) {
+            if (tr.get('FEC_Business_Process__c') != null && !businessProcessFieldMatches(tr, businessProcessCode, businessProcessName)) {
                 continue;
             }
             String name = tr.get('Name') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(tr.get('Name'));
@@ -231,30 +386,46 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
         Map<String, String> bpToPrefix = new Map<String, String>{
             'COF' => 'COF',
             'COF (COMPLAINT OR FEEDBACK)' => 'COF',
+            'COF - GENERAL FLOW' => 'COF',
             'GSR' => 'GSR',
             'GSR (GENERAL SERVICE REQUEST)' => 'GSR',
+            'GSR - GENERAL FLOW' => 'GSR',
             'ADDRESS UPDATE' => 'AddressUpdate',
             'PHONE UPDATE' => 'PhoneUpdate',
             'DOCUMENT REQUEST' => 'DocumentRequest',
             'MRC RETURN' => 'MRCReturn',
+            'ORIGINAL MRC RETURN' => 'MRCReturn',
             'REFUND REQUEST (LOAN)' => 'RefundLoan',
             'INCORRECT PAYMENT HANDLING (LOAN)' => 'IncorrectPayment',
+            'INCORRECT PAYMENT HANDLING' => 'IncorrectPayment',
             'IPP CLOSURE' => 'IPPClosure',
             'IPP CONVERSION' => 'IPPConversion',
             'CARD UNBLOCK' => 'CardUnblock',
             'CONTRACT CLOSURE' => 'ContractClosure',
             'CARD CLOSURE & REFUND REQUEST (CARD)' => 'CardClosure',
             'CARD REPLACEMENT' => 'CardReplacement',
-            'POINTS REDEMPTION' => 'PointsRedemption'
+            'POINTS REDEMPTION' => 'PointsRedemption',
+            'POINT REDEMPTION' => 'PointsRedemption',
+            'PIN REPLACEMENT' => 'PinReplacement'
         };
-        return bpToPrefix.get(key);
+        String mapped = bpToPrefix.get(key);
+        if (String.isNotBlank(mapped)) {
+            return mapped;
+        }
+        if (key.startsWith('COF')) {
+            return 'COF';
+        }
+        if (key.startsWith('GSR')) {
+            return 'GSR';
+        }
+        return null;
     }
 
     private static List<String> mapUserGroupToTemplateSuffixes(String businessProcessCode, String userGroup) {
         String bp = String.isBlank(businessProcessCode) ? FEC_ConstantCommon.STR_EMPTY : businessProcessCode.trim().toUpperCase();
         String ug = String.isBlank(userGroup) ? FEC_ConstantCommon.STR_EMPTY : userGroup.trim().toUpperCase();
         List<String> out = new List<String>();
-        if (bp == 'COF' || bp == 'COF (COMPLAINT OR FEEDBACK)') {
+        if (bp.startsWith('COF')) {
             if (ug == 'CC') { out.add('CSCustomerCare'); }
             else if (ug == 'CO') { out.add('CO'); }
             else if (ug == 'CL') { out.add('CL'); }
@@ -265,7 +436,7 @@ public without sharing class FEC_BatchCaseHandlingTemplateHelper {
             else { out.add('OtherCS'); }
             return out;
         }
-        if (bp == 'GSR' || bp == 'GSR (GENERAL SERVICE REQUEST)') {
+        if (bp.startsWith('GSR')) {
             if (ug == 'SP') { out.add('CSSupport'); }
             else if (ug == 'CO') { out.add('CO'); }
             else if (ug == 'CL') { out.add('CL'); }

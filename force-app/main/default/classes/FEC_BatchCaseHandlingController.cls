@@ -35,6 +35,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     public class BusinessProcessExportRow {
         @AuraEnabled public String businessProcessCode;
+        @AuraEnabled public String businessProcessName;
         @AuraEnabled public Integer totalCases;
         @AuraEnabled public String templateName;
         @AuraEnabled public String templateDownloadUrl;
@@ -510,10 +511,9 @@ public without sharing class FEC_BatchCaseHandlingController {
             'FEC_Category__r.FEC_Code__c',
             'FEC_SubCategory__r.FEC_Code__c',
             'FEC_SubCode__r.FEC_Code__c',
-            'FEC_Business_Process__r.FEC_Code__c',
-            'FEC_Business_Process__r.Name',
             '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
         };
+        selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         String dataSoql =
             'SELECT ' + String.join(selectFields, ', ') +
             ' FROM Case WHERE ' + whereClause +
@@ -538,8 +538,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
             r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
             r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
-            r.businessProcessCode = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.FEC_Code__c;
-            r.businessProcessName = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.Name;
+            FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
             out.rows.add(r);
         }
         return out;
@@ -629,7 +628,12 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     @AuraEnabled(cacheable=true)
     public static List<String> getBulkExportAllowedBusinessProcessNames() {
-        return FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
+        return new List<String>(FEC_BatchCaseHandlingTemplateHelper.queryAllowedBusinessProcessNames());
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<String> getBulkExportAllowedBusinessProcessCodes() {
+        return new List<String>(FEC_BatchCaseHandlingTemplateHelper.queryAllowedBusinessProcessCodes());
     }
 
     @AuraEnabled
@@ -637,12 +641,12 @@ public without sharing class FEC_BatchCaseHandlingController {
         List<BusinessProcessExportRow> out = new List<BusinessProcessExportRow>();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
         List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
-        whereParts.add(FEC_BatchCaseHandlingTemplateHelper.buildAllowedBusinessProcessNameInClause());
+        whereParts.add(FEC_BatchCaseHandlingTemplateHelper.buildAllowedStageBusinessProcessWhereClause());
         String whereClause = String.join(whereParts, ' AND ');
         List<AggregateResult> grouped = Database.query(
-            'SELECT FEC_Business_Process__r.Name bpName, COUNT(Id) cnt ' +
+            'SELECT FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c bpCode, FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name bpName, COUNT(Id) cnt ' +
             'FROM Case WHERE ' + whereClause +
-            ' GROUP BY FEC_Business_Process__r.Name'
+            ' GROUP BY FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name'
         );
 
         List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
@@ -681,14 +685,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
 
         for (AggregateResult ar : grouped) {
-            String bpName = ar.get('bpName') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpName'));
-            if (String.isBlank(bpName) || !FEC_BatchCaseHandlingTemplateHelper.isAllowedBusinessProcessName(bpName)) {
+            String bpCode = ar.get('bpCode') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpCode')).trim();
+            String bpName = ar.get('bpName') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpName')).trim();
+            if (String.isBlank(bpCode) || !FEC_BatchCaseHandlingTemplateHelper.isAllowedBusinessProcessForExport(bpCode, bpName)) {
                 continue;
             }
             BusinessProcessExportRow item = new BusinessProcessExportRow();
-            item.businessProcessCode = bpName;
+            item.businessProcessCode = bpCode;
+            item.businessProcessName = bpName;
             item.totalCases = Integer.valueOf(String.valueOf(ar.get('cnt')));
-            SObject matched = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateByBusinessProcessAndUserGroup(bpName, userGroup, templateRows);
+            SObject matched = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateByBusinessProcessAndUserGroup(bpCode, bpName, userGroup, templateRows);
             if (matched != null) {
                 Id matchedTemplateId = (Id) matched.get('Id');
                 item.templateName = String.valueOf(matched.get('Name'));

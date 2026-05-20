@@ -10,6 +10,7 @@ import getAttachmentCaseSetOptions from "@salesforce/apex/FEC_BatchCaseHandlingC
 import downloadAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadAttachmentsZip";
 import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandlingController.getBusinessProcessExportRows";
 import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessNames";
+import getBulkExportAllowedBusinessProcessCodes from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessCodes";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
@@ -370,21 +371,22 @@ const EXPORT_PROPERTY_OPTIONS = [
 ];
 
 const ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES = [
-  "COF (Complaint or Feedback)",
-  "GSR (General Service Request)",
+  "COF - General Flow",
+  "GSR - General Flow",
   "Address Update",
   "Phone Update",
   "Document Request",
-  "MRC Return",
+  "Original MRC Return",
   "Refund Request (Loan)",
-  "Incorrect Payment Handling (Loan)",
+  "Incorrect Payment Handling",
   "IPP Closure",
   "Card Unblock",
   "Contract Closure",
   "Card Closure & Refund Request (Card)",
   "Card Replacement",
   "IPP Conversion",
-  "Points Redemption"
+  "Point Redemption",
+  "PIN Replacement"
 ];
 
 const FILTER_SCOPE_PRE_DEFINE = "PRE_DEFINE";
@@ -533,19 +535,26 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   }
 
   rowBusinessProcessKey(row) {
-    const v = (row?.businessProcessName || row?.businessProcessCode || STR_EMPTY)
+    const v = (row?.businessProcessCode || row?.businessProcessName || STR_EMPTY)
       .trim();
     return v;
   }
 
-  buildAllowedBulkExportBpSet(names) {
+  buildAllowedBulkExportBpSet(names, codes) {
     const set = new Set();
-    const list =
+    const nameList =
       Array.isArray(names) && names.length
         ? names
         : ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES;
-    list.forEach((n) => {
+    nameList.forEach((n) => {
       const k = String(n || STR_EMPTY).trim().toLowerCase();
+      if (k) {
+        set.add(k);
+      }
+    });
+    const codeList = Array.isArray(codes) ? codes : [];
+    codeList.forEach((c) => {
+      const k = String(c || STR_EMPTY).trim().toLowerCase();
       if (k) {
         set.add(k);
       }
@@ -553,20 +562,29 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.allowedBulkExportBpSet = set;
   }
 
-  isAllowedBulkExportBusinessProcess(name) {
+  isAllowedBulkExportBusinessProcess(nameOrCode) {
     if (!this.allowedBulkExportBpSet) {
-      this.buildAllowedBulkExportBpSet(ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES);
+      this.buildAllowedBulkExportBpSet(
+        ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES,
+        []
+      );
     }
-    const k = String(name || STR_EMPTY).trim().toLowerCase();
+    const k = String(nameOrCode || STR_EMPTY).trim().toLowerCase();
     return Boolean(k) && this.allowedBulkExportBpSet.has(k);
   }
 
   async loadBulkExportAllowedBusinessProcesses() {
     try {
-      const names = await getBulkExportAllowedBusinessProcessNames();
-      this.buildAllowedBulkExportBpSet(names);
+      const [names, codes] = await Promise.all([
+        getBulkExportAllowedBusinessProcessNames(),
+        getBulkExportAllowedBusinessProcessCodes()
+      ]);
+      this.buildAllowedBulkExportBpSet(names, codes);
     } catch {
-      this.buildAllowedBulkExportBpSet(ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES);
+      this.buildAllowedBulkExportBpSet(
+        ALLOWED_BULK_EXPORT_BUSINESS_PROCESS_NAMES,
+        []
+      );
     }
   }
 
@@ -1720,9 +1738,11 @@ export default class Fec_BatchCaseHandling extends LightningElement {
       })
       .map((b) => {
         const code = String(b.businessProcessCode || STR_EMPTY).trim();
+        const name = String(b.businessProcessName || code || STR_EMPTY).trim();
         return {
           rowKey: `bp-${code}`,
           businessProcessCode: code,
+          businessProcessName: name,
           templateName: (templateMetaByCode[code] || {}).templateName || STR_EMPTY,
           selected: true
         };
@@ -1735,6 +1755,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         .map((code) => ({
           rowKey: `bp-${code}`,
           businessProcessCode: code,
+          businessProcessName: code,
           templateName: (templateMetaByCode[code] || {}).templateName || code,
           selected: true
         }));
