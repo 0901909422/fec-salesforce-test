@@ -1027,10 +1027,12 @@ const removeFileExtensionSafe = (fileName) => {
 const buildResultXlsxFileName = (sourceFileName) => {
   let base = removeFileExtensionSafe(sourceFileName);
   const lower = base.toLowerCase();
-  if (lower.endsWith("_result")) {
+  if (lower.endsWith("_importresult")) {
+    base = base.slice(0, -13);
+  } else if (lower.endsWith("_result")) {
     base = base.slice(0, -7);
   }
-  return `${base}_Result.xlsx`;
+  return `${base}_ImportResult.xlsx`;
 };
 
 const formatDateTimeEnGb = (value) => {
