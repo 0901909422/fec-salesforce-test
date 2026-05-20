@@ -1,6 +1,6 @@
 .custom-table {
   width: 100%;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 .custom-table th,
@@ -15,7 +15,6 @@
  */
 .update-reason-cell,
 .remarks-cell {
-
   white-space: normal;
 
   overflow-wrap: anywhere;
@@ -46,7 +45,22 @@
 .readonly-text {
   display: block;
 
+  min-width: 0;
+
+  max-width: 100%;
+
   line-height: 1.5;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.readonly-text,
+.checkbox-wrapper {
+  min-width: 0;
 }
 
 /*
@@ -58,4 +72,13 @@
   align-items: center;
 
   gap: 0.5rem;
+}
+
+.contact-wrapper {
+  min-width: 0;
+}
+
+.contact-wrapper .readonly-text {
+  min-width: 0;
+  flex: 1;
 }
