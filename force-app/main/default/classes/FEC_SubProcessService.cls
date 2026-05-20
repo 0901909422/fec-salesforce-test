@@ -71,18 +71,6 @@ public with sharing class FEC_SubProcessService {
             ) {
                 return result;
             }
-
-            Id currentStageId = null;
-            if (recordId != null) {
-                List<Case> caseForStage = [
-                    SELECT FEC_Current_Case_Stage__c
-                    FROM Case WHERE Id = :recordId
-                    WITH SECURITY_ENFORCED LIMIT 1
-                ];
-                if (!caseForStage.isEmpty()) {
-                    currentStageId = caseForStage[0].FEC_Current_Case_Stage__c;
-                }
-            }
             
             // ===== BUILD QUERY =====
             
@@ -116,13 +104,14 @@ public with sharing class FEC_SubProcessService {
             // ===== QUERY NOC =====
             
             List<FEC_Nature_of_Case__c> nocList =
-                Database.query(query.replace('LIMIT 1', 'ORDER BY LastModifiedDate DESC'));
+                Database.query(query);
             
             if (nocList.isEmpty()) {
                 return result;
             }
             
-            FEC_Nature_of_Case__c noc = resolveSubProcessNatureOfCase(nocList, recordId, currentStageId);
+            FEC_Nature_of_Case__c noc =
+                nocList[0];
             
             // ===== REMOVE PHONE =====
             
@@ -141,6 +130,18 @@ public with sharing class FEC_SubProcessService {
             
             // ===== HOLD CASE — Manual =====
             // tungnm37: chỉ hiển thị khi có config Manual + Active + Stage khớp với stage hiện tại của case
+            Id currentStageId = null;
+            if (recordId != null) {
+                List<Case> caseForStage = [
+                    SELECT FEC_Current_Case_Stage__c
+                    FROM Case WHERE Id = :recordId
+                    WITH SECURITY_ENFORCED LIMIT 1
+                ];
+                if (!caseForStage.isEmpty()) {
+                    currentStageId = caseForStage[0].FEC_Current_Case_Stage__c;
+                }
+            }
+
             List<FEC_Hold_Case_Config__c> manualConfigs = [
                 SELECT Id
                 FROM FEC_Hold_Case_Config__c
@@ -153,13 +154,15 @@ public with sharing class FEC_SubProcessService {
             result.showHoldCaseManual = !manualConfigs.isEmpty();
 
             // ===== HOLD CASE — Auto =====
+            FEC_Nature_of_Case__c nocForHoldCase =
+                resolveHoldCaseNatureOfCase(nocList, currentStageId);
             List<FEC_Hold_Case_Config__c> autoConfigs = [
                 SELECT Id
                 FROM FEC_Hold_Case_Config__c
                 WHERE Hold_Case_Type__c = 'Auto'
                   AND FEC_Active__c = true
                   AND FEC_Case_Stage__c = :currentStageId
-                  AND (FEC_Nature_of_Cases__c = :noc.Id OR FEC_Nature_of_Cases__c = null)
+                  AND (FEC_Nature_of_Cases__c = :nocForHoldCase.Id OR FEC_Nature_of_Cases__c = null)
                 WITH SECURITY_ENFORCED
                 LIMIT 1
             ];
@@ -177,9 +180,9 @@ public with sharing class FEC_SubProcessService {
         }
     }
 
-    private static FEC_Nature_of_Case__c resolveSubProcessNatureOfCase(
+    /** Duplicate NOC cùng Product/Category/SubCategory/SubCode: ưu tiên NOC có Hold Case Config Auto khớp stage. */
+    private static FEC_Nature_of_Case__c resolveHoldCaseNatureOfCase(
         List<FEC_Nature_of_Case__c> nocList,
-        Id recordId,
         Id currentStageId
     ) {
         if (nocList == null || nocList.isEmpty()) {
