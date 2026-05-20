@@ -82,15 +82,15 @@
     <picklistValues>
         <picklist>FEC_Customer_Type__c</picklist>
         <values>
+            <fullName>All</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Existing</fullName>
             <default>false</default>
         </values>
         <values>
             <fullName>Non-existing</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>All</fullName>
             <default>false</default>
         </values>
     </picklistValues>

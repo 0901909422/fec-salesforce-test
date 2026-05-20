@@ -362,6 +362,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -672,6 +682,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>false</editable>
+        <field>FEC_Notification_Template_Channel__c.FEC_Notification_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_Template_Channel__c.FEC_Notification_Template__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
         <field>FEC_Product_Type__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -961,10 +981,10 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-    <editable>false</editable>
-    <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
-    <readable>true</readable>
-</fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Senior Customer Care Specialist - Master Data Management</label>
     <license>Salesforce</license>
@@ -1197,8 +1217,20 @@
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
+    <recordTypeVisibilities>
+        <recordType>FEC_Notification__c.Auto_Notification</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
+    <recordTypeVisibilities>
+        <recordType>FEC_Notification__c.Manual_Notification</recordType>
+        <visible>true</visible>
+    </recordTypeVisibilities>
     <tabSettings>
         <tab>FEC_Enhanced_Letterhead__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>FEC_Notification__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
