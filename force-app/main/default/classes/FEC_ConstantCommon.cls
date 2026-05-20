@@ -825,8 +825,12 @@ public with sharing class FEC_ConstantCommon {
     public static final List<Map<String, String>> REPORT_CONFIGS =
     new List<Map<String, String>>{
         new Map<String, String>{
-            'name'       => 'Download BÁO CÁO INTERACTIONS & SERVICE',
-            'uniqueName' => 'BO_CO_INTERACTIONS_SERVICE_CASES_SUM_Rsl'
+            'name'       => 'Interactions & Service Cases Summary TAT',
+            'uniqueName' => 'FEC_RP_02'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases Summary',
+            'uniqueName' => 'FEC_RP_01'
         }
     };
 }

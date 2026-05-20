@@ -1,5 +1,16 @@
-public without sharing class FEC_DownloadReportService {
+/****************************************************************************************
+* File Name    : FEC_DownloadReportService
+* Author       : Quangdv7
+* Date         : 2026-05-20
+* Description  : Get data for API service
+* ===============================================================
+* Ver      Date           Author              Modification
+* ===============================================================
+   1.0      2026-05-20    Quangdv7             Create
+ 
+****************************************************************************************/
 
+public without sharing class FEC_DownloadReportService {
 
     public static void generateDailyReports() {
 
@@ -8,12 +19,15 @@ public without sharing class FEC_DownloadReportService {
 
         for (Map<String, String> config : FEC_ConstantCommon.REPORT_CONFIGS) {
 
+            String name       = config.get('name');
+            String uniqueName = config.get('uniqueName');
+
             try {
 
                 List<Report> reports = [
-                    SELECT Id 
-                    FROM Report 
-                    WHERE DeveloperName = :config.get('uniqueName')
+                    SELECT Id
+                    FROM Report
+                    WHERE DeveloperName = :uniqueName
                     LIMIT 1
                 ];
 
@@ -21,11 +35,16 @@ public without sharing class FEC_DownloadReportService {
                     continue;
                 }
 
-                config.put('reportId', String.valueOf(reports[0].Id));
-                processReport(config, baseUrl, today);
+                processReportAsync(
+                    name,
+                    uniqueName,
+                    String.valueOf(reports[0].Id),
+                    baseUrl,
+                    today
+                );
 
             } catch (Exception e) {
-                System.debug('ERROR [' + config.get('name') + '] => ' + e.getMessage());
+                System.debug(e.getMessage());
             }
         }
     }
@@ -178,10 +197,10 @@ public without sharing class FEC_DownloadReportService {
             '/sfc/servlet.shepherd/document/download/' +
             cv.ContentDocumentId;
 
-        List<Download_Report__c> existing =
+        List<FEC_Download_Report__c> existing =
             [
                 SELECT Id
-                FROM Download_Report__c
+                FROM FEC_Download_Report__c
                 WHERE FEC_Report_Unique_Name__c = :uniqueName
                 AND Name LIKE :(today + '%')
                 LIMIT 1
@@ -194,7 +213,7 @@ public without sharing class FEC_DownloadReportService {
 
         } else {
 
-            Download_Report__c rec          = new Download_Report__c();
+            FEC_Download_Report__c rec          = new FEC_Download_Report__c();
             rec.Name                        = today + ' - ' + reportName;
             rec.FEC_Report_Unique_Name__c   = uniqueName;
             rec.FEC_Link__c                 = fileLink;

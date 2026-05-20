@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</fullName>
+    <columns>NAME</columns>
+    <columns>CREATED_DATE</columns>
+    <filterScope>Mine</filterScope>
+    <label>INTERACTIONS &amp; SERVICE CASES SUMMARY TAT</label>
+    <sharedTo>
+        <role>FEC_Card_Risk_Monitoring_Specialist</role>
+        <role>FEC_Customer_Care_Manager</role>
+        <role>FEC_Customer_Care_Specialist</role>
+        <role>FEC_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Customer_Service_Operations_Manager</role>
+        <role>FEC_Customer_Service_Support_Manager</role>
+        <role>FEC_Customer_Service_Support_Specialist</role>
+        <role>FEC_Head_of_Quality_Control_Ops_Management_Department</role>
+        <role>FEC_Senior_Card_Risk_Monitoring_Specialist</role>
+        <role>FEC_Senior_Customer_Care_Specialist</role>
+        <role>FEC_Senior_Customer_Service_Operations_Management_Specialist</role>
+        <role>FEC_Senior_Customer_Service_Support_Specialist</role>
+        <role>FEC_Unit_Head_of_Customer_Care</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Operations_Management</role>
+        <role>FEC_Unit_Head_of_Customer_Service_Support</role>
+    </sharedTo>
+</ListView>

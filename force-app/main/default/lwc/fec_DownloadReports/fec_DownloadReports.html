@@ -1,0 +1,70 @@
+<template>
+    <div class="modal-container">
+
+        <!-- HEADER -->
+        <div class="modal-header">
+            <h2 class="modal-title">{customLabel.downloadReport}</h2>
+        </div>
+
+        <!-- BODY -->
+        <div class="modal-body">
+
+            <div class="section-label">{customLabel.exportView}</div>
+
+            <!-- CARDS -->
+            <div class="cards-grid">
+
+                <!-- FORMATTED CARD -->
+                <div class={formattedClass} onclick={handleFormatted}>
+                    <template if:true={isFormattedSelected}>
+                        <div class="check-icon">&#10003;</div>
+                    </template>
+                    <div class="card-title">{customLabel.formattedReport}s</div>
+                    <div class="card-desc">
+                        {customLabel.titleContextReport}
+                    </div>
+                </div>
+
+                <!-- DETAILS CARD -->
+                <div class={detailsClass} onclick={handleDetails}>
+                    <template if:true={isDetailsSelected}>
+                        <div class="check-icon">&#10003;</div>
+                    </template>
+                    <div class="card-title">{customLabel.detailsOnly}</div>
+                    <div class="card-desc">
+                        {customLabel.exportDetail}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FORMAT -->
+            <div class="format-section">
+                <div class="format-label">{customLabel.format}</div>
+                <div class="format-select">
+                    <span>{customLabel.formatExcel}</span>
+                    <span class="select-arrow">&#9651;&#9661;</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+            <lightning-button
+                variant="neutral"
+                label="Cancel"
+                disabled={isLoading}
+                onclick={handleCancel}>
+            </lightning-button>
+            <lightning-button
+                class="slds-m-left_small"
+                variant="brand"
+                label="Download"
+                disabled={isLoading}
+                onclick={handleDownload}>
+            </lightning-button>
+        </div>
+
+    </div>
+</template>

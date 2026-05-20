@@ -1344,6 +1344,7 @@
         <members>RD_IT_User_System_Management</members>
         <!-- Case Assignment -->
         <members>FEC_Case_Assignment_Management</members>
+        <members>FEC_Download_Report_Data</members>
         <name>PermissionSet</name>
     </types>
     <types>
@@ -1550,6 +1551,7 @@
 	<types>
 		<members>FEC_Assignment_Set_User_Role</members>
 		<members>Assign_Entitlement_to_Case</members>
+        <members>FEC_DownloadReportFlow</members>
 		<name>Flow</name>
 	</types>
     <types>
