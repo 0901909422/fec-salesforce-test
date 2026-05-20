@@ -312,6 +312,15 @@ public with sharing class FEC_CardEligibilityController {
         result.success = false;
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -360,6 +369,15 @@ public with sharing class FEC_CardEligibilityController {
         result.tenorList  = new List<IPPTenorRow>();
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -386,23 +404,25 @@ public with sharing class FEC_CardEligibilityController {
                 ? System.Label.FEC_MSG_Status_Eligible
                 : System.Label.FEC_MSG_Status_Not_Eligible;
 
-            // 2. Map IPP Status (Requirement: Tenure > 0 AND AccEligibilty == true)
+            // 2. Map IPP Status (Requirement: LengthOfPageList(campaigns) > 0 AND AccEligibilty == true)
+            Boolean hasCampaigns = (apiResult.campaigns != null && !apiResult.campaigns.isEmpty());
+            Boolean isIPPEligible = (isFastCashEligible && hasCampaigns);
+            result.ippStatus = isIPPEligible
+                ? System.Label.FEC_MSG_Status_Eligible
+                : System.Label.FEC_MSG_Status_Not_Eligible;
+
             Boolean hasValidTenures = false;
             if (apiResult.campaigns != null) {
                 for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
-                    if (camp.tenure != null && camp.tenure > 0) {
+                    if (camp.tenure != null && camp.tenure >= 0) {
                         hasValidTenures = true;
                         break;
                     }
                 }
             }
-            Boolean isIPPEligible = (isFastCashEligible && hasValidTenures);
-            result.ippStatus = isIPPEligible
-                ? System.Label.FEC_MSG_Status_Eligible
-                : System.Label.FEC_MSG_Status_Not_Eligible;
             
             // 3. Limit (EligibleAmount)
-            result.creditLimit = formatValue(apiResult.eligibleAmount != null ? String.valueOf(apiResult.eligibleAmount) : null);
+            result.creditLimit = apiResult.eligibleAmount != null ? String.valueOf(apiResult.eligibleAmount) : null;
             
             // 4. Error Code & Description (Only show when NOT eligible)
             if (!isFastCashEligible || !isIPPEligible) {
@@ -417,7 +437,7 @@ public with sharing class FEC_CardEligibilityController {
             if (hasValidTenures) {
                 Integer idx = 1;
                 for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
-                    if (camp.tenure == null || camp.tenure <= 0) continue; // Skip invalid tenures
+                    if (camp.tenure == null || camp.tenure < 0) continue; // Skip invalid tenures
                     
                     IPPTenorRow row = new IPPTenorRow();
                     row.id = idx++;
@@ -465,7 +485,7 @@ public with sharing class FEC_CardEligibilityController {
             if (detail != null && detail.status != 'ERROR') {
                 IPPTenorRow row       = new IPPTenorRow();
                 row.id                = 1;
-                row.tenure            = formatValue(detail.ippTerm);
+                row.tenure            = formatValue(detail.ippTerm + ' ' + System.Label.FEC_LABEL_Months);
                 row.rate              = formatValue(detail.interestRate != null
                     ? (detail.interestRate * 100).setScale(2) + FEC_ConstantCommon.STR_PERCENT : null);
                 row.registrationRate  = FEC_ConstantCommon.STR_DASH;

@@ -4,39 +4,24 @@ public without sharing class FEC_CaseExecuteService {
     @AuraEnabled public Boolean shouldUpdate;
   }
   
+  //thangtv: không ép true — luôn tính lại quyền qua canExecute
   @AuraEnabled
-  public static void forceShowExecute(Id caseId) {
-    try {
-      FEC_CaseTriggerHandler.isSystemUpdate = true;
-      
-      update new Case(Id = caseId, FEC_Can_Execute__c = true);
-      
-      System.debug('FORCE UPDATE FEC_Can_Execute__c = true');
-      
-    } catch (Exception e) {
-      System.debug('forceShowExecute ERROR = ' + e.getMessage());
-      
-      throw new AuraHandledException(e.getMessage());
-      
-    } finally {
-      FEC_CaseTriggerHandler.isSystemUpdate = false;
-    }
+  public static ExecuteVisibilityResult forceShowExecute(Id caseId) {
+    return canExecute(caseId);
   }
   
   @AuraEnabled
   public static void forceHideExecute(Id caseId) {
+    if (caseId == null) {
+      return;
+    }
     try {
       FEC_CaseTriggerHandler.isSystemUpdate = true;
-      
-      update new Case(Id = caseId, FEC_Can_Execute__c = false);
-      
+      updateCaseExecuteFlag(caseId, false);
       System.debug('FORCE UPDATE FEC_Can_Execute__c = false');
-      
     } catch (Exception e) {
       System.debug('forceHideExecute ERROR = ' + e.getMessage());
-      
       throw new AuraHandledException(e.getMessage());
-      
     } finally {
       FEC_CaseTriggerHandler.isSystemUpdate = false;
     }
@@ -151,113 +136,16 @@ public without sharing class FEC_CaseExecuteService {
     if (isQueueOwner(c.OwnerId)) {
       System.debug('CHECK BY Queue Owner');
       
-      return isUserInQueue(currentUserId, c.OwnerId) || isUserRoleInQueue(currentUserId, c.OwnerId);
+      return QUEUE_MEMBERSHIP_ACCESS.isUserInQueue(currentUserId, c.OwnerId)
+        || QUEUE_MEMBERSHIP_ACCESS.isUserRoleInQueue(currentUserId, c.OwnerId);
     }
     
     return false;
   }
   
-  private static Boolean isUserInQueue(Id userId, Id queueId) {
-    if (userId == null || queueId == null) {
-      return false;
-    }
-    
-    Set<Id> visitedGroupIds = new Set<Id>();
-    
-    Set<Id> groupsToProcess = new Set<Id>{queueId};
-    
-    while (!groupsToProcess.isEmpty()) {
-      Set<Id> currentBatch = new Set<Id>(groupsToProcess);
-      
-      groupsToProcess.clear();
-      
-      visitedGroupIds.addAll(currentBatch);
-      
-      List<GroupMember> members = [
-        SELECT GroupId,
-        UserOrGroupId FROM GroupMember WHERE GroupId IN : currentBatch
-      ];
-      
-      for (GroupMember gm : members) {
-        Id memberId = gm.UserOrGroupId;
-        
-        /*
-         * Direct User
-         */
-        if (memberId == userId) {
-          return true;
-        }
-        
-        /*
-         * Nested Group
-         */
-        if (memberId.getSObjectType() == Group.SObjectType) {
-          if (!visitedGroupIds.contains(memberId)
-          && !groupsToProcess.contains(memberId)) {
-            groupsToProcess.add(memberId);
-          }
-        }
-      }
-    }
-    
-    return false;
-  }
-  
-  
-  private static Boolean isUserRoleInQueue(Id userId, Id queueId) {
-    if (userId == null || queueId == null) {
-      return false;
-    }
-    
-    /*
-     * Get current user role
-     */
-    User userRecord = [
-        SELECT Id, UserRoleId
-        FROM User
-        WHERE Id = :userId
-        LIMIT 1
-    ];
-    
-    if (userRecord.UserRoleId == null) {
-      return false;
-    }
-    
-    /*
-     * Get role groups from queue
-     */
-    List<Group> queueRoleGroups = [
-        SELECT
-            Id,
-            Type,
-            RelatedId
-        FROM Group
-        WHERE Id IN (
-            SELECT UserOrGroupId
-            FROM GroupMember
-            WHERE GroupId = :queueId
-        )
-        AND Type IN ('Role', 'RoleAndSubordinates')
-    ];
-    
-    if (queueRoleGroups.isEmpty()) {
-      return false;
-    }
-    
-    /*
-     * Collect role ids
-     */
-    Set<Id> queueRoleIds = new Set<Id>();
-    
-    for (Group g : queueRoleGroups) {
-      if (g.RelatedId != null) {
-        queueRoleIds.add(g.RelatedId);
-      }
-    }
-    
-    return queueRoleIds.contains(userRecord.UserRoleId);
-  }
-  
+  private static final QueueMembershipAccess QUEUE_MEMBERSHIP_ACCESS =
+    new QueueMembershipAccess();
+
   private static ExecuteVisibilityResult buildResult(
   Case c, Boolean canExecute) {
     ExecuteVisibilityResult result = new ExecuteVisibilityResult();
@@ -287,10 +175,8 @@ public without sharing class FEC_CaseExecuteService {
         
         FEC_CaseTriggerHandler.isSystemUpdate = true;
         
-        /*
-         * UPDATE HERE
-         */
-        update new Case(Id = c.Id, FEC_Can_Execute__c = canExecute);
+        //thangtv: SYSTEM_MODE — reset flag khi user không có FLS edit trên Case
+        updateCaseExecuteFlag(c.Id, canExecute);
         
         System.debug('Case updated successfully');
         
@@ -349,7 +235,7 @@ public without sharing class FEC_CaseExecuteService {
       /*
        * Routing history
        */
-      // createRoutingActionHistory(caseId, oldOwnerId, userId);
+      createRoutingActionHistory(caseId, oldOwnerId, userId);
       
       System.debug('SUCCESS: Owner updated');
       
@@ -549,5 +435,86 @@ public without sharing class FEC_CaseExecuteService {
   
   private static Boolean isCurrentUserOwner(Id ownerId, Id currentUserId) {
     return ownerId != null && currentUserId != null && ownerId == currentUserId;
+  }
+
+  private static void updateCaseExecuteFlag(Id caseId, Boolean canExecute) {
+    Database.update(
+      new Case(Id = caseId, FEC_Can_Execute__c = canExecute),
+      AccessLevel.SYSTEM_MODE
+    );
+  }
+
+  //thangtv: đọc GroupMember without sharing (giống FEC_AssignmentExecuteService)
+  private class QueueMembershipAccess {
+    Boolean isUserInQueue(Id userId, Id queueId) {
+      if (userId == null || queueId == null) {
+        return false;
+      }
+
+      Set<Id> visitedGroupIds = new Set<Id>();
+      Set<Id> groupsToProcess = new Set<Id>{ queueId };
+
+      while (!groupsToProcess.isEmpty()) {
+        Set<Id> currentBatch = new Set<Id>(groupsToProcess);
+        groupsToProcess.clear();
+        visitedGroupIds.addAll(currentBatch);
+
+        for (GroupMember gm : [
+          SELECT GroupId, UserOrGroupId
+          FROM GroupMember
+          WHERE GroupId IN :currentBatch
+        ]) {
+          Id memberId = gm.UserOrGroupId;
+          if (memberId == userId) {
+            return true;
+          }
+          if (memberId.getSObjectType() == Group.SObjectType
+            && !visitedGroupIds.contains(memberId)
+            && !groupsToProcess.contains(memberId)) {
+            groupsToProcess.add(memberId);
+          }
+        }
+      }
+      return false;
+    }
+
+    Boolean isUserRoleInQueue(Id userId, Id queueId) {
+      if (userId == null || queueId == null) {
+        return false;
+      }
+
+      User userRecord = [
+        SELECT Id, UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+      ];
+
+      if (userRecord.UserRoleId == null) {
+        return false;
+      }
+
+      Set<Id> queueRoleIds = new Set<Id>();
+      for (Group g : [
+        SELECT RelatedId
+        FROM Group
+        WHERE Id IN (
+          SELECT UserOrGroupId
+          FROM GroupMember
+          WHERE GroupId = :queueId
+        )
+        AND Type IN (
+          'Role',
+          'RoleAndSubordinates',
+          'RoleAndSubordinatesInternal'
+        )
+      ]) {
+        if (g.RelatedId != null) {
+          queueRoleIds.add(g.RelatedId);
+        }
+      }
+
+      return queueRoleIds.contains(userRecord.UserRoleId);
+    }
   }
 }

@@ -1727,6 +1727,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Case_Hold_History__c.FEC_Hold_Case_Config__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Case_Hold_History__c.FEC_Release_Case_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Case_Refund_Details__c.FEC_Payment_Channel__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -2283,6 +2293,11 @@
     <fieldPermissions>
         <editable>false</editable>
         <field>Case.FEC_NFU_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.FEC_NFU_Description_Result__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -4141,6 +4156,11 @@
         <field>Case.FEC_Full_Remarks__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Case.FEC_Is_DNB__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>CS - Head of CS Contact Center Dept - Interaction Case &amp; Service Case</label>
     <license>Salesforce</license>
@@ -4210,6 +4230,16 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_Case_Flow_History__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Case_Hold_History__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>

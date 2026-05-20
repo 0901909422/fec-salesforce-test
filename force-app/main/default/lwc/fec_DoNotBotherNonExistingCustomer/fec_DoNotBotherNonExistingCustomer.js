@@ -1,7 +1,6 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
 import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseNonExistingData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
-import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 
 import FEC_DNB_Has_Data_Question from "@salesforce/label/c.FEC_DNB_Has_Data_Question";
 import FEC_DNB_No_Data_Question from "@salesforce/label/c.FEC_DNB_No_Data_Question";
@@ -11,7 +10,9 @@ import FEC_DNB_NID_Placeholder from "@salesforce/label/c.FEC_DNB_NID_Placeholder
 import FEC_DNB_NID_Error from "@salesforce/label/c.FEC_MSG_National_ID_Invalid";
 
 import FEC_DNB_Update_Button from "@salesforce/label/c.FEC_DNB_Update_Button";
+import checkDNBNonExisting from "@salesforce/apex/FEC_DNBHandler.checkDNBNonExisting";
 
+import createNonExistingDNBRows from "@salesforce/apex/FEC_DNBHandler.createNonExistingDNBRows";
 import FEC_DNB_Modal_Title from "@salesforce/label/c.FEC_DNB_Modal_Title";
 import FEC_DNB_Modal_Message from "@salesforce/label/c.FEC_DNB_Modal_Message";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
@@ -19,7 +20,42 @@ import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+
+import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
+
+import updateFieldDoNotBother from "@salesforce/apex/FEC_DNBHandler.updateFieldDoNotBother";
+
+import updateDNBProcessCount from "@salesforce/apex/FEC_DNBHandler.updateDNBProcessCount";
+
+import DO_NOT_BOTHER_CHANNEL from "@salesforce/messageChannel/FEC_DoNotBother__c";
+
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+  publish,
+} from "lightning/messageService";
 export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement {
+  @wire(MessageContext)
+  messageContext;
+
+  subscription = null;
+
+  isReadonlyMode = false;
+
+  modeEditCase = false;
+
+  errorMessage = "";
+
+  retryCount = 0;
+
+  maxRetry = 3;
+
+  isMaxRetryReached = false;
+
   labels = {
     pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
     goToPageLabel: FEC_GO_TO_PAGE_LABEL,
@@ -49,82 +85,118 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     { label: "Có", value: "yes" },
   ];
   hasDNBData = false;
-  dnbMap = new Map();
   isConfirmOpen = false;
   // ===== Pagination state =====
   pageSize = 10;
   currentPage = 1;
   goToPageValue;
   isDNBUpdated = false;
-  columns = [
-    { label: "DNB Channel", fieldName: "channel", type: "text" },
-    { label: "Type", fieldName: "type", type: "text" },
-    { label: "Phone/Email", fieldName: "contact", type: "contact" },
-    { label: "Current Status", fieldName: "status", type: "text" },
 
-    {
-      label: "Action",
-      fieldName: "active",
-      type: "checkbox",
-      checkboxLabelField: "checkboxLabel",
-    },
-    { label: "Expiry Date", fieldName: "expiry", type: "text" },
-    { label: "Original Reason", fieldName: "originalReason", type: "text" },
-    { label: "Update Reason", fieldName: "updateReason", type: "picklist" },
-    { label: "Remarks", fieldName: "remarks", type: "textarea" },
-  ];
+  @track isCheckingDNB = false;
+  @track isDNBChecked = false;
+  @track hasExistingDNB = false;
 
-  async connectedCallback() {
-    await this.getDnb();
-    await this.loadData();
+  get columns() {
+    return [
+      {
+        label: "DNB Channel",
+        fieldName: "channel",
+        type: "text",
+      },
+
+      {
+        label: "Type",
+        fieldName: "type",
+        type: "text",
+      },
+
+      {
+        label: "Phone/Email",
+        fieldName: "contact",
+        type: "contact",
+      },
+
+      {
+        label: "Current Status",
+        fieldName: "status",
+        type: "text",
+      },
+
+      {
+        label: "Action",
+        fieldName: "active",
+        type: "checkbox",
+        checkboxLabelField: "checkboxLabel",
+      },
+
+      {
+        label: "Expiry Date",
+        fieldName: "expiry",
+        type: "text",
+      },
+
+      {
+        label: "Original Reason",
+        fieldName: "originalReasonLabel",
+        type: "text",
+      },
+
+      {
+        label: "Update Reason",
+
+        fieldName: this.isReadonlyMode ? "updateReasonLabel" : "updateReason",
+
+        type: this.isReadonlyMode ? "text" : "picklist",
+
+        headerClass: "update-reason-header",
+      },
+
+      {
+        label: "Remarks",
+
+        fieldName: "remarks",
+
+        type: this.isReadonlyMode ? "text" : "textarea",
+
+        disabledField: "isReadonly",
+
+        headerClass: "remarks-header",
+      },
+    ];
   }
 
-  async getDnb() {
-    try {
-      const res = await getDNB({
-        caseId: this.recordId,
-      });
+  async connectedCallback() {
+    this.subscribeToMessageChannel();
 
-      const parsed = typeof res === "string" ? JSON.parse(res) : res;
-      console.log("DNB RAW RESPONSE:", res);
-      console.log("DNB PARSED RESPONSE:", JSON.stringify(parsed));
-      const list = parsed.result || [];
+    await this.loadData();
 
-      this.hasDNBData = list.length > 0;
+    // await this.loadDNBRecords();
+  }
 
-      this.dnbMap = new Map();
+  disconnectedCallback() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
 
-      list.forEach((item) => {
-        if (!item || !item.type_value) {
-          return;
-        }
+    this.modeEditCase = false;
+  }
 
-        /*
-         * Ignore masked records
-         */
-        if (String(item.type_value).includes("*")) {
-          return;
-        }
-        /*
-         * Normalize API value
-         */
-        const normalizedValue = this.normalizeCompareValue(item.type_value);
+  subscribeToMessageChannel() {
+    this.subscription = subscribe(
+      this.messageContext,
+      IS_MODE_EDIT,
+      (message) => this.handleModeEditMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
 
-        const key = `${item.type}_${normalizedValue}`;
+  handleModeEditMessage(message) {
+    if (!message || typeof message.isModeEdit === "undefined") return;
 
-        this.dnbMap.set(key, item);
-      });
-
-      console.log("===== DNB MAP =====");
-
-      this.dnbMap.forEach((value, key) => {
-        console.log("KEY:", key);
-
-        console.log("VALUE =", value);
-      });
-    } catch (e) {
-      console.error("Get DNB error", e);
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
     }
+
+    this.modeEditCase = message.isModeEdit;
   }
 
   async loadData() {
@@ -134,91 +206,21 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
       this.customerName = result.customerName;
       this.nationalId = result.nationalId;
       this.contractId = result.contractId;
-      const rows = this.buildDNBData(result);
-      this.data = this.prepareData(rows);
+      this.retryCount = result.processActionCount || 0;
+
+      this.isMaxRetryReached = this.retryCount >= 3;
+      this.modeEditCase = result.viewMode === "handling" ? true : false;
+      // this.data = this.prepareData(rows);
       this.updatePagedData();
     } catch (e) {
       console.error("Load data error", e);
     }
   }
 
-  buildDNBData(res) {
-    const channel = res.channel?.toLowerCase();
-    const isCall = ["inbound", "outbound"].includes(channel);
-    const isEmail = channel === "email";
-    const createRow = ({
-      id,
-      channel,
-      type,
-      contact,
-      maskedContact,
-      disableAction = false,
-    }) => {
-      const hasContact = !!contact;
+  getReasonLabel(value) {
+    const option = this.getReasonOptions().find((x) => x.value === value);
 
-      const typeKey = this.mapType(channel);
-      const normalizedContact = this.normalizeCompareValue(contact);
-
-      const key = `${typeKey}_${normalizedContact}`;
-
-      const dnb = this.dnbMap.get(key);
-
-      const hasDNB = !!dnb;
-      return {
-        id,
-        channel,
-        type,
-
-        contact: contact || "",
-        maskedContact: maskedContact || "",
-        isHidden: true,
-
-        // ===== CORE LOGIC =====
-        status: hasDNB ? "Active" : "Inactive",
-        checkboxLabel: hasDNB ? "Extend" : "Active",
-        expiry: dnb?.exclude_time || "",
-
-        active: false,
-
-        originalReason: dnb?.reason || "",
-        updateReason: "",
-
-        isReasonDisabled: true,
-
-        isActionDisabled: disableAction || !hasContact,
-        hasContact,
-
-        reasonOptionsFormatted: this.getReasonOptions(),
-        remarks: "",
-      };
-    };
-
-    return [
-      createRow({
-        id: "interaction-phone-call",
-        channel: "Call",
-        type: "Interaction Phone",
-        contact: res.interactionPhoneNumber,
-        maskedContact: res.interactionMaskedPhone,
-        disableAction: isEmail,
-      }),
-      createRow({
-        id: "interaction-phone-sms",
-        channel: "SMS",
-        type: "Interaction Phone",
-        contact: res.interactionPhoneNumber,
-        maskedContact: res.interactionMaskedPhone,
-        disableAction: isEmail,
-      }),
-      createRow({
-        id: "interaction-email",
-        channel: "Email",
-        type: "Interaction Email",
-        contact: isCall ? "" : res.interactionEmail,
-        maskedContact: res.interactionMaskedEmail,
-        disableAction: isCall,
-      }),
-    ];
+    return option ? option.label : value || "";
   }
 
   getReasonOptions() {
@@ -240,14 +242,155 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     ];
   }
 
-  prepareData(data) {
-    return data.map((row) => ({
-      ...row,
-      isReasonDisabled: !row.active,
-      maskedContact: row.maskedContact || this.maskContact(row.contact),
-    }));
+  async loadDNBRecords() {
+    try {
+      const result = await getListDNBs({
+        caseId: this.recordId,
+      });
+
+      console.log("DNB DB RECORDS:", JSON.stringify(result));
+
+      this.hasDNBData = result?.length > 0;
+
+      this.data = this.prepareDBData(result);
+
+      this.updatePagedData();
+    } catch (e) {
+      console.error("Load DNB records error", JSON.stringify(e));
+    }
   }
 
+  async checkDNB() {
+    console.log("Checking DNB for NID:", this.nationalId);
+
+    return await checkDNBNonExisting({
+      caseId: this.recordId,
+      nid: this.nationalId,
+    });
+  }
+
+  async handleCheckDNB() {
+    this.isCheckingDNB = true;
+
+    try {
+      /*
+       * CHECK API ONLY
+       */
+      const result = await this.checkDNB();
+
+      console.log("DNB RESULT:", JSON.stringify(result));
+
+      this.isDNBChecked = true;
+
+      /*
+       * API FAIL
+       */
+      if (!result?.success) {
+        this.showToast(
+          "Error",
+          result?.errorMessage || "Check DNB failed",
+          "error",
+        );
+
+        return;
+      }
+
+      /*
+       * HAS DATA
+       */
+      const hasData = result?.result && result.result.length > 0;
+
+      this.hasExistingDNB = hasData;
+
+      this.hasDNBData = hasData;
+
+      // /*
+      //  * default selection
+      //  */
+      // this.selectedOption = hasData ? "yes" : "no";
+
+      /*
+       * IMPORTANT:
+       * clear table
+       */
+      this.data = [];
+
+      this.currentPage = 1;
+
+      this.updatePagedData();
+    } catch (e) {
+      console.error("handleCheckDNB ERROR", e);
+
+      this.showToast(
+        "Error",
+        e?.body?.message || e?.message || "Unexpected error",
+        "error",
+      );
+    } finally {
+      this.isCheckingDNB = false;
+    }
+  }
+
+  prepareDBData(records) {
+    return (records || []).map((row) => {
+      const isReadonly = !!row.updatedReason;
+
+      return {
+        id: row.id,
+
+        channel: row.channel,
+
+        type: row.type,
+
+        contact: row.typeValue || "",
+
+        maskedContact:
+          row.typeValue && row.typeValue.includes("*")
+            ? row.typeValue
+            : this.maskContact(row.typeValue),
+
+        isHidden: true,
+
+        status: row.doNotBother || "Inactive",
+
+        checkboxLabel:
+          row.doNotBother === "Extend Expiry Date" ||
+          row.doNotBother === "Active"
+            ? "Extend Expiry Date"
+            : "Active",
+
+        expiry: row.expectedExcludeTime || "",
+
+        active: row.action || false,
+
+        originalReason: row.reason2 || "",
+
+        originalReasonLabel: this.getReasonLabel(row.reason2),
+
+        updateReason: row.updatedReason || "",
+
+        updateReasonLabel: this.getReasonLabel(row.updatedReason),
+
+        remarks: row.remarks || "",
+
+        /*
+         * READONLY
+         */
+        isReadonly,
+
+        isReasonDisabled: !row.action || isReadonly,
+
+        isActionDisabled:
+          (!!row.typeValue && row.type === "Insert from DB") ||
+          !row.typeValue ||
+          isReadonly,
+
+        hasContact: !!row.typeValue,
+
+        reasonOptionsFormatted: this.getReasonOptions(),
+      };
+    });
+  }
   maskContact(value) {
     if (!value) return "";
 
@@ -289,8 +432,8 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }));
   }
 
-  get showTable() {
-    return this.selectedOption === "yes";
+  get showTableSection() {
+    return this.isDNBChecked && this.selectedOption === "yes";
   }
 
   get hasDataAtDNB() {
@@ -309,14 +452,66 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.pagedData = this.data.slice(start, end);
   }
 
+  handleTextareaChange(event) {
+    const { id, field, value } = event.detail;
+
+    this.data = this.data.map((row) =>
+      row.id === id ? { ...row, [field]: value } : row,
+    );
+
+    this.refreshData();
+  }
   // ===== Events =====
-  handleRadioChange(event) {
+  // handleRadioChange(event) {
+  //   this.selectedOption = event.detail.value;
+
+  //   /*
+  //    * Nếu chọn YES mà chưa có data
+  //    * thì load default table
+  //    */
+  //   if (
+  //     this.selectedOption === "yes" &&
+  //     !this.hasExistingDNB &&
+  //     this.data.length === 0
+  //   ) {
+  //     this.loadDNBRecords();
+  //   }
+
+  //   this.currentPage = 1;
+  //   this.updatePagedData();
+  // }
+
+  async handleRadioChange(event) {
     this.selectedOption = event.detail.value;
 
-    if (this.selectedOption === "yes") {
-      this.currentPage = 1;
-      this.updatePagedData();
+    /*
+     * USER CONFIRM YES
+     */
+    if (this.selectedOption === "yes" && this.data.length === 0) {
+      try {
+        /*
+         * CREATE DB ROWS
+         */
+        await createNonExistingDNBRows({
+          caseId: this.recordId,
+
+          nid: this.nationalId,
+        });
+
+        /*
+         * LOAD DB
+         */
+        await this.loadDNBRecords();
+      } catch (e) {
+        console.error("create rows error", e);
+
+        this.showToast("Error", e?.body?.message || e?.message, "error");
+      }
     }
+
+    this.currentPage = 1;
+
+    this.updatePagedData();
   }
 
   handleNextPage() {
@@ -429,6 +624,16 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }
 
     try {
+      /*
+       * User selected YES
+       */
+      await updateFieldDoNotBother({
+        caseId: this.recordId,
+
+        selectedOption: "yes",
+      });
+
+      this.syncUIValuesBeforeReadonly();
       const payload = this.buildPayload();
 
       console.log("FINAL PAYLOAD:", JSON.stringify(payload));
@@ -444,19 +649,27 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
        */
       if (Number(result?.code) === 0) {
         /*
-         * Reload DNB data
+         * Reset retry count
          */
-        await this.getDnb();
+        await updateDNBProcessCount({
+          caseId: this.recordId,
 
-        /*
-         * Reload table
-         */
-        await this.loadData();
+          isSuccess: true,
+        });
 
         /*
          * Success state
          */
         this.isDNBUpdated = true;
+
+        this.isReadonlyMode = true;
+
+        this.applyReadonlyState();
+
+        /*
+         * Publish LMS
+         */
+        this.publishReadonlyMessage();
 
         this.showToast("Success", "DNB created successfully", "success");
       } else {
@@ -475,10 +688,43 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         }
 
         this.showToast("Failed", errorMessage, "error", "sticky");
+
+        /*
+         * Persist retry count
+         */
+        const retryCount = await updateDNBProcessCount({
+          caseId: this.recordId,
+
+          isSuccess: false,
+        });
+
+        this.retryCount = retryCount;
+        if (retryCount < 3) {
+          this.errorMessage =
+            "Cập nhật thông tin khách hàng vào danh sách DNB thất bại. Vui lòng thử lại";
+        } else {
+          this.errorMessage =
+            "Cập nhật thông tin khách hàng vào danh sách DNB thất bại.";
+        }
+        this.isMaxRetryReached = retryCount >= 3;
       }
     } catch (e) {
       console.error("createDNB ERROR =", e);
+      const retryCount = await updateDNBProcessCount({
+        caseId: this.recordId,
 
+        isSuccess: false,
+      });
+
+      this.retryCount = retryCount;
+      if (retryCount < 3) {
+        this.errorMessage =
+          "Cập nhật thông tin khách hàng vào danh sách DNB thất bại. Vui lòng thử lại";
+      } else {
+        this.errorMessage =
+          "Cập nhật thông tin khách hàng vào danh sách DNB thất bại.";
+      }
+      this.isMaxRetryReached = retryCount >= 3;
       this.showToast(
         "System Error",
         e?.body?.message || e?.message || "Unexpected error",
@@ -494,20 +740,38 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.close();
   }
 
+  handleNidChange(event) {
+    const value = event.target.value || "";
+
+    this.nationalId = value.replace(/\D/g, "");
+
+    /*
+     * reset state
+     */
+    this.isDNBChecked = false;
+    this.hasExistingDNB = false;
+    this.data = [];
+  }
+
   buildPayload() {
     return this.data
       .filter((row) => row.active)
       .map((row) => ({
+        dnb_id: row.id || null,
+        channel: row.channel,
         reason: row.updateReason,
+        remarks: row.remarks,
         full_name: this.customerName || "UNKNOWN",
         nid: this.nationalId || "000000000000",
         do_not_bother: true,
         type: this.mapType(row.channel),
-        type_value: this.normalizePhone(row.contact),
+        type_value:
+          row.channel === "Email"
+            ? row.contact
+            : this.normalizePhone(row.contact),
         contract_id: this.contractId || "UNKNOWN",
       }));
   }
-
   mapType(channel) {
     switch (channel) {
       case "Call":
@@ -521,34 +785,15 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }
   }
 
-  handleNidChange(event) {
-    const value = event.target.value;
-
-    // chỉ cho nhập số
-    const cleaned = value.replace(/\D/g, "");
-
-    this.nationalId = cleaned;
-
-    // validate: phải là 9 hoặc 12 số
-    this.nidError = !(cleaned.length === 9 || cleaned.length === 12);
-  }
-
-  normalizeCompareValue(value) {
-    if (!value) {
+  normalizePhone(phone) {
+    if (!phone) {
       return "";
     }
 
     /*
-     * EMAIL
+     * Remove spaces/dots
      */
-    if (value.includes("@")) {
-      return value.trim().toLowerCase();
-    }
-
-    /*
-     * PHONE
-     */
-    let cleaned = value.replace(/\D/g, "");
+    let cleaned = phone.replace(/\D/g, "");
 
     /*
      * 0xxxxxxxxx -> 84xxxxxxxxx
@@ -558,6 +803,74 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }
 
     return cleaned;
+  }
+
+  // handleNidChange(event) {
+  //   const value = event.target.value;
+
+  //   // chỉ cho nhập số
+  //   const cleaned = value.replace(/\D/g, "");
+
+  //   this.nationalId = cleaned;
+
+  //   // validate: phải là 9 hoặc 12 số
+  //   this.nidError = !(cleaned.length === 9 || cleaned.length === 12);
+  // }
+
+  applyReadonlyState() {
+    this.data = this.data.map((row) => ({
+      ...row,
+
+      isReadonly: true,
+
+      isReasonDisabled: true,
+
+      isActionDisabled: true,
+    }));
+
+    this.updatePagedData();
+  }
+
+  publishReadonlyMessage() {
+    publish(
+      this.messageContext,
+
+      DO_NOT_BOTHER_CHANNEL,
+
+      {
+        status: "SUCCESS",
+
+        caseId: this.recordId,
+
+        message: "DNB updated successfully",
+      },
+    );
+  }
+
+  syncUIValuesBeforeReadonly() {
+    this.data = this.data.map((row) => {
+      /*
+       * Only submitted rows
+       */
+      if (!row.active) {
+        return row;
+      }
+
+      return {
+        ...row,
+
+        /*
+         * Persist current UI values
+         */
+        originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+        updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+        remarks: row.remarks || "-",
+      };
+    });
+
+    this.updatePagedData();
   }
 
   showToast(title, message, variant, mode = "dismissable") {
@@ -583,7 +896,41 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.isConfirmOpen = false;
   }
 
-  handleCloseModal() {
+  async handleCloseModal() {
+    try {
+      await updateFieldDoNotBother({
+        caseId: this.recordId,
+
+        selectedOption: "no",
+      });
+    } catch (e) {
+      console.error("Update DNB flag error", e);
+    }
+
     this.close();
+  }
+
+  get isHandlingMode() {
+    return this.modeEditCase === true;
+  }
+
+  get showResultSection() {
+    /*
+     * REVIEW MODE
+     */
+    if (!this.isHandlingMode) {
+      return true;
+    }
+
+    /*
+     * HANDLING MODE
+     */
+    return this.isReadonlyMode;
+  }
+
+  get showUpdateButton() {
+    return (
+      !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
+    );
   }
 }

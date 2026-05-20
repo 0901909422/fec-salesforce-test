@@ -2,7 +2,6 @@
   <c-fec_-spinner is-loaded={isLoaded}></c-fec_-spinner>
 
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1294-->
-  <!--linhdev fix jira FECREDIT_CSM_2025_KH-1366-->
   <!--linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeMainSectionlst} onfecfastcashpropertyinfovisibility={handleFastCashPropertyInfoVisibility} onfecfastcashblockconfirmed={handleFastCashBlockConfirmed} onfecpointsredemptionsectionvisibility={handlePointsRedemptionSectionVisibility}>
     <!-- section -->
@@ -75,6 +74,42 @@
                                         onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
                                       </lightning-input-field>
                                   </div>
+                                  <template if:true={field.showMrcDupInline}>
+                                    <template if:true={showMrcRl0502DupBanner}>
+                                      <div class="mrc-dup-inline slds-m-top_x-small">
+                                        <p class="mrc-dup-message">
+                                          {mrcDupMessageBeforeLink}
+                                          <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+                                          {mrcDupMessageAfterLink}
+                                        </p>
+                                        <lightning-radio-group
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-obj-name={obj.name}
+                                          name={obj.id}
+                                          label=""
+                                          options={mrcHandlingRadioOptions}
+                                          value={mrcHandlingOptionValue}
+                                          type="radio"
+                                          variant="label-hidden"
+                                          onchange={handleMrcHandlingOptionChange}>
+                                        </lightning-radio-group>
+                                        <lightning-input-field
+                                          class="slds-hide"
+                                          data-section={section.id}
+                                          data-sub={row.sub.name}
+                                          data-obj={obj.id}
+                                          data-field="FEC_MRC_Request_Handling_Option__c"
+                                          data-obj-name={obj.name}
+                                          variant="label-hidden"
+                                          field-name="FEC_MRC_Request_Handling_Option__c"
+                                          value={mrcHandlingOptionValue}
+                                          onchange={handleChangeInput}>
+                                        </lightning-input-field>
+                                      </div>
+                                    </template>
+                                  </template>
                                 </template>
                               </template>
                               <div if:true={field.customError}
@@ -158,6 +193,42 @@
                                             onkeydown={handleInputKeydown} onpaste={handlePaste} value={field.value}>
                                           </lightning-input-field>
                                       </div>
+                                      <template if:true={field.showMrcDupInline}>
+                                        <template if:true={showMrcRl0502DupBanner}>
+                                          <div class="mrc-dup-inline slds-m-top_x-small">
+                                            <p class="mrc-dup-message">
+                                              {mrcDupMessageBeforeLink}
+                                              <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+                                              {mrcDupMessageAfterLink}
+                                            </p>
+                                            <lightning-radio-group
+                                              data-section={section.id}
+                                              data-sub={row.sub.name}
+                                              data-obj={obj.id}
+                                              data-obj-name={obj.name}
+                                              name={obj.id}
+                                              label=""
+                                              options={mrcHandlingRadioOptions}
+                                              value={mrcHandlingOptionValue}
+                                              type="radio"
+                                              variant="label-hidden"
+                                              onchange={handleMrcHandlingOptionChange}>
+                                            </lightning-radio-group>
+                                            <lightning-input-field
+                                              class="slds-hide"
+                                              data-section={section.id}
+                                              data-sub={row.sub.name}
+                                              data-obj={obj.id}
+                                              data-field="FEC_MRC_Request_Handling_Option__c"
+                                              data-obj-name={obj.name}
+                                              variant="label-hidden"
+                                              field-name="FEC_MRC_Request_Handling_Option__c"
+                                              value={mrcHandlingOptionValue}
+                                              onchange={handleChangeInput}>
+                                            </lightning-input-field>
+                                          </div>
+                                        </template>
+                                      </template>
                                     </template>
                                   </template>
                                   <div if:true={field.customError}
@@ -247,11 +318,13 @@
     </template>
   </lightning-accordion>
   <!--HieuTT74: [UPDATE 12/5/2026: JIRA FECREDIT_CSM_2025_KH-1211: Hiển thị quy trình phụ]-->
-  <c-fec_-sub-process-container record-id={recordId}></c-fec_-sub-process-container>
+  <c-fec_-sub-process-container record-id={recordId} lock-api-lwcs-after-revert-to-default-stage={business.lockApiLwcsAfterRevertToDefaultStage}>
+  </c-fec_-sub-process-container>
   <!--END: Hieutt74: Update ngày 12/5/2026-->
   <lightning-accordion if:true={businessLoaded} allow-multiple-sections-open active-section-name={activeRoutingSectionlst}>
     <!-- routing action -->
-    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showRoutingSection} name="routing-action"
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới — ẩn block cũ khi bộ mới active-->
+    <lightning-accordion-section key={routingAccordionSectionKey} if:true={showLegacyRoutingSection} name="routing-action"
       label={customLabel.routingActionLabel}>
       <div class="slds-grid slds-wrap">
         <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-around--x-small">
@@ -319,6 +392,22 @@
           </div>
         </div>
       </div>
+    </lightning-accordion-section>
+
+    <!--PhongBT 18/05/26: Document Request sử dụng cục routing action mới-->
+    <lightning-accordion-section if:true={showDocumentRequestStageChangeRoutingSection}
+      name="routing-action-doc-request" label={customLabel.routingActionLabel}>
+      <c-fec_-document-request-routing-action is-edit={isEdit}
+        action-value={actionValue} routing-action-options={business.routingActionlst}
+        is-routing-action-disabled={isRoutingActionDisabled} show-route-to={showRouteTo}
+        next-team={business.nextTeam} route-to-queue-display-label={routeToQueueDisplayLabel}
+        show-revert={showRevert} revert-decision-display-label={revertDecisionDisplayLabel}
+        show-transfer={showTransfer} show-update={showUpdate} decision-value={decisionValue}
+        sub-decision-value={subDecisionValue} decision-options={decisionOptions}
+        sub-decision-options={subDecisionOptions} decision-update-options={decisionUpdateOptions}
+        is-sub-decision-options-display={isSubDecisionOptionsDisplay} onactionchange={handleChangeAction}
+        onroutingfieldchange={handleDocReqRoutingFieldChange}>
+      </c-fec_-document-request-routing-action>
     </lightning-accordion-section>
   </lightning-accordion>
 
