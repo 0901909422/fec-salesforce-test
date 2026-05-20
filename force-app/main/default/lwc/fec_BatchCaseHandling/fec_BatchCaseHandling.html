@@ -18,10 +18,122 @@
           class="slds-accordion__section"
         >
           <div class="fec-session-body fec-session-body--filters">
-            <p class="fec-filter-help">{batchUi.filterHelpAnd}</p>
-            <template if:true={filterResetHint}>
-              <p class="fec-filter-help fec-filter-help--hint">{batchUi.filterResetHint}</p>
+            <div class="fec-filter-table">
+              <div class="fec-filter-table__header">
+                <span class="fec-filter-table__col">{batchUi.filterPropertyField}</span>
+                <span class="fec-filter-table__col">{batchUi.filterColCondition}</span>
+                <span class="fec-filter-table__col">{batchUi.filterColValue}</span>
+                <span class="fec-filter-table__col fec-filter-table__col--action"></span>
+              </div>
+              <template if:true={showNoFiltersAdded}>
+                <p class="fec-filter-help fec-filter-help--empty">{batchUi.noFiltersAdded}</p>
+              </template>
+              <template for:each={filterLinesView} for:item="fline">
+              <div key={fline.rowId} class={fline.filterRowClass}>
+                <lightning-combobox
+                  data-rowid={fline.rowId}
+                  label={batchUi.filterPropertyField}
+                  variant="label-hidden"
+                  value={fline.propertyComboboxValue}
+                  options={fline.propertyOptions}
+                  placeholder={batchUi.propertyPlaceholder}
+                  onchange={handleFilterPropertyChange}
+                ></lightning-combobox>
+                <template if:true={fline.showFilterCriteria}>
+                <lightning-combobox
+                  data-rowid={fline.rowId}
+                  label={batchUi.filterColCondition}
+                  variant="label-hidden"
+                  value={fline.operatorKey}
+                  options={fline.operatorOptions}
+                  placeholder={batchUi.operatorPlaceholder}
+                  onchange={handleFilterOperatorChange}
+                ></lightning-combobox>
+                <template if:true={fline.showAttachCombo}>
+                  <lightning-combobox
+                    data-rowid={fline.rowId}
+                    label={batchUi.filterColValue}
+                    variant="label-hidden"
+                    value={fline.valueText}
+                    options={attachmentPicklistOptions}
+                    placeholder={batchUi.valuePlaceholder}
+                    disabled={fline.valueInputDisabled}
+                    onchange={handleFilterValueChange}
+                  ></lightning-combobox>
+                </template>
+                <template if:true={fline.showBooleanCombo}>
+                  <lightning-combobox
+                    data-rowid={fline.rowId}
+                    label={batchUi.filterColValue}
+                    variant="label-hidden"
+                    value={fline.valueText}
+                    options={booleanPicklistOptions}
+                    placeholder={batchUi.valuePlaceholder}
+                    disabled={fline.valueInputDisabled}
+                    onchange={handleFilterValueChange}
+                  ></lightning-combobox>
+                </template>
+                <template if:true={fline.showValuePicklist}>
+                  <lightning-combobox
+                    data-rowid={fline.rowId}
+                    label={batchUi.filterColValue}
+                    variant="label-hidden"
+                    value={fline.valueText}
+                    options={fline.valuePicklistOptions}
+                    placeholder={batchUi.valuePlaceholder}
+                    disabled={fline.valueInputDisabled}
+                    onchange={handleFilterValueChange}
+                  ></lightning-combobox>
+                </template>
+                <template if:true={fline.showValueMultiPicklist}>
+                  <div class="fec-filter-multi-value">
+                    <lightning-dual-listbox
+                      data-rowid={fline.rowId}
+                      label={batchUi.valueField}
+                      variant="label-hidden"
+                      size={fline.multiPicklistSize}
+                      source-label={batchUi.valueAvailable}
+                      selected-label={batchUi.valueSelected}
+                      options={fline.multiPicklistOptions}
+                      value={fline.valueList}
+                      onchange={handleFilterValueListChange}
+                    ></lightning-dual-listbox>
+                  </div>
+                </template>
+                <template if:true={fline.showValueDefault}>
+                  <lightning-input
+                    data-rowid={fline.rowId}
+                    label={batchUi.filterColValue}
+                    variant="label-hidden"
+                    type="text"
+                    value={fline.valueText}
+                    disabled={fline.valueInputDisabled}
+                    onchange={handleFilterValueChange}
+                  ></lightning-input>
+                </template>
+                <template if:true={fline.showValueBox}>
+                  <lightning-input
+                    data-rowid={fline.rowId}
+                    label={batchUi.filterColValue}
+                    variant="label-hidden"
+                    type={fline.valueTypeAttr}
+                    value={fline.valueText}
+                    placeholder={batchUi.valuePlaceholder}
+                    disabled={fline.valueInputDisabled}
+                    onchange={handleFilterValueChange}
+                  ></lightning-input>
+                </template>
+                <lightning-button-icon
+                  icon-name="utility:delete"
+                  alternative-text={batchUi.removeRow}
+                  title={batchUi.removeRow}
+                  data-rowid={fline.rowId}
+                  onclick={handleRemoveFilterLine}
+                ></lightning-button-icon>
+                </template>
+              </div>
             </template>
+            </div>
             <div class="fec-filter-toolbar">
               <lightning-button
                 label={batchUi.addFilterRow}
@@ -39,57 +151,6 @@
                 disabled={caseSearchLoading}
               ></lightning-button>
             </div>
-            <template for:each={filterLinesView} for:item="fline">
-              <div key={fline.rowId} class="fec-filter-row">
-                <lightning-combobox
-                  data-rowid={fline.rowId}
-                  label={batchUi.filterPropertyField}
-                  variant="label-hidden"
-                  value={fline.propertyKey}
-                  options={propertyOptionsForFilter}
-                  placeholder={batchUi.propertyPlaceholder}
-                  onchange={handleFilterPropertyChange}
-                ></lightning-combobox>
-                <lightning-combobox
-                  data-rowid={fline.rowId}
-                  label={batchUi.operatorField}
-                  variant="label-hidden"
-                  value={fline.operatorKey}
-                  options={fline.operatorOptions}
-                  placeholder={batchUi.operatorPlaceholder}
-                  onchange={handleFilterOperatorChange}
-                ></lightning-combobox>
-                <template if:true={fline.showAttachCombo}>
-                  <lightning-combobox
-                    data-rowid={fline.rowId}
-                    label={batchUi.valueField}
-                    variant="label-hidden"
-                    value={fline.valueText}
-                    options={attachmentPicklistOptions}
-                    placeholder={batchUi.valuePlaceholder}
-                    onchange={handleFilterValueChange}
-                  ></lightning-combobox>
-                </template>
-                <template if:true={fline.showValueBox}>
-                  <lightning-input
-                    data-rowid={fline.rowId}
-                    label={batchUi.valueField}
-                    variant="label-hidden"
-                    type={fline.valueTypeAttr}
-                    value={fline.valueText}
-                    placeholder={batchUi.valuePlaceholder}
-                    onchange={handleFilterValueChange}
-                  ></lightning-input>
-                </template>
-                <lightning-button-icon
-                  icon-name="utility:delete"
-                  alternative-text={batchUi.removeRow}
-                  title={batchUi.removeRow}
-                  data-rowid={fline.rowId}
-                  onclick={handleRemoveFilterLine}
-                ></lightning-button-icon>
-              </div>
-            </template>
           </div>
         </lightning-accordion-section>
         </lightning-accordion>
@@ -644,7 +705,7 @@
                           onchange={handleBpRowSelect}
                         ></lightning-input>
                       </td>
-                      <td>{bp.businessProcessCode}</td>
+                      <td>{bp.businessProcessName}</td>
                     </tr>
                   </template>
                 </template>
@@ -728,4 +789,3 @@
     </section>
     <div class="slds-backdrop slds-backdrop_open"></div>
   </template>
-</template>

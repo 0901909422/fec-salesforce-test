@@ -1,7 +1,7 @@
 public without sharing class FEC_BatchCaseHandlingExportService {
 
     public static List<String> buildCaseExportSelectFields() {
-        return new List<String>{
+        List<String> selectFields = new List<String>{
             'Id',
             'FEC_Customer_Type__c',
             'FEC_Customer_Name__c',
@@ -34,8 +34,6 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Original_Sub_Code__r.FEC_Code__c',
             'FEC_Original_Sub_Code__r.FEC_Name_VN__c',
             'FEC_Original_Sub_Code__r.Name',
-            'FEC_Business_Process__r.FEC_Code__c',
-            'FEC_Business_Process__r.Name',
             'FEC_Interaction__r.FEC_ID_Search__c',
             'FEC_CS_Check_Block_Limit_Date__c',
             'FEC_CS_Check_Block_Limit_Amount__c',
@@ -57,7 +55,10 @@ public without sharing class FEC_BatchCaseHandlingExportService {
             'FEC_Account_or_Contract__r.FEC_Sales_Sub_Channel__c',
             '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
         };
+        selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
+        return selectFields;
     }
+
 
     public static void enrichExportRows(List<FEC_BatchCaseHandlingExportRow> rows) {
         if (rows == null || rows.isEmpty()) {
@@ -138,8 +139,7 @@ public without sharing class FEC_BatchCaseHandlingExportService {
         r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
         r.hasAttachmentLabel = r.hasAttachment ? 'Has attachment' : FEC_ConstantCommon.STR_EMPTY;
         r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
-        r.businessProcessCode = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.FEC_Code__c;
-        r.businessProcessName = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.Name;
+        FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
         r.blockLimitDateLabel = formatExportDate(c.FEC_CS_Check_Block_Limit_Date__c);
         r.blockLimitAmount = formatExportCurrency(c.FEC_CS_Check_Block_Limit_Amount__c);
         r.classificationByCs = c.FEC_CS_Check_Classification_by_CS__c;
