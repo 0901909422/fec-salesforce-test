@@ -149,9 +149,21 @@ public with sharing class FEC_GetMRCInfo {
       result.success = false;
       return result;
     }
+    String trimmed = xml.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+      result.success = false;
+      return result;
+    }
+    String normalizedXml = FEC_CommonUltils.cleanResponseBody(trimmed);
+    if (String.isBlank(normalizedXml)) {
+      result.errorMessage = System.Label.FEC_MSG_Response_Null;
+      result.success = false;
+      return result;
+    }
     try {
       Dom.Document doc = new Dom.Document();
-      doc.load(xml);
+      doc.load(normalizedXml);
       Dom.XmlNode envelope = doc.getRootElement();
       Dom.XmlNode body = envelope.getChildElement(
         'Body',

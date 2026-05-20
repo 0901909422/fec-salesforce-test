@@ -857,6 +857,18 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
+          // MRC Return Stage 1: ẩn Customer Confirmation / Contract Processing Assessment Type.
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              selectedStage.Name,
+              fieldApiNameTemp
+            )
+          ) {
+            continue;
+          }
+
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {

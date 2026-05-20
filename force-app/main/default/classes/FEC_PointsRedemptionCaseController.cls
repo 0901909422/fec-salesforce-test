@@ -309,11 +309,15 @@ public without sharing class FEC_PointsRedemptionCaseController {
             throw new AuraHandledException(MSG_NOT_ELIGIBLE);
         }
         FEC_CMSRewardRedeemService.RedeemRequest req = new FEC_CMSRewardRedeemService.RedeemRequest();
+        req.transId = FEC_CommonUltils.generateTransactionUUID();
+        req.requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+        req.dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT_GMT);
         req.accountNumber = accountNumber.trim();
         req.customerName = FEC_CommonUltils.defaultToEmpty(el.customerName);
         req.customerMobile = FEC_CommonUltils.defaultToEmpty(el.customerMobile);
         req.ticketId = c.CaseNumber != null ? c.CaseNumber : String.valueOf(c.Id);
         req.ticketPoint = tier.price;
+        req.adjustmentIndicator = '+';
         req.productId = tier.productId;
         req.productName = tier.productName;
         req.productType = tier.productType;
