@@ -94,7 +94,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     List<FEC_Notification__c> activeNotifications = [
         SELECT Id, Name, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
                FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
-               FEC_SubCategory__c, FEC_SubCode__c, FEC_Case_Stage__c,
+              //  FEC_SubCategory__c, FEC_SubCode__c,
                FEC_Notification_Channel__r.Name,
                FEC_Notification_Template__c
         FROM FEC_Notification__c
@@ -119,9 +119,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
-                && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
-                && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
-                && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
+                && (notif.FEC_Category__c == relatedCase.FEC_Category__c);
+                // && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
+                // && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
             //  if (notif.Name == 'TestAutoKHv1_14/4') {
             //     System.debug('--- [sendNotificationEmails] notif name: ' + notif.Name);
             //     System.debug('--- [sendNotificationEmails] history.FEC_Current_Status__c.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ""): ' + history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ''));

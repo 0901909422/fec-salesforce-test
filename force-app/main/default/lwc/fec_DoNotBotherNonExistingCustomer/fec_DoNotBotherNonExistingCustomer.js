@@ -1,7 +1,6 @@
 import { LightningElement, track, api, wire } from "lwc";
 import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseNonExistingData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
-// import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 
 import FEC_DNB_Has_Data_Question from "@salesforce/label/c.FEC_DNB_Has_Data_Question";
 import FEC_DNB_No_Data_Question from "@salesforce/label/c.FEC_DNB_No_Data_Question";
@@ -11,7 +10,9 @@ import FEC_DNB_NID_Placeholder from "@salesforce/label/c.FEC_DNB_NID_Placeholder
 import FEC_DNB_NID_Error from "@salesforce/label/c.FEC_MSG_National_ID_Invalid";
 
 import FEC_DNB_Update_Button from "@salesforce/label/c.FEC_DNB_Update_Button";
+import checkDNBNonExisting from "@salesforce/apex/FEC_DNBHandler.checkDNBNonExisting";
 
+import createNonExistingDNBRows from "@salesforce/apex/FEC_DNBHandler.createNonExistingDNBRows";
 import FEC_DNB_Modal_Title from "@salesforce/label/c.FEC_DNB_Modal_Title";
 import FEC_DNB_Modal_Message from "@salesforce/label/c.FEC_DNB_Modal_Message";
 import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
@@ -91,6 +92,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   goToPageValue;
   isDNBUpdated = false;
 
+  @track isCheckingDNB = false;
+  @track isDNBChecked = false;
+  @track hasExistingDNB = false;
+
   get columns() {
     return [
       {
@@ -165,7 +170,7 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
     await this.loadData();
 
-    await this.loadDNBRecords();
+    // await this.loadDNBRecords();
   }
 
   disconnectedCallback() {
@@ -179,12 +184,12 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.subscription = subscribe(
       this.messageContext,
       IS_MODE_EDIT,
-      (message) => this.handleMessage(message),
+      (message) => this.handleModeEditMessage(message),
       { scope: APPLICATION_SCOPE },
     );
   }
 
-  handleMessage(message) {
+  handleModeEditMessage(message) {
     if (!message || typeof message.isModeEdit === "undefined") return;
 
     if (message.caseId != null && message.caseId !== this.recordId) {
@@ -205,11 +210,17 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       this.isMaxRetryReached = this.retryCount >= 3;
       this.modeEditCase = result.viewMode === "handling" ? true : false;
-      this.data = this.prepareData(rows);
+      // this.data = this.prepareData(rows);
       this.updatePagedData();
     } catch (e) {
       console.error("Load data error", e);
     }
+  }
+
+  getReasonLabel(value) {
+    const option = this.getReasonOptions().find((x) => x.value === value);
+
+    return option ? option.label : value || "";
   }
 
   getReasonOptions() {
@@ -245,7 +256,78 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       this.updatePagedData();
     } catch (e) {
-      console.error("Load DNB records error", e);
+      console.error("Load DNB records error", JSON.stringify(e));
+    }
+  }
+
+  async checkDNB() {
+    console.log("Checking DNB for NID:", this.nationalId);
+
+    return await checkDNBNonExisting({
+      caseId: this.recordId,
+      nid: this.nationalId,
+    });
+  }
+
+  async handleCheckDNB() {
+    this.isCheckingDNB = true;
+
+    try {
+      /*
+       * CHECK API ONLY
+       */
+      const result = await this.checkDNB();
+
+      console.log("DNB RESULT:", JSON.stringify(result));
+
+      this.isDNBChecked = true;
+
+      /*
+       * API FAIL
+       */
+      if (!result?.success) {
+        this.showToast(
+          "Error",
+          result?.errorMessage || "Check DNB failed",
+          "error",
+        );
+
+        return;
+      }
+
+      /*
+       * HAS DATA
+       */
+      const hasData = result?.result && result.result.length > 0;
+
+      this.hasExistingDNB = hasData;
+
+      this.hasDNBData = hasData;
+
+      // /*
+      //  * default selection
+      //  */
+      // this.selectedOption = hasData ? "yes" : "no";
+
+      /*
+       * IMPORTANT:
+       * clear table
+       */
+      this.data = [];
+
+      this.currentPage = 1;
+
+      this.updatePagedData();
+    } catch (e) {
+      console.error("handleCheckDNB ERROR", e);
+
+      this.showToast(
+        "Error",
+        e?.body?.message || e?.message || "Unexpected error",
+        "error",
+      );
+    } finally {
+      this.isCheckingDNB = false;
     }
   }
 
@@ -262,7 +344,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
         contact: row.typeValue || "",
 
-        maskedContact: this.maskContact(row.typeValue),
+        maskedContact:
+          row.typeValue && row.typeValue.includes("*")
+            ? row.typeValue
+            : this.maskContact(row.typeValue),
 
         isHidden: true,
 
@@ -295,7 +380,10 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
         isReasonDisabled: !row.action || isReadonly,
 
-        isActionDisabled: row.channel === "Email" || isReadonly,
+        isActionDisabled:
+          (!!row.typeValue && row.type === "Insert from DB") ||
+          !row.typeValue ||
+          isReadonly,
 
         hasContact: !!row.typeValue,
 
@@ -344,8 +432,8 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }));
   }
 
-  get showTable() {
-    return this.selectedOption === "yes";
+  get showTableSection() {
+    return this.isDNBChecked && this.selectedOption === "yes";
   }
 
   get hasDataAtDNB() {
@@ -364,14 +452,66 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.pagedData = this.data.slice(start, end);
   }
 
+  handleTextareaChange(event) {
+    const { id, field, value } = event.detail;
+
+    this.data = this.data.map((row) =>
+      row.id === id ? { ...row, [field]: value } : row,
+    );
+
+    this.refreshData();
+  }
   // ===== Events =====
-  handleRadioChange(event) {
+  // handleRadioChange(event) {
+  //   this.selectedOption = event.detail.value;
+
+  //   /*
+  //    * Nếu chọn YES mà chưa có data
+  //    * thì load default table
+  //    */
+  //   if (
+  //     this.selectedOption === "yes" &&
+  //     !this.hasExistingDNB &&
+  //     this.data.length === 0
+  //   ) {
+  //     this.loadDNBRecords();
+  //   }
+
+  //   this.currentPage = 1;
+  //   this.updatePagedData();
+  // }
+
+  async handleRadioChange(event) {
     this.selectedOption = event.detail.value;
 
-    if (this.selectedOption === "yes") {
-      this.currentPage = 1;
-      this.updatePagedData();
+    /*
+     * USER CONFIRM YES
+     */
+    if (this.selectedOption === "yes" && this.data.length === 0) {
+      try {
+        /*
+         * CREATE DB ROWS
+         */
+        await createNonExistingDNBRows({
+          caseId: this.recordId,
+
+          nid: this.nationalId,
+        });
+
+        /*
+         * LOAD DB
+         */
+        await this.loadDNBRecords();
+      } catch (e) {
+        console.error("create rows error", e);
+
+        this.showToast("Error", e?.body?.message || e?.message, "error");
+      }
     }
+
+    this.currentPage = 1;
+
+    this.updatePagedData();
   }
 
   handleNextPage() {
@@ -600,11 +740,24 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.close();
   }
 
+  handleNidChange(event) {
+    const value = event.target.value || "";
+
+    this.nationalId = value.replace(/\D/g, "");
+
+    /*
+     * reset state
+     */
+    this.isDNBChecked = false;
+    this.hasExistingDNB = false;
+    this.data = [];
+  }
+
   buildPayload() {
     return this.data
       .filter((row) => row.active)
       .map((row) => ({
-        dnb_id: row.id,
+        dnb_id: row.id || null,
         channel: row.channel,
         reason: row.updateReason,
         remarks: row.remarks,
@@ -632,17 +785,37 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     }
   }
 
-  handleNidChange(event) {
-    const value = event.target.value;
+  normalizePhone(phone) {
+    if (!phone) {
+      return "";
+    }
 
-    // chỉ cho nhập số
-    const cleaned = value.replace(/\D/g, "");
+    /*
+     * Remove spaces/dots
+     */
+    let cleaned = phone.replace(/\D/g, "");
 
-    this.nationalId = cleaned;
+    /*
+     * 0xxxxxxxxx -> 84xxxxxxxxx
+     */
+    if (cleaned.startsWith("0")) {
+      cleaned = "84" + cleaned.substring(1);
+    }
 
-    // validate: phải là 9 hoặc 12 số
-    this.nidError = !(cleaned.length === 9 || cleaned.length === 12);
+    return cleaned;
   }
+
+  // handleNidChange(event) {
+  //   const value = event.target.value;
+
+  //   // chỉ cho nhập số
+  //   const cleaned = value.replace(/\D/g, "");
+
+  //   this.nationalId = cleaned;
+
+  //   // validate: phải là 9 hoặc 12 số
+  //   this.nidError = !(cleaned.length === 9 || cleaned.length === 12);
+  // }
 
   applyReadonlyState() {
     this.data = this.data.map((row) => ({
@@ -672,6 +845,32 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
         message: "DNB updated successfully",
       },
     );
+  }
+
+  syncUIValuesBeforeReadonly() {
+    this.data = this.data.map((row) => {
+      /*
+       * Only submitted rows
+       */
+      if (!row.active) {
+        return row;
+      }
+
+      return {
+        ...row,
+
+        /*
+         * Persist current UI values
+         */
+        originalReasonLabel: this.getReasonLabel(row.originalReason),
+
+        updateReasonLabel: this.getReasonLabel(row.updateReason),
+
+        remarks: row.remarks || "-",
+      };
+    });
+
+    this.updatePagedData();
   }
 
   showToast(title, message, variant, mode = "dismissable") {
@@ -730,6 +929,8 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   get showUpdateButton() {
-    return !this.isReadonlyMode && !this.isMaxRetryReached;
+    return (
+      !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
+    );
   }
 }
