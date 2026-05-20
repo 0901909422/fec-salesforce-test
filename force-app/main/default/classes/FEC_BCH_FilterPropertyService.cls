@@ -68,7 +68,7 @@ public without sharing class FEC_BCH_FilterPropertyService {
         out.add(buildMeta('CASE_CREATED_BY', 'Case Created By', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
         out.add(buildMeta('CASE_CREATED_BY_ROLE', 'Case Created By Role', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
         out.add(buildMeta('CASE_STATUS', 'Case Status', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('ATTACHMENTS', 'Attachments', 'checkbox', new List<String>{ 'equals', 'not_equal_to' }));
+        out.add(buildMeta('ATTACHMENTS', 'Attachments', 'checkbox', new List<String>{ 'equals' }));
         return out;
     }
 
