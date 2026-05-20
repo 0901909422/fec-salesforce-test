@@ -1,6 +1,7 @@
 public without sharing class FEC_RoutingHistTatSvc {
     private static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
-    private static final Integer FEC_TAT_BUSINESS_HOURS_PER_DAY = 8;
+    /** 1 "ngày" khi hiển thị TAT = 24 giờ (diffMs vẫn từ BusinessHours.diff). */
+    private static final Integer FEC_TAT_DISPLAY_HOURS_PER_DAY = 24;
 
     private static Id cachedBusinessHoursId;
     private static Boolean businessHoursLookupDone = false;
@@ -35,12 +36,12 @@ public without sharing class FEC_RoutingHistTatSvc {
         Map<Id, FEC_Assignment__c> assignmentById = assignmentIds.isEmpty()
             ? new Map<Id, FEC_Assignment__c>()
             : new Map<Id, FEC_Assignment__c>([
-                  SELECT Id, FEC_Manual__c, CreatedDate, FEC_Submitted_On__c
+                  SELECT Id, FEC_Manual__c, CreatedDate
                   FROM FEC_Assignment__c
                   WHERE Id IN :assignmentIds
               ]);
 
-        applySubmittedOn(newRows, assignmentById, oldMap);
+        applySubmittedOn(newRows, oldMap);
 
         Set<Id> updatingIds = oldMap != null ? oldMap.keySet() : new Set<Id>();
         List<FEC_Routing_Action_History__c> poolFromDb = caseIds.isEmpty()
@@ -76,17 +77,27 @@ public without sharing class FEC_RoutingHistTatSvc {
             Case c = caseById.get(h.FEC_Case__c);
             Datetime assignedOn = resolveAssignedOn(h, pool, caseById, assignmentById);
             h.FEC_Assigned_On__c = assignedOn;
-            applyTatToHrsField(h, bhId, assignedOn);
+            applyTatField(h, bhId, assignedOn);
+        }
+
+        Set<Id> caseIdsForFullTat = new Set<Id>();
+        for (FEC_Routing_Action_History__c h : newRows) {
+            if (h.FEC_Case__c != null) {
+                caseIdsForFullTat.add(h.FEC_Case__c);
+            }
+        }
+        if (!caseIdsForFullTat.isEmpty()) {
+            FEC_CaseTatFullProcessSvc.syncCasesFromRoutingHistory(caseIdsForFullTat);
         }
     }
 
     /**
-     * TH1: FEC_Submitted_On__c = FEC_Date_Time__c (≈ CreatedDate). TH2: = Assignment.FEC_Submitted_On__c.
-     * Insert: offset giây trong batch để thứ tự strict < khi suy Assigned On.
+     * Code duoi nay cua hoangnm107
+     * FEC_Submitted_On__c = thời điểm khởi tạo RAH (FEC_Date_Time__c ≈ CreatedDate).
+     * Insert: offset giây trong batch để thứ tự strict &lt; khi suy Assigned On (TH1/TH2.1).
      */
     private static void applySubmittedOn(
         List<FEC_Routing_Action_History__c> newRows,
-        Map<Id, FEC_Assignment__c> assignmentById,
         Map<Id, FEC_Routing_Action_History__c> oldMap
     ) {
         Datetime base = System.now();
@@ -102,19 +113,9 @@ public without sharing class FEC_RoutingHistTatSvc {
                 continue;
             }
 
-            if (h.FEC_Assignment__c == null) {
-                h.FEC_Submitted_On__c = h.FEC_Date_Time__c != null
-                    ? h.FEC_Date_Time__c
-                    : base.addSeconds(secOffset++);
-                continue;
-            }
-
-            FEC_Assignment__c a = assignmentById.get(h.FEC_Assignment__c);
-            if (a != null && a.FEC_Submitted_On__c != null) {
-                h.FEC_Submitted_On__c = a.FEC_Submitted_On__c;
-            } else {
-                h.FEC_Submitted_On__c = base.addSeconds(secOffset++);
-            }
+            h.FEC_Submitted_On__c = h.FEC_Date_Time__c != null
+                ? h.FEC_Date_Time__c
+                : base.addSeconds(secOffset++);
         }
     }
 
@@ -130,37 +131,31 @@ public without sharing class FEC_RoutingHistTatSvc {
 
     private static void clearTatFields(FEC_Routing_Action_History__c h) {
         h.FEC_Assigned_On__c = null;
-        clearTatHrsField(h);
+        h.FEC_TAT_by_Assignment__c = null;
     }
 
-    private static void clearTatHrsField(FEC_Routing_Action_History__c h) {
-        h.FEC_TAT_by_Assignment_Hrs__c = null;
-    }
-
-    private static void applyTatToHrsField(
+    private static void applyTatField(
         FEC_Routing_Action_History__c h,
         Id bhId,
         Datetime assignedOn
     ) {
         if (bhId == null || h.FEC_Submitted_On__c == null || assignedOn == null) {
-            clearTatHrsField(h);
+            h.FEC_TAT_by_Assignment__c = null;
             return;
         }
 
         if (h.FEC_Submitted_On__c <= assignedOn) {
-            h.FEC_TAT_by_Assignment_Hrs__c = 0;
+            h.FEC_TAT_by_Assignment__c = formatTatDisplay(0L);
             return;
         }
 
         Long diffMs = BusinessHours.diff(bhId, assignedOn, h.FEC_Submitted_On__c);
         if (diffMs == null || diffMs < 0) {
-            clearTatHrsField(h);
+            h.FEC_TAT_by_Assignment__c = null;
             return;
         }
 
-        h.FEC_TAT_by_Assignment_Hrs__c = Decimal.valueOf(diffMs)
-            .divide(3600000, 12, System.RoundingMode.HALF_UP)
-            .setScale(2, System.RoundingMode.HALF_UP);
+        h.FEC_TAT_by_Assignment__c = formatTatDisplay(diffMs);
     }
 
     private static Datetime resolveAssignedOn(
@@ -340,10 +335,9 @@ public without sharing class FEC_RoutingHistTatSvc {
     }
 
     /**
-     * Hiển thị duration theo giờ làm việc: luôn đủ 4 phần "N ngày N giờ N phút N giây".
-     * 1 "ngày" = FEC_TAT_BUSINESS_HOURS_PER_DAY × 3600 giây làm việc (mặc định 8h).
+     * Hiển thị duration (diffMs từ BusinessHours.diff) dạng "N ngày N giờ N phút N giây".
+     * 1 ngày hiển thị = 24 giờ.
      */
-    /** Format duration (dùng cho test / hiển thị tùy chọn), không ghi vào FEC_TAT_by_Assignment__c. */
     public static String formatTatDisplay(Long diffMs) {
         return formatAsDaysHours(diffMs);
     }
@@ -355,11 +349,7 @@ public without sharing class FEC_RoutingHistTatSvc {
         }
 
         Long totalSec = diffMs / 1000L;
-        Integer hPerDay = FEC_TAT_BUSINESS_HOURS_PER_DAY;
-        if (hPerDay == null || hPerDay <= 0) {
-            hPerDay = 8;
-        }
-        Long secPerDay = (Long)hPerDay * 3600L;
+        Long secPerDay = (Long)FEC_TAT_DISPLAY_HOURS_PER_DAY * 3600L;
         Long days = totalSec / secPerDay;
         Long rem = totalSec - days * secPerDay;
         Integer hours = (Integer)(rem / 3600L);

@@ -965,7 +965,93 @@ const getUsernameBeforeAt = (email) =>{
     }
 
     return email.split("@")[0];
-}
+};
+
+/* ---------- Batch import (fec_BatchCaseCreation / fec_BatchDataCreation) ---------- */
+
+const normalizeHeaderCell = (cell) =>
+  String(cell ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+const findColumnIndex = (headersNorm, synonyms) => {
+  for (let s = 0; s < synonyms.length; s += 1) {
+    const idx = headersNorm.indexOf(synonyms[s]);
+    if (idx >= 0) {
+      return idx;
+    }
+  }
+  return -1;
+};
+
+const normalizeNoteTextSafe = (text) => String(text ?? "").trim();
+
+const promiseWithTimeoutSafe = (promise, timeoutMs, timeoutMessage) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+    Promise.resolve(promise)
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+
+const arrayBufferToBase64Safe = (buffer) => {
+  if (!buffer) {
+    return "";
+  }
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
+};
+
+const removeFileExtensionSafe = (fileName) => {
+  const name = String(fileName ?? "");
+  const dotIdx = name.lastIndexOf(".");
+  if (dotIdx <= 0) {
+    return name;
+  }
+  return name.substring(0, dotIdx);
+};
+
+const buildResultXlsxFileName = (sourceFileName) => {
+  let base = removeFileExtensionSafe(sourceFileName);
+  const lower = base.toLowerCase();
+  if (lower.endsWith("_importresult")) {
+    base = base.slice(0, -13);
+  } else if (lower.endsWith("_result")) {
+    base = base.slice(0, -7);
+  }
+  return `${base}_ImportResult.xlsx`;
+};
+
+const formatDateTimeEnGb = (value) => {
+  try {
+    return new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(new Date(value));
+  } catch (e) {
+    return value;
+  }
+};
+
+const extractErrorMessage = (error) =>
+  error?.body?.message || error?.message || "Unexpected error";
 
 /** Encode ArrayBuffer to base64 (chunked for large buffers). */
 const arrayBufferToBase64 = (buffer) => {
@@ -1027,5 +1113,14 @@ export {
   doctypeIconFromExtension,
   mapLinkedFileToTableRow,
   getUsernameBeforeAt,
+  normalizeHeaderCell,
+  findColumnIndex,
+  normalizeNoteTextSafe,
+  promiseWithTimeoutSafe,
+  arrayBufferToBase64Safe,
+  removeFileExtensionSafe,
+  buildResultXlsxFileName,
+  formatDateTimeEnGb,
+  extractErrorMessage,
   arrayBufferToBase64
 };

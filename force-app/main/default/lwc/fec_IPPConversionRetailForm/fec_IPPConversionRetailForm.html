@@ -14,15 +14,68 @@
         <h3 class="slds-text-heading_small slds-m-bottom_small">
           {ippRetailUi.unbilledHeading}
         </h3>
-        <lightning-datatable
-          key-field="transactionId"
-          data={transactions}
-          columns={transactionColumns}
-          max-row-selection={datatableMaxRowSelection}
-          hide-checkbox-column={isReadOnly}
-          onrowselection={handleRowSelection}
-        >
-        </lightning-datatable>
+        <div class="ipp-retail-datatable">
+          <lightning-datatable
+            key={datatableRenderKey}
+            key-field="transactionId"
+            data={pagedTransactions}
+            columns={transactionColumns}
+            max-row-selection={datatableMaxRowSelection}
+            hide-checkbox-column={isReadOnly}
+            selected-rows={selectedRowIds}
+            onrowselection={handleRowSelection}
+          >
+          </lightning-datatable>
+          <template if:true={showPagination}>
+            <div class="table-pagination slds-m-top_small slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+              <div class="page-size slds-grid slds-grid_vertical-align-center">
+                <span class="slds-m-right_x-small">{paginationLabels.pageSizeLabel}</span>
+                <lightning-combobox
+                  value={pageSizeStr}
+                  options={pageSizeOptions}
+                  onchange={handlePageSizeChange}
+                  variant="label-hidden"
+                ></lightning-combobox>
+              </div>
+              <div class="pagination-controls slds-grid slds-grid_vertical-align-center">
+                <lightning-button-icon
+                  class="square-icon"
+                  icon-name="utility:chevronleft"
+                  alternative-text={paginationLabels.prevLabel}
+                  onclick={handlePrevPage}
+                  disabled={disablePaginationPrevPage}
+                ></lightning-button-icon>
+                <span class="page-number">{currentPage}</span>
+                <lightning-button-icon
+                  class="square-icon"
+                  icon-name="utility:chevronright"
+                  alternative-text={paginationLabels.nextLabel}
+                  onclick={handleNextPage}
+                  disabled={disablePaginationNextPage}
+                ></lightning-button-icon>
+              </div>
+              <div class="go-to-page slds-grid slds-grid_vertical-align-center">
+                <span class="slds-m-right_x-small">{paginationLabels.goToPageLabel}</span>
+                <lightning-input
+                  type="number"
+                  value={goToPageValue}
+                  min="1"
+                  max={totalPages}
+                  variant="label-hidden"
+                  class="page-input"
+                  onchange={handleGoToPageInput}
+                ></lightning-input>
+                <span class="page-of">of {totalPages}</span>
+                <lightning-button
+                  class="square-go-btn"
+                  label={paginationLabels.goBtnLabel}
+                  onclick={handleGoToPage}
+                  variant="brand"
+                ></lightning-button>
+              </div>
+            </div>
+          </template>
+        </div>
         <template if:true={showCheckDetailsButton}>
           <div class="slds-m-top_medium">
             <lightning-button

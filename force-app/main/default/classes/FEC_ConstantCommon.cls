@@ -838,6 +838,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
     public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
+    /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
+    public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
     public static final String API_VERSION = 'v59.0';
 
     public static final List<Map<String, String>> REPORT_CONFIGS =

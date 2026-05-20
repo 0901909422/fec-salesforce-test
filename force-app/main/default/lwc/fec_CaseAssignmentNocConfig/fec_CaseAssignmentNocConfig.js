@@ -12,6 +12,10 @@ import createNoc from "@salesforce/apex/FEC_CaseAssignmentNocController.createNo
 
 const ASSIGNMENT_STATUS_FIELDS = [STATUS_FIELD];
 
+function comboSelector(dataId) {
+  return `c-fec_-combo-box[data-id="${dataId}"]`;
+}
+
 export default class Fec_CaseAssignmentNocConfig extends LightningElement {
   _recordId;
 
@@ -39,15 +43,16 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
   @track showModal = false;
   @track isSaving = false;
 
-  @track productTypeOptions = [];
-  @track categoryOptions = [];
-  @track subCategoryOptions = [];
-  @track subCodeOptions = [];
+  /** Options for fec_ComboBox (same UX as fec_CaseEditNOC Nature of Case sidebar). */
+  @track productTypeOptionlst = [];
+  @track categoryOptionlst = [];
+  @track subCategoryOptionlst = [];
+  @track subCodeOptionlst = [];
 
-  selectedProductTypeId = "";
-  selectedCategoryKey = "";
-  selectedSubCategoryId = "";
-  selectedSubCodeId = "";
+  selectedProductTypeId;
+  selectedCategoryKey;
+  selectedSubCategoryId;
+  selectedSubCodeId;
 
   wiredAssignmentResult;
 
@@ -59,13 +64,45 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
   @wire(getProductTypeOptions)
   wiredProductTypes({ data, error }) {
     if (data) {
-      this.productTypeOptions = (data || []).map((o) => ({
+      this.productTypeOptionlst = (data || []).map((o) => ({
         label: o.label,
         value: o.value,
       }));
     } else if (error) {
-      this.productTypeOptions = [];
+      this.productTypeOptionlst = [];
     }
+  }
+
+  get formattedProductTypeOption() {
+    return JSON.stringify(this.productTypeOptionlst || []);
+  }
+
+  get formattedCategoryOption() {
+    return JSON.stringify(this.categoryOptionlst || []);
+  }
+
+  get formattedSubCategoryOption() {
+    return JSON.stringify(this.subCategoryOptionlst || []);
+  }
+
+  get formattedSubCodeOption() {
+    return JSON.stringify(this.subCodeOptionlst || []);
+  }
+
+  get comboProdTypeLocked() {
+    return false;
+  }
+
+  get comboCategoryLocked() {
+    return !this.selectedProductTypeId;
+  }
+
+  get comboSubCategoryLocked() {
+    return !this.selectedCategoryKey;
+  }
+
+  get comboSubCodeLocked() {
+    return !this.selectedSubCategoryId;
   }
 
   get canAddNoc() {
@@ -81,16 +118,16 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
     return !this.canAddNoc;
   }
 
-  get categoryComboboxDisabled() {
-    return !this.selectedProductTypeId;
-  }
-
-  get subCategoryComboboxDisabled() {
-    return !this.selectedCategoryKey;
-  }
-
-  get subCodeComboboxDisabled() {
-    return !this.selectedSubCategoryId;
+  /** Không chỉ New NOC — mọi thao tác CRM trên NOC đều cần parent Draft (server + UX). */
+  get nocRestrictedMessage() {
+    const status = this.wiredAssignmentResult?.data?.fields?.FEC_Status__c?.value;
+    if (!this.recordId || !status || status === "Draft") {
+      return "";
+    }
+    return (
+      "Chỉ khi Case Assignment có Status Draft mới thêm được Case Assignment NOC và chỉnh sửa/xóa NOC trên các màn Salesforce." +
+      " Active: chỉ đổi được Status của Case Assignment sang Archived (tab chi tiết). Archived: không chỉnh được."
+    );
   }
 
   get isSaveDisabled() {
@@ -131,49 +168,91 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
     }
     this.resetModalFields();
     this.showModal = true;
+    Promise.resolve().then(() => this.clearAllCombosUi());
   }
 
   closeModal() {
     this.showModal = false;
     this.resetModalFields();
+    Promise.resolve().then(() => this.clearAllCombosUi());
   }
 
   resetModalFields() {
-    this.selectedProductTypeId = "";
-    this.selectedCategoryKey = "";
-    this.selectedSubCategoryId = "";
-    this.selectedSubCodeId = "";
-    this.categoryOptions = [];
-    this.subCategoryOptions = [];
-    this.subCodeOptions = [];
+    this.selectedProductTypeId = undefined;
+    this.selectedCategoryKey = undefined;
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.categoryOptionlst = [];
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
   }
 
-  async handleProductTypeChange(event) {
-    this.selectedProductTypeId = event.detail.value || "";
-    this.selectedCategoryKey = "";
-    this.selectedSubCategoryId = "";
-    this.selectedSubCodeId = "";
-    this.subCategoryOptions = [];
-    this.subCodeOptions = [];
+  clearAllCombosUi() {
+    [
+      "assignment-noc-prod-type",
+      "assignment-noc-category",
+      "assignment-noc-sub-category",
+      "assignment-noc-sub-code",
+    ].forEach((dataId) => {
+      const el = this.template.querySelector(comboSelector(dataId));
+      el?.clear?.();
+    });
+  }
+
+  async handleChangeProductType(e) {
+    this.selectedProductTypeId = e.detail?.value ?? undefined;
+    this.selectedCategoryKey = undefined;
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
     await this.refreshCategories();
   }
 
-  async handleCategoryChange(event) {
-    this.selectedCategoryKey = event.detail.value || "";
-    this.selectedSubCategoryId = "";
-    this.selectedSubCodeId = "";
-    this.subCodeOptions = [];
+  handleRemoveProductType() {
+    this.selectedProductTypeId = undefined;
+    this.selectedCategoryKey = undefined;
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.categoryOptionlst = [];
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
+  }
+
+  async handleChangeCategory(e) {
+    this.selectedCategoryKey = e.detail?.value ?? undefined;
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.subCodeOptionlst = [];
     await this.refreshSubCategories();
   }
 
-  async handleSubCategoryChange(event) {
-    this.selectedSubCategoryId = event.detail.value || "";
-    this.selectedSubCodeId = "";
+  handleRemoveCategory() {
+    this.selectedCategoryKey = undefined;
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.subCategoryOptionlst = [];
+    this.subCodeOptionlst = [];
+  }
+
+  async handleChangeSubCategory(e) {
+    this.selectedSubCategoryId = e.detail?.value ?? undefined;
+    this.selectedSubCodeId = undefined;
     await this.refreshSubCodes();
   }
 
-  handleSubCodeChange(event) {
-    this.selectedSubCodeId = event.detail.value || "";
+  handleRemoveSubCategory() {
+    this.selectedSubCategoryId = undefined;
+    this.selectedSubCodeId = undefined;
+    this.subCodeOptionlst = [];
+  }
+
+  handleChangeSubCode(e) {
+    this.selectedSubCodeId = e.detail?.value ?? undefined;
+  }
+
+  handleRemoveSubCode() {
+    this.selectedSubCodeId = undefined;
   }
 
   mapOptionItems(rows) {
@@ -181,20 +260,20 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
   }
 
   async refreshCategories() {
-    this.categoryOptions = [];
+    this.categoryOptionlst = [];
     if (!this.selectedProductTypeId) {
       return;
     }
     try {
       const rows = await getCategoryOptions({ productTypeId: this.selectedProductTypeId });
-      this.categoryOptions = this.mapOptionItems(rows);
+      this.categoryOptionlst = this.mapOptionItems(rows);
     } catch (e) {
-      this.categoryOptions = [];
+      this.categoryOptionlst = [];
     }
   }
 
   async refreshSubCategories() {
-    this.subCategoryOptions = [];
+    this.subCategoryOptionlst = [];
     if (!this.selectedProductTypeId || !this.selectedCategoryKey) {
       return;
     }
@@ -203,14 +282,14 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
         productTypeId: this.selectedProductTypeId,
         categoryKey: this.selectedCategoryKey,
       });
-      this.subCategoryOptions = this.mapOptionItems(rows);
+      this.subCategoryOptionlst = this.mapOptionItems(rows);
     } catch (e) {
-      this.subCategoryOptions = [];
+      this.subCategoryOptionlst = [];
     }
   }
 
   async refreshSubCodes() {
-    this.subCodeOptions = [];
+    this.subCodeOptionlst = [];
     if (!this.selectedProductTypeId || !this.selectedCategoryKey || !this.selectedSubCategoryId) {
       return;
     }
@@ -220,14 +299,28 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
         categoryKey: this.selectedCategoryKey,
         subCategoryId: this.selectedSubCategoryId,
       });
-      this.subCodeOptions = this.mapOptionItems(rows);
+      this.subCodeOptionlst = this.mapOptionItems(rows);
     } catch (e) {
-      this.subCodeOptions = [];
+      this.subCodeOptionlst = [];
     }
+  }
+
+  reportModalComboboxValidity() {
+    const prod = this.template.querySelector(comboSelector("assignment-noc-prod-type"));
+    const cat = this.template.querySelector(comboSelector("assignment-noc-category"));
+    const subCat = this.template.querySelector(comboSelector("assignment-noc-sub-category"));
+    return [
+      prod?.reportValidity?.() !== false,
+      cat?.reportValidity?.() !== false,
+      subCat?.reportValidity?.() !== false,
+    ].every(Boolean);
   }
 
   async handleSave() {
     if (this.isSaveDisabled) {
+      return;
+    }
+    if (!this.reportModalComboboxValidity()) {
       return;
     }
     this.isSaving = true;
@@ -256,7 +349,7 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
         title,
         message,
         variant,
-      })
+      }),
     );
   }
 }

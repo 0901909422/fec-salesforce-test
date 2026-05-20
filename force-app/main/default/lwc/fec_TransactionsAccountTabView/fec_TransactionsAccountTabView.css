@@ -1,0 +1,37 @@
+.transaction-detail-card {
+    border: 1px solid #d8dde6;
+    border-radius: 0.75rem;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 10%);
+}
+
+.slds-page-header {
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+    background: #fff;
+}
+
+.detail-tab-wrapper {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+}
+
+.text-red {
+    color: red;
+    font-weight: 600;
+}
+
+/* Force 4 columns (console subtab — SLDS 1-of-4 often stacks to 1 column) */
+.field-grid-4col {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 0.75rem;
+    row-gap: 0;
+    width: 100%;
+}
+
+.field-column {
+    min-width: 0;
+}

@@ -3,6 +3,7 @@ import { NavigationMixin } from "lightning/navigation";
 import { getRecord, getRecordNotifyChange, updateRecord } from "lightning/uiRecordApi";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
+import getActiveCaseQueues from "@salesforce/apex/FEC_CaseAssignmentConfigController.getActiveCaseQueues";
 
 import BUSINESS_HOURS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Business_Hours__c";
 import NAME_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.Name";
@@ -14,16 +15,26 @@ import TIME_SLOTS_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Time
 import QUEUES_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Select_Queues__c";
 import ROLE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Role__c";
 import SCALE_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Scale__c";
+import NOC_COUNT_FIELD from "@salesforce/schema/FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
 
+const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
+  "Không thể Active khi chưa thêm Case Assignment NOC.";
+
 const FIELD_EDIT_LABELS = {
+  Name: "Name",
   FEC_Status__c: "Status",
   FEC_Business_Hours__c: "Business Hours",
   FEC_Assignment_Method__c: "Assignment Method",
   FEC_Scheduled_Time__c: "Scheduled Time",
   FEC_Time_Slots__c: "Time Slots",
+  FEC_Select_Queues__c: "Select Queues",
 };
+
+const STATUS_DRAFT = "Draft";
+const STATUS_ACTIVE = "Active";
+const STATUS_ARCHIVED = "Archived";
 
 const FIELDS = [
   NAME_FIELD,
@@ -36,6 +47,7 @@ const FIELDS = [
   QUEUES_FIELD,
   ROLE_FIELD,
   SCALE_FIELD,
+  NOC_COUNT_FIELD,
   "FEC_Case_Assignment__c.Owner.Name",
   "FEC_Case_Assignment__c.FEC_Business_Hours__r.Name",
 ];
@@ -60,6 +72,16 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   @track modalFormRenderKey = 0;
   @track modalBusinessHoursValue = "";
   @track isBusinessHoursSaving = false;
+  @track statusArchiveOnlyMode = false;
+  @track activeToArchiveValue = STATUS_ARCHIVED;
+  @track isSavingActiveArchive = false;
+  @track modalStatusValue = "";
+  @track isStatusSaving = false;
+  @track modalNameValue = "";
+  @track isNameSaving = false;
+  @track modalSelectedQueues = [];
+  @track isQueuesSaving = false;
+  @track queueOptions = [];
   businessHourOptionsWire;
 
   get assignmentName() {
@@ -68,6 +90,16 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
 
   get ownerName() {
     return this.getLookupLabel("OwnerId", "Owner.Name");
+  }
+
+  get ownerId() {
+    const data = this.record?.data;
+    const id = data?.fields?.OwnerId?.value;
+    return id || "";
+  }
+
+  get hasOwnerLink() {
+    return Boolean(this.ownerId);
   }
 
   get status() {
@@ -230,6 +262,92 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return label ? `Edit ${label}` : "Edit field";
   }
 
+  get assignmentStatusKey() {
+    return String(this.status || "").trim();
+  }
+
+  get nocCount() {
+    const raw = this.record?.data?.fields?.FEC_Case_Assignmetn_NOC_Count__c?.value;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  get canSelectActiveStatus() {
+    return this.nocCount > 0;
+  }
+
+  get draftStatusEditOptions() {
+    const options = [
+      { label: STATUS_DRAFT, value: STATUS_DRAFT },
+      { label: STATUS_ACTIVE, value: STATUS_ACTIVE },
+      { label: STATUS_ARCHIVED, value: STATUS_ARCHIVED },
+    ];
+    if (this.canSelectActiveStatus) {
+      return options;
+    }
+    return options.filter((option) => option.value !== STATUS_ACTIVE);
+  }
+
+  get isEditingDraftStatus() {
+    return (
+      this.editingFieldName === "FEC_Status__c" &&
+      this.canEditDraftDetailFields &&
+      !this.statusArchiveOnlyMode
+    );
+  }
+
+  get isEditingName() {
+    return this.editingFieldName === "Name" && this.canEditDraftDetailFields;
+  }
+
+  get isEditingQueues() {
+    return (
+      this.editingFieldName === "FEC_Select_Queues__c" &&
+      this.canEditDraftDetailFields
+    );
+  }
+
+  get queueDualListboxOptions() {
+    return (this.queueOptions || []).map((item) => ({
+      label: item.label,
+      value: item.value,
+    }));
+  }
+
+  get modalContainerClass() {
+    return this.isEditingQueues
+      ? "slds-modal__container modal-container-wide"
+      : "slds-modal__container";
+  }
+
+  get canEditDraftDetailFields() {
+    return this.assignmentStatusKey === STATUS_DRAFT;
+  }
+
+  get canEditStatusControl() {
+    const s = this.assignmentStatusKey;
+    return s === STATUS_DRAFT || s === STATUS_ACTIVE;
+  }
+
+  get archivedStatusOptions() {
+    return [{ label: STATUS_ARCHIVED, value: STATUS_ARCHIVED }];
+  }
+
+  get isEditingActiveToArchive() {
+    return this.statusArchiveOnlyMode && this.editingFieldName === "FEC_Status__c";
+  }
+
+  get showGenericFieldEditForm() {
+    return (
+      Boolean(this.editingFieldName) &&
+      !this.isEditingBusinessHours &&
+      !this.isEditingActiveToArchive &&
+      !this.isEditingDraftStatus &&
+      !this.isEditingName &&
+      !this.isEditingQueues
+    );
+  }
+
   toggleCaseSection() {
     this.caseInfoExpanded = !this.caseInfoExpanded;
   }
@@ -246,9 +364,33 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     if (!this.recordId || !fieldApiName) {
       return;
     }
+    if (
+      fieldApiName !== "FEC_Status__c" &&
+      fieldApiName !== "Name" &&
+      fieldApiName !== "FEC_Select_Queues__c" &&
+      !this.canEditDraftDetailFields
+    ) {
+      return;
+    }
+    if (fieldApiName === "FEC_Status__c" && !this.canEditStatusControl) {
+      return;
+    }
+    this.statusArchiveOnlyMode =
+      fieldApiName === "FEC_Status__c" && this.assignmentStatusKey === STATUS_ACTIVE;
+    this.activeToArchiveValue = STATUS_ARCHIVED;
     this.editingFieldName = fieldApiName;
     if (fieldApiName === "FEC_Business_Hours__c") {
       this.modalBusinessHoursValue = this.businessHoursId || "";
+    }
+    if (fieldApiName === "FEC_Status__c" && this.canEditDraftDetailFields) {
+      this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
+    }
+    if (fieldApiName === "Name") {
+      this.modalNameValue = this.assignmentName || "";
+    }
+    if (fieldApiName === "FEC_Select_Queues__c") {
+      this.modalSelectedQueues = this.parseSemicolonList(this.queuesRaw);
+      this.ensureQueueOptionsLoaded();
     }
     this.modalFormRenderKey += 1;
     this.isEditModalOpen = true;
@@ -264,14 +406,270 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     this.editingFieldName = "";
     this.modalBusinessHoursValue = "";
     this.isBusinessHoursSaving = false;
+    this.statusArchiveOnlyMode = false;
+    this.isSavingActiveArchive = false;
+    this.activeToArchiveValue = STATUS_ARCHIVED;
+    this.modalStatusValue = "";
+    this.isStatusSaving = false;
+    this.modalNameValue = "";
+    this.isNameSaving = false;
+    this.modalSelectedQueues = [];
+    this.isQueuesSaving = false;
+  }
+
+  handleModalNameChange(event) {
+    this.modalNameValue = event.detail.value || "";
+  }
+
+  handleModalQueuesChange(event) {
+    this.modalSelectedQueues = event.detail.value || [];
+  }
+
+  async ensureQueueOptionsLoaded() {
+    if (this.queueOptions.length) {
+      return;
+    }
+    try {
+      this.queueOptions = await getActiveCaseQueues();
+    } catch (e) {
+      this.queueOptions = [];
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Cannot load queue options.",
+          variant: "error",
+        })
+      );
+    }
+  }
+
+  async handleSaveName() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    const trimmedName = (this.modalNameValue || "").trim();
+    if (!trimmedName) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Name can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isNameSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [NAME_FIELD.fieldApiName]: trimmedName,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Name.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isNameSaving = false;
+    }
+  }
+
+  async handleSaveQueues() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (!this.modalSelectedQueues.length) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: "Select Queues can't be blank",
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isQueuesSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [QUEUES_FIELD.fieldApiName]: this.modalSelectedQueues.join(";"),
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Select Queues.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isQueuesSaving = false;
+    }
+  }
+
+  parseSemicolonList(rawValue) {
+    if (rawValue === null || rawValue === undefined || rawValue === "") {
+      return [];
+    }
+    return String(rawValue)
+      .split(";")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  handleModalStatusChange(event) {
+    const nextStatus = event.detail.value || STATUS_DRAFT;
+    if (nextStatus === STATUS_ACTIVE && !this.canSelectActiveStatus) {
+      this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.modalStatusValue = nextStatus;
+  }
+
+  async handleSaveDraftStatus() {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (this.modalStatusValue === STATUS_ACTIVE && !this.canSelectActiveStatus) {
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
+          variant: "error",
+        })
+      );
+      return;
+    }
+    this.isStatusSaving = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [STATUS_FIELD.fieldApiName]: this.modalStatusValue,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Record updated.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Status.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isStatusSaving = false;
+    }
   }
 
   handleModalBusinessHoursChange(event) {
     this.modalBusinessHoursValue = event.detail.value || "";
   }
 
+  handleActiveToArchiveChange(event) {
+    this.activeToArchiveValue = event.detail.value || STATUS_ARCHIVED;
+  }
+
+  async handleSaveActiveToArchive() {
+    if (
+      !this.recordId ||
+      this.activeToArchiveValue !== STATUS_ARCHIVED ||
+      this.assignmentStatusKey !== STATUS_ACTIVE
+    ) {
+      return;
+    }
+    this.isSavingActiveArchive = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [STATUS_FIELD.fieldApiName]: STATUS_ARCHIVED,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Status updated to Archived.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Status.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isSavingActiveArchive = false;
+    }
+  }
+
   async handleSaveBusinessHours() {
-    if (!this.recordId) {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
       return;
     }
     this.isBusinessHoursSaving = true;
@@ -343,6 +741,21 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       attributes: {
         recordId: this.businessHoursId,
         objectApiName: "BusinessHours",
+        actionName: "view",
+      },
+    });
+  }
+
+  handleOwnerNav(event) {
+    event.preventDefault();
+    if (!this.ownerId) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: this.ownerId,
+        objectApiName: "User",
         actionName: "view",
       },
     });

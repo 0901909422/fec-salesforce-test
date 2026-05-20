@@ -4,7 +4,7 @@
     <description>Loại khách hàng được thiết lập: All/ Existing Customer/ Non-Existing Customer</description>
     <label>Customer Type</label>
     <required>false</required>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
