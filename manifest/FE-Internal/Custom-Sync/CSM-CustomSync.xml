@@ -50,7 +50,7 @@
         <name>Layout</name>
     </types>
     <types>
-        <members>Custom_Sync_Record_Page</members>
+        <members>FEC_Custom_Sync_Record_Page</members>
         <name>FlexiPage</name>
     </types> 
     <types> 
