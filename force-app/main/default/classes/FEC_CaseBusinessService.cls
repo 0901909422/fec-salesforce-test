@@ -2362,6 +2362,7 @@ public without sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
+          // // Toannd61 19/05/26 jira 1423 jira 1423
           FEC_Current_Case_Stage__r.FEC_Code__c,
           FEC_Current_Case_Stage__r.Name,
           FEC_Actual_Nature_of_Case__c,
@@ -2778,11 +2779,23 @@ public without sharing class FEC_CaseBusinessService {
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
+
+      Case endCase = [
+        SELECT FEC_Final_Status__c
+        FROM Case
+        WHERE Id = :caseId
+        LIMIT 1
+      ];
+      history.FEC_Changed_Status__c = endCase.FEC_Final_Status__c;
+      Database.update(history, AccessLevel.SYSTEM_MODE);
+
       FEC_AutoHoldCaseService.enqueueAfterRoutingHistory(history.Id);
       System.debug(
         'FEC_DEBUG CaseBusinessService.createRoutingActionHis corrId=' + corrId +
         ' inserted historyId=' + history.Id +
         ' routingAction=' + history.FEC_Routing_Action__c +
+        ' currentStatus=' + history.FEC_Current_Status__c +
+        ' changedStatus=' + history.FEC_Changed_Status__c +
         ' originalQueue=' + history.FEC_Original_User_Queue__c +
         ' updatedQueue=' + history.FEC_Updated_User_Queue__c +
         ' description=' + history.FEC_Description__c
