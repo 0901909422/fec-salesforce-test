@@ -27,13 +27,13 @@ public with sharing class FEC_CheckCampaignStatusBatch implements Database.Batch
             'FROM FEC_DataCampaign__c ' +
             'WHERE FEC_IsPushed__c = true ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
-            'AND FEC_IsWithinLifetime__c = true';
+            'AND FEC_IsAtOrWithinLifetime__c = true';
 
         Integer totalRecords = Database.countQuery(
             'SELECT count() FROM FEC_DataCampaign__c ' +
             'WHERE FEC_IsPushed__c = true ' +
             'AND (NOT FEC_RecordStatus__c LIKE \'Resolved-%\') ' +
-            'AND FEC_IsWithinLifetime__c = true'
+            'AND FEC_IsAtOrWithinLifetime__c = true'
         );
         this.batchLogId = FEC_CampaignBatchLogger.logStart('FEC_CheckCampaignStatusBatch', totalRecords);
 

@@ -30,6 +30,15 @@ const LS_OK = 'fec-pr-ok-';
 const MAX_FAIL = 3;
 const VARIANT = { ERROR: 'error', SUCCESS: 'success', WARNING: 'warning' };
 
+//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+function isPointsRedemptionHideC360AndProperty(subCode) {
+    if (!subCode) {
+        return false;
+    }
+    const s = String(subCode).trim().toUpperCase();
+    return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
+}
+
 export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(LightningElement) {
     @api recordId;
     @api subCodeCode;
@@ -38,6 +47,8 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     @track loading = false;
     @track showPanel = false;
     @track notEligibleMessage;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — lý do không đủ điều kiện (vd Available Points < 100,000)
+    @track notEligibleReason;
     @track cmsPhone = STR_EMPTY;
     @track tierOptionsUi = [];
     @track selectedTierJson;
@@ -61,6 +72,8 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     connectedCallback() {
         this.restoreLocalState();
         this._lastSub = (this.subCodeCode || STR_EMPTY).trim();
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+        this._notifyPointsRedemptionSectionVisibility();
         this.refreshInit();
     }
 
@@ -68,8 +81,24 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         const sub = (this.subCodeCode || STR_EMPTY).trim();
         if (this.recordId && sub !== this._lastSub) {
             this._lastSub = sub;
+            //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+            this._notifyPointsRedemptionSectionVisibility();
             this.refreshInit();
         }
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+    _notifyPointsRedemptionSectionVisibility(subCodeOverride) {
+        const sub = subCodeOverride != null ? subCodeOverride : this.subCodeCode;
+        this.dispatchEvent(
+            new CustomEvent('fecpointsredemptionsectionvisibility', {
+                bubbles: true,
+                composed: true,
+                detail: {
+                    hideC360AndProperty: isPointsRedemptionHideC360AndProperty(sub)
+                }
+            })
+        );
     }
 
     restoreLocalState() {
@@ -89,22 +118,33 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
     }
 
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
+    _applyInitResult(r) {
+        this.showPanel = !!(r && r.showRedemptionUi);
+        this.notEligibleMessage = r && r.notEligibleMessage ? r.notEligibleMessage : null;
+        this.notEligibleReason = r && r.notEligibleReason ? r.notEligibleReason : null;
+        this.cmsPhone = r && r.cmsPhone ? r.cmsPhone : STR_EMPTY;
+        const opts = (r && r.tierOptions) || [];
+        this.tierOptionsUi = opts.map((o) => ({
+            label: o.label,
+            value: o.valueJson
+        }));
+        this.selectedTierJson = null;
+        if (r && r.subCodeCode) {
+            this._notifyPointsRedemptionSectionVisibility(r.subCodeCode);
+        }
+    }
+
     refreshInit() {
         if (!this.recordId) {
             return;
         }
         this.loading = true;
+        this.notEligibleMessage = null;
+        this.notEligibleReason = null;
         initData({ caseId: this.recordId, subCodeCode: this.subCodeCode || null })
             .then((r) => {
-                this.showPanel = !!(r && r.showRedemptionUi);
-                this.notEligibleMessage = r && r.notEligibleMessage ? r.notEligibleMessage : null;
-                this.cmsPhone = r && r.cmsPhone ? r.cmsPhone : STR_EMPTY;
-                const opts = (r && r.tierOptions) || [];
-                this.tierOptionsUi = opts.map((o) => ({
-                    label: o.label,
-                    value: o.valueJson
-                }));
-                this.selectedTierJson = null;
+                this._applyInitResult(r);
             })
             .catch((err) => {
                 this.showPanel = false;

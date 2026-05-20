@@ -26,8 +26,12 @@ public with sharing class FEC_ProcessChangeStatusTriggerHandler {
         for (SObject record : newList) {
             SObject oldRecord = (oldMap != null) ? oldMap.get(record.Id) : null;
             String oldStatus = (oldRecord != null) ? (String)oldRecord.get(FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS) : null;
+            String newStatus = (String)record.get(FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS);
 
-            if (oldStatus == FEC_UIConstants.PROCESS_STATUS_NEW) {
+            // Preserve 'Deleted' status — soft-delete must not be overridden
+            if (newStatus == FEC_UIConstants.PROCESS_STATUS_DELETED) {
+                // Keep as-is
+            } else if (oldStatus == FEC_UIConstants.PROCESS_STATUS_NEW) {
                 record.put(FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS, FEC_UIConstants.PROCESS_STATUS_NEW);
             } else {
                 record.put(FEC_FieldConstants.FIELD_PROCESS_CHANGE_STATUS, FEC_UIConstants.PROCESS_STATUS_UPDATE);

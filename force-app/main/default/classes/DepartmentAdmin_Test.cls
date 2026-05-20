@@ -203,9 +203,9 @@ private class DepartmentAdmin_Test {
     static void testSearchActiveUsers() {
         // Should find active users by name fragment and by email
         Test.startTest();
-        List<DepartmentAdmin.UserDto> byName = DepartmentAdmin.searchActiveUsers('Jane');
-        List<DepartmentAdmin.UserDto> byEmail = DepartmentAdmin.searchActiveUsers('john.queue1@');
-        List<DepartmentAdmin.UserDto> blank = DepartmentAdmin.searchActiveUsers('');
+        List<DepartmentAdmin.UserDto> byName = DepartmentAdmin.searchActiveUsers('Jane', new List<Id>());
+        List<DepartmentAdmin.UserDto> byEmail = DepartmentAdmin.searchActiveUsers('john.queue1@', new List<Id>());
+        List<DepartmentAdmin.UserDto> blank = DepartmentAdmin.searchActiveUsers('', new List<Id>());
 
         System.assert(byName.size() > 0, 'Expect at least one match by name');
         Boolean hasJane = false;

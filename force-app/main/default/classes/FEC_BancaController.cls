@@ -143,19 +143,53 @@ public with sharing class FEC_BancaController {
         }
 
         /* =====================================================
-         * SAVE DB
+         * SAVE / UPDATE DB
          * ===================================================== */
-        List<FEC_Insurance_Info__c> savedRecords =
-            saveInsuranceInfo(
-                cs.FEC_Account_or_Contract__c,
-                mapData.values()
-            );
+        saveInsuranceInfo(
+            cs.FEC_Account_or_Contract__c,
+            mapData.values()
+        );
+
+        /* =====================================================
+         * QUERY SAVED DATA
+         * ===================================================== */
+        List<FEC_Insurance_Info__c> savedRecords = [
+            SELECT
+                Id,
+                FEC_User_ID__c,
+                FEC_Buyer_Name__c,
+                FEC_Buyer_DOB__c,
+                FEC_Buyer_NID__c,
+                FEC_Product_Name__c,
+                FEC_Premium_Fee__c,
+                FEC_Status__c,
+
+                FEC_Buyer_Gender__c,
+                FEC_Sale_Channel__c,
+                FEC_Insurer_Company__c,
+                FEC_Sub_Channel__c,
+
+                FEC_Policy_Number__c,
+                FEC_Agent_Code__c,
+                FEC_Phone_Number__c,
+                FEC_Agent_Name__c,
+
+                FEC_Expiry_Date__c,
+                FEC_Payment_ID__c,
+                FEC_Cancel_Date__c,
+                FEC_Effective_Date__c
+
+            FROM FEC_Insurance_Info__c
+            WHERE FEC_Customer_History__c =
+                :cs.FEC_Account_or_Contract__c
+
+            ORDER BY CreatedDate DESC
+        ];
 
         /* =====================================================
          * RETURN DTO
          * ===================================================== */
-        List<BancaDTO> result =
-            new List<BancaDTO>();
+        List<BancaDTO> result = new List<BancaDTO>();
 
         for (FEC_Insurance_Info__c rec : savedRecords) {
 
@@ -302,10 +336,6 @@ public with sharing class FEC_BancaController {
                 continue;
             }
 
-            if (mapData.containsKey(item.userID)) {
-                continue;
-            }
-
             mapData.put(
                 item.userID,
                 mapFromNID(item, caseId)
@@ -335,10 +365,6 @@ public with sharing class FEC_BancaController {
         ) {
 
             if (String.isBlank(item.userID)) {
-                continue;
-            }
-
-            if (mapData.containsKey(item.userID)) {
                 continue;
             }
 
@@ -431,39 +457,61 @@ public with sharing class FEC_BancaController {
         List<BancaDTO> dataList
     ) {
 
+        List<FEC_Insurance_Info__c> upsertList =
+            new List<FEC_Insurance_Info__c>();
+
         if (
             customerHistoryId == null ||
             dataList == null ||
             dataList.isEmpty()
         ) {
-            return new List<FEC_Insurance_Info__c>();
+            return upsertList;
         }
 
         /* =====================================================
-         * DELETE OLD DATA
+         * GET EXISTING DATA
          * ===================================================== */
-        List<FEC_Insurance_Info__c> oldData = [
-            SELECT Id
-            FROM FEC_Insurance_Info__c
-            WHERE FEC_Customer_History__c = :customerHistoryId
-        ];
+        Map<String, FEC_Insurance_Info__c> existingMap =
+            new Map<String, FEC_Insurance_Info__c>();
 
-        if (!oldData.isEmpty()) {
-            delete oldData;
+        for (
+            FEC_Insurance_Info__c oldRec :
+            [
+                SELECT
+                    Id,
+                    FEC_User_ID__c
+                FROM FEC_Insurance_Info__c
+                WHERE FEC_Customer_History__c = :customerHistoryId
+            ]
+        ) {
+
+            if (!String.isBlank(oldRec.FEC_User_ID__c)) {
+                existingMap.put(
+                    oldRec.FEC_User_ID__c,
+                    oldRec
+                );
+            }
         }
 
         /* =====================================================
-         * INSERT NEW DATA
+         * INSERT / UPDATE
          * ===================================================== */
-        List<FEC_Insurance_Info__c> insertList =
-            new List<FEC_Insurance_Info__c>();
-
         for (BancaDTO dto : dataList) {
 
-            FEC_Insurance_Info__c rec =
-                new FEC_Insurance_Info__c();
+            FEC_Insurance_Info__c rec;
 
-            rec.FEC_Customer_History__c = customerHistoryId;
+            if (
+                existingMap.containsKey(dto.userId)
+            ) {
+
+                rec = existingMap.get(dto.userId);
+
+            } else {
+
+                rec = new FEC_Insurance_Info__c();
+                rec.FEC_Customer_History__c =
+                    customerHistoryId;
+            }
 
             rec.FEC_User_ID__c         = dto.userId;
             rec.FEC_Buyer_Name__c      = dto.buyerName;
@@ -471,7 +519,18 @@ public with sharing class FEC_BancaController {
             rec.FEC_Buyer_NID__c       = dto.buyerNID;
             rec.FEC_Product_Name__c    = dto.productName;
 
-            // rec.FEC_Premium_Fee__c = Decimal.valueOf(dto.premiumFree);
+            if (!String.isBlank(dto.premiumFree)) {
+
+                try {
+                    rec.FEC_Premium_Fee__c =
+                        Decimal.valueOf(dto.premiumFree);
+                } catch (Exception e) {
+                    System.debug(
+                        'Premium parse error: ' +
+                        e.getMessage()
+                    );
+                }
+            }
 
             rec.FEC_Status__c          = dto.status;
             rec.FEC_Buyer_Gender__c    = dto.gender;
@@ -494,13 +553,13 @@ public with sharing class FEC_BancaController {
 
             rec.FEC_Payment_ID__c      = dto.paymentID;
 
-            insertList.add(rec);
+            upsertList.add(rec);
         }
 
-        if (!insertList.isEmpty()) {
-            insert insertList;
+        if (!upsertList.isEmpty()) {
+            upsert upsertList;
         }
 
-        return insertList;
+        return upsertList;
     }
 }

@@ -1,4 +1,4 @@
-public with sharing class FEC_AssignmentRoutingActionHandler {
+public without sharing class FEC_AssignmentRoutingActionHandler {
     
     @AuraEnabled
     public static void execute(
@@ -100,7 +100,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         //Chưa có trường FEC_Assignment_Owner__c(formular)
         FEC_Assignment__c assignmentToUpdate = new FEC_Assignment__c(
             Id = assignmentId,
-        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED,
+        FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_COMPLETED, 
         FEC_OwnerID__c = null // unassigned
             );
         
@@ -379,7 +379,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         FROM FEC_Assignment__c
         WHERE Id = :assignmentId
     ];
-        
+
         Case c = [
         SELECT FEC_Current_Case_Stage__r.FEC_Code__c
         FROM Case
@@ -542,7 +542,7 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
     /**
      * tungnm37: Đồng bộ Case.FEC_Assignment_Users__c theo rule:
      * - Nếu FEC_Assignment_Owner__c != null → lưu User ID
-     * - Nếu FEC_Assignment_Owner__c == null → lưu Queue ID từ FEC_OwnerID__c
+     * - Nếu FEC_Assignment_Owner__c == null → lưu Queue Name từ FEC_OwnerID__c
      */
     private static void syncAssignmentUsersToCase(Id caseId, Id assignmentId) {
         try {
@@ -557,24 +557,24 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
             FEC_Assignment__c a = assignments[0];
             String userValue;
             if (a.FEC_Assignment_Owner__c != null) {
-                // Owner là User → lưu User ID
+                // tungnm37: Owner là User → lưu User ID
                 userValue = String.valueOf(a.FEC_Assignment_Owner__c);
             } else if (String.isNotBlank(a.FEC_OwnerID__c)) {
-                // Owner là Queue → FEC_OwnerID__c có thể là Queue Id hoặc Queue Name
-                // Kiểm tra nếu là valid Salesforce Id (18 ký tự) thì dùng trực tiếp
-                try {
-                    Id queueId = (Id) a.FEC_OwnerID__c;
-                    userValue = String.valueOf(queueId);
-                } catch (Exception ex) {
-                    // FEC_OwnerID__c là Queue Name → tìm Queue Id
-                    List<Group> groups = [
-                        SELECT Id FROM Group
-                        WHERE Name = :a.FEC_OwnerID__c AND Type = 'Queue'
-                        LIMIT 1
-                    ];
-                    if (!groups.isEmpty()) {
-                        userValue = String.valueOf(groups[0].Id);
+                // tungnm37: Owner là Queue → FEC_OwnerID__c lưu Queue Name → dùng trực tiếp
+                // Nếu là Salesforce Id (bắt đầu 00G) thì lookup Name
+                String ownerIdStr = a.FEC_OwnerID__c.trim();
+                Boolean looksLikeId = ownerIdStr.length() >= 15 && ownerIdStr.startsWith('00G');
+                if (looksLikeId) {
+                    try {
+                        Id queueId = (Id) ownerIdStr;
+                        List<Group> groups = [SELECT Name FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
+                        userValue = groups.isEmpty() ? ownerIdStr : groups[0].Name;
+                    } catch (Exception ex) {
+                        userValue = ownerIdStr;
                     }
+                } else {
+                    // Đã là Queue Name
+                    userValue = ownerIdStr;
                 }
             }
             
@@ -583,6 +583,10 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
                     new Case(Id = caseId, FEC_Assignment_Users__c = userValue),
                 AccessLevel.SYSTEM_MODE
                     );
+                // tungnm37: nếu Owner là User → share Case với quyền Edit
+                if (a.FEC_Assignment_Owner__c != null) {
+                    shareCaseToUser(caseId, a.FEC_Assignment_Owner__c);
+                }
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG syncAssignmentUsersToCase error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
@@ -694,5 +698,30 @@ public with sharing class FEC_AssignmentRoutingActionHandler {
         return parts.isEmpty()
             ? email.trim()
             : parts[0].trim();
+    }
+
+    // tungnm37: Share Case với User khi assign Assignment Owner → User (quyền Edit)
+    private static void shareCaseToUser(Id caseId, Id userId) {
+        try {
+            // Kiểm tra đã share chưa để tránh duplicate
+            List<CaseShare> existing = [
+                SELECT Id FROM CaseShare
+                WHERE CaseId = :caseId
+                  AND UserOrGroupId = :userId
+                  AND RowCause = 'Manual'
+                LIMIT 1
+            ];
+            if (!existing.isEmpty()) return;
+
+            CaseShare share = new CaseShare(
+                CaseId = caseId,
+                UserOrGroupId = userId,
+                CaseAccessLevel = 'Edit',
+                RowCause = 'Manual'
+            );
+            Database.insert(share, false); // false = không throw nếu đã tồn tại
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG shareCaseToUser error: ' + e.getMessage());
+        }
     }
 }

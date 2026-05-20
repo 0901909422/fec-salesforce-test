@@ -93,7 +93,6 @@ public without sharing class FEC_CardClosureRefundController {
         }
         Boolean cardAlreadyC = BLOCK_CODE_CARD.equals(cardBlock);
         dto.cardBlocked = cardAlreadyC;
-        dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !cardAlreadyC;
         Boolean pendingFromApi = false;
         if (!String.isBlank(accountNumberForDisb)) {
             try {
@@ -175,7 +174,30 @@ public without sharing class FEC_CardClosureRefundController {
                 }
             }
         }
+        dto.showBlockCardButton = !dto.hideBlockCardBySubCode && !dto.attemptsExhausted && !dto.cardBlocked && hasPendingDisbursementSnapshot(dto);
         return dto;
+    }
+
+    private static Boolean hasPendingDisbursementSnapshot(CardLockUiContextDTO dto) {
+        if (!String.isBlank(dto.pendingApplicationId)) {
+            return true;
+        }
+        if (!String.isBlank(dto.pendingApplicationStatus)) {
+            return true;
+        }
+        if (!String.isBlank(dto.pendingDisbursementStatus)) {
+            return true;
+        }
+        if (!String.isBlank(dto.pendingCsDecision)) {
+            return true;
+        }
+        if (dto.pendingDisbursementApprovalDate != null) {
+            return true;
+        }
+        if (dto.pendingDisbursedAmount != null) {
+            return true;
+        }
+        return false;
     }
 
     private static String resolvePendingDisbursementCsDecision(String disbStatusEsb, String appStatusLos) {

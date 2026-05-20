@@ -1,26 +1,46 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import { getRecord, getFieldValue, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import TRANSFER_DATA_FIELD   from '@salesforce/schema/Case.FEC_Transfer_Data_to_Collections__c';
 import TRANSFER_TIME_FIELD   from '@salesforce/schema/Case.FEC_Transfer_Time__c';
 import TRANSFER_STATUS_FIELD from '@salesforce/schema/Case.FEC_Transfer_Status__c';
 import FAILURE_REASON_FIELD  from '@salesforce/schema/Case.FEC_Failure_Reason__c';
+import REMARK_FOR_COLLECTIONS_FIELD from '@salesforce/schema/Case.FEC_Remark_for_Collections__c';
 import COLL_ACTION_CODE_FIELD     from '@salesforce/schema/Case.FEC_Coll_Action_Code__c';
 import COLL_SUB_ACTION_CODE_FIELD from '@salesforce/schema/Case.FEC_Coll_Sub_Action_Code__c';
 import COLL_REMARKS_FIELD         from '@salesforce/schema/Case.FEC_Coll_Remarks__c';
 import COLL_ACTION_DATE_FIELD     from '@salesforce/schema/Case.FEC_Coll_Action_Date__c';
 import COLL_AGENT_FIELD           from '@salesforce/schema/Case.FEC_Coll_Agent__c';
+import IS_SUBMITED_FIELD          from '@salesforce/schema/Case.FEC_Is_Submited__c';
+
+/** FEC_TranferInformationCallout — ghi khi user transfer từ CSM. */
+const TRANSFER_CALLOUT_FIELDS = [
+    TRANSFER_DATA_FIELD,
+    TRANSFER_TIME_FIELD,
+    TRANSFER_STATUS_FIELD,
+    FAILURE_REASON_FIELD,
+    REMARK_FOR_COLLECTIONS_FIELD
+];
+
+/** FEC_UpdateTransferInfoRestService — ghi khi Pega Collections callback. */
+const COLL_REST_UPDATE_FIELDS = [
+    COLL_ACTION_CODE_FIELD,
+    COLL_SUB_ACTION_CODE_FIELD,
+    COLL_REMARKS_FIELD,
+    COLL_ACTION_DATE_FIELD,
+    COLL_AGENT_FIELD
+];
 
 const TRANSFER_DETAIL_FIELDS = [
-    TRANSFER_DATA_FIELD, TRANSFER_TIME_FIELD, TRANSFER_STATUS_FIELD,
-    FAILURE_REASON_FIELD, COLL_ACTION_CODE_FIELD, COLL_SUB_ACTION_CODE_FIELD,
-    COLL_REMARKS_FIELD, COLL_ACTION_DATE_FIELD, COLL_AGENT_FIELD
+    IS_SUBMITED_FIELD,
+    ...TRANSFER_CALLOUT_FIELDS,
+    ...COLL_REST_UPDATE_FIELDS
 ];
 import transferCallFromCase from '@salesforce/apex/FEC_TranferInformationCallout.transferCallFromCase';
+import prepareRemarkForCollectionsTransfer from '@salesforce/apex/FEC_TranferInformationCallout.prepareRemarkForCollectionsTransfer';
 import FEC_Collections_Transfer_Failed_Summary from '@salesforce/label/c.FEC_Collections_Transfer_Failed_Summary';
 import FEC_Collections_Transfer_MaxFailed_Summary from '@salesforce/label/c.FEC_Collections_Transfer_MaxFailed_Summary';
 import FEC_Notification_16_Collections_Transfer_Success from '@salesforce/label/c.FEC_Notification_16_Collections_Transfer_Success';
-import FEC_TransferCall_Section_CaseInfo from '@salesforce/label/c.FEC_TransferCall_Section_CaseInfo';
 import FEC_TransferCall_Subtitle from '@salesforce/label/c.FEC_TransferCall_Subtitle';
 import FEC_TransferCall_Btn_TransferToCollection from '@salesforce/label/c.FEC_TransferCall_Btn_TransferToCollection';
 import FEC_TransferCall_Modal_ConfirmMessage from '@salesforce/label/c.FEC_TransferCall_Modal_ConfirmMessage';
@@ -29,7 +49,16 @@ import FEC_TransferCall_Modal_RemarkRequired from '@salesforce/label/c.FEC_Trans
 import FEC_TransferCall_Btn_Cancel from '@salesforce/label/c.FEC_TransferCall_Btn_Cancel';
 import FEC_TransferCall_Btn_ConfirmTransfer from '@salesforce/label/c.FEC_TransferCall_Btn_ConfirmTransfer';
 import FEC_TransferCall_Spinner_Loading from '@salesforce/label/c.FEC_TransferCall_Spinner_Loading';
-const CASE_INFO_SECTION = 'caseInformation';
+import FEC_TransferCall_Details_Title from '@salesforce/label/c.FEC_TransferCall_Details_Title';
+import FEC_TransferCall_Field_TransferDataToCollections from '@salesforce/label/c.FEC_TransferCall_Field_TransferDataToCollections';
+import FEC_TransferCall_Field_TransferTime from '@salesforce/label/c.FEC_TransferCall_Field_TransferTime';
+import FEC_TransferCall_Field_TransferStatus from '@salesforce/label/c.FEC_TransferCall_Field_TransferStatus';
+import FEC_TransferCall_Field_FailureReason from '@salesforce/label/c.FEC_TransferCall_Field_FailureReason';
+import FEC_TransferCall_Field_CollActionCode from '@salesforce/label/c.FEC_TransferCall_Field_CollActionCode';
+import FEC_TransferCall_Field_CollSubActionCode from '@salesforce/label/c.FEC_TransferCall_Field_CollSubActionCode';
+import FEC_TransferCall_Field_CollRemarks from '@salesforce/label/c.FEC_TransferCall_Field_CollRemarks';
+import FEC_TransferCall_Field_CollActionDate from '@salesforce/label/c.FEC_TransferCall_Field_CollActionDate';
+import FEC_TransferCall_Field_CollAgent from '@salesforce/label/c.FEC_TransferCall_Field_CollAgent';
 /** Mirror FEC_ConstantCommon.STR_EMPTY — chuỗi rỗng dùng chung. */
 const STR_EMPTY = '';
 const STR_UNKNOWN_ERROR = 'Unknown error';
@@ -159,7 +188,6 @@ const MAX_TRANSFER_RETRIES = 3;
 export default class Fec_TransferCall extends NavigationMixin(LightningElement) {
     @api recordId;
 
-    activeSections = [CASE_INFO_SECTION];
     showConfirmModal = false;
     remarkValue = STR_EMPTY;
     isTransferring = false;
@@ -181,30 +209,65 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
     /** Dòng chi tiết sau &quot;Lí do:&quot; — chỉ báo lỗi inline, không toast. */
     transferErrorReason = STR_EMPTY;
 
-    /** Số lần transfer thất bại liên tiếp — ẩn nút khi đạt MAX_TRANSFER_RETRIES. */
+    /** Số lần transfer thất bại liên tiếp (session theo Case). */
     _transferFailCount = 0;
+
+    /**
+     * true sau lần transfer thất bại thứ 3 — disable nút Transfer Data to Collection và style xám.
+     */
+    transferButtonLocked = false;
 
     @wire(getRecord, { recordId: '$recordId', fields: TRANSFER_DETAIL_FIELDS })
     _caseRecord;
 
+    /** Transfer callout (FEC_TranferInformationCallout). */
     get detailTransferDataToCollections() {
-        if (this.transferCompleted || this.transferFailed) {
+        if (this.transferCompleted || (this.isTransferReadonly && this._caseTransferStatus === 'Success')) {
             return 'Yes';
         }
-        const v = getFieldValue(this._caseRecord?.data, TRANSFER_DATA_FIELD);
-        return v === true ? 'Yes' : v === false ? 'No' : STR_EMPTY;
+        if (this.transferFailed || (this.isTransferReadonly && this._caseTransferStatus === 'Failure')) {
+            return 'No';
+        }
+        const stored = getFieldValue(this._caseRecord?.data, TRANSFER_DATA_FIELD);
+        if (stored === 'Yes' || stored === 'No') {
+            return stored;
+        }
+        const status = getFieldValue(this._caseRecord?.data, TRANSFER_STATUS_FIELD);
+        if (status === 'Success') {
+            return 'Yes';
+        }
+        if (status === 'Failure') {
+            return 'No';
+        }
+        return STR_EMPTY;
     }
+
+    get detailRemarkForCollections() {
+        const fromCase = getFieldValue(this._caseRecord?.data, REMARK_FOR_COLLECTIONS_FIELD);
+        if (fromCase) {
+            return fromCase;
+        }
+        return this.transferRemark || STR_EMPTY;
+    }
+
     get detailTransferTime() {
-        const v = getFieldValue(this._caseRecord?.data, TRANSFER_TIME_FIELD);
-        return v || STR_EMPTY;
+        return getFieldValue(this._caseRecord?.data, TRANSFER_TIME_FIELD) || STR_EMPTY;
     }
+
     get detailTransferStatus() {
+        if (this.isTransferReadonly) {
+            return this._caseTransferStatus;
+        }
         if (this._localTransferStatus) {
             return this._localTransferStatus;
         }
         return getFieldValue(this._caseRecord?.data, TRANSFER_STATUS_FIELD) || STR_EMPTY;
     }
+
     get detailFailureReason() {
+        if (this.isTransferReadonly) {
+            return this._caseTransferStatus === 'Success' ? STR_EMPTY : this._caseFailureReason;
+        }
         if (this._localTransferStatus === 'Success') {
             return STR_EMPTY;
         }
@@ -213,12 +276,22 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         }
         return getFieldValue(this._caseRecord?.data, FAILURE_REASON_FIELD) || STR_EMPTY;
     }
-    get detailCollActionCode()     { return getFieldValue(this._caseRecord?.data, COLL_ACTION_CODE_FIELD)     || STR_EMPTY; }
-    get detailCollSubActionCode()  { return getFieldValue(this._caseRecord?.data, COLL_SUB_ACTION_CODE_FIELD) || STR_EMPTY; }
-    get detailCollRemarks()        { return getFieldValue(this._caseRecord?.data, COLL_REMARKS_FIELD)         || STR_EMPTY; }
+
+    /** Update Transfer Info REST (FEC_UpdateTransferInfoRestService). */
+    get detailCollActionCode() {
+        return getFieldValue(this._caseRecord?.data, COLL_ACTION_CODE_FIELD) || STR_EMPTY;
+    }
+    get detailCollSubActionCode() {
+        return getFieldValue(this._caseRecord?.data, COLL_SUB_ACTION_CODE_FIELD) || STR_EMPTY;
+    }
+    get detailCollRemarks() {
+        return getFieldValue(this._caseRecord?.data, COLL_REMARKS_FIELD) || STR_EMPTY;
+    }
     get detailCollActionDate() {
         const v = getFieldValue(this._caseRecord?.data, COLL_ACTION_DATE_FIELD);
-        if (!v) return STR_EMPTY;
+        if (!v) {
+            return STR_EMPTY;
+        }
         try {
             const d = new Date(v);
             if (isNaN(d.getTime())) return String(v);
@@ -232,12 +305,13 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
             return fmt.format(d).replace(',', STR_EMPTY);
         } catch { return String(v); }
     }
-    get detailCollAgent()          { return getFieldValue(this._caseRecord?.data, COLL_AGENT_FIELD)           || STR_EMPTY; }
+    get detailCollAgent() {
+        return getFieldValue(this._caseRecord?.data, COLL_AGENT_FIELD) || STR_EMPTY;
+    }
 
     labelNoti16 = FEC_Notification_16_Collections_Transfer_Success;
     labelTransferFailSummary = FEC_Collections_Transfer_Failed_Summary;
     labelTransferMaxFailSummary = FEC_Collections_Transfer_MaxFailed_Summary;
-    labelSectionCaseInfo = FEC_TransferCall_Section_CaseInfo;
     labelSubtitle = FEC_TransferCall_Subtitle;
     labelTransferToCollection = FEC_TransferCall_Btn_TransferToCollection;
     labelModalConfirmMessage = FEC_TransferCall_Modal_ConfirmMessage;
@@ -246,23 +320,80 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
     labelCancel = FEC_TransferCall_Btn_Cancel;
     labelConfirmTransfer = FEC_TransferCall_Btn_ConfirmTransfer;
     labelLoading = FEC_TransferCall_Spinner_Loading;
+    labelDetailsTitle = FEC_TransferCall_Details_Title;
+    labelFieldTransferDataToCollections = FEC_TransferCall_Field_TransferDataToCollections;
+    labelFieldRemarkForCollections = FEC_TransferCall_Modal_RemarkLabel;
+    labelFieldTransferTime = FEC_TransferCall_Field_TransferTime;
+    labelFieldTransferStatus = FEC_TransferCall_Field_TransferStatus;
+    labelFieldFailureReason = FEC_TransferCall_Field_FailureReason;
+    labelFieldCollActionCode = FEC_TransferCall_Field_CollActionCode;
+    labelFieldCollSubActionCode = FEC_TransferCall_Field_CollSubActionCode;
+    labelFieldCollRemarks = FEC_TransferCall_Field_CollRemarks;
+    labelFieldCollActionDate = FEC_TransferCall_Field_CollActionDate;
+    labelFieldCollAgent = FEC_TransferCall_Field_CollAgent;
 
     get isMaxFailReached() {
-        return this._transferFailCount >= MAX_TRANSFER_RETRIES;
+        return this.transferButtonLocked;
     }
 
-    get transferStatusClass() {
-        const s = this.detailTransferStatus;
-        if (s === 'Success') return 'fec-td-value fec-td-value--success';
-        if (s === 'Failure') return 'fec-td-value fec-td-value--failure';
-        return 'fec-td-value';
+    /** Case đã submit — giữ nguyên UI, chỉ khóa thao tác transfer. */
+    get isTransferReadonly() {
+        return getFieldValue(this._caseRecord?.data, IS_SUBMITED_FIELD) === true;
+    }
+
+    get _caseTransferStatus() {
+        return getFieldValue(this._caseRecord?.data, TRANSFER_STATUS_FIELD) || STR_EMPTY;
+    }
+
+    get _caseFailureReason() {
+        return (getFieldValue(this._caseRecord?.data, FAILURE_REASON_FIELD) || STR_EMPTY).trim();
+    }
+
+    /** Giữ layout success view khi transfer thành công (session hoặc Case đã submit). */
+    get showTransferSuccessView() {
+        if (this.transferCompleted) {
+            return true;
+        }
+        return this.isTransferReadonly && this._caseTransferStatus === 'Success';
+    }
+
+    /** Hiện Call Transfer Details trong accordion (thất bại / readonly có dữ liệu transfer). */
+    get showCallTransferDetails() {
+        if (this.showTransferSuccessView) {
+            return false;
+        }
+        if (this.transferFailed) {
+            return true;
+        }
+        if (!this.isTransferReadonly) {
+            return false;
+        }
+        const status = this._caseTransferStatus;
+        const transferData = getFieldValue(this._caseRecord?.data, TRANSFER_DATA_FIELD);
+        return (
+            status === 'Failure' ||
+            status === 'Success' ||
+            transferData === 'Yes' ||
+            transferData === 'No'
+        );
+    }
+
+    get transferButtonClass() {
+        const base = 'slds-button slds-button_brand fec-transfer-call__btn-transfer';
+        if (this.transferButtonLocked || this.isTransferReadonly) {
+            return `${base} fec-transfer-call__btn-max-failed`;
+        }
+        return base;
     }
 
     get transferButtonDisabled() {
-        return this.isTransferring || this.isMaxFailReached;
+        return this.isTransferring || this.isMaxFailReached || this.isTransferReadonly;
     }
 
     get hasTransferError() {
+        if (this.isTransferReadonly) {
+            return this._caseTransferStatus === 'Failure' && this._caseFailureReason.length > 0;
+        }
         return typeof this.transferErrorReason === 'string' && this.transferErrorReason.trim().length > 0;
     }
 
@@ -271,11 +402,17 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
     }
 
     get transferErrorReasonLine() {
-        const r = (this.transferErrorReason || STR_EMPTY).trim();
+        const r = this.isTransferReadonly
+            ? this._caseFailureReason
+            : (this.transferErrorReason || STR_EMPTY).trim();
         return r.length ? `Lí do: ${r}` : STR_EMPTY;
     }
 
     _lastRecordIdForStorage;
+
+    _syncTransferButtonLocked() {
+        this.transferButtonLocked = this._transferFailCount >= MAX_TRANSFER_RETRIES;
+    }
 
     renderedCallback() {
         if (!this.recordId) {
@@ -293,6 +430,7 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
             const storedFailCount = sessionStorage.getItem(STORAGE_FAIL_COUNT_PREFIX + this.recordId);
             if (storedFailCount != null) {
                 this._transferFailCount = parseInt(storedFailCount, 10) || 0;
+                this._syncTransferButtonLocked();
             }
             if (sessionStorage.getItem(STORAGE_KEY_PREFIX + this.recordId) === '1') {
                 this.transferCompleted = true;
@@ -305,6 +443,7 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
                     this._localTransferStatus = 'Failure';
                     this._localFailureReason = sessionStorage.getItem(STORAGE_REASON_PREFIX + this.recordId) || STR_EMPTY;
                     this.transferErrorReason = this._localFailureReason;
+                    this.transferRemark = sessionStorage.getItem(STORAGE_REMARK_PREFIX + this.recordId) || STR_EMPTY;
                 }
             }
         } catch {
@@ -328,17 +467,21 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         this._localTransferStatus = 'Success';
         this._localFailureReason = STR_EMPTY;
         this._transferFailCount = 0;
+        this.transferButtonLocked = false;
     }
 
-    persistTransferFailure(reason) {
+    persistTransferFailure(reason, remark) {
         if (!this.recordId) {
             return;
         }
         const r = reason || STR_EMPTY;
+        const rm = remark || STR_EMPTY;
         this._transferFailCount += 1;
+        this._syncTransferButtonLocked();
         try {
             sessionStorage.setItem(STORAGE_STATUS_PREFIX + this.recordId, 'Failure');
             sessionStorage.setItem(STORAGE_REASON_PREFIX + this.recordId, r);
+            sessionStorage.setItem(STORAGE_REMARK_PREFIX + this.recordId, rm);
             sessionStorage.setItem(STORAGE_FAIL_COUNT_PREFIX + this.recordId, String(this._transferFailCount));
         } catch {
             /* bỏ qua */
@@ -346,6 +489,7 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         this.transferFailed = true;
         this._localTransferStatus = 'Failure';
         this._localFailureReason = r;
+        this.transferRemark = rm;
     }
 
     clearTransferSuccessSession() {
@@ -381,20 +525,33 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         });
     }
 
-    handleSectionToggle(event) {
-        this.activeSections = event.detail.openSections;
-    }
-
-    handleOpenConfirmModal() {
-        if (!this.recordId || this.isTransferring || this.isMaxFailReached) {
+    handleOpenConfirmModal(event) {
+        if (!this.recordId || this.isTransferring || this.transferButtonLocked || this.isTransferReadonly) {
             return;
         }
+        event?.currentTarget?.blur?.();
         this.transferErrorReason = STR_EMPTY;
         this.transferFailed = false;
         this._localTransferStatus = STR_EMPTY;
         this._localFailureReason = STR_EMPTY;
+        this.transferRemark = STR_EMPTY;
         this.remarkValue = STR_EMPTY;
-        this.showConfirmModal = true;
+        try {
+            sessionStorage.removeItem(STORAGE_REMARK_PREFIX + this.recordId);
+        } catch {
+            /* bỏ qua */
+        }
+        prepareRemarkForCollectionsTransfer({ caseId: this.recordId })
+            .then(() => {
+                getRecordNotifyChange([{ recordId: this.recordId }]);
+            })
+            .catch((err) => {
+                // eslint-disable-next-line no-console
+                console.warn('[fec_TransferCall] clear remark on Case failed', err);
+            })
+            .finally(() => {
+                this.showConfirmModal = true;
+            });
     }
 
     handleCancelModal() {
@@ -405,32 +562,66 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
         this.remarkValue = STR_EMPTY;
     }
 
-    handleRemarkChange(event) {
-        this.remarkValue = event.target.value;
-    }
-
-    async handleConfirmTransfer() {
-        if (!this.recordId || this.isTransferring) {
-            return;
-        }
-
-        const textarea = this.template.querySelector(
+    _getCollectionsRemarkTextarea() {
+        return this.template.querySelector(
             'lightning-textarea[name="collectionsRemark"]'
         );
-        if (textarea) {
-            const ok = textarea.checkValidity();
-            textarea.reportValidity();
-            if (!ok) {
-                return;
+    }
+
+    _syncRemarkValueFromDom() {
+        const textarea = this._getCollectionsRemarkTextarea();
+        if (textarea && typeof textarea.value === 'string') {
+            this.remarkValue = textarea.value;
+        }
+    }
+
+    /**
+     * Kiểm tra Remark for Collections trước khi gọi Apex.
+     * @returns {{ valid: boolean, trimmed: string }}
+     */
+    _validateCollectionsRemark() {
+        this._syncRemarkValueFromDom();
+        const textarea = this._getCollectionsRemarkTextarea();
+        const trimmed = (this.remarkValue || STR_EMPTY).trim();
+
+        if (trimmed.length > 0) {
+            if (textarea?.setCustomValidity) {
+                textarea.setCustomValidity(STR_EMPTY);
+                textarea.reportValidity();
             }
+            return { valid: true, trimmed };
         }
 
-        const trimmed = (this.remarkValue || STR_EMPTY).trim();
-        if (!trimmed) {
-            this.showConfirmModal = false;
-            this.transferErrorReason = 'Vui lòng nhập Remark for Collections.';
+        if (textarea) {
+            if (textarea.setCustomValidity) {
+                textarea.setCustomValidity(this.labelRemarkRequired);
+            }
+            if (textarea.reportValidity) {
+                textarea.reportValidity();
+            }
+        }
+        return { valid: false, trimmed: STR_EMPTY };
+    }
+
+    handleRemarkChange(event) {
+        this.remarkValue = event.target.value;
+        const textarea = event.target;
+        if (textarea?.setCustomValidity) {
+            textarea.setCustomValidity(STR_EMPTY);
+            textarea.reportValidity();
+        }
+    }
+
+    async handleConfirmTransfer(event) {
+        if (!this.recordId || this.isTransferring || this.transferButtonLocked || this.isTransferReadonly) {
             return;
         }
+
+        const { valid, trimmed } = this._validateCollectionsRemark();
+        if (!valid) {
+            return;
+        }
+        event?.currentTarget?.blur?.();
 
         this.transferErrorReason = STR_EMPTY;
         this.isTransferring = true;
@@ -460,7 +651,7 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
                     this.clearTransferSuccessSession();
                     this.showConfirmModal = false;
                     this.transferErrorReason = transferCallFailureMessage(result);
-                    this.persistTransferFailure(this.transferErrorReason);
+                    this.persistTransferFailure(this.transferErrorReason, trimmed);
                     // eslint-disable-next-line no-console
                     console.warn(
                         '[fec_TransferCall] transfer failed',
@@ -472,7 +663,7 @@ export default class Fec_TransferCall extends NavigationMixin(LightningElement) 
                 this.clearTransferSuccessSession();
                 this.showConfirmModal = false;
                 this.transferErrorReason = imperativeApexErrorMessage(err);
-                this.persistTransferFailure(this.transferErrorReason);
+                this.persistTransferFailure(this.transferErrorReason, trimmed);
                 // eslint-disable-next-line no-console
                 console.error('[fec_TransferCall] apex exception', err);
             })

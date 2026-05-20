@@ -1,24 +1,60 @@
-import { LightningElement, track, api } from "lwc";
+import { LightningElement, track, api, wire } from "lwc";
 import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseNonExistingData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
-import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
+// import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 
-import FEC_DNB_Has_Data_Question from '@salesforce/label/c.FEC_DNB_Has_Data_Question';
-import FEC_DNB_No_Data_Question from '@salesforce/label/c.FEC_DNB_No_Data_Question';
+import FEC_DNB_Has_Data_Question from "@salesforce/label/c.FEC_DNB_Has_Data_Question";
+import FEC_DNB_No_Data_Question from "@salesforce/label/c.FEC_DNB_No_Data_Question";
 
-import FEC_DNB_National_Id from '@salesforce/label/c.LBL_NationalID';
-import FEC_DNB_NID_Placeholder from '@salesforce/label/c.FEC_DNB_NID_Placeholder';
-import FEC_DNB_NID_Error from '@salesforce/label/c.FEC_MSG_National_ID_Invalid';
+import FEC_DNB_National_Id from "@salesforce/label/c.LBL_NationalID";
+import FEC_DNB_NID_Placeholder from "@salesforce/label/c.FEC_DNB_NID_Placeholder";
+import FEC_DNB_NID_Error from "@salesforce/label/c.FEC_MSG_National_ID_Invalid";
 
-import FEC_DNB_Update_Button from '@salesforce/label/c.FEC_DNB_Update_Button';
+import FEC_DNB_Update_Button from "@salesforce/label/c.FEC_DNB_Update_Button";
 
-import FEC_DNB_Modal_Title from '@salesforce/label/c.FEC_DNB_Modal_Title';
-import FEC_DNB_Modal_Message from '@salesforce/label/c.FEC_DNB_Modal_Message';
-
-
+import FEC_DNB_Modal_Title from "@salesforce/label/c.FEC_DNB_Modal_Title";
+import FEC_DNB_Modal_Message from "@salesforce/label/c.FEC_DNB_Modal_Message";
+import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page";
+import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import FEC_Yes_Btn from "@salesforce/label/c.FEC_Yes_Btn";
 import FEC_No_Btn from "@salesforce/label/c.FEC_No_Btn";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
+
+import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
+
+import updateFieldDoNotBother from "@salesforce/apex/FEC_DNBHandler.updateFieldDoNotBother";
+
+import updateDNBProcessCount from "@salesforce/apex/FEC_DNBHandler.updateDNBProcessCount";
+
+import DO_NOT_BOTHER_CHANNEL from "@salesforce/messageChannel/FEC_DoNotBother__c";
+
+import IS_MODE_EDIT from "@salesforce/messageChannel/FEC_Case_Mode__c";
+
+import {
+  subscribe,
+  unsubscribe,
+  APPLICATION_SCOPE,
+  MessageContext,
+  publish,
+} from "lightning/messageService";
 export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement {
+  @wire(MessageContext)
+  messageContext;
+
+  subscription = null;
+
+  isReadonlyMode = false;
+
+  modeEditCase = false;
+
+  errorMessage = "";
+
+  retryCount = 0;
+
+  maxRetry = 3;
+
+  isMaxRetryReached = false;
+
   labels = {
     pageSizeLabel: FEC_RECORDS_PER_PAGE_LABEL,
     goToPageLabel: FEC_GO_TO_PAGE_LABEL,
@@ -42,59 +78,120 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
   customerName = "";
   nationalId = "";
+  contractId = "";
   radioOptions = [
     { label: "Không", value: "no" },
     { label: "Có", value: "yes" },
   ];
   hasDNBData = false;
-  dnbMap = new Map();
   isConfirmOpen = false;
   // ===== Pagination state =====
   pageSize = 10;
   currentPage = 1;
   goToPageValue;
+  isDNBUpdated = false;
 
-  columns = [
-    { label: "DNB Channel", fieldName: "channel", type: "text" },
-    { label: "Type", fieldName: "type", type: "text" },
-    { label: "Phone/Email", fieldName: "contact", type: "contact" },
-    { label: "Current Status", fieldName: "status", type: "text" },
+  get columns() {
+    return [
+      {
+        label: "DNB Channel",
+        fieldName: "channel",
+        type: "text",
+      },
 
-    {
-      label: "Action",
-      fieldName: "active",
-      type: "checkbox",
-      checkboxLabel: this.hasDNBData ? "Extend" : "Active",
-    },
-    { label: "Expiry Date", fieldName: "expiry", type: "text" },
-    { label: "Original Reason", fieldName: "originalReason", type: "text" },
-    { label: "Update Reason", fieldName: "updateReason", type: "picklist" },
-  ];
+      {
+        label: "Type",
+        fieldName: "type",
+        type: "text",
+      },
 
-  async connectedCallback() {
-    await this.getDnb();
-    await this.loadData();
+      {
+        label: "Phone/Email",
+        fieldName: "contact",
+        type: "contact",
+      },
+
+      {
+        label: "Current Status",
+        fieldName: "status",
+        type: "text",
+      },
+
+      {
+        label: "Action",
+        fieldName: "active",
+        type: "checkbox",
+        checkboxLabelField: "checkboxLabel",
+      },
+
+      {
+        label: "Expiry Date",
+        fieldName: "expiry",
+        type: "text",
+      },
+
+      {
+        label: "Original Reason",
+        fieldName: "originalReasonLabel",
+        type: "text",
+      },
+
+      {
+        label: "Update Reason",
+
+        fieldName: this.isReadonlyMode ? "updateReasonLabel" : "updateReason",
+
+        type: this.isReadonlyMode ? "text" : "picklist",
+
+        headerClass: "update-reason-header",
+      },
+
+      {
+        label: "Remarks",
+
+        fieldName: "remarks",
+
+        type: this.isReadonlyMode ? "text" : "textarea",
+
+        disabledField: "isReadonly",
+
+        headerClass: "remarks-header",
+      },
+    ];
   }
 
-  async getDnb() {
-    try {
-      const res = await getDNB({ caseId: this.recordId });
-      const parsed = JSON.parse(res);
-      const list = parsed.result || [];
+  async connectedCallback() {
+    this.subscribeToMessageChannel();
 
-      this.hasDNBData = list.length > 0;
+    await this.loadData();
 
-      this.dnbMap = new Map();
+    await this.loadDNBRecords();
+  }
 
-      list.forEach((item) => {
-        const key = `${item.type}_${item.type_value}`;
-        this.dnbMap.set(key, item);
-      });
+  disconnectedCallback() {
+    unsubscribe(this.subscription);
+    this.subscription = null;
 
-      console.log("DNB MAP:", this.dnbMap);
-    } catch (e) {
-      console.error("Get DNB error", e);
+    this.modeEditCase = false;
+  }
+
+  subscribeToMessageChannel() {
+    this.subscription = subscribe(
+      this.messageContext,
+      IS_MODE_EDIT,
+      (message) => this.handleMessage(message),
+      { scope: APPLICATION_SCOPE },
+    );
+  }
+
+  handleMessage(message) {
+    if (!message || typeof message.isModeEdit === "undefined") return;
+
+    if (message.caseId != null && message.caseId !== this.recordId) {
+      return;
     }
+
+    this.modeEditCase = message.isModeEdit;
   }
 
   async loadData() {
@@ -103,87 +200,16 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
 
       this.customerName = result.customerName;
       this.nationalId = result.nationalId;
+      this.contractId = result.contractId;
+      this.retryCount = result.processActionCount || 0;
 
-      const rows = this.buildDNBData(result);
+      this.isMaxRetryReached = this.retryCount >= 3;
+      this.modeEditCase = result.viewMode === "handling" ? true : false;
       this.data = this.prepareData(rows);
       this.updatePagedData();
     } catch (e) {
       console.error("Load data error", e);
     }
-  }
-
-  buildDNBData(res) {
-    const channel = res.channel?.toLowerCase();
-    const isCall = ["inbound", "outbound"].includes(channel);
-
-    const createRow = ({
-      id,
-      channel,
-      type,
-      contact,
-      maskedContact,
-      disableAction = false,
-    }) => {
-      const hasContact = !!contact;
-
-      const typeKey = this.mapType(channel);
-      const key = `${typeKey}_${contact}`;
-
-      const dnb = this.dnbMap.get(key);
-
-      const hasExpiry = !!dnb?.expiry;
-
-      return {
-        id,
-        channel,
-        type,
-
-        contact: contact || "",
-        maskedContact: maskedContact || "",
-        isHidden: true,
-
-        // ===== CORE LOGIC =====
-        status: hasExpiry ? "Active" : "Inactive",
-        expiry: dnb?.expiry || "",
-
-        active: false,
-
-        originalReason: dnb?.reason || "",
-        updateReason: "",
-
-        isReasonDisabled: true,
-
-        isActionDisabled: disableAction || !hasContact,
-        hasContact,
-
-        reasonOptionsFormatted: this.getReasonOptions(),
-      };
-    };
-
-    return [
-      createRow({
-        id: "interaction-phone-call",
-        channel: "Call",
-        type: "Interaction Phone",
-        contact: res.interactionPhoneNumber,
-        maskedContact: res.interactionMaskedPhone,
-      }),
-      createRow({
-        id: "interaction-phone-sms",
-        channel: "SMS",
-        type: "Interaction Phone",
-        contact: res.interactionPhoneNumber,
-        maskedContact: res.interactionMaskedPhone,
-      }),
-      createRow({
-        id: "interaction-email",
-        channel: "Email",
-        type: "Interaction Email",
-        contact: isCall ? "" : res.interactionEmail,
-        maskedContact: res.interactionMaskedEmail,
-        disableAction: isCall,
-      }),
-    ];
   }
 
   getReasonOptions() {
@@ -205,14 +231,78 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     ];
   }
 
-  prepareData(data) {
-    return data.map((row) => ({
-      ...row,
-      isReasonDisabled: !row.active,
-      maskedContact: row.maskedContact || this.maskContact(row.contact),
-    }));
+  async loadDNBRecords() {
+    try {
+      const result = await getListDNBs({
+        caseId: this.recordId,
+      });
+
+      console.log("DNB DB RECORDS:", JSON.stringify(result));
+
+      this.hasDNBData = result?.length > 0;
+
+      this.data = this.prepareDBData(result);
+
+      this.updatePagedData();
+    } catch (e) {
+      console.error("Load DNB records error", e);
+    }
   }
 
+  prepareDBData(records) {
+    return (records || []).map((row) => {
+      const isReadonly = !!row.updatedReason;
+
+      return {
+        id: row.id,
+
+        channel: row.channel,
+
+        type: row.type,
+
+        contact: row.typeValue || "",
+
+        maskedContact: this.maskContact(row.typeValue),
+
+        isHidden: true,
+
+        status: row.doNotBother || "Inactive",
+
+        checkboxLabel:
+          row.doNotBother === "Extend Expiry Date" ||
+          row.doNotBother === "Active"
+            ? "Extend Expiry Date"
+            : "Active",
+
+        expiry: row.expectedExcludeTime || "",
+
+        active: row.action || false,
+
+        originalReason: row.reason2 || "",
+
+        originalReasonLabel: this.getReasonLabel(row.reason2),
+
+        updateReason: row.updatedReason || "",
+
+        updateReasonLabel: this.getReasonLabel(row.updatedReason),
+
+        remarks: row.remarks || "",
+
+        /*
+         * READONLY
+         */
+        isReadonly,
+
+        isReasonDisabled: !row.action || isReadonly,
+
+        isActionDisabled: row.channel === "Email" || isReadonly,
+
+        hasContact: !!row.typeValue,
+
+        reasonOptionsFormatted: this.getReasonOptions(),
+      };
+    });
+  }
   maskContact(value) {
     if (!value) return "";
 
@@ -389,32 +479,146 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
   }
 
   async handleUpdate() {
-    if (this.isUpdateDisabled) return;
-
-    const payload = this.buildPayload();
-
-    console.log("FINAL PAYLOAD:", JSON.stringify(payload));
+    if (this.isUpdateDisabled) {
+      return;
+    }
 
     try {
-      await createDNB({ payload: payload }); // Apex call
+      /*
+       * User selected YES
+       */
+      await updateFieldDoNotBother({
+        caseId: this.recordId,
+
+        selectedOption: "yes",
+      });
+
+      this.syncUIValuesBeforeReadonly();
+      const payload = this.buildPayload();
+
+      console.log("FINAL PAYLOAD:", JSON.stringify(payload));
+
+      const result = await createDNB({
+        payload: JSON.stringify(payload),
+      });
+
+      console.log("DNB RESULT =", result);
+
+      /*
+       * SUCCESS
+       */
+      if (Number(result?.code) === 0) {
+        /*
+         * Reset retry count
+         */
+        await updateDNBProcessCount({
+          caseId: this.recordId,
+
+          isSuccess: true,
+        });
+
+        /*
+         * Success state
+         */
+        this.isDNBUpdated = true;
+
+        this.isReadonlyMode = true;
+
+        this.applyReadonlyState();
+
+        /*
+         * Publish LMS
+         */
+        this.publishReadonlyMessage();
+
+        this.showToast("Success", "DNB created successfully", "success");
+      } else {
+        /*
+         * BUSINESS ERROR
+         */
+        let errorMessage = result?.sys?.message || "Unknown error";
+
+        const invalidFields = (result?.result || [])
+          .flatMap((item) => item?.list_invalid || [])
+          .filter(Boolean)
+          .join(", ");
+
+        if (invalidFields) {
+          errorMessage += ` (${invalidFields})`;
+        }
+
+        this.showToast("Failed", errorMessage, "error", "sticky");
+
+        /*
+         * Persist retry count
+         */
+        const retryCount = await updateDNBProcessCount({
+          caseId: this.recordId,
+
+          isSuccess: false,
+        });
+
+        this.retryCount = retryCount;
+        if (retryCount < 3) {
+          this.errorMessage =
+            "Cập nhật thông tin khách hàng vào danh sách DNB thất bại. Vui lòng thử lại";
+        } else {
+          this.errorMessage =
+            "Cập nhật thông tin khách hàng vào danh sách DNB thất bại.";
+        }
+        this.isMaxRetryReached = retryCount >= 3;
+      }
     } catch (e) {
-      console.error(e);
+      console.error("createDNB ERROR =", e);
+      const retryCount = await updateDNBProcessCount({
+        caseId: this.recordId,
+
+        isSuccess: false,
+      });
+
+      this.retryCount = retryCount;
+      if (retryCount < 3) {
+        this.errorMessage =
+          "Cập nhật thông tin khách hàng vào danh sách DNB thất bại. Vui lòng thử lại";
+      } else {
+        this.errorMessage =
+          "Cập nhật thông tin khách hàng vào danh sách DNB thất bại.";
+      }
+      this.isMaxRetryReached = retryCount >= 3;
+      this.showToast(
+        "System Error",
+        e?.body?.message || e?.message || "Unexpected error",
+        "error",
+        "sticky",
+      );
     }
+
+    /*
+     * Always close modal
+     */
+
+    this.close();
   }
 
   buildPayload() {
     return this.data
       .filter((row) => row.active)
       .map((row) => ({
+        dnb_id: row.id,
+        channel: row.channel,
         reason: row.updateReason,
+        remarks: row.remarks,
         full_name: this.customerName || "UNKNOWN",
         nid: this.nationalId || "000000000000",
         do_not_bother: true,
         type: this.mapType(row.channel),
-        type_value: row.contact,
+        type_value:
+          row.channel === "Email"
+            ? row.contact
+            : this.normalizePhone(row.contact),
+        contract_id: this.contractId || "UNKNOWN",
       }));
   }
-
   mapType(channel) {
     switch (channel) {
       case "Call":
@@ -440,6 +644,46 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.nidError = !(cleaned.length === 9 || cleaned.length === 12);
   }
 
+  applyReadonlyState() {
+    this.data = this.data.map((row) => ({
+      ...row,
+
+      isReadonly: true,
+
+      isReasonDisabled: true,
+
+      isActionDisabled: true,
+    }));
+
+    this.updatePagedData();
+  }
+
+  publishReadonlyMessage() {
+    publish(
+      this.messageContext,
+
+      DO_NOT_BOTHER_CHANNEL,
+
+      {
+        status: "SUCCESS",
+
+        caseId: this.recordId,
+
+        message: "DNB updated successfully",
+      },
+    );
+  }
+
+  showToast(title, message, variant, mode = "dismissable") {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title,
+        message,
+        variant,
+        mode,
+      }),
+    );
+  }
   //------------------------- MODAL EVENTS ----------------
   get isOpen() {
     return this.isConfirmOpen;
@@ -453,7 +697,39 @@ export default class Fec_DoNotBotherNonExistingCustomer extends LightningElement
     this.isConfirmOpen = false;
   }
 
-  handleCloseModal() {
+  async handleCloseModal() {
+    try {
+      await updateFieldDoNotBother({
+        caseId: this.recordId,
+
+        selectedOption: "no",
+      });
+    } catch (e) {
+      console.error("Update DNB flag error", e);
+    }
+
     this.close();
+  }
+
+  get isHandlingMode() {
+    return this.modeEditCase === true;
+  }
+
+  get showResultSection() {
+    /*
+     * REVIEW MODE
+     */
+    if (!this.isHandlingMode) {
+      return true;
+    }
+
+    /*
+     * HANDLING MODE
+     */
+    return this.isReadonlyMode;
+  }
+
+  get showUpdateButton() {
+    return !this.isReadonlyMode && !this.isMaxRetryReached;
   }
 }

@@ -901,6 +901,16 @@ public with sharing class FEC_CommonUltils {
             return Date.newInstance(year, month, day);
         }
 
+        // Format: yyyyMMdd (common in host / VMX payloads)
+        if (v.length() == 8) {
+            Integer y = Integer.valueOf(v.substring(0, 4));
+            Integer mo = Integer.valueOf(v.substring(4, 6));
+            Integer da = Integer.valueOf(v.substring(6, 8));
+            if (mo >= 1 && mo <= 12 && da >= 1 && da <= 31) {
+                return Date.newInstance(y, mo, da);
+            }
+        }
+
     } catch (Exception e) {
         System.debug('Invalid date: ' + v);
     }
@@ -1352,11 +1362,16 @@ public with sharing class FEC_CommonUltils {
     }
     
     // Sort alphabetically
-    parts.sort();
+    parts.sort(new TeamComparator());
     
     // Join back with "_"
     return String.join(parts, '_');
 
+  }
+  public class TeamComparator implements Comparator<String> {
+    public Integer compare(String a, String b) {
+        return a.toLowerCase().compareTo(b.toLowerCase());
+    }
   }
 
   public static void logException(String author, String func, String errMsg, String stackTrace) {

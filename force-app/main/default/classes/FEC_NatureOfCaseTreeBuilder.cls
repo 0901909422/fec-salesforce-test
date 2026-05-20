@@ -43,6 +43,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Product_Type__r.Name, noc.FEC_Product_Type__c,
                         noc.FEC_Customer_Type__c, noc.Id, FEC_UIConstants.LABEL_PRODUCT_TYPE
                     );
+                    ptNode.FEC_User_Group = noc.FEC_User_Group__c;
                     mapProductType.put(productTypeCode, ptNode);
                 } else {
                     ptNode = mapProductType.get(productTypeCode);
@@ -64,6 +65,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Business_Process__r.Name, noc.FEC_Business_Process__c,
                         noc.FEC_Customer_Type__c, noc.Id, FEC_UIConstants.LABEL_BUSINESS_PROCESS
                     );
+                    bpNode.FEC_User_Group = noc.FEC_User_Group__c;
                     ptNode.mapChilds.put(bpKey, bpNode);
                 } else { bpNode = ptNode.mapChilds.get(bpKey); }
                 if (noc.FEC_Business_Process__r.FEC_Active__c == false) { continue; }
@@ -83,6 +85,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Category__r.Name, noc.FEC_Category__c,
                         noc.FEC_Customer_Type__c, noc.Id, FEC_UIConstants.LABEL_CATEGORY
                     );
+                    catNode.FEC_User_Group = noc.FEC_User_Group__c;
                     bpNode.mapChilds.put(catKey, catNode);
                 } else { catNode = bpNode.mapChilds.get(catKey); }
                 if (noc.FEC_Category__r.FEC_Active__c == false) { continue; }
@@ -102,6 +105,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.FEC_Sub_Category__r.Name, noc.FEC_Sub_Category__c,
                         noc.FEC_Customer_Type__c, noc.Id, FEC_UIConstants.LABEL_SUB_CATEGORY
                     );
+                    subCatNode.FEC_User_Group = noc.FEC_User_Group__c;
                     catNode.mapChilds.put(subCatKey, subCatNode);
                 } else { subCatNode = catNode.mapChilds.get(subCatKey); }
                 if (noc.FEC_Sub_Category__r.FEC_Active__c == false) { continue; }
@@ -112,14 +116,16 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                 String scKey = subCatNode.code + '_' + subCodeCode;
                 if (subCatNode.mapChilds == null) subCatNode.mapChilds = new Map<String, FEC_NatureOfCaseTreeItem>();
                 if (!subCatNode.mapChilds.containsKey(scKey)) {
-                    subCatNode.mapChilds.put(scKey, new FEC_NatureOfCaseTreeItem(
+                    FEC_NatureOfCaseTreeItem scNode = new FEC_NatureOfCaseTreeItem(
                         subCodeCode, scodeKey, null,
                         noc.FEC_Sub_Code__r.FEC_Alias__c, noc.FEC_Sub_Code__r.FEC_Code__c,
                         noc.FEC_Sub_Code__r.FEC_Name_VN__c, null,
                         noc.FEC_Sub_Code__r.FEC_Active__c, null,
                         noc.FEC_Sub_Code__r.Name, noc.FEC_Sub_Code__c,
                         noc.FEC_Customer_Type__c, noc.Id, FEC_UIConstants.LABEL_SUB_CODE
-                    ));
+                    );
+                    scNode.FEC_User_Group = noc.FEC_User_Group__c;
+                    subCatNode.mapChilds.put(scKey, scNode);
                 }
             }
         }
@@ -184,6 +190,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.Id,
                         FEC_UIConstants.LABEL_PRODUCT_TYPE
                     );
+                    ptNode.FEC_User_Group = noc.FEC_User_Group__c;
                     mapProductType.put(productTypeCode, ptNode);
                 } else {
                     ptNode = mapProductType.get(productTypeCode);
@@ -222,6 +229,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.Id,
                         FEC_UIConstants.LABEL_BUSINESS_PROCESS
                     );
+                    bpNode.FEC_User_Group = noc.FEC_User_Group__c;
                     ptNode.mapChilds.put(bpKey, bpNode);
                 } else {
                     bpNode = ptNode.mapChilds.get(bpKey);
@@ -256,6 +264,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.Id,
                         FEC_UIConstants.LABEL_CATEGORY
                     );
+                    catNode.FEC_User_Group = noc.FEC_User_Group__c;
                     bpNode.mapChilds.put(catKey, catNode);
                 } else {
                     catNode = bpNode.mapChilds.get(catKey);
@@ -290,6 +299,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.Id,
                         FEC_UIConstants.LABEL_SUB_CATEGORY
                     );
+                    subCatNode.FEC_User_Group = noc.FEC_User_Group__c;
                     catNode.mapChilds.put(subCatKey, subCatNode);
                 } else {
                     subCatNode = catNode.mapChilds.get(subCatKey);
@@ -323,6 +333,7 @@ public with sharing class FEC_NatureOfCaseTreeBuilder {
                         noc.Id,
                         FEC_UIConstants.LABEL_SUB_CODE
                     );
+                    scNode.FEC_User_Group = noc.FEC_User_Group__c;
                     subCatNode.mapChilds.put(scKey, scNode);
                 }
                 if (noc.FEC_Sub_Code__r.FEC_Active__c == false) {

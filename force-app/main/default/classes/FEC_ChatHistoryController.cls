@@ -2,6 +2,9 @@ public with sharing class FEC_ChatHistoryController {
     public class ChatDataWrapper {
         @AuraEnabled public List<FEC_ChatHistory__c> messages;
         @AuraEnabled public Map<String, String> fileMap; // Map<FileName, ContentVersionId>
+        @AuraEnabled public Boolean isChatAutomation;
+        @AuraEnabled public Boolean hasManualChatHistory;
+        @AuraEnabled public String manualChatHistoryContent;
     }
     
     /** * getChatMessages
@@ -19,6 +22,12 @@ public with sharing class FEC_ChatHistoryController {
             WHERE FEC_Case__c = :caseId 
             ORDER BY FEC_CreatedAt__c ASC
         ];
+
+        // Query Case to check if it's Chat Automation and if manual chat history exists
+        List<Case> cases = [SELECT FEC_Is_Chat_Automation__c, FEC_Chat_History__c FROM Case WHERE Id = :caseId LIMIT 1];
+        result.isChatAutomation = !cases.isEmpty() && cases[0].FEC_Is_Chat_Automation__c;
+        result.hasManualChatHistory = !cases.isEmpty() && String.isNotBlank(cases[0].FEC_Chat_History__c);
+        result.manualChatHistoryContent = !cases.isEmpty() ? cases[0].FEC_Chat_History__c : null;
 
         List<ContentVersion> files = [
             SELECT Id, Title, FileExtension 
@@ -38,5 +47,19 @@ public with sharing class FEC_ChatHistoryController {
             }
         }
         return result;
+    }
+
+    /** * saveManualChatHistory
+    * Saves a manual chat history message directly to the Case's FEC_Chat_History__c field.
+    * @param caseId: ID of the Case to save chat history for.
+    * @param message: The message text to save.
+    */
+    @AuraEnabled
+    public static void saveManualChatHistory(Id caseId, String message) {
+        if (String.isBlank(message)) {
+            throw new AuraHandledException('Message cannot be blank.');
+        }
+        
+        update new Case(Id = caseId, FEC_Chat_History__c = message);
     }
 }

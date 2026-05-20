@@ -9,22 +9,28 @@
       <template if:false={eligibilityLoading}>
         <template if:true={showNotEligible}>
           <lightning-layout-item size="12" padding="around-small">
-            <lightning-input type="text" label={customLabel.lblFastCashStatus} value={fastCashStatusLabel} disabled></lightning-input>
-          </lightning-layout-item>
-          <lightning-layout-item size="6" padding="around-small">
-            <lightning-input type="text" label={customLabel.lblErrorCode} value={displayErrorCode} disabled></lightning-input>
-          </lightning-layout-item>
-          <lightning-layout-item size="6" padding="around-small">
-            <lightning-input type="text" label={customLabel.lblErrorDescription} value={displayErrorDescription} disabled></lightning-input>
+            <p class="fec-fc-noti fec-fc-noti-below-title validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
           </lightning-layout-item>
           <lightning-layout-item size="12" padding="around-small">
-            <p class="validation-msg validation-msg-red">{customLabel.msgNoti15}</p>
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblFastCashStatus}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayFastCashStatus}</div>
+            </div>
+          </lightning-layout-item>
+          <lightning-layout-item size="6" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblErrorCode}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayErrorCode}</div>
+            </div>
+          </lightning-layout-item>
+          <lightning-layout-item size="6" padding="around-small">
+            <div class="slds-form-element">
+              <label class="slds-form-element__label slds-text-color_weak">{customLabel.lblErrorDescription}</label>
+              <div class="fec-fc-readonly-line slds-text-body_regular">{displayErrorDescription}</div>
+            </div>
           </lightning-layout-item>
         </template>
         <template if:true={showEligible}>
-          <lightning-layout-item size="12" padding="around-small">
-            <lightning-input type="text" label={customLabel.lblFastCashStatus} value={fastCashStatusLabel} disabled></lightning-input>
-          </lightning-layout-item>
           <lightning-layout-item size="6" padding="around-small">
             <lightning-input
               type="text"
@@ -46,10 +52,7 @@
             <template if:true={showNoti08}>
               <p class="slds-m-top_x-small validation-msg validation-msg-green">{customLabel.msgNoti08}</p>
             </template>
-            <template if:true={showNoti09}>
-              <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti09}</p>
-            </template>
-            <template if:true={showNoti10}>
+            <template if:true={showNoti10UnderInput}>
               <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti10}</p>
             </template>
           </lightning-layout-item>
@@ -61,8 +64,11 @@
           </lightning-layout-item>
           <lightning-layout-item size="12" padding="around-small">
             <template if:true={showBlockButton}>
-              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={isReadOnly}>
+              <lightning-button variant="brand" label={customLabel.lblBlockAmount} onclick={handleOpenBlockModal} disabled={blockAmountButtonDisabled}>
               </lightning-button>
+            </template>
+            <template if:true={showNoti09BelowButton}>
+              <p class="slds-m-top_x-small validation-msg validation-msg-red">{customLabel.msgNoti09}</p>
             </template>
           </lightning-layout-item>
         </template>
@@ -76,10 +82,10 @@
     <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
       <div class="slds-modal__container">
         <header class="slds-modal__header">
-          <h2 class="slds-modal__title">{customLabel.lblModalTitle}</h2>
+          <h2 class="slds-modal__title slds-hyphenate fec-fc-modal-title">{customLabel.lblModalTitle}</h2>
           <button class="slds-button slds-modal__close slds-button_icon-inverse" title={customLabel.btnClose} onclick={handleConfirmNo}></button>
         </header>
-        <div class="slds-modal__content slds-p-around_medium">
+        <div class="slds-modal__content slds-p-around_medium fec-fc-modal-body">
           <p>{customLabel.modalBody}</p>
         </div>
         <footer class="slds-modal__footer">

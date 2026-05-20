@@ -432,6 +432,131 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Applicable_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Channel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Editable_Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Editable_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_API_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Editable__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Label_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Mandatory__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Masking__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Object_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Order_Display__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_ReadOnly__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Reverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Field_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_LWC_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Masking_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Nature_Of_Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Section__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Stage_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Sub_Section_Field_Layout__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Sub_Section_Layout__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Sub_Section_Order__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Sub_Section__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Assignment_MDS__c.FEC_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Business_Process__c.FEC_Active__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -612,12 +737,17 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
+        <field>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Category__c</field>
+        <field>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Hold_Case_Config__c.FEC_Case_Stage__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -638,16 +768,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_NFU_Code__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Category__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>FEC_Hold_Case_Config__c.FEC_Sub_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -941,7 +1061,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -956,7 +1076,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -981,7 +1101,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1292,6 +1412,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Stage_Change__c.FEC_IsReverted__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Stage_Change__c.FEC_Next_Queue__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1422,7 +1547,67 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>FEC_Template__c.FEC_Is_ZNS_Template__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Preview_ZNS_Url__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>FEC_Template__c.FEC_Subject_Line__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template__c.FEC_Template_ZNS_Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Accept_Null__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Field_Name__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Format_Function__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Max_Length__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Min_Length__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Page_Context__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Param_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Require__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>FEC_Notification_ZNS_Param_Mapping__c.Template_ID__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -1480,7 +1665,6 @@
         <field>FEC_Decision_Table__c.FEC_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1507,7 +1691,6 @@
         <field>FEC_MDM_Additional_Field__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1529,7 +1712,6 @@
         <field>FEC_MDM_Additional_Field_List_Value__c.FEC_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Master_Data_Setting__c Field Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1596,7 +1778,6 @@
         <field>FEC_MDM_Master_Data_Setting__c.Process_Change_Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <!-- FEC_MDM_Channel__c Permissions -->
     <fieldPermissions>
         <editable>true</editable>
@@ -1614,7 +1795,7 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
+        <editable>true</editable>
         <field>FEC_Hold_Case_Config__c.FEC_Nature_of_Cases__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -1664,6 +1845,15 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>true</modifyAllRecords>
         <object>FEC_Additional_Info__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>FEC_Assignment_MDS__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
@@ -1977,6 +2167,16 @@
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
     <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>FEC_Notification_ZNS_Param_Mapping__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
         <allowEdit>true</allowEdit>
@@ -1985,7 +2185,6 @@
         <object>FEC_MDM_Additional_Field__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- FEC_MDM_Additional_Field_List_Value__c Permissions -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -1996,7 +2195,6 @@
         <object>FEC_MDM_Additional_Field_List_Value__c</object>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
-
     <!-- Other MDM Objects -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
@@ -2124,7 +2322,6 @@
         <object>FEC_Decision_Table__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-    
     <recordTypeVisibilities>
         <recordType>FEC_Notification__c.Auto_Notification</recordType>
         <visible>true</visible>

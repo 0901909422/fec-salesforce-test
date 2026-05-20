@@ -52,8 +52,8 @@ public with sharing class FEC_CardEligibilityController {
         @AuraEnabled public String  tenure         { get; set; }
         @AuraEnabled public String  rate           { get; set; }
         @AuraEnabled public String  registrationRate { get; set; }
-        @AuraEnabled public Decimal monthlyInstallment { get; set; }
-        @AuraEnabled public Decimal conversionFee  { get; set; }
+        @AuraEnabled public String  monthlyInstallment { get; set; }
+        @AuraEnabled public String  conversionFee  { get; set; }
     }
 
     /** Bundle đọc từ FEC_Customer_History__c (neo Case.FEC_Account_or_Contract__c). */
@@ -312,6 +312,15 @@ public with sharing class FEC_CardEligibilityController {
         result.success = false;
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -360,6 +369,15 @@ public with sharing class FEC_CardEligibilityController {
         result.tenorList  = new List<IPPTenorRow>();
 
         try {
+            if (caseId != null) {
+                List<Case> cases = [SELECT FEC_Is_Test_API__c FROM Case WHERE Id = :caseId LIMIT 1];
+                if (!cases.isEmpty() && cases[0].FEC_Is_Test_API__c == true) {
+                    result.httpStatus = 0;
+                    result.errorMessage = System.Label.FEC_MSG_Error_API_Label;
+                    return result;
+                }
+            }
+
             if (String.isBlank(accountNumber)) {
                 result.httpStatus = 0;
                 result.errorMessage = String.format(
@@ -379,18 +397,57 @@ public with sharing class FEC_CardEligibilityController {
             result.errorCode    = apiResult.code;
             result.description  = apiResult.description;
 
-            // Map eligibility fields
+            // 1. Map Fast Cash Status
             String elig = apiResult.accEligibility;
-            Boolean isEligible = ('true'.equalsIgnoreCase(elig) || 'eligible'.equalsIgnoreCase(elig) || '1'.equals(elig));
-            result.fastCashStatus = isEligible
-                ? System.Label.FEC_MSG_Status_Eligible
-                : System.Label.FEC_MSG_Status_Not_Eligible;
-            result.ippStatus = isEligible
+            Boolean isFastCashEligible = ('true'.equalsIgnoreCase(elig) || 'eligible'.equalsIgnoreCase(elig) || '1'.equals(elig));
+            result.fastCashStatus = isFastCashEligible
                 ? System.Label.FEC_MSG_Status_Eligible
                 : System.Label.FEC_MSG_Status_Not_Eligible;
 
-            // Populate mock / placeholder tenor table (replace with real API call if available)
-            if (isEligible) {
+            // 2. Map IPP Status (Requirement: Tenure > 0 AND AccEligibilty == true)
+            Boolean hasValidTenures = false;
+            if (apiResult.campaigns != null) {
+                for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
+                    if (camp.tenure != null && camp.tenure > 0) {
+                        hasValidTenures = true;
+                        break;
+                    }
+                }
+            }
+            Boolean isIPPEligible = (isFastCashEligible && hasValidTenures);
+            result.ippStatus = isIPPEligible
+                ? System.Label.FEC_MSG_Status_Eligible
+                : System.Label.FEC_MSG_Status_Not_Eligible;
+            
+            // 3. Limit (EligibleAmount)
+            result.creditLimit = apiResult.eligibleAmount != null ? String.valueOf(apiResult.eligibleAmount) : null;
+            
+            // 4. Error Code & Description (Only show when NOT eligible)
+            if (!isFastCashEligible || !isIPPEligible) {
+                result.errorCode = formatValue(apiResult.code);
+                result.description = formatValue(apiResult.description);
+            } else {
+                result.errorCode = FEC_ConstantCommon.STR_DASH;
+                result.description = FEC_ConstantCommon.STR_DASH;
+            }
+
+            // 5. Populate tenor table from API campaigns
+            if (hasValidTenures) {
+                Integer idx = 1;
+                for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
+                    if (camp.tenure == null || camp.tenure <= 0) continue; // Skip invalid tenures
+                    
+                    IPPTenorRow row = new IPPTenorRow();
+                    row.id = idx++;
+                    row.tenure = formatValue(camp.tenure != null ? camp.tenure + ' ' + System.Label.FEC_LABEL_Months : null);
+                    row.rate = formatValue(camp.interestRate != null ? (camp.interestRate * 100).setScale(2) + FEC_ConstantCommon.STR_PERCENT : null);
+                    row.registrationRate = formatValue(camp.registrationRate != null ? camp.registrationRate + FEC_ConstantCommon.STR_PERCENT : FEC_ConstantCommon.STR_DASH);
+                    row.monthlyInstallment = formatValue(camp.monthlyInstallment != null ? String.valueOf(camp.monthlyInstallment) : FEC_ConstantCommon.STR_DASH);
+                    row.conversionFee = formatValue(camp.conversionFee != null ? String.valueOf(camp.conversionFee) : FEC_ConstantCommon.STR_DASH);
+                    result.tenorList.add(row);
+                }
+            } else if (isIPPEligible) {
+                // Fallback to existing mock/placeholder logic if no campaigns but eligible (như cũ)
                 result.tenorList = buildTenorList(accountNumber);
             }
 
@@ -426,12 +483,12 @@ public with sharing class FEC_CardEligibilityController {
             if (detail != null && detail.status != 'ERROR') {
                 IPPTenorRow row       = new IPPTenorRow();
                 row.id                = 1;
-                row.tenure            = detail.ippTerm;
-                row.rate              = detail.interestRate != null
-                    ? (detail.interestRate * 100).setScale(2) + '%' : null;
-                row.registrationRate  = null;
-                row.monthlyInstallment = detail.installmentAmount;
-                row.conversionFee     = detail.conversionFee;
+                row.tenure            = formatValue(detail.ippTerm);
+                row.rate              = formatValue(detail.interestRate != null
+                    ? (detail.interestRate * 100).setScale(2) + FEC_ConstantCommon.STR_PERCENT : null);
+                row.registrationRate  = FEC_ConstantCommon.STR_DASH;
+                row.monthlyInstallment = formatValue(detail.installmentAmount != null ? String.valueOf(detail.installmentAmount) : null);
+                row.conversionFee     = formatValue(detail.conversionFee != null ? String.valueOf(detail.conversionFee) : null);
                 rows.add(row);
             }
         } catch (Exception e) {
@@ -440,5 +497,9 @@ public with sharing class FEC_CardEligibilityController {
         }
 
         return rows;
+    }
+
+    private static String formatValue(String val) {
+        return String.isNotBlank(val) ? val : FEC_ConstantCommon.STR_DASH;
     }
 }

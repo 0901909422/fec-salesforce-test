@@ -170,21 +170,15 @@ export default class FecAdditionalFieldList extends LightningElement {
         return this.fieldList.slice(start, start + this.pageSize);
     }
 
-    handlePreviousPage() {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-        }
+    handlePageChange(event) {
+        this.currentPage = event.detail.page;
     }
 
-    handleNextPage() {
-        if (this.currentPage < this.totalPages) {
-            this.currentPage++;
-        }
+    handlePageSizeChange(event) {
+        this.pageSize = event.detail.pageSize;
+        this.currentPage = 1;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize) || 1;
     }
-
-    get isFirstPage() { return this.currentPage <= 1; }
-    get isLastPage() { return this.currentPage >= this.totalPages; }
-    get paginationInfo() { return `${this.currentPage} / ${this.totalPages} (${this.totalRecords} records)`; }
 
     async deleteRecord(recordId) {
         this.isLoading = true;

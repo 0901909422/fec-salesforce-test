@@ -23,6 +23,8 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
 
     @api forceTwoColumn = false;
     @api columns;
+    @api showEditButton = false;
+    @api editLabel = 'Edit';
 
     /* ================= INTERNAL STATE ================= */
     _sections = [];
@@ -56,9 +58,9 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
                         ...field,
                         rowClass:
                             'slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center',
-                            valueClass: isNegative(field.value)
-                                ? 'slds-truncate text-red'
-                                : 'slds-wrap'
+                        valueClass: isNegative(field.value)
+                            ? 'slds-truncate text-red'
+                            : 'slds-wrap'
                     };
                 })
             };
@@ -115,6 +117,16 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
         this.dispatchEvent(
             new CustomEvent('toggle', {
                 detail: { fieldName, sectionName },
+                bubbles: true,
+                composed: true
+            })
+        );
+    }
+
+    handleEdit() {
+
+        this.dispatchEvent(
+            new CustomEvent('edit', {
                 bubbles: true,
                 composed: true
             })

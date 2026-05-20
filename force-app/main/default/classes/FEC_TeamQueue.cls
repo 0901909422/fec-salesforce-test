@@ -13,6 +13,7 @@ public with sharing class FEC_TeamQueue {
         @AuraEnabled public String teamName;
         @AuraEnabled public String teamLabel;
         @AuraEnabled public String teamId;
+        @AuraEnabled public String teamDescription;
     }
 
     /**
@@ -36,6 +37,7 @@ public with sharing class FEC_TeamQueue {
 
         @AuraEnabled public Id teamQueueRecordId;      // FEC_Team_Queue__c.Id
         @AuraEnabled public Id teamId;
+        @AuraEnabled public String teamName;           // FEC_Select_Team__r.Name
         @AuraEnabled public String queueLabelStatus;    // FEC_Team_Queue__c.FEC_Team__c
     }
     /*------------------------------------------------------------
@@ -55,7 +57,7 @@ public with sharing class FEC_TeamQueue {
         try {
             // Query to get teams and their queue counts
             List<FEC_Team__c> listTeamNames = [
-                SELECT Id, Name, FEC_Team_Label__c 
+                SELECT Id, Name, FEC_Team_Label__c, FEC_Team_Description__c
                 FROM FEC_Team__c 
                 WHERE FEC_Team_Active__c = true
                 ORDER BY Name
@@ -67,6 +69,7 @@ public with sharing class FEC_TeamQueue {
                 wrapper.teamName = team.Name;
                 wrapper.teamLabel = team.FEC_Team_Label__c;
                 wrapper.teamId = team.Id;
+                wrapper.teamDescription = team.FEC_Team_Description__c;
                 result.add(wrapper);
             }
         } catch (Exception e) {
@@ -290,7 +293,7 @@ public with sharing class FEC_TeamQueue {
 
         // Resolve FEC_Team_Queue__c mapping
         FEC_Team_Queue__c teamQueue = [
-                SELECT Id, FEC_Select_Team__c, FEC_Team__c
+                SELECT Id, FEC_Select_Team__c, FEC_Team__c, FEC_Select_Team__r.Name
                 FROM FEC_Team_Queue__c
                 WHERE Id = :teamQueueRecordId
                 LIMIT 1
@@ -300,6 +303,7 @@ public with sharing class FEC_TeamQueue {
             dto.teamQueueRecordId = teamQueue.Id;
             dto.teamId = teamQueue.FEC_Select_Team__c;
             dto.queueLabelStatus = teamQueue.FEC_Team__c;
+            dto.teamName = teamQueue.FEC_Select_Team__r.Name;
         }
         return dto;
     }
@@ -320,12 +324,22 @@ public with sharing class FEC_TeamQueue {
     @AuraEnabled
     public static Boolean updateQueueEdit(Id queueId, String newQueueLabel, Id teamQueueRecordId, Id newTeamId, String newLabelStatus) {
         String messageEdit = '';
+        String oldValueDisplay = '';
+        EditQueueDto info = getQueueEditInfo(queueId, teamQueueRecordId);
+        if (info == null) {
+            throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_Invalid_Queue);
+        }
+        Map<String, Object> oldValue = new Map<String, Object>();
+        oldValue.put('oldLabel', info.queueLabel != null ? info.queueLabel : null);
+        oldValue.put('oldTeam', info.teamName != null ? info.teamName : null);
+        oldValue.put('oldLabelStatus', info.queueLabelStatus != null ? info.queueLabelStatus : null);
         // Update Queue Label if provided
         if (!String.isBlank(newQueueLabel)) {
             Group toUpdate = new Group(Id = queueId, Name = newQueueLabel);
             try {
                 update toUpdate;
-                messageEdit = messageEdit + 'update label to:' + newQueueLabel;
+                oldValueDisplay = oldValueDisplay + ' - Old label: ' + oldValue.get('oldLabel');
+                messageEdit = messageEdit + ' - Updated label to: ' + newQueueLabel;
             } catch (DmlException d) {
                 throw new AuraHandledException(System.Label.CS_OrgChart_Text_EditQueueModal_Update_Err + d.getMessage());
             }
@@ -335,12 +349,16 @@ public with sharing class FEC_TeamQueue {
         Boolean isTqNeeded = false;
         if (newTeamId != null) {
             tqUpdate.FEC_Select_Team__c = newTeamId;
-            messageEdit = messageEdit + ' update team to: ' + newTeamId;
+            FEC_Team__c teamByNewTeamId = [SELECT FEC_Team_Label__c FROM FEC_Team__c WHERE Id = :newTeamId LIMIT 1];
+            String teamName = teamByNewTeamId.FEC_Team_Label__c;
+            oldValueDisplay = oldValueDisplay + ' - Old team: ' + (oldValue.get('oldTeam') != null ? oldValue.get('oldTeam') : 'None');
+            messageEdit = messageEdit + ' - Updated team to: ' + teamName;
             isTqNeeded = true;
         }
         if (!String.isBlank(newLabelStatus)) {
             tqUpdate.FEC_Team__c = newLabelStatus;
-            messageEdit = messageEdit + ' update label status to: ' + newLabelStatus;
+            oldValueDisplay = oldValueDisplay + ' - Old label status: ' + (oldValue.get('oldLabelStatus') != null ? oldValue.get('oldLabelStatus') : 'None');
+            messageEdit = messageEdit + ' - Updated label status to: ' + newLabelStatus;
             isTqNeeded = true;
         }
         if (isTqNeeded) {
@@ -351,7 +369,7 @@ public with sharing class FEC_TeamQueue {
             }
         }
         if (!String.isBlank(messageEdit)) {
-            DepartmentAdmin.insertCustomLog(queueId, CLASS_NAME, 'updateQueueEdit', 'Update Queue', '', messageEdit);
+            DepartmentAdmin.insertCustomLog(queueId, CLASS_NAME, 'updateQueueEdit', 'Update Queue', oldValueDisplay, messageEdit);
         }
         return true;
     }

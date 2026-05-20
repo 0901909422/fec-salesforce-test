@@ -31,6 +31,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track showSelectedUsersTable = false;
     @track isSearching = false;
     @track isAddingToQueue = false;
+    @track userIdExcludeFromSearch = [];
 
     // Multi-select for suggestions
     selectedSuggestionIds = new Set();
@@ -71,6 +72,8 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track editQueueLabelStatus = '';
     @track curentTeamId = null;
     @track currentTeamName = null;
+    @track currentTeamApiName = null;
+    @track currentTeamDescription = null;
     @track editTeamId = null;
     @track teamOptions = [];
     @track editErrorMessage = '';
@@ -122,9 +125,9 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.editQueueLabel = event.target.value;
     }
 
-    handleEditTeamChange(event) {
-        this.editTeamId = event.detail ? event.detail.value : event.target.value;
-    }
+    // handleEditTeamChange(event) {
+    //     this.editTeamId = event.detail ? event.detail.value : event.target.value;
+    // }
 
     handleEditQueueLabelStatusChange(event) {
         this.editQueueLabelStatus = event.target.value;
@@ -214,6 +217,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     }
     
     async handleSelectQueue(event) {
+        this.template.querySelector('.users-in-queue-box')?.scrollIntoView({ behavior: 'smooth' });
         const qid = event.detail.queueId;
         const teamQueueRecordID = event.detail.teamQueueRecordID;
         const curentTeamId = event.detail.curentTeamId;
@@ -287,9 +291,9 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         if (!this.selectedQueueId) return;
         this.isLoadingUsers = true;
         this.usersError = undefined;
+        this.userIdExcludeFromSearch = [];
 
         const container = this.template.querySelector('.table-user-container');
-        const scrollTop = container ? container.scrollTop : 0;
 
         try {
             const res = await getQueueMembers({
@@ -301,6 +305,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             // Append for infinite scroll only when rows exist
             if (rows.length > 0) {
                 this.users = [...this.users, ...rows];
+                this.userIdExcludeFromSearch = this.users.map(u => u.id);
                 // Update cursor using the last row's id
                 this.lastUserId = rows[rows.length - 1].id;
             }
@@ -335,7 +340,7 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         if (!this.searchTerm.trim()) return;
         this.isSearching = true;
         try {
-            const results = await searchActiveUsers({ searchTerm: this.searchTerm });
+            const results = await searchActiveUsers({ searchTerm: this.searchTerm, excludedIds: this.userIdExcludeFromSearch });
             const incoming = Array.isArray(results) ? results : [];
             const keep = new Set();
             // add UI flag isSelected for checkbox binding
@@ -459,6 +464,14 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             const userIds = this.selectedUsersToAdd.map(user => user.id);
             const success = await addUsersToQueue({ queueId: this.selectedQueueId, userIds });
             if (success) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: this.customLabels.CS_OrgChart_Text_Save_Success_Title,
+                        message: this.customLabels.CS_OrgChart_Text_Add_User_To_Queue_Sucess,
+                        variant: 'success',
+                        mode: 'dismissable'
+                    })
+                );
                 // Refresh the user list after adding
                 await this.handleRefresh();
                 // Ask child component to reload history logs
@@ -511,6 +524,14 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             });
 
             if (result) {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: this.customLabels.CS_OrgChart_Text_Save_Success_Title,
+                        message: this.customLabels.CS_OrgChart_Text_Remove_User_Sucess,
+                        variant: 'success',
+                        mode: 'dismissable'
+                    })
+                );
                 // Refresh the user list to reflect the removal
                 await this.handleRefresh();
                 // Ask child component to reload history logs
@@ -539,12 +560,16 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     handleSelectTeam(event) {
         const teamId = event.detail.teamId;
         const teamName = event.detail.teamName;
+        const teamApiName = event.detail.teamApiName;
+        const teamDescription = event.detail.teamDescription;
         this.isLoadQueue = false;
         console.log('Team selected:', teamId, teamName);
         if (teamId) {
             this.curentTeamId = teamId;
             this.currentTeamName = teamName;
             this.selectedQueueId = null;
+            this.currentTeamApiName = teamApiName;
+            this.currentTeamDescription = teamDescription;
             this.refreshHistoryChild(teamId);
         }
 

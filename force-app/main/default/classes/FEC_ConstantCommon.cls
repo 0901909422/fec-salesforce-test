@@ -13,9 +13,15 @@ public with sharing class FEC_ConstantCommon {
     public static final Integer HTTP_TIMEOUT_MAX = 120000;
     public static final Integer HTTP_TIMEOUT_DEFAULT = 60000;
     public static final Integer HTTP_STATUS_OK = 200;
+    public static final Integer HTTP_STATUS_BAD_REQUEST = 400;
+
+    /** Múi giờ khi format datetime hiển thị VN (Transfer Call / Pega callback). */
+    public static final String USER_TIMEZONE_VIETNAM = 'Asia/Ho_Chi_Minh';
 
     /** Chuỗi rỗng dùng chung (default khi value blank). */
     public static final String STR_EMPTY = '';
+    public static final String STR_PERCENT = '%';
+    public static final String STR_DASH = '-';
 
     /** Dấu phân tách dùng cho key (vd: RecordType|Channel). */
     public static final String KEY_DELIMITER_PIPE = '|';
@@ -51,6 +57,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DATE_FORMAT_MMYYYY = 'MM/yyyy';
     public static final String DATE_FORMAT_DDMMYYYY = 'dd/MM/yyyy';
     public static final String DATETIME_FORMAT_OUTPUT = 'dd/MM/yyyy HH:mm:ss';
+    public static final String DATETIME_FORMAT_OUTPUT1 = 'dd/MM/yyyy, HH:mm:ss';
     public static final String DATETIME_FORMAT_LOG = 'yyyy-MM-dd HH:mm:ss';
 
     public static final String PAYMENT_PREFIX = 'pay_';
@@ -59,6 +66,12 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_CUSTOMER_RECORD_TYPE_DEV_NAME = 'Customer_Case';
     public static final String CASE_INTERNAL_RECORD_TYPE_DEV_NAME = 'Internal_Case';
     public static final String CASE_SEARCH_RECORD_TYPE_DEV_NAME = 'Search_Interaction';
+
+    /** Case Assignment FEC_Status__c: only Draft allows inserting Case Assignment NOC lines. */
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_DRAFT = 'Draft';
+    /** Case Assignment FEC_Status__c: only NOC under Active rules join duplicate / queue-overlap check. */
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_ACTIVE = 'Active';
+    public static final String FEC_CASE_ASSIGNMENT_STATUS_ARCHIVED = 'Archived';
 
     public static final String CHANNEL_INBOUND_API = 'InboundRinging';
     public static final String CHANNEL_OUTBOUND_API = 'OutboundEstablished';
@@ -100,6 +113,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String PATTERN_SYS_TIME = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}';
     public static final String PATTERN_DATE_TIME = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$';
     public static final String PATTERN_DATE_TIME_FULL = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{2}:\\d{2}$';
+    /** Batch Data Creation: yyyy-MM-ddTHH:mm:ss.SSS+0700 (offset không có dấu :). */
+    public static final String PATTERN_BATCH_DATETIME_OFFSET = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}[+-]\\d{4}$';
+    public static final String PATTERN_ALPHANUMERIC = '^[a-zA-Z0-9]+$';
     public static final String PATTERN_DATE_FORMAT_MM = '^(1[0-2]|[1-9])$';
     public static final String PATTERN_DATE_FORMAT_DDMMYYZZ = '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$';
     public static final String PATTERN_DATE_FORMAT_MMYYYY = '^(0[1-9]|1[0-2])/\\d{4}$';
@@ -242,14 +258,14 @@ public with sharing class FEC_ConstantCommon {
     public static final String GROUP_TYPE_QUEUE = 'Queue';
     public static final String SOBJECT_USER = 'User';
     public static final String SOBJECT_GROUP = 'Group';
-    public static final String DELIMITER_SEMICOLON = ';';
-    public static final String DELIMITER_UNDERSCORE = '_';
 
     // tungnm37 thêm: Assignment constants cho COF/GSR
     public static final String ASSIGNMENT_NAME_CALL = 'Call';
     public static final String ASSIGNMENT_NAME_ROUTING = 'Routing';
     public static final String ASSIGNMENT_TYPE_ROUTING = 'Routing';
     public static final String ASSIGNMENT_STATUS_OPEN = 'Open';
+    public static final String DELIMITER_SEMICOLON = ';';
+    public static final String DELIMITER_UNDERSCORE = '_';
 
     // tungnm37 thêm: UpdateDisbursementStatus log constants
     public static final String DISB_LOG_CRMID    = 'CRMID=';
@@ -344,9 +360,29 @@ public with sharing class FEC_ConstantCommon {
         'Transfer',
         'Recall'
     };
+    /** Business Hours dùng tính TAT Routing Action History (FEC_RoutingHistTatSvc). Phải trùng Name trên org. */
+    public static final String FEC_BUSINESS_HOURS_NAME = 'FEC Business Hours';
+    /**
+     * Số giờ làm việc tính là 1 "ngày" trong chuỗi hiển thị TAT (mặc định 8h/ngày làm việc).
+     * Khớp lịch Business Hours nếu có thể; chỉ ảnh hưởng format text, không ảnh hưởng BusinessHours.diff.
+     */
+    public static final Integer FEC_TAT_BUSINESS_HOURS_PER_DAY = 8;
+
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
+    public static final String FEC_RAH_DESCRIPTION_AUTO_ASSIGNMENT = 'Auto Assignment';
     public static final String CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER = 'Resolved-CannotContactCustomer';
+
+    /** Case Status values allowed for Batch Case Creation import. */
+    public static final List<String> CUSTOMER_CASE_IMPORT_STATUS_VALUES = new List<String>{
+        CASE_STATUS_OPEN,
+        CASE_STATUS_PENDING,
+        CASE_STATUS_AUTO_CANCELLED,
+        CASE_STATUS_RESOLVED_CANCELLED,
+        CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER,
+        CASE_STATUS_RESOLVED_COMPLETED,
+        CASE_STATUS_RESOLVED_REJECTED
+    };
 
     public static final String UPLOAD_DOCUMENT = 'UploadDocument';
     public static final String CASE_STATUS_ERROR = 'ERROR';
@@ -643,7 +679,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String STATUS_PENDING_CIC = 'Pending-CICRelated';
     public static final String STATUS_PENDING_DOCUMENT = 'Pending-DocumentPreparation';
     public static final String STATUS_PENDING_TASK_REVIEW = 'Pending-TaskUnderReview';
-    
+    public static final String ORIGINAL_LWC_COF = 'fec_OriginalInformation';
     
     public static final Map<String, String> CASE_STATUS_MAP = new Map<String, String>{
         'PENDING_CS' => 'Pending-CSInternal',
@@ -666,6 +702,73 @@ public with sharing class FEC_ConstantCommon {
         'DOCUMENT_PREP' => 'Pending-DocumentPreparation',
         'TASK_UNDER_REVIEW' => 'Pending-TaskUnderReview'
     };
+
+    /** Transfer Call: RequestorID gửi lên Pega Collections. */
+    public static final String TRANSFER_CALL_REQUESTOR_ID_CSM = 'CSM';
+
+    /** Transfer Call: tên FEC_API_Config__mdt record cho endpoint. */
+    public static final String API_CONFIG_NAME = 'FEC_Transfer_Call';
+
+    /** REST POST Update_Transfer_Information (Pega Collections → SF): log / context. */
+    public static final String UPDATE_TRANSFER_REST_SERVICE_NAME = 'FEC_UpdateTransferInfoRestService';
+    public static final String UPDATE_TRANSFER_MSG_SUCCESS =
+        'Update call transfer information by ServiceCaseID successfully';
+    public static final String UPDATE_TRANSFER_VAL_REQUEST_BODY_REQUIRED = 'Request body is required';
+    public static final String UPDATE_TRANSFER_VAL_SERVICE_CASE_ID_REQUIRED = 'ServiceCaseID is required';
+    public static final String UPDATE_TRANSFER_VAL_REQUESTOR_ID_REQUIRED = 'RequestorID is required';
+    public static final String UPDATE_TRANSFER_VAL_COLL_ACTION_CODE_REQUIRED = 'CollActionCode is required';
+    public static final String UPDATE_TRANSFER_ERR_SERVICE_CASE_NOT_FOUND_PREFIX = 'ServiceCaseID not found: ';
+
+    /**
+     * Transfer Call: thứ tự các fieldKey trong mảng data[].
+     * Theo spec: 7 field, KHÔNG có csCaseID (csCaseID nằm ở root body riêng).
+     */
+    public static final List<String> TRANSFER_CALL_DATA_FIELD_ORDER = new List<String>{
+        'productType',
+        'extAppId',
+        'phoneNumber',
+        'category',
+        'subCategory',
+        'subCode',
+        'remark'
+    };  
+
+    public static final String TRANSFER_ERR_EN_GENESYS_ID_NULL = 'genesysId is null';
+    public static final String TRANSFER_ERR_EN_PHONE_NUMBER_NULL = 'phoneNumber is null';
+    public static final String TRANSFER_ERR_EN_PHONE_NUMBER_INVALID = 'Invalid format PhoneNumber';
+    public static final String TRANSFER_ERR_EN_CS_CASE_ID_NULL = 'csCaseId is null';
+    public static final String TRANSFER_ERR_EN_EXT_APP_ID_NULL = 'extAppId is null';
+    public static final String TRANSFER_ERR_EN_PRODUCT_TYPE_NULL = 'productType is null';
+    public static final String TRANSFER_ERR_EN_PRODUCT_TYPE_INVALID = 'productType is invalid';
+    public static final String TRANSFER_ERR_EN_CATEGORY_NULL = 'category is null';
+    public static final String TRANSFER_ERR_EN_SUB_CATEGORY_NULL = 'subCategory is null';
+    public static final String TRANSFER_ERR_EN_SUB_CODE_NULL = 'subCode is null';
+    public static final String TRANSFER_ERR_EN_REMARK_NULL = 'remark is null';
+    /** Lỗi nghiệp vụ từ Pega (Reason) khi số HĐ/tài khoản không có trên Collections. */
+    public static final String TRANSFER_ERR_EN_EXT_APP_ID_NOT_ON_COLLECTIONS =
+        '-';
+
+    /** Transfer Call: giá trị mặc định khi field trống. */
+    public static final String TRANSFER_CALL_DEFAULT_GENESYS_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PRODUCT_TYPE  = '';
+    public static final String TRANSFER_CALL_DEFAULT_EXT_APP_ID    = '';
+    public static final String TRANSFER_CALL_DEFAULT_PHONE         = '';
+    public static final String TRANSFER_CALL_DEFAULT_CATEGORY      = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CATEGORY  = '';
+    public static final String TRANSFER_CALL_DEFAULT_SUB_CODE      = '';
+    public static final String TRANSFER_CALL_DEFAULT_CS_CASE_ID    = '';
+
+    /** Transfer Call: giới hạn độ dài log/hint khi parse lỗi. */
+    public static final Integer TRANSFER_CALL_DEBUG_BODY_MAX_LEN   = 1000;
+    public static final Integer TRANSFER_CALL_API_HINT_RAW_MAX_LEN = 500;
+
+    /** Transfer Call: các key JSON ưu tiên khi trích xuất thông tin lỗi từ response. */
+    public static final List<String> TRANSFER_CALL_JSON_ERROR_HINT_KEYS = new List<String>{
+        'Reason', 'reason', 'message', 'errorMessage', 'error', 'detail', 'ResultOfClass'
+    };
+
+    /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
+    public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
     
     public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
         TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
@@ -682,6 +785,11 @@ public with sharing class FEC_ConstantCommon {
     public static final String COF_GENERAL_FLOW = 'COF - General Flow';
     public static final String STAGE_ONE = 'Stage 1';
     public static final String ORIGINAL_INFORMATION = 'Original Information';
+    public static final String ORIGINAL_INFO = 'Original Info';
+    public static final String UPDATED_INFO = 'Updated Info';
+    public static final String PROPERTY_INFO = 'Property Info';
+    public static final String STAGE_TWO = 'Stage 2';
+    public static final String STAGE_THREE = 'Stage 3';
     
     //HieuTT74: Update common constant - ngày 28-4-2026
     public static final String CHANNEL_FACEBOOK = 'Facebook';
@@ -708,5 +816,9 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
     public static final String QUEUE_ID_START = '00G';
+    /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
+    public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
+    /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
+    public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
 
 }

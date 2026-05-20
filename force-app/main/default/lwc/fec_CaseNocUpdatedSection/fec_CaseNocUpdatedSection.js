@@ -24,6 +24,10 @@ export default class Fec_CaseNocUpdatedSection extends LightningElement {
   // ─── @api props từ parent ────────────────────────────────────────────────
   @api productTypeId;
   @api isEditable = false;
+  @api productTypeName;
+  @api categoryName;
+  @api subCategoryName;
+  @api subCodeName;
 
   // Options dưới dạng JSON string để tránh vấn đề reactivity khi truyền array qua @api
   @api productTypeOptions = "[]";
@@ -82,36 +86,49 @@ export default class Fec_CaseNocUpdatedSection extends LightningElement {
   }
 
   // ─── Getters: parse JSON options ─────────────────────────────────────────
-  get formattedProductTypeOption() {
+  _optionsWithDisplayName(optionsJson, value, displayName) {
+    let list = [];
     try {
-      return this.productTypeOptions || "[]";
+      list = JSON.parse(optionsJson || "[]");
     } catch (e) {
-      return "[]";
+      list = [];
     }
+    if (!value || !displayName || list.some((item) => item.value === value)) {
+      return JSON.stringify(list);
+    }
+    return JSON.stringify([...list, { label: displayName, value, helpText: null }]);
+  }
+
+  get formattedProductTypeOption() {
+    return this._optionsWithDisplayName(
+      this.productTypeOptions,
+      this.productTypeId,
+      this.productTypeName
+    );
   }
 
   get formattedCategoryOption() {
-    try {
-      return this.categoryOptions || "[]";
-    } catch (e) {
-      return "[]";
-    }
+    return this._optionsWithDisplayName(
+      this.categoryOptions,
+      this._categoryId,
+      this.categoryName
+    );
   }
 
   get formattedSubCategoryOption() {
-    try {
-      return this.subCategoryOptions || "[]";
-    } catch (e) {
-      return "[]";
-    }
+    return this._optionsWithDisplayName(
+      this.subCategoryOptions,
+      this._subCategoryId,
+      this.subCategoryName
+    );
   }
 
   get formattedSubCodeOption() {
-    try {
-      return this.subCodeOptions || "[]";
-    } catch (e) {
-      return "[]";
-    }
+    return this._optionsWithDisplayName(
+      this.subCodeOptions,
+      this._subCodeId,
+      this.subCodeName
+    );
   }
 
   // ─── Handlers: Category ──────────────────────────────────────────────────

@@ -33,7 +33,11 @@ c-fec_-repayment-schedule-payment-history .slds-accordion__summary,
 c-fec_-interaction-info-f2-f_-letter .slds-accordion__summary,
 c-fec_-interaction-my-case-info .slds-accordion__summary,
 c-fec_-k-y-c .slds-accordion__summary,
-c-fec_-card-replacement-address .slds-accordion__summary {
+c-fec_-card-replacement-address .slds-accordion__summary,
+c-fec_-assignment-list .slds-accordion__summary,
+c-fec_-banca .slds-accordion__summary,
+c-fec_-hold-case-configuration .slds-accordion__summary,
+c-fec_-batch-case-handling .slds-accordion__summary {
   background-color: #f3f3f3;
   border-radius: 4px;
 }
@@ -82,4 +86,8 @@ c-lwc-multi-lookup lightning-pill lightning-icon {
 
 c-lwc-multi-lookup lightning-input input {
   padding-left: 8px !important;
+}
+
+c-fec_-case-bussiness .hide-help-icon lightning-helptext {
+  display: none;
 }

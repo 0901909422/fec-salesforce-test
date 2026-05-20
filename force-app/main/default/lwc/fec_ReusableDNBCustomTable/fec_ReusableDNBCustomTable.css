@@ -1,0 +1,61 @@
+.custom-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.custom-table th,
+.custom-table td {
+  vertical-align: top;
+
+  white-space: nowrap;
+}
+
+/*
+ * ONLY LONG TEXT COLUMNS
+ */
+.update-reason-cell,
+.remarks-cell {
+
+  white-space: normal;
+
+  overflow-wrap: anywhere;
+}
+
+/*
+ * COLUMN WIDTHS
+ */
+.update-reason-header {
+  width: 260px;
+}
+
+.remarks-header {
+  width: 180px;
+}
+
+/*
+ * INPUTS
+ */
+.update-reason-cell lightning-combobox,
+.remarks-cell lightning-textarea {
+  width: 100%;
+}
+
+/*
+ * READONLY
+ */
+.readonly-text {
+  display: block;
+
+  line-height: 1.5;
+}
+
+/*
+ * CHECKBOX
+ */
+.checkbox-wrapper {
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.5rem;
+}

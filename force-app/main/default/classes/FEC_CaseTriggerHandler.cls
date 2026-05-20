@@ -27,7 +27,7 @@ public without sharing class FEC_CaseTriggerHandler {
             List<Case> newCases = (List<Case>) Trigger.new;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onBeforeInsert(listCase);
+            if (!listCase.isEmpty()) handler.onBeforeInsert(listCase);
         }
         
         if (Trigger.isBefore && Trigger.isUpdate) {
@@ -35,14 +35,14 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onBeforeUpdate(listCase, oldMap);
+            if (!listCase.isEmpty()) handler.onBeforeUpdate(listCase, oldMap);
         }
         
         if (Trigger.isAfter && Trigger.isInsert) {
             List<Case> newCases = (List<Case>) Trigger.new;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onAfterInsert(listCase);
+            if (!listCase.isEmpty()) handler.onAfterInsert(listCase);
         }
         
         if (Trigger.isAfter && Trigger.isUpdate) {
@@ -50,7 +50,7 @@ public without sharing class FEC_CaseTriggerHandler {
             Map<Id, Case> oldMap = (Map<Id, Case>) Trigger.oldMap;
             List<Case> listCase = new List<Case>();
             filterCase(listCase, newCases);
-            handler.onAfterUpdate(listCase, oldMap);
+            if (!listCase.isEmpty()) handler.onAfterUpdate(listCase, oldMap);
         }
     }
 
@@ -73,6 +73,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearchFromParent(newCases, null);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, null);
     }
 
     /**
@@ -89,6 +90,7 @@ public without sharing class FEC_CaseTriggerHandler {
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
         syncGlobalSearchFromParent(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, oldMap);
     }
 
     /**
@@ -106,6 +108,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
         redirectEmailReplyToCustomerCase(newCases);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, null);
         
         isExecuting = false;
     }
@@ -132,9 +135,11 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
-        // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
-        syncAssignmentUsersOnOwnerChange(newCases, oldMap);
+        // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
+        // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
+        // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         isExecuting = false;
     }
 
@@ -148,11 +153,8 @@ public without sharing class FEC_CaseTriggerHandler {
         for (Case c : newCases) {
             Case oldCase = oldMap.get(c.Id);
             if (c.OwnerId != null && c.OwnerId != oldCase.OwnerId) {
-                // tungnm37 fix: khi owner đổi về User → clear FEC_Assignment_Users__c để Service Case Owner hiển thị
-                // khi owner đổi về Queue → set = Queue Id để formula ẩn (COF/GSR auto routing)
-                String newAssignmentUsers = c.OwnerId.getSObjectType() == User.SObjectType
-                    ? null
-                    : String.valueOf(c.OwnerId);
+                // tungnm37: set FEC_Assignment_Users__c = OwnerId mới (User ID hoặc Queue ID)
+                String newAssignmentUsers = String.valueOf(c.OwnerId);
                 toUpdate.add(new Case(Id = c.Id, FEC_Assignment_Users__c = newAssignmentUsers));
             }
         }

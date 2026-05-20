@@ -110,7 +110,9 @@
                                     <div class="slds-grid slds-grid_vertical-align-center slds-grow">
                                         <lightning-icon icon-name={row.iconName} size="xx-small" class="slds-m-right_x-small toggle-icon"></lightning-icon>
                                         <span class="property-name">{row.displayName}</span>
-                                        <span class="external-id">({row.externalId})</span>
+                                        <template if:true={row.hasPropertyName}>
+                                            <span class="additional-field-tag">{row.propertyName}</span>
+                                        </template>
                                     </div>
                                     <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-end">
                                         <template if:true={row.diffCount}>

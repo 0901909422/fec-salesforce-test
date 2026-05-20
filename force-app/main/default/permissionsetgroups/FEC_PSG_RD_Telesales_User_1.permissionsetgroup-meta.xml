@@ -2,10 +2,15 @@
 <PermissionSetGroup xmlns="http://soap.sforce.com/2006/04/metadata">
     <hasActivationRequired>false</hasActivationRequired>
     <label>PSG - RD - Telesales User 1</label>
+    <permissionSets>FEC_Common_System_Setting</permissionSets>
+    <permissionSets>FEC_Permission_Set_Customer_Data_Management_User</permissionSets>
+    <permissionSets>FEC_Case_Assignment_Management</permissionSets>
+    <permissionSets>FEC_Batch_Case_Handling</permissionSets>
+    <permissionSets>FEC_Batch_Case_Creation</permissionSets>
+    <permissionSets>FEC_Permission_Set_Batch_Data_Creation</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_1_Customer_360</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_1_Interaction_Case_Service_Case</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_1_Master_Data_Management</permissionSets>
     <permissionSets>FEC_RD_Telesales_User_1_User_Management</permissionSets>
-    <permissionSets>FEC_Common_System_Setting</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>
