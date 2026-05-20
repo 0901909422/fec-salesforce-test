@@ -93,6 +93,10 @@
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
 		<members>FEC_AutoHoldCaseHistoryService</members>
+		<members>FEC_CardInfoController</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_MockData</members>
+        <members>FEC_BlockCodeRoutingService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -171,6 +175,7 @@
         <members>fec_CaseAssignmentDetailSummary</members>
         <members>fec_CaseAssignmentNocConfig</members>
         <members>fec_CaseAssignmentNocNew</members>
+        <members>fec_IPPDetails</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -221,6 +226,8 @@
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
 		<members>FEC_Case_Hold_History__c</members>
+		<members>FEC_Notification__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>

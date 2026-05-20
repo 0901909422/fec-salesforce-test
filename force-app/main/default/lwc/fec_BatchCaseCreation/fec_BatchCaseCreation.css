@@ -241,7 +241,7 @@
 .fec-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 1040px;
   font-size: 0.8125rem;
 }
 
@@ -264,6 +264,30 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.fec-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.fec-sort-button:focus {
+  outline: none;
+  text-decoration: underline;
+}
+
+.fec-stt-col {
+  width: 3.25rem;
+  text-align: center !important;
 }
 
 .fec-sort-icon {

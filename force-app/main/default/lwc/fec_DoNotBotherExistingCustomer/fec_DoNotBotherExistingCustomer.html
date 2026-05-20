@@ -39,7 +39,7 @@
                         </template>
 
                         <!-- BUTTON -->
-                        <template if:false={showUpdateButton}>
+                        <template if:true={showUpdateButton}>
                             <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
                                 onclick={openModal} disabled={isUpdateDisabled}>
                             </lightning-button>

@@ -3,6 +3,8 @@ import FEC_RECORDS_PER_PAGE_LABEL from "@salesforce/label/c.FEC_Record_per_Page"
 import FEC_GO_TO_PAGE_LABEL from "@salesforce/label/c.FEC_Go_to_page_label";
 import getCaseData from "@salesforce/apex/FEC_DNBHandler.getCaseData";
 import createDNB from "@salesforce/apex/FEC_DNBHandler.createDNB";
+import checkDNBExisting from "@salesforce/apex/FEC_DNBHandler.checkDNBExisting";
+import createExistingDNBRows from "@salesforce/apex/FEC_DNBHandler.createExistingDNBRows";
 // import getDNB from "@salesforce/apex/FEC_DNBHandler.getDNBResult";
 import getListDNBs from "@salesforce/apex/FEC_DNBHandler.getListDNBs";
 import updateFieldDoNotBother from "@salesforce/apex/FEC_DNBHandler.updateFieldDoNotBother";
@@ -154,9 +156,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
   async connectedCallback() {
     this.subscribeToMessageChannel();
+
     await this.loadData();
 
-    await this.loadDNBRecords();
+    await this.initializeDNBFlow();
   }
 
   disconnectedCallback() {
@@ -227,6 +230,73 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
       console.error("Load DNB records error", e);
     }
   }
+
+  async checkDNB() {
+    console.log("Checking DNB for NID:", this.nationalId);
+
+    return await checkDNBExisting({
+      caseId: this.recordId,
+    });
+  }
+
+  async createDNBRows() {
+    await createExistingDNBRows({
+      caseId: this.recordId,
+    });
+  }
+
+  async initializeDNBFlow() {
+    try {
+      /*
+       * STEP 1:
+       * CHECK API ONLY
+       */
+      const result = await this.checkDNB();
+
+      console.log("EXISTING DNB RESULT:", JSON.stringify(result));
+
+      /*
+       * API FAIL
+       */
+      if (!result?.success) {
+        this.showToast(
+          "Error",
+          result?.errorMessage || "Check DNB failed",
+          "error",
+        );
+
+        return;
+      }
+
+      /*
+       * STEP 2:
+       * CREATE DB ROWS
+       */
+      await this.createDNBRows();
+
+      /*
+       * STEP 3:
+       * LOAD DB
+       */
+      await this.loadDNBRecords();
+
+      /*
+       * DEFAULT UI
+       */
+      this.hasDNBData = this.data.length > 0;
+
+      // this.selectedOption = this.hasDNBData ? "yes" : "no";
+    } catch (e) {
+      console.error("initializeDNBFlow ERROR", e);
+
+      this.showToast(
+        "Error",
+        e?.body?.message || e?.message || "Unexpected error",
+        "error",
+      );
+    }
+  }
+
   getReasonOptions() {
     return [
       { label: "Not interested", value: "not_interested" },
@@ -298,7 +368,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
         contact: row.typeValue || "",
 
-        maskedContact: this.maskContact(row.typeValue),
+        maskedContact:
+          row.typeValue && row.typeValue.includes("*")
+            ? row.typeValue
+            : this.maskContact(row.typeValue),
 
         isHidden: true,
 
@@ -331,7 +404,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
 
         isReasonDisabled: !row.action || isReadonly,
 
-        isActionDisabled: row.channel === "Email" || isReadonly,
+        isActionDisabled:
+          (!!row.typeValue && row.type === "Insert from DB") ||
+          !row.typeValue ||
+          isReadonly,
 
         hasContact: !!row.typeValue,
 
@@ -587,6 +663,10 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
          */
         this.publishReadonlyMessage();
 
+        /*
+         * Reload DB
+         */
+        await this.loadDNBRecords();
         this.showToast("Success", "DNB created successfully", "success");
       } else {
         /*
@@ -796,7 +876,9 @@ export default class Fec_DoNotBotherExistingCustomer extends LightningElement {
   }
 
   get showUpdateButton() {
-    return !this.isReadonlyMode && !this.isMaxRetryReached;
+    return (
+      !this.isReadonlyMode && !this.isDNBUpdated && !this.isMaxRetryReached
+    );
   }
   //------------------------- MODAL EVENTS ----------------
   get isOpen() {
