@@ -27,11 +27,14 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     public static List<String> buildBaseCaseWhere() {
         List<String> parts = new List<String>();
         parts.add(
-            'RecordType.DeveloperName IN (\'' +
+            'RecordType.DeveloperName = \'' +
             String.escapeSingleQuotes(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) +
-            '\',\'' +
-            String.escapeSingleQuotes(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME) +
-            '\')'
+            '\''
+        );
+        parts.add(
+            'OwnerId = \'' +
+            String.escapeSingleQuotes(String.valueOf(UserInfo.getUserId())) +
+            '\''
         );
         parts.add('IsClosed = false');
         parts.add(
@@ -276,7 +279,7 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             return buildTextClause('FEC_SubCode__r.FEC_Code__c', op, vText);
         }
         if (prop == 'CASE_CREATED_ON') {
-            return buildDateClause('FEC_Case_Created_On__c', op, vText);
+            return buildDateTimeClause('FEC_Case_Created_On__c', op, vText);
         }
         return buildGenericCaseFieldClause(prop, op, vText);
     }
@@ -426,22 +429,22 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         String da = d.day() < 10 ? '0' + String.valueOf(d.day()) : String.valueOf(d.day());
         String dayLit = y + '-' + mo + '-' + da;
         if (op == 'equals') {
-            return 'DATEVALUE(' + fieldApi + ') = ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') = ' + dayLit;
         }
         if (op == 'not_equal_to') {
-            return 'DATEVALUE(' + fieldApi + ') != ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') != ' + dayLit;
         }
         if (op == 'less_than') {
-            return 'DATEVALUE(' + fieldApi + ') < ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') < ' + dayLit;
         }
         if (op == 'greater_than') {
-            return 'DATEVALUE(' + fieldApi + ') > ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') > ' + dayLit;
         }
         if (op == 'less_or_equal') {
-            return 'DATEVALUE(' + fieldApi + ') <= ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') <= ' + dayLit;
         }
         if (op == 'greater_or_equal') {
-            return 'DATEVALUE(' + fieldApi + ') >= ' + dayLit;
+            return 'DAY_ONLY(' + fieldApi + ') >= ' + dayLit;
         }
         return FEC_ConstantCommon.STR_EMPTY;
     }
@@ -607,22 +610,22 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
         String da = d.day() < 10 ? '0' + String.valueOf(d.day()) : String.valueOf(d.day());
         String dayLit = y + '-' + mo + '-' + da;
         if (op == 'equals') {
-            return 'DATEVALUE(' + fieldApi + ') = ' + dayLit;
+            return fieldApi + ' = ' + dayLit;
         }
         if (op == 'not_equal_to') {
-            return 'DATEVALUE(' + fieldApi + ') != ' + dayLit;
+            return fieldApi + ' != ' + dayLit;
         }
         if (op == 'less_than') {
-            return 'DATEVALUE(' + fieldApi + ') < ' + dayLit;
+            return fieldApi + ' < ' + dayLit;
         }
         if (op == 'greater_than') {
-            return 'DATEVALUE(' + fieldApi + ') > ' + dayLit;
+            return fieldApi + ' > ' + dayLit;
         }
         if (op == 'less_or_equal') {
-            return 'DATEVALUE(' + fieldApi + ') <= ' + dayLit;
+            return fieldApi + ' <= ' + dayLit;
         }
         if (op == 'greater_or_equal') {
-            return 'DATEVALUE(' + fieldApi + ') >= ' + dayLit;
+            return fieldApi + ' >= ' + dayLit;
         }
         return FEC_ConstantCommon.STR_EMPTY;
     }

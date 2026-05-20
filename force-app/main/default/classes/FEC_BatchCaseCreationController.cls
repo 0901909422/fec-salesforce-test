@@ -58,6 +58,15 @@ public with sharing class FEC_BatchCaseCreationController {
         Map<String, String> subCodeMap;
     }
 
+    /** Bộ NOC (FEC_Nature_of_Case__c) active — validate phân cấp Product → Category → Sub Category → Sub Code (theo text import). */
+    private class NatureOfCaseHierarchyMaps {
+        Set<String> fullTextKeys = new Set<String>();
+        Map<String, Set<String>> categoryTextKeysByProductId = new Map<String, Set<String>>();
+        Map<String, Set<String>> subCategoryTextKeysByProductId = new Map<String, Set<String>>();
+        Map<String, Set<String>> subCategoryTextKeysByProductCategory = new Map<String, Set<String>>();
+        Map<String, Set<String>> subCodeTextKeysByProductCategorySubCategory = new Map<String, Set<String>>();
+    }
+
     @AuraEnabled(cacheable=true)
     public static List<TemplateOption> getTemplateOptions() {
         List<TemplateOption> output = new List<TemplateOption>();
@@ -161,27 +170,55 @@ public with sharing class FEC_BatchCaseCreationController {
         Map<Id, String> resultUrlByBatchId = new Map<Id, String>();
         Map<Id, String> sourceUrlByBatchId = new Map<Id, String>();
         Set<Id> batchIds = new Set<Id>();
+        Map<Id, Id> sourceDocIdByBatchId = new Map<Id, Id>();
         for (SObject row : rows) {
-            batchIds.add((Id) row.get('Id'));
+            Id batchId = (Id) row.get('Id');
+            batchIds.add(batchId);
+            if (String.isNotBlank(fileContentDocumentIdField)) {
+                String docIdStr = FEC_BatchImportCommon.asString(
+                    FEC_BatchImportCommon.getFieldValue(row, fileContentDocumentIdField)
+                );
+                if (String.isNotBlank(docIdStr)) {
+                    try {
+                        sourceDocIdByBatchId.put(batchId, (Id) docIdStr);
+                    } catch (Exception ignore) {
+                        // skip invalid id
+                    }
+                }
+            }
         }
         if (!batchIds.isEmpty()) {
             for (ContentDocumentLink link : [
-                SELECT LinkedEntityId, ContentDocument.Title, ContentDocument.LatestPublishedVersionId
+                SELECT LinkedEntityId, ContentDocumentId, ContentDocument.Title, ContentDocument.LatestPublishedVersionId, ContentDocument.CreatedDate
                 FROM ContentDocumentLink
                 WHERE LinkedEntityId IN :batchIds
-                ORDER BY LinkedEntityId, SystemModstamp DESC
+                ORDER BY LinkedEntityId, ContentDocument.CreatedDate ASC
             ]) {
                 String title = link.ContentDocument == null ? null : link.ContentDocument.Title;
-                String versionId = String.valueOf(link.ContentDocument.LatestPublishedVersionId);
+                String versionId =
+                    link.ContentDocument == null
+                        ? null
+                        : String.valueOf(link.ContentDocument.LatestPublishedVersionId);
                 if (String.isBlank(versionId) || String.isBlank(title)) {
                     continue;
                 }
-                if (title.toLowerCase().endsWith('_result')) {
-                    if (!resultUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                        resultUrlByBatchId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId);
+                String url = FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId;
+                Id sourceDocId = sourceDocIdByBatchId.get(link.LinkedEntityId);
+                if (sourceDocId != null) {
+                    if (link.ContentDocumentId == sourceDocId) {
+                        if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
+                            sourceUrlByBatchId.put(link.LinkedEntityId, url);
+                        }
+                    } else {
+                        // File result upload sau (CreatedDate ASC) → ghi đè để lấy bản mới nhất (xlsx client).
+                        resultUrlByBatchId.put(link.LinkedEntityId, url);
                     }
+                } else if (FEC_BatchImportCommon.isResultContentTitle(title)) {
+                    resultUrlByBatchId.put(link.LinkedEntityId, url);
                 } else if (!sourceUrlByBatchId.containsKey(link.LinkedEntityId)) {
-                    sourceUrlByBatchId.put(link.LinkedEntityId, FEC_ConstantCommon.CONTENT_VERSION_DOWNLOAD_URL_PREFIX + versionId);
+                    sourceUrlByBatchId.put(link.LinkedEntityId, url);
+                } else {
+                    resultUrlByBatchId.put(link.LinkedEntityId, url);
                 }
             }
         }
@@ -252,7 +289,7 @@ public with sharing class FEC_BatchCaseCreationController {
             }
 
             ContentVersion cv = new ContentVersion();
-            cv.Title = FEC_BatchImportCommon.removeFileExtension(fileName);
+            cv.Title = FEC_BatchImportCommon.normalizeSourceContentTitle(fileName);
             cv.PathOnClient = '/' + fileName;
             cv.VersionData = EncodingUtil.base64Decode(fileBodyBase64);
             insert cv;
@@ -286,84 +323,74 @@ public with sharing class FEC_BatchCaseCreationController {
             Boolean isWelcomeFlow = isWelcomeCallInput(templateName, parsed);
             List<CaseRowResult> rowResults = validateAndBuildCases(parsed, isWelcomeFlow);
             Integer totalCount = rowResults.size();
+            Integer failedCount = countFailedRowResults(rowResults);
+            String batchFailureReason = failedCount > 0
+                ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) })
+                : '';
 
-            // Row-by-row: dòng pass validation thì insert, dòng fail giữ nguyên status='Failed' và errors,
-            // KHÔNG còn rollback toàn bộ vì có dòng lỗi như trước.
+            // Có bất kỳ dòng lỗi validation → không import cả file, không tạo Case.
+            if (failedCount > 0) {
+                markAllRowResultsFailedForBatchNoImport(rowResults);
+                applyBatchImportFailureOutcome(
+                    batchFieldMap,
+                    batchRow,
+                    totalCount,
+                    failedCount,
+                    batchFailureReason,
+                    fileName,
+                    rowResults
+                );
+                out.success = false;
+                out.message = batchFailureReason;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Failure';
+                out.resultRowsJson = JSON.serialize(rowResults);
+                return out;
+            }
+
+            Savepoint importSavepoint = Database.setSavepoint();
             if (isWelcomeFlow) {
                 insertWelcomeCallCases(parsed, rowResults);
             } else {
                 insertStandardCasesWithInteraction(parsed, rowResults);
             }
 
-            Set<Id> insertedCaseIds = new Set<Id>();
-            for (CaseRowResult rr : rowResults) {
-                if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
-                    insertedCaseIds.add(Id.valueOf(rr.recordId));
-                }
+            failedCount = countFailedRowResults(rowResults);
+            if (failedCount > 0) {
+                Database.rollback(importSavepoint);
+                markRowResultsNotImportedAfterRollback(rowResults);
+                markAllRowResultsFailedForBatchNoImport(rowResults);
+                batchFailureReason = String.format(
+                    System.Label.FEC_Batch_Import_Invalid_Row_Count,
+                    new List<String>{ String.valueOf(failedCount) }
+                );
+                applyBatchImportFailureOutcome(
+                    batchFieldMap,
+                    batchRow,
+                    totalCount,
+                    failedCount,
+                    batchFailureReason,
+                    fileName,
+                    rowResults
+                );
+                out.success = false;
+                out.message = batchFailureReason;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Failure';
+                out.resultRowsJson = JSON.serialize(rowResults);
+                return out;
             }
 
-            Map<Id, Case> finalById = new Map<Id, Case>();
-            if (!insertedCaseIds.isEmpty()) {
-                finalById = new Map<Id, Case>([
-                    SELECT
-                        Id,
-                        Status,
-                        FEC_Interaction_ID__c,
-                        FEC_Case_ID__c,
-                        FEC_Interaction__c,
-                        FEC_Interaction__r.FEC_Interaction_ID__c,
-                        FEC_Interaction__r.FEC_Case_ID__c,
-                        FEC_Interaction__r.Id
-                    FROM Case
-                    WHERE Id IN :insertedCaseIds
-                ]);
-            }
-            for (CaseRowResult rr : rowResults) {
-                if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
-                    Case c = finalById.get((Id) rr.recordId);
-                    rr.finalStatus = c == null ? '' : c.Status;
-                    rr.interactionId = '';
-                    if (c != null) {
-                        rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction_ID__c);
-                        if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                            rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Interaction_ID__c);
-                        }
-                        if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                            rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Case_ID__c);
-                        }
-                        if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
-                            rr.interactionId = String.valueOf(c.FEC_Interaction__r.Id);
-                        }
-                    }
-                    rr.caseBusinessId = c == null ? '' : normalizeCaseBusinessId(c.FEC_Case_ID__c);
-                } else {
-                    rr.finalStatus = '';
-                    rr.interactionId = '';
-                    rr.caseBusinessId = '';
-                }
-            }
-
-            Integer successCount = 0;
-            Integer failedCount = 0;
-            for (CaseRowResult rr : rowResults) {
-                if ('Succeeded'.equals(rr.status)) {
-                    successCount += 1;
-                } else if ('Failed'.equals(rr.status)) {
-                    failedCount += 1;
-                }
-            }
+            enrichRowResultsFromInsertedCases(rowResults);
 
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Processed');
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
             FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount);
-            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
-            FEC_BatchImportCommon.putIfFieldExists(
-                batchFieldMap,
-                batchRow,
-                new List<String>{ 'FEC_Failure_Reason__c' },
-                failedCount > 0 ? String.format(System.Label.FEC_Batch_Import_Invalid_Row_Count, new List<String>{ String.valueOf(failedCount) }) : ''
-            );
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, totalCount);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, 0);
+            FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, '');
             update batchRow;
 
             out.success = true;
@@ -429,6 +456,16 @@ public with sharing class FEC_BatchCaseCreationController {
         Schema.DescribeFieldResult channelDfr = Case.FEC_Channel__c.getDescribe();
         Schema.DescribeFieldResult subChannelDfr = Case.FEC_Interaction_Subchannel__c.getDescribe();
         Schema.DescribeFieldResult statusDfr = Case.Status.getDescribe();
+        Map<String, Set<String>> subChannelsByChannel = buildSubChannelsByChannelMap(channelDfr, subChannelDfr);
+
+        Set<Id> productIdsForNoc = new Set<Id>();
+        for (ParsedCaseRow rowForNoc : parsed) {
+            Id productIdForNoc = lookupFromMap(rowForNoc.productType, maps.productMap);
+            if (productIdForNoc != null) {
+                productIdsForNoc.add(productIdForNoc);
+            }
+        }
+        NatureOfCaseHierarchyMaps nocMaps = loadNatureOfCaseHierarchyMaps(productIdsForNoc);
 
         List<CaseRowResult> rowResults = new List<CaseRowResult>();
 
@@ -442,10 +479,12 @@ public with sharing class FEC_BatchCaseCreationController {
             }
 
             if (String.isBlank(r.contractNumber)) {
-                errs.add(System.Label.FEC_Batch_Import_Required_Contract_Number);
+                errs.add(System.Label.FEC_Batch_Import_Required_Account_Contract_Number);
             }
             if (String.isBlank(r.interactionPhone)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Interaction_Phone);
+            } else if (!Pattern.matches(FEC_ConstantCommon.PATTERN_PHONE_NUMBER, r.interactionPhone)) {
+                errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Phone_Format);
             }
             if (String.isBlank(r.productType)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Product_Type);
@@ -458,6 +497,9 @@ public with sharing class FEC_BatchCaseCreationController {
             }
             if (String.isBlank(r.subCode)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Sub_Code);
+            }
+            if (String.isBlank(r.caseRemarks)) {
+                errs.add(System.Label.FEC_Batch_Import_Required_Case_Remarks);
             }
             if (!welcome && String.isBlank(r.caseStatus)) {
                 errs.add(System.Label.FEC_Batch_Import_Required_Case_Status);
@@ -491,7 +533,7 @@ public with sharing class FEC_BatchCaseCreationController {
             }
 
             if (!welcome) {
-                String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
+                String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
                 if (String.isBlank(statusApi)) {
                     errs.add(System.Label.FEC_Batch_Import_Invalid_Case_Status);
                 }
@@ -506,14 +548,32 @@ public with sharing class FEC_BatchCaseCreationController {
                 if (String.isNotBlank(r.interactionSubChannel) && subChannelApi == null) {
                     errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Sub_Channel);
                 }
+                if (
+                    String.isNotBlank(channelApi) &&
+                    String.isNotBlank(subChannelApi) &&
+                    !isSubChannelValidForChannel(channelApi, subChannelApi, subChannelsByChannel)
+                ) {
+                    errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Channel_For_Channel);
+                }
             }
 
             if (String.isNotBlank(r.interactionEmail) && !Pattern.matches(FEC_ConstantCommon.PATTERN_EMAIL, r.interactionEmail)) {
                 errs.add(System.Label.FEC_Batch_Import_Invalid_Interaction_Email);
             }
 
+            // NOC: chạy khi đủ Product/Category/Sub Category/Sub Code (kể cả dòng còn lỗi Contract, Channel...)
+            if (
+                productId != null &&
+                String.isNotBlank(r.productType) &&
+                String.isNotBlank(r.category) &&
+                String.isNotBlank(r.subCategory) &&
+                String.isNotBlank(r.subCode)
+            ) {
+                appendNatureOfCaseValidationErrors(r, productId, nocMaps, errs);
+            }
+
             rr.status = errs.isEmpty() ? 'Succeeded' : 'Failed';
-            rr.errors = errs.isEmpty() ? '' : String.join(errs, ' ');
+            rr.errors = errs.isEmpty() ? '' : joinRowErrors(errs);
             rowResults.add(rr);
         }
 
@@ -803,7 +863,7 @@ public with sharing class FEC_BatchCaseCreationController {
                 continue;
             }
             ParsedCaseRow r = parsed[origIdx];
-            String statusApi = matchCaseStatus(statusDfr, r.caseStatus);
+            String statusApi = matchBatchImportCaseStatus(statusDfr, r.caseStatus);
             Case cc = new Case();
             cc.RecordTypeId = custRt;
             cc.FEC_Interaction__c = srInt[k].getId();
@@ -1009,6 +1069,381 @@ public with sharing class FEC_BatchCaseCreationController {
         return idByKey;
     }
 
+    private static Set<String> natureTextAliases(String name, String code) {
+        Set<String> aliases = new Set<String>();
+        if (String.isNotBlank(name)) {
+            aliases.add(name.trim().toLowerCase());
+        }
+        if (String.isNotBlank(code)) {
+            aliases.add(code.trim().toLowerCase());
+        }
+        return aliases;
+    }
+
+    private static void addTextAliasesToSet(Set<String> target, Set<String> aliases) {
+        if (target == null || aliases == null || aliases.isEmpty()) {
+            return;
+        }
+        target.addAll(aliases);
+    }
+
+    private static Boolean natureInputMatches(Set<String> allowed, String raw) {
+        if (allowed == null || allowed.isEmpty() || String.isBlank(raw)) {
+            return false;
+        }
+        return allowed.contains(raw.trim().toLowerCase());
+    }
+
+    private static String joinRowErrors(List<String> errs) {
+        List<String> normalized = new List<String>();
+        if (errs == null) {
+            return '';
+        }
+        for (String err : errs) {
+            if (String.isBlank(err)) {
+                continue;
+            }
+            String message = err.trim().replaceAll('[\\r\\n\\u2028\\u2029]+', ' ').replaceAll('\\s+', ' ');
+            while (message.endsWith('.')) {
+                message = message.substring(0, message.length() - 1).trim();
+            }
+            if (String.isNotBlank(message)) {
+                normalized.add(message);
+            }
+        }
+        return String.join(normalized, ', ');
+    }
+
+    private static Set<String> resolveSubCodesForCategorySubCategory(
+        NatureOfCaseHierarchyMaps nocMaps,
+        String productIdKey,
+        String categoryRaw,
+        String subCategoryRaw
+    ) {
+        if (nocMaps == null || String.isBlank(productIdKey) || String.isBlank(categoryRaw) || String.isBlank(subCategoryRaw)) {
+            return null;
+        }
+        String categoryNorm = categoryRaw.trim().toLowerCase();
+        String subCategoryNorm = subCategoryRaw.trim().toLowerCase();
+        String directKey = productIdKey + '|' + categoryNorm + '|' + subCategoryNorm;
+        Set<String> direct = nocMaps.subCodeTextKeysByProductCategorySubCategory.get(directKey);
+        if (direct != null && !direct.isEmpty()) {
+            return direct;
+        }
+        for (String mapKey : nocMaps.subCodeTextKeysByProductCategorySubCategory.keySet()) {
+            if (!mapKey.startsWith(productIdKey + '|')) {
+                continue;
+            }
+            List<String> parts = mapKey.split('\\|');
+            if (parts.size() < 3) {
+                continue;
+            }
+            String catAlias = parts[1];
+            String subAlias = parts[2];
+            if (catAlias.equals(categoryNorm) && subAlias.equals(subCategoryNorm)) {
+                Set<String> codes = nocMaps.subCodeTextKeysByProductCategorySubCategory.get(mapKey);
+                if (codes != null && !codes.isEmpty()) {
+                    return codes;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static NatureOfCaseHierarchyMaps loadNatureOfCaseHierarchyMaps(Set<Id> productIds) {
+        NatureOfCaseHierarchyMaps out = new NatureOfCaseHierarchyMaps();
+        if (productIds == null || productIds.isEmpty()) {
+            return out;
+        }
+        for (FEC_Nature_of_Case__c noc : [
+            SELECT
+                FEC_Product_Type__c,
+                FEC_Category__c,
+                FEC_Sub_Category__c,
+                FEC_Sub_Code__c,
+                FEC_Product_Type__r.Name,
+                FEC_Product_Type__r.FEC_Code__c,
+                FEC_Category__r.Name,
+                FEC_Category__r.FEC_Code__c,
+                FEC_Sub_Category__r.Name,
+                FEC_Sub_Category__r.FEC_Code__c,
+                FEC_Sub_Code__r.Name,
+                FEC_Sub_Code__r.FEC_Code__c
+            FROM FEC_Nature_of_Case__c
+            WHERE FEC_Active__c = true AND FEC_Product_Type__c IN :productIds
+        ]) {
+            if (noc.FEC_Product_Type__c == null || noc.FEC_Category__c == null) {
+                continue;
+            }
+            String productIdKey = String.valueOf(noc.FEC_Product_Type__c);
+            Set<String> categoryAliases = natureTextAliases(
+                noc.FEC_Category__r == null ? null : noc.FEC_Category__r.Name,
+                noc.FEC_Category__r == null ? null : noc.FEC_Category__r.FEC_Code__c
+            );
+            if (categoryAliases.isEmpty()) {
+                continue;
+            }
+            if (!out.categoryTextKeysByProductId.containsKey(productIdKey)) {
+                out.categoryTextKeysByProductId.put(productIdKey, new Set<String>());
+            }
+            addTextAliasesToSet(out.categoryTextKeysByProductId.get(productIdKey), categoryAliases);
+
+            Set<String> subCategoryAliases = natureTextAliases(
+                noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.Name,
+                noc.FEC_Sub_Category__r == null ? null : noc.FEC_Sub_Category__r.FEC_Code__c
+            );
+            if (!subCategoryAliases.isEmpty()) {
+                if (!out.subCategoryTextKeysByProductId.containsKey(productIdKey)) {
+                    out.subCategoryTextKeysByProductId.put(productIdKey, new Set<String>());
+                }
+                addTextAliasesToSet(
+                    out.subCategoryTextKeysByProductId.get(productIdKey),
+                    subCategoryAliases
+                );
+            }
+            Set<String> subCodeAliases = natureTextAliases(
+                noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.Name,
+                noc.FEC_Sub_Code__r == null ? null : noc.FEC_Sub_Code__r.FEC_Code__c
+            );
+
+            for (String categoryAlias : categoryAliases) {
+                String productCategoryKey = productIdKey + '|' + categoryAlias;
+                if (!subCategoryAliases.isEmpty()) {
+                    if (!out.subCategoryTextKeysByProductCategory.containsKey(productCategoryKey)) {
+                        out.subCategoryTextKeysByProductCategory.put(productCategoryKey, new Set<String>());
+                    }
+                    addTextAliasesToSet(
+                        out.subCategoryTextKeysByProductCategory.get(productCategoryKey),
+                        subCategoryAliases
+                    );
+                    for (String subCategoryAlias : subCategoryAliases) {
+                        String tripleKey = productCategoryKey + '|' + subCategoryAlias;
+                        if (!subCodeAliases.isEmpty()) {
+                            if (!out.subCodeTextKeysByProductCategorySubCategory.containsKey(tripleKey)) {
+                                out.subCodeTextKeysByProductCategorySubCategory.put(tripleKey, new Set<String>());
+                            }
+                            addTextAliasesToSet(
+                                out.subCodeTextKeysByProductCategorySubCategory.get(tripleKey),
+                                subCodeAliases
+                            );
+                        }
+                        if (!subCodeAliases.isEmpty()) {
+                            for (String subCodeAlias : subCodeAliases) {
+                                out.fullTextKeys.add(
+                                    productIdKey + '|' + categoryAlias + '|' + subCategoryAlias + '|' + subCodeAlias
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Validate NOC theo thứ tự Product Type → Category → Sub Category → Sub Code.
+     * Dừng ở mức lỗi đầu tiên; so khớp text import với Name/Code trên NOC (không dùng Id lookup chéo).
+     */
+    private static void appendNatureOfCaseValidationErrors(
+        ParsedCaseRow r,
+        Id productId,
+        NatureOfCaseHierarchyMaps nocMaps,
+        List<String> errs
+    ) {
+        if (productId == null || r == null || nocMaps == null) {
+            return;
+        }
+        if (String.isBlank(r.category) || String.isBlank(r.subCategory) || String.isBlank(r.subCode)) {
+            return;
+        }
+        String productIdKey = String.valueOf(productId);
+        String categoryNorm = r.category.trim().toLowerCase();
+        String subCategoryNorm = r.subCategory.trim().toLowerCase();
+        String subCodeNorm = r.subCode.trim().toLowerCase();
+        String fullKey = productIdKey + '|' + categoryNorm + '|' + subCategoryNorm + '|' + subCodeNorm;
+        if (nocMaps.fullTextKeys.contains(fullKey)) {
+            return;
+        }
+
+        Set<String> categoriesForProduct = nocMaps.categoryTextKeysByProductId.get(productIdKey);
+        if (!natureInputMatches(categoriesForProduct, r.category)) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Category_For_Product_Type);
+            return;
+        }
+
+        Set<String> subCategoriesForProduct = nocMaps.subCategoryTextKeysByProductId.get(productIdKey);
+        if (!natureInputMatches(subCategoriesForProduct, r.subCategory)) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Category_For_Category);
+            return;
+        }
+
+        Set<String> subCodesForTriple = resolveSubCodesForCategorySubCategory(
+            nocMaps,
+            productIdKey,
+            r.category,
+            r.subCategory
+        );
+        if (subCodesForTriple == null || subCodesForTriple.isEmpty()) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category);
+            return;
+        }
+        if (!natureInputMatches(subCodesForTriple, r.subCode)) {
+            errs.add(System.Label.FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category);
+        }
+    }
+
+    private static Map<String, Set<String>> buildSubChannelsByChannelMap(
+        Schema.DescribeFieldResult channelDfr,
+        Schema.DescribeFieldResult subChannelDfr
+    ) {
+        Map<String, Set<String>> subChannelsByChannel = new Map<String, Set<String>>();
+        if (channelDfr == null || subChannelDfr == null) {
+            return subChannelsByChannel;
+        }
+        List<Schema.PicklistEntry> channelEntries = channelDfr.getPicklistValues();
+        List<Schema.PicklistEntry> subChannelEntries = subChannelDfr.getPicklistValues();
+        Schema.SObjectField controllerFieldRef = subChannelDfr.getController();
+        String controllerFieldApi =
+            controllerFieldRef == null ? null : controllerFieldRef.getDescribe().getName();
+        Boolean dependent =
+            String.isNotBlank(controllerFieldApi) &&
+            controllerFieldApi.equalsIgnoreCase(String.valueOf(channelDfr.getName()));
+        if (!dependent) {
+            return subChannelsByChannel;
+        }
+
+        for (Integer channelIndex = 0; channelIndex < channelEntries.size(); channelIndex++) {
+            Schema.PicklistEntry channelEntry = channelEntries[channelIndex];
+            if (channelEntry == null || !channelEntry.isActive()) {
+                continue;
+            }
+            registerChannelSubChannelKey(subChannelsByChannel, channelEntry.getValue());
+            registerChannelSubChannelKey(subChannelsByChannel, channelEntry.getLabel());
+
+            for (Schema.PicklistEntry subEntry : subChannelEntries) {
+                if (subEntry == null || !subEntry.isActive()) {
+                    continue;
+                }
+                if (dependent && !isPicklistEntryValidForControllerIndex(subEntry, channelIndex)) {
+                    continue;
+                }
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getValue(), subEntry.getValue());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getValue(), subEntry.getLabel());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getLabel(), subEntry.getValue());
+                addSubChannelForChannelKey(subChannelsByChannel, channelEntry.getLabel(), subEntry.getLabel());
+            }
+        }
+        return subChannelsByChannel;
+    }
+
+    private static void registerChannelSubChannelKey(Map<String, Set<String>> subChannelsByChannel, String channelKey) {
+        if (String.isBlank(channelKey)) {
+            return;
+        }
+        String normalized = channelKey.trim().toLowerCase();
+        if (!subChannelsByChannel.containsKey(normalized)) {
+            subChannelsByChannel.put(normalized, new Set<String>());
+        }
+    }
+
+    private static void addSubChannelForChannelKey(
+        Map<String, Set<String>> subChannelsByChannel,
+        String channelKey,
+        String subChannelKey
+    ) {
+        if (String.isBlank(channelKey) || String.isBlank(subChannelKey)) {
+            return;
+        }
+        registerChannelSubChannelKey(subChannelsByChannel, channelKey);
+        subChannelsByChannel.get(channelKey.trim().toLowerCase()).add(subChannelKey.trim().toLowerCase());
+    }
+
+    private static String readPicklistEntryValidFor(Schema.PicklistEntry entry) {
+        if (entry == null) {
+            return null;
+        }
+        Map<String, Object> entryMap = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(entry));
+        Object validForObj = entryMap == null ? null : entryMap.get('validFor');
+        return validForObj == null ? null : String.valueOf(validForObj);
+    }
+
+    private static Boolean isPicklistEntryValidForControllerIndex(Schema.PicklistEntry entry, Integer controllerIndex) {
+        if (entry == null || controllerIndex == null || controllerIndex < 0) {
+            return false;
+        }
+        String validForBits = readPicklistEntryValidFor(entry);
+        if (String.isBlank(validForBits)) {
+            return true;
+        }
+        String hexString = EncodingUtil.convertToHex(EncodingUtil.base64Decode(validForBits));
+        Integer controlByteIndex = controllerIndex / 8;
+        Integer controlBitIndex = Math.mod(controllerIndex, 8);
+        Integer startChar = controlByteIndex * 2;
+        if (hexString.length() <= startChar + 1) {
+            return false;
+        }
+        Integer byteValue = hexStringToInt(hexString.substring(startChar, startChar + 2));
+        return (byteValue & (1 << controlBitIndex)) != 0;
+    }
+
+    private static Integer hexStringToInt(String hex) {
+        if (String.isBlank(hex)) {
+            return 0;
+        }
+        Integer result = 0;
+        String hexChars = '0123456789ABCDEF';
+        String normalized = hex.toUpperCase();
+        for (Integer i = 0; i < normalized.length(); i++) {
+            String ch = normalized.substring(i, i + 1);
+            Integer digit = hexChars.indexOf(ch);
+            if (digit < 0) {
+                continue;
+            }
+            result = (result << 4) + digit;
+        }
+        return result;
+    }
+
+    private static Boolean isSubChannelValidForChannel(
+        String channelApi,
+        String subChannelApi,
+        Map<String, Set<String>> subChannelsByChannel
+    ) {
+        if (String.isBlank(channelApi) || String.isBlank(subChannelApi) || subChannelsByChannel == null) {
+            return true;
+        }
+        Set<String> allowed = subChannelsByChannel.get(channelApi.trim().toLowerCase());
+        if (allowed == null || allowed.isEmpty()) {
+            return true;
+        }
+        return allowed.contains(subChannelApi.trim().toLowerCase());
+    }
+
+    private static String matchBatchImportCaseStatus(Schema.DescribeFieldResult statusDfr, String raw) {
+        if (String.isBlank(raw)) {
+            return null;
+        }
+        String direct = matchPicklist(statusDfr, raw);
+        if (String.isNotBlank(direct)) {
+            if (
+                direct == FEC_ConstantCommon.CASE_STATUS_OPEN ||
+                direct == FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED
+            ) {
+                return direct;
+            }
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_OPEN)) {
+            return FEC_ConstantCommon.CASE_STATUS_OPEN;
+        }
+        if (trimmed.equalsIgnoreCase(FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED)) {
+            return FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED;
+        }
+        return null;
+    }
+
     private static String matchPicklist(Schema.DescribeFieldResult dfr, String raw) {
         if (String.isBlank(raw) || dfr == null) {
             return null;
@@ -1040,6 +1475,176 @@ public with sharing class FEC_BatchCaseCreationController {
             }
         }
         return null;
+    }
+
+    private static Integer countFailedRowResults(List<CaseRowResult> rowResults) {
+        Integer failedCount = 0;
+        if (rowResults == null) {
+            return failedCount;
+        }
+        for (CaseRowResult rr : rowResults) {
+            if ('Failed'.equals(rr.status)) {
+                failedCount += 1;
+            }
+        }
+        return failedCount;
+    }
+
+    private static void applyBatchImportFailureOutcome(
+        Map<String, Schema.SObjectField> batchFieldMap,
+        SObject batchRow,
+        Integer totalCount,
+        Integer failedCount,
+        String batchFailureReason,
+        String sourceFileName,
+        List<CaseRowResult> rowResults
+    ) {
+        saveCaseImportResultCsv((Id) batchRow.get('Id'), sourceFileName, rowResults);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, 'Failure');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Records__c', 'FEC_Total_Records_Count__c' }, totalCount);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, 0);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
+        FEC_BatchImportCommon.putIfFieldExists(batchFieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, batchFailureReason);
+        update batchRow;
+    }
+
+    /** File result CSV trên server — luôn có link tải khi validation/DML fail (không phụ thuộc SheetJS client). */
+    private static void saveCaseImportResultCsv(Id batchRecordId, String sourceFileName, List<CaseRowResult> rowResults) {
+        if (batchRecordId == null || rowResults == null || rowResults.isEmpty()) {
+            return;
+        }
+        try {
+            List<String> lines = new List<String>();
+            lines.add(
+                '"Row","Contract","Phone","Product","Category","Sub Category","Sub Code","Case Status","Remarks","Channel","Sub Channel","Email","Import Status","Errors"'
+            );
+            Integer rowNum = 0;
+            for (CaseRowResult rr : rowResults) {
+                rowNum += 1;
+                lines.add(
+                    String.join(
+                        new List<String>{
+                            csvEscape(String.valueOf(rowNum)),
+                            csvEscape(rr.contractNumber),
+                            csvEscape(rr.interactionPhone),
+                            csvEscape(rr.productType),
+                            csvEscape(rr.category),
+                            csvEscape(rr.subCategory),
+                            csvEscape(rr.subCode),
+                            csvEscape(rr.caseStatus),
+                            csvEscape(rr.caseRemarks),
+                            csvEscape(rr.interactionChannel),
+                            csvEscape(rr.interactionSubChannel),
+                            csvEscape(rr.interactionEmail),
+                            csvEscape(rr.status),
+                            csvEscape(rr.errors)
+                        },
+                        ','
+                    )
+                );
+            }
+            String resultTitle = FEC_BatchImportCommon.buildResultContentTitle(sourceFileName);
+            ContentVersion cv = new ContentVersion();
+            cv.Title = resultTitle;
+            cv.PathOnClient = '/' + resultTitle + '.csv';
+            cv.VersionData = Blob.valueOf('\uFEFF' + String.join(lines, '\r\n'));
+            cv.FirstPublishLocationId = batchRecordId;
+            insert cv;
+        } catch (Exception ex) {
+            // Không chặn cập nhật batch Failure nếu không ghi được file result.
+        }
+    }
+
+    private static String csvEscape(String value) {
+        String v = value == null ? '' : value;
+        if (v.contains('"') || v.contains(',') || v.contains('\n') || v.contains('\r')) {
+            return '"' + v.replace('"', '""') + '"';
+        }
+        return '"' + v + '"';
+    }
+
+    /** Cả file không import — mọi dòng Failed, không có ID/Interaction/Case ID. */
+    private static void markAllRowResultsFailedForBatchNoImport(List<CaseRowResult> rowResults) {
+        if (rowResults == null) {
+            return;
+        }
+        for (CaseRowResult rr : rowResults) {
+            rr.status = 'Failed';
+            rr.recordId = '';
+            rr.finalStatus = '';
+            rr.interactionId = '';
+            rr.caseBusinessId = '';
+        }
+    }
+
+    /** Sau rollback: dòng từng insert thành công — đánh Failed, xóa Id Case (lỗi chi tiết giữ trên dòng đã Failed từ trước). */
+    private static void markRowResultsNotImportedAfterRollback(List<CaseRowResult> rowResults) {
+        if (rowResults == null) {
+            return;
+        }
+        for (CaseRowResult rr : rowResults) {
+            if (!'Succeeded'.equals(rr.status)) {
+                continue;
+            }
+            rr.status = 'Failed';
+            rr.recordId = '';
+            rr.finalStatus = '';
+            rr.interactionId = '';
+            rr.caseBusinessId = '';
+        }
+    }
+
+    private static void enrichRowResultsFromInsertedCases(List<CaseRowResult> rowResults) {
+        if (rowResults == null || rowResults.isEmpty()) {
+            return;
+        }
+        Set<Id> insertedCaseIds = new Set<Id>();
+        for (CaseRowResult rr : rowResults) {
+            if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
+                insertedCaseIds.add(Id.valueOf(rr.recordId));
+            }
+        }
+        Map<Id, Case> finalById = new Map<Id, Case>();
+        if (!insertedCaseIds.isEmpty()) {
+            finalById = new Map<Id, Case>([
+                SELECT
+                    Id,
+                    Status,
+                    FEC_Interaction_ID__c,
+                    FEC_Case_ID__c,
+                    FEC_Interaction__c,
+                    FEC_Interaction__r.FEC_Interaction_ID__c,
+                    FEC_Interaction__r.FEC_Case_ID__c,
+                    FEC_Interaction__r.Id
+                FROM Case
+                WHERE Id IN :insertedCaseIds
+            ]);
+        }
+        for (CaseRowResult rr : rowResults) {
+            if ('Succeeded'.equals(rr.status) && String.isNotBlank(rr.recordId)) {
+                Case c = finalById.get((Id) rr.recordId);
+                rr.finalStatus = c == null ? '' : c.Status;
+                rr.interactionId = '';
+                if (c != null) {
+                    rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction_ID__c);
+                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
+                        rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Interaction_ID__c);
+                    }
+                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
+                        rr.interactionId = normalizeCaseBusinessId(c.FEC_Interaction__r.FEC_Case_ID__c);
+                    }
+                    if (String.isBlank(rr.interactionId) && c.FEC_Interaction__r != null) {
+                        rr.interactionId = String.valueOf(c.FEC_Interaction__r.Id);
+                    }
+                }
+                rr.caseBusinessId = c == null ? '' : normalizeCaseBusinessId(c.FEC_Case_ID__c);
+            } else {
+                rr.finalStatus = '';
+                rr.interactionId = '';
+                rr.caseBusinessId = '';
+            }
+        }
     }
 
     private static void upsertFailedBatch(String fileName, String templateName, String reason) {
