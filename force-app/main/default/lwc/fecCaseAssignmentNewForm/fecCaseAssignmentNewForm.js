@@ -23,6 +23,9 @@ import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
+const STATUS_ACTIVE = "Active";
+const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
+  "Không thể Active khi chưa thêm Case Assignment NOC.";
 
 export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningElement) {
   @track queueOptions = [];
@@ -111,6 +114,10 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
   set statusOptions(value) {
     this._statusOptions = value;
+  }
+
+  get availableStatusOptions() {
+    return this.statusOptions.filter((option) => option.value !== STATUS_ACTIVE);
   }
 
   get assignmentMethodOptions() {
@@ -242,7 +249,14 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   handleStatusChange(event) {
-    this.status = event.detail.value || "";
+    const nextStatus = event.detail.value || "";
+    if (nextStatus === STATUS_ACTIVE) {
+      this.status = this._statusOptions?.[0]?.value || "Draft";
+      this.pageErrors = [MSG_CANNOT_ACTIVE_WITHOUT_NOC];
+      this.reportFieldValidity(this.pageErrors);
+      return;
+    }
+    this.status = nextStatus;
     this.clearPageErrors();
   }
 
@@ -504,6 +518,9 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     if (!this.status) {
       errors.push("Status can't be blank");
     }
+    if (this.status === STATUS_ACTIVE) {
+      errors.push(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+    }
     if (!this.assignmentMethod) {
       errors.push("Assignment Method can't be blank");
     }
@@ -575,6 +592,15 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     }
 
     this.queueHasError = messages.some((msg) => msg.includes("Select Queues"));
+
+    const activeWithoutNoc = messages.some((msg) => msg === MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+    if (activeWithoutNoc) {
+      const statusField = this.template.querySelector('[data-field="status"]');
+      if (statusField) {
+        statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+        statusField.reportValidity();
+      }
+    }
   }
 
   handleAddRole() {
