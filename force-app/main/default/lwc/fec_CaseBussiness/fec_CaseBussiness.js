@@ -18,6 +18,10 @@ import getCardStatus from "@salesforce/apex/FEC_CardLockUnLockController.getCard
 import checkProcessActionCardBlock from "@salesforce/apex/FEC_CardLockUnLockController.checkProcessActionCardBlock";
 import checkProcessAction from "@salesforce/apex/FEC_CardReplacementAddressController.checkProcessAction";
 import { getRecord, getFieldValue, updateRecord } from "lightning/uiRecordApi";
+import { refreshApex } from "@salesforce/apex";
+import FEC_NFU_DESCRIPTION_RESULT from "@salesforce/schema/Case.FEC_NFU_Description_Result__c";
+import getSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubProcesses";
+import getSubmittedSubProcesses from "@salesforce/apex/FEC_SubProcessService.getSubmittedSubProcesses";
 import USER_ID from "@salesforce/user/Id";
 import USER_GROUP_FIELD from "@salesforce/schema/User.FEC_User_Group__c";
 import ID_FIELD from "@salesforce/schema/Case.Id";
@@ -686,6 +690,15 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   businessLoaded = false;
 
+  /** Auto Hold Case — hiển thị trong accordion Case Information. */
+  holdCaseNocParams = { recordId: null };
+  wiredCaseHoldResultWire;
+  holdCaseResultOnCase = false;
+  holdCaseResultOverride = null;
+  showHoldCase = false;
+  showHoldCaseManual = false;
+  showHoldCaseAuto = false;
+
   //linhdev: Fix jira FECREDIT_CSM_2025_KH-1226 — tách active name theo từng lightning-accordion
   // (tránh trộn "routing-action" với UUID section: active-section-name có tên lạ có thể làm co section).
   @track activeMainSectionlst = [];
@@ -754,6 +767,53 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   @wire(MessageContext)
   messageContext;
+
+  @wire(getRecord, { recordId: "$recordId", fields: [FEC_NFU_DESCRIPTION_RESULT] })
+  wiredCaseHoldResult(result) {
+    this.wiredCaseHoldResultWire = result;
+    const resultVal = getFieldValue(result.data, FEC_NFU_DESCRIPTION_RESULT);
+    this.holdCaseResultOnCase = !!resultVal;
+    if (resultVal) {
+      this.showHoldCase = true;
+      this.showHoldCaseAuto = true;
+      if (!this.holdCaseResultOverride) {
+        this.holdCaseResultOverride = resultVal;
+      }
+      this._ensureCaseInformationHoldCaseFlags();
+      this.business = { ...this.business };
+    } else if (result.error) {
+      console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
+    }
+  }
+
+  @wire(getSubProcesses, {
+    recordId: "$recordId",
+    productTypeId: "$holdCaseNocParams.productTypeId",
+    categoryId: "$holdCaseNocParams.categoryId",
+    subCategoryId: "$holdCaseNocParams.subCategoryId",
+    subCodeId: "$holdCaseNocParams.subCodeId",
+  })
+  wiredHoldCaseSubProcesses({ data, error }) {
+    if (data) {
+      this.showHoldCase = !!data.showHoldCase || this.holdCaseResultOnCase;
+      this.showHoldCaseManual = !!data.showHoldCaseManual;
+      if (!this.holdCaseResultOnCase) {
+        this.showHoldCaseAuto = !!data.showHoldCaseAuto;
+      }
+    }
+    if (error) {
+      console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
+    }
+  }
+
+  get showHoldCaseSection() {
+    return (
+      this.showHoldCaseAuto ||
+      this.showHoldCaseManual ||
+      this.holdCaseResultOnCase ||
+      !!this.holdCaseResultOverride
+    );
+  }
 
   get iconHideConst() {
     return ICON_HIDE;
@@ -1685,11 +1745,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       (message) => this._handleCaseNOCMessage(message),
       { scope: APPLICATION_SCOPE }
     );
+    this.holdCaseNocParams = { recordId: this.recordId };
+    this._boundCheckHoldCaseRefresh = this._checkHoldCaseRefreshFlag.bind(this);
+    window.addEventListener("focus", this._boundCheckHoldCaseRefresh);
+    this._checkHoldCaseRefreshFlag();
+    void this._initializeHoldCaseVisibility();
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366
     const fastCashNocSel = readFastCashNocSelectionFromStorage(this.recordId);
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
     const pointsRedemptionNocSel = readPointsRedemptionNocSelectionFromStorage(this.recordId);
     if (fastCashNocSel && fastCashNocSel.productTypeId) {
+      this.holdCaseNocParams = {
+        recordId: this.recordId,
+        productTypeId: fastCashNocSel.productTypeId,
+        categoryId: fastCashNocSel.categoryId,
+        subCategoryId: fastCashNocSel.subCategoryId,
+        subCodeId: fastCashNocSel.subCodeId,
+      };
       this.getData(
         fastCashNocSel.productTypeId,
         fastCashNocSel.categoryId,
@@ -1729,6 +1801,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (this._subscriptionCaseNOC) {
       unsubscribe(this._subscriptionCaseNOC);
       this._subscriptionCaseNOC = null;
+    }
+    if (this._boundCheckHoldCaseRefresh) {
+      window.removeEventListener("focus", this._boundCheckHoldCaseRefresh);
     }
     localStorage.removeItem(this.draftStorageKey);
   }
@@ -1781,6 +1856,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (hasNocSelectionPayload) {
       // NOC update từ Updated Information section.
       // Lưu ý: bộ NOC không có Sub-Code sẽ publish subCodeId = null, vẫn phải reload.
+      this.holdCaseNocParams = {
+        recordId: this.recordId,
+        productTypeId: message.productTypeId,
+        categoryId: message.categoryId,
+        subCategoryId: message.subCategoryId,
+        subCodeId: message.subCodeId,
+      };
       this._handleNOCUpdate(message);
     }
   }
@@ -1997,6 +2079,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           sectionlst.push(section.id);
 
           section.isLastSection = index === this.business.sectionlst.length - 1;
+          section.isCaseInformationSection = section.name === SECTION_NAME_CASE_INFORMATION;
+          section.holdCaseRowKey = `${section.id}-hold-case`;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
             sub.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[sub.layout] || SLDS_MEDIUM_SIZE_OF_12[12]) + ' slds-m-top_medium';
@@ -4236,10 +4320,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
    * Submit toàn bộ form và chờ tất cả hoàn thành.
    * Đảm bảo Account Info, Case Info đã lưu trước khi run().
    */
+  _ensureCaseInformationHoldCaseFlags() {
+    if (!this.business?.sectionlst) {
+      return;
+    }
+    this.business.sectionlst.forEach((section) => {
+      section.isCaseInformationSection =
+        section.name === SECTION_NAME_CASE_INFORMATION;
+    });
+  }
+
   _rebuildAllSectionSortedRows() {
     if (!this.business?.sectionlst) {
       return;
     }
+    this._ensureCaseInformationHoldCaseFlags();
     this.business.sectionlst.forEach((section) => {
       section.sortedSectionContentlst = mergeSectionSortedRows(section);
     });
@@ -4458,16 +4553,101 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._scheduleRefreshFileUploadCards();
   }
 
+  /** Manual Hold Case (Quick Action) báo refresh qua sessionStorage sau TH1/TH2/TH3. */
+  _checkHoldCaseRefreshFlag() {
+    if (!this.recordId) {
+      return;
+    }
+    try {
+      const key = "fec_hold_case_refresh_" + this.recordId;
+      const displayKey = "fec_hold_case_display_" + this.recordId;
+      const displayVal = sessionStorage.getItem(displayKey);
+      if (displayVal) {
+        this.holdCaseResultOverride = displayVal;
+      }
+      if (sessionStorage.getItem(key)) {
+        sessionStorage.removeItem(key);
+        sessionStorage.removeItem(displayKey);
+        this._refreshHoldCaseAutoDisplay();
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        window.setTimeout(() => this._refreshHoldCaseAutoDisplay(), 600);
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        window.setTimeout(() => this._refreshHoldCaseAutoDisplay(), 1200);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  async _initializeHoldCaseVisibility() {
+    try {
+      const result = await getSubmittedSubProcesses({ caseId: this.recordId });
+      this.showHoldCase = !!result.showHoldCase || this.holdCaseResultOnCase;
+      this.showHoldCaseManual = !!result.showHoldCaseManual;
+      if (!this.holdCaseResultOnCase) {
+        this.showHoldCaseAuto = !!result.showHoldCaseAuto;
+      }
+    } catch (error) {
+      console.error("[fec_CaseBussiness] _initializeHoldCaseVisibility ERROR", error);
+    }
+  }
+
+  _refreshHoldCaseAutoDisplay() {
+    this._checkHoldCaseRefreshFlag();
+    const initPromise = this._initializeHoldCaseVisibility();
+    const promises = [initPromise];
+    if (this.wiredCaseHoldResultWire) {
+      promises.push(
+        refreshApex(this.wiredCaseHoldResultWire).then(() => {
+          const resultVal = getFieldValue(
+            this.wiredCaseHoldResultWire?.data,
+            FEC_NFU_DESCRIPTION_RESULT,
+          );
+          this.holdCaseResultOnCase = !!resultVal;
+          if (resultVal) {
+            this.showHoldCase = true;
+            this.showHoldCaseAuto = true;
+            if (!this.holdCaseResultOverride) {
+              this.holdCaseResultOverride = resultVal;
+            }
+            this._ensureCaseInformationHoldCaseFlags();
+            this.business = { ...this.business };
+          }
+        }),
+      );
+    }
+    if (this.holdCaseResultOverride) {
+      this.showHoldCase = true;
+      this.showHoldCaseAuto = true;
+    }
+    return Promise.all(promises).then(() => {
+      if (
+        this.showHoldCaseAuto &&
+        !this.holdCaseResultOnCase &&
+        !this.holdCaseResultOverride
+      ) {
+        this.holdCaseResultOverride = "PENDING";
+        this.showHoldCase = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
+      const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
+      if (autoCmp?.refresh) {
+        return autoCmp.refresh();
+      }
+      return undefined;
+    });
+  }
+
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
   @api
   refreshAutoHoldCase() {
-    const delays = [2000, 5000, 8000];
+    const delays = [1500, 4000, 8000, 12000, 20000];
     delays.forEach((delayMs) => {
       // eslint-disable-next-line @lwc/lwc/no-async-operation
       setTimeout(() => {
-        const subprocess =
-          this.template.querySelector("c-fec_-sub-process-container") ||
-          this.template.querySelector("c-fec-sub-process-container");
+        this._refreshHoldCaseAutoDisplay();
+        const subprocess = this._getSubProcessContainerEl();
         subprocess?.refreshAutoHoldCase?.();
       }, delayMs);
     });
