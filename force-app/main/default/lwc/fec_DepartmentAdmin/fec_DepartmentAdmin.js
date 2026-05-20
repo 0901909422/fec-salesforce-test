@@ -72,6 +72,8 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     @track editQueueLabelStatus = '';
     @track curentTeamId = null;
     @track currentTeamName = null;
+    @track currentTeamApiName = null;
+    @track currentTeamDescription = null;
     @track editTeamId = null;
     @track teamOptions = [];
     @track editErrorMessage = '';
@@ -123,9 +125,9 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         this.editQueueLabel = event.target.value;
     }
 
-    handleEditTeamChange(event) {
-        this.editTeamId = event.detail ? event.detail.value : event.target.value;
-    }
+    // handleEditTeamChange(event) {
+    //     this.editTeamId = event.detail ? event.detail.value : event.target.value;
+    // }
 
     handleEditQueueLabelStatusChange(event) {
         this.editQueueLabelStatus = event.target.value;
@@ -219,10 +221,11 @@ export default class Fec_DepartmentAdmin extends LightningElement {
         const qid = event.detail.queueId;
         const teamQueueRecordID = event.detail.teamQueueRecordID;
         const curentTeamId = event.detail.curentTeamId;
+        const queueLabelStatus = event.detail.queueLabelStatus;
         this.curentTeamId = curentTeamId;
         this.selectedQueueId = qid;
         this.isLoadQueue = true;
-        
+
         // Get queue name using the new Apex method
         try {
             const queueInfo = await getQueueValidBaseNameOrId({ developerName: null, queueId: qid });
@@ -230,12 +233,17 @@ export default class Fec_DepartmentAdmin extends LightningElement {
             if (queueInfo && queueInfo.name) {
                 this.selectedQueueName = queueInfo.name;
                 this.selectedQueueDevName = queueInfo.devname;
+                this.selectedQueueLabelStatus = queueLabelStatus;
             } else {
                 this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
+                this.selectedQueueDevName = '';
+                this.selectedQueueLabelStatus = '';
             }
         } catch (error) {
             console.error('Error fetching queue name:', error);
             this.selectedQueueName = this.customLabels.CS_OrgChart_Table_UserTable_Queue_Unknow;
+            this.selectedQueueDevName = '';
+            this.selectedQueueLabelStatus = '';
         }
         
         // reset pagination and users
@@ -558,12 +566,16 @@ export default class Fec_DepartmentAdmin extends LightningElement {
     handleSelectTeam(event) {
         const teamId = event.detail.teamId;
         const teamName = event.detail.teamName;
+        const teamApiName = event.detail.teamApiName;
+        const teamDescription = event.detail.teamDescription;
         this.isLoadQueue = false;
         console.log('Team selected:', teamId, teamName);
         if (teamId) {
             this.curentTeamId = teamId;
             this.currentTeamName = teamName;
             this.selectedQueueId = null;
+            this.currentTeamApiName = teamApiName;
+            this.currentTeamDescription = teamDescription;
             this.refreshHistoryChild(teamId);
         }
 

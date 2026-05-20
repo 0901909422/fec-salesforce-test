@@ -27,7 +27,7 @@
             <template if:true={isExpanded}>
                 <template if:true={dataLogs.length}>
                     <div class="table-history-container slds-m-bottom_small">
-                        <lightning-datatable
+                        <c-fec_-custom-datatable
                             key-field="Id"
                             data={dataLogs}
                             columns={columns}
@@ -35,7 +35,7 @@
                             enable-infinite-loading
                             show-row-number-column
                             resize-column-disabled>
-                        </lightning-datatable>
+                        </c-fec_-custom-datatable>
                     </div>
                 </template>
                 <template if:false={dataLogs.length}>

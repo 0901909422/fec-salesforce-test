@@ -13,6 +13,7 @@ public with sharing class FEC_TeamQueue {
         @AuraEnabled public String teamName;
         @AuraEnabled public String teamLabel;
         @AuraEnabled public String teamId;
+        @AuraEnabled public String teamDescription;
     }
 
     /**
@@ -56,7 +57,7 @@ public with sharing class FEC_TeamQueue {
         try {
             // Query to get teams and their queue counts
             List<FEC_Team__c> listTeamNames = [
-                SELECT Id, Name, FEC_Team_Label__c 
+                SELECT Id, Name, FEC_Team_Label__c, FEC_Team_Description__c
                 FROM FEC_Team__c 
                 WHERE FEC_Team_Active__c = true
                 ORDER BY Name
@@ -68,6 +69,7 @@ public with sharing class FEC_TeamQueue {
                 wrapper.teamName = team.Name;
                 wrapper.teamLabel = team.FEC_Team_Label__c;
                 wrapper.teamId = team.Id;
+                wrapper.teamDescription = team.FEC_Team_Description__c;
                 result.add(wrapper);
             }
         } catch (Exception e) {
@@ -94,7 +96,7 @@ public with sharing class FEC_TeamQueue {
         try {
             // Query to get queue names for a specific team
             List<FEC_Team_Queue__c> teamQueues = [
-                SELECT Id, FEC_Queue_Name__c
+                SELECT Id, FEC_Queue_Name__c, FEC_Team__c
                 FROM FEC_Team_Queue__c
                 WHERE FEC_Select_Team__r.Id = :teamID
                 ORDER BY FEC_Queue_Name__c
@@ -114,6 +116,7 @@ public with sharing class FEC_TeamQueue {
                     listQueue.teamqueue = teamID;
                     listQueue.queueId = queueInfo.Id;
                     listQueue.displayname = queueInfo.name;
+                    listQueue.queueLabelStatus = tq.FEC_Team__c;
                     result.add(listQueue);
                 }
             }
