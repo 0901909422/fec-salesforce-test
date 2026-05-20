@@ -1223,6 +1223,9 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.showMultiPicklistValue(line)) {
       cls += " fec-filter-table__row--multi";
     }
+    if (this.isAttachmentsFilterLine(line)) {
+      cls += " fec-filter-table__row--attach";
+    }
     return cls;
   }
 

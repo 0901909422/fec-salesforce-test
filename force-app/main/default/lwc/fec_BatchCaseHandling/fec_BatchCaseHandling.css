@@ -339,6 +339,18 @@
   min-width: 0;
 }
 
+.fec-filter-attach-condition {
+  min-height: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.fec-filter-attach-condition lightning-input {
+  display: block;
+}
+
 .fec-filter-attach-value {
   min-height: 2rem;
   display: flex;
@@ -350,6 +362,10 @@
 .fec-filter-table__row lightning-dual-listbox {
   min-width: 0;
   grid-column: span 1;
+}
+
+.fec-filter-table__row--attach {
+  align-items: center;
 }
 
 .fec-filter-table__row--multi {

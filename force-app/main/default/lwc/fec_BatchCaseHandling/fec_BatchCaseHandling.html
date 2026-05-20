@@ -52,14 +52,16 @@
                 ></lightning-combobox>
                 </template>
                 <template if:true={fline.showAttachConditionCheckbox}>
-                  <lightning-input
-                    data-rowid={fline.rowId}
-                    type="checkbox"
-                    label={batchUi.filterColCondition}
-                    variant="label-hidden"
-                    checked={fline.attachmentConditionChecked}
-                    onchange={handleFilterAttachmentConditionChange}
-                  ></lightning-input>
+                  <div class="fec-filter-attach-condition">
+                    <lightning-input
+                      data-rowid={fline.rowId}
+                      type="checkbox"
+                      label={batchUi.filterColCondition}
+                      variant="label-hidden"
+                      checked={fline.attachmentConditionChecked}
+                      onchange={handleFilterAttachmentConditionChange}
+                    ></lightning-input>
+                  </div>
                 </template>
                 <template if:true={fline.showAttachmentValueLabel}>
                   <div class="fec-filter-attach-value">{fline.attachmentValueLabel}</div>
