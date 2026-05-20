@@ -17913,4 +17913,33 @@
         <shortDescription>Search Channel</shortDescription>
         <value>Search Channel</value>
     </labels>
+
+    <labels>
+        <fullName>FEC_Label_GA_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Code</shortDescription>
+        <value>General Assignment Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_GA_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Name</shortDescription>
+        <value>General Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_New_GA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New GA</shortDescription>
+        <value>New General Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Information</shortDescription>
+        <value>Information</value>
+    </labels>
 </CustomLabels>
