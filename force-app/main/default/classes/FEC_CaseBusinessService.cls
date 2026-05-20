@@ -2010,13 +2010,30 @@ public without sharing class FEC_CaseBusinessService {
 
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
   }
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   @AuraEnabled
   public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
     createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+  }
+
+  private static String readCaseFinalStatusBeforeSubmit(String caseId) {
+    if (String.isBlank(caseId)) {
+      return null;
+    }
+    List<Case> rows = [
+      SELECT FEC_Final_Status__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    return rows.isEmpty() ? null : rows[0].FEC_Final_Status__c;
   }
   //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   /**

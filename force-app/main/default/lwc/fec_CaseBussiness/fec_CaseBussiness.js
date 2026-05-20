@@ -723,6 +723,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     if (resultVal) {
       this.showHoldCase = true;
       this.showHoldCaseAuto = true;
+      if (!this.holdCaseResultOverride) {
+        this.holdCaseResultOverride = resultVal;
+      }
+      this._ensureCaseInformationHoldCaseFlags();
+      this.business = { ...this.business };
+    } else if (result.error) {
+      console.error("[fec_CaseBussiness] wiredCaseHoldResult error", result.error);
     }
   }
 
@@ -1768,6 +1775,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
           section.isLastSection = index === this.business.sectionlst.length - 1;
           section.isCaseInformationSection = section.name === SECTION_NAME_CASE_INFORMATION;
+          section.holdCaseRowKey = `${section.id}-hold-case`;
 
           section.subSectionlst?.forEach((sub, subIndex) => {
             sub.className = 'slds-col slds-size_1-of-1 ' + (SLDS_MEDIUM_SIZE_OF_12[sub.layout] || SLDS_MEDIUM_SIZE_OF_12[12]) + ' slds-m-top_medium';
@@ -3959,10 +3967,21 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
    * Submit toàn bộ form và chờ tất cả hoàn thành.
    * Đảm bảo Account Info, Case Info đã lưu trước khi run().
    */
+  _ensureCaseInformationHoldCaseFlags() {
+    if (!this.business?.sectionlst) {
+      return;
+    }
+    this.business.sectionlst.forEach((section) => {
+      section.isCaseInformationSection =
+        section.name === SECTION_NAME_CASE_INFORMATION;
+    });
+  }
+
   _rebuildAllSectionSortedRows() {
     if (!this.business?.sectionlst) {
       return;
     }
+    this._ensureCaseInformationHoldCaseFlags();
     this.business.sectionlst.forEach((section) => {
       section.sortedSectionContentlst = mergeSectionSortedRows(section);
     });
@@ -4235,6 +4254,11 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           if (resultVal) {
             this.showHoldCase = true;
             this.showHoldCaseAuto = true;
+            if (!this.holdCaseResultOverride) {
+              this.holdCaseResultOverride = resultVal;
+            }
+            this._ensureCaseInformationHoldCaseFlags();
+            this.business = { ...this.business };
           }
         }),
       );
@@ -4244,6 +4268,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this.showHoldCaseAuto = true;
     }
     return Promise.all(promises).then(() => {
+      if (
+        this.showHoldCaseAuto &&
+        !this.holdCaseResultOnCase &&
+        !this.holdCaseResultOverride
+      ) {
+        this.holdCaseResultOverride = "PENDING";
+        this.showHoldCase = true;
+        this._ensureCaseInformationHoldCaseFlags();
+        this.business = { ...this.business };
+      }
       const autoCmp = this.template.querySelector("c-fec_hold-case-auto");
       if (autoCmp?.refresh) {
         return autoCmp.refresh();
