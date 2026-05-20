@@ -5,9 +5,9 @@ Checklist
 		- Email: add Email
         - Endpoint
 	 - Email:  Setup > Deliverability > Select All Emal > Go Organization-Wide Addresses and add Email > email cần add
-	 - CustomSync__C  | object lưu config
+	 - FEC_Custom_Sync__C  | object lưu config
 		- ProcessingQuantity__c: số lượng reocord trong 1 lần gửi 
-		- TotalRecordSync__c: Số lượng reocrd đc Sync trong kỳ trước 
+		- FEC_Total_RecordSync__c: Số lượng reocrd đc Sync trong kỳ trước 
         - Request Body Mapping: Là json với cấu trúc Map<'FieldBix','FieldSalesforce'> phải đúng cấu trúc và các field của SF phải đúng
         - Mapping Data Type: là json với cấu trức Map<'FieldBix','DataType'> DataType của field dưới Bix
         - Table Name: là Table của Bix
@@ -24,47 +24,7 @@ Checklist
     String jobID = System.schedule('Custom Sync Hourly', cronExp, syncJob);
 
 ================================= Scrtip Test ========================================================
-
-List<Case> lst = [Select id, FEC_Case_Phone_Number__c, LastModifiedDate from Case 
-                  where FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c = 'Phone Update'  
-                  limit 1000];
-for(Case item : lst){
-    item.FEC_Case_Phone_Number__c = '0999999999';
-}
-update lst;
-
-
--------
-
-
-
-List<CustomSync__c> lst = [Select id, Name,
-                                        SyncFailed__c,
-                                        SyncSuccessFully__c,
-                                        SyncTo__c,
-                                        Active__c, 
-                                        StartAt__c,
-                                        EndAt__c,
-                                        ProcessingQuantity__c,
-                                        CaseBusinessCode__c, 
-                                        TableName__c,
-                                        TotalRecordSync__c,
-                                        TargetObject__c,
-                                        RequestBodyMapping__c,
-                                        MappingDataType__c
-                                        from CustomSync__c
-                                        where SyncTo__c = 'Bix' and Active__c = true]; 
-            if(!lst.isEmpty()){  
-                Map<Id, CustomSync__c> mapCustomSync = new Map<Id, CustomSync__c>(lst); // ReSync
-                // Sync New
-                FEC_QueueRunBatchSync nextJob = new FEC_QueueRunBatchSync(lst);  
-                System.enqueueJob(nextJob);   
-                // ReSync
-                FEC_BatchReCallCustomSync batch = new FEC_BatchReCallCustomSync(mapCustomSync);
-                Database.executeBatch(batch,1);
-            }
-
-
+   
 script run Custumsync by Id
 Map<Id,Case> mCase = new Map<Id,Case>([Select id from Case limit 100]);
 //Map<Id,FEC_Case_Remarks__c> mCase = new Map<Id,FEC_Case_Remarks__c>([Select id from FEC_Case_Remarks__c limit 100]);
