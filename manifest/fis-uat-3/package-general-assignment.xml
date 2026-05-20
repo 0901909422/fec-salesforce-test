@@ -60,6 +60,7 @@
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_General_Assignment_Config_Record_Page</members>
         <members>FEC_General_Assignment_Record_Page</members>
+        <members>FEC_Routing_Assignment_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <name>FlexiPage</name>
     </types>
