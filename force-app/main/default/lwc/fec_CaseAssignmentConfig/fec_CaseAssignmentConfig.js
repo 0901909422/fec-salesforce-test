@@ -87,9 +87,23 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   async loadRolesByQueues() {
     try {
       this.roleOptions = await getRoleOptions({ queueNames: this.selectedQueues });
+      this.pruneRoleRowsToAvailableOptions();
     } catch (e) {
       this.roleOptions = [];
       this.showToast("Error", "Cannot load role options.", "error");
+    }
+  }
+
+  pruneRoleRowsToAvailableOptions() {
+    if (!this.selectedQueues.length) {
+      this.roleRows = [];
+      this.selectedRole = "";
+      return;
+    }
+    const allowed = new Set((this.roleOptions || []).map((item) => item.value));
+    this.roleRows = this.roleRows.filter((row) => allowed.has(row.role));
+    if (this.selectedRole && !allowed.has(this.selectedRole)) {
+      this.selectedRole = "";
     }
   }
 
@@ -142,12 +156,12 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     return rows.filter((row) => row.role && row.scale >= 1);
   }
 
-  handleQueuesChange(event) {
+  async handleQueuesChange(event) {
     if (this.configReadOnly) {
       return;
     }
     this.selectedQueues = event.detail.value || [];
-    this.loadRolesByQueues();
+    await this.loadRolesByQueues();
   }
 
   handleRoleChange(event) {

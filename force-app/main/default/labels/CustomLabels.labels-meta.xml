@@ -4426,7 +4426,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
-        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+        <value>Đổi điểm thưởng thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Retry</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Retry</shortDescription>
+        <value>Đổi điểm thưởng thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
@@ -7294,7 +7302,21 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>MRC RL05.02 — banner trùng Case RL05 cùng hợp đồng</shortDescription>
-        <value>Đã phát hiện yêu cầu MRC Return (RL05) đang xử lý trên cùng hợp đồng: Case trước {0}. Chọn &quot;MRC Request Handling Option&quot; và lưu để hệ thống tự động hủy đúng nhánh.</value>
+        <value>Đang tồn tại một yêu cầu hoàn trả MRC gốc mã {0} chờ xử lý. Bạn có chắc chắn muốn hủy yêu cầu cũ, tạo yêu cầu mới không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Opt_Cancel_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — radio hủy yêu cầu mới, tiếp tục yêu cầu cũ</shortDescription>
+        <value>Hủy yêu cầu mới, tiếp tục xử lý yêu cầu cũ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — radio hủy yêu cầu cũ, tạo yêu cầu mới</shortDescription>
+        <value>Hủy yêu cầu cũ, tạo yêu cầu mới</value>
     </labels>
     <labels>
         <fullName>FEC_MRC_Dup_Remark_Cancel_Prev</fullName>
@@ -16114,7 +16136,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_NoDataFound</shortDescription>
-        <value>Không tìm thấy dữ liệu.</value>
+        <value>No data found</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ExportSuccess</fullName>
@@ -16147,6 +16169,22 @@
         <protected>false</protected>
         <shortDescription>FEC_BCH_ImportFailed</shortDescription>
         <value>Import dữ liệu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Submitted</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Submitted</shortDescription>
+        <value>Import request has been submitted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Rows_Invalid</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Rows_Invalid</shortDescription>
+        <value>Một hoặc nhiều dòng import không hợp lệ.</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_RequireFile</fullName>
@@ -16234,7 +16272,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachHas</shortDescription>
-        <value>Has attachment</value>
+        <value>Lọc các case có chứa tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AttachNo</fullName>
@@ -16242,7 +16280,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachNo</shortDescription>
-        <value>No attachment</value>
+        <value>Lọc các case không có tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ActionPickPlaceholder</fullName>
@@ -16338,7 +16376,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickProperty</shortDescription>
-        <value>--Chọn thuộc tính--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterPickOperator</fullName>
@@ -16346,7 +16384,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickOperator</shortDescription>
-        <value>--Chọn toán tử--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_NoticeTitle</fullName>
@@ -16546,7 +16584,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterResetHint</shortDescription>
-        <value>Chưa thêm bộ lọc.</value>
+        <value>No filters added</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AddFilterRow</fullName>
@@ -16554,7 +16592,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AddFilterRow</shortDescription>
-        <value>Add filter row</value>
+        <value>Add Filter</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterData</fullName>
@@ -16573,12 +16611,68 @@
         <value>Reset</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_FilterGroupPredefined</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupPredefined</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterGroupCaseFields</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupCaseFields</shortDescription>
+        <value>All Cases</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_FilterPropertyField</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPropertyField</shortDescription>
-        <value>Filter property</value>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColCondition</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColCondition</shortDescription>
+        <value>Condition</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColValue</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColValue</shortDescription>
+        <value>Filter Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeField</shortDescription>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopePreDefine</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopePreDefine</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeAllCase</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeAllCase</shortDescription>
+        <value>All Cases</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_PropertyPlaceholder</fullName>
@@ -16586,7 +16680,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_PropertyPlaceholder</shortDescription>
-        <value>Property</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_OperatorField</fullName>
