@@ -50,155 +50,156 @@ public without sharing class FEC_DownloadReportService {
     }
 
     // =========================================================
-    // PROCESS REPORT
+    // FUTURE METHOD
     // =========================================================
-    private static void processReport(
-        Map<String, String> config,
+    @future(callout=true)
+    public static void processReportAsync(
+        String reportName,
+        String uniqueName,
+        String reportId,
         String baseUrl,
         String today
     ) {
+        try {
 
-        String reportId   = config.get('reportId');
-        String reportName = config.get('name');
-        String uniqueName = config.get('uniqueName');
+            String endpoint =
+                baseUrl +
+                '/services/data/' + FEC_ConstantCommon.API_VERSION +
+                '/analytics/reports/' + reportId +
+                '?includeDetails=true';
 
-        String endpoint =
-            baseUrl +
-            '/services/data/' + FEC_ConstantCommon.API_VERSION +
-            '/analytics/reports/' + reportId +
-            '?includeDetails=true';
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(endpoint);
+            req.setMethod('GET');
+            req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+            req.setHeader('Content-Type', 'application/json');
 
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint(endpoint);
-        req.setMethod('GET');
-        req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
-        req.setHeader('Content-Type', 'application/json');
+            HttpResponse res = new Http().send(req);
 
-        HttpResponse res = new Http().send(req);
-
-        if (res.getStatusCode() != 200) {
-            throw new CalloutException(
-                'Export failed [' + res.getStatusCode() + '] => ' + res.getBody()
-            );
-        }
-
-        Map<String, Object> reportData =
-            (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-
-        Map<String, Object> extMeta =
-            (Map<String, Object>) reportData.get('reportExtendedMetadata');
-
-        Map<String, Object> columnMeta =
-            (Map<String, Object>) extMeta.get('detailColumnInfo');
-
-        Map<String, Object> reportMetadata =
-            (Map<String, Object>) reportData.get('reportMetadata');
-
-        List<Object> detailColumns =
-            (List<Object>) reportMetadata.get('detailColumns');
-
-        List<String> headers = new List<String>();
-
-        for (Object col : detailColumns) {
-
-            String colName = String.valueOf(col);
-
-            if (columnMeta.containsKey(colName)) {
-                Map<String, Object> colInfo =
-                    (Map<String, Object>) columnMeta.get(colName);
-                headers.add(String.valueOf(colInfo.get('label')));
-            } else {
-                headers.add(colName);
+            if (res.getStatusCode() != 200) {
+                throw new CalloutException(
+                    'Export failed [' + res.getStatusCode() + '] => ' + res.getBody()
+                );
             }
-        }
 
-        List<String> csvLines = new List<String>();
-        csvLines.add('\uFEFFsep=,');
-        csvLines.add(buildCsvRow(headers));
+            Map<String, Object> reportData =
+                (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
 
-        Map<String, Object> factMap =
-            (Map<String, Object>) reportData.get('factMap');
+            Map<String, Object> extMeta =
+                (Map<String, Object>) reportData.get('reportExtendedMetadata');
 
-        List<String> factKeys = new List<String>(factMap.keySet());
-        factKeys.sort();
+            Map<String, Object> columnMeta =
+                (Map<String, Object>) extMeta.get('detailColumnInfo');
 
-        for (String key : factKeys) {
+            Map<String, Object> reportMetadata =
+                (Map<String, Object>) reportData.get('reportMetadata');
 
-            if (!key.endsWith('!T')) continue;
+            List<Object> detailColumns =
+                (List<Object>) reportMetadata.get('detailColumns');
 
-            Map<String, Object> section =
-                (Map<String, Object>) factMap.get(key);
+            List<String> headers = new List<String>();
 
-            if (!section.containsKey('rows')) continue;
+            for (Object col : detailColumns) {
 
-            List<Object> rows = (List<Object>) section.get('rows');
+                String colName = String.valueOf(col);
 
-            if (rows == null || rows.isEmpty()) continue;
+                if (columnMeta.containsKey(colName)) {
+                    Map<String, Object> colInfo =
+                        (Map<String, Object>) columnMeta.get(colName);
+                    headers.add(String.valueOf(colInfo.get('label')));
+                } else {
+                    headers.add(colName);
+                }
+            }
 
-            for (Object rowObj : rows) {
+            List<String> csvLines = new List<String>();
+            csvLines.add('\uFEFFsep=,');
+            csvLines.add(buildCsvRow(headers));
 
-                Map<String, Object> row =
-                    (Map<String, Object>) rowObj;
+            Map<String, Object> factMap =
+                (Map<String, Object>) reportData.get('factMap');
 
-                List<Object> dataCells =
-                    (List<Object>) row.get('dataCells');
+            List<String> factKeys = new List<String>(factMap.keySet());
+            factKeys.sort();
 
-                if (dataCells == null) continue;
+            for (String key : factKeys) {
 
-                List<String> rowValues = new List<String>();
+                if (!key.endsWith('!T')) continue;
 
-                for (Object cellObj : dataCells) {
+                Map<String, Object> section =
+                    (Map<String, Object>) factMap.get(key);
 
-                    Map<String, Object> cell =
-                        (Map<String, Object>) cellObj;
+                if (!section.containsKey('rows')) continue;
 
-                    String label = '';
+                List<Object> rows = (List<Object>) section.get('rows');
 
-                    if (cell.get('label') != null &&
-                        !String.valueOf(cell.get('label')).equals('null') &&
-                        !String.valueOf(cell.get('label')).equals('')
-                    ) {
-                        label = String.valueOf(cell.get('label'));
+                if (rows == null || rows.isEmpty()) continue;
 
-                    } else if (cell.get('value') != null &&
-                        !String.valueOf(cell.get('value')).equals('null')
-                    ) {
-                        label = String.valueOf(cell.get('value'));
+                for (Object rowObj : rows) {
+
+                    Map<String, Object> row =
+                        (Map<String, Object>) rowObj;
+
+                    List<Object> dataCells =
+                        (List<Object>) row.get('dataCells');
+
+                    if (dataCells == null) continue;
+
+                    List<String> rowValues = new List<String>();
+
+                    for (Object cellObj : dataCells) {
+
+                        Map<String, Object> cell =
+                            (Map<String, Object>) cellObj;
+
+                        String label = '';
+
+                        if (
+                            cell.get('label') != null &&
+                            !String.valueOf(cell.get('label')).equals('null') &&
+                            !String.valueOf(cell.get('label')).equals('')
+                        ) {
+                            label = String.valueOf(cell.get('label'));
+
+                        } else if (
+                            cell.get('value') != null &&
+                            !String.valueOf(cell.get('value')).equals('null')
+                        ) {
+                            label = String.valueOf(cell.get('value'));
+                        }
+
+                        label = stripHtml(label);
+                        rowValues.add(label);
                     }
 
-                    rowValues.add(label);
+                    csvLines.add(buildCsvRow(rowValues));
                 }
-
-                csvLines.add(buildCsvRow(rowValues));
             }
-        }
 
-        String csvContent = String.join(csvLines, '\n');
+            String csvContent = String.join(csvLines, '\n');
+            String fileName   = today.replace('/', '') + '_' + uniqueName + '.csv';
 
-        String fileName = today.replace('/', '') + '_' + uniqueName + '.csv';
+            ContentVersion cv = new ContentVersion();
+            cv.Title          = today + ' - ' + reportName;
+            cv.PathOnClient   = fileName;
+            cv.VersionData    = Blob.valueOf(csvContent);
+            cv.IsMajorVersion = true;
 
-        ContentVersion cv  = new ContentVersion();
-        cv.Title           = today + ' - ' + reportName;
-        cv.PathOnClient    = fileName;
-        cv.VersionData     = Blob.valueOf(csvContent);
-        cv.IsMajorVersion  = true;
+            insert cv;
 
-        insert cv;
+            cv = [
+                SELECT ContentDocumentId
+                FROM ContentVersion
+                WHERE Id = :cv.Id
+                LIMIT 1
+            ];
 
-        cv = [
-            SELECT ContentDocumentId
-            FROM ContentVersion
-            WHERE Id = :cv.Id
-            LIMIT 1
-        ];
+            String fileLink =
+                baseUrl +
+                '/sfc/servlet.shepherd/document/download/' +
+                cv.ContentDocumentId;
 
-        String fileLink =
-            baseUrl +
-            '/sfc/servlet.shepherd/document/download/' +
-            cv.ContentDocumentId;
-
-        List<FEC_Download_Report__c> existing =
-            [
+            List<FEC_Download_Report__c> existing = [
                 SELECT Id
                 FROM FEC_Download_Report__c
                 WHERE FEC_Report_Unique_Name__c = :uniqueName
@@ -206,28 +207,54 @@ public without sharing class FEC_DownloadReportService {
                 LIMIT 1
             ];
 
-        if (!existing.isEmpty()) {
+            if (!existing.isEmpty()) {
 
-            existing[0].FEC_Link__c = fileLink;
-            update existing[0];
+                existing[0].FEC_Link__c = fileLink;
+                update existing[0];
 
-        } else {
+            } else {
 
-            FEC_Download_Report__c rec          = new FEC_Download_Report__c();
-            rec.Name                        = today + ' - ' + reportName;
-            rec.FEC_Report_Unique_Name__c   = uniqueName;
-            rec.FEC_Link__c                 = fileLink;
+                FEC_Download_Report__c rec    = new FEC_Download_Report__c();
+                rec.Name                      = today + ' - ' + reportName;
+                rec.FEC_Report_Unique_Name__c = uniqueName;
+                rec.FEC_Link__c               = fileLink;
 
-            insert rec;
+                insert rec;
+            }
+
+        } catch (Exception e) {
+            System.debug(e.getMessage());
         }
     }
 
+    // =========================================================
+    // STRIP HTML
+    // =========================================================
+    private static String stripHtml(String val) {
+
+        if (String.isBlank(val)) return '';
+
+        return val.replaceAll('<[^>]+>', '').trim();
+    }
+
+    // =========================================================
+    // BUILD CSV ROW
+    // =========================================================
     private static String buildCsvRow(List<String> values) {
+
         List<String> escaped = new List<String>();
+
         for (String val : values) {
+
             if (val == null) val = '';
+
             val = val.replace('"', '""');
-            if (val.contains(',') || val.contains('\n') || val.contains('"')) {
+
+            if (
+                val.contains(',') ||
+                val.contains('\n') ||
+                val.contains('"')
+            ) {
                 val = '"' + val + '"';
             }
 

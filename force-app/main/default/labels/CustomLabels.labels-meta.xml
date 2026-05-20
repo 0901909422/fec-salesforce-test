@@ -18083,4 +18083,11 @@
         <shortDescription>Information</shortDescription>
         <value>Information</value>
     </labels>
+    <labels>
+        <fullName>FEC_Error_Download</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Download</shortDescription>
+        <value>Select at least one record and try again.</value>
+    </labels>
 </CustomLabels>

@@ -1,7 +1,20 @@
+/****************************************************************************************
+ * File Name    : Fec_DownloadReports.js
+ * Author       : Quangdv7
+ * Date         : 2026-05-21
+ * Description  : Call data object Case
+ * Modification Log
+ * ===============================================================
+ * Ver      Date           Author              Modification
+ * ===============================================================
+   1.0      2026-05-21     Quangdv7             Create
+ 
+****************************************************************************************/
+
 import { LightningElement, api, wire } from 'lwc';
 import { EnclosingTabId, closeTab } from 'lightning/platformWorkspaceApi';
 import { NavigationMixin } from 'lightning/navigation';
-
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import downloadReport from '@salesforce/apex/FEC_DownloadReportController.downloadReport';
 
 import FEC_Download_Report from '@salesforce/label/c.FEC_Download_Report';
@@ -12,6 +25,7 @@ import FEC_Details_Only from '@salesforce/label/c.FEC_Details_Only';
 import FEC_Export_Detail from '@salesforce/label/c.FEC_Export_Detail';
 import FEC_Format from '@salesforce/label/c.FEC_Format';
 import FEC_Format_Excel from '@salesforce/label/c.FEC_Format_Excel';
+import FEC_Error_Download from '@salesforce/label/c.FEC_Error_Download';
 
 export default class Fec_DownloadReports extends LightningElement {
 
@@ -30,7 +44,8 @@ export default class Fec_DownloadReports extends LightningElement {
         detailsOnly: FEC_Details_Only,
         exportDetail: FEC_Export_Detail,
         format: FEC_Format,
-        formatExcel: FEC_Format_Excel
+        formatExcel: FEC_Format_Excel,
+        errorDownload: FEC_Error_Download
     }
 
     get formattedClass() {
@@ -58,6 +73,14 @@ export default class Fec_DownloadReports extends LightningElement {
         return raw.split(',').map(id => id.trim()).filter(Boolean);
     }
 
+    showError(message) {
+        this.dispatchEvent(new ShowToastEvent({
+            title: 'Error',
+            message,
+            variant: 'error'
+        }));
+    }
+
     async closeAndRefresh() {
         try {
             this[NavigationMixin.Navigate]({
@@ -83,7 +106,7 @@ export default class Fec_DownloadReports extends LightningElement {
         const ids = this.getRecordIdsFromUrl();
 
         if (!ids.length) {
-            console.error('No recordIds');
+            this.showError(this.customLabel.errorDownload);
             return;
         }
 
