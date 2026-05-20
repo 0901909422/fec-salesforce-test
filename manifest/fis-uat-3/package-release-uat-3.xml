@@ -166,7 +166,10 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
+        <members>FEC_BCH_FilterPropertyService</members>
+        <members>FEC_CaseAssignmentTriggerHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -590,6 +593,8 @@
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Transfer_Call_to_Collection__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
+        <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
+		<members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Hold_History__c.FEC_Case__c</members>
         <members>FEC_Case_Hold_History__c.FEC_End_Time__c</members>
         <members>FEC_Case_Hold_History__c.FEC_Hold_Case_Config__c</members>
@@ -599,6 +604,7 @@
         <members>FEC_Case_Hold_History__c.FEC_Type__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -640,8 +646,8 @@
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
 		<members>FEC_Case_Hold_History__c</members>
-        <members>FEC_Notification_Template_Channel__c</members>
 		<members>FEC_Notification__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -946,6 +952,7 @@
 		<members>FEC_Premium_Free</members>s
         <members>FEC_Points_Redeem_Button_Label</members>
 		<members>FEC_Points_Redeem_Fail_After_Max</members>
+		<members>FEC_Points_Redeem_Fail_Retry</members>
 		<members>FEC_Points_Redeem_Fail_Prefix</members>
 		<members>FEC_Points_Redeem_Success_Message</members>
 		<members>FEC_Points_Redeemed_Points_Label</members>
@@ -1157,6 +1164,17 @@
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
+        <members>FEC_BCH_FilterColCondition</members>
+        <members>FEC_BCH_FilterColValue</members>
+        <members>FEC_BCH_FilterGroupCaseFields</members>
+        <members>FEC_BCH_FilterGroupPredefined</members>
+        <members>FEC_BCH_FilterScopeAllCase</members>
+        <members>FEC_BCH_FilterScopeField</members>
+        <members>FEC_BCH_FilterScopePreDefine</members>
+        <members>FEC_BCH_Import_Rows_Invalid</members>
+        <members>FEC_BCH_Import_Submitted</members>
         <name>CustomLabel</name>
     </types>
 	<types>

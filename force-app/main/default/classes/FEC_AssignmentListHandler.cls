@@ -146,34 +146,75 @@ public without sharing class FEC_AssignmentListHandler {
     
     
     @AuraEnabled(cacheable=true)
-    public static List<SelectOptionWrapper> getQueuesForUser() {
+    public static List<SelectOptionWrapper>
+    getQueuesForUser() {
         
         Id userId = UserInfo.getUserId();
         
-        // 1. tìm queue user thuộc
-        List<GroupMember> memberships = [
+        User u = [
+        SELECT UserRoleId
+        FROM User
+        WHERE Id = :userId
+        LIMIT 1
+    ];
+        
+        Set<Id> memberIds = new Set<Id>{
+            userId
+        };
+        
+        // Direct/Public Groups
+        for (GroupMember gm : [
         SELECT GroupId
         FROM GroupMember
         WHERE UserOrGroupId = :userId
-    ];
+    ]) {
+            memberIds.add(gm.GroupId);
+        }
         
+        // Role Groups
+        if (u.UserRoleId != null) {
+            
+            for (Group g : [
+            SELECT Id
+            FROM Group
+            WHERE Type IN (
+                'Role',
+                'RoleAndSubordinates'
+            )
+            AND RelatedId = :u.UserRoleId
+        ]) {
+                memberIds.add(g.Id);
+            }
+        }
+        
+        // Queue Membership
         Set<Id> queueIds = new Set<Id>();
-        for (GroupMember gm : memberships) {
+        
+        for (GroupMember gm : [
+        SELECT GroupId
+        FROM GroupMember
+        WHERE UserOrGroupId IN :memberIds
+    ]) {
             queueIds.add(gm.GroupId);
         }
         
-        // 2. lấy queue info
-        List<Group> queues = [
+        List<SelectOptionWrapper> result =
+            new List<SelectOptionWrapper>();
+        
+        for (Group q : [
         SELECT Id, Name
         FROM Group
         WHERE Id IN :queueIds
         AND Type = 'Queue'
-    ];
-        
-        List<SelectOptionWrapper> result = new List<SelectOptionWrapper>();
-        
-        for (Group g : queues) {
-            result.add(new SelectOptionWrapper(g.Id, g.Name));
+        ORDER BY Name
+    ]) {
+            
+            result.add(
+                new SelectOptionWrapper(
+                q.Id,
+            q.Name
+                )
+                );
         }
         
         return result;
