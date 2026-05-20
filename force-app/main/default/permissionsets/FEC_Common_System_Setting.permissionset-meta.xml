@@ -1001,6 +1001,10 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
+        <apexClass>FEC_ScopedStageChangeRoutingService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
         <apexClass>FEC_SearchByListNIDsServiceCallout</apexClass>
         <enabled>true</enabled>
     </classAccesses>
