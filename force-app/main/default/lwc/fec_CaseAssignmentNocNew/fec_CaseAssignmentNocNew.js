@@ -4,6 +4,13 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import USER_ID from "@salesforce/user/Id";
 import { getRecord, getFieldValue } from "lightning/uiRecordApi";
 import NAME_FIELD from "@salesforce/schema/User.Name";
+import {
+  IsConsoleNavigation,
+  getFocusedTabInfo,
+  closeTab,
+  openSubtab,
+  openTab,
+} from "lightning/platformWorkspaceApi";
 
 import getProductTypeOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getProductTypeOptions";
 import getCategoryOptions from "@salesforce/apex/FEC_CaseAssignmentNocController.getCategoryOptions";
@@ -157,7 +164,6 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   @track subCodeOptionlst = [];
 
   assignmentRecordId;
-  ownerRecordId = USER_ID;
   /** Related List → New có defaultFieldValues: khóa thay Assignment. */
   lockRelatedAssignmentPicker = false;
 
@@ -171,8 +177,12 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   userRecord;
 
   isSaving = false;
+  pageErrors = [];
+  currentTabId;
 
   assignmentSyncPass = 0;
+
+  @wire(IsConsoleNavigation) isConsoleNavigation;
 
   @wire(getProductTypeOptions)
   wiredProductTypes({ data, error }) {
@@ -233,11 +243,25 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   }
 
   get auditStamp() {
-    const name = getFieldValue(this.userRecord, NAME_FIELD) || "";
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
-    const stamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    return name ? `${name}, ${stamp}` : stamp;
+    return `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}, ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+
+  get ownerDisplayName() {
+    return getFieldValue(this.userRecord, NAME_FIELD) || "";
+  }
+
+  get hasOwnerDisplayName() {
+    return Boolean(this.ownerDisplayName);
+  }
+
+  get hasPageErrors() {
+    return (this.pageErrors || []).length > 0;
+  }
+
+  get isSaveDisabled() {
+    return this.isSaving;
   }
 
   get assignmentPickerKey() {
@@ -248,19 +272,14 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     return this.lockRelatedAssignmentPicker === true;
   }
 
-  get isSaveDisabled() {
-    return (
-      this.isSaving ||
-      !this.assignmentRecordId ||
-      !this.ownerRecordId ||
-      !this.selectedProductTypeId ||
-      !this.selectedCategoryKey ||
-      !this.selectedSubCategoryId
-    );
-  }
-
   connectedCallback() {
-    Promise.resolve().then(() => {
+    Promise.resolve().then(async () => {
+      try {
+        const { tabId } = await getFocusedTabInfo();
+        this.currentTabId = tabId;
+      } catch (e) {
+        this.currentTabId = null;
+      }
       this.applyResolvedAssignmentId(resolveParentAssignmentFromState(this._readUrlStateParams()));
       this.syncAssignmentFromWindowLocation();
       this.clearComboUi();
@@ -352,10 +371,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
 
   handleAssignmentChange(e) {
     this.assignmentRecordId = e.detail?.recordId || undefined;
-  }
-
-  handleOwnerChange(e) {
-    this.ownerRecordId = e.detail?.recordId || undefined;
+    this.clearPageErrors();
   }
 
   clearComboUi() {
@@ -375,6 +391,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     this.selectedSubCodeId = undefined;
     this.subCategoryOptionlst = [];
     this.subCodeOptionlst = [];
+    this.clearPageErrors();
     await this.refreshCategories();
   }
 
@@ -393,6 +410,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     this.selectedSubCategoryId = undefined;
     this.selectedSubCodeId = undefined;
     this.subCodeOptionlst = [];
+    this.clearPageErrors();
     await this.refreshSubCategories();
   }
 
@@ -407,6 +425,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   async handleChangeSubCategory(e) {
     this.selectedSubCategoryId = e.detail?.value ?? undefined;
     this.selectedSubCodeId = undefined;
+    this.clearPageErrors();
     await this.refreshSubCodes();
   }
 
@@ -418,6 +437,7 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
 
   handleChangeSubCode(e) {
     this.selectedSubCodeId = e.detail?.value ?? undefined;
+    this.clearPageErrors();
   }
 
   handleRemoveSubCode() {
@@ -470,13 +490,134 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
     }
   }
 
-  reportRequiredCombos() {
-    const p = this.template.querySelector(comboSel("noc-new-prod-type"));
-    const c = this.template.querySelector(comboSel("noc-new-category"));
-    const s = this.template.querySelector(comboSel("noc-new-sub-category"));
-    return (
-      [p?.reportValidity?.(), c?.reportValidity?.(), s?.reportValidity?.()].every((v) => v !== false)
-    );
+  validateBeforeSave() {
+    const errors = [];
+    if (!this.assignmentRecordId) {
+      errors.push("Case Assignment Name can't be blank");
+    }
+    if (!this.selectedProductTypeId) {
+      errors.push("Product Type can't be blank");
+    }
+    if (!this.selectedCategoryKey) {
+      errors.push("Category can't be blank");
+    }
+    if (!this.selectedSubCategoryId) {
+      errors.push("Sub-Category can't be blank");
+    }
+    return errors;
+  }
+
+  clearPageErrors() {
+    this.pageErrors = [];
+  }
+
+  reportFieldValidity(messages) {
+    const assignmentPicker = this.template.querySelector('[data-id="picker-assignment"]');
+    if (assignmentPicker) {
+      const blankAssignment = messages.some((msg) => msg.includes("Case Assignment Name"));
+      assignmentPicker.setCustomValidity?.(
+        blankAssignment ? "Case Assignment Name can't be blank" : ""
+      );
+      assignmentPicker.reportValidity?.();
+    }
+
+    [
+      { id: "noc-new-prod-type", label: "Product Type" },
+      { id: "noc-new-category", label: "Category" },
+      { id: "noc-new-sub-category", label: "Sub-Category" },
+    ].forEach(({ id, label }) => {
+      const combo = this.template.querySelector(comboSel(id));
+      if (!combo) {
+        return;
+      }
+      const blank = messages.some((msg) => msg.includes(label));
+      combo.setCustomValidity?.(blank ? `${label} can't be blank` : "");
+      combo.reportValidity?.();
+    });
+  }
+
+  handleUserNav(event) {
+    event.preventDefault();
+    if (!USER_ID) {
+      return;
+    }
+    this[NavigationMixin.Navigate]({
+      type: "standard__recordPage",
+      attributes: {
+        recordId: USER_ID,
+        objectApiName: "User",
+        actionName: "view",
+      },
+    });
+  }
+
+  async navigateAfterSave(nocId) {
+    const pageReference = {
+      type: "standard__recordPage",
+      attributes: {
+        recordId: nocId,
+        objectApiName: "FEC_Case_Assignment_NOC__c",
+        actionName: "view",
+      },
+    };
+
+    let tabToClose = this.currentTabId;
+    try {
+      const focusedTab = await getFocusedTabInfo();
+      if (!tabToClose) {
+        tabToClose = focusedTab.tabId;
+      }
+      const parentTabId = focusedTab.isSubtab
+        ? focusedTab.parentTabId
+        : focusedTab.tabId;
+
+      await openSubtab(parentTabId, {
+        pageReference,
+        focus: true,
+      });
+
+      setTimeout(async () => {
+        try {
+          if (tabToClose) {
+            await closeTab(tabToClose);
+          }
+        } catch (e) {
+          /* ignore tab close failures */
+        }
+      }, 500);
+      return;
+    } catch (e) {
+      /* fall through */
+    }
+
+    if (this.isConsoleNavigation?.data === true) {
+      if (!tabToClose) {
+        try {
+          const { tabId } = await getFocusedTabInfo();
+          tabToClose = tabId;
+        } catch (err) {
+          tabToClose = null;
+        }
+      }
+
+      await openTab({
+        recordId: nocId,
+        focus: true,
+      });
+
+      setTimeout(async () => {
+        try {
+          if (tabToClose) {
+            await closeTab(tabToClose);
+          }
+        } catch (err) {
+          /* ignore tab close failures */
+        }
+      }, 500);
+      return;
+    }
+
+    this[NavigationMixin.Navigate](pageReference);
   }
 
   handleCancel() {
@@ -501,16 +642,14 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
   }
 
   async handleSave() {
-    if (this.isSaveDisabled) {
+    this.clearPageErrors();
+    const validationErrors = this.validateBeforeSave();
+    if (validationErrors.length) {
+      this.pageErrors = validationErrors;
+      this.reportFieldValidity(validationErrors);
       return;
     }
-    if (!this.assignmentRecordId || !this.ownerRecordId) {
-      this.showToast("Error", "Case Assignment và Owner là bắt buộc.", "error");
-      return;
-    }
-    if (!this.reportRequiredCombos()) {
-      return;
-    }
+
     this.isSaving = true;
     try {
       const nocId = await createNoc({
@@ -519,23 +658,16 @@ export default class Fec_CaseAssignmentNocNew extends NavigationMixin(LightningE
         categoryKey: this.selectedCategoryKey,
         subCategoryId: this.selectedSubCategoryId,
         subCodeId: this.selectedSubCodeId || null,
-        ownerId: this.ownerRecordId,
       });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
-      this[NavigationMixin.Navigate]({
-        type: "standard__recordPage",
-        attributes: {
-          recordId: nocId,
-          objectApiName: "FEC_Case_Assignment_NOC__c",
-          actionName: "view",
-        },
-      });
+      await this.navigateAfterSave(nocId);
     } catch (e) {
       const msg =
         e?.body?.pageErrors?.[0]?.message ||
         e?.body?.message ||
         e?.message ||
         "Could not save Case Assignment NOC.";
+      this.pageErrors = [msg];
       this.showToast("Error", msg, "error");
     } finally {
       this.isSaving = false;

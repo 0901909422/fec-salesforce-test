@@ -19,7 +19,7 @@ import FEC_LBL_Remove_Phone_Input_Label from '@salesforce/label/c.FEC_LBL_Remove
 import FEC_Btn_Remove_Phone_Check_Eligibility from '@salesforce/label/c.FEC_Btn_Remove_Phone_Check_Eligibility';
 import FEC_Btn_Previous from '@salesforce/label/c.FEC_Btn_Previous';
 import FEC_Btn_Next from '@salesforce/label/c.FEC_Btn_Next';
-import FEC_Record_per_Page from '@salesforce/label/c.FEC_Record_per_Page';
+import FEC_BCH_PageSize from '@salesforce/label/c.FEC_BCH_PageSize';
 import FEC_Go_to_page_label from '@salesforce/label/c.FEC_Go_to_page_label';
 import FEC_Go_Button_Label from '@salesforce/label/c.FEC_Go_Button_Label';
 import Loading from '@salesforce/label/c.Loading';
@@ -146,7 +146,7 @@ export default class Fec_RemovePhoneForm extends LightningElement {
     goToPageValue = 1;
 
     paginationLabels = {
-        pageSizeLabel: FEC_Record_per_Page,
+        pageSizeLabel: FEC_BCH_PageSize,
         goToPageLabel: FEC_Go_to_page_label,
         goBtnLabel: FEC_Go_Button_Label,
         prevLabel: FEC_Btn_Previous,

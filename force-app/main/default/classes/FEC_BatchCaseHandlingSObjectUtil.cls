@@ -1,4 +1,4 @@
-public class FEC_BatchCaseHandlingSObjectUtil {
+public without sharing class FEC_BatchCaseHandlingSObjectUtil {
 
     public static void addIfNotBlank(List<String> selectParts, String fieldApiName) {
         if (String.isNotBlank(fieldApiName) && !selectParts.contains(fieldApiName)) {

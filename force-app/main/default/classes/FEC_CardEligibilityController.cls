@@ -414,7 +414,7 @@ public with sharing class FEC_CardEligibilityController {
             Boolean hasValidTenures = false;
             if (apiResult.campaigns != null) {
                 for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
-                    if (camp.tenure != null && camp.tenure >= 0) {
+                    if (camp.tenure != null) {
                         hasValidTenures = true;
                         break;
                     }
@@ -437,15 +437,28 @@ public with sharing class FEC_CardEligibilityController {
             if (hasValidTenures) {
                 Integer idx = 1;
                 for (FEC_CheckEligibilityIPPCallout.CampaignDetail camp : apiResult.campaigns) {
-                    if (camp.tenure == null || camp.tenure < 0) continue; // Skip invalid tenures
+                    if (camp.tenure == null) continue; // Skip invalid tenures
+                    
+                    // Calculate Monthly Installment (Proposed EMI) and Conversion Fee like Pega does
+                    Decimal monthlyInstallmentVal = null;
+                    if (apiResult.eligibleAmount != null && camp.tenure != null && camp.interestRate != null) {
+                        Decimal emi = FEC_CommonUltils.calculateReducingEMI(apiResult.eligibleAmount, camp.tenure, camp.interestRate);
+                        monthlyInstallmentVal = FEC_CommonUltils.roundUpToThousand(emi);
+                    }
+                    
+                    Decimal conversionFeeVal = null;
+                    if (apiResult.eligibleAmount != null && camp.registrationRate != null) {
+                        Decimal rawFee = (apiResult.eligibleAmount * camp.registrationRate * 100.0) / 10000000.0;
+                        conversionFeeVal = Math.ceil(rawFee) * 1000.0;
+                    }
                     
                     IPPTenorRow row = new IPPTenorRow();
                     row.id = idx++;
-                    row.tenure = formatValue(camp.tenure != null ? camp.tenure + ' ' + System.Label.FEC_LABEL_Months : null);
+                    row.tenure = formatValue(camp.tenure != null ? String.valueOf(camp.tenure) : null);
                     row.rate = formatValue(camp.interestRate != null ? (camp.interestRate * 100).setScale(2) + FEC_ConstantCommon.STR_PERCENT : null);
-                    row.registrationRate = formatValue(camp.registrationRate != null ? camp.registrationRate + FEC_ConstantCommon.STR_PERCENT : FEC_ConstantCommon.STR_DASH);
-                    row.monthlyInstallment = formatValue(camp.monthlyInstallment != null ? String.valueOf(camp.monthlyInstallment) : FEC_ConstantCommon.STR_DASH);
-                    row.conversionFee = formatValue(camp.conversionFee != null ? String.valueOf(camp.conversionFee) : FEC_ConstantCommon.STR_DASH);
+                    row.registrationRate = formatValue(camp.registrationRate != null ? camp.registrationRate.setScale(2) + FEC_ConstantCommon.STR_PERCENT : FEC_ConstantCommon.STR_DASH);
+                    row.monthlyInstallment = formatValue(monthlyInstallmentVal != null ? String.valueOf(monthlyInstallmentVal.setScale(0)) : FEC_ConstantCommon.STR_DASH);
+                    row.conversionFee = formatValue(conversionFeeVal != null ? String.valueOf(conversionFeeVal.setScale(0)) : FEC_ConstantCommon.STR_DASH);
                     result.tenorList.add(row);
                 }
             } else if (isIPPEligible) {
@@ -500,6 +513,7 @@ public with sharing class FEC_CardEligibilityController {
 
         return rows;
     }
+
 
     private static String formatValue(String val) {
         return String.isNotBlank(val) ? val : FEC_ConstantCommon.STR_DASH;

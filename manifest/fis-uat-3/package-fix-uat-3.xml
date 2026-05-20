@@ -78,6 +78,7 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -96,6 +97,20 @@
         <members>FEC_IPPController</members>
         <members>FEC_MockData</members>
         <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_CMSRewardRedeemService</members>
+        <members>FEC_CMSRewardRedeemServiceTest</members>
+        <members>FEC_GetMRCInfo</members>
+        <members>FEC_BCH_FilterPropertyService</members>
+        <members>FEC_BatchCaseHandlingCaseFilter</members>
+        <members>FEC_BatchCaseHandlingImportRow</members>
+        <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BatchCaseHandlingSObjectUtil</members>
+        <members>FEC_BatchCaseHandlingTemplateHelper</members>
+        <members>FEC_BatchCaseHandlingZipResult</members>
+        <members>FEC_BatchCaseHandlingZipService</members>
+        <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseAssignmentTriggerHandler</members>
+        <members>FEC_ScopedStageChangeRoutingService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -175,6 +190,11 @@
         <members>fec_CaseAssignmentNocConfig</members>
         <members>fec_CaseAssignmentNocNew</members>
         <members>fec_IPPDetails</members>
+        <members>fecCaseAssignmentNewForm</members>
+        <members>fec_NotificationOverride</members>
+        <members>fec_CaseBussinessScopedRoutingIntegration</members>
+        <members>fec_ScopedStageChangeRouting</members>
+        <members>fec_ScopedStageChangeRoutingAction</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -217,6 +237,10 @@
         <members>FEC_Case_Hold_History__c.FEC_Type__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
+        <members>FEC_Template_Import__c.FEC_Business_Process__c</members>
+        <members>FEC_Template_Import__c.FEC_User_Group__c</members>
+        <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -240,6 +264,8 @@
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Case_Assignment_Record_Page</members>
+        <members>FEC_Notification_Record_Page_Auto</members>
+        <members>FEC_Notification_Record_Page_Manual</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -287,16 +313,39 @@
         <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
         <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
         <members>FEC_MRC_RL0502_Dup_Banner</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
+        <members>FEC_BCH_AddFilterRow</members>
+        <members>FEC_BCH_AttachHas</members>
+        <members>FEC_BCH_AttachNo</members>
+        <members>FEC_BCH_FilterColCondition</members>
+        <members>FEC_BCH_FilterColValue</members>
+        <members>FEC_BCH_FilterGroupCaseFields</members>
+        <members>FEC_BCH_FilterGroupPredefined</members>
+        <members>FEC_BCH_FilterPickOperator</members>
+        <members>FEC_BCH_FilterPickProperty</members>
+        <members>FEC_BCH_FilterPropertyField</members>
+        <members>FEC_BCH_FilterResetHint</members>
+        <members>FEC_BCH_FilterScopeAllCase</members>
+        <members>FEC_BCH_FilterScopeField</members>
+        <members>FEC_BCH_FilterScopePreDefine</members>
+        <members>FEC_BCH_Import_Rows_Invalid</members>
+        <members>FEC_BCH_Import_Submitted</members>
+        <members>FEC_BCH_NoDataFound</members>
+        <members>FEC_BCH_PropertyPlaceholder</members>
+        <members>FEC_Points_Redeem_Fail_After_Max</members>
+        <members>FEC_Points_Redeem_Fail_Retry</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>
@@ -465,6 +514,8 @@
 		<members>FEC_RD_Telesales_User_1_Master_Data_Management</members>
 		<members>FEC_RD_Telesales_User_2_Master_Data_Management</members>
         <members>RD_IT_User_Master_Data_Management</members>
+        <members>FEC_Batch_Case_Creation</members>
+        <members>FEC_Permission_Set_Batch_Data_Creation</members>
 		<name>PermissionSet</name>
 	</types>
     <types>
