@@ -214,7 +214,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
+                    //tungnm37: set status theo team thay vi hardcode Open
+                    FEC_Assignment_Status__c = resolveAssignmentStatus(ra.FEC_Team__c),
                     FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -357,7 +358,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    FEC_Assignment_Status__c = FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN,
+                    //tungnm37: set status theo team thay vi hardcode Open
+                    FEC_Assignment_Status__c = resolveAssignmentStatus(teamName),
                     FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
@@ -453,6 +455,23 @@ public without sharing class FEC_CofGsrAssignmentService {
             System.debug('createAssignmentsFromManualItems error: ' + e.getMessage() + ' | ' + e.getStackTraceString());
             FEC_CommonUltils.logException('tungnm37', 'createAssignmentsFromManualItems', e.getMessage(), e.getStackTraceString());
         }
+    }
+
+    //tungnm37: Resolve Assignment Status theo team code
+    //tungnm37: SP/CC → CSBackOfficeReview; CS khac (IB/EC/OB/QC/OM/F2F/CA/CL/CX) → CSReview
+    //tungnm37: Other Dept (CO/PM/CP/DS/IA/IT/TS) → OtherDeptReview; con lai → Open
+    private static String resolveAssignmentStatus(String teamCode) {
+        if (String.isBlank(teamCode)) return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
+        if (FEC_ConstantCommon.CS_BACKOFFICE_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_CS_BACKOFFICE;
+        }
+        if (FEC_ConstantCommon.CS_REVIEW_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_CS_REVIEW;
+        }
+        if (FEC_ConstantCommon.OTHER_DEPT_TEAMS.contains(teamCode)) {
+            return FEC_ConstantCommon.STATUS_OTHER_DEPT;
+        }
+        return FEC_ConstantCommon.ASSIGNMENT_STATUS_OPEN;
     }
 
     // tungnm37 fix: lưu Queue Name cho queue (để hiển thị listview), User Id cho user
@@ -625,8 +644,16 @@ public without sharing class FEC_CofGsrAssignmentService {
                 }
             }
             if (!nocIds.isEmpty()) {
-                // tungnm37 fix: dùng moveToNextStage thay vì query FEC_Default_Stage__c = false
-                moveToNextStage(caseId, nocIds);
+                List<FEC_Case_Stage__c> nextStages = [
+                    SELECT Id FROM FEC_Case_Stage__c
+                    WHERE FEC_Nature_of_Cases__c IN :nocIds
+                      AND FEC_Default_Stage__c = false
+                      AND FEC_Active__c = true
+                    ORDER BY Name ASC LIMIT 1
+                ];
+                if (!nextStages.isEmpty()) {
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
+                }
             }
 
             // tungnm37 fix: nếu có team khác CC/SP → tạo assignment tự động cho tất cả team
@@ -651,36 +678,21 @@ public without sharing class FEC_CofGsrAssignmentService {
             if (cases.isEmpty()) return;
             Id currentStageId = cases[0].FEC_Current_Case_Stage__c;
 
-            // tungnm37 fix: lấy tất cả stage theo NOC sort theo Name, tìm stage tiếp theo sau stage hiện tại
-            List<FEC_Case_Stage__c> allStages = [
-                SELECT Id, Name FROM FEC_Case_Stage__c
+            // tungnm37: lấy stage không phải default (stage 2+) theo NOC
+            List<FEC_Case_Stage__c> nextStages = [
+                SELECT Id FROM FEC_Case_Stage__c
                 WHERE FEC_Nature_of_Cases__c IN :nocIds
+                  AND FEC_Default_Stage__c = false
                   AND FEC_Active__c = true
-                ORDER BY Name ASC
+                ORDER BY Name ASC LIMIT 1
             ];
-            if (allStages.isEmpty()) return;
-
-            // tungnm37: tìm index của stage hiện tại, lấy stage tiếp theo
-            Integer currentIndex = -1;
-            for (Integer i = 0; i < allStages.size(); i++) {
-                if (allStages[i].Id == currentStageId) {
-                    currentIndex = i;
-                    break;
-                }
-            }
-
-            // tungnm37: nếu tìm thấy stage hiện tại và còn stage tiếp theo
-            if (currentIndex >= 0 && currentIndex + 1 < allStages.size()) {
-                Id nextStageId = allStages[currentIndex + 1].Id;
+            if (!nextStages.isEmpty() && nextStages[0].Id != currentStageId) {
                 FEC_CaseTriggerHandler.isSystemUpdate = true;
                 try {
-                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStageId), AccessLevel.SYSTEM_MODE);
-                    System.debug('FEC_DEBUG moveToNextStage: moved from ' + allStages[currentIndex].Name + ' to ' + allStages[currentIndex + 1].Name);
+                    Database.update(new Case(Id = caseId, FEC_Current_Case_Stage__c = nextStages[0].Id), AccessLevel.SYSTEM_MODE);
                 } finally {
                     FEC_CaseTriggerHandler.isSystemUpdate = false;
                 }
-            } else {
-                System.debug('FEC_DEBUG moveToNextStage: no next stage found. currentIndex=' + currentIndex + ' total=' + allStages.size());
             }
         } catch (Exception e) {
             System.debug('FEC_DEBUG moveToNextStage error: ' + e.getMessage());
