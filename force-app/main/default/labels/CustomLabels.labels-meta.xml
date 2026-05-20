@@ -4388,7 +4388,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
-        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+        <value>Đổi điểm thưởng thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Retry</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Retry</shortDescription>
+        <value>Đổi điểm thưởng thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
