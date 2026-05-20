@@ -149,6 +149,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCode__c,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
+          FEC_Current_Case_Stage__r.FEC_Code__c,
+          FEC_Current_Case_Stage__r.Name,
           FEC_Customer_Type__c,
           FEC_Actual_Nature_of_Case__c,
           FEC_Account_or_Contract__c,
@@ -855,6 +857,18 @@ public without sharing class FEC_CaseBusinessService {
             continue;
           }
 
+          // MRC Return Stage 1: ẩn Customer Confirmation / Contract Processing Assessment Type.
+          if (
+            FEC_MrcReturnCaseService.shouldSkipStage1Field(
+              businessProcessCode,
+              result.subCategoryCode,
+              selectedStage.Name,
+              fieldApiNameTemp
+            )
+          ) {
+            continue;
+          }
+
           // GSR handling: điều chỉnh field hiển thị theo việc bộ NOC updated có đổi hay không.
           if (isGsrNocOnlyDisplayMode) {
             if (isUpdatedNocDifferentFromCurrent) {
@@ -1162,12 +1176,14 @@ public without sharing class FEC_CaseBusinessService {
         result,
         categoryId,
         subCategoryId,
-        subCodeId
+        subCodeId,
+        selectedStage != null ? selectedStage.Id : null,
+        parseIdSafelyForRouting(routeToId)
       );
 
-      // [HARDCODE RC27.01/RC27.02 — Display Override]:
+      // [HARDCODE RC27.01/RC27.02 — Display Override Stage 1]:
       // Khi Case ở Stage 1 (chưa submit) với sub-code RC27.01/RC27.02 và KHÔNG có Block Code,
-      // hiển thị Team=SP, Queue=CS Support. Block Code được phép ghi đè RC27.
+      // hiển thị Team=SP, Queue=CS Support. Stage 2→3 (kể cả có Block Code): FEC_BlockCodeRoutingService.
       // Toannd61
       if (
         !selectedCase.FEC_Is_Submited__c &&
@@ -2290,6 +2306,8 @@ public without sharing class FEC_CaseBusinessService {
           Owner.Name,
           FEC_Current_Case_Stage__c,
           FEC_Current_Case_Stage__r.FEC_Default_Stage__c,
+          FEC_Current_Case_Stage__r.FEC_Code__c,
+          FEC_Current_Case_Stage__r.Name,
           FEC_Actual_Nature_of_Case__c,
           FEC_Team__c,
           FEC_Account_or_Contract__c,
@@ -5257,6 +5275,17 @@ public without sharing class FEC_CaseBusinessService {
       return Integer.valueOf(m.group(1));
     }
     return null;
+  }
+
+  private static Id parseIdSafelyForRouting(String rawId) {
+    if (String.isBlank(rawId)) {
+      return null;
+    }
+    try {
+      return Id.valueOf(rawId.trim());
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   public class CaseBusinessServiceException extends Exception {

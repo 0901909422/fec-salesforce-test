@@ -166,6 +166,7 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <name>ApexClass</name>
     </types>
@@ -640,6 +641,9 @@
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
 		<members>FEC_Case_Hold_History__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
+		<members>FEC_Notification__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -1155,6 +1159,8 @@
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
 		<members>FEC_Transfer_Err_Remark_Null</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <name>CustomLabel</name>
     </types>
 	<types>

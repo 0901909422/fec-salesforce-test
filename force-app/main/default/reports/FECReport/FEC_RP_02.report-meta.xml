@@ -115,11 +115,10 @@
         <field>FEC_Routing_Action_History__c$FEC_Changed_Status__c</field>
     </columns>
     <columns>
-        <aggregateTypes>Sum</aggregateTypes>
-        <field>FEC_Routing_Action_History__c$FEC_TAT_by_Assignment_Hrs__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
     </columns>
     <columns>
-        <field>FEC_Routing_Action_History__c$FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</field>
+        <field>FEC_Routing_Action_History__c$FEC_TAT_by_Assignment__c</field>
     </columns>
     <filter>
         <booleanFilter>(1 OR 2) AND 3</booleanFilter>
@@ -157,7 +156,7 @@
     <showDetails>true</showDetails>
     <showGrandTotal>true</showGrandTotal>
     <showSubTotals>true</showSubTotals>
-    <sortColumn>FEC_Routing_Action_History__c$FEC_Case__c.FEC_TAT_Full_Process_Hrs__c</sortColumn>
+    <sortColumn>FEC_Routing_Action_History__c$FEC_Case__c.FEC_Last_Updated_On__c</sortColumn>
     <sortOrder>Desc</sortOrder>
     <timeFrameFilter>
         <dateColumn>FEC_Routing_Action_History__c$CreatedDate</dateColumn>
