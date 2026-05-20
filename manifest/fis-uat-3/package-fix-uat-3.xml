@@ -78,6 +78,7 @@
 		<members>FEC_AutoHoldCaseQueueable</members>
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
+		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -92,6 +93,13 @@
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
 		<members>FEC_AutoHoldCaseHistoryService</members>
+		<members>FEC_CardInfoController</members>
+        <members>FEC_IPPController</members>
+        <members>FEC_MockData</members>
+        <members>FEC_BlockCodeRoutingService</members>
+        <members>FEC_CMSRewardRedeemService</members>
+        <members>FEC_CMSRewardRedeemServiceTest</members>
+        <members>FEC_GetMRCInfo</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -170,6 +178,9 @@
         <members>fec_CaseAssignmentDetailSummary</members>
         <members>fec_CaseAssignmentNocConfig</members>
         <members>fec_CaseAssignmentNocNew</members>
+        <members>fec_IPPDetails</members>
+        <members>fecCaseAssignmentNewForm</members>
+        <members>fec_NotificationOverride</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -220,6 +231,8 @@
 		<members>FEC_Case_Assignment_NOC__c</members>
 		<members>FEC_Case_Assignment__c</members>
 		<members>FEC_Case_Hold_History__c</members>
+		<members>FEC_Notification__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
@@ -233,6 +246,8 @@
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
         <members>FEC_Case_Assignment_Record_Page</members>
+        <members>FEC_Notification_Record_Page_Auto</members>
+        <members>FEC_Notification_Record_Page_Manual</members>
         <name>FlexiPage</name>
     </types>
 	<types>
@@ -280,6 +295,8 @@
         <members>FEC_MRC_Return_Msg_Product_Not_TW</members>
         <members>FEC_MRC_Return_Msg_DPD_RL0503</members>
         <members>FEC_MRC_RL0502_Dup_Banner</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_New</members>
+        <members>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_Prev</members>
         <members>FEC_MRC_Dup_Remark_Cancel_New</members>
         <members>FEC_MRC_RL0502_Dup_Open_Case_Btn</members>
@@ -290,6 +307,7 @@
         <members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_Search_Test_Service_Error_Account</members>
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
+	    <members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
 		<name>CustomMetadata</name>
 	</types>
     <types>

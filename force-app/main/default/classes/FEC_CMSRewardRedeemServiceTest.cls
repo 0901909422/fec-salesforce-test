@@ -122,6 +122,9 @@ private class FEC_CMSRewardRedeemServiceTest {
         Decimal cashback
     ) {
         FEC_CMSRewardRedeemService.RedeemRequest req = new FEC_CMSRewardRedeemService.RedeemRequest();
+        req.transId = '550e8400-e29b-41d4-a716-446655440000';
+        req.requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+        req.dateTimeStr = '20260411T161927.0 GMT';
         req.accountNumber = '0001500030000274373';
         req.customerName = 'TEST CUSTOMER';
         req.customerMobile = '84938089975';

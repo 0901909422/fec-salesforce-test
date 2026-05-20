@@ -611,6 +611,7 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
 
         Integer totalTargets = targetCases.size();
         if (totalTargets <= ASSIGNMENT_CASE_DML_CHUNK_SIZE) {
+            registerSkipOwnerChangeRoutingHistoryForCases(targetCases);
             update targetCases;
             insertAssignmentRunLog(
                 assignmentRecord.Id,
@@ -1169,5 +1170,20 @@ public without sharing class FEC_CaseAssignmentAutoDistributeService {
             return String.valueOf(idValue).toLowerCase();
         }
         return '';
+    }
+
+    /**
+     * Auto distribute đổi Owner hàng loạt — không tạo Routing Action History / notification
+     * trong cùng transaction (tránh chiếm quota enqueue của xích AutoDistQueueJob).
+     */
+    private static void registerSkipOwnerChangeRoutingHistoryForCases(List<Case> cases) {
+        if (cases == null) {
+            return;
+        }
+        for (Case c : cases) {
+            if (c != null && c.Id != null) {
+                FEC_CaseBusinessService.registerSkipOwnerChangeRoutingHistory(c.Id);
+            }
+        }
     }
 }
