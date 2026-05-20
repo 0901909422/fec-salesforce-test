@@ -25,6 +25,10 @@ const FIELD_EDIT_LABELS = {
   FEC_Time_Slots__c: "Time Slots",
 };
 
+const STATUS_DRAFT = "Draft";
+const STATUS_ACTIVE = "Active";
+const STATUS_ARCHIVED = "Archived";
+
 const FIELDS = [
   NAME_FIELD,
   OWNER_FIELD,
@@ -60,6 +64,9 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   @track modalFormRenderKey = 0;
   @track modalBusinessHoursValue = "";
   @track isBusinessHoursSaving = false;
+  @track statusArchiveOnlyMode = false;
+  @track activeToArchiveValue = STATUS_ARCHIVED;
+  @track isSavingActiveArchive = false;
   businessHourOptionsWire;
 
   get assignmentName() {
@@ -230,6 +237,35 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return label ? `Edit ${label}` : "Edit field";
   }
 
+  get assignmentStatusKey() {
+    return String(this.status || "").trim();
+  }
+
+  get canEditDraftDetailFields() {
+    return this.assignmentStatusKey === STATUS_DRAFT;
+  }
+
+  get canEditStatusControl() {
+    const s = this.assignmentStatusKey;
+    return s === STATUS_DRAFT || s === STATUS_ACTIVE;
+  }
+
+  get archivedStatusOptions() {
+    return [{ label: STATUS_ARCHIVED, value: STATUS_ARCHIVED }];
+  }
+
+  get isEditingActiveToArchive() {
+    return this.statusArchiveOnlyMode && this.editingFieldName === "FEC_Status__c";
+  }
+
+  get showGenericFieldEditForm() {
+    return (
+      Boolean(this.editingFieldName) &&
+      !this.isEditingBusinessHours &&
+      !this.isEditingActiveToArchive
+    );
+  }
+
   toggleCaseSection() {
     this.caseInfoExpanded = !this.caseInfoExpanded;
   }
@@ -246,6 +282,15 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     if (!this.recordId || !fieldApiName) {
       return;
     }
+    if (fieldApiName !== "FEC_Status__c" && !this.canEditDraftDetailFields) {
+      return;
+    }
+    if (fieldApiName === "FEC_Status__c" && !this.canEditStatusControl) {
+      return;
+    }
+    this.statusArchiveOnlyMode =
+      fieldApiName === "FEC_Status__c" && this.assignmentStatusKey === STATUS_ACTIVE;
+    this.activeToArchiveValue = STATUS_ARCHIVED;
     this.editingFieldName = fieldApiName;
     if (fieldApiName === "FEC_Business_Hours__c") {
       this.modalBusinessHoursValue = this.businessHoursId || "";
@@ -264,14 +309,64 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     this.editingFieldName = "";
     this.modalBusinessHoursValue = "";
     this.isBusinessHoursSaving = false;
+    this.statusArchiveOnlyMode = false;
+    this.isSavingActiveArchive = false;
+    this.activeToArchiveValue = STATUS_ARCHIVED;
   }
 
   handleModalBusinessHoursChange(event) {
     this.modalBusinessHoursValue = event.detail.value || "";
   }
 
+  handleActiveToArchiveChange(event) {
+    this.activeToArchiveValue = event.detail.value || STATUS_ARCHIVED;
+  }
+
+  async handleSaveActiveToArchive() {
+    if (
+      !this.recordId ||
+      this.activeToArchiveValue !== STATUS_ARCHIVED ||
+      this.assignmentStatusKey !== STATUS_ACTIVE
+    ) {
+      return;
+    }
+    this.isSavingActiveArchive = true;
+    try {
+      await updateRecord({
+        fields: {
+          Id: this.recordId,
+          [STATUS_FIELD.fieldApiName]: STATUS_ARCHIVED,
+        },
+      });
+      getRecordNotifyChange([{ recordId: this.recordId }]);
+      this.closeEditModal();
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Saved",
+          message: "Status updated to Archived.",
+          variant: "success",
+        })
+      );
+    } catch (e) {
+      const msg =
+        e?.body?.output?.errors?.[0]?.message ||
+        e?.body?.message ||
+        e?.message ||
+        "Could not update Status.";
+      this.dispatchEvent(
+        new ShowToastEvent({
+          title: "Error",
+          message: msg,
+          variant: "error",
+        })
+      );
+    } finally {
+      this.isSavingActiveArchive = false;
+    }
+  }
+
   async handleSaveBusinessHours() {
-    if (!this.recordId) {
+    if (!this.recordId || !this.canEditDraftDetailFields) {
       return;
     }
     this.isBusinessHoursSaving = true;
