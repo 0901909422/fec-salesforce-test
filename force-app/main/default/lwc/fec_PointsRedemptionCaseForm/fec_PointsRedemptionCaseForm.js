@@ -8,7 +8,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { NavigationMixin } from 'lightning/navigation';
 import { publish, MessageContext } from 'lightning/messageService';
 import CASE_NOC from '@salesforce/messageChannel/FEC_Case_NOC__c';
-import LightningConfirm from 'lightning/confirm';
 import initData from '@salesforce/apex/FEC_PointsRedemptionCaseController.initData';
 import redeem from '@salesforce/apex/FEC_PointsRedemptionCaseController.redeem';
 import saveDraftSelection from '@salesforce/apex/FEC_PointsRedemptionCaseController.saveDraftSelection';
@@ -24,6 +23,8 @@ import FEC_Points_Redeemed_Points_Label from '@salesforce/label/c.FEC_Points_Red
 import FEC_Points_Redemption_CMS_Phone_Label from '@salesforce/label/c.FEC_Points_Redemption_CMS_Phone_Label';
 import FEC_Points_Redemption_Confirm_Message from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Message';
 import FEC_Points_Redemption_Confirm_Title from '@salesforce/label/c.FEC_Points_Redemption_Confirm_Title';
+import FEC_Yes_Btn from '@salesforce/label/c.FEC_Yes_Btn';
+import FEC_No_Btn from '@salesforce/label/c.FEC_No_Btn';
 import Loading from '@salesforce/label/c.Loading';
 import {
     STR_EMPTY,
@@ -87,10 +88,12 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
     @track failCount = 0;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07: thông báo đỏ in đậm dưới nút Redeem Points
     @track redeemFailMessage;
+    @track showRedeemConfirmModal = false;
 
     _lastSub = STR_EMPTY;
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — khóa NOC sau Có/Không pop-up Redeem Points
     _redeemModalConfirmed = false;
+    _redeemConfirmResolver;
 
     @wire(MessageContext)
     messageContext;
@@ -275,14 +278,7 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             this.toast(FEC_Toast_Validation_Title, FEC_Complete_This_Field, VARIANT.WARNING);
             return;
         }
-        const ok = await LightningConfirm.open({
-            message: FEC_Points_Redemption_Confirm_Message,
-            variant: 'header',
-            label: FEC_Points_Redemption_Confirm_Title,
-            theme: 'default'
-        });
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
-        this.applyNocLockAfterRedeemModal();
+        const ok = await this.openRedeemConfirmModal();
         if (!ok) {
             return;
         }
@@ -305,6 +301,34 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             .finally(() => {
                 this.loading = false;
             });
+    }
+
+    openRedeemConfirmModal() {
+        this.showRedeemConfirmModal = true;
+        return new Promise((resolve) => {
+            this._redeemConfirmResolver = resolve;
+        });
+    }
+
+    _finishRedeemConfirmModal(result) {
+        if (this._redeemConfirmResolver) {
+            this._redeemConfirmResolver(result);
+            this._redeemConfirmResolver = null;
+        }
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Không: khóa NOC (giống Fast Cash handleConfirmNo)
+    handleCancelRedeemConfirmModal() {
+        this.showRedeemConfirmModal = false;
+        this.applyNocLockAfterRedeemModal();
+        this._finishRedeemConfirmModal(false);
+    }
+
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Có: khóa NOC rồi gọi redeem (giống Fast Cash handleConfirmYes)
+    handleConfirmRedeemConfirmModal() {
+        this.showRedeemConfirmModal = false;
+        this.applyNocLockAfterRedeemModal();
+        this._finishRedeemConfirmModal(true);
     }
 
     //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 inline, không toast lỗi API
@@ -400,5 +424,21 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
 
     get labelRedeemPoints() {
         return FEC_Points_Redeem_Button_Label;
+    }
+
+    get labelRedeemConfirmTitle() {
+        return FEC_Points_Redemption_Confirm_Title;
+    }
+
+    get labelRedeemConfirmMessage() {
+        return FEC_Points_Redemption_Confirm_Message;
+    }
+
+    get labelNoBtn() {
+        return FEC_No_Btn;
+    }
+
+    get labelYesBtn() {
+        return FEC_Yes_Btn;
     }
 }
