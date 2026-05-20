@@ -1048,4 +1048,59 @@ public without sharing class FEC_CaseTriggerHandler {
             update caseUpdates;
         }
     }
+
+      private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        try {
+            CustomNotificationType notifType = [
+                SELECT Id FROM CustomNotificationType
+                WHERE DeveloperName = 'Custom_Notification' LIMIT 1
+            ];
+
+            for (Case c : newCases) {
+                Case oldCase = oldMap.get(c.Id);
+                Boolean isWarning = String.isNotBlank(c.FEC_SLA_Warning__c)
+                    && c.FEC_SLA_Warning__c != oldCase.FEC_SLA_Warning__c;
+                Boolean isViolating = String.isNotBlank(c.FEC_SLA_Violating_Warning__c)
+                    && c.FEC_SLA_Violating_Warning__c != oldCase.FEC_SLA_Violating_Warning__c;
+
+                if (!isWarning && !isViolating) continue;
+                if (String.isBlank(c.FEC_Follow_Up_User__c)) continue;
+
+                // Parse recipients tá»« FEC_Follow_Up_User__c
+                Set<String> recipientIds = new Set<String>();
+                for (String entry : c.FEC_Follow_Up_User__c.split(';')) {
+                    String[] parts = entry.trim().split('\\|');
+                    if (parts.size() > 0 && String.isNotBlank(parts[0])) {
+                        recipientIds.add(parts[0].trim());
+                    }
+                }
+                if (recipientIds.isEmpty()) continue;
+
+                String title;
+                String body;
+                if (isViolating) {
+                    //tungnm37: Violation notification
+                    title = 'Case ' + c.CaseNumber + ' - Da vuot qua thoi gian xu ly';
+                    body = '- Case ID: ' + c.CaseNumber + '\n- Da vuot qua thoi gian xu ly';
+                } else {
+                    //tungnm37: Warning notification
+                    title = 'Case ' + c.CaseNumber + ' - Sap vuot qua thoi gian xu ly';
+                    body = '- Case ID: ' + c.CaseNumber + '\n- Sap vuot qua thoi gian xu ly';
+                }
+
+                Messaging.CustomNotification notif = new Messaging.CustomNotification();
+                notif.setNotificationTypeId(notifType.Id);
+                notif.setTargetId(c.Id);
+                notif.setTitle(title);
+                notif.setBody(body);
+                try {
+                    notif.send(recipientIds);
+                } catch (Exception ex) {
+                    System.debug('FEC_DEBUG sendSLANotifications send error: ' + ex.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG sendSLANotifications error: ' + e.getMessage());
+        }
+    }
 }
