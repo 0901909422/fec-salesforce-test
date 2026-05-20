@@ -36,10 +36,6 @@ c-fec_-k-y-c .slds-accordion__summary,
 c-fec_-card-replacement-address .slds-accordion__summary,
 c-fec_-assignment-list .slds-accordion__summary,
 c-fec_-banca .slds-accordion__summary,
-c-fec_-hold-case-configuration .slds-accordion__summary {
-c-fec_-card-replacement-address .slds-accordion__summary,
-c-fec_-assignment-list .slds-accordion__summary,
-c-fec_-banca .slds-accordion__summary,
 c-fec_-hold-case-configuration .slds-accordion__summary,
 c-fec_-batch-case-handling .slds-accordion__summary {
   background-color: #f3f3f3;
@@ -56,63 +52,10 @@ c-fec_-noc-routing-assignment .slds-accordion__summary {
   border-radius: 4px;
 }
 
-/* tungnm37: nền xám cho General Assignment detail components */
-c-fec_-general-assignment-detail .slds-accordion__summary,
-c-fec_-general-assignment-config-detail .slds-accordion__summary {
-  background-color: #f3f3f3;
-  border-radius: 4px;
-}
-
-/* tungnm37: nền xám cho Routing Assignment History header */
-c-fec_-routing-assignment-history .slds-card__header {
-  background-color: #f3f3f3;
-  border-radius: 4px 4px 0 0;
-}
-
-/* tungnm37: nền xám cho General Assignment History header */
-c-fec_-general-assignment-history .slds-card__header {
-  background-color: #f3f3f3;
-  border-radius: 4px 4px 0 0;
-}
-
 
 c-fec_-noc-general-assignment .slds-card__header {
   background-color: #f3f3f3;
   border-radius: 4px 4px 0 0;
-}
-
-c-fec_-routing-assignment-detail-simple .slds-card__header {
-  background-color: #f3f3f3;
-  border-radius: 4px 4px 0 0;
-}
-
-c-fec_-routing-assignment-detail-simple .slds-accordion__summary {
-  background-color: #f3f3f3;
-  border-radius: 4px;
-}
-
-c-fec_-general-assignment-history .slds-card {
-  border-radius: 0.5rem;
-  border: 1px solid #dddbda;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-}
-
-c-fec_-general-assignment-history .slds-card__header {
-  background-color: #ffffff;
-  border-radius: 0.5rem 0.5rem 0 0;
-}
-
-c-fec_-routing-assignment-history .slds-card {
-  border-radius: 0.5rem;
-  border: 1px solid #dddbda;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-}
-
-c-fec_-routing-assignment-history .slds-card__header {
-  background-color: #ffffff;
-  border-radius: 0.5rem 0.5rem 0 0;
 }
 
 c-fec_-general-assignment-detail-simple .slds-card {
@@ -127,19 +70,6 @@ c-fec_-general-assignment-detail-simple .slds-card__header {
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
-c-fec_-routing-assignment-detail-simple .slds-card {
-  border-radius: 0.5rem;
-  border: 1px solid #dddbda;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-}
-
-c-fec_-routing-assignment-detail-simple .slds-card__header {
-  background-color: #f3f3f3;
-  border-radius: 0.5rem 0.5rem 0 0;
-  padding: 0.75rem 1rem;
-  min-height: 2.75rem;
-}
 /* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
 c-fec-email-section .slds-accordion__summary {
   background-color: #f3f3f3;
@@ -182,40 +112,11 @@ c-lwc-multi-lookup lightning-pill lightning-icon {
   padding: 1px !important;
 }
 
-/* Fix edit form grid layout for RA and GA detail simple (LWC shadow DOM) */
-c-fec_-routing-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap,
-c-fec_-general-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
-}
-
-c-fec_-routing-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap > .slds-col.slds-size_1-of-2,
-c-fec_-general-assignment-detail-simple .slds-grid.slds-gutters.slds-wrap > .slds-col.slds-size_1-of-2 {
-  flex: 0 0 50% !important;
-  max-width: 50% !important;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  box-sizing: border-box;
-}
 
 c-lwc-multi-lookup lightning-input input {
   padding-left: 8px !important;
 }
 
-/* fec_FileUploadCard: cursor tay trên vùng lightning-file-upload (SLDS trong shadow; CSS LWC scoped không tới được) */
-c-fec_-file-upload-card
-  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
-  .slds-file-selector__dropzone,
-c-fec_-file-upload-card
-  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
-  .slds-file-selector__button,
-c-fec_-file-upload-card
-  lightning-file-upload:not([disabled]):not([aria-disabled="true"])
-  .slds-file-selector__text {
-  cursor: pointer !important;
-}
 
 c-fec_-case-bussiness .hide-help-icon lightning-helptext {
   display: none;
