@@ -3,6 +3,10 @@
     <label>FEC MFASOUTSTANDINGAUTHINQ</label>
     <protected>false</protected>
     <values>
+        <field>FEC_Account_Number_Hard_Code__c</field>
+        <value xsi:type="xsd:string">0001500060000003944</value>
+    </values>
+    <values>
         <field>FEC_Endpoint__c</field>
         <value xsi:type="xsd:string">/esb/cms/CMS_VMXIntegrationWS</value>
     </values>
@@ -11,3 +15,4 @@
         <value xsi:nil="true"/>
     </values>
 </CustomMetadata>
+
