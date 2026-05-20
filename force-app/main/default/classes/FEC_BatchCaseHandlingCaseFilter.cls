@@ -27,11 +27,14 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
     public static List<String> buildBaseCaseWhere() {
         List<String> parts = new List<String>();
         parts.add(
-            'RecordType.DeveloperName IN (\'' +
+            'RecordType.DeveloperName = \'' +
             String.escapeSingleQuotes(FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME) +
-            '\',\'' +
-            String.escapeSingleQuotes(FEC_ConstantCommon.CASE_INTERNAL_RECORD_TYPE_DEV_NAME) +
-            '\')'
+            '\''
+        );
+        parts.add(
+            'OwnerId = \'' +
+            String.escapeSingleQuotes(String.valueOf(UserInfo.getUserId())) +
+            '\''
         );
         parts.add('IsClosed = false');
         parts.add(
