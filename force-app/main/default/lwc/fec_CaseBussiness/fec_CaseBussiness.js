@@ -133,6 +133,13 @@ const FIELD_MRC_CUSTOMER_CONFIRMATION = "FEC_Customer_Confirmation__c";
 const FIELD_MRC_HANDLING_OPTION = "FEC_MRC_Request_Handling_Option__c";
 const MRC_OPT_CANCEL_PREVIOUS = "Cancel previous request, create new request";
 const MRC_OPT_CANCEL_NEW = "Cancel new request, continue previous request handling";
+const MRC_CONF_NOT_RECEIVED = "Customer has not received MRC";
+const MRC_CONF_RECEIVED = "Customer received MRC";
+const MRC_FLOW_NOT_ELIGIBLE = "NOT_ELIGIBLE";
+const MRC_FLOW_PAYMENT = "PAYMENT_SUPPORT";
+const MRC_FLOW_CP = "CP_SUPPORT";
+const LWC_MRC_INFO = "fec_MRC";
+const LWC_MRC_DELIVERY = "fec_ContractClosureForm";
 
 const ACTION_PHONE_UPDATE = "Phone Update";
 const ACTION_EMAIL_UPDATE = "Email Update";
@@ -551,6 +558,9 @@ function mergeSectionSortedRows(section) {
     if (sub._hideForPointsRedemption) {
       return;
     }
+    if (sub._hideForMrcRl05 || sub.hideForMrcRl05) {
+      return;
+    }
     const fecOrd = readFecSubSectionOrder(sub);
     const sortOrder =
       fecOrd !== undefined ? fecOrd : subIndex + 1;
@@ -582,6 +592,9 @@ function mergeSectionSortedRows(section) {
     const dynSubKey = normalizeSubSectionName(dynCmp?.subSectionName);
     //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — RC33.01–03: ẩn LWC C360 / Property
     if (shouldSkipPointsRedemptionLwcDynCmp(section._pointsRedemptionHideTarget, dynSubKey)) {
+      return;
+    }
+    if (dynCmp._hideForMrcRl05) {
       return;
     }
     const fecOrd = readFecSubSectionOrder(dynCmp);
@@ -1260,8 +1273,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   }
 
   get showMrcRl0502DupBanner() {
+    const ctx = this.mrcRl05Ui;
+    if (ctx?.showMrcDupBanner !== true) {
+      return false;
+    }
     const v = this.business?.mrcRl0502DuplicateOpenCaseId;
     return typeof v === "string" && v.length >= 15;
+  }
+
+  get mrcRl05Ui() {
+    return this.business?.mrcRl05Ui || null;
   }
 
   get mrcDupCaseNumber() {
@@ -1340,29 +1361,176 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       return;
     }
 
+    const ctx = this.mrcRl05Ui;
+    const showDup = this.showMrcRl0502DupBanner;
+    const confVal = this._getCaseFieldValue(FIELD_MRC_CUSTOMER_CONFIRMATION);
+    const showDupInline =
+      showDup &&
+      ctx?.showCustomerConfirmation === true &&
+      (confVal === MRC_CONF_NOT_RECEIVED || !confVal);
+    const showDupStandalone = showDup && ctx?.dupCaseOnly === true;
+
     this.business.sectionlst.forEach((section) => {
+      if (section.name === SECTION_NAME_CASE_INFORMATION) {
+        section.showMrcRl0502DupStandalone = showDupStandalone;
+      }
       section.subSectionlst?.forEach((sub) => {
         sub.objlst?.forEach((obj) => {
           obj.fieldlst?.forEach((field) => {
             if (field.apiName === FIELD_MRC_HANDLING_OPTION) {
-              field.isHidden = this.showMrcRl0502DupBanner;
-              if (this.showMrcRl0502DupBanner && !this.mrcHandlingOptionValue && field.value) {
+              field.isHidden = showDup;
+              if (showDup && !this.mrcHandlingOptionValue && field.value) {
                 this.mrcHandlingOptionValue = field.value;
               }
             }
             if (field.apiName === FIELD_MRC_CUSTOMER_CONFIRMATION) {
-              field.showMrcDupInline = this.showMrcRl0502DupBanner;
+              field.showMrcDupInline = showDupInline;
+              const ctx = this.mrcRl05Ui;
+              field.isHidden = ctx?.showCustomerConfirmation === false;
+            }
+            if (field.apiName === "FEC_Contract_Processing_Assessment_Type__c") {
+              const ctx = this.mrcRl05Ui;
+              if (ctx?.isReturnSubCode) {
+                field.isHidden = true;
+              }
             }
           });
         });
       });
     });
 
-    if (!this.showMrcRl0502DupBanner) {
+    if (!showDup) {
       this.mrcHandlingOptionValue = STR_EMPTY;
     }
 
+    this._applyMrcRl05SectionVisibility();
     this.business = { ...this.business };
+  }
+
+  _applyMrcRl05SectionVisibility() {
+    const ctx = this.mrcRl05Ui;
+    const subCodeUpper = String(this.business?.subCodeCode ?? STR_EMPTY).toUpperCase();
+    const isRl05OnBusiness =
+      subCodeUpper.includes("RL05") ||
+      String(this.business?.subCategoryCode ?? STR_EMPTY)
+        .toUpperCase()
+        .includes("RL05");
+    if ((!ctx?.isRl05Branch && !isRl05OnBusiness) || !this.business?.sectionlst) {
+      return;
+    }
+
+    const showDelivery = this._shouldShowMrcDeliveryForm(ctx);
+    const hidePropertyInfo =
+      ctx?.hidePropertyInfo === true || this._isMrcRl05PhotoSubCodeFromBusiness();
+    let changed = false;
+
+    this.business.sectionlst.forEach((section) => {
+      if (section.name !== SECTION_NAME_CASE_INFORMATION) {
+        return;
+      }
+      section.subSectionlst?.forEach((sub) => {
+        const hideSub =
+          hidePropertyInfo === true &&
+          sub.name === SUBSECTION_NAME_PROPERTY_INFO;
+        if (sub._hideForMrcRl05 !== hideSub || sub.hideForMrcRl05 !== hideSub) {
+          sub._hideForMrcRl05 = hideSub;
+          sub.hideForMrcRl05 = hideSub;
+          changed = true;
+        }
+        if (hideSub) {
+          sub.objlst?.forEach((obj) => {
+            obj.fieldlst?.forEach((field) => {
+              if (!field.isHidden) {
+                field.isHidden = true;
+                changed = true;
+              }
+            });
+          });
+        }
+      });
+      (section.componentlst || []).forEach((entry) => {
+        const meta = normalizeMasterDataLwcEntry(entry);
+        const name = meta.componentName;
+        let hide = false;
+        if (name === LWC_MRC_INFO) {
+          hide = ctx.hideMrcInfoLwc === true;
+        } else if (name === LWC_MRC_DELIVERY) {
+          hide = !showDelivery;
+        }
+        if (entry._hideForMrcRl05 !== hide) {
+          entry._hideForMrcRl05 = hide;
+          changed = true;
+        }
+      });
+      (section.resolvedComponentlst || []).forEach((dyn) => {
+        let hide = false;
+        if (dyn.componentName === LWC_MRC_INFO) {
+          hide = ctx.hideMrcInfoLwc === true;
+        } else if (dyn.componentName === LWC_MRC_DELIVERY) {
+          hide = !showDelivery;
+        }
+        if (dyn._hideForMrcRl05 !== hide) {
+          dyn._hideForMrcRl05 = hide;
+          changed = true;
+        }
+      });
+    });
+
+    if (changed) {
+      this._rebuildAllSectionSortedRows();
+    }
+  }
+
+  _isMrcRl05PhotoSubCodeFromBusiness() {
+    const code = String(this.business?.subCodeCode ?? STR_EMPTY).toUpperCase();
+    return code.includes("RL05.01") || code.includes("RL05.03");
+  }
+
+  _shouldShowMrcDeliveryForm(ctx) {
+    if (this._isMrcRl05PhotoSubCodeFromBusiness()) {
+      return true;
+    }
+    if (!ctx || ctx.showDeliveryForm !== true) {
+      return false;
+    }
+    if (
+      ctx.dupCaseOnly === true &&
+      this.mrcHandlingOptionValue !== MRC_OPT_CANCEL_PREVIOUS
+    ) {
+      return false;
+    }
+    if (
+      ctx.isReturnSubCode &&
+      this.showMrcRl0502DupBanner &&
+      this._getCaseFieldValue(FIELD_MRC_CUSTOMER_CONFIRMATION) ===
+        MRC_CONF_NOT_RECEIVED &&
+      !this.mrcHandlingOptionValue
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  _applyMrcRl0502AutoRouting() {
+    const ctx = this.mrcRl05Ui;
+    if (!ctx?.isReturnSubCode || !this.isEdit) {
+      return;
+    }
+    if (ctx.autoRouteReject === true) {
+      this._setActionValueByCode(ACTION_REJECT);
+      this.business = { ...this.business };
+      return;
+    }
+    if (ctx.autoRoutePayment === true || ctx.autoRouteCp === true) {
+      this._setActionValueByCode(ACTION_ROUTE_TO);
+      this.business = { ...this.business };
+      return;
+    }
+    const conf = this._getCaseFieldValue(FIELD_MRC_CUSTOMER_CONFIRMATION);
+    if (conf === MRC_CONF_RECEIVED) {
+      this._setActionValueByCode(ACTION_CANCEL);
+      this.business = { ...this.business };
+    }
   }
 
   @api getNatureOfCaseId() {
@@ -2136,6 +2304,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         // PhuongNT add handle set update field read only
         this.handleSetUpdateFieldReadOnly();
         this._applyMrcRl0502DupFieldLayout();
+        this._applyMrcRl0502AutoRouting();
 
         console.log("🚀 ~ Fec_CaseBussiness ~ getData ~ this.business after:", JSON.stringify(this.business))
         publish(this.messageContext, CASE_NOTIFICATION, {
@@ -2393,6 +2562,13 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     }
 
     this.setDraft(objId, fieldName, value);
+
+    if (
+      fieldName === FIELD_MRC_CUSTOMER_CONFIRMATION ||
+      fieldName === FIELD_MRC_HANDLING_OPTION
+    ) {
+      this._applyMrcRl0502DupFieldLayout();
+    }
 
     if (PHONE_VALIDATED_FIELD_APIS.has(fieldName)) {
       value = applyPhoneInputMaxLength(value);

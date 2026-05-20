@@ -300,10 +300,14 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     return this.editingFieldName === "Name" && this.canEditDraftDetailFields;
   }
 
+  /** Select Queues chỉ cấu hình lúc tạo mới; không sửa trên record Draft. */
+  get canEditSelectQueues() {
+    return false;
+  }
+
   get isEditingQueues() {
     return (
-      this.editingFieldName === "FEC_Select_Queues__c" &&
-      this.canEditDraftDetailFields
+      this.editingFieldName === "FEC_Select_Queues__c" && this.canEditSelectQueues
     );
   }
 
@@ -364,10 +368,12 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     if (!this.recordId || !fieldApiName) {
       return;
     }
+    if (fieldApiName === "FEC_Select_Queues__c") {
+      return;
+    }
     if (
       fieldApiName !== "FEC_Status__c" &&
       fieldApiName !== "Name" &&
-      fieldApiName !== "FEC_Select_Queues__c" &&
       !this.canEditDraftDetailFields
     ) {
       return;
@@ -387,10 +393,6 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     }
     if (fieldApiName === "Name") {
       this.modalNameValue = this.assignmentName || "";
-    }
-    if (fieldApiName === "FEC_Select_Queues__c") {
-      this.modalSelectedQueues = this.parseSemicolonList(this.queuesRaw);
-      this.ensureQueueOptionsLoaded();
     }
     this.modalFormRenderKey += 1;
     this.isEditModalOpen = true;
@@ -494,7 +496,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
   }
 
   async handleSaveQueues() {
-    if (!this.recordId || !this.canEditDraftDetailFields) {
+    if (!this.recordId || !this.canEditSelectQueues) {
       return;
     }
     if (!this.modalSelectedQueues.length) {

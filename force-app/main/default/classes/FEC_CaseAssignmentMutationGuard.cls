@@ -1,6 +1,6 @@
 /**
  * Enforces edit rules for FEC_Case_Assignment__c:
- * Draft – full edit.
+ * Draft – full edit trừ FEC_Select_Queues__c (chỉ set lúc tạo mới).
  * Active – chỉ được đổi sang Archived nếu mọi field business (theo whitelist) không đổi so với bản trước update.
  * Archived – không đổi Status hay field business được giám sát.
  *
@@ -18,6 +18,8 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         'Khi Status là Active, chỉ được đổi Status sang Archived. Các field khác không được sửa.';
     public static final String MSG_CANNOT_ACTIVE_WITHOUT_NOC =
         'Không thể Active khi chưa thêm Case Assignment NOC.';
+    public static final String MSG_DRAFT_SELECT_QUEUES_LOCKED =
+        'Khi Status là Draft, không được chỉnh sửa Select Queues.';
 
     private static final String RUNNING_TIMES_FIELD = 'FEC_Running_Times__c';
 
@@ -111,6 +113,7 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         }
         String archived = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ARCHIVED;
         String active = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+        String draft = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_DRAFT;
 
         for (FEC_Case_Assignment__c newRow : newList) {
             FEC_Case_Assignment__c oldRow = oldMap.get(newRow.Id);
@@ -119,6 +122,14 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
             }
             String oldStatus = oldRow.FEC_Status__c;
             String newStatus = newRow.FEC_Status__c;
+
+            if (
+                oldStatus == draft &&
+                selectQueuesChanged(oldRow, newRow)
+            ) {
+                newRow.addError(MSG_DRAFT_SELECT_QUEUES_LOCKED);
+                continue;
+            }
 
             if (oldStatus == archived) {
                 if (
@@ -150,6 +161,20 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
      * @param excludeRunningTimesWhenActiveSiblingTrigger refresh nội dung Running Times khi đổi Status;
      *        true = nhánh Active (bỏ qua Running Times); false = Archived (vẫn giám sát).
      */
+    private static Boolean selectQueuesChanged(
+        FEC_Case_Assignment__c oldRow,
+        FEC_Case_Assignment__c newRow
+    ) {
+        Map<String, Object> populated = newRow.getPopulatedFieldsAsMap();
+        if (populated == null) {
+            populated = new Map<String, Object>();
+        }
+        Object effectiveNew = populated.containsKey('FEC_Select_Queues__c')
+            ? newRow.FEC_Select_Queues__c
+            : oldRow.FEC_Select_Queues__c;
+        return fieldValuesDiffer(oldRow.FEC_Select_Queues__c, effectiveNew);
+    }
+
     private static Boolean assignmentBusinessFieldsChanged(
         FEC_Case_Assignment__c oldRow,
         FEC_Case_Assignment__c newRow,
