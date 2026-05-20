@@ -642,6 +642,7 @@
 		<members>FEC_Case_Hold_History__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
 		<members>FEC_Notification__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
