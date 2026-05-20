@@ -58,18 +58,6 @@ c-fec_-noc-general-assignment .slds-card__header {
   border-radius: 4px 4px 0 0;
 }
 
-c-fec_-general-assignment-detail-simple .slds-card {
-  border-radius: 0.5rem;
-  border: 1px solid #dddbda;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-}
-
-c-fec_-general-assignment-detail-simple .slds-card__header {
-  background-color: #f3f3f3;
-  border-radius: 0.5rem 0.5rem 0 0;
-}
-
 /* fecEmailSection: bỏ viền xám slds-tabs_card, header #f3f3f3 */
 c-fec-email-section .slds-accordion__summary {
   background-color: #f3f3f3;
