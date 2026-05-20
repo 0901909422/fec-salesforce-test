@@ -1,4 +1,4 @@
-trigger FEC_CaseAssignmentNOCTrigger on FEC_Case_Assignment_NOC__c (before insert, before update, before delete) {
+﻿trigger FEC_CaseAssignmentNOCTrigger on FEC_Case_Assignment_NOC__c (before insert, before update, before delete) {
     if (Trigger.isBefore && Trigger.isInsert) {
         FEC_CaseAssignmentNOCTriggerHandler.handleBeforeInsert(Trigger.new);
     }
