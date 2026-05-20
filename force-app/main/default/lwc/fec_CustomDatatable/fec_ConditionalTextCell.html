@@ -1,0 +1,8 @@
+<template>
+    <template if:true={typeAttributes.isStrikethrough}>
+        <span style="text-decoration: line-through; color: #706e6b;">{value}</span>
+    </template>
+    <template if:false={typeAttributes.isStrikethrough}>
+        <span>{value}</span>
+    </template>
+</template>
