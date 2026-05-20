@@ -2,49 +2,51 @@
     <lightning-card>
         <template if:true={isHandlingMode}>
             <div class="slds-p-around_medium">
+                <div class="dnb-check-section">
 
-                <!-- Question -->
-                <div class="slds-m-bottom_medium">
-                    <template if:true={hasDataAtDNB}>
-                        <p class="slds-text-heading_large slds-text-title_bold custom-question">
-                            {labels.hasDataQuestion}
-                        </p>
-                    </template>
-                    <template if:false={hasDataAtDNB}>
-                        <p class="slds-text-heading_large slds-text-title_bold custom-question">
-                            {labels.noDataQuestion}
-                        </p>
-                    </template>
-                    <lightning-radio-group name="updateChoice" options={radioOptions} value={selectedOption}
-                        type="radio" variant="label-hidden" class="horizontal-radio" onchange={handleRadioChange}>
-                    </lightning-radio-group>
+                    <div class="dnb-input-wrapper">
+
+                        <lightning-input type="text" name="nationalId" label="National ID" value={nationalId}
+                            onchange={handleNidChange} maxlength="12" required
+                            message-when-value-missing="Vui lòng nhập National ID"
+                            message-when-pattern-mismatch="National ID không hợp lệ" pattern="[0-9]{9}|[0-9]{12}">
+                        </lightning-input>
+
+                    </div>
+
+                    <div class="dnb-button-wrapper">
+
+                        <lightning-button label="Check DNB" variant="brand" onclick={handleCheckDNB}
+                            disabled={isCheckingDNB}>
+                        </lightning-button>
+
+                    </div>
 
                 </div>
+                <!-- Question -->
+                <template if:true={isDNBChecked}>
+                    <div class="slds-m-bottom_medium">
+                        <template if:true={hasDataAtDNB}>
+                            <p class="slds-text-heading_large slds-text-title_bold custom-question">
+                                {labels.hasDataQuestion}
+                            </p>
+                        </template>
+                        <template if:false={hasDataAtDNB}>
+                            <p class="slds-text-heading_large slds-text-title_bold custom-question">
+                                {labels.noDataQuestion}
+                            </p>
+                        </template>
+                        <lightning-radio-group name="updateChoice" options={radioOptions} value={selectedOption}
+                            type="radio" variant="label-hidden" class="horizontal-radio" onchange={handleRadioChange}>
+                        </lightning-radio-group>
 
-                <template if:true={showTable}>
-                    <div class={formElementClass}>
-                        <div class="slds-col slds-size_1-of-6"><label class="slds-form-element__label" for="nid">
-                                <abbr class="slds-required">*</abbr>
-                                {labels.nidLabel}
-                            </label></div>
-
-                        <div class="slds-col slds-size_5-of-6">
-                            <div class="slds-form-element__control ">
-                                <input id="nid" type="text" class="slds-input" value={nationalId}
-                                    oninput={handleNidChange} maxlength="12" placeholder={labels.nidPlaceholder} />
-                            </div>
-
-                            <template if:true={nidError}>
-                                <div class="slds-form-element__help">
-                                    {labels.nidError}
-                                </div>
-                            </template>
-                        </div>
                     </div>
+                </template>
+                <template if:true={showTableSection}>
                     <div class="dnb-container"> <!-- Table -->
                         <c-fec_-reusable-d-n-b-custom-table key-field="id" data={pagedData} columns={columns}
                             oncheckboxchange={handleCheckboxChange} onpicklistchange={handlePicklistChange}
-                            ontogglecontact={handleToggleContact}>
+                            ontogglecontact={handleToggleContact} ontextareachange={handleTextareaChange}>
                         </c-fec_-reusable-d-n-b-custom-table>
                     </div>
                     <div class="btn-wrapper">
@@ -57,9 +59,13 @@
                         </template>
 
 
-                        <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
-                            onclick={openModal} disabled={isUpdateDisabled}>
-                        </lightning-button>
+                        <template if:true={showUpdateButton}>
+
+                            <lightning-button class="update-dnb-btn" label="Update to DNB" variant="brand"
+                                onclick={openModal} disabled={isUpdateDisabled}>
+                            </lightning-button>
+
+                        </template>
 
                         <template if:true={errorMessage}>
 
