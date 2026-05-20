@@ -35,11 +35,7 @@ const IMPORT_TIMEOUT_MS = 60 * 1000;
 const IMPORT_TIMEOUT_MESSAGE = FEC_Batch_RequestTimeout;
 const REQUIRED_HEADERS = ["service resource", "start date", "end date"];
 const NOTE_HEADER = "note";
-const RESULT_FILE_HEADERS = [
-  "Service Resource",
-  "Start Date",
-  "End Date",
-  "Note",
+const RESULT_APPEND_HEADERS = [
   "ID",
   "Status",
   "Errors"
@@ -71,9 +67,13 @@ export default class Fec_BatchDataCreation extends LightningElement {
   currentPage = 1;
   /** String values must match pageSizeOptions for lightning-combobox. */
   pageSize = "20";
+  sortBy = "uploadedOn";
+  sortDirection = "desc";
   selectedFile;
   sheetJsReady = false;
   templateDownloadUrlByValue = {};
+  pendingImportHeaders = [];
+  pendingImportSourceRows = [];
   pendingImportRows = [];
 
   templateOptions = [];
@@ -164,12 +164,57 @@ export default class Fec_BatchDataCreation extends LightningElement {
     return !!(this.selectedFile && this.selectedFileName);
   }
 
+  get fileNameSortIcon() {
+    return this.getSortIcon("fileName");
+  }
+
+  get uploadedOnSortIcon() {
+    return this.getSortIcon("uploadedOn");
+  }
+
+  get uploadedBySortIcon() {
+    return this.getSortIcon("uploadedBy");
+  }
+
+  get totalRecordsCountSortIcon() {
+    return this.getSortIcon("totalRecordsCount");
+  }
+
+  get totalSuccessRecordsSortIcon() {
+    return this.getSortIcon("totalSuccessRecords");
+  }
+
+  get totalFailedRecordsSortIcon() {
+    return this.getSortIcon("totalFailedRecords");
+  }
+
+  get statusSortIcon() {
+    return this.getSortIcon("status");
+  }
+
+  get failureReasonSortIcon() {
+    return this.getSortIcon("failureReason");
+  }
+
+  get resultSortIcon() {
+    return this.getSortIcon("result");
+  }
+
+  getSortIcon(fieldName) {
+    if (this.sortBy !== fieldName) {
+      return "utility:arrowdown";
+    }
+    return this.sortDirection === "asc" ? "utility:arrowup" : "utility:arrowdown";
+  }
+
   handleTemplateChange(event) {
     this.selectedTemplate = event.detail.value;
     this.templateRequiredError = false;
     this.fileRequiredError = false;
     this.attachDataRequiredError = false;
     this.importValidationError = "";
+    this.pendingImportHeaders = [];
+    this.pendingImportSourceRows = [];
     this.pendingImportRows = [];
   }
 
@@ -209,6 +254,8 @@ export default class Fec_BatchDataCreation extends LightningElement {
     this.fileRequiredError = false;
     this.attachDataRequiredError = false;
     this.importValidationError = "";
+    this.pendingImportHeaders = [];
+    this.pendingImportSourceRows = [];
   }
 
   handleDownloadTemplate() {
@@ -272,6 +319,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
     if (!Array.isArray(headerRow)) {
       return { ok: false, noData: true };
     }
+    const originalHeaders = headerRow.map((cell) =>
+      cell == null ? "" : String(cell)
+    );
 
     const headerCells = headerRow.map((cell) =>
       String(cell ?? "")
@@ -280,9 +330,24 @@ export default class Fec_BatchDataCreation extends LightningElement {
     );
     const headerIndexes = REQUIRED_HEADERS.map((h) => headerCells.indexOf(h));
     const noteIndex = headerCells.indexOf(NOTE_HEADER);
+    const sourceRows = [];
+    for (let i = 1; i < rowsAoA.length; i += 1) {
+      const rowArr = rowsAoA[i];
+      if (!Array.isArray(rowArr) || rowArr.every((value) => value == null || value === "")) {
+        continue;
+      }
+      sourceRows.push(
+        originalHeaders.map((_, idx) => {
+          const value = rowArr[idx];
+          return value == null ? "" : value;
+        })
+      );
+    }
     if (headerIndexes.some((idx) => idx < 0)) {
       return {
         ok: false,
+        headers: originalHeaders,
+        sourceRows,
         message:
           "File phải có các cột: Service Resource, Start Date, End Date."
       };
@@ -301,6 +366,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
 
     let dataRowCount = 0;
     const importRows = [];
+    const validSourceRows = [];
     for (let i = 1; i < rowsAoA.length; i += 1) {
       const rowArr = rowsAoA[i];
       const vSr = cellAt(rowArr, headerIndexes[0]);
@@ -311,6 +377,12 @@ export default class Fec_BatchDataCreation extends LightningElement {
         continue;
       }
       dataRowCount += 1;
+      validSourceRows.push(
+        originalHeaders.map((_, idx) => {
+          const value = Array.isArray(rowArr) ? rowArr[idx] : "";
+          return value == null ? "" : value;
+        })
+      );
       importRows.push({
         serviceResource: vSr,
         startDate: vStart,
@@ -319,9 +391,20 @@ export default class Fec_BatchDataCreation extends LightningElement {
       });
     }
     if (dataRowCount === 0) {
-      return { ok: false, noData: true };
+      return {
+        ok: false,
+        noData: true,
+        headers: originalHeaders,
+        sourceRows
+      };
     }
-    return { ok: true, message: "", rows: importRows };
+    return {
+      ok: true,
+      message: "",
+      headers: originalHeaders,
+      sourceRows: validSourceRows,
+      rows: importRows
+    };
   }
 
   readFileAsArrayBuffer(file) {
@@ -377,6 +460,8 @@ export default class Fec_BatchDataCreation extends LightningElement {
       const check = await this.validateBulkOffCreationExcel(fileToUpload);
       if (!check.ok) {
         const parsedRows = Array.isArray(check.rows) ? check.rows : [];
+        const sourceHeaders = Array.isArray(check.headers) ? check.headers : [];
+        const sourceRows = Array.isArray(check.sourceRows) ? check.sourceRows : [];
         if (check.noData) {
           // File đã đính kèm nhưng rỗng → dùng importValidationError, không phải attachDataRequiredError.
           this.attachDataRequiredError = false;
@@ -386,7 +471,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
             key,
             this.importValidationError,
             fileToUpload,
-            parsedRows
+            parsedRows,
+            sourceHeaders,
+            sourceRows
           );
         } else {
           this.importValidationError = check.message || "";
@@ -395,11 +482,17 @@ export default class Fec_BatchDataCreation extends LightningElement {
             key,
             this.importValidationError || FEC_Batch_Msg_InvalidImportData,
             fileToUpload,
-            parsedRows
+            parsedRows,
+            sourceHeaders,
+            sourceRows
           );
         }
         return;
       }
+      this.pendingImportHeaders = Array.isArray(check.headers) ? check.headers : [];
+      this.pendingImportSourceRows = Array.isArray(check.sourceRows)
+        ? check.sourceRows
+        : [];
       this.pendingImportRows = Array.isArray(check.rows) ? check.rows : [];
     } catch (error) {
       this.importValidationError =
@@ -434,12 +527,16 @@ export default class Fec_BatchDataCreation extends LightningElement {
           await this.saveResultWorkbook(
             result.batchRecordId,
             fileToUpload.name,
-            result.resultRowsJson
+            result.resultRowsJson,
+            this.pendingImportHeaders,
+            this.pendingImportSourceRows
           );
         }
         this.showSuccess("Success", result.message || "Import started.");
         this.selectedFile = null;
         this.selectedFileName = "";
+        this.pendingImportHeaders = [];
+        this.pendingImportSourceRows = [];
         this.pendingImportRows = [];
         this.importValidationError = "";
         this.attachDataRequiredError = false;
@@ -463,6 +560,7 @@ export default class Fec_BatchDataCreation extends LightningElement {
     try {
       const data = await getRecentRows();
       this.rows = Array.isArray(data) ? data.map((row) => this.normalizeRow(row)) : [];
+      this.sortRows();
       if (this.currentPage > this.totalPages) {
         this.currentPage = this.totalPages;
       }
@@ -494,22 +592,25 @@ export default class Fec_BatchDataCreation extends LightningElement {
     };
   }
 
-  async saveResultWorkbook(batchRecordId, sourceFileName, resultRowsJson) {
+  async saveResultWorkbook(
+    batchRecordId,
+    sourceFileName,
+    resultRowsJson,
+    sourceHeaders = [],
+    sourceRows = []
+  ) {
     await this.ensureSheetJsLoaded();
     const parsedRows = JSON.parse(resultRowsJson || "[]");
     const exportRows = Array.isArray(parsedRows)
-      ? parsedRows.map((r) => [
-          String(r?.serviceResource || ""),
-          String(r?.startDate || ""),
-          String(r?.endDate || ""),
-          String(r?.note || ""),
+      ? parsedRows.map((r, index) => [
+          ...(sourceRows[index] || sourceHeaders.map(() => "")),
           String(r?.recordId || ""),
           String(r?.status || ""),
           String(r?.errors || "")
         ])
       : [];
     const worksheet = window.XLSX.utils.aoa_to_sheet([
-      RESULT_FILE_HEADERS,
+      [...sourceHeaders, ...RESULT_APPEND_HEADERS],
       ...exportRows
     ]);
     const workbook = window.XLSX.utils.book_new();
@@ -544,8 +645,57 @@ export default class Fec_BatchDataCreation extends LightningElement {
   rebuildPageRows() {
     const size = Number(this.pageSize) || 20;
     const start = (this.currentPage - 1) * size;
-    this.pagedRows = this.rows.slice(start, start + size);
+    this.pagedRows = this.rows.slice(start, start + size).map((row, index) => ({
+      ...row,
+      rowNumber: start + index + 1
+    }));
     this.goToPageInput = String(this.currentPage);
+  }
+
+  handleSort(event) {
+    const fieldName = event.currentTarget?.dataset?.field;
+    if (!fieldName) {
+      return;
+    }
+    if (this.sortBy === fieldName) {
+      this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      this.sortBy = fieldName;
+      this.sortDirection = fieldName === "uploadedOn" ? "desc" : "asc";
+    }
+    this.currentPage = 1;
+    this.sortRows();
+    this.rebuildPageRows();
+  }
+
+  sortRows() {
+    const fieldName = this.sortBy || "uploadedOn";
+    const direction = this.sortDirection === "asc" ? 1 : -1;
+    const numericFields = new Set([
+      "totalRecordsCount",
+      "totalSuccessRecords",
+      "totalFailedRecords"
+    ]);
+    this.rows = [...this.rows].sort((a, b) => {
+      let left = a?.[fieldName];
+      let right = b?.[fieldName];
+      if (fieldName === "uploadedOn") {
+        left = left ? new Date(left).getTime() : 0;
+        right = right ? new Date(right).getTime() : 0;
+        return (left - right) * direction;
+      }
+      if (numericFields.has(fieldName)) {
+        left = Number(left) || 0;
+        right = Number(right) || 0;
+        return (left - right) * direction;
+      }
+      left = String(left ?? "").toLocaleLowerCase();
+      right = String(right ?? "").toLocaleLowerCase();
+      return left.localeCompare(right, undefined, {
+        numeric: true,
+        sensitivity: "base"
+      }) * direction;
+    });
   }
 
   handlePageSizeChange(event) {
@@ -604,7 +754,15 @@ export default class Fec_BatchDataCreation extends LightningElement {
     });
   }
 
-  async logFailedImportAttempt(fileName, templateName, reason, fileObject, parsedRows) {
+  async logFailedImportAttempt(
+    fileName,
+    templateName,
+    reason,
+    fileObject,
+    parsedRows,
+    sourceHeaders = [],
+    sourceRows = []
+  ) {
     try {
       const safeFileName = fileName || "Unknown_File.xlsx";
       const safeReason = reason || "Import failed.";
@@ -630,7 +788,9 @@ export default class Fec_BatchDataCreation extends LightningElement {
             batchRecordId,
             safeFileName,
             parsedRows,
-            safeReason
+            safeReason,
+            sourceHeaders,
+            sourceRows
           );
         } catch (resultError) {
           // Failed to save result file should not block flow.
@@ -648,22 +808,37 @@ export default class Fec_BatchDataCreation extends LightningElement {
     }
   }
 
-  async saveResultWorkbookForFailure(batchRecordId, sourceFileName, parsedRows, reason) {
+  async saveResultWorkbookForFailure(
+    batchRecordId,
+    sourceFileName,
+    parsedRows,
+    reason,
+    sourceHeaders = [],
+    sourceRows = []
+  ) {
     await this.ensureSheetJsLoaded();
-    const baseRows = Array.isArray(parsedRows) && parsedRows.length > 0
-      ? parsedRows
-      : [{ serviceResource: "", startDate: "", endDate: "", note: "" }];
-    const exportRows = baseRows.map((r) => [
-      String(r?.serviceResource || ""),
-      String(r?.startDate || ""),
-      String(r?.endDate || ""),
-      String(r?.note || ""),
+    const headers = Array.isArray(sourceHeaders) && sourceHeaders.length
+      ? sourceHeaders
+      : ["Service Resource", "Start Date", "End Date", "Note"];
+    const baseRows =
+      Array.isArray(sourceRows) && sourceRows.length
+        ? sourceRows
+        : Array.isArray(parsedRows) && parsedRows.length
+          ? parsedRows.map((r) => [
+              String(r?.serviceResource || ""),
+              String(r?.startDate || ""),
+              String(r?.endDate || ""),
+              String(r?.note || "")
+            ])
+          : [headers.map(() => "")];
+    const exportRows = baseRows.map((row) => [
+      ...(Array.isArray(row) ? row : headers.map(() => "")),
       "",
       "Failed",
       String(reason || "")
     ]);
     const worksheet = window.XLSX.utils.aoa_to_sheet([
-      RESULT_FILE_HEADERS,
+      [...headers, ...RESULT_APPEND_HEADERS],
       ...exportRows
     ]);
     const workbook = window.XLSX.utils.book_new();

@@ -50,8 +50,8 @@ public without sharing class FEC_NotificationService {
                    FEC_Notification_Template__r.FEC_Enhanced_Letterhead__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                   FEC_SubCategory__c,
-                   FEC_SubCode__c,
+                //    FEC_SubCategory__c,
+                //    FEC_SubCode__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
@@ -261,8 +261,8 @@ public without sharing class FEC_NotificationService {
                    FEC_Notification_Template__r.FEC_Active__c,
                    FEC_Product_Type__c,
                    FEC_Category__c,
-                   FEC_SubCategory__c,
-                   FEC_SubCode__c,
+                //    FEC_SubCategory__c,
+                //    FEC_SubCode__c,
                    FEC_Customer_Type__c,
                    FEC_Schedule_Start_Time__c,
                    FEC_Schedule_End_Time__c
@@ -448,8 +448,8 @@ public without sharing class FEC_NotificationService {
         }
         if (n.FEC_Product_Type__c != null && n.FEC_Product_Type__c != c.FEC_Product_Type__c) return false;
         if (n.FEC_Category__c != null && n.FEC_Category__c != c.FEC_Category__c) return false;
-        if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
-        if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
+        // if (n.FEC_SubCategory__c != null && n.FEC_SubCategory__c != c.FEC_SubCategory__c) return false;
+        // if (n.FEC_SubCode__c != null && n.FEC_SubCode__c != c.FEC_SubCode__c) return false;
         return true;
     }
 

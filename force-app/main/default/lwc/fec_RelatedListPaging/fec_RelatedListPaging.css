@@ -510,7 +510,7 @@
 .text-negative,
 .text-negative span {
     color: #ea001e !important;
-    font-weight: 600;
+    font-weight: 400 !important;
 }
 
 /* Responsive */

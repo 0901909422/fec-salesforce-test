@@ -16,13 +16,14 @@
    1.6      2026-05-12     Agent                TransactionDTO.effectiveSortEpoch for LWC sort when effective column shows dual text
    1.7      2026-05-12     Agent                loadTransactionDetail: same Basic+M_FAS augment as list for dual-display fields
    1.8      2026-05-12     Agent                Dual-display cell text: value | value (no long API path prefixes)
-   1.9      2026-05-12     Agent                Dual cells: omit " | —" when only one side has data
+   1.9      2026-05-12     Agent                Dual cells: omit " | ΓÇö" when only one side has data
    2.0      2026-05-12     Agent                Pending: rows from AUTHS_TABLE; dual M_FAS|Detail (detail null); new row fields for sheet
    2.1      2026-05-12     Agent                Pending: eff from POSTING if needed; MFAS AUTH_GRP + AUTH_AMT + pad when Auths empty
    2.2      2026-05-12     Agent                Pending DTOs from same fasAuthRows as unbilled M_FAS call (FEC ACCT); remove duplicate Case-ACCT callout
    2.3      2026-05-12     Agent                Pending effective: prefer AUTH_GRP EFF_DATE (VMX_AUTH_DETAIL path); dual detail|AUTHS_TABLE
    2.4      2026-05-12     Agent                M_FAS ACCT: use Case-resolved account (same as BasicInfo); hardcode only when blank
    2.5      2026-05-14     Agent                Currency display: TRNXCurrencyCode + GetCardFinancial + FEC_Currency_Code__c master (code-Name)
+   2.6      2026-05-20     Agent                Pending: VMX_AUTH_DETAIL_INQ; account via FEC_API_Setting + FEC_MFASOUTSTANDINGAUTHINQ metadata
  
 ****************************************************************************************/
 
@@ -33,6 +34,7 @@ public without sharing class FEC_TransactionsController {
      * (integration / non-prod only; prefer Case-resolved account).
      */
     private static final String M_FAS_UNBILLED_ACCOUNT_NUMBER = '0001500040000597830';
+    private static final String M_FAS_API_CONFIG = 'FEC_MFASOUTSTANDINGAUTHINQ';
 
     public class TransactionDTO {
         @AuraEnabled public Map<String, String> helpTexts;
@@ -71,7 +73,7 @@ public without sharing class FEC_TransactionsController {
         @AuraEnabled public String authorizationResponseDualDisplay;
         @AuraEnabled public String declineDescriptionDualDisplay;
 
-        /** Millis at GMT midnight of merged effective date — for client sort when UI shows dual strings. */
+        /** Millis at GMT midnight of merged effective date ΓÇö for client sort when UI shows dual strings. */
         @AuraEnabled public Long effectiveSortEpoch;
     }
 
@@ -136,9 +138,11 @@ public without sharing class FEC_TransactionsController {
         Map<String, String> finTrnxCurrencyByKey = buildFinTrnxCurrencyByKey(financial);
 
         /* ===============================
-           PENDING - CALL OUT
+           PENDING - VMX_AUTH_DETAIL_INQ (metadata FEC_MFASOUTSTANDINGAUTHINQ)
            =============================== */
-        res.pendingTransactions = buildPendingDtosFromAuthRows(fasAuthRows);
+        List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow> pendingFasAuthRows =
+            callVmxAuthDetailInqSafe(accNumber);
+        res.pendingTransactions = buildPendingDtosFromAuthRows(pendingFasAuthRows);
 
         /* ===============================
            HISTORY
@@ -163,7 +167,7 @@ public without sharing class FEC_TransactionsController {
     }
 
     /* =====================================================
-       HISTORY – LOAD UI
+       HISTORY ΓÇô LOAD UI
        ===================================================== */
     private static List<TransactionDTO> loadHistoryForUI(Id customerHistoryId) {
 
@@ -276,7 +280,7 @@ public without sharing class FEC_TransactionsController {
      * Fills dual-display strings on unbilled DTOs by re-matching the same API payloads
      * used for upsert (composite key: posting date + amount + D/C).
      * Display format per field: left from GetCardBasicInfo, right from M_FAS AUTHS_TABLE;
-     * uses " | " only when both sides have a value (otherwise one value, no trailing " | —").
+     * uses " | " only when both sides have a value (otherwise one value, no trailing " | ΓÇö").
      */
     private static void augmentUnbilledDtosWithDualDisplay(
         List<TransactionDTO> dtos,
@@ -452,7 +456,7 @@ public without sharing class FEC_TransactionsController {
 
     /**
      * Renders "left | right" only when both sides have real values;
-     * if exactly one side is present, returns that side only (no trailing " | —").
+     * if exactly one side is present, returns that side only (no trailing " | ΓÇö").
      */
     private static String dualPairDisplay(String leftShown, String rightShown) {
         Boolean lMiss =
@@ -485,10 +489,10 @@ public without sharing class FEC_TransactionsController {
     }
 
     /* =====================================================
-       PENDING — same M_FAS rows as unbilled; Effective Date prefers AUTH_GRP.EFF_DATE
-       (VMX_AUTH_DETAIL…MODULE007…RETRV_AUTH_DTL_OUT.AUTH_GRP) when present in envelope.
+       PENDING ΓÇö same M_FAS rows as unbilled; Effective Date prefers AUTH_GRP.EFF_DATE
+       (VMX_AUTH_DETAILΓÇªMODULE007ΓÇªRETRV_AUTH_DTL_OUT.AUTH_GRP) when present in envelope.
        Dual effective column: detail EFF_DATE | AUTHS_TABLE EFF_DATE.
-       Other Pending fields: primary from AUTH_GRP (MODULE007…RETRV_AUTH_DTL_OUT);
+       Other Pending fields: primary from AUTH_GRP (MODULE007ΓÇªRETRV_AUTH_DTL_OUT);
        approval from VMX_MSGOUT.AUTH_CD; dual column shows AUTHS_TABLE where applicable.
        ===================================================== */
     private static List<TransactionDTO> buildPendingDtosFromAuthRows(
@@ -579,7 +583,7 @@ public without sharing class FEC_TransactionsController {
     }
 
     /* =====================================================
-       UPSERT HISTORY — GetCardBasicInfo (priority) + M_FAS rows
+       UPSERT HISTORY ΓÇö GetCardBasicInfo (priority) + M_FAS rows
        ===================================================== */
     private static void upsertHistoryFromBasicInfoAndFas(
         Id historyId,
@@ -788,7 +792,7 @@ public without sharing class FEC_TransactionsController {
     }
 
     /**
-     * Sheet: Transaction Plan from M_FAS AUTHS_TABLE.CREDIT_PLAN — index by
+     * Sheet: Transaction Plan from M_FAS AUTHS_TABLE.CREDIT_PLAN ΓÇö index by
      * same composite key as Basic (posting + amount + D/C) for merge.
      */
     private static Map<String, String> buildCreditPlanByCompositeFromFas(
@@ -935,6 +939,65 @@ public without sharing class FEC_TransactionsController {
             );
         }
         return new List<FEC_GetCardBasicInfo.TransactionInfo>();
+    }
+
+    /**
+     * Pending: VMX_AUTH_DETAIL_INQ. Non-Production account from metadata; Production from Case.
+     */
+    private static List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>
+    callVmxAuthDetailInqSafe(String resolvedAccountNumber) {
+        String acctForApi = resolveMfasAccountNumber(
+            resolvedAccountNumber,
+            M_FAS_API_CONFIG
+        );
+        if (String.isBlank(acctForApi)) {
+            return new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+        }
+        try {
+            FEC_MFASOUTSTANDINGAUTHINQ.ResponseWrapper res =
+                FEC_MFASOUTSTANDINGAUTHINQ.callVmxAuthDetailInqService(
+                    FEC_CommonUltils.generateTransactionId(),
+                    FEC_ConstantCommon.REQUESTOR_CRM,
+                    Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT),
+                    FEC_ConstantCommon.REQUESTOR_VMXVERSION,
+                    FEC_ConstantCommon.REQUESTOR_CONTEXT,
+                    UserInfo.getUserId(),
+                    FEC_ConstantCommon.REQUESTOR_ORG,
+                    acctForApi
+                );
+            if (res != null
+                && res.VMXMsgOut != null
+                && res.VMXMsgOut.Auths != null) {
+                return res.VMXMsgOut.Auths;
+            }
+        } catch (Exception e) {
+            System.debug(
+                LoggingLevel.WARN,
+                'FEC_TransactionsController.callVmxAuthDetailInqSafe: ' +
+                    e.getMessage()
+            );
+        }
+        return new List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>();
+    }
+
+    private static String resolveMfasAccountNumber(
+        String resolvedAccountNumber,
+        String apiConfigDeveloperName
+    ) {
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        if (String.isNotBlank(apiSetting?.FEC_Enviroment__c)
+            && apiSetting.FEC_Enviroment__c
+                == FEC_ConstantCommon.ENVIROMENT_NON_PRODUCTION) {
+            FEC_API_Config__mdt apiConfig =
+                FEC_API_Config__mdt.getInstance(apiConfigDeveloperName);
+            if (String.isNotBlank(apiConfig?.FEC_Account_Number_Hard_Code__c)) {
+                return apiConfig.FEC_Account_Number_Hard_Code__c.trim();
+            }
+        }
+        if (String.isNotBlank(resolvedAccountNumber)) {
+            return resolvedAccountNumber.trim();
+        }
+        return null;
     }
 
     private static List<FEC_MFASOUTSTANDINGAUTHINQ.AuthTableRow>

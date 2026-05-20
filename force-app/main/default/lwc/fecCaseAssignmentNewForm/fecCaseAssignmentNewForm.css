@@ -42,6 +42,12 @@
   border-color: #747474;
 }
 
+.queue-trigger_error,
+.queue-trigger_error:hover {
+  border-color: #c23934;
+  box-shadow: #c23934 0 0 0 1px inset;
+}
+
 .queue-trigger-text {
   flex: 1;
   overflow: hidden;

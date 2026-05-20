@@ -4,11 +4,22 @@ public without sharing class FEC_BatchCaseHandlingController {
     private static final Integer MAX_ATTACHMENT_CASE_SET = 1000;
     private static final Integer MAX_EXPORT_ROWS = 100000;
     private static final Integer EXPORT_CURSOR_PAGE_SIZE = 1000;
+    private static final String PROPERTY_GROUP_PREDEFINED = 'PREDEFINED';
+    private static final String PROPERTY_GROUP_CASE_FIELD = 'CASE_FIELD';
+    private static final String QUEUE_MY_PENDING = 'My Pending Cases';
+    public class FilterPicklistOption {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
+    }
     public class FilterPropertyMeta {
         @AuraEnabled public String propertyKey;
         @AuraEnabled public String label;
         @AuraEnabled public String valueType;
         @AuraEnabled public List<String> operators;
+        @AuraEnabled public String propertyGroup;
+        @AuraEnabled public String fieldApiName;
+        @AuraEnabled public Boolean multiValue;
+        @AuraEnabled public List<FilterPicklistOption> picklistOptions;
     }
 
     public class BulkCaseSearchResult {
@@ -24,6 +35,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
     public class BusinessProcessExportRow {
         @AuraEnabled public String businessProcessCode;
+        @AuraEnabled public String businessProcessName;
         @AuraEnabled public Integer totalCases;
         @AuraEnabled public String templateName;
         @AuraEnabled public String templateDownloadUrl;
@@ -54,30 +66,322 @@ public without sharing class FEC_BatchCaseHandlingController {
         @AuraEnabled public String resultRowsJson;
     }
 
+    public class FilterPropertyMetadataBundle {
+        @AuraEnabled public List<FilterPropertyMeta> preDefineProperties;
+        @AuraEnabled public List<FilterPropertyMeta> allCaseProperties;
+    }
+
     @AuraEnabled(cacheable=true)
-    public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata() {
-        List<FilterPropertyMeta> out = new List<FilterPropertyMeta>();
-        out.add(buildMeta('CUSTOMER_TYPE', 'Customer Type', 'picklist', new List<String>{ 'equals', 'not_equal_to' }));
-        out.add(buildMeta('CASE_ID', 'Case ID', 'text', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_CREATED_BY', 'Case Created By', 'text', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_CREATED_BY_ROLE', 'Case Created By Role', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('CASE_STATUS', 'Case Status', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with' }));
-        out.add(buildMeta('PRODUCT_TYPE', 'Product Type', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('CATEGORY', 'Category', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('SUB_CATEGORY', 'Sub Category', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('SUB_CODE', 'Sub Code', 'picklist', new List<String>{ 'equals', 'not_equal_to', 'contains', 'does_not_contain', 'starts_with', 'does_not_start_with', 'is_null', 'is_not_null' }));
-        out.add(buildMeta('CASE_CREATED_ON', 'Case Created On', 'date', new List<String>{ 'equals', 'not_equal_to', 'less_than', 'greater_than', 'less_or_equal', 'greater_or_equal' }));
-        out.add(buildMeta('ATTACHMENTS', 'Attachments', 'checkbox', new List<String>{ 'equals', 'not_equal_to' }));
+    public static List<FilterPropertyMeta> getCaseFilterPropertyMetadata(String filterScope) {
+        List<FilterPropertyMeta> out = FEC_BCH_FilterPropertyService.getMetadata(filterScope);
+        hydrateFilterMetadata(out);
         return out;
     }
 
-    private static FilterPropertyMeta buildMeta(String key, String label, String valueType, List<String> ops) {
-        FilterPropertyMeta m = new FilterPropertyMeta();
-        m.propertyKey = key;
-        m.label = label;
-        m.valueType = valueType;
-        m.operators = ops;
-        return m;
+    @AuraEnabled(cacheable=true)
+    public static FilterPropertyMetadataBundle getCaseFilterPropertyMetadataBundle() {
+        FilterPropertyMetadataBundle bundle = new FilterPropertyMetadataBundle();
+        bundle.preDefineProperties = FEC_BCH_FilterPropertyService.getMetadata(
+            FEC_BCH_FilterPropertyService.SCOPE_PRE_DEFINE
+        );
+        hydrateFilterMetadata(bundle.preDefineProperties);
+        bundle.allCaseProperties = FEC_BCH_FilterPropertyService.getMetadata(
+            FEC_BCH_FilterPropertyService.SCOPE_ALL_CASE
+        );
+        hydrateFilterMetadata(bundle.allCaseProperties);
+        return bundle;
+    }
+
+    private static void hydrateFilterMetadata(List<FilterPropertyMeta> metas) {
+        if (metas == null || metas.isEmpty()) {
+            return;
+        }
+        Map<String, Schema.SObjectField> caseFieldMap = Case.SObjectType.getDescribe().fields.getMap();
+        for (FilterPropertyMeta m : metas) {
+            if (m == null) {
+                continue;
+            }
+            m.propertyGroup = FEC_BCH_FilterPropertyService.isPredefinedPropertyKey(m.propertyKey)
+                ? PROPERTY_GROUP_PREDEFINED
+                : PROPERTY_GROUP_CASE_FIELD;
+            m.picklistOptions = new List<FilterPicklistOption>();
+            m.multiValue = false;
+            if (PROPERTY_GROUP_PREDEFINED == m.propertyGroup) {
+                hydratePredefinedFilterMeta(m);
+            } else {
+                hydrateCaseFieldFilterMeta(m, caseFieldMap);
+            }
+        }
+    }
+
+    private static void hydratePredefinedFilterMeta(FilterPropertyMeta m) {
+        String key = String.isBlank(m.propertyKey) ? FEC_ConstantCommon.STR_EMPTY : m.propertyKey.trim().toUpperCase();
+        if (key == 'CUSTOMER_TYPE') {
+            m.fieldApiName = 'FEC_Customer_Type__c';
+            m.multiValue = true;
+            m.picklistOptions = toFilterPicklistOptions(
+                FEC_CommonUltils.getPicklistOptionsWithAccess('Case', m.fieldApiName)
+            );
+            return;
+        }
+        if (key == 'QUEUE') {
+            m.fieldApiName = FEC_ConstantCommon.STR_EMPTY;
+            m.multiValue = true;
+            m.picklistOptions = loadQueueOptions();
+            return;
+        }
+        if (key == 'PRODUCT_TYPE') {
+            m.fieldApiName = 'FEC_Product_Type__c';
+            m.picklistOptions = loadMasterDataCodeOptions('FEC_Product_Type__c');
+            return;
+        }
+        if (key == 'CATEGORY') {
+            m.fieldApiName = 'FEC_Category__c';
+            m.picklistOptions = loadMasterDataCodeOptions('FEC_Category__c');
+            return;
+        }
+        if (key == 'SUB_CATEGORY') {
+            m.fieldApiName = 'FEC_SubCategory__c';
+            m.picklistOptions = loadMasterDataCodeOptions('FEC_Sub_Category__c');
+            return;
+        }
+        if (key == 'SUB_CODE') {
+            m.fieldApiName = 'FEC_SubCode__c';
+            m.picklistOptions = loadMasterDataCodeOptions('FEC_Sub_Code__c');
+            return;
+        }
+        if (key == 'CASE_ID') {
+            m.fieldApiName = 'FEC_ID_Search__c';
+            return;
+        }
+        if (key == 'CASE_CREATED_ON') {
+            m.fieldApiName = 'FEC_Case_Created_On__c';
+            return;
+        }
+        if (key == 'CASE_CREATED_BY') {
+            m.fieldApiName = 'FEC_Case_Created_By__c';
+            m.multiValue = true;
+            m.picklistOptions = loadCaseCreatedByOptions();
+            return;
+        }
+        if (key == 'CASE_CREATED_BY_ROLE') {
+            m.fieldApiName = 'CreatedBy.FEC_User_Group__c';
+            m.multiValue = true;
+            m.picklistOptions = loadUserGroupOptions();
+            return;
+        }
+        if (key == 'CASE_STATUS') {
+            m.fieldApiName = 'FEC_Final_Status__c';
+            m.multiValue = true;
+            m.picklistOptions = loadCaseStatusOptions();
+            return;
+        }
+        if (key == 'ATTACHMENTS') {
+            m.fieldApiName = FEC_ConstantCommon.STR_EMPTY;
+        }
+    }
+
+    private static void hydrateCaseFieldFilterMeta(FilterPropertyMeta m, Map<String, Schema.SObjectField> caseFieldMap) {
+        String fieldApi = m.propertyKey;
+        m.fieldApiName = fieldApi;
+        if (String.isBlank(fieldApi) || caseFieldMap == null || !caseFieldMap.containsKey(fieldApi)) {
+            return;
+        }
+        Schema.DescribeFieldResult dfr = caseFieldMap.get(fieldApi).getDescribe();
+        Schema.DisplayType dt = dfr.getType();
+        if (dt == Schema.DisplayType.MULTIPICKLIST) {
+            m.multiValue = true;
+        }
+        if (dt == Schema.DisplayType.PICKLIST || dt == Schema.DisplayType.MULTIPICKLIST || dt == Schema.DisplayType.COMBOBOX) {
+            m.picklistOptions = toFilterPicklistOptionsFromEntries(dfr.getPicklistValues());
+        }
+    }
+
+    private static List<FilterPicklistOption> toFilterPicklistOptions(List<FEC_CommonUltils.PicklistOption> src) {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        if (src == null) {
+            return out;
+        }
+        for (FEC_CommonUltils.PicklistOption o : src) {
+            if (o == null || String.isBlank(o.value)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = String.isBlank(o.label) ? o.value : o.label;
+            item.value = o.value;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> toFilterPicklistOptionsFromEntries(List<Schema.PicklistEntry> entries) {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        if (entries == null) {
+            return out;
+        }
+        for (Schema.PicklistEntry entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+            String value = entry.getValue();
+            if (String.isBlank(value)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = String.isBlank(entry.getLabel()) ? value : entry.getLabel();
+            item.value = value;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadCaseStatusOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        for (FEC_CommonUltils.PicklistOption o : FEC_CommonUltils.getPicklistOptionsWithAccess('Case', 'FEC_Final_Status__c')) {
+            if (o == null || String.isBlank(o.value)) {
+                continue;
+            }
+            String v = o.value;
+            if (v == 'Open' || v.startsWith('Pending')) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = String.isBlank(o.label) ? v : o.label;
+                item.value = v;
+                out.add(item);
+            }
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadCaseCreatedByOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        Map<String, String> seen = new Map<String, String>();
+        for (Case row : [
+            SELECT FEC_Case_Created_By__c
+            FROM Case
+            WHERE RecordType.DeveloperName = :FEC_ConstantCommon.CASE_CUSTOMER_RECORD_TYPE_DEV_NAME
+            AND FEC_Case_Created_By__c != null
+            ORDER BY FEC_Case_Created_By__c
+            LIMIT 5000
+        ]) {
+            String v = row.FEC_Case_Created_By__c == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(row.FEC_Case_Created_By__c).trim();
+            if (String.isBlank(v) || seen.containsKey(v)) {
+                continue;
+            }
+            seen.put(v, v);
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = v;
+            item.value = v;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadUserGroupOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        Map<String, Schema.SObjectField> userFields = User.SObjectType.getDescribe().fields.getMap();
+        if (!userFields.containsKey('FEC_User_Group__c')) {
+            return out;
+        }
+        for (AggregateResult ar : [
+            SELECT FEC_User_Group__c grp
+            FROM User
+            WHERE FEC_User_Group__c != null
+            GROUP BY FEC_User_Group__c
+            ORDER BY FEC_User_Group__c
+            LIMIT 500
+        ]) {
+            String v = ar.get('grp') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('grp'));
+            if (String.isBlank(v)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = v;
+            item.value = v;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadQueueOptions() {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        FilterPicklistOption myPending = new FilterPicklistOption();
+        myPending.label = QUEUE_MY_PENDING;
+        myPending.value = QUEUE_MY_PENDING;
+        out.add(myPending);
+        Id currentUserId = UserInfo.getUserId();
+        for (GroupMember gm : [
+            SELECT Group.Name
+            FROM GroupMember
+            WHERE UserOrGroupId = :currentUserId AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+            ORDER BY Group.Name
+        ]) {
+            if (gm.Group == null || String.isBlank(gm.Group.Name)) {
+                continue;
+            }
+            FilterPicklistOption item = new FilterPicklistOption();
+            item.label = gm.Group.Name;
+            item.value = gm.Group.Name;
+            out.add(item);
+        }
+        return out;
+    }
+
+    private static List<FilterPicklistOption> loadMasterDataCodeOptions(String objectApi) {
+        List<FilterPicklistOption> out = new List<FilterPicklistOption>();
+        if (objectApi == 'FEC_Product_Type__c') {
+            for (FEC_Product_Type__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Product_Type__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Category__c') {
+            for (FEC_Category__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Category__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Sub_Category__c') {
+            for (FEC_Sub_Category__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Sub_Category__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        } else if (objectApi == 'FEC_Sub_Code__c') {
+            for (FEC_Sub_Code__c row : [
+                SELECT FEC_Code__c
+                FROM FEC_Sub_Code__c
+                WHERE FEC_Active__c = true AND FEC_Code__c != null
+                ORDER BY FEC_Code__c
+                LIMIT 5000
+            ]) {
+                FilterPicklistOption item = new FilterPicklistOption();
+                item.label = row.FEC_Code__c;
+                item.value = row.FEC_Code__c;
+                out.add(item);
+            }
+        }
+        return out;
     }
 
     @AuraEnabled(cacheable=true)
@@ -191,9 +495,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
 
         String countSoql = 'SELECT COUNT() FROM Case WHERE ' + whereClause;
@@ -209,10 +511,9 @@ public without sharing class FEC_BatchCaseHandlingController {
             'FEC_Category__r.FEC_Code__c',
             'FEC_SubCategory__r.FEC_Code__c',
             'FEC_SubCode__r.FEC_Code__c',
-            'FEC_Business_Process__r.FEC_Code__c',
-            'FEC_Business_Process__r.Name',
             '(SELECT Id FROM ContentDocumentLinks LIMIT 1)'
         };
+        selectFields.addAll(FEC_BatchCaseHandlingTemplateHelper.buildCaseStageBusinessProcessSelectFields());
         String dataSoql =
             'SELECT ' + String.join(selectFields, ', ') +
             ' FROM Case WHERE ' + whereClause +
@@ -237,8 +538,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             r.lastUpdatedOn = c.FEC_Last_Updated_On__c;
             r.hasAttachment = c.ContentDocumentLinks != null && !c.ContentDocumentLinks.isEmpty();
             r.caseReviewUrl = '/lightning/r/Case/' + String.valueOf(c.Id) + '/view';
-            r.businessProcessCode = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.FEC_Code__c;
-            r.businessProcessName = c.FEC_Business_Process__r == null ? null : c.FEC_Business_Process__r.Name;
+            FEC_BatchCaseHandlingTemplateHelper.applyStageBusinessProcessToExportRow(r, c);
             out.rows.add(r);
         }
         return out;
@@ -256,9 +556,7 @@ public without sharing class FEC_BatchCaseHandlingController {
 
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
-        List<String> dynamicParts = FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps);
-        whereParts.addAll(dynamicParts);
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
 
         Id cursorId;
         if (String.isNotBlank(afterCaseId)) {
@@ -295,15 +593,14 @@ public without sharing class FEC_BatchCaseHandlingController {
     public static List<CaseSetRangeOption> getAttachmentCaseSetOptions(String filtersJson) {
         List<CaseSetRangeOption> out = new List<CaseSetRangeOption>();
         Integer total = 0;
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
         String whereClause = String.join(whereParts, ' AND ');
         total = Database.countQuery('SELECT COUNT() FROM Case WHERE ' + whereClause);
         if (total < 1) {
             return out;
         }
-        Integer max = Math.min(total, MAX_ATTACHMENT_CASE_SET);
+        Integer max = MAX_ATTACHMENT_CASE_SET;
         for (Integer i = 1; i <= max; i += 50) {
             CaseSetRangeOption item = new CaseSetRangeOption();
             item.startIndex = i;
@@ -329,19 +626,27 @@ public without sharing class FEC_BatchCaseHandlingController {
         return FEC_BatchCaseHandlingZipService.downloadCaseAttachmentsZip(caseId);
     }
 
+    @AuraEnabled(cacheable=true)
+    public static List<String> getBulkExportAllowedBusinessProcessNames() {
+        return new List<String>(FEC_BatchCaseHandlingTemplateHelper.queryAllowedBusinessProcessNames());
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<String> getBulkExportAllowedBusinessProcessCodes() {
+        return new List<String>(FEC_BatchCaseHandlingTemplateHelper.queryAllowedBusinessProcessCodes());
+    }
+
     @AuraEnabled
     public static List<BusinessProcessExportRow> getBusinessProcessExportRows(String filtersJson) {
         List<BusinessProcessExportRow> out = new List<BusinessProcessExportRow>();
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
-        List<String> allowedBpNames = FEC_BatchCaseHandlingTemplateHelper.ALLOWED_BUSINESS_PROCESS_NAMES;
-        whereParts.add('FEC_Business_Process__r.Name IN :allowedBpNames');
+        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps);
+        whereParts.add(FEC_BatchCaseHandlingTemplateHelper.buildAllowedStageBusinessProcessWhereClause());
         String whereClause = String.join(whereParts, ' AND ');
         List<AggregateResult> grouped = Database.query(
-            'SELECT FEC_Business_Process__r.Name bpName, COUNT(Id) cnt ' +
+            'SELECT FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c bpCode, FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name bpName, COUNT(Id) cnt ' +
             'FROM Case WHERE ' + whereClause +
-            ' GROUP BY FEC_Business_Process__r.Name'
+            ' GROUP BY FEC_Current_Case_Stage__r.FEC_Business_Process__r.FEC_Code__c, FEC_Current_Case_Stage__r.FEC_Business_Process__r.Name'
         );
 
         List<SObject> templateRows = FEC_BatchCaseHandlingTemplateHelper.queryActiveBatchCaseHandlingTemplates();
@@ -380,14 +685,16 @@ public without sharing class FEC_BatchCaseHandlingController {
         }
 
         for (AggregateResult ar : grouped) {
-            String bpName = ar.get('bpName') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpName'));
-            if (String.isBlank(bpName)) {
+            String bpCode = ar.get('bpCode') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpCode')).trim();
+            String bpName = ar.get('bpName') == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(ar.get('bpName')).trim();
+            if (String.isBlank(bpCode) || !FEC_BatchCaseHandlingTemplateHelper.isAllowedBusinessProcessForExport(bpCode, bpName)) {
                 continue;
             }
             BusinessProcessExportRow item = new BusinessProcessExportRow();
-            item.businessProcessCode = bpName;
+            item.businessProcessCode = bpCode;
+            item.businessProcessName = bpName;
             item.totalCases = Integer.valueOf(String.valueOf(ar.get('cnt')));
-            SObject matched = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateByBusinessProcessAndUserGroup(bpName, userGroup, templateRows);
+            SObject matched = FEC_BatchCaseHandlingTemplateHelper.resolveTemplateByBusinessProcessAndUserGroup(bpCode, bpName, userGroup, templateRows);
             if (matched != null) {
                 Id matchedTemplateId = (Id) matched.get('Id');
                 item.templateName = String.valueOf(matched.get('Name'));
@@ -433,7 +740,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         out.success = false;
 
         if (String.isBlank(fileName) || String.isBlank(fileBodyBase64) || String.isBlank(rowsJson)) {
-            out.message = 'Vui lòng đính kèm tệp dữ liệu';
+            out.message = System.Label.FEC_BCH_RequireFile;
             upsertFailedBatchHandling(fileName, templateName, out.message);
             return out;
         }
@@ -443,7 +750,7 @@ public without sharing class FEC_BatchCaseHandlingController {
         try {
             List<Object> inputRows = (List<Object>) JSON.deserializeUntyped(rowsJson);
             if (inputRows == null || inputRows.isEmpty()) {
-                out.message = 'Vui lòng đính kèm tệp dữ liệu';
+                out.message = System.Label.FEC_BCH_RequireFile;
                 upsertFailedBatchHandling(fileName, templateName, out.message);
                 return out;
             }
@@ -490,10 +797,10 @@ public without sharing class FEC_BatchCaseHandlingController {
             String failureReason = FEC_ConstantCommon.STR_EMPTY;
             if (totalCount == 0) {
                 finalStatus = 'Failure';
-                failureReason = 'Vui lòng đính kèm tệp dữ liệu';
+                failureReason = System.Label.FEC_BCH_RequireFile;
             } else if (failedCount == totalCount) {
                 finalStatus = 'Failure';
-                failureReason = 'Một hoặc nhiều dòng import không hợp lệ.';
+                failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
             } else {
                 finalStatus = 'Processed';
             }
@@ -505,7 +812,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             update batchRow;
 
             out.success = true;
-            out.message = 'Import request has been submitted.';
+            out.message = System.Label.FEC_BCH_Import_Submitted;
             out.batchRecordId = (Id) batchRow.get('Id');
             out.contentDocumentId = insertedCv.ContentDocumentId;
             out.status = finalStatus;
@@ -524,7 +831,7 @@ public without sharing class FEC_BatchCaseHandlingController {
             } else {
                 upsertFailedBatchHandling(fileName, templateName, ex.getMessage());
             }
-            out.message = ex.getMessage();
+            out.message = System.Label.FEC_BCH_ImportFailed;
             return out;
         }
     }
@@ -577,5 +884,4 @@ public without sharing class FEC_BatchCaseHandlingController {
         } catch (DmlException ex) {
         }
     }
-
 }
