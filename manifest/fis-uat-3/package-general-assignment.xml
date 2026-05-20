@@ -90,6 +90,10 @@
         <members>FEC_Label_Customer_Type</members>
         <members>FEC_Label_Detail_Information</members>
         <members>FEC_Label_Edit</members>
+        <members>FEC_Label_GA_Code</members>
+        <members>FEC_Label_GA_Name</members>
+        <members>FEC_Label_Information</members>
+        <members>FEC_Label_New_GA</members>
         <members>FEC_Label_New_RA</members>
         <members>FEC_Label_No_History_Short</members>
         <members>FEC_Label_No_Records</members>
