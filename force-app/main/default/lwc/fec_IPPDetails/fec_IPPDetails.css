@@ -84,10 +84,11 @@
     min-height: 100px;
 }
 
-/* Currency negative value styling - highlight negative values in red */
+/* Currency negative: đỏ, không in đậm (bảng + summary) */
 .currency-negative,
 .slds-text-color_error {
     color: #ea001e !important;
+    font-weight: 400 !important;
 }
 
 /* Màu đỏ cho label Total IPP Balance và Total IPP Current Balance */
@@ -130,11 +131,17 @@ span.slds-text-color_error {
 }
 
 /* Đảm bảo tất cả cell currency (cả positive và negative) không bị wrap */
-:host .custom-table td.currency-negative {
+:host .custom-table td.currency-negative,
+:host .ipp-details-table-wrapper .address-table td.currency-negative,
+:host .ipp-details-table-wrapper .address-table td.currency-negative span,
+:host .ipp-details-table-wrapper .address-table td.slds-text-color_error,
+:host .ipp-details-table-wrapper .address-table td.slds-text-color_error span {
     white-space: nowrap !important;
     word-wrap: normal !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
+    color: #ea001e !important;
+    font-weight: 400 !important;
 }
 
 /* Đường ngăn cách cột cho bảng IPP Details - truyền biến CSS vào component con */

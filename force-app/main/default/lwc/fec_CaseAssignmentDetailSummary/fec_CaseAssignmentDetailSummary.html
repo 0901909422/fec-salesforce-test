@@ -20,12 +20,31 @@
         <div class="section-body">
           <div class="detail-grid">
             <div class="detail-cell">
-              <div class="detail-label">Case Assignment Name</div>
-              <div class="detail-value">{displayName}</div>
+              <div class="detail-label">Name</div>
+              <div class="detail-value-row">
+                <span class="detail-value">{displayName}</span>
+                <template if:true={canEditDraftDetailFields}>
+                  <lightning-button-icon
+                    icon-name="utility:edit"
+                    alternative-text="Edit Name"
+                    variant="bare"
+                    class="edit-pencil"
+                    data-field="Name"
+                    onclick={handleFieldEditClick}
+                  ></lightning-button-icon>
+                </template>
+              </div>
             </div>
             <div class="detail-cell">
               <div class="detail-label">Owner</div>
-              <div class="detail-value">{displayOwner}</div>
+              <div class="detail-value-row">
+                <template if:true={hasOwnerLink}>
+                  <a href="#" class="entity-link" onclick={handleOwnerNav}>{displayOwner}</a>
+                </template>
+                <template if:false={hasOwnerLink}>
+                  <span class="detail-value">{displayOwner}</span>
+                </template>
+              </div>
             </div>
             <div class="detail-cell">
               <div class="detail-label">Status</div>
@@ -140,19 +159,31 @@
       <template if:true={queuesExpanded}>
         <div class="section-body">
           <div class="detail-label">Select Queues</div>
-          <template if:true={queuesIsEmpty}>
-            <div class="empty-hint">
-              Not configured yet. Use <strong>Edit</strong> on this record (field <strong>Select Queues</strong>) to add queues.
-            </div>
-          </template>
-          <template if:false={queuesIsEmpty}>
-            <div class="detail-value queues-value">{displayQueues}</div>
-          </template>
+          <div class="detail-value-row">
+            <template if:true={queuesIsEmpty}>
+              <div class="empty-hint">
+                Not configured yet. Select queues using the edit icon when Status is Draft.
+              </div>
+            </template>
+            <template if:false={queuesIsEmpty}>
+              <div class="detail-value queues-value">{displayQueues}</div>
+            </template>
+            <template if:true={canEditDraftDetailFields}>
+              <lightning-button-icon
+                icon-name="utility:edit"
+                alternative-text="Edit Select Queues"
+                variant="bare"
+                class="edit-pencil"
+                data-field="FEC_Select_Queues__c"
+                onclick={handleFieldEditClick}
+              ></lightning-button-icon>
+            </template>
+          </div>
         </div>
       </template>
     </section>
 
-    <!-- Receipt Case Information -->
+    <!-- User Information -->
     <section class="accordion-block accordion-block-last">
       <button
         type="button"
@@ -166,7 +197,7 @@
           class="section-chevron"
           alternative-text=""
         ></lightning-icon>
-        <span class="section-header-text">Receipt Case Information</span>
+        <span class="section-header-text">User Information</span>
       </button>
       <template if:true={receiptExpanded}>
         <div class="section-body">
@@ -205,7 +236,7 @@
     <!-- Single-field edit modal -->
     <template if:true={isEditModalOpen}>
       <section role="dialog" aria-modal="true" class="slds-modal slds-fade-in-open">
-        <div class="slds-modal__container">
+        <div class={modalContainerClass}>
           <header class="slds-modal__header">
             <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeEditModal}>
               <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse" size="small"></lightning-icon>
@@ -264,6 +295,82 @@
                   label="Save"
                   onclick={handleSaveActiveToArchive}
                   disabled={isSavingActiveArchive}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
+            <template if:true={isEditingDraftStatus}>
+              <lightning-combobox
+                name="fecStatusDraftEdit"
+                label="Status"
+                value={modalStatusValue}
+                options={draftStatusEditOptions}
+                disabled={isStatusSaving}
+                onchange={handleModalStatusChange}
+              ></lightning-combobox>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isStatusSaving}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveDraftStatus}
+                  disabled={isStatusSaving}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
+            <template if:true={isEditingName}>
+              <lightning-input
+                label="Name"
+                value={modalNameValue}
+                required
+                disabled={isNameSaving}
+                onchange={handleModalNameChange}
+              ></lightning-input>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isNameSaving}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveName}
+                  disabled={isNameSaving}
+                  class="slds-m-left_x-small"
+                ></lightning-button>
+              </div>
+            </template>
+            <template if:true={isEditingQueues}>
+              <lightning-dual-listbox
+                name="fecSelectQueuesEdit"
+                label="Select Queues"
+                source-label="Available"
+                selected-label="Chosen"
+                options={queueDualListboxOptions}
+                value={modalSelectedQueues}
+                disabled={isQueuesSaving}
+                onchange={handleModalQueuesChange}
+              ></lightning-dual-listbox>
+              <div class="slds-m-top_medium slds-text-align_right">
+                <lightning-button
+                  variant="neutral"
+                  label="Cancel"
+                  onclick={closeEditModal}
+                  disabled={isQueuesSaving}
+                ></lightning-button>
+                <lightning-button
+                  variant="brand"
+                  label="Save"
+                  onclick={handleSaveQueues}
+                  disabled={isQueuesSaving}
                   class="slds-m-left_x-small"
                 ></lightning-button>
               </div>

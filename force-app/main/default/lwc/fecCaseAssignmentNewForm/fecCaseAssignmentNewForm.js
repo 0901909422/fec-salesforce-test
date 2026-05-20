@@ -3,6 +3,13 @@ import { NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { createRecord, getRecord } from "lightning/uiRecordApi";
 import { getObjectInfo, getPicklistValues } from "lightning/uiObjectInfoApi";
+import {
+  IsConsoleNavigation,
+  getFocusedTabInfo,
+  closeTab,
+  openTab,
+  openSubtab,
+} from "lightning/platformWorkspaceApi";
 import USER_ID from "@salesforce/user/Id";
 import USER_NAME_FIELD from "@salesforce/schema/User.Name";
 
@@ -16,6 +23,9 @@ import getRoleOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.
 import getBusinessHourOptions from "@salesforce/apex/FEC_CaseAssignmentConfigController.getBusinessHourOptions";
 
 const OBJECT_API_NAME = "FEC_Case_Assignment__c";
+const STATUS_ACTIVE = "Active";
+const MSG_CANNOT_ACTIVE_WITHOUT_NOC =
+  "Không thể Active khi chưa thêm Case Assignment NOC.";
 
 export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningElement) {
   @track queueOptions = [];
@@ -36,6 +46,11 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   assignmentName = "";
   ownerName = "";
   isSaving = false;
+  pageErrors = [];
+  queueHasError = false;
+  currentTabId;
+
+  @wire(IsConsoleNavigation) isConsoleNavigation;
 
   @wire(getObjectInfo, { objectApiName: CASE_ASSIGNMENT_OBJECT })
   objectInfo;
@@ -83,7 +98,13 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     }
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    try {
+      const { tabId } = await getFocusedTabInfo();
+      this.currentTabId = tabId;
+    } catch (e) {
+      this.currentTabId = null;
+    }
     this.loadQueues();
     this.loadBusinessHours();
   }
@@ -95,6 +116,10 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this._statusOptions = value;
   }
 
+  get availableStatusOptions() {
+    return this.statusOptions.filter((option) => option.value !== STATUS_ACTIVE);
+  }
+
   get assignmentMethodOptions() {
     return this._assignmentMethodOptions || [];
   }
@@ -102,17 +127,8 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this._assignmentMethodOptions = value;
   }
 
-  get isSaveDisabled() {
-    return (
-      this.isSaving ||
-      !this.assignmentName ||
-      !this.status ||
-      !this.assignmentMethod ||
-      !this.selectedQueues.length ||
-      (this.isContinuousMethod && !this.scheduledTime) ||
-      (this.isTimeBasedMethod && !this.selectedTimeSlots.length) ||
-      !this.roleRows.length
-    );
+  get hasPageErrors() {
+    return (this.pageErrors || []).length > 0;
   }
 
   get isContinuousMethod() {
@@ -178,12 +194,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   get isAddRoleDisabled() {
-    return (
-      !this.selectedRole ||
-      !this.selectedScale ||
-      Number(this.selectedScale) < 1 ||
-      !this.selectedQueues.length
-    );
+    return !this.selectedRole || !this.selectedQueues.length;
   }
 
   async loadQueues() {
@@ -210,23 +221,48 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       if (!this.roleOptions.some((item) => item.value === this.selectedRole)) {
         this.selectedRole = "";
       }
+      this.pruneRoleRowsToAvailableOptions();
     } catch (e) {
       this.roleOptions = [];
       this.selectedRole = "";
+      this.roleRows = [];
       this.showToast("Error", "Cannot load role options.", "error");
+    }
+  }
+
+  pruneRoleRowsToAvailableOptions() {
+    if (!this.selectedQueues.length) {
+      this.roleRows = [];
+      this.selectedRole = "";
+      return;
+    }
+    const allowed = new Set((this.roleOptions || []).map((item) => item.value));
+    this.roleRows = this.roleRows.filter((row) => allowed.has(row.role));
+    if (this.selectedRole && !allowed.has(this.selectedRole)) {
+      this.selectedRole = "";
     }
   }
 
   handleNameChange(event) {
     this.assignmentName = event.detail.value || "";
+    this.clearPageErrors();
   }
 
   handleStatusChange(event) {
-    this.status = event.detail.value || "";
+    const nextStatus = event.detail.value || "";
+    if (nextStatus === STATUS_ACTIVE) {
+      this.status = this._statusOptions?.[0]?.value || "Draft";
+      this.pageErrors = [MSG_CANNOT_ACTIVE_WITHOUT_NOC];
+      this.reportFieldValidity(this.pageErrors);
+      return;
+    }
+    this.status = nextStatus;
+    this.clearPageErrors();
   }
 
   handleAssignmentMethodChange(event) {
     this.assignmentMethod = event.detail.value || "";
+    this.clearPageErrors();
     if (this.isContinuousMethod) {
       this.selectedTimeSlots = [];
     } else if (this.isTimeBasedMethod) {
@@ -239,10 +275,12 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
 
   handleBusinessHoursChange(event) {
     this.businessHoursId = event.detail.value || "";
+    this.clearPageErrors();
   }
 
   handleScheduledTimeChange(event) {
     this.scheduledTime = event.detail.value || "";
+    this.clearPageErrors();
   }
 
   toggleQueueDropdown(event) {
@@ -276,6 +314,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     } else {
       this.selectedQueues = [];
     }
+    this.clearPageErrors();
     await this.loadRolesByQueues();
   }
 
@@ -293,12 +332,14 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       next = next.filter((q) => q !== value);
     }
     this.selectedQueues = next;
+    this.clearPageErrors();
     await this.loadRolesByQueues();
   }
 
   async handleRemoveQueue(event) {
     const queueValue = event.target.name;
     this.selectedQueues = this.selectedQueues.filter((item) => item !== queueValue);
+    this.clearPageErrors();
     await this.loadRolesByQueues();
   }
 
@@ -312,6 +353,7 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
 
   handleTimeSlotsChange(event) {
     this.selectedTimeSlots = event.detail.value || [];
+    this.clearPageErrors();
   }
 
   async handleSave() {
@@ -323,18 +365,25 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
   }
 
   async saveRecord(stayOnForm) {
+    this.clearPageErrors();
+    const validationErrors = this.validateBeforeSave();
+    if (validationErrors.length) {
+      this.pageErrors = validationErrors;
+      this.reportFieldValidity(validationErrors);
+      return;
+    }
+
     this.isSaving = true;
+    const trimmedName = (this.assignmentName || "").trim();
     const fields = {
-      Name: this.assignmentName,
+      Name: trimmedName,
       FEC_Status__c: this.status,
       FEC_Assignment_Method__c: this.assignmentMethod,
       FEC_Select_Queues__c: this.selectedQueues.join(";"),
       FEC_Role__c: this.roleRows.map((row) => `${row.role}|${row.scale}`).join(";"),
+      FEC_Business_Hours__c: this.businessHoursId,
     };
 
-    if (this.businessHoursId) {
-      fields.FEC_Business_Hours__c = this.businessHoursId;
-    }
     fields.FEC_Scale__c = this.roleRows.length === 1 ? this.roleRows[0].scale : null;
     if (this.isContinuousMethod && this.scheduledTime !== "") {
       fields.FEC_Scheduled_Time__c = Number(this.scheduledTime);
@@ -353,21 +402,86 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
       if (stayOnForm) {
         this.resetForm();
       } else {
-        this[NavigationMixin.Navigate]({
-          type: "standard__recordPage",
-          attributes: {
-            recordId: result.id,
-            objectApiName: OBJECT_API_NAME,
-            actionName: "view",
-          },
-        });
+        await this.navigateAfterCreate(result.id);
       }
     } catch (e) {
-      const message = e?.body?.message || "Create Case Assignment failed.";
-      this.showToast("Error", message, "error");
+      const messages = this.extractRecordErrors(e);
+      this.pageErrors = messages.length
+        ? messages
+        : [e?.body?.message || "Create Case Assignment failed."];
+      this.reportFieldValidity(this.pageErrors);
     } finally {
       this.isSaving = false;
     }
+  }
+
+  async navigateAfterCreate(recordId) {
+    const pageReference = {
+      type: "standard__recordPage",
+      attributes: {
+        recordId,
+        objectApiName: OBJECT_API_NAME,
+        actionName: "view",
+      },
+    };
+
+    let tabToClose = this.currentTabId;
+    try {
+      const focusedTab = await getFocusedTabInfo();
+      if (!tabToClose) {
+        tabToClose = focusedTab.tabId;
+      }
+      const parentTabId = focusedTab.isSubtab
+        ? focusedTab.parentTabId
+        : focusedTab.tabId;
+
+      await openSubtab(parentTabId, {
+        pageReference,
+        focus: true,
+      });
+
+      setTimeout(async () => {
+        try {
+          if (tabToClose) {
+            await closeTab(tabToClose);
+          }
+        } catch (e) {
+          // ignore tab close failures
+        }
+      }, 500);
+      return;
+    } catch (e) {
+      // fall through to console / standard navigation
+    }
+
+    if (this.isConsoleNavigation?.data === true) {
+      if (!tabToClose) {
+        try {
+          const { tabId } = await getFocusedTabInfo();
+          tabToClose = tabId;
+        } catch (err) {
+          tabToClose = null;
+        }
+      }
+
+      await openTab({
+        recordId,
+        focus: true,
+      });
+
+      setTimeout(async () => {
+        try {
+          if (tabToClose) {
+            await closeTab(tabToClose);
+          }
+        } catch (err) {
+          // ignore tab close failures
+        }
+      }, 500);
+      return;
+    }
+
+    this[NavigationMixin.Navigate](pageReference);
   }
 
   handleCancel() {
@@ -391,10 +505,108 @@ export default class FecCaseAssignmentNewForm extends NavigationMixin(LightningE
     this.scheduledTime = "";
     this.selectedTimeSlots = [];
     this.businessHoursId = "";
+    this.clearPageErrors();
+  }
+
+  validateBeforeSave() {
+    const errors = [];
+    const trimmedName = (this.assignmentName || "").trim();
+
+    if (!trimmedName) {
+      errors.push("Case Assignment Name can't be blank");
+    }
+    if (!this.status) {
+      errors.push("Status can't be blank");
+    }
+    if (this.status === STATUS_ACTIVE) {
+      errors.push(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+    }
+    if (!this.assignmentMethod) {
+      errors.push("Assignment Method can't be blank");
+    }
+    if (!this.businessHoursId) {
+      errors.push("Business Hours can't be blank");
+    }
+    if (!this.selectedQueues.length) {
+      errors.push("Select Queues can't be blank");
+    }
+    if (this.isTimeBasedMethod && !this.selectedTimeSlots.length) {
+      errors.push("Time Slots can't be blank");
+    }
+    if (!this.roleRows.length) {
+      errors.push("Role can't be blank");
+    }
+    return errors;
+  }
+
+  extractRecordErrors(error) {
+    const messages = [];
+    const output = error?.body?.output;
+    if (output?.fieldErrors) {
+      Object.values(output.fieldErrors).forEach((entries) => {
+        (entries || []).forEach((entry) => {
+          if (entry?.message) {
+            messages.push(entry.message);
+          }
+        });
+      });
+    }
+    if (output?.errors) {
+      output.errors.forEach((entry) => {
+        if (entry?.message) {
+          messages.push(entry.message);
+        }
+      });
+    }
+    return [...new Set(messages)];
+  }
+
+  clearPageErrors() {
+    this.pageErrors = [];
+    this.queueHasError = false;
+    this.template.querySelectorAll("[data-field]").forEach((field) => {
+      if (typeof field.setCustomValidity === "function") {
+        field.setCustomValidity("");
+        field.reportValidity();
+      }
+    });
+  }
+
+  reportFieldValidity(messages) {
+    const blankName = messages.some((msg) => msg.includes("Case Assignment Name"));
+    if (blankName) {
+      const nameInput = this.template.querySelector('[data-field="assignmentName"]');
+      if (nameInput) {
+        nameInput.setCustomValidity("Case Assignment Name can't be blank");
+        nameInput.reportValidity();
+      }
+    }
+
+    const blankBusinessHours = messages.some((msg) => msg.includes("Business Hours"));
+    if (blankBusinessHours) {
+      const businessHoursField = this.template.querySelector('[data-field="businessHours"]');
+      if (businessHoursField) {
+        businessHoursField.setCustomValidity("Business Hours can't be blank");
+        businessHoursField.reportValidity();
+      }
+    }
+
+    this.queueHasError = messages.some((msg) => msg.includes("Select Queues"));
+
+    const activeWithoutNoc = messages.some((msg) => msg === MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+    if (activeWithoutNoc) {
+      const statusField = this.template.querySelector('[data-field="status"]');
+      if (statusField) {
+        statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+        statusField.reportValidity();
+      }
+    }
   }
 
   handleAddRole() {
-    const scale = Number(this.selectedScale);
+    const rawScale = this.selectedScale;
+    const scale =
+      rawScale === "" || rawScale == null ? 1 : Number(rawScale);
     if (!this.selectedRole || !scale || scale < 1) {
       return;
     }
