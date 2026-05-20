@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
     <labels>
         <fullName>Auto_Mapping</fullName>
@@ -17820,5 +17820,97 @@
         <protected>false</protected>
         <shortDescription>RA Queue Required</shortDescription>
         <value>Vui lòng chọn Queue</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_Label_Detail_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Detail Information</shortDescription>
+        <value>Detail Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_RA_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Name</shortDescription>
+        <value>Routing Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type</shortDescription>
+        <value>Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Team</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Back</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Back</shortDescription>
+        <value>Back</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_RA_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA History</shortDescription>
+        <value>Routing Assignment History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_No_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Records</shortDescription>
+        <value>No records found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_No_History_Short</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No History Short</shortDescription>
+        <value>No history</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_New_RA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New RA</shortDescription>
+        <value>New Routing Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Required_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required Info</shortDescription>
+        <value>Please fill in all required fields</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Search_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Channel</shortDescription>
+        <value>Search Channel</value>
     </labels>
 </CustomLabels>
