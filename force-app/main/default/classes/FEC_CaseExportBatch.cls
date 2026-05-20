@@ -66,7 +66,13 @@ public class FEC_CaseExportBatch
 
                 // Lookup objects — cùng cấp với Case
                 Map<String, Object> lookupMap = assembleLookupForCase(theCase, lookupDataByType);
-                caseResult.putAll(lookupMap);
+                // Không ghi đè child data đã có bằng lookup data
+                for (String key : lookupMap.keySet()) {
+                    if (!caseResult.containsKey(key)) {
+                        caseResult.put(key, lookupMap.get(key));
+                    }
+                }
+
 
                 batchPayload.add(caseResult);
             }

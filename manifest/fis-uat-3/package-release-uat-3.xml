@@ -640,6 +640,8 @@
 		<members>FEC_Case_Assignment__c</members>
         <members>FEC_Transfer_Call_Error__c</members>
 		<members>FEC_Case_Hold_History__c</members>
+        <members>FEC_Notification_Template_Channel__c</members>
+		<members>FEC_Notification__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
