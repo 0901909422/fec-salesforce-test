@@ -14,3 +14,13 @@
   padding-top: var(--slds-spacing-medium, 1rem);
   margin-top: var(--slds-spacing-large, 1.5rem);
 }
+
+.entity-link {
+  color: var(--slds-color-text-link, #0176d3);
+  text-decoration: none;
+}
+
+.entity-link:hover,
+.entity-link:focus {
+  text-decoration: underline;
+}

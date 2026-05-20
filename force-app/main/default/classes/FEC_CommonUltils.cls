@@ -1443,4 +1443,29 @@ public with sharing class FEC_CommonUltils {
         return null;
     }
 }
+
+  public static Decimal calculateReducingEMI(Decimal principal, Integer tenure, Decimal monthlyInterestRate) {
+    if (principal == null || principal <= 0 || tenure == null || tenure <= 0 || monthlyInterestRate == null) {
+      return 0;
+    }
+    if (monthlyInterestRate == 0) {
+      return principal / tenure;
+    }
+    Double p = principal.doubleValue();
+    Double n = (Double) tenure;
+    Double r = monthlyInterestRate.doubleValue();
+    
+    Double power = Math.pow(1 + r, n);
+    Double emi = (p * r * power) / (power - 1);
+    return Decimal.valueOf(emi);
+  }
+
+  public static Decimal roundUpToThousand(Decimal value) {
+    if (value == null) {
+      return 0;
+    }
+    Double doubledVal = value.doubleValue() / 1000.0;
+    Double rounded = Math.ceil(doubledVal) * 1000.0;
+    return Decimal.valueOf(rounded);
+  }
 }
