@@ -101,9 +101,10 @@ public with sharing class FEC_AutoHoldCaseService {
                     RESULT_ALREADY_MARKED,
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
-                    null,
-                    parseNfuTillDate(lastResult.nfuTillDate),
-                    config
+                    parseNfuDateTime(lastResult.nfuStartDate),
+                    parseNfuDateTime(lastResult.nfuTillDate),
+                    config,
+                    System.Label.FEC_STOP_IMPACT_ALREADY_MARKED_MSG
                 );
                 return;
             }
@@ -115,14 +116,24 @@ public with sharing class FEC_AutoHoldCaseService {
                     nfuCode,
                     holdCaseMaster.FEC_NFU_Reason_VN__c,
                     DateTime.now(),
-                    parseNfuTillDate(lastResult.nfuTillDate),
-                    config
+                    parseNfuDateTime(lastResult.nfuTillDate),
+                    config,
+                    System.Label.FEC_MSG_SUCCESS
                 );
                 return;
             }
         }
 
-        updateCaseAfterApi(caseId, RESULT_ERROR, null, null, null, null, null);
+        updateCaseAfterApi(
+            caseId,
+            RESULT_ERROR,
+            null,
+            null,
+            null,
+            null,
+            null,
+            System.Label.FEC_MSG_ERROR
+        );
     }
 
     @TestVisible
@@ -195,11 +206,26 @@ public with sharing class FEC_AutoHoldCaseService {
         if (String.isBlank(configValue) || String.isBlank(historyValue)) {
             return false;
         }
-        String cleaned = historyValue.replaceAll(
-            FEC_ConstantCommon.PATTERN_CLEAN_TEXT,
-            ''
-        );
-        return configValue.contains(cleaned);
+        String normalizedHistory = normalizeStatusKey(historyValue);
+        if (String.isBlank(normalizedHistory)) {
+            return false;
+        }
+        for (String token : configValue.split(',')) {
+            if (normalizeStatusKey(token) == normalizedHistory) {
+                return true;
+            }
+        }
+        return normalizeStatusKey(configValue).contains(normalizedHistory);
+    }
+
+    @TestVisible
+    private static String normalizeStatusKey(String raw) {
+        if (String.isBlank(raw)) {
+            return '';
+        }
+        return raw.trim()
+            .replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')
+            .toLowerCase();
     }
 
     @TestVisible
@@ -231,12 +257,17 @@ public with sharing class FEC_AutoHoldCaseService {
         String nfuReason,
         DateTime startedDate,
         DateTime expiryDate,
-        FEC_Hold_Case_Config__c matchedHoldConfig
+        FEC_Hold_Case_Config__c matchedHoldConfig,
+        String collectionsResponse
     ) {
         Case patch = new Case(
             Id = caseId,
             FEC_NFU_Description_Result__c = resultType
         );
+
+        if (String.isNotBlank(collectionsResponse)) {
+            patch.FEC_Collections_Response__c = collectionsResponse;
+        }
 
         if (resultType == RESULT_ERROR) {
             Database.update(patch, AccessLevel.SYSTEM_MODE);
@@ -260,7 +291,7 @@ public with sharing class FEC_AutoHoldCaseService {
     }
 
     @TestVisible
-    private static DateTime parseNfuTillDate(String raw) {
+    private static DateTime parseNfuDateTime(String raw) {
         if (String.isBlank(raw)) {
             return null;
         }
@@ -275,7 +306,7 @@ public with sharing class FEC_AutoHoldCaseService {
             }
             return DateTime.valueOfGmt(normalized);
         } catch (Exception ex) {
-            System.debug('[FEC_AutoHoldCaseService] parseNfuTillDate failed: ' + ex.getMessage());
+            System.debug('[FEC_AutoHoldCaseService] parseNfuDateTime failed: ' + ex.getMessage());
             return null;
         }
     }

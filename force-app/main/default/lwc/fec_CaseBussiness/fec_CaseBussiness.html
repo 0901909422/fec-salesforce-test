@@ -235,6 +235,17 @@
           </template>
         </div>
 
+        <template if:true={section.isCaseInformationSection}>
+          <template if:true={showHoldCaseSection}>
+            <div class="slds-col slds-size_1-of-1 slds-m-top_medium">
+              <c-fec_hold-case-auto
+                record-id={recordId}
+                result-override={holdCaseResultOverride}>
+              </c-fec_hold-case-auto>
+            </div>
+          </template>
+        </template>
+
         <!-- process action -->
         <template if:true={finalShowProcessAction}>
           <div class="process-action" if:true={section.isLastSection}>
