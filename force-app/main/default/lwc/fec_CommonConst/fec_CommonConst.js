@@ -165,6 +165,7 @@ const QUEUE_ID_START = '00G';
 const ACTION_OPTIONS_CS_SUPPORT = [
   { label: "Reject", value: "Reject" },
   { label: "Resolve", value: "Resolve" },
+  { label: 'Escalate', value: 'Escalate' },
   { label: "Revert", value: "Revert" },
   { label: "Transfer", value: "Transfer" },
   { label: "Route to", value: "Route_to" },
@@ -180,6 +181,10 @@ const ACTION_OPTIONS_OTHER = [
 ];
 
 const DECISION_OPTIONS_MAP = {
+  Route_to: [
+    { label: "Team", value: "TEAM" },
+  ],
+
   Revert: [
     { label: "User", value: "USER" },
     { label: "User’s Team Queue", value: "USER_TEAM_QUEUE" },
@@ -216,7 +221,7 @@ const DECISION_OPTIONS_MAP = {
   ],
 };
 
-const ACTIONS_REQUIRE_DECISION = ["Revert", "Transfer", "Update"];
+const ACTIONS_REQUIRE_DECISION = ["Route_to", "Revert", "Transfer", "Update"];
 
 const ACTIONS_REQUIRE_SUBDECISION_MAP = {
   Transfer: ["USER", "QUEUE"],
