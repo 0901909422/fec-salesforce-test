@@ -16,6 +16,8 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         'Case Assignment có Status Archived không được chỉnh sửa.';
     public static final String MSG_ACTIVE_ONLY_ARCHIVE =
         'Khi Status là Active, chỉ được đổi Status sang Archived. Các field khác không được sửa.';
+    public static final String MSG_CANNOT_ACTIVE_WITHOUT_NOC =
+        'Không thể Active khi chưa thêm Case Assignment NOC.';
 
     private static final String RUNNING_TIMES_FIELD = 'FEC_Running_Times__c';
 
@@ -31,6 +33,74 @@ public with sharing class FEC_CaseAssignmentMutationGuard {
         'FEC_Scale__c',
         RUNNING_TIMES_FIELD
     };
+
+    public static void enforceActiveRequiresNocOnInsert(List<FEC_Case_Assignment__c> newList) {
+        if (newList == null || newList.isEmpty()) {
+            return;
+        }
+        String active = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+        for (FEC_Case_Assignment__c row : newList) {
+            if (row.FEC_Status__c == active) {
+                row.addError(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+            }
+        }
+    }
+
+    public static void enforceActiveRequiresNocOnUpdate(
+        List<FEC_Case_Assignment__c> newList,
+        Map<Id, FEC_Case_Assignment__c> oldMap
+    ) {
+        if (newList == null || newList.isEmpty() || oldMap == null || oldMap.isEmpty()) {
+            return;
+        }
+        String active = FEC_ConstantCommon.FEC_CASE_ASSIGNMENT_STATUS_ACTIVE;
+        Set<Id> assignmentIdsNeedingNoc = new Set<Id>();
+        for (FEC_Case_Assignment__c row : newList) {
+            FEC_Case_Assignment__c oldRow = oldMap.get(row.Id);
+            if (oldRow == null) {
+                continue;
+            }
+            if (
+                row.FEC_Status__c == active &&
+                oldRow.FEC_Status__c != active
+            ) {
+                assignmentIdsNeedingNoc.add(row.Id);
+            }
+        }
+        if (assignmentIdsNeedingNoc.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Integer> nocCountByAssignmentId = countNocByAssignmentIds(assignmentIdsNeedingNoc);
+        for (FEC_Case_Assignment__c row : newList) {
+            if (!assignmentIdsNeedingNoc.contains(row.Id)) {
+                continue;
+            }
+            Integer nocCount = nocCountByAssignmentId.get(row.Id);
+            if (nocCount == null || nocCount == 0) {
+                row.addError(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+            }
+        }
+    }
+
+    private static Map<Id, Integer> countNocByAssignmentIds(Set<Id> assignmentIds) {
+        Map<Id, Integer> countsByAssignmentId = new Map<Id, Integer>();
+        if (assignmentIds == null || assignmentIds.isEmpty()) {
+            return countsByAssignmentId;
+        }
+        for (AggregateResult aggregateRow : [
+            SELECT FEC_Case_Assignment_Name__c parentId, COUNT(Id) cnt
+            FROM FEC_Case_Assignment_NOC__c
+            WHERE FEC_Case_Assignment_Name__c IN :assignmentIds
+            GROUP BY FEC_Case_Assignment_Name__c
+        ]) {
+            countsByAssignmentId.put(
+                (Id) aggregateRow.get('parentId'),
+                (Integer) aggregateRow.get('cnt')
+            );
+        }
+        return countsByAssignmentId;
+    }
 
     public static void enforceBeforeUpdate(
         List<FEC_Case_Assignment__c> newList,

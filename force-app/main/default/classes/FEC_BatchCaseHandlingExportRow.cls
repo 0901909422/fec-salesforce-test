@@ -1,4 +1,4 @@
-public class FEC_BatchCaseHandlingExportRow {
+public without sharing class FEC_BatchCaseHandlingExportRow {
     @AuraEnabled public Id caseId;
     @AuraEnabled public String customerType;
     @AuraEnabled public String customerName;

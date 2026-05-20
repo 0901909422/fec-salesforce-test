@@ -39,6 +39,10 @@
               disabled={redeemDisabled}
             >
             </lightning-button>
+            <!-- linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Noti-06/07 dưới nút Redeem Points -->
+            <template if:true={redeemFailMessage}>
+              <p class="slds-m-top_x-small fec-pr-redeem-fail">{redeemFailMessage}</p>
+            </template>
           </template>
         </lightning-layout-item>
       </template>
