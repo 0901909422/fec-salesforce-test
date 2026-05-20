@@ -420,11 +420,12 @@ public without sharing class FEC_StatementsAccountController {
                     apiToDate
                 );
 
-            List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
             if (apiRes == null || apiRes.Transactions == null) {
-                return result;
+                return new List<BilledTransactionDTO>();
             }
 
+            List<FEC_GetCardFinancialTransactions.FinancialTransaction> billedFinTxns =
+                new List<FEC_GetCardFinancialTransactions.FinancialTransaction>();
             for (
                 FEC_GetCardFinancialTransactions.FinancialTransaction ft : apiRes.Transactions
             ) {
@@ -434,7 +435,25 @@ public without sharing class FEC_StatementsAccountController {
                 if (!finTxnBelongsToBilledCycle(ft, prevStatementDate, currentStmtDate, apiFromDate)) {
                     continue;
                 }
-                result.add(buildBilledDtoFromFinancialTxn(ft, helpTemplate));
+                billedFinTxns.add(ft);
+            }
+
+            Map<String, Id> transactionIdsByKey =
+                upsertBilledFinancialTransactions(
+                    stmt.FEC_Customer_History__c,
+                    billedFinTxns
+                );
+
+            List<BilledTransactionDTO> result = new List<BilledTransactionDTO>();
+            for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : billedFinTxns) {
+                String key = buildBilledFinancialTransactionKey(ft);
+                result.add(
+                    buildBilledDtoFromFinancialTxn(
+                        ft,
+                        helpTemplate,
+                        String.isNotBlank(key) ? transactionIdsByKey.get(key) : null
+                    )
+                );
             }
             return result;
         } catch (Exception e) {
@@ -470,18 +489,19 @@ public without sharing class FEC_StatementsAccountController {
 
     private static BilledTransactionDTO buildBilledDtoFromFinancialTxn(
         FEC_GetCardFinancialTransactions.FinancialTransaction ft,
-        Map<String, String> helpTemplate
+        Map<String, String> helpTemplate,
+        Id transactionId
     ) {
         Date effDate = effectiveDateFromFinancialTxn(ft);
         Date postD = FEC_CommonUltils.parseDate(ft.PostingDate);
 
         BilledTransactionDTO dto = new BilledTransactionDTO();
         dto.helpTexts = helpTemplate;
-        dto.Id = null;
+        dto.Id = transactionId;
         dto.effectiveDate = effDate;
         dto.postDate = postD;
         dto.transactionAmount = ft.TRNXAmount;
-        dto.merchantDescription = ft.MerchantName;
+        dto.merchantDescription = firstNonBlank(ft.MerchantName, ft.Description);
         dto.creditDebitFlag = ft.CreditDebitFlag;
         dto.transactionPlan = ft.Plan;
         dto.transactionCode = ft.TransactionCode;
@@ -491,6 +511,172 @@ public without sharing class FEC_StatementsAccountController {
         dto.otpSent = formatOtpSent(ft.OTPSent);
         dto.effectiveSortEpoch = effectiveSortEpochFromFinancialTxn(ft, effDate);
         return dto;
+    }
+
+    private static Map<String, Id> upsertBilledFinancialTransactions(
+        Id customerHistoryId,
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> finTxns
+    ) {
+        Map<String, Id> idsByKey = new Map<String, Id>();
+        if (customerHistoryId == null || finTxns == null || finTxns.isEmpty()) {
+            return idsByKey;
+        }
+
+        Map<String, FEC_Transaction__c> existingByKey =
+            loadExistingBilledTransactionsByKey(customerHistoryId, finTxns);
+        Map<String, FEC_Transaction__c> recordsByKey =
+            new Map<String, FEC_Transaction__c>();
+
+        for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : finTxns) {
+            String key = buildBilledFinancialTransactionKey(ft);
+            if (String.isBlank(key)) {
+                continue;
+            }
+
+            FEC_Transaction__c record = existingByKey.containsKey(key)
+                ? existingByKey.get(key)
+                : new FEC_Transaction__c(FEC_Customer_History__c = customerHistoryId);
+
+            applyFinancialTransaction(record, ft);
+            recordsByKey.put(key, record);
+        }
+
+        if (!recordsByKey.isEmpty()) {
+            upsert recordsByKey.values();
+            for (String key : recordsByKey.keySet()) {
+                idsByKey.put(key, recordsByKey.get(key).Id);
+            }
+        }
+        return idsByKey;
+    }
+
+    private static Map<String, FEC_Transaction__c> loadExistingBilledTransactionsByKey(
+        Id customerHistoryId,
+        List<FEC_GetCardFinancialTransactions.FinancialTransaction> finTxns
+    ) {
+        Map<String, FEC_Transaction__c> existingByKey =
+            new Map<String, FEC_Transaction__c>();
+        Date minPostDate;
+        Date maxPostDate;
+
+        for (FEC_GetCardFinancialTransactions.FinancialTransaction ft : finTxns) {
+            Date postDate = FEC_CommonUltils.parseDate(ft.PostingDate);
+            if (postDate == null) {
+                continue;
+            }
+            minPostDate = minPostDate == null || postDate < minPostDate
+                ? postDate
+                : minPostDate;
+            maxPostDate = maxPostDate == null || postDate > maxPostDate
+                ? postDate
+                : maxPostDate;
+        }
+
+        if (minPostDate == null || maxPostDate == null) {
+            return existingByKey;
+        }
+
+        for (FEC_Transaction__c tx : [
+            SELECT Id,
+                FEC_Post_Date__c,
+                FEC_Transaction_Amount__c,
+                FEC_Credit_Debit_Flag__c,
+                FEC_Transaction_Code__c,
+                FEC_Authorization_Code__c,
+                FEC_Transaction_Plan__c
+            FROM FEC_Transaction__c
+            WHERE FEC_Customer_History__c = :customerHistoryId
+                AND FEC_Post_Date__c >= :minPostDate
+                AND FEC_Post_Date__c <= :maxPostDate
+        ]) {
+            String key = buildBilledKey(
+                tx.FEC_Post_Date__c,
+                tx.FEC_Transaction_Amount__c,
+                tx.FEC_Credit_Debit_Flag__c,
+                tx.FEC_Transaction_Code__c,
+                tx.FEC_Authorization_Code__c,
+                tx.FEC_Transaction_Plan__c
+            );
+            if (String.isNotBlank(key)) {
+                existingByKey.put(key, tx);
+            }
+        }
+        return existingByKey;
+    }
+
+    private static void applyFinancialTransaction(
+        FEC_Transaction__c record,
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft
+    ) {
+        Date effDate = effectiveDateFromFinancialTxn(ft);
+        Date postDate = FEC_CommonUltils.parseDate(ft.PostingDate);
+
+        record.FEC_Effective_Date__c = effDate;
+        record.FEC_Post_Date__c = postDate;
+        record.FEC_Transaction_Amount__c = ft.TRNXAmount;
+        record.FEC_Merchant_Description__c =
+            firstNonBlank(ft.MerchantName, ft.Description);
+        record.FEC_Credit_Debit_Flag__c = ft.CreditDebitFlag;
+        record.FEC_Transaction_Plan__c = ft.Plan;
+        record.FEC_Transaction_Code__c = ft.TransactionCode;
+        record.FEC_Authorization_Code__c = ft.AuthCode;
+        record.FEC_Merchant_Category_Code__c = ft.MCC;
+        record.FEC_Currency_Code__c = ft.TRNXCurrencyCode;
+        record.FEC_OTP_Sent__c = formatOtpSent(ft.OTPSent);
+    }
+
+    private static String buildBilledFinancialTransactionKey(
+        FEC_GetCardFinancialTransactions.FinancialTransaction ft
+    ) {
+        if (ft == null) {
+            return null;
+        }
+        return buildBilledKey(
+            FEC_CommonUltils.parseDate(ft.PostingDate),
+            ft.TRNXAmount,
+            ft.CreditDebitFlag,
+            ft.TransactionCode,
+            ft.AuthCode,
+            ft.Plan
+        );
+    }
+
+    private static String buildBilledKey(
+        Date postDate,
+        Decimal amount,
+        String creditDebit,
+        String transactionCode,
+        String authorizationCode,
+        String transactionPlan
+    ) {
+        if (postDate == null || amount == null) {
+            return null;
+        }
+        return String.join(
+            new List<String>{
+                postDate.format(),
+                String.valueOf(amount.setScale(2)),
+                normalizeText(creditDebit),
+                normalizeText(transactionCode),
+                normalizeText(authorizationCode),
+                normalizeText(transactionPlan)
+            },
+            '|'
+        );
+    }
+
+    private static String normalizeText(String value) {
+        return String.isBlank(value) ? '' : value.trim().toUpperCase();
+    }
+
+    private static String firstNonBlank(String firstValue, String secondValue) {
+        if (String.isNotBlank(firstValue)) {
+            return firstValue.trim();
+        }
+        if (String.isNotBlank(secondValue)) {
+            return secondValue.trim();
+        }
+        return null;
     }
 
     private static Date effectiveDateFromFinancialTxn(

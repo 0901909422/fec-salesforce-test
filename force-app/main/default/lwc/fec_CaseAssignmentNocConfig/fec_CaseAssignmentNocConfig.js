@@ -331,7 +331,6 @@ export default class Fec_CaseAssignmentNocConfig extends LightningElement {
         categoryKey: this.selectedCategoryKey,
         subCategoryId: this.selectedSubCategoryId,
         subCodeId: this.selectedSubCodeId || null,
-        ownerId: null,
       });
       this.showToast("Success", "Case Assignment NOC saved.", "success");
       this.closeModal();

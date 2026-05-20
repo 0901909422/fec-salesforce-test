@@ -20,6 +20,10 @@
                     <value>false</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
+                    <name>hideSlackAction</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
                     <name>numVisibleActions</name>
                     <value>3</value>
                 </componentInstanceProperties>
@@ -247,6 +251,16 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_HoldCaseConfiguration</componentName>
+                <identifier>c_fec_HoldCaseConfiguration</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-0c21dacb-479b-4cd1-87f4-fd146cf95312</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>relatedListComponentOverride</name>
                     <value>NONE</value>
@@ -266,14 +280,14 @@
         <name>relatedTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
-     <flexiPageRegions>
+    <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>fec_HoldCaseConfiguration</componentName>
-                <identifier>c_fec_HoldCaseConfiguration</identifier>
+                <componentName>fec_NocChannelConfig</componentName>
+                <identifier>fec_NocChannelConfig</identifier>
             </componentInstance>
         </itemInstances>
-        <name>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</name>
+        <name>nocChannelConfigTabContent</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -363,6 +377,26 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
+                <componentName>fec_NocRoutingAssignment</componentName>
+                <identifier>fec_NocRoutingAssignment</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocRoutingAssignmentTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_NocGeneralAssignment</componentName>
+                <identifier>fec_NocGeneralAssignment</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>nocGeneralAssignmentTabContent</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>active</name>
                     <value>true</value>
@@ -383,6 +417,20 @@
             <componentInstance>
                 <componentInstanceProperties>
                     <name>body</name>
+                    <value>Facet-0c21dacb-479b-4cd1-87f4-fd146cf95312</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Hold Case</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>flexipage_tab2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
                     <value>relatedTabContent</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
@@ -391,20 +439,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:tab</componentName>
                 <identifier>relatedListsTab</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentInstanceProperties>
-                    <name>body</name>
-                    <value>Facet-b910115f-a013-4cb0-be22-0990ad57c0da</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>title</name>
-                    <value>Hold Case</value>
-                </componentInstanceProperties>
-                <componentName>flexipage:tab</componentName>
-                <identifier>flexipage_tab2</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -435,6 +469,34 @@
                 <identifier>flexipage_tab</identifier>
             </componentInstance>
         </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>nocRoutingAssignmentTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>Routing Assignment</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocRoutingAssignmentTab</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>body</name>
+                    <value>nocGeneralAssignmentTabContent</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>title</name>
+                    <value>General Assignment</value>
+                </componentInstanceProperties>
+                <componentName>flexipage:tab</componentName>
+                <identifier>nocGeneralAssignmentTab</identifier>
+            </componentInstance>
+        </itemInstances>
         <name>maintabs</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -455,16 +517,6 @@
         </itemInstances>
         <name>main</name>
         <type>Region</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>c:fec_NocChannelConfig</componentName>
-                <identifier>fec_NocChannelConfig</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>nocChannelConfigTabContent</name>
-        <type>Facet</type>
     </flexiPageRegions>
     <masterLabel>Nature of Cases Record Page</masterLabel>
     <sobjectType>FEC_Nature_of_Case__c</sobjectType>

@@ -122,6 +122,7 @@ const WARNING_HOLD_TOAST = 'warning';
 const RESPONSE_SUCCESS = 'SUCCESS';
 const TARGET_GROUP_INTERNAL_USER = 'Internal User';
 const SEARCH_PLACEHOLDER = 'Search User...';
+const DATE_PLACEHOLDER = 'DD/MM/YYYY';
 const SEARCH_BY_EMAIL = 'Search By Email';
 const SEARCH_INTERNAL_USERS = 'Search Internal Users';
 const MIN_FAST_CASH_REGISTRATION_VND = 2000000;
@@ -132,6 +133,10 @@ const FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX = 'fec_fc_blkok_';
 const FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX = 'fec_fc_blkmodal_';
 const FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX = 'fec_fc_nocsel_';
 const FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX = 'fec_fc_reqamt_';
+//linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — session khóa NOC sau pop-up Redeem Points
+const FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX = 'fec_pr_noclock_';
+const FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX = 'fec_pr_rdmmodal_';
+const FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX = 'fec_pr_nocsel_';
 const ERROR_TILE_SHOWTOAST = 'Thất bại';
 const MSG_ENTER_EMAIL_CORRECTLY = 'Please enter the email correctly before sending.';
 const NOTIFICATION_CHANNEL_SF_APP = 'Salesforce App';
@@ -165,6 +170,7 @@ const QUEUE_ID_START = '00G';
 const ACTION_OPTIONS_CS_SUPPORT = [
   { label: "Reject", value: "Reject" },
   { label: "Resolve", value: "Resolve" },
+  { label: 'Escalate', value: 'Escalate' },
   { label: "Revert", value: "Revert" },
   { label: "Transfer", value: "Transfer" },
   { label: "Route to", value: "Route_to" },
@@ -180,6 +186,7 @@ const ACTION_OPTIONS_OTHER = [
 ];
 
 const DECISION_OPTIONS_MAP = {
+
   Revert: [
     { label: "User", value: "USER" },
     { label: "User’s Team Queue", value: "USER_TEAM_QUEUE" },
@@ -320,6 +327,7 @@ export {
     RESPONSE_SUCCESS,
     TARGET_GROUP_INTERNAL_USER,
     SEARCH_PLACEHOLDER,
+    DATE_PLACEHOLDER,
     SEARCH_BY_EMAIL,
     SEARCH_INTERNAL_USERS,
     MIN_FAST_CASH_REGISTRATION_VND,
@@ -330,6 +338,9 @@ export {
     FEC_FAST_CASH_STORAGE_MODAL_CONFIRMED_PREFIX,
     FEC_FAST_CASH_STORAGE_NOC_SELECTION_PREFIX,
     FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_NOC_LOCK_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX,
+    FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX,
     ERROR_TILE_SHOWTOAST,
     RESPONE_MESSARE_ERROR,
     RESPONE_MESSARE_SUCCESS,

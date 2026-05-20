@@ -48,6 +48,8 @@ import {
   FEC_FAST_CASH_STORAGE_BLK_FAIL_PREFIX,
   FEC_FAST_CASH_STORAGE_BLK_OK_PREFIX,
   FEC_FAST_CASH_STORAGE_REQUESTED_AMOUNT_PREFIX,
+  FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX,
+  FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX,
   // RECORD_TYPE_INTERNAL_CASE
 } from "c/fec_CommonConst";
 
@@ -93,6 +95,37 @@ function readFastCashNocSelectionForCaseDetail(caseId) {
     }
     const sel = JSON.parse(raw);
     if (!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId)) {
+      return null;
+    }
+    return sel;
+  } catch (e) {
+    return null;
+  }
+}
+
+//linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474
+function isPointsRedemptionModalConfirmed(caseId) {
+  try {
+    if (!caseId) {
+      return false;
+    }
+    return sessionStorage.getItem(FEC_POINTS_REDEMPTION_STORAGE_MODAL_CONFIRMED_PREFIX + caseId) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+function readPointsRedemptionNocSelectionForCaseDetail(caseId) {
+  try {
+    if (!caseId) {
+      return null;
+    }
+    const raw = sessionStorage.getItem(FEC_POINTS_REDEMPTION_STORAGE_NOC_SELECTION_PREFIX + caseId);
+    if (!raw) {
+      return null;
+    }
+    const sel = JSON.parse(raw);
+    if (!(sel && sel.productTypeId && sel.categoryId && sel.subCategoryId && sel.subCodeId)) {
       return null;
     }
     return sel;
@@ -206,6 +239,16 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     try {
       //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Fast Cash sau Có/Không: giữ handling (Save/Submit, remark, routing)
       if (isFastCashBlockModalConfirmed(this.recordId)) {
+        this.modeEditCase = true;
+        await resetViewMode({
+          recordId: this.recordId,
+          viewMode: VIEW_MODE_HANDLING,
+        });
+        if (!this.activeSections.includes("case-remark")) {
+          this.activeSections = [...this.activeSections, "case-remark"];
+        }
+      } else if (isPointsRedemptionModalConfirmed(this.recordId)) {
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — RC33 sau Có/Không Redeem Points: giữ handling
         this.modeEditCase = true;
         await resetViewMode({
           recordId: this.recordId,
@@ -348,12 +391,20 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     if (caseBusinessEle) {
       // Chỉ gọi getData khi mode thực sự đổi: tránh reset NOC do broadcast từ tab khác
       const fastCashNocSel = readFastCashNocSelectionForCaseDetail(this.recordId);
+      const pointsRedemptionNocSel = readPointsRedemptionNocSelectionForCaseDetail(this.recordId);
       if (fastCashNocSel && fastCashNocSel.productTypeId) {
         caseBusinessEle.getData(
           fastCashNocSel.productTypeId,
           fastCashNocSel.categoryId,
           fastCashNocSel.subCategoryId,
           fastCashNocSel.subCodeId
+        );
+      } else if (pointsRedemptionNocSel && pointsRedemptionNocSel.productTypeId) {
+        caseBusinessEle.getData(
+          pointsRedemptionNocSel.productTypeId,
+          pointsRedemptionNocSel.categoryId,
+          pointsRedemptionNocSel.subCategoryId,
+          pointsRedemptionNocSel.subCodeId
         );
       } else {
         caseBusinessEle.getData();
@@ -368,6 +419,10 @@ export default class Fec_CaseDetail_Customer extends LightningElement {
     }
     //linhdev fix jira FECREDIT_CSM_2025_KH-1366 — Có/Không pop-up Block Amount: không getData(null) → mất Case Information / Fast Cash
     if (message.fastCashNocLocked === true) {
+      return;
+    }
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1469-1474 — Có/Không pop-up Redeem Points: không getData(null) → mất Account/Case Information
+    if (message.pointsRedemptionNocLocked === true) {
       return;
     }
     const isNocCleared =
