@@ -65,10 +65,38 @@ public class FEC_TeamQueue_Test {
     @isTest
     static void testGetListTeam() {
         FEC_Team__c team = createSampleTeam();
+        // Also create an inactive team that should NOT be returned
+        FEC_Team__c inactiveTeam = new FEC_Team__c(
+            Name = 'InactiveTeam',
+            FEC_Team_Label__c = 'Inactive Label',
+            FEC_Team_Description__c = 'Inactive Desc',
+            FEC_Team_Active__c = false
+        );
+        insert inactiveTeam;
+
         Test.startTest();
         List<FEC_TeamQueue.TeamQueueWrapper> teams = FEC_TeamQueue.getListTeam();
         Test.stopTest();
-        System.assert(teams.size() > 0, 'Should return at least one team');
+
+        // Should return at least the active team
+        System.assert(teams.size() >= 1, 'Should return at least one active team');
+
+        // Verify the active team is in the result with correct field mapping
+        Boolean foundActive = false;
+        Boolean foundInactive = false;
+        for (FEC_TeamQueue.TeamQueueWrapper w : teams) {
+            if (w.teamId == team.Id) {
+                foundActive = true;
+                System.assertEquals('TestTeam', w.teamName, 'teamName should map to FEC_Team__c.Name');
+                System.assertEquals('Test Label', w.teamLabel, 'teamLabel should map to FEC_Team_Label__c');
+                System.assertEquals('Test Description', w.teamDescription, 'teamDescription should map to FEC_Team_Description__c');
+            }
+            if (w.teamId == inactiveTeam.Id) {
+                foundInactive = true;
+            }
+        }
+        System.assertEquals(true, foundActive, 'Active team should be in the result');
+        System.assertEquals(false, foundInactive, 'Inactive team should NOT be in the result');
     }
 
     @isTest
