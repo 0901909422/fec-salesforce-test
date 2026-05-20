@@ -31,12 +31,36 @@ const MAX_FAIL = 3;
 const VARIANT = { ERROR: 'error', SUCCESS: 'success', WARNING: 'warning' };
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-function isPointsRedemptionHideC360AndProperty(subCode) {
+function isPointsRedemptionRc33Branch(subCode) {
     if (!subCode) {
         return false;
     }
     const s = String(subCode).trim().toUpperCase();
     return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
+}
+
+function resolveSelectedTierFromSaved(savedRedeemedPoints, tierOptionsUi) {
+    if (!savedRedeemedPoints || !tierOptionsUi || !tierOptionsUi.length) {
+        return null;
+    }
+    const savedNorm = String(savedRedeemedPoints).trim();
+    if (!savedNorm) {
+        return null;
+    }
+    for (const o of tierOptionsUi) {
+        if (o.label === savedNorm) {
+            return o.value;
+        }
+        try {
+            const p = JSON.parse(o.value);
+            if (p && p.price != null && String(Math.trunc(Number(p.price))) === savedNorm) {
+                return o.value;
+            }
+        } catch (e) {
+            // no-op
+        }
+    }
+    return null;
 }
 
 export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(LightningElement) {
@@ -87,15 +111,17 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         }
     }
 
-    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-    _notifyPointsRedemptionSectionVisibility(subCodeOverride) {
-        const sub = subCodeOverride != null ? subCodeOverride : this.subCodeCode;
+    //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — chỉ ẩn C360/Property khi không đủ điều kiện đổi điểm
+    _notifyPointsRedemptionSectionVisibility() {
+        if (!isPointsRedemptionRc33Branch(this.subCodeCode)) {
+            return;
+        }
         this.dispatchEvent(
             new CustomEvent('fecpointsredemptionsectionvisibility', {
                 bubbles: true,
                 composed: true,
                 detail: {
-                    hideC360AndProperty: isPointsRedemptionHideC360AndProperty(sub)
+                    hideC360AndProperty: !!this.notEligibleMessage
                 }
             })
         );
@@ -129,10 +155,9 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             label: o.label,
             value: o.valueJson
         }));
-        this.selectedTierJson = null;
-        if (r && r.subCodeCode) {
-            this._notifyPointsRedemptionSectionVisibility(r.subCodeCode);
-        }
+        const restored = resolveSelectedTierFromSaved(r && r.savedRedeemedPoints, this.tierOptionsUi);
+        this.selectedTierJson = restored || null;
+        this._notifyPointsRedemptionSectionVisibility();
     }
 
     refreshInit() {
@@ -142,12 +167,16 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
         this.loading = true;
         this.notEligibleMessage = null;
         this.notEligibleReason = null;
+        this._notifyPointsRedemptionSectionVisibility();
         initData({ caseId: this.recordId, subCodeCode: this.subCodeCode || null })
             .then((r) => {
                 this._applyInitResult(r);
             })
             .catch((err) => {
                 this.showPanel = false;
+                this.notEligibleMessage = null;
+                this.notEligibleReason = null;
+                this._notifyPointsRedemptionSectionVisibility();
                 this.toast(FEC_Toast_Error, this.msg(err), VARIANT.ERROR);
             })
             .finally(() => {
@@ -255,6 +284,21 @@ export default class Fec_PointsRedemptionCaseForm extends NavigationMixin(Lightn
             return Promise.resolve();
         }
         return saveDraftSelection({ caseId: this.recordId, tierJson: this.selectedTierJson, subCodeCode: this.subCodeCode || null });
+    }
+
+    @api getSelectedRedeemedPointsValue() {
+        if (!this.selectedTierJson) {
+            return null;
+        }
+        try {
+            const p = JSON.parse(this.selectedTierJson);
+            if (p && p.price != null) {
+                return String(Math.trunc(Number(p.price)));
+            }
+        } catch (e) {
+            // no-op
+        }
+        return null;
     }
 
     get loadingLabel() {

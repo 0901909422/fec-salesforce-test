@@ -33,7 +33,9 @@ public without sharing class FEC_PointsRedemptionCaseController {
                 FEC_Account_or_Contract__r.FEC_Account_Number__c,
                 FEC_Account_or_Contract__r.FEC_Contract_Number__c,
                 FEC_Account_Number__c,
-                FEC_Account_Contract_Number_Text__c
+                FEC_Account_Contract_Number_Text__c,
+                FEC_Redeemed_Points__c,
+                FEC_CMS_Phone__c
             FROM Case
             WHERE Id = :caseId
             LIMIT 1
@@ -191,6 +193,7 @@ public without sharing class FEC_PointsRedemptionCaseController {
         @AuraEnabled public String subCodeCode;
         @AuraEnabled public String expectedProductType;
         @AuraEnabled public Decimal availablePoints;
+        @AuraEnabled public String savedRedeemedPoints;
     }
 
     public class TierPayload {
@@ -278,6 +281,9 @@ public without sharing class FEC_PointsRedemptionCaseController {
         if (!r.showRedemptionUi) {
             r.notEligibleMessage = MSG_NOT_ELIGIBLE;
         }
+        if (c != null && String.isNotBlank(c.FEC_Redeemed_Points__c)) {
+            r.savedRedeemedPoints = c.FEC_Redeemed_Points__c.trim();
+        }
         return r;
     }
 
@@ -309,11 +315,15 @@ public without sharing class FEC_PointsRedemptionCaseController {
             throw new AuraHandledException(MSG_NOT_ELIGIBLE);
         }
         FEC_CMSRewardRedeemService.RedeemRequest req = new FEC_CMSRewardRedeemService.RedeemRequest();
+        req.transId = FEC_CommonUltils.generateTransactionUUID();
+        req.requestorId = FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
+        req.dateTimeStr = Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT_GMT);
         req.accountNumber = accountNumber.trim();
         req.customerName = FEC_CommonUltils.defaultToEmpty(el.customerName);
         req.customerMobile = FEC_CommonUltils.defaultToEmpty(el.customerMobile);
         req.ticketId = c.CaseNumber != null ? c.CaseNumber : String.valueOf(c.Id);
         req.ticketPoint = tier.price;
+        req.adjustmentIndicator = '+';
         req.productId = tier.productId;
         req.productName = tier.productName;
         req.productType = tier.productType;
@@ -362,16 +372,21 @@ public without sharing class FEC_PointsRedemptionCaseController {
     }
 
     private static void persistRedeemedPoints(Id caseId, Decimal pts) {
-        try {
-            Case row = new Case(Id = caseId);
-            row.put('FEC_Redeemed_Points__c', pts != null ? String.valueOf(pts.longValue()) : null);
-            SObjectAccessDecision d = Security.stripInaccessible(AccessType.UPDATABLE, new List<SObject>{ row });
-            List<SObject> toSave = d.getRecords();
-            if (!toSave.isEmpty()) {
-                update toSave;
-            }
-        } catch (Exception ignore) {
+        if (caseId == null || !Schema.sObjectType.Case.fields.FEC_Redeemed_Points__c.isUpdateable()) {
+            return;
         }
+        Case row = new Case(Id = caseId);
+        row.FEC_Redeemed_Points__c = pts != null ? String.valueOf(pts.longValue()) : null;
+        SObjectAccessDecision d = Security.stripInaccessible(AccessType.UPDATABLE, new List<SObject>{ row });
+        List<SObject> toSave = d.getRecords();
+        if (toSave.isEmpty()) {
+            return;
+        }
+        Case stripped = (Case) toSave[0];
+        if (!stripped.getPopulatedFieldsAsMap().containsKey('FEC_Redeemed_Points__c')) {
+            return;
+        }
+        update stripped;
     }
 
     private static void applyCmsPhoneToCase(Id caseId, String phone) {

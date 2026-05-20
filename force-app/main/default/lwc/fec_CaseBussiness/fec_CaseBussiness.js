@@ -280,14 +280,6 @@ const SUBSECTION_NAME_PROPERTY_INFO = 'Property Info';
 const SUBSECTION_NAME_C360_INFO = 'C360 Info';
 
 //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-function isPointsRedemptionHideC360AndProperty(subCode) {
-  if (!subCode) {
-    return false;
-  }
-  const s = String(subCode).trim().toUpperCase();
-  return s.includes('RC33.01') || s.includes('RC33.02') || s.includes('RC33.03');
-}
-//linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
 function pointsRedemptionHideTargetForSection(sectionName, hide) {
   if (!hide) {
     return null;
@@ -1878,10 +1870,8 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
         this._applyInternalFieldVisibility();
         //linhdev fix jira FECREDIT_CSM_2025_KH-1294
         this._applyFastCashPropertyInfoVisibility();
-        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
-        this._setPointsRedemptionHideFlag(
-          isPointsRedemptionHideC360AndProperty(this.business?.subCodeCode)
-        );
+        //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394 — C360/Property: LWC Points Redemption quyết định sau initData
+        this._setPointsRedemptionHideFlag(false);
         this._rebuildAllSectionSortedRows();
         this.businessLoaded = true;
         this._syncRemovePhoneLockAfterRevert();
@@ -2738,6 +2728,23 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     return el.saveDraftIfApplicable();
   }
 
+  _syncPointsRedemptionFieldToRecordForm() {
+    const el = this._getPointsRedemptionCaseFormEl();
+    if (!el || typeof el.getSelectedRedeemedPointsValue !== "function") {
+      return;
+    }
+    const val = el.getSelectedRedeemedPointsValue();
+    if (val == null || val === STR_EMPTY) {
+      return;
+    }
+    const fields = this.template.querySelectorAll(
+      'lightning-input-field[field-name="FEC_Redeemed_Points__c"]',
+    );
+    fields?.forEach((field) => {
+      field.value = val;
+    });
+  }
+
   _saveBeneficiaryBankInfoDraftIfApplicable() {
     const el = this._getBeneficiaryBankInfoBlockEl();
     if (!el || typeof el.saveDraftIfApplicable !== "function") {
@@ -2919,6 +2926,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
 
   //linhdev: Persist child data before case record form submit
   _persistChildDataBeforeCaseRecordFormSubmit() {
+    this._syncPointsRedemptionFieldToRecordForm();
     return Promise.all([this._saveRemovePhoneDraftIfApplicable()]);
   }
 
@@ -3086,6 +3094,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       this._saveOnlyFormCount = 0;
       this._saveOnlyFormTotal = total;
 
+      this._syncPointsRedemptionFieldToRecordForm();
       formToSubmit.forEach((item) => {
         this._applyPicklistLabelToApiValue(item);
         item.submit();
