@@ -17,6 +17,7 @@
 public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     private static final String NS_VMX = 'http://fecredit.com.vn/cms/ws/v2';
+    private static final String SERVICE_OUTSTANDING_AUTH_INQ = 'M_FAS_OUTSTANDING_AUTH_INQ';
     private static final String SERVICE_VMX_AUTH_DETAIL_INQ = 'M_FAS_VMX_AUTH_DETAIL_INQ';
     private static final String API_CONFIG = 'FEC_MFASOUTSTANDINGAUTHINQ';
 
@@ -93,6 +94,30 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         public String MSGOUT_AUTH_CD;
     }
 
+    /** Unbilled M_FAS: M_FAS_OUTSTANDING_AUTH_INQ (Case account / unbilled fallback in controller). */
+    public static ResponseWrapper callService(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String vmxVersion,
+        String context,
+        String signOnName,
+        String org,
+        String acct
+    ) {
+        return callServiceInternal(
+            transID,
+            requestorId,
+            dateTimeStr,
+            vmxVersion,
+            context,
+            signOnName,
+            org,
+            acct,
+            SERVICE_OUTSTANDING_AUTH_INQ
+        );
+    }
+
     /* =====================================================
        PUBLIC METHOD — Pending: VMX_AUTH_DETAIL_INQ
        ===================================================== */
@@ -106,6 +131,30 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String org,
         String acct
     ) {
+        return callServiceInternal(
+            transID,
+            requestorId,
+            dateTimeStr,
+            vmxVersion,
+            context,
+            signOnName,
+            org,
+            acct,
+            SERVICE_VMX_AUTH_DETAIL_INQ
+        );
+    }
+
+    private static ResponseWrapper callServiceInternal(
+        String transID,
+        String requestorId,
+        String dateTimeStr,
+        String vmxVersion,
+        String context,
+        String signOnName,
+        String org,
+        String acct,
+        String serviceNodeName
+    ) {
         validateRequest(transID, requestorId, dateTimeStr, context, signOnName, org, acct);
 
         String soapBody = buildSoapRequest(
@@ -116,7 +165,8 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             context,
             signOnName,
             org,
-            acct
+            acct,
+            serviceNodeName
         );
 
         FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
@@ -144,7 +194,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
             );
         }
 
-        ResponseWrapper response = parseResponse(res.getBody());
+        ResponseWrapper response = parseResponse(res.getBody(), serviceNodeName);
 
         if (response.Sys == null || response.Sys.Code != 1) {
             throw new CalloutException(
@@ -177,7 +227,8 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
         String context,
         String signOnName,
         String org,
-        String acct
+        String acct,
+        String serviceNodeName
     ) {
         Dom.Document doc = new Dom.Document();
     
@@ -223,7 +274,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
         // ================= BUSINESS NODE =================
         Dom.XmlNode fasNode =
-            action.addChildElement(SERVICE_VMX_AUTH_DETAIL_INQ, null, null);
+            action.addChildElement(serviceNodeName, null, null);
 
         Dom.XmlNode vmxRoot =
             fasNode.addChildElement('VMX_ROOT', null, null);
@@ -249,7 +300,7 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
     /* =====================================================
        RESPONSE PARSER
        ===================================================== */
-    private static ResponseWrapper parseResponse(String xml) {
+    private static ResponseWrapper parseResponse(String xml, String serviceNodeName) {
 
     ResponseWrapper result = new ResponseWrapper();
     result.VMXMsgOut = new VMXMsgOut();
@@ -294,10 +345,10 @@ public with sharing class FEC_MFASOUTSTANDINGAUTHINQ {
 
     Dom.XmlNode fasNode = FEC_CommonUltils.findChildByName(
         responseNode,
-        SERVICE_VMX_AUTH_DETAIL_INQ
+        serviceNodeName
     );
     if (fasNode == null) {
-        fasNode = findChildByLocalName(responseNode, SERVICE_VMX_AUTH_DETAIL_INQ);
+        fasNode = findChildByLocalName(responseNode, serviceNodeName);
     }
     if (fasNode == null) return result;
     Dom.XmlNode rootNode = FEC_CommonUltils.findChildByName(fasNode, 'VMX_ROOT');
