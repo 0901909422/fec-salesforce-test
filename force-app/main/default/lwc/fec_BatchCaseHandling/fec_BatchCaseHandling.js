@@ -2090,7 +2090,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const fileName = this.selectedImportFileName;
     if (!this.sheetJsReady) {
       try {
-        await loadScript(this, FEC_SheetJS + "/xlsx.full.min.js");
+        await loadScript(this, FEC_SheetJS);
         this.sheetJsReady = true;
       } catch (e) {
         this.handleImportFailure(e, fileName);
@@ -2491,7 +2491,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     if (this.sheetJsReady) {
       return;
     }
-    await loadScript(this, FEC_SheetJS + "/xlsx.full.min.js");
+    await loadScript(this, FEC_SheetJS);
     this.sheetJsReady = true;
   }
 
