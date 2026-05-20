@@ -40,7 +40,13 @@
                                     <div class="slds-text-title_bold">{customLabels.CS_OrgChart_Text_UserTable_Title}</div>
                                     <template lwc:if={selectedQueueName}>
                                         <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
-                                            {customLabels.CS_OrgChart_Text_UserTable_Queue_Name_Title}: {selectedQueueName}
+                                            {customLabels.CS_OrgChart_Text_AddQueueModal_Input_Label}: {selectedQueueName}
+                                        </div>
+                                        <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                            {customLabels.CS_OrgChart_Text_AddQueueModal_Input_Name}: {selectedQueueDevName}
+                                        </div>
+                                        <div class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">
+                                            {customLabels.CS_OrgChart_Text_EditQueueModal_Input_Queue_Status}: {selectedQueueLabelStatus}
                                         </div>
                                     </template>
                                 </div>

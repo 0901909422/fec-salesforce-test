@@ -23,7 +23,14 @@ export default class Fec_CustomHistoryLog extends LightningElement {
         { label: this.customLabels.CS_OrgChart_Table_HistoryLog_ModifiedBy_Column, fieldName: 'LogCreatedByEmail', type: 'email' },
         { label: this.customLabels.CS_OrgChart_Table_HistoryLog_Action_Column, fieldName: 'LogActionName', type: 'text' },
         { label: this.customLabels.CS_OrgChart_Table_HistoryLog_OldValue_Column, fieldName: 'LogMessage', type: 'text' },
-        { label: this.customLabels.CS_OrgChart_Table_HistoryLog_NewValue_Column, fieldName: 'LogResponse', type: 'text' }
+        { 
+            label: this.customLabels.CS_OrgChart_Table_HistoryLog_NewValue_Column, 
+            fieldName: 'LogResponse', 
+            type: 'conditionalText',
+            typeAttributes: { 
+                isStrikethrough: { fieldName: 'isRemoveAction' } 
+            }
+        }
     ];
 
     get expandLabel() {
@@ -62,7 +69,8 @@ export default class Fec_CustomHistoryLog extends LightningElement {
                 LogCreatedByEmail: log.createdByEmail,
                 LogActionName: log.logActionName,
                 LogMessage: log.logMessage,
-                LogResponse: log.logResponse
+                LogResponse: log.logResponse,
+                isRemoveAction: !!(log.logActionName && log.logActionName.includes('Remove'))
             }));
         } catch (e) {
             this.hasError = true;

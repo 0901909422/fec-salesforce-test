@@ -121,7 +121,8 @@ public class FEC_TeamQueue_Test {
         FEC_Team__c team = createSampleTeam();
         FEC_Team_Queue__c tq = new FEC_Team_Queue__c(
             FEC_Select_Team__c = team.Id,
-            FEC_Queue_Name__c = 'TestQueueDevName'
+            FEC_Queue_Name__c = 'TestQueueDevName',
+            FEC_Team__c = 'Active'
         );
         insert tq;
 
@@ -129,6 +130,15 @@ public class FEC_TeamQueue_Test {
         List<FEC_TeamQueue.ListQueueDto> queues = FEC_TeamQueue.getQueuesForTeam(team.Id);
         Test.stopTest();
         System.assertNotEquals(null, queues, 'Queues list should not be null');
+        // Note: result size depends on whether DepartmentAdmin.getQueueValidBaseNameOrId
+        // finds a matching Group record. In unit tests without a real Queue Group,
+        // the list may be empty. We verify the method executes without error.
+        // If a queue IS returned, verify queueLabelStatus mapping
+        for (FEC_TeamQueue.ListQueueDto q : queues) {
+            if (q.id == tq.Id) {
+                System.assertEquals('Active', q.queueLabelStatus, 'queueLabelStatus should map to FEC_Team__c field');
+            }
+        }
     }
 
     @isTest

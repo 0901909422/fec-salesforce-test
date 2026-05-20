@@ -96,7 +96,7 @@ public with sharing class FEC_TeamQueue {
         try {
             // Query to get queue names for a specific team
             List<FEC_Team_Queue__c> teamQueues = [
-                SELECT Id, FEC_Queue_Name__c
+                SELECT Id, FEC_Queue_Name__c, FEC_Team__c
                 FROM FEC_Team_Queue__c
                 WHERE FEC_Select_Team__r.Id = :teamID
                 ORDER BY FEC_Queue_Name__c
@@ -116,6 +116,7 @@ public with sharing class FEC_TeamQueue {
                     listQueue.teamqueue = teamID;
                     listQueue.queueId = queueInfo.Id;
                     listQueue.displayname = queueInfo.name;
+                    listQueue.queueLabelStatus = tq.FEC_Team__c;
                     result.add(listQueue);
                 }
             }
