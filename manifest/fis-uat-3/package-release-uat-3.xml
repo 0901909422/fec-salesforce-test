@@ -169,6 +169,7 @@
 		<members>FEC_MrcReturnCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <members>FEC_BCH_FilterPropertyService</members>
+        <members>FEC_CaseAssignmentTriggerHandler</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -603,6 +604,7 @@
         <members>FEC_Case_Hold_History__c.FEC_Type__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Duration_Minutes__c</members>
         <members>FEC_Hold_Case_Config__c.FEC_Auto_Hold_Release_Case_Status__c</members>
+        <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
         <name>CustomField</name>
     </types>
     <types>
