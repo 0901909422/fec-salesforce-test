@@ -1,12 +1,39 @@
 public class FEC_CustomSyncValidator {
 
-    public static void validate(List<FEC_Custom_Sync__c> records) {
+    public static void validate(List<FEC_Custom_Sync__c> records, Map<Id, FEC_Custom_Sync__c> oldMap) {
+        // Filter records that need validation:
+        // Only validate when Active is being set to true:
+        // - Insert with Active = true
+        // - Update: Active changed from false to true, OR Active is already true
+        List<FEC_Custom_Sync__c> recordsToValidate = new List<FEC_Custom_Sync__c>();
+        for (FEC_Custom_Sync__c rec : records) {
+            Boolean isActive = rec.FEC_Active__c == true;
+
+            if (oldMap == null) {
+                // Insert: only validate if Active = true
+                if (isActive) {
+                    recordsToValidate.add(rec);
+                }
+            } else {
+                // Update: validate if Active is true (either already true or changing to true)
+                Boolean wasActive = oldMap.containsKey(rec.Id) && oldMap.get(rec.Id).FEC_Active__c == true;
+                Boolean activating = isActive && !wasActive;
+                if (isActive || activating) {
+                    recordsToValidate.add(rec);
+                }
+            }
+        }
+
+        if (recordsToValidate.isEmpty()) {
+            return;
+        }
+
         // Collect CaseBusinessCodes to validate against FEC_Business_Process__c
         Set<String> caseBusinessCodes = new Set<String>();
         Set<String> targetObjects = new Set<String>();
         Map<String, Set<String>> fieldsByTargetObject = new Map<String, Set<String>>();
 
-        for (FEC_Custom_Sync__c rec : records) {
+        for (FEC_Custom_Sync__c rec : recordsToValidate) {
             if (String.isNotBlank(rec.FEC_Case_Business_Code__c)) {
                 caseBusinessCodes.add(rec.FEC_Case_Business_Code__c);
             }
@@ -40,14 +67,12 @@ public class FEC_CustomSyncValidator {
         }
 
         // Rule 4: Validate fields by building a dynamic SOQL query per TargetObject
-        // This approach supports relationship fields (e.g. Owner.Name, Account.Name)
         Map<String, String> queryErrorByObject = new Map<String, String>();
         if (!targetObjects.isEmpty()) {
             for (String objName : targetObjects) {
                 Set<String> fields = fieldsByTargetObject.get(objName);
                 if (fields == null || fields.isEmpty()) continue;
 
-                // Build SELECT field list (only non-null values)
                 List<String> fieldList = new List<String>(fields);
                 String soql = 'SELECT ' + String.join(fieldList, ', ') + ' FROM ' + objName + ' LIMIT 0';
                 try {
@@ -59,7 +84,7 @@ public class FEC_CustomSyncValidator {
         }
 
         // Per-record validation
-        for (FEC_Custom_Sync__c rec : records) {
+        for (FEC_Custom_Sync__c rec : recordsToValidate) {
             // Rule 1: CaseBusinessCode != null => TargetObject must be 'Case'
             if (String.isNotBlank(rec.FEC_Case_Business_Code__c) 
                 && rec.FEC_Target_Object__c != 'Case' && rec.FEC_Target_Object__c != 'case') {
@@ -80,11 +105,9 @@ public class FEC_CustomSyncValidator {
                     Set<String> bodyKeys = bodyMap.keySet();
                     Set<String> typeKeys = typeMap.keySet();
 
-                    // Keys in MappingDataType but missing in RequestBodyMapping (dư)
                     Set<String> extraInType = new Set<String>(typeKeys);
                     extraInType.removeAll(bodyKeys);
 
-                    // Keys in RequestBodyMapping but missing in MappingDataType (thiếu)
                     Set<String> missingInType = new Set<String>(bodyKeys);
                     missingInType.removeAll(typeKeys);
 
