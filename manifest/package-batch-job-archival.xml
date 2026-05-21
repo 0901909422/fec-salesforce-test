@@ -16,7 +16,6 @@
 		<members>FEC_CaseExportHttpServiceTest</members>
 		<members>FEC_CasePayloadBuilderTest</members>
 		<members>FEC_ArchiveVerifyBatch</members>
-		<members>FEC_ArchiveVerifyBatch_Test</members>
 		<members>FEC_ArchiveVerifyHttpService</members>
 		<members>FEC_ArchiveVerifyBatchTest</members>
 		<members>FEC_ArchiveVerifyHttpServiceTest</members>
