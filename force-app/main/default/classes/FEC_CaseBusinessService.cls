@@ -137,7 +137,9 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       User currentUser = userlst.get(0);
-      List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
+      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+        currentUser.FEC_User_Group__c
+      );
 
       //  ===================================== GET CASE ===============================
             List<Case> caselst = [
@@ -2370,7 +2372,9 @@ public without sharing class FEC_CaseBusinessService {
 
       User currentUser = userlst.get(0);
 
-      List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
+      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+        currentUser.FEC_User_Group__c
+      );
 
       List<Case> caselst = [
         SELECT
@@ -2792,7 +2796,8 @@ public without sharing class FEC_CaseBusinessService {
         FEC_User__c = emailLocalPart(usr.Email),
         FEC_User_Role__c = usr.UserRole?.Name,
         FEC_Current_Status__c = finalStatusBeforeSubmit,
-        FEC_Changed_Status__c = c.FEC_Final_Status__c
+        FEC_Changed_Status__c = c.FEC_Final_Status__c,
+        FEC_Previous_Stage__c = currentStageId
       );
     try {
       new FEC_CaseBusinessWithoutSharing().doInsert(new List<FEC_Routing_Action_History__c>{ history });
