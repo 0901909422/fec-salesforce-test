@@ -209,8 +209,8 @@ public without sharing class FEC_CaseBusinessService {
           FEC_SubCategory__r.Name,
           FEC_SubCategory__r.FEC_Code__c,
           FEC_SubCode__r.Name,
-          FEC_SubCode__r.FEC_Code__c,
           FEC_Assignment_Count__c,
+          FEC_SubCode__r.FEC_Code__c, //linhdev fix jira FECREDIT_CSM_2025_KH-1393-1394
           FEC_Actual_Nature_of_Case__r.FEC_Business_Process__r.FEC_Code__c
         FROM Case
         WHERE Id = :caseId
@@ -889,8 +889,8 @@ public without sharing class FEC_CaseBusinessService {
           if(
             DOCUMENT_REQUEST.equals(businessProcessCode)
             && String.isNotBlank(docReqValidationMessage)
-            && 'Case Information'.equals(sectionNameTemp)
-            && !'Property Info'.equals(subSectionNameTemp)
+            && (FEC_ConstantCommon.SECTION_CASE_INFORMATION.equals(sectionNameTemp)
+              || FEC_ConstantCommon.SUB_SECTION_C360_INFO.equals(subSectionNameTemp))
           ){
             continue;
           }
@@ -2082,13 +2082,30 @@ public without sharing class FEC_CaseBusinessService {
 
   @AuraEnabled
   public static void markCaseSubmittedWithoutRouting(String caseId) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
   }
 //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   @AuraEnabled
   public static void markCaseSubmittedWithoutRoutingWithHistory(String caseId, String natureOfCaseId, String fieldListJson) {
+    String statusBefore = readCaseFinalStatusBeforeSubmit(caseId);
     markCaseSubmittedAndClearDrafts(caseId);
     createCaseFlowHistory(caseId, natureOfCaseId, fieldListJson);
+    FEC_AutoHoldCaseService.enqueueAfterCaseSubmit(caseId, statusBefore);
+  }
+
+  private static String readCaseFinalStatusBeforeSubmit(String caseId) {
+    if (String.isBlank(caseId)) {
+      return null;
+    }
+    List<Case> rows = [
+      SELECT FEC_Final_Status__c
+      FROM Case
+      WHERE Id = :caseId
+      LIMIT 1
+    ];
+    return rows.isEmpty() ? null : rows[0].FEC_Final_Status__c;
   }
   //PhongBT: tạo FEC_Case_Flow_History__c khi submit case lần đầu.
   /**
