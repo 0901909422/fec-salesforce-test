@@ -19,32 +19,32 @@ public with sharing class FEC_PaymentHistoryValidationService {
   private static final String CARD_BLOCK_CODE_C = 'C';
 
   /**
-   * RC04.04 — Giấy xác nhận đóng thẻ: gợi ý infoMessage khi
-   * Account Status (T-1) in (8,9) OR (not in (8,9) AND ít nhất một: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
+   * RC04.04 — Giấy xác nhận đóng thẻ: trả infoMessage khi không đủ điều kiện;
+   * đủ điều kiện thì không trả message (null).
+   * Điều kiện đủ: Account Status (T-1) in (8,9) OR (not in (8,9) AND ít nhất một: Block Code = C, IPP Principal T-1 = 0, OTB >= Credit Limit).
    *
    * Field mapping:
    *   Account Status : FEC_Customer_History__c.FEC_Account_Status__c
    *   Block Code     : FEC_Customer_History__c.FEC_Block_Code__c
    *   IPP Principal  : FEC_Statement__c.FEC_IPP_Principal__c  (kỳ sao kê gần nhất của Customer History)
-   *   OTB            : FEC_Customer_History__c.FEC_OTB__c
+   *   OTB            : FEC_Account_Status__c.FEC_OTB__c (bản ghi Account Status mới nhất của Customer History)
    *   Card Limit     : FEC_Customer_History__c.FEC_Credit_Limit__c
    */
   private static String buildRc0404InfoMessageIfEligible(Id customerHistoryId) {
     if (customerHistoryId == null) {
-      return null;
+      return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
     List<FEC_Customer_History__c> rows = [
       SELECT
         FEC_Account_Status__c,
         FEC_Block_Code__c,
-        FEC_OTB__c,
         FEC_Credit_Limit__c
       FROM FEC_Customer_History__c
       WHERE Id = :customerHistoryId
       LIMIT 1
     ];
     if (rows.isEmpty()) {
-      return null;
+      return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
     }
     FEC_Customer_History__c h = rows[0];
 
@@ -59,7 +59,7 @@ public with sharing class FEC_PaymentHistoryValidationService {
       : h.FEC_Block_Code__c.trim();
     Boolean blockCodeC = CARD_BLOCK_CODE_C.equals(block);
 
-    Decimal otb = h.FEC_OTB__c;
+    Decimal otb = resolveOtbFromAccountStatus(customerHistoryId);
     Decimal limitAmt = h.FEC_Credit_Limit__c;
     Boolean otbGteLimit =
       otb != null && limitAmt != null && otb >= limitAmt;
@@ -79,15 +79,30 @@ public with sharing class FEC_PaymentHistoryValidationService {
     }
 
     if (statusEightOrNine || (!statusEightOrNine && (blockCodeC || ippPrincipalZero || otbGteLimit))) {
-      return System.Label.FEC_MSG_Can_Create_Card_Close_Certificate;
+      return null;
     }
+    return System.Label.FEC_MSG_Cannot_Create_Card_Close_Certificate;
+    }
+
+  /** OTB từ FEC_Account_Status__c (bản ghi mới nhất theo Customer History). */
+  private static Decimal resolveOtbFromAccountStatus(Id customerHistoryId) {
+    if (customerHistoryId == null) {
     return null;
+    }
+    List<FEC_Account_Status__c> statusRows = [
+      SELECT FEC_OTB__c
+      FROM FEC_Account_Status__c
+      WHERE FEC_Customer_History__c = :customerHistoryId
+      ORDER BY LastModifiedDate DESC, CreatedDate DESC
+      LIMIT 1
+    ];
+    return statusRows.isEmpty() ? null : statusRows[0].FEC_OTB__c;
   }
 
   /**
    * RL04.02: chặn chỉ khi Contract Status = Closed (thông báo lịch trả nợ).
    * RL04.03: Closed hoặc Active với COUNT FEC_Payment_History__c theo Customer History below 7 (thông báo lịch sử thanh toán).
-   * RC04.04: không chặn; trả infoMessage khi đủ điều kiện gợi ý giấy xác nhận đóng thẻ.
+   * RC04.04: không chặn; trả infoMessage khi không đủ điều kiện phát hành giấy xác nhận đóng thẻ.
    */
   @AuraEnabled
   public static PaymentHistoryRequestValidationResult validatePaymentHistoryRequestForSubCode(

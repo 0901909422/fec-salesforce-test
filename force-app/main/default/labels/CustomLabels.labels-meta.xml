@@ -15984,6 +15984,13 @@
         <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Cannot_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện phát hành giấy xác nhận đóng thẻ</shortDescription>
+        <value>Không đủ điều kiện phát hành yêu cầu giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
