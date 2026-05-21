@@ -107,7 +107,6 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             );
         
         update assignmentToUpdate;
-        // tungnm37: sync lại Case.FEC_Assignment_Users__c → clear về null sau khi resolve
         syncAssignmentUsersToCase(caseId, assignmentId);
         // ===== INSERT HISTORY =====
         insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_REJECT, remark);
@@ -231,16 +230,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         
         if (isCSSupport()) {
-            userDepart = 'CS Support';
+            userDepart = FEC_ConstantCommon.TEAM_CS_SUPPORT;
             
         } else if (isCSCustomerCare()) {
-            userDepart = 'CS Customer Care';
+            userDepart = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
             
         } else if (isOtherCS(userId)){
-            userDepart = 'Other CS';
+            userDepart = FEC_ConstantCommon.TEAM_CS_OTHER;
         }
         else {
-            userDepart = 'OTHER';
+            userDepart = FEC_ConstantCommon.TEAM_OTHER;
         }
         
         System.debug('=== User department: ' + userDepart);
@@ -248,7 +247,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         /*
          * OTHER DEPT
          */
-        if (userDepart == 'OTHER') {
+        if (userDepart == FEC_ConstantCommon.TEAM_OTHER) {
             if (assignment != null
             && String.isNotBlank(assignment.FEC_Case__r.FEC_Current_Case_Stage__r.FEC_Code__c)) {
                 /*
@@ -276,7 +275,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         /*
          * CS Support / CS Customer Care
          */
-        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care'||userDepart == 'Other CS') {
+        else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE||userDepart == FEC_ConstantCommon.TEAM_CS_OTHER) {
             System.debug('Test routing CS');
             assignment.FEC_OwnerID__c = queue.Name;
             assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
@@ -315,16 +314,16 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         
         if (isCSSupport()) {
-            userDepart = 'CS Support';
+            userDepart = FEC_ConstantCommon.TEAM_CS_SUPPORT;
             
         } else if (isCSCustomerCare()) {
-            userDepart = 'CS Customer Care';
+            userDepart = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
             
         } else if (isOtherCS(userId)){
-            userDepart = 'Other CS';
+            userDepart = FEC_ConstantCommon.TEAM_CS_OTHER;
         }
         else {
-            userDepart = 'OTHER';
+            userDepart = FEC_ConstantCommon.TEAM_OTHER;
         }
         
         System.debug('=== User department: ' + userDepart);
@@ -342,10 +341,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             System.debug(queueName);
             assignment.FEC_OwnerID__c = queueName;
             if(queueName.contains('CS')){
-                System.debug('CS Khác: ');
                 assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
             }else{
-                System.debug('Khác CS: ');
                 assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
             }
             
@@ -912,8 +909,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             WHERE
                 RelatedId = :u.UserRoleId
                 AND Type IN (
-                    'Role',
-                    'RoleAndSubordinates'
+                    :FEC_ConstantCommon.ROLE_STR,
+                    :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
                 )
         ];
             
@@ -954,13 +951,13 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
     
     public static Boolean isCSSupport() {
         return isCurrentUserInQueue(
-            'FEC_DQ_CS_Support'
+            FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
             );
     }
     
     public static Boolean isCSCustomerCare() {
         return isCurrentUserInQueue(
-            'FEC_DQ_CS_Customer_Care'
+            FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
             );
     }
     
@@ -1017,7 +1014,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FROM GroupMember
         WHERE
             UserOrGroupId IN :memberIds
-            AND Group.Type = 'Queue'
+            AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND Group.DeveloperName LIKE 'FEC_DQ_CS%'
     ];
         
@@ -1036,10 +1033,10 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 gm.Group.DeveloperName;
             
             if (
-                devName != 'FEC_DQ_CS_Support'
+                devName != FEC_ConstantCommon.QUEUE_DQ_CS_SUPPORT_NAME
                 &&
                 devName !=
-                'FEC_DQ_CS_Customer_Care'
+                FEC_ConstantCommon.QUEUE_DQ_CS_CUSTOMER_CARE_NAME
             ) {
                 
                 return true;
@@ -1089,7 +1086,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             
             System.debug('FEC_Current_Case_Stage');
             System.debug(c.FEC_Current_Case_Stage__r.FEC_Code__c);
-                /*
+            /*
              * Collect queue ids
              */
             Set<Id> queueIds = new Set<Id>();
