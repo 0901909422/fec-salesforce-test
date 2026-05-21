@@ -349,7 +349,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String CASE_RESOLVE_ACTION = 'Resolve';
     public static final String REMARK_TYPE_ASSIGNMENT = 'Assignment';
     public static final String TEAM_VALUE = 'CannotContactCustomer';
-    
+    public static final String TEAM_VALUE_CSSUPPORT = 'CSSupport';
     /** Giá trị trường FEC_Routing_Action__c khi đổi Owner (Salesforce / trigger). */
     public static final String FEC_ROUTING_ACTION_CHANGE_OWNER = 'Change Owner';
     /** Routing Action History: cộng dồn FEC_Team__c / Pending-{Team1}_{Team2} (cùng luồng Route to). */
