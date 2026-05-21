@@ -308,6 +308,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+    public static final String SECTION_CASE_INFORMATION = 'Case Information';
+    public static final String SUB_SECTION_C360_INFO = 'C360 Info';
 
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';
@@ -621,7 +623,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String DECISION_QUEUE = 'QUEUE';
     public static final String DECISION_USER_QUEUE = 'USER_QUEUE';
     public static final String DECISION_USER_TEAM_QUEUE = 'USER_TEAM_QUEUE';
-    
+
     public static final String DECISION_CANNOT_CONTACT = 'CANNOT_CONTACT';
     
     // ================= ASSIGNMENT STATUS =================
@@ -649,8 +651,9 @@ public with sharing class FEC_ConstantCommon {
 
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
-    
+
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
     
@@ -735,7 +738,7 @@ public with sharing class FEC_ConstantCommon {
         'subCategory',
         'subCode',
         'remark'
-    };  
+    };
 
     public static final String TRANSFER_ERR_EN_GENESYS_ID_NULL = 'genesysId is null';
     public static final String TRANSFER_ERR_EN_PHONE_NUMBER_NULL = 'phoneNumber is null';
@@ -773,7 +776,7 @@ public with sharing class FEC_ConstantCommon {
 
     /** Transfer Call: pattern hợp lệ cho productType dạng tên (ngoài whitelist code). */
     public static final String TRANSFER_CALL_PRODUCT_TYPE_NAME_PATTERN = '^[A-Za-z0-9 _\\-]{1,50}$';
-    
+
     public static final Map<String, String> TEAM_QUEUE_MAP = new Map<String, String>{
         TEAM_CS_SUPPORT => QUEUE_CS_SUPPORT,
         TEAM_CS_CUSTOMER_CARE => QUEUE_CS_CUSTOMER_CARE
@@ -818,6 +821,21 @@ public with sharing class FEC_ConstantCommon {
 
     public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
+
+    //tungnm37: Tap hop team CS BackOffice (SP, CC)
+    public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
+    //tungnm37: Tap hop team CS khac (IB, OB, EC, F2F, QC, OM, CX)
+    //tungnm37: CA, CL k phai CS Review
+    public static final Set<String> CS_REVIEW_TEAMS = new Set<String>{ 'IB', 'EC', 'OB', 'QC', 'OM', 'F2F', 'CX' };
+    //tungnm37: Tap hop team Other Dept (CO, CL, CP, PM, DS, TS, CA, IA, IT)
+    public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'CL', 'CP', 'PM', 'DS', 'TS', 'CA', 'IA', 'IT' };
+
+    //tungnm37: Tap hop cac status Assignment da dong (dung de query active assignments)
+    public static final Set<String> CLOSED_ASSIGNMENT_STATUSES = new Set<String>{
+        ASSIGNMENT_STATUS_COMPLETED,
+        ASSIGNMENT_AUTOCOMPLETE_STATUS,
+        ASSIGNMENT_AUTORECALLED_STATUS
+    };
 
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */

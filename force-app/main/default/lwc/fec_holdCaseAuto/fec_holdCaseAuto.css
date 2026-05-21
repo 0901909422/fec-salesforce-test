@@ -25,6 +25,10 @@
     color: #c23934;
 }
 
+.hold-case-auto-manual-action {
+    margin-bottom: 0.75rem;
+}
+
 .hold-case-auto-message--pending {
     display: flex;
     align-items: center;

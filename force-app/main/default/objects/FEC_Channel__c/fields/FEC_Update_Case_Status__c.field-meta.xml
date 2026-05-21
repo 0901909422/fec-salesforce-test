@@ -3,7 +3,7 @@
     <fullName>FEC_Update_Case_Status__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Update Case Status</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
