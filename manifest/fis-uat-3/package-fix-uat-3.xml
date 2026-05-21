@@ -119,6 +119,7 @@
         <members>FEC_ScopedStageChangeRoutingService</members>
         <members>FEC_NatureOfCaseUserGroupService</members>
         <members>FEC_PaymentHistoryValidationService</members>
+		<members>FEC_NocRoutingAssignmentController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -204,6 +205,7 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
+		<members>fecRoutingAssignmentEditForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -265,10 +267,12 @@
 		<members>FEC_Case_Hold_History__c</members>
 		<members>FEC_Notification__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
+		<members>FEC_Routing_Assignment__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fec_CaseAssignmentNocNewOverride</members>
+        <members>fecRoutingAssignmentEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
@@ -362,6 +366,13 @@
         <members>FEC_MSG_Cannot_Request_Payment_History</members>
         <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
         <members>FEC_BCH_Col_TotalRecords</members>
+		<members>FEC_Label_Customer_All</members>
+		<members>FEC_Label_Customer_Existing</members>
+		<members>FEC_Label_Customer_Non_Existing</members>
+		<members>FEC_Label_Edit_RA</members>
+		<members>FEC_Label_Nature_of_Cases</members>
+		<members>FEC_RA_Error_Load</members>
+		<members>FEC_RA_Error_Update</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
