@@ -184,6 +184,7 @@
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
+        <members>FEC_CaseSlaNotificationService</members>
         <name>ApexClass</name>
     </types>
 	<types>
@@ -1198,6 +1199,10 @@
         <members>FEC_BCH_FilterScopePreDefine</members>
         <members>FEC_BCH_Import_Rows_Invalid</members>
         <members>FEC_BCH_Import_Submitted</members>
+        <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
+        <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
+        <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
+        <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
         <members>FEC_Error_Download</members>
         <name>CustomLabel</name>
     </types>
