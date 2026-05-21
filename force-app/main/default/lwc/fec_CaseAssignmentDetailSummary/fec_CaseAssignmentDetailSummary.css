@@ -94,13 +94,15 @@
   flex-shrink: 0;
 }
 
-.hours-link {
+.hours-link,
+.entity-link {
   color: var(--lwc-brandTextLink, #0176d3);
   font-size: 0.875rem;
   text-decoration: none;
 }
 
-.hours-link:hover {
+.hours-link:hover,
+.entity-link:hover {
   text-decoration: underline;
 }
 
@@ -139,4 +141,8 @@
 
 .slds-modal__container {
   max-width: 28rem;
+}
+
+.modal-container-wide {
+  max-width: 40rem;
 }

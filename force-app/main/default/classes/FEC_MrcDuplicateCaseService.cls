@@ -73,6 +73,8 @@ public without sharing class FEC_MrcDuplicateCaseService {
                 AND Id != :currentCaseId
                 AND IsClosed = FALSE
                 AND FEC_SubCategory__r.FEC_Code__c LIKE '%RL05%'
+                AND FEC_SubCode__r.FEC_Code__c LIKE '%RL05.02%'
+                AND FEC_Final_Status__c LIKE 'Pending%'
                 AND CreatedDate < :currentCreatedDate
             ORDER BY CreatedDate DESC
             LIMIT 1

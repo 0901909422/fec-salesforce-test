@@ -23,10 +23,11 @@ public without sharing class FEC_BatchCaseHandlingZipService {
             offsetRows = 2000;
         }
 
-        List<String> whereParts = FEC_BatchCaseHandlingCaseFilter.buildBaseCaseWhere();
         List<Map<String, Object>> filterMaps = FEC_BatchCaseHandlingCaseFilter.parseFilterMaps(filtersJson);
-        whereParts.addAll(FEC_BatchCaseHandlingCaseFilter.buildDynamicWhereFromFilters(filterMaps));
-        String whereClause = String.join(whereParts, ' AND ');
+        String whereClause = String.join(
+            FEC_BatchCaseHandlingCaseFilter.buildCompleteWhere(filterMaps),
+            ' AND '
+        );
 
         List<Case> cases = Database.query(
             'SELECT Id, FEC_ID_Search__c FROM Case WHERE ' + whereClause +
@@ -61,34 +62,53 @@ public without sharing class FEC_BatchCaseHandlingZipService {
                 docToCase.put(l.ContentDocumentId, l.LinkedEntityId);
             }
         }
-        List<ContentVersion> versions = [
-            SELECT Id, Title, FileExtension, ContentSize, VersionData, ContentDocumentId
+        List<ContentVersion> versionMetas = [
+            SELECT Id, Title, FileExtension, ContentSize, ContentDocumentId
             FROM ContentVersion
             WHERE IsLatest = true AND ContentDocumentId IN :docIds
         ];
-        if (versions.isEmpty()) {
+        if (versionMetas.isEmpty()) {
             out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
 
-        Compression.ZipWriter writer = new Compression.ZipWriter();
+        List<Id> selectedVersionIds = new List<Id>();
         Integer totalSize = 0;
-        Integer added = 0;
-        for (ContentVersion cv : versions) {
+        for (ContentVersion cv : versionMetas) {
             Integer sz = cv.ContentSize == null ? 0 : cv.ContentSize;
             if (totalSize + sz > MAX_ZIP_BYTES) {
                 break;
             }
+            selectedVersionIds.add(cv.Id);
+            totalSize += sz;
+        }
+        if (selectedVersionIds.isEmpty()) {
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
+            return out;
+        }
+
+        Map<Id, ContentVersion> versionById = new Map<Id, ContentVersion>([
+            SELECT Id, Title, FileExtension, VersionData, ContentDocumentId
+            FROM ContentVersion
+            WHERE Id IN :selectedVersionIds
+        ]);
+
+        Compression.ZipWriter writer = new Compression.ZipWriter();
+        Integer added = 0;
+        for (Id versionId : selectedVersionIds) {
+            ContentVersion cv = versionById.get(versionId);
+            if (cv == null || cv.VersionData == null) {
+                continue;
+            }
             Id ownerCaseId = docToCase.get(cv.ContentDocumentId);
             String caseLabel = caseLabelById.get(ownerCaseId);
             String ext = String.isBlank(cv.FileExtension) ? FEC_ConstantCommon.STR_EMPTY : '.' + cv.FileExtension;
-            String entryName = String.valueOf(caseLabel) + ' - ' + cv.Title + ext;
+            String entryName = String.valueOf(caseLabel) + '_' + cv.Title + ext;
             writer.addEntry(entryName, cv.VersionData);
-            totalSize += sz;
             added += 1;
         }
         if (added == 0) {
-            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
 
@@ -217,31 +237,50 @@ public without sharing class FEC_BatchCaseHandlingZipService {
         for (ContentDocumentLink l : links) {
             docIds.add(l.ContentDocumentId);
         }
-        List<ContentVersion> versions = [
-            SELECT Id, Title, FileExtension, ContentSize, VersionData
+        List<ContentVersion> versionMetas = [
+            SELECT Id, Title, FileExtension, ContentSize, ContentDocumentId
             FROM ContentVersion
             WHERE IsLatest = true AND ContentDocumentId IN :docIds
         ];
-        if (versions.isEmpty()) {
+        if (versionMetas.isEmpty()) {
             out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
-        Compression.ZipWriter writer = new Compression.ZipWriter();
+        List<Id> selectedVersionIds = new List<Id>();
         Integer totalSize = 0;
-        Integer added = 0;
-        String caseLabel = String.isBlank(c.FEC_ID_Search__c) ? String.valueOf(c.Id) : c.FEC_ID_Search__c;
-        for (ContentVersion cv : versions) {
+        for (ContentVersion cv : versionMetas) {
             Integer sz = cv.ContentSize == null ? 0 : cv.ContentSize;
             if (totalSize + sz > MAX_ZIP_BYTES) {
                 break;
             }
-            String ext = String.isBlank(cv.FileExtension) ? FEC_ConstantCommon.STR_EMPTY : '.' + cv.FileExtension;
-            writer.addEntry(caseLabel + ' - ' + cv.Title + ext, cv.VersionData);
+            selectedVersionIds.add(cv.Id);
             totalSize += sz;
+        }
+        if (selectedVersionIds.isEmpty()) {
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
+            return out;
+        }
+
+        Map<Id, ContentVersion> versionById = new Map<Id, ContentVersion>([
+            SELECT Id, Title, FileExtension, VersionData
+            FROM ContentVersion
+            WHERE Id IN :selectedVersionIds
+        ]);
+
+        Compression.ZipWriter writer = new Compression.ZipWriter();
+        Integer added = 0;
+        String caseLabel = String.isBlank(c.FEC_ID_Search__c) ? String.valueOf(c.Id) : c.FEC_ID_Search__c;
+        for (Id versionId : selectedVersionIds) {
+            ContentVersion cv = versionById.get(versionId);
+            if (cv == null || cv.VersionData == null) {
+                continue;
+            }
+            String ext = String.isBlank(cv.FileExtension) ? FEC_ConstantCommon.STR_EMPTY : '.' + cv.FileExtension;
+            writer.addEntry(caseLabel + '_' + cv.Title + ext, cv.VersionData);
             added += 1;
         }
         if (added == 0) {
-            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Total_Size_Exceeded;
+            out.message = System.Label.FEC_Batch_Case_Handling_Zip_Fetch_Attachments_Failed;
             return out;
         }
         ContentVersion zipCv = new ContentVersion();

@@ -261,6 +261,16 @@ public with sharing class FEC_CheckEligibilityIPPCallout {
                             
                             String smsStr = FEC_CommonUltils.getXmlValue(node, 'SMSRate');
                             detail.smsRate = String.isNotBlank(smsStr) ? Decimal.valueOf(smsStr) : null;
+
+                            String convStr = FEC_CommonUltils.getXmlValue(node, 'ConversionRate');
+                            if (String.isNotBlank(convStr)) {
+                                Decimal rawConv = Decimal.valueOf(convStr);
+                                if (rawConv < 1.0) {
+                                    detail.registrationRate = rawConv * 100;
+                                } else {
+                                    detail.registrationRate = rawConv;
+                                }
+                            }
                             
                             result.campaigns.add(detail);
                         }
