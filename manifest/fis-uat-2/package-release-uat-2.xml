@@ -471,7 +471,7 @@
 
 	<!-- case management -->
 	<types>
-		<members>interstion sla main_v3</members>
+		<members>Interaction SLA Main</members>
 		<name>EntitlementProcess</name>
 	</types>
 	<types>

@@ -563,17 +563,18 @@
                       <tr key={row.id}>
                         <td class="fec-td-num">{row.rowIndex}</td>
                         <td>
-                          <template if:true={row.fileDownloadUrl}>
+                          <template if:true={row.hasFileDownloadLink}>
                             <a
                               href="javascript:void(0);"
+                              class="fec-bulk-link"
                               data-url={row.fileDownloadUrl}
-                              onclick={handleFileNameClick}
+                              onclick={handleBulkLinkClick}
                             >
-                              {row.fileName}
+                              {row.fileNameDisplay}
                             </a>
                           </template>
-                          <template if:false={row.fileDownloadUrl}>
-                            {row.fileName}
+                          <template if:false={row.hasFileDownloadLink}>
+                            {row.fileNameDisplay}
                           </template>
                         </td>
                         <td>{row.uploadedOnLabel}</td>
@@ -584,16 +585,17 @@
                         <td>{row.status}</td>
                         <td>{row.failureReason}</td>
                         <td>
-                          <template if:true={row.resultDownloadUrl}>
+                          <template if:true={row.hasResultDownloadLink}>
                             <a
                               href="javascript:void(0);"
+                              class="fec-bulk-link"
                               data-url={row.resultDownloadUrl}
-                              onclick={handleResultClick}
+                              onclick={handleBulkLinkClick}
                             >
                               {row.result}
                             </a>
                           </template>
-                          <template if:false={row.resultDownloadUrl}>
+                          <template if:false={row.hasResultDownloadLink}>
                             {row.result}
                           </template>
                         </td>
@@ -614,7 +616,7 @@
                 <lightning-combobox
                   variant="label-hidden"
                   value={pageSize}
-                  placeholder="10"
+                  placeholder="20"
                   options={pageSizeOptions}
                   onchange={handlePageSizeChange}
                 ></lightning-combobox>
