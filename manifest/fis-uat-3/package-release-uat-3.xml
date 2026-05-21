@@ -1269,8 +1269,10 @@
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
+        <members>FEC_LABEL_API_Code</members>
         <members>FEC_Error_Download</members>
         <members>FEC_LABEL_Description</members>
+        <members>FEC_LABEL_Months</members>
         <members>FEC_MSG_Card_Block_Fail_Retry</members>
         <members>FEC_MSG_IPP_Conversion_Fail_Retry</members>
         <members>FEC_MSG_IPP_Conversion_Success</members>
@@ -1287,6 +1289,7 @@
 		<members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
         <name>CustomLabel</name>
     </types>
+	<types>
 		<!-- Interaction Case Service Case -->
         <members>FEC_CS_CS_Ecom_Officer_Interaction_Case_Service_Case</members>
         <members>FEC_CS_CS_Ecom_Specialist_Interaction_Case_Service_Case</members>
