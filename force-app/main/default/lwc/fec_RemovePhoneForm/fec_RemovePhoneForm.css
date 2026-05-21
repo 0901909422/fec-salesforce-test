@@ -10,6 +10,100 @@
     align-items: end;
 }
 
+.input-row lightning-input {
+    flex: 0 1 16rem;
+    max-width: 16rem;
+    min-width: 0;
+}
+
 .button-wrap {
-    padding-bottom: 0.125rem;
+    flex: 0 0 auto;
+}
+
+.table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid #e5e5e5;
+    background: #fafaf9;
+}
+
+.page-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #3e3e3c;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.go-to-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #3e3e3c;
+}
+
+.page-input {
+    width: 3.5rem;
+}
+
+.page-of {
+    font-size: 13px;
+    color: #3e3e3c;
+    white-space: nowrap;
+}
+
+.square-icon {
+    --slds-c-button-radius-border: 4px;
+    --slds-c-button-sizing-border: 0.5px;
+    --slds-c-button-color-border: #d8dde6c7;
+    --slds-c-button-color-background: #ffffff;
+    --slds-c-button-color-background-hover: #f3f3f3;
+    width: 32px;
+    height: 32px;
+}
+
+.page-number {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0176d3;
+    border: 1px solid #0176d3;
+    color: #ffffff;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* Disabled unchecked: empty box (white fill + grey border), not solid grey block. */
+.remove-phone-datatable lightning-datatable .slds-checkbox [type="checkbox"]:disabled:not(:checked) + .slds-checkbox_faux {
+    background-color: #ffffff;
+    border-color: #939393;
+}
+
+/* Disabled checked: darker than brand blue, keep white tick visible. */
+.remove-phone-datatable lightning-datatable .slds-checkbox [type="checkbox"]:disabled:checked + .slds-checkbox_faux {
+    background-color: #514f4d;
+    border-color: #514f4d;
+}
+
+.square-go-btn {
+    --sds-c-button-brand-color-background: #0176d3;
+    --sds-c-button-brand-color-background-hover: #014486;
+    --sds-c-button-brand-color-border: #0176d3;
+    --sds-c-button-brand-color-border-hover: #014486;
+    --slds-c-button-brand-color-background: #0176d3;
+    --slds-c-button-brand-color-background-hover: #014486;
+    --slds-c-button-brand-color-border: #0176d3;
+    --slds-c-button-brand-color-border-hover: #014486;
+    --slds-c-button-radius-border: 4px;
 }

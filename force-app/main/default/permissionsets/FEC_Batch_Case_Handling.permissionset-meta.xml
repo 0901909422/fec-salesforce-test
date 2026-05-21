@@ -55,6 +55,16 @@
         <field>FEC_Template_Import__c.FEC_Applicable_for__c</field>
         <readable>true</readable>
     </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template_Import__c.FEC_Business_Process__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>FEC_Template_Import__c.FEC_User_Group__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Batch Case Handling</label>
     <license>Salesforce</license>
@@ -78,6 +88,10 @@
         <viewAllFields>true</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
+    <tabSettings>
+        <tab>Batch_Case_Handling</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
     <tabSettings>
         <tab>FEC_Template_Import__c</tab>
         <visibility>Visible</visibility>

@@ -9,12 +9,18 @@ import getUsersInGroup from "@salesforce/apex/FEC_AssignmentListHandler.getUsers
 import getQueuesForUser from "@salesforce/apex/FEC_AssignmentListHandler.getQueuesForUser";
 
 import getTeams from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.getTeams";
+//HieuTT74: [Update 20/5/2026] Get Team cho Action Route to
+import getTeamForRouteToAction from "@salesforce/apex/FEC_AssignmentListHandler.getTeamForRouteToAction";
+import getQueueForRouteToAction from "@salesforce/apex/FEC_AssignmentListHandler.getQueueForRouteToAction";
+
 import getQueuesByTeam from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.getQueuesByTeam";
 
 import CASE_ID from "@salesforce/schema/Case.Id";
 import USER_ID from "@salesforce/user/Id";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import executeSubmit from "@salesforce/apex/FEC_AssignmentRoutingActionHandler.execute";
+//thangtv: refresh ẩn/hiện nút Execute Assignment sau Submit
+import refreshExecuteVisibility from "@salesforce/apex/FEC_AssignmentExecuteService.refreshExecuteAssignmentVisibility";
 import {
   subscribe,
   unsubscribe,
@@ -197,7 +203,6 @@ export default class Fec_AssignmentList extends LightningElement {
         id: item.Id,
         assignmentId: item.Name,
         ownerId: item.FEC_Assignment_Owner__c || "",
-
         // tungnm37: dùng formula FEC_Assignment_Owner_Text__c (tự xử lý Unassigned/queue/user)
         owner:
           item.FEC_Assignment_Owner_Text__c ||
@@ -271,16 +276,48 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
   }
 
+  // handleActionChange(event) {
+  //   const id = event.target.dataset.id;
+  //   const value = event.detail.value;
+
+  //   this.assignments = this.assignments.map((item) => {
+  //     if (item.id !== id) return item;
+
+  //     return {
+  //       ...item,
+  //       action: value,
+  //       decision: null,
+  //       subDecision: null,
+
+  //       decisionOptions: DECISION_OPTIONS_MAP[value] || [],
+
+  //       showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
+
+  //       showSubDecision: false,
+  //       isUserDecision: false,
+  //       isQueueDecision: false,
+
+  //       showTeam: item.action == 'Route_to' ? true: false,
+  //       showQueueByTeam: false,
+  //     };
+  //   });
+  //   this.updatePagedData();
+  // }
+
   handleActionChange(event) {
     const id = event.target.dataset.id;
     const value = event.detail.value;
 
     this.assignments = this.assignments.map((item) => {
-      if (item.id !== id) return item;
+      if (item.id !== id) {
+        return item;
+      }
 
       return {
         ...item,
+
         action: value,
+
         decision: null,
         subDecision: null,
 
@@ -289,53 +326,109 @@ export default class Fec_AssignmentList extends LightningElement {
         showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
 
         showSubDecision: false,
+
         isUserDecision: false,
         isQueueDecision: false,
 
-        showTeam: false,
+        /*
+         * Route_to
+         * show team combobox immediately
+         */
+        showTeam: value === "Route_to",
+
         showQueueByTeam: false,
+
+        selectedTeam: null,
+        selectedQueue: null,
       };
     });
+
     this.updatePagedData();
+
+    /*
+     * Auto load teams for Route_to
+     */
+    if (value === "Route_to") {
+      const currentItem = this.assignments.find((item) => item.id === id);
+
+      if (currentItem) {
+        this.loadTeamsForRouteToAction(
+          currentItem.assignmentId,
+          currentItem.id,
+        );
+      }
+    }
   }
 
   handleDecisionChange(event) {
     const id = event.target.dataset.id;
     const value = event.detail.value;
 
+    /*
+     * Find current assignment
+     */
+    const currentItem = this.assignments.find((item) => item.id === id);
+
+    if (!currentItem) {
+      return;
+    }
+
     this.assignments = this.assignments.map((item) => {
-      if (item.id !== id) return item;
+      if (item.id !== id) {
+        return item;
+      }
 
       const requiredSubDecisionValues =
         ACTIONS_REQUIRE_SUBDECISION_MAP[item.action] || [];
 
       return {
         ...item,
+
         decision: value,
         subDecision: null,
 
         showSubDecision: requiredSubDecisionValues.includes(value),
 
         isUserDecision: value === "USER",
+
         isQueueDecision: value === "QUEUE",
 
         showTeam: item.action === "Route_to" && value === "TEAM",
+
         showQueueByTeam: false,
+
+        selectedTeam: null,
+        selectedQueue: null,
       };
     });
 
     this.updatePagedData();
 
+    /*
+     * USER
+     */
     if (value === "USER") {
       this.loadUsers();
-    }
-
-    if (value === "QUEUE") {
+    } else if (value === "QUEUE") {
+      /*
+       * QUEUE
+       */
       this.loadQueues();
-    }
-
-    if (value === "TEAM") {
-      this.loadTeams();
+    } else if (value === "TEAM") {
+      /*
+       * TEAM
+       */
+      /*
+       * Route To
+       */
+      if (currentItem.action === "Route_to") {
+        this.loadTeamsForRouteToAction(currentItem.assignmentId);
+      } else {
+        /*
+         * Other actions
+         */
+        this.loadTeams();
+      }
     }
   }
 
@@ -349,10 +442,15 @@ export default class Fec_AssignmentList extends LightningElement {
 
   async loadQueues() {
     const result = await getQueuesForUser();
+
+    console.log("QUEUE RESULT", JSON.stringify(result));
+
     this.queueOptions = result.map((r) => ({
       label: r.label,
       value: r.value,
     }));
+
+    console.log("QUEUE OPTIONS", JSON.stringify(this.queueOptions));
   }
 
   async loadTeams() {
@@ -364,17 +462,47 @@ export default class Fec_AssignmentList extends LightningElement {
     }));
   }
 
+  async loadTeamsForRouteToAction(selectedAssignmentId) {
+    const result = await getTeamForRouteToAction({
+      caseId: this.recordId,
+      assignmentId: selectedAssignmentId,
+    });
+    this.teamOptions = result.map((r) => ({
+      label: r.label,
+      value: r.value,
+    }));
+  }
+
+  async loadQueuesForRouteToAction(selectedAssignmentId) {
+    const result = await getQueueForRouteToAction({
+      caseId: this.recordId,
+      assignmentId: selectedAssignmentId,
+    });
+    this.queueOptionsByTeam = result.map((r) => ({
+      label: r.label,
+      value: r.value,
+    }));
+  }
+
   handleTeamChange(event) {
     const id = event.target.dataset.id;
     const team = event.detail.value;
 
+    /*
+     * Find current assignment
+     */
+    const currentItem = this.assignments.find((item) => item.id === id);
+
+    if (!currentItem) {
+      return;
+    }
     // set team vào decision (giữ nguyên)
     this.assignments = this.assignments.map((item) => {
       if (item.id === id) {
         return {
           ...item,
-          decision: team,
-          subDecision: null,
+          // decision: team,
+          subDecision: team,
           showQueueByTeam: true,
         };
       }
@@ -383,7 +511,15 @@ export default class Fec_AssignmentList extends LightningElement {
 
     this.updatePagedData();
 
-    this.loadQueuesByTeam(team);
+    // this.loadQueuesByTeam(team);
+
+    if (currentItem.action === "Route_to") {
+      this.loadQueuesForRouteToAction(currentItem.assignmentId);
+    } else {
+      /*
+       * Other actions
+       */
+    }
   }
 
   async loadQueuesByTeam(team) {
@@ -399,6 +535,7 @@ export default class Fec_AssignmentList extends LightningElement {
     const id = event.target.dataset.id;
     const value = event.detail.value;
 
+    console.log("Sub decision change", JSON.stringify({ id, value }));
     this.updateField(id, "subDecision", value);
   }
 
@@ -485,6 +622,10 @@ export default class Fec_AssignmentList extends LightningElement {
       );
       // reload data
       await this.initData();
+
+      //thangtv: cập nhật FEC_Can_Execute_Assignment__c khi assignment đã Completed
+      await refreshExecuteVisibility({ caseId: this.recordId });
+
       // 👇 QUAN TRỌNG: chuyển mode view
       setTimeout(() => {
         this.modeEditCase = false;

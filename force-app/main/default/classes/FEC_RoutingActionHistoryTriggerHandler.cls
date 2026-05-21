@@ -29,14 +29,14 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   private void onBeforeInsert(List<FEC_Routing_Action_History__c> newRecords) {
-    // TODO: Add before insert logic here
+    FEC_RoutingHistTatSvc.applyBeforeSave(newRecords, null);
   }
 
   private void onBeforeUpdate(
     List<FEC_Routing_Action_History__c> newRecords,
     Map<Id, FEC_Routing_Action_History__c> oldMap
   ) {
-    // TODO: Add before update logic here
+    FEC_RoutingHistTatSvc.applyBeforeSave(newRecords, oldMap);
   }
 
   private void onAfterInsert(List<FEC_Routing_Action_History__c> newRecords) {
@@ -94,7 +94,7 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     List<FEC_Notification__c> activeNotifications = [
         SELECT Id, Name, FEC_Current_Status__c, FEC_Changed_Status__c, FEC_Target_Group__c, 
                FEC_Customer_Type__c, FEC_Product_Type__c, FEC_Category__c, 
-               FEC_SubCategory__c, FEC_SubCode__c, FEC_Case_Stage__c,
+              //  FEC_SubCategory__c, FEC_SubCode__c,
                FEC_Notification_Channel__r.Name,
                FEC_Notification_Template__c
         FROM FEC_Notification__c
@@ -119,9 +119,9 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
                 && (String.isNotBlank(history.FEC_Changed_Status__c) && notif.FEC_Changed_Status__c?.contains(history.FEC_Changed_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, '')) == true)
                 && FEC_CommonUltils.notificationCustomerTypeMatchesCase(notif.FEC_Customer_Type__c, relatedCase.FEC_Customer_Type__c)
                 && (notif.FEC_Product_Type__c == relatedCase.FEC_Product_Type__c)
-                && (notif.FEC_Category__c == relatedCase.FEC_Category__c)
-                && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
-                && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
+                && (notif.FEC_Category__c == relatedCase.FEC_Category__c);
+                // && (notif.FEC_SubCategory__c == relatedCase.FEC_SubCategory__c)
+                // && (notif.FEC_SubCode__c == relatedCase.FEC_SubCode__c);
             //  if (notif.Name == 'TestAutoKHv1_14/4') {
             //     System.debug('--- [sendNotificationEmails] notif name: ' + notif.Name);
             //     System.debug('--- [sendNotificationEmails] history.FEC_Current_Status__c.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ""): ' + history.FEC_Current_Status__c?.replaceAll(FEC_ConstantCommon.PATTERN_CLEAN_TEXT, ''));
@@ -222,7 +222,11 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   ) {
     Set<Id> caseIds = new Set<Id>();
     for (FEC_Routing_Action_History__c history : newRecords) {
-      if (history.FEC_Case__c != null) {
+      if (
+        history.FEC_Case__c != null &&
+        history.FEC_Routing_Action_Type__c == 'Case' &&
+        history.FEC_Assignment__c == null
+      ) {
         caseIds.add(history.FEC_Case__c);
       }
     }
@@ -233,14 +237,18 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
 
     Map<Id, Case> caseMap = new Map<Id, Case>(
       [
-        SELECT Id, FEC_Team__c
+        SELECT Id, FEC_Team__c, FEC_Assignment_Count__c
         FROM Case
         WHERE Id IN :caseIds
       ]
     );
 
     for (FEC_Routing_Action_History__c history : newRecords) {
-      if (history.FEC_Case__c == null) {
+      if (
+        history.FEC_Case__c == null ||
+        history.FEC_Routing_Action_Type__c != 'Case' ||
+        history.FEC_Assignment__c != null
+      ) {
         continue;
       }
 
@@ -250,7 +258,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
       }
 
       updateCaseTeams(
-        parseOwnerIdField(history.FEC_Original_User_Queue_ID__c),
         parseOwnerIdField(history.FEC_Updated_User_Queue_ID__c),
         caseRecord,
         history
@@ -354,7 +361,6 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
   }
 
   public static void updateCaseTeams(
-    Id originalUserQueueId,
     Id updatedUserQueueId,
     Case caseRecord,
     FEC_Routing_Action_History__c history
@@ -362,74 +368,99 @@ public without sharing class FEC_RoutingActionHistoryTriggerHandler {
     if (caseRecord == null || history == null) {
       return;
     }
-
-    if (
-      history.FEC_Routing_Action__c == FEC_CaseBusinessService.CANCEL ||
-      history.FEC_Routing_Action__c == FEC_CaseBusinessService.REJECT ||
-      history.FEC_Routing_Action__c == FEC_CaseBusinessService.RESOLVE
-    ) {
-      caseRecord.FEC_Team__c = null;
-      return;
+    FEC_CaseBusinessService.Method actionMethod = FEC_CaseBusinessService.METHOD_MAP.get(history?.FEC_Routing_Action__c);
+    switch on actionMethod {
+      when CANCEL {
+        caseRecord.FEC_Team__c = null;
+      }
+      when REJECT, RESOLVE {
+        if (caseRecord.FEC_Assignment_Count__c > 0) {
+          caseRecord.FEC_Team__c = null;
+        } else {
+          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
+        }
+      }
+      when UPDATEACTION {
+        if (caseRecord.FEC_Assignment_Count__c == 0) {
+          updateTeamForUpdateAction(caseRecord, history);
+        }
+      }
+      when else {
+        if (caseRecord.FEC_Assignment_Count__c == 0) {
+          updateTeamFromQueue(updatedUserQueueId, caseRecord, history);
+        }
+      }
     }
+  }
 
-    Set<Id> idSet = new Set<Id>();
-    if (originalUserQueueId != null)
-      idSet.add(originalUserQueueId);
-    if (updatedUserQueueId != null)
-      idSet.add(updatedUserQueueId);
-
-    Map<Id, String> teamMap = getTeamsFromIds(idSet);
-    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
-    String originalTeam = teamMap.get(originalUserQueueId);
-    if (String.isNotBlank(originalTeam)) {
-        // Xóa sạch khoảng trắng dư thừa, ký tự invisible, newline...
-        originalTeam = originalTeam.replaceAll('\\W+', '').trim();
-    }
-
-    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.REOPEN) {
-      caseRecord.FEC_Team__c = originalTeam;
-      return;
-    }
-    // Change Owner: gán FEC_Team__c = team của owner mới (thay thế toàn bộ), không merge với team cũ trên Case
-    if (history.FEC_Routing_Action__c == FEC_CaseBusinessService.CHANGE_OWNER) {
-      String updatedTeamOnly = teamMap.get(updatedUserQueueId);
+  private static void updateTeamForUpdateAction(Case caseRecord, FEC_Routing_Action_History__c history) {
+    if (history.FEC_Decision__c != FEC_ConstantCommon.CASE_DECISION_VALUE) {
+      Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
+      String updatedTeamOnly = decisionToTeamMap.get(history.FEC_Decision__c);
       if (String.isNotBlank(updatedTeamOnly)) {
         caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
       } else {
         caseRecord.FEC_Team__c = null;
       }
-      return;
-    }
-    String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId)?.replaceAll('\\W+', '').trim();
+    } else {
+      caseRecord.FEC_Team__c = null;
+      caseRecord.Status = 'Resolved-CannotContactCustomer';
 
-    String currentTeamsStr = caseRecord.FEC_Team__c;
-    Set<String> teamSet = new Set<String>();
-    if (String.isNotBlank(currentTeamsStr)) {
-      for (
-        String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
-      ) {
-        if (String.isNotBlank(t)) {
-          teamSet.add(t.replaceAll('\\W+', '').trim());
-        }
-      }
+      FEC_Routing_Action_History__c clonedHistory = history.clone(false, true, false, false);
+      clonedHistory.FEC_Routing_Action__c = FEC_CaseBusinessService.RESOLVE;
+      insert clonedHistory;
     }
-    if (teamSet.contains(originalTeam)) {
-      teamSet.remove(originalTeam);
+  }
+
+  private static void updateTeamFromQueue(Id updatedUserQueueId, Case caseRecord, FEC_Routing_Action_History__c history) {
+    Set<Id> idSet = new Set<Id>();
+    if (updatedUserQueueId != null) {
+      idSet.add(updatedUserQueueId);
     }
+    Map<Id, String> teamMap = getTeamsFromIds(idSet);
+    Map<String, String> decisionToTeamMap = FEC_ConstantCommon.decisionToTeamMap;
+    String updatedTeamOnly = teamMap.get(updatedUserQueueId);
+    if (String.isNotBlank(updatedTeamOnly)) {
+      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(updatedTeamOnly);
+    } else {
+      caseRecord.FEC_Team__c = null;
+    }
+
+    // if (originalUserQueueId != null)
+    //   idSet.add(originalUserQueueId);
+    
+
+    
+    //String updatedTeam = history.FEC_Routing_Action__c == FEC_CaseBusinessService.UPDATEACTION ? decisionToTeamMap.get(history.FEC_Decision__c) : teamMap.get(updatedUserQueueId)?.replaceAll('\\W+', '').trim();
+
+    // String currentTeamsStr = caseRecord.FEC_Team__c;
+    // Set<String> teamSet = new Set<String>();
+    // if (String.isNotBlank(currentTeamsStr)) {
+    //   for (
+    //     String t : currentTeamsStr.split(FEC_ConstantCommon.DELIMITER_UNDERSCORE)
+    //   ) {
+    //     if (String.isNotBlank(t)) {
+    //       teamSet.add(t.replaceAll('\\W+', '').trim());
+    //     }
+    //   }
+    // }
+    // if (teamSet.contains(originalTeam)) {
+    //   teamSet.remove(originalTeam);
+    // }
 
     // Add updated team if not exists
-    if (String.isNotBlank(updatedTeam)) {
-      teamSet.add(updatedTeam);
-    }
+    // if (String.isNotBlank(updatedTeam)) {
+    //   teamSet.add(updatedTeam);
+    // }
 
-    if (teamSet.isEmpty()) {
-      caseRecord.FEC_Team__c = null;
-    } else {
-      caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
-        new List<String>(teamSet),
-        FEC_ConstantCommon.DELIMITER_UNDERSCORE
-      ));
-    }
+    // if (teamSet.isEmpty()) {
+    //   caseRecord.FEC_Team__c = null;
+    // } else {
+    //   caseRecord.FEC_Team__c = FEC_CommonUltils.sortTeamField(String.join(
+    //     new List<String>(teamSet),
+    //     FEC_ConstantCommon.DELIMITER_UNDERSCORE
+    //   ));
+    // }
   }
 
   public static Map<Id, String> getTeamsFromIds(Set<Id> targetIds) {

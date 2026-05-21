@@ -65,6 +65,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearchFromParent(newCases, null);
         setParentIdFromEmailThread(newCases);
         stripSubjectThreadToken(newCases);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, null);
     }
 
     /**
@@ -81,6 +82,7 @@ public without sharing class FEC_CaseTriggerHandler {
         // Delegate: Check duplicate External Interaction ID (Story 4)
         new CaseTriggerHandler().onBeforeUpdate(newCases, oldMap);
         syncGlobalSearchFromParent(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.applyBeforeSave(newCases, oldMap);
     }
 
     /**
@@ -98,6 +100,7 @@ public without sharing class FEC_CaseTriggerHandler {
         syncGlobalSearch(newCases, null);
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, null);
         redirectEmailReplyToCustomerCase(newCases);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, null);
         
         isExecuting = false;
     }
@@ -111,6 +114,7 @@ public without sharing class FEC_CaseTriggerHandler {
      * @modified: 2026/01/16
      * @modified: 2026/02/02
      * @modified: 2026/04/06 - Added Auto Notification for Internal User (Loại 3 Email + Loại 4 SF App)
+     * @modified: 2026/05/21 - Added SLA bell notification (sendSLANotifications)
      */
     private void onAfterUpdate(List<Case> newCases, Map<Id, Case> oldMap) {
         isExecuting = true;
@@ -124,9 +128,12 @@ public without sharing class FEC_CaseTriggerHandler {
         FEC_CaseManagerListService.syncFromOwnerCases(newCases, oldMap);
         syncGlobalSearch(newCases, oldMap);
         FEC_NotificationService.sendEmailNotifications(newCases, oldMap);
+        FEC_CaseTatFullProcessSvc.syncAfterSave(newCases, oldMap);
         FEC_NotificationService.sendSFAppNotifications(newCases, oldMap);
-        // tungnm37: Đồng bộ FEC_Assignment_Users__c khi OwnerId thay đổi (bao phủ mọi luồng)
-        syncAssignmentUsersOnOwnerChange(newCases, oldMap);
+        sendSLANotifications(newCases, oldMap);
+        // tungnm37 fix: comment out syncAssignmentUsersOnOwnerChange vì đã được xử lý trong FEC_AssignmentTriggerHandler
+        // tungnm37 fix: logic cũ set FEC_Assignment_Users__c = OwnerId mà không check assignment type
+        // syncAssignmentUsersOnOwnerChange(newCases, oldMap);
         isExecuting = false;
     }
 
@@ -1041,6 +1048,109 @@ public without sharing class FEC_CaseTriggerHandler {
         }
         if (!caseUpdates.isEmpty()) {
             update caseUpdates;
+        }
+    }
+
+    /**
+     * II. Hình thức gửi thông báo SLA (bell) — theo Category/Sub-Category và lịch sử xử lý Case.
+     * - Trường hợp 1: Case còn lại (không thuộc Request/Internal Task + ISL01/ISC01 hủy yêu cầu).
+     * - Trường hợp 2: Category Request hoặc Internal Task, Sub-Code ISL01 / ISC01 (Hủy yêu cầu).
+     * Lần 1 (vàng): FEC_SLA_Warning__c đổi — nội dung "Sắp vượt quá thời gian xử lý".
+     * Lần 2 (đỏ): FEC_SLA_Violating_Warning__c đổi — nội dung "Đã vượt quá thời gian xử lý".
+     */
+      private static void sendSLANotifications(List<Case> newCases, Map<Id, Case> oldMap) {
+        try {
+            CustomNotificationType notifType = [
+                SELECT Id FROM CustomNotificationType
+                WHERE DeveloperName = 'Custom_Notification' LIMIT 1
+            ];
+
+            List<Case> slaCases = new List<Case>();
+            Set<Id> slaCaseIds = new Set<Id>();
+            Map<Id, Boolean> caseIdToIsViolating = new Map<Id, Boolean>();
+            for (Case c : newCases) {
+                Case oldCase = oldMap.get(c.Id);
+                Boolean isWarning = String.isNotBlank(c.FEC_SLA_Warning__c)
+                    && c.FEC_SLA_Warning__c != oldCase.FEC_SLA_Warning__c;
+                Boolean isViolating = String.isNotBlank(c.FEC_SLA_Violating_Warning__c)
+                    && c.FEC_SLA_Violating_Warning__c != oldCase.FEC_SLA_Violating_Warning__c;
+                if (!isWarning && !isViolating) {
+                    continue;
+                }
+                slaCases.add(c);
+                slaCaseIds.add(c.Id);
+                caseIdToIsViolating.put(c.Id, isViolating);
+            }
+            if (slaCases.isEmpty()) {
+                return;
+            }
+
+            Map<Id, Case> slaCaseById = new Map<Id, Case>([
+                SELECT
+                    Id,
+                    CaseNumber,
+                    FEC_Category__r.Name,
+                    FEC_SubCategory__r.FEC_Code__c
+                FROM Case
+                WHERE Id IN :slaCaseIds
+            ]);
+
+            Map<Id, Set<String>> caseIdToRecipientIds =
+                FEC_CaseSlaNotificationService.buildSlaNotificationRecipientsByCase(
+                    slaCaseById,
+                    caseIdToIsViolating
+                );
+
+            for (Case c : slaCases) {
+                Case slaCase = slaCaseById.get(c.Id);
+                if (slaCase == null) {
+                    continue;
+                }
+                Boolean isViolating = caseIdToIsViolating.get(c.Id) == true;
+
+                Set<String> recipientIds = caseIdToRecipientIds.get(c.Id);
+                if (recipientIds == null || recipientIds.isEmpty()) {
+                    continue;
+                }
+
+                Boolean isCancelRequestCase =
+                    FEC_CaseSlaNotificationService.isSlaCancelRequestInternalTaskCase(slaCase);
+                List<String> caseNumberArgs = new List<String>{ slaCase.CaseNumber };
+                String title;
+                String body;
+                if (isViolating && isCancelRequestCase) {
+                    // Lần 2 (đỏ) — Trường hợp 2: Đã vượt quá thời gian xử lý
+                    title = String.format(
+                        System.Label.FEC_MSG_SLA_Notif_Title_Exceeded,
+                        caseNumberArgs
+                    );
+                    body = String.format(
+                        System.Label.FEC_MSG_SLA_Notif_Body_Exceeded,
+                        caseNumberArgs
+                    );
+                } else {
+                    // Lần 1 (vàng) hoặc Lần 2 (đỏ) Trường hợp 1: Sắp vượt quá thời gian xử lý
+                    title = String.format(
+                        System.Label.FEC_MSG_SLA_Notif_Title_Approaching,
+                        caseNumberArgs
+                    );
+                    body = String.format(
+                        System.Label.FEC_MSG_SLA_Notif_Body_Approaching,
+                        caseNumberArgs
+                    );
+                }
+
+                FEC_CommonUltils.notifyUsers(
+                    recipientIds,
+                    c.Id,
+                    null,
+                    title,
+                    body,
+                    notifType
+                );
+            }
+        } catch (Exception e) {
+            System.debug('FEC_DEBUG sendSLANotifications error: ' + e.getMessage());
         }
     }
 }

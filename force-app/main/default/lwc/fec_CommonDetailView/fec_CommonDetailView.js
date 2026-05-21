@@ -58,9 +58,9 @@ export default class Fec_CommonDetailViewailView extends LightningElement {
                         ...field,
                         rowClass:
                             'slds-grid slds-border_bottom slds-p-vertical_x-small slds-grid_vertical-align-center',
-                            valueClass: isNegative(field.value)
-                                ? 'slds-truncate text-red'
-                                : 'slds-wrap'
+                        valueClass: isNegative(field.value)
+                            ? 'slds-truncate text-red'
+                            : 'slds-wrap'
                     };
                 })
             };

@@ -1,0 +1,103 @@
+.hold-case-auto-wrapper {
+    padding: 0.5rem 0 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.hold-case-auto-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #181818;
+    margin-bottom: 0.5rem;
+}
+
+.hold-case-auto-message {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.hold-case-auto-message--success {
+    color: #2e844a;
+}
+
+.hold-case-auto-message--error {
+    color: #c23934;
+}
+
+.hold-case-auto-manual-action {
+    margin-bottom: 0.75rem;
+}
+
+.hold-case-auto-message--pending {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #706e6b;
+}
+
+.hold-case-auto-pending-text {
+    font-size: 0.8125rem;
+}
+
+/* NFU Details — gạch dưới từng value, không gạch liền 2 cột */
+.hold-case-auto-details {
+    margin-top: 0.25rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+}
+
+.hold-case-auto-details-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #181818;
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.hold-case-auto-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+    row-gap: 0.25rem;
+    padding: 0 0 0.75rem;
+}
+
+.hold-case-auto-row--last {
+    padding-bottom: 0;
+    margin-top: 0.125rem;
+}
+
+.hold-case-auto-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.hold-case-auto-field--full {
+    grid-column: 1 / -1;
+}
+
+.hold-case-auto-field-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #181818;
+    line-height: 1.25;
+}
+
+.hold-case-auto-field-value {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #181818;
+    line-height: 1.4;
+    min-height: 1.25rem;
+    padding-bottom: 0.375rem;
+    border-bottom: 1px solid #c9c9c9;
+}

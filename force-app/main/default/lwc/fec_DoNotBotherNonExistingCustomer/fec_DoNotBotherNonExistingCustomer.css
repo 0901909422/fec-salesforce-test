@@ -38,7 +38,6 @@
   overflow: hidden;
 }
 
-
 .custom-question {
   font-size: 16px;
   color: #3e3e3c;
@@ -101,9 +100,55 @@
 }
 
 .btn-wrapper {
-    padding-top: 16px;
+  padding-top: 16px;
 }
 
 .slds-input {
-    max-width: 280px;
+  max-width: 280px;
+}
+
+.dnb-success {
+  color: #2e844a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.dnb-error {
+  color: #c23934;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 0.75rem;
+}
+
+.dnb-check-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dnb-input-wrapper {
+  flex: 1;
+}
+
+.dnb-button-wrapper {
+  padding-bottom: 2px;
+}
+
+.dnb-button-wrapper lightning-button {
+  width: 100%;
+}
+
+/*
+ * Responsive
+ */
+@media screen and (max-width: 768px) {
+  .dnb-check-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dnb-button-wrapper {
+    width: 100%;
+  }
 }

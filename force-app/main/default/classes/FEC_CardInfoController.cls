@@ -61,6 +61,12 @@ public with sharing class FEC_CardInfoController {
         dto.cardDeliveries = new List<CardDeliveryDTO>();
         dto.otherCards = new List<OtherCardDTO>();
 
+        FEC_API_Setting__c apiSetting = FEC_API_Setting__c.getOrgDefaults();
+        Boolean isMockMode = apiSetting == null || apiSetting.FEC_Call_Mock__c != false;
+        if (isMockMode) {
+            return loadCardInfoForMockMode(customerHistoryId);
+        }
+
         if (customerHistoryId != null) {
             dto.cardDeliveries = mapCardDeliveriesToDTO(queryCardDeliveries(customerHistoryId));
             dto.otherCards = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
@@ -103,6 +109,26 @@ public with sharing class FEC_CardInfoController {
             }
         }
 
+        return dto;
+    }
+
+    /** Mock mode: Card Delivery từ FEC_MockData; Other Cards giữ DB nếu có. */
+    private static CardInfoDTO loadCardInfoForMockMode(Id customerHistoryId) {
+        CardInfoDTO mockInfo = FEC_MockData.getHardcodedCardInfo();
+        CardInfoDTO dto = new CardInfoDTO();
+        dto.cardDeliveries = mockInfo.cardDeliveries != null
+            ? mockInfo.cardDeliveries
+            : new List<CardDeliveryDTO>();
+        dto.otherCards = new List<OtherCardDTO>();
+        if (customerHistoryId != null) {
+            List<OtherCardDTO> fromDb = mapOtherCardsToDTO(queryOtherCards(customerHistoryId));
+            if (!fromDb.isEmpty()) {
+                dto.otherCards = fromDb;
+            }
+        }
+        if (dto.otherCards.isEmpty() && mockInfo.otherCards != null) {
+            dto.otherCards = mockInfo.otherCards;
+        }
         return dto;
     }
 

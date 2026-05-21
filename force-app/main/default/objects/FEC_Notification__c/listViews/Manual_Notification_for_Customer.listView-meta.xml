@@ -6,11 +6,7 @@
     <columns>FEC_Customer_Type__c</columns>
     <columns>FEC_Product_Type__c</columns>
     <columns>FEC_Category__c</columns>
-    <columns>FEC_SubCategory__c</columns>
-    <columns>FEC_SubCode__c</columns>
     <columns>FEC_Notification_Status__c</columns>
-    <columns>FEC_Notification_Channel__c</columns>
-    <columns>FEC_Notification_Template__c</columns>
     <columns>FEC_Channel__c</columns>
     <columns>FEC_Applicable_User_Groups__c</columns>
     <filterScope>Everything</filterScope>

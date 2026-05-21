@@ -71,7 +71,7 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
-                            <value>Case.New_Assignment</value>
+                            <value>Case.FEC_New_Assignment_LWC</value>
                             <visibilityRule>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
@@ -83,7 +83,7 @@
                         <valueListItems>
                             <value>Case.FEC_Execute_Customer_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7 AND 8 AND 9</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4 AND 5 AND 6 AND 7</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.FEC_Interaction_View_Mode__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -115,19 +115,9 @@
                                     <rightValue>Resolved-Cancelled</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Is_Owner__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>true</rightValue>
-                                </criteria>
-                                <criteria>
                                     <leftValue>{!Record.FEC_Can_Execute__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>0</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
@@ -171,9 +161,9 @@
                                     <rightValue>true</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.FEC_Assignment_Count__c}</leftValue>
-                                    <operator>GT</operator>
-                                    <rightValue>0</rightValue>
+                                    <leftValue>{!Record.FEC_Assigment_Mode__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>review</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
@@ -204,6 +194,10 @@
                 <componentInstanceProperties>
                     <name>hideChatterActions</name>
                     <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>hideSlackAction</name>
+                    <value>false</value>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>numVisibleActions</name>
@@ -245,23 +239,7 @@
                 <identifier>c_fec_CaseDetail_Customer</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_DoNotBotherHandling</componentName>
-                <identifier>c_fec_DoNotBotherHandling</identifier>
-            </componentInstance>
-        </itemInstances>
         <name>Facet-4caf6061-dc01-488c-bf14-8ebf5bcb8d36</name>
-        <type>Facet</type>
-    </flexiPageRegions>
-    <flexiPageRegions>
-        <itemInstances>
-            <componentInstance>
-                <componentName>fec_Banca</componentName>
-                <identifier>c_fec_Banca</identifier>
-            </componentInstance>
-        </itemInstances>
-        <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
@@ -281,6 +259,16 @@
             <fieldInstance>
                 <fieldItem>Record.FEC_Interaction__r.FEC_Last_Updated_On_View__c</fieldItem>
                 <identifier>RecordFEC_Interaction_rFEC_Last_Updated_On_View_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.FEC_MRC_Request_Handling_Option__c</fieldItem>
+                <identifier>RecordFEC_MRC_Request_Handling_Optin__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-b98e8ce4-83d4-4be1-b3a1-1f08c8409b27</name>
@@ -1470,6 +1458,16 @@
             </componentInstance>
         </itemInstances>
         <name>Facet-c3aab53f-481a-4de2-b754-184d4c3e3cb6</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>fec_Banca</componentName>
+                <identifier>c_fec_Banca</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-4a031182-8cf0-4e37-b787-0f5b5961f7f9</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>

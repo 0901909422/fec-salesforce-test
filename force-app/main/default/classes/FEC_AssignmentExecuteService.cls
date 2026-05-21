@@ -1,7 +1,12 @@
-public with sharing class FEC_AssignmentExecuteService {
+public without sharing class FEC_AssignmentExecuteService {
+
     public class ExecuteVisibilityResult {
         @AuraEnabled public Boolean value;
         @AuraEnabled public Boolean shouldUpdate;
+    }
+
+    public class ExecuteAssignmentResult {
+        @AuraEnabled public Integer claimedCount;
     }
     
     private static final Set<String> CLOSED_STATUSES =
@@ -48,10 +53,29 @@ public with sharing class FEC_AssignmentExecuteService {
         
         System.debug('hasAccess = ' + hasAccess);
         
+        //thangtv: không có quyền → ẩn nút Execute Assignment
+        if (!hasAccess) {
+            return buildResult(caseRecord, false);
+        }
+        
         /*
-         * 5. Return result
+         * 5. User còn Routing assignment chưa Completed (chưa submit xong)
          */
-        return buildResult(caseRecord, hasAccess);
+        //thangtv: ẩn nút khi user đã submit hết assignment liên quan (Status = Completed)
+        Boolean hasPendingForUser = hasPendingRoutingAssignmentForUser(
+            caseId,
+            currentUserId
+        );
+        
+        System.debug('hasPendingForUser = ' + hasPendingForUser);
+        
+        return buildResult(caseRecord, hasPendingForUser);
+    }
+    
+    //thangtv: gọi lại sau Submit Assignment để cập nhật FEC_Can_Execute_Assignment__c
+    @AuraEnabled
+    public static ExecuteVisibilityResult refreshExecuteAssignmentVisibility(Id caseId) {
+        return canExecuteAssignment(caseId);
     }
     
     /////////Helper Methods/////////
@@ -71,49 +95,109 @@ public with sharing class FEC_AssignmentExecuteService {
         return countAssignment > 0;
     }
     
-    // private static Boolean hasAssignmentUsersAccess(
-    // Case caseRecord, Id currentUserId) {
-        //     if (caseRecord == null || currentUserId == null
-        //     || String.isBlank(caseRecord.FEC_Assignment_Users__c)) {
-            //         return false;
-        //     }
+    //thangtv: kiểm tra assignment đã Completed / đóng
+    private static Boolean isClosedAssignmentStatus(String status) {
+        return !String.isBlank(status) && CLOSED_STATUSES.contains(status);
+    }
+    
+    //thangtv: user còn assignment liên quan chưa Completed thì mới hiện nút Execute
+    private static Boolean hasPendingRoutingAssignmentForUser(Id caseId, Id userId) {
+        List<FEC_Assignment__c> assignments = [
+            SELECT Id,
+                FEC_Assignment_Owner__c,
+                FEC_OwnerID__c,
+                FEC_Assignment_Status__c
+            FROM FEC_Assignment__c
+            WHERE FEC_Case__c = :caseId
+        ];
         
-        //     Set<String> assignmentValues =
-        //         parseAssignmentUsers(caseRecord.FEC_Assignment_Users__c);
+        if (assignments.isEmpty()) {
+            return false;
+        }
         
-        //     /*
-        //      * 1. User match
-        //      */
-        //     if (assignmentValues.contains(String.valueOf(currentUserId))) {
-            //         return true;
-        //     }
+        User currentUser = [
+            SELECT Id, UserRoleId
+            FROM User
+            WHERE Id = :userId
+            LIMIT 1
+        ];
         
-        //     /*
-        //      * 2. Role match
-        //      */
-        //     User currentUser =
-        //         [SELECT UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1];
+        Map<String, Group> queueByName = loadQueuesByOwnerReferences(assignments);
         
-        //     if (currentUser.UserRoleId != null
-        //     && assignmentValues.contains(String.valueOf(currentUser.UserRoleId))) {
-            //         return true;
-        //     }
+        for (FEC_Assignment__c assignment : assignments) {
+            if (!isAssignmentRelevantToUser(assignment, userId, currentUser, queueByName)) {
+                continue;
+            }
+            if (!isClosedAssignmentStatus(assignment.FEC_Assignment_Status__c)) {
+                return true;
+            }
+        }
         
-        //     /*
-        //      * 3. Queue match
-        //      */
-        //     for (String value : assignmentValues) {
-            //         if (isQueueId(value)) {
-                //             Id memberId = (Id) value;
-                
-                //             if (isUserInQueue(currentUserId, memberId)) {
-                    //                 return true;
-                //             }
-            //         }
-        //     }
+        return false;
+    }
+    
+    //thangtv: load queue theo FEC_OwnerID__c để xác định assignment liên quan user
+    private static Map<String, Group> loadQueuesByOwnerReferences(
+        List<FEC_Assignment__c> assignments
+    ) {
+        Set<String> queueNames = new Set<String>();
+        for (FEC_Assignment__c assignment : assignments) {
+            if (String.isBlank(assignment.FEC_OwnerID__c)) {
+                continue;
+            }
+            String ownerRef = assignment.FEC_OwnerID__c.trim();
+            if (!isUserId(ownerRef)) {
+                queueNames.add(ownerRef);
+            }
+        }
         
-        //     return false;
-    // }
+        Map<String, Group> queueByName = new Map<String, Group>();
+        if (!queueNames.isEmpty()) {
+            for (Group g : [
+                SELECT Id, Name
+                FROM Group
+                WHERE Type = 'Queue' AND Name IN :queueNames
+            ]) {
+                queueByName.put(g.Name, g);
+            }
+        }
+        return queueByName;
+    }
+    
+    //thangtv: assignment thuộc owner user hoặc queue/user trong FEC_OwnerID__c
+    private static Boolean isAssignmentRelevantToUser(
+        FEC_Assignment__c assignment,
+        Id userId,
+        User currentUser,
+        Map<String, Group> queueByName
+    ) {
+        if (assignment.FEC_Assignment_Owner__c == userId) {
+            return true;
+        }
+        
+        if (String.isBlank(assignment.FEC_OwnerID__c)) {
+            return false;
+        }
+        
+        String ownerRef = assignment.FEC_OwnerID__c.trim();
+        
+        if (isUserId(ownerRef)) {
+            try {
+                return (Id) ownerRef == userId;
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+        
+        Group queueGroup = queueByName.get(ownerRef);
+        if (queueGroup == null) {
+            return false;
+        }
+        
+        Set<Id> queueIds = new Set<Id>{ queueGroup.Id };
+        return isUserInQueues(userId, queueIds)
+            || isUserRoleInQueues(userId, queueIds);
+    }
     
     private static Boolean hasAssignmentUsersAccess(
     Case caseRecord, Id currentUserId) {
@@ -122,43 +206,62 @@ public with sharing class FEC_AssignmentExecuteService {
             return false;
         }
         
+        /*
+         * Parse values
+         * Example:
+         * "DQ - CS Customer Care; hieu dev"
+         */
         Set<String> assignmentValues =
             parseAssignmentUsers(caseRecord.FEC_Assignment_Users__c);
         
+        if (assignmentValues.isEmpty()) {
+            return false;
+        }
+        
         /*
-         * Current User Info
+         * Current user
          */
         User currentUser = [
-    SELECT Id, Name, UserRoleId,
-    UserRole.Name FROM User WHERE Id = : currentUserId LIMIT 1
-  ];
+            SELECT Id, Name, UserRoleId FROM User WHERE Id = : currentUserId LIMIT 1
+        ];
         
         /*
-         * 1. User Name match
+         * 1. Direct user match
          */
-        if (assignmentValues.contains(currentUser.Name)) {
+        if (assignmentValues.contains(currentUser.Id)) {
             return true;
         }
         
         /*
-         * 2. Role Name match
+         * 2. Find queues by name
          */
-        if (currentUser.UserRoleId != null
-        && assignmentValues.contains(currentUser.UserRole.Name)) {
+        List<Group> queues = [
+    SELECT Id,
+    Name FROM Group WHERE Name IN : assignmentValues AND Type = 'Queue'
+  ];
+        
+        if (queues.isEmpty()) {
+            return false;
+        }
+        
+        Set<Id> queueIds = new Set<Id>();
+        
+        for (Group g : queues) {
+            queueIds.add(g.Id);
+        }
+        
+        /*
+         * 3. Direct queue membership
+         */
+        if (isUserInQueues(currentUserId, queueIds)) {
             return true;
         }
         
         /*
-         * 3. Queue Name match
+         * 4. Queue role membership
          */
-        List<GroupMember> groupMembers = [
-    SELECT Group.Name FROM GroupMember WHERE UserOrGroupId = : currentUserId
-  ];
-        
-        for (GroupMember gm : groupMembers) {
-            if (gm.Group != null && assignmentValues.contains(gm.Group.Name)) {
-                return true;
-            }
+        if (isUserRoleInQueues(currentUserId, queueIds)) {
+            return true;
         }
         
         return false;
@@ -171,7 +274,8 @@ public with sharing class FEC_AssignmentExecuteService {
             return values;
         }
         
-        for (String value : assignmentUsers.split(';')) {
+        // tungnm37 fix: split bằng ',' - delimiter chuẩn
+        for (String value : assignmentUsers.split(',')) {
             if (!String.isBlank(value)) {
                 values.add(value.trim());
             }
@@ -179,67 +283,16 @@ public with sharing class FEC_AssignmentExecuteService {
         
         return values;
     }
+
+    private static final QueueMembershipAccess QUEUE_MEMBERSHIP_ACCESS =
+        new QueueMembershipAccess();
     
-    private static Boolean isUserInQueue(Id userId, Id queueId) {
-        if (userId == null || queueId == null) {
-            return false;
-        }
-        
-        /*
-         * Validate queue
-         */
-        List<Group> queueGroups =
-            [SELECT Id, Type FROM Group WHERE Id = : queueId LIMIT 1];
-        
-        if (queueGroups.isEmpty() || queueGroups[0].Type != 'Queue') {
-            return false;
-        }
-        
-        /*
-         * BFS traversal
-         */
-        Set<Id> visitedGroupIds = new Set<Id>();
-        
-        Set<Id> groupsToProcess = new Set<Id>{queueId};
-        
-        while (!groupsToProcess.isEmpty()) {
-            Set<Id> currentBatch = new Set<Id>(groupsToProcess);
-            
-            groupsToProcess.clear();
-            
-            visitedGroupIds.addAll(currentBatch);
-            
-            List<GroupMember> members = [
-      SELECT GroupId,
-      UserOrGroupId FROM GroupMember WHERE GroupId IN : currentBatch
-    ];
-            
-            for (GroupMember gm : members) {
-                Id memberId = gm.UserOrGroupId;
-                
-                /*
-                 * Direct user
-                 */
-                if (memberId == userId) {
-                    return true;
-                }
-                
-                /*
-                 * Nested group
-                 * - Public Group
-                 * - Role
-                 * - RoleAndSubordinates
-                 */
-                if (memberId.getSObjectType() == Group.SObjectType) {
-                    if (!visitedGroupIds.contains(memberId)
-                    && !groupsToProcess.contains(memberId)) {
-                        groupsToProcess.add(memberId);
-                    }
-                }
-            }
-        }
-        
-        return false;
+    private static Boolean isUserInQueues(Id userId, Set<Id> queueIds) {
+        return QUEUE_MEMBERSHIP_ACCESS.isUserInQueues(userId, queueIds);
+    }
+
+    private static Boolean isUserRoleInQueues(Id userId, Set<Id> queueIds) {
+        return QUEUE_MEMBERSHIP_ACCESS.isUserRoleInQueues(userId, queueIds);
     }
     
     private static ExecuteVisibilityResult buildResult(
@@ -267,8 +320,14 @@ public with sharing class FEC_AssignmentExecuteService {
                 
                 FEC_CaseTriggerHandler.isSystemUpdate = true;
                 
-                update new Case(
-                    Id = caseRecord.Id, FEC_Can_Execute_Assignment__c = canExecute);
+                //thangtv: SYSTEM_MODE — CS user có thể không có FLS edit trên Case
+                Database.update(
+                    new Case(
+                        Id = caseRecord.Id,
+                        FEC_Can_Execute_Assignment__c = canExecute
+                    ),
+                    AccessLevel.SYSTEM_MODE
+                );
                 
                 System.debug('Case updated successfully');
                 
@@ -285,22 +344,25 @@ public with sharing class FEC_AssignmentExecuteService {
         return result;
     }
     
-    private static Boolean isQueueId(
-        String value
-    ) {
-        
-        return
-            !String.isBlank(value)
-            &&
-            value.startsWith('00G')
-            &&
-            value.length() >= 15;
+    private static Boolean isQueueId(String value) {
+        return !String.isBlank(value)
+            && value.startsWith('00G')
+            && value.length() >= 15;
+    }
+    
+    //thangtv: FEC_OwnerID__c lưu User Id
+    private static Boolean isUserId(String value) {
+        return !String.isBlank(value)
+            && value.startsWith('005')
+            && value.length() >= 15;
     }
     //----------------------------//
     
     @AuraEnabled
-    public static void executeAssignment(Id caseId) {
+    public static ExecuteAssignmentResult executeAssignment(Id caseId) {
         Id userId = UserInfo.getUserId();
+        ExecuteAssignmentResult executeResult = new ExecuteAssignmentResult();
+        executeResult.claimedCount = 0;
         
         System.debug('==============================');
         System.debug('START executeAssignment');
@@ -359,49 +421,7 @@ public with sharing class FEC_AssignmentExecuteService {
         /*
          * STEP 4
          * Find executable assignments
-         * tungnm37 fix: bulk hóa SOQL ra ngoài loop để tránh Too many SOQL queries
          */
-
-        // tungnm37: collect tất cả queue IDs cần check
-        Set<Id> allQueueIds = new Set<Id>();
-        for (Group g : queueByName.values()) {
-            allQueueIds.add(g.Id);
-        }
-
-        // tungnm37: bulk query GroupMember cho user trực tiếp
-        Set<Id> userDirectQueueIds = new Set<Id>();
-        if (!allQueueIds.isEmpty()) {
-            for (GroupMember gm : [
-                SELECT GroupId FROM GroupMember
-                WHERE GroupId IN :allQueueIds AND UserOrGroupId = :userId
-            ]) {
-                userDirectQueueIds.add(gm.GroupId);
-            }
-        }
-
-        // tungnm37: bulk query GroupMember cho role
-        Set<Id> roleQueueIds = new Set<Id>();
-        if (!allQueueIds.isEmpty() && currentUser.UserRoleId != null) {
-            Set<Id> roleGroupIds = new Set<Id>();
-            for (Group rg : [
-                SELECT Id FROM Group
-                WHERE Type IN ('Role', 'RoleAndSubordinates', 'RoleAndSubordinatesInternal')
-                  AND RelatedId = :currentUser.UserRoleId
-            ]) {
-                roleGroupIds.add(rg.Id);
-            }
-            if (!roleGroupIds.isEmpty()) {
-                for (GroupMember gm : [
-                    SELECT GroupId FROM GroupMember
-                    WHERE GroupId IN :allQueueIds AND UserOrGroupId IN :roleGroupIds
-                ]) {
-                    roleQueueIds.add(gm.GroupId);
-                }
-            }
-        }
-
-        System.debug('userDirectQueueIds = ' + userDirectQueueIds);
-        System.debug('roleQueueIds = ' + roleQueueIds);
         List<FEC_Assignment__c> assignmentsToUpdate = new List<FEC_Assignment__c>();
         
         for (FEC_Assignment__c assignment : assignments) {
@@ -412,32 +432,28 @@ public with sharing class FEC_AssignmentExecuteService {
              */
             if (assignment.FEC_Assignment_Owner__c == userId) {
                 matched = true;
+                
                 System.debug('MATCH DIRECT OWNER => ' + assignment.Id);
             }
             
             /*
-             * QUEUE OWNER - tungnm37 fix: dùng pre-queried sets thay vì SOQL trong loop
+             * QUEUE OWNER
              */
-            if (
-                !matched
-                &&
-                assignment.FEC_Assignment_Owner__c == null
-                &&
-                queueByName.containsKey(assignment.FEC_OwnerID__c)
-            ) {
-                Group queueGroup = queueByName.get(assignment.FEC_OwnerID__c);
-                System.debug('CHECK QUEUE => ' + queueGroup.Name);
-
-                // tungnm37: check direct user in queue (bulk queried)
-                if (userDirectQueueIds.contains(queueGroup.Id)) {
-                    matched = true;
-                    System.debug('MATCH DIRECT QUEUE USER');
-                }
-
-                // tungnm37: check role in queue (bulk queried)
-                if (!matched && roleQueueIds.contains(queueGroup.Id)) {
-                    matched = true;
-                    System.debug('MATCH ROLE QUEUE');
+            if (!matched && assignment.FEC_Assignment_Owner__c == null
+            && !String.isBlank(assignment.FEC_OwnerID__c)) {
+                String ownerRef = assignment.FEC_OwnerID__c.trim();
+                if (queueByName.containsKey(ownerRef)) {
+                    Group queueGroup = queueByName.get(ownerRef);
+                    System.debug('CHECK QUEUE => ' + queueGroup.Name);
+                    //thangtv: without sharing — with sharing không đọc được GroupMember role trong queue
+                    matched = QUEUE_MEMBERSHIP_ACCESS.canUserClaimFromQueue(
+                        userId,
+                        currentUser.UserRoleId,
+                        queueGroup.Id
+                    );
+                    if (matched) {
+                        System.debug('MATCH QUEUE MEMBERSHIP');
+                    }
                 }
             }
             
@@ -446,6 +462,7 @@ public with sharing class FEC_AssignmentExecuteService {
              */
             if (matched) {
                 System.debug('TAKE ASSIGNMENT => ' + assignment.Id);
+                
                 assignment.FEC_Assignment_Owner__c = userId;
                 assignmentsToUpdate.add(assignment);
             }
@@ -459,9 +476,16 @@ public with sharing class FEC_AssignmentExecuteService {
             try {
                 FEC_CaseTriggerHandler.isSystemUpdate = true;
                 
-                update assignmentsToUpdate;
+                //thangtv: SYSTEM_MODE — claim owner khi user chưa có share edit trên Assignment
+                Database.update(assignmentsToUpdate, AccessLevel.SYSTEM_MODE);
                 
                 System.debug('Assignments updated successfully');
+                executeResult.claimedCount = assignmentsToUpdate.size();
+                createRoutingActionHistory(
+                    assignmentsToUpdate,
+                userId,
+                caseId
+                    );
                 
             } catch (Exception e) {
                 System.debug('executeAssignment ERROR = ' + e.getMessage());
@@ -471,6 +495,241 @@ public with sharing class FEC_AssignmentExecuteService {
             } finally {
                 FEC_CaseTriggerHandler.isSystemUpdate = false;
             }
+        }
+
+        return executeResult;
+    }
+
+    //thangtv: truy vấn GroupMember phải without sharing (CS user không thấy role member của queue)
+    private without sharing class QueueMembershipAccess {
+        Boolean canUserClaimFromQueue(
+            Id userId,
+            Id userRoleId,
+            Id queueId
+        ) {
+            if (userId == null || queueId == null) {
+                return false;
+            }
+
+            if ([
+                    SELECT COUNT()
+                    FROM GroupMember
+                    WHERE GroupId = :queueId AND UserOrGroupId = :userId
+                ] > 0) {
+                return true;
+            }
+
+            if (userRoleId == null) {
+                return false;
+            }
+
+            return [
+                    SELECT COUNT()
+                    FROM GroupMember
+                    WHERE GroupId = :queueId
+                    AND UserOrGroupId IN (
+                        SELECT Id
+                        FROM Group
+                        WHERE Type IN (
+                            'Role',
+                            'RoleAndSubordinates',
+                            'RoleAndSubordinatesInternal'
+                        )
+                        AND RelatedId = :userRoleId
+                    )
+                ] > 0;
+        }
+
+        Boolean isUserInQueues(Id userId, Set<Id> queueIds) {
+            if (userId == null || queueIds == null || queueIds.isEmpty()) {
+                return false;
+            }
+
+            List<Group> queueGroups = [
+                SELECT Id
+                FROM Group
+                WHERE Id IN :queueIds AND Type = 'Queue'
+            ];
+
+            if (queueGroups.isEmpty()) {
+                return false;
+            }
+
+            Set<Id> validQueueIds = new Set<Id>();
+            for (Group g : queueGroups) {
+                validQueueIds.add(g.Id);
+            }
+
+            Set<Id> visitedGroupIds = new Set<Id>();
+            Set<Id> groupsToProcess = new Set<Id>(validQueueIds);
+
+            while (!groupsToProcess.isEmpty()) {
+                Set<Id> currentBatch = new Set<Id>(groupsToProcess);
+                groupsToProcess.clear();
+                visitedGroupIds.addAll(currentBatch);
+
+                for (GroupMember gm : [
+                    SELECT GroupId, UserOrGroupId
+                    FROM GroupMember
+                    WHERE GroupId IN :currentBatch
+                ]) {
+                    Id memberId = gm.UserOrGroupId;
+                    if (memberId == userId) {
+                        return true;
+                    }
+                    if (memberId.getSObjectType() == Group.SObjectType
+                        && !visitedGroupIds.contains(memberId)
+                        && !groupsToProcess.contains(memberId)) {
+                        groupsToProcess.add(memberId);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        Boolean isUserRoleInQueues(Id userId, Set<Id> queueIds) {
+            if (userId == null || queueIds == null || queueIds.isEmpty()) {
+                return false;
+            }
+
+            User userRecord = [
+                SELECT Id, UserRoleId
+                FROM User
+                WHERE Id = :userId
+                LIMIT 1
+            ];
+
+            if (userRecord.UserRoleId == null) {
+                return false;
+            }
+
+            Set<Id> queueRoleIds = new Set<Id>();
+            for (Group g : [
+                SELECT RelatedId
+                FROM Group
+                WHERE Id IN (
+                    SELECT UserOrGroupId
+                    FROM GroupMember
+                    WHERE GroupId IN :queueIds
+                )
+                AND Type IN ('Role', 'RoleAndSubordinates', 'RoleAndSubordinatesInternal')
+            ]) {
+                if (g.RelatedId != null) {
+                    queueRoleIds.add(g.RelatedId);
+                }
+            }
+
+            return queueRoleIds.contains(userRecord.UserRoleId);
+        }
+    }
+    
+    private static void createRoutingActionHistory(
+    List<FEC_Assignment__c> assignments, Id currentUserId, Id caseId) {
+        if (assignments == null || assignments.isEmpty() || currentUserId == null
+        || caseId == null) {
+            return;
+        }
+        
+        /*
+         * Current user
+         */
+        User currentUser = [
+    SELECT Id, Email, UserRole.Name FROM User WHERE Id = : currentUserId LIMIT 1
+  ];
+        
+        /*
+         * Case info
+         */
+        Case caseRecord = [
+    SELECT Id,
+    FEC_Current_Case_Stage__r.FEC_Code__c FROM Case WHERE Id = : caseId LIMIT 1
+  ];
+        
+        /*
+         * Collect updated owner ids
+         */
+        Set<Id> updatedOwnerIds = new Set<Id>();
+        
+        for (FEC_Assignment__c assignment : assignments) {
+            if (assignment.FEC_Assignment_Owner__c != null) {
+                updatedOwnerIds.add(assignment.FEC_Assignment_Owner__c);
+            }
+        }
+        
+        /*
+         * Query updated owners
+         */
+        Map<Id, User> userById = new Map<Id, User>();
+        
+        if (!updatedOwnerIds.isEmpty()) {
+            userById = new Map<Id, User>(
+                [SELECT Id, Email FROM User WHERE Id IN : updatedOwnerIds]);
+        }
+        
+        /*
+         * Create histories
+         */
+        List<FEC_Routing_Action_History__c> histories =
+            new List<FEC_Routing_Action_History__c>();
+        
+        for (FEC_Assignment__c assignment : assignments) {
+            User updatedOwner = userById.get(assignment.FEC_Assignment_Owner__c);
+            
+            FEC_Routing_Action_History__c history = new FEC_Routing_Action_History__c();
+            
+            history.FEC_Routing_Action__c = 'Change Owner';
+            
+            history.FEC_Routing_Action_Type__c = 'Assignment';
+            
+            /*
+             * Original queue/user owner
+             */
+            history.FEC_Original_User_Queue__c = assignment.FEC_OwnerID__c;
+            
+            /*
+             * Updated owner email
+             */
+            if (updatedOwner != null) {
+                history.FEC_Updated_User_Queue__c = updatedOwner.Email;
+            }
+            
+            /*
+             * Execute user
+             */
+            history.FEC_User__c = currentUser.Email;
+            
+            /*
+             * Execute user role
+             */
+            if (currentUser.UserRole != null) {
+                history.FEC_User_Role__c = currentUser.UserRole.Name;
+            }
+            
+            /*
+             * Stage code
+             */
+            if (caseRecord.FEC_Current_Case_Stage__r != null) {
+                history.FEC_Stage_Name__c =
+                    caseRecord.FEC_Current_Case_Stage__r.FEC_Code__c;
+            }
+            
+            /*
+             * Assignment
+             */
+            history.FEC_Assignment__c = assignment.Id;
+            
+            /*
+             * Case
+             */
+            history.FEC_Case__c = caseId;
+            
+            histories.add(history);
+        }
+        
+        if (!histories.isEmpty()) {
+            //thangtv: không chặn claim nếu user thiếu FLS trên Routing Action History
+            Database.insert(histories, AccessLevel.SYSTEM_MODE);
         }
     }
     
@@ -489,14 +748,16 @@ public with sharing class FEC_AssignmentExecuteService {
         if (caselst.isEmpty())
             return null;
         
-        Case c = caselst.get(0);
-        
         FEC_CaseTriggerHandler.isSystemUpdate = true;
-        update new Case(
-            Id = recordId,
-        FEC_Assigment_Mode__c = viewMode
+        try {
+            Database.update(
+                new Case(Id = recordId, FEC_Assigment_Mode__c = viewMode),
+                AccessLevel.SYSTEM_MODE
             );
-        return viewMode;
+            return viewMode;
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = false;
+        }
     }
     
     
@@ -513,7 +774,10 @@ public with sharing class FEC_AssignmentExecuteService {
             
             FEC_CaseTriggerHandler.isSystemUpdate = true;
             
-            update new Case(Id = caseId, FEC_Can_Execute_Assignment__c = true);
+            Database.update(
+                new Case(Id = caseId, FEC_Can_Execute_Assignment__c = true),
+                AccessLevel.SYSTEM_MODE
+            );
             
             System.debug('FEC_Can_Execute_Assignment__c = true');
             
@@ -527,3 +791,5 @@ public with sharing class FEC_AssignmentExecuteService {
         }
     }
 }
+
+///HieuTT Update

@@ -1,7 +1,8 @@
 /**
  * Ghi đè hiển thị / Route to Team & Queue theo nghiệp vụ:
- * 1) Case có Interaction + Category Request + RC09 (điện thoại/địa chỉ) → Team SP, queue FEC_DQ_CS_Support.
+ * 1) RC27 tại Stage 2 → Stage 3: Team/Queue theo FEC_Stage_Change__c (SP / CS Support), ưu tiên hơn Block Code.
  * 2) Customer History Block Code → Team OM, queue FEC_Day_2_Check.
+ * 3) RC27 + sibling RC09 trên Interaction → Team SP, queue FEC_DQ_CS_Support.
  * Tách khỏi FEC_CaseBusinessService để dễ bảo trì.
  * @author Toannd61
  */
@@ -210,6 +211,98 @@ public without sharing class FEC_BlockCodeRoutingService {
     }
   }
 
+  /** Case đang ở Stage 2 (theo FEC_Code__c hoặc Name trên FEC_Case_Stage__c). */
+  public static Boolean isCaseAtStageTwo(Case c) {
+    if (c == null || c.FEC_Current_Case_Stage__r == null) {
+      return false;
+    }
+    String stageCode = trimSafe(c.FEC_Current_Case_Stage__r.FEC_Code__c);
+    if (FEC_ConstantCommon.STAGE_TWO.equals(stageCode)) {
+      return true;
+    }
+    String stageName = c.FEC_Current_Case_Stage__r.Name;
+    return String.isNotBlank(stageName) &&
+      stageName.contains(FEC_ConstantCommon.STAGE_TWO);
+  }
+
+  /**
+   * RC27 (RC27.01/RC27.02) đang Route to từ Stage 2 — dùng Team/Queue theo Stage Change, không ép OM/Day 2.
+   * @author Toannd61
+   */
+  public static Boolean isRc27StageTwoToThreeRouting(
+    Case c,
+    String categoryId,
+    String subCategoryId,
+    String subCodeId
+  ) {
+    return isCaseAtStageTwo(c) &&
+      isCurrentCaseRc27ByCurrentNoc(c, categoryId, subCategoryId, subCodeId);
+  }
+
+  /** @author Toannd61 */
+  public static Boolean isRc27StageTwoToThreeRouting(Case c) {
+    return isCaseAtStageTwo(c) && isCurrentCaseRc27ByCaseFields(c);
+  }
+
+  private static void applyRc27StageTwoToThreeFromStageChange(
+    FEC_CaseBusinessService.Business businessResult,
+    Id currentStageId,
+    Id routeToActionId
+  ) {
+    if (businessResult == null || currentStageId == null) {
+      return;
+    }
+    List<FEC_Stage_Change__c> stageChangelst = new List<FEC_Stage_Change__c>();
+    if (routeToActionId != null) {
+      stageChangelst = [
+        SELECT FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Action_Button__c = :routeToActionId
+          AND FEC_IsReverted__c = false
+        LIMIT 1
+      ];
+    }
+    if (stageChangelst.isEmpty()) {
+      stageChangelst = [
+        SELECT FEC_Team_User_Group__c, FEC_Next_Queue__c
+        FROM FEC_Stage_Change__c
+        WHERE
+          FEC_Previous_Stage__c = :currentStageId
+          AND FEC_Active__c = TRUE
+          AND FEC_Team_User_Group__c = :TEAM_DISPLAY_SP
+          AND FEC_IsReverted__c = false
+        LIMIT 1
+      ];
+    }
+    if (stageChangelst.isEmpty()) {
+      return;
+    }
+    FEC_Stage_Change__c stageChange = stageChangelst[0];
+    if (String.isNotBlank(stageChange.FEC_Team_User_Group__c)) {
+      businessResult.nextTeam = stageChange.FEC_Team_User_Group__c;
+    }
+    if (String.isNotBlank(stageChange.FEC_Next_Queue__c)) {
+      List<Group> ql = [
+        SELECT Id, Name
+        FROM Group
+        WHERE
+          Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
+          AND DeveloperName = :stageChange.FEC_Next_Queue__c
+        LIMIT 1
+      ];
+      if (!ql.isEmpty()) {
+        businessResult.nextQueue = new FEC_CommonUltils.PicklistOption(
+          ql[0].Name,
+          (String) ql[0].Id,
+          null
+        );
+      }
+    }
+  }
+
   /** @author Toannd61 */
   public static Id resolveDqCsSupportQueueId() {
     List<Group> g = [
@@ -235,12 +328,15 @@ public without sharing class FEC_BlockCodeRoutingService {
       businessResult,
       theCase != null ? (String) theCase.FEC_Category__c : null,
       theCase != null ? (String) theCase.FEC_SubCategory__c : null,
-      theCase != null ? (String) theCase.FEC_SubCode__c : null
+      theCase != null ? (String) theCase.FEC_SubCode__c : null,
+      theCase != null ? theCase.FEC_Current_Case_Stage__c : null,
+      null
     );
   }
 
   /**
-   * Sau khi getByCase đã tính nextTeam/nextQueue — ưu tiên Block Code (CS D2C), rồi rule RC27 + sibling RC09.
+   * Sau khi getByCase đã tính nextTeam/nextQueue — ưu tiên RC27 Stage2→3 (theo Stage Change),
+   * rồi Block Code (OM/Day 2), rồi RC27 + sibling RC09.
    * Dùng NOC hiện tại trên màn (category/subcategory/subcode Id), không phụ thuộc Case đã save.
    * @author Toannd61
    */
@@ -251,7 +347,47 @@ public without sharing class FEC_BlockCodeRoutingService {
     String currentSubCategoryId,
     String currentSubCodeId
   ) {
+    applyToBusinessIfApplicable(
+      theCase,
+      businessResult,
+      currentCategoryId,
+      currentSubCategoryId,
+      currentSubCodeId,
+      theCase != null ? theCase.FEC_Current_Case_Stage__c : null,
+      null
+    );
+  }
+
+  /**
+   * @param currentStageId Stage hiện tại trên màn (selectedStage.Id từ getByCase).
+   * @param routeToActionId Action Route to (FEC_Action_Button__c) để lấy đúng FEC_Stage_Change__c Stage2→3.
+   * @author Toannd61
+   */
+  public static void applyToBusinessIfApplicable(
+    Case theCase,
+    FEC_CaseBusinessService.Business businessResult,
+    String currentCategoryId,
+    String currentSubCategoryId,
+    String currentSubCodeId,
+    Id currentStageId,
+    Id routeToActionId
+  ) {
     if (businessResult == null || theCase == null) {
+      return;
+    }
+    if (
+      isRc27StageTwoToThreeRouting(
+        theCase,
+        currentCategoryId,
+        currentSubCategoryId,
+        currentSubCodeId
+      )
+    ) {
+      applyRc27StageTwoToThreeFromStageChange(
+        businessResult,
+        currentStageId,
+        routeToActionId
+      );
       return;
     }
     if (isCustomerHistoryForcedOmDay2(theCase.FEC_Account_or_Contract__c)) {
@@ -301,7 +437,8 @@ public without sharing class FEC_BlockCodeRoutingService {
   }
 
   /**
-   * Sau các bước map queue trong route() — ưu tiên queue Day 2 Check (CS D2C), rồi rule RC27 + sibling RC09.
+   * Sau các bước map queue trong route() — RC27 Stage2→3 giữ queue Stage Change;
+   * rồi Day 2 Check (Block Code); rồi RC27 + sibling RC09.
    * @author Toannd61
    */
   public static String applyRouteQueueOverrideIfApplicable(
@@ -309,6 +446,9 @@ public without sharing class FEC_BlockCodeRoutingService {
     String queueId
   ) {
     if (routeCase == null) {
+      return queueId;
+    }
+    if (isRc27StageTwoToThreeRouting(routeCase)) {
       return queueId;
     }
     if (isCustomerHistoryForcedOmDay2(routeCase.FEC_Account_or_Contract__c)) {

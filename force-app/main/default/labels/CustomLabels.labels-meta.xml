@@ -3090,6 +3090,40 @@
         <value>Case Id is invalid.</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_SLA_Notif_Title_Approaching</fullName>
+        <categories>SLA Notification</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SLA bell notification title — approaching deadline</shortDescription>
+        <value>Case {0} - Sap vuot qua thoi gian xu ly</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SLA_Notif_Body_Approaching</fullName>
+        <categories>SLA Notification</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SLA bell notification body — approaching deadline</shortDescription>
+        <value>- Case ID: {0}
+- Sap vuot qua thoi gian xu ly</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SLA_Notif_Title_Exceeded</fullName>
+        <categories>SLA Notification</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SLA bell notification title — exceeded deadline</shortDescription>
+        <value>Case {0} - Da vuot qua thoi gian xu ly</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SLA_Notif_Body_Exceeded</fullName>
+        <categories>SLA Notification</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>SLA bell notification body — exceeded deadline</shortDescription>
+        <value>- Case ID: {0}
+- Da vuot qua thoi gian xu ly</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Close_Interaction_Complete_Case_Warning</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -4388,7 +4422,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_Points_Redeem_Fail_After_Max</shortDescription>
-        <value>Đổi điểm thưởng thất bại (lần {0}).</value>
+        <value>Đổi điểm thưởng thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redeem_Fail_Retry</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redeem_Fail_Retry</shortDescription>
+        <value>Đổi điểm thưởng thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_Points_Redeem_Fail_Prefix</fullName>
@@ -4437,6 +4479,14 @@
         <protected>false</protected>
         <shortDescription>FEC_Points_Redemption_Confirm_Title</shortDescription>
         <value>Xác nhận đổi điểm</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Points_Redemption_Available_Points_Below_Min</fullName>
+        <categories>Points Redemption LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Points_Redemption_Available_Points_Below_Min</shortDescription>
+        <value>Available Points &lt; 100,000</value>
     </labels>
     <labels>
         <fullName>FEC_Post_Date</fullName>
@@ -8613,6 +8663,69 @@
         <value>ID</value>
     </labels>
     <labels>
+        <fullName>FEC_MRC_Return_Case_Info_Block_Title</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return — tiêu đề khi không hiển thị Case Information</shortDescription>
+        <value>Yêu cầu MRC Return không thể nhập Case Information trong trường hợp này.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Return_Msg_Product_Not_TW</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return — sản phẩm không phải TW</shortDescription>
+        <value>Yêu cầu liên quan MRC (RL05) chỉ áp dụng khi Product Code của hợp đồng là TW.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Return_Msg_DPD_RL0503</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC Return RL05.03 — DPD từ 15 ngày</shortDescription>
+        <value>Hợp đồng có số ngày quá hạn (DPD) từ 15 trở lên: không được tiếp tục với Sub Code gửi mẫu đơn RL05.03.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Banner</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — banner trùng Case RL05 cùng hợp đồng</shortDescription>
+        <value>Đang tồn tại một yêu cầu hoàn trả MRC gốc mã {0} chờ xử lý. Bạn có chắc chắn muốn hủy yêu cầu cũ, tạo yêu cầu mới không?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Opt_Cancel_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — radio hủy yêu cầu mới, tiếp tục yêu cầu cũ</shortDescription>
+        <value>Hủy yêu cầu mới, tiếp tục xử lý yêu cầu cũ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Opt_Cancel_Prev</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — radio hủy yêu cầu cũ, tạo yêu cầu mới</shortDescription>
+        <value>Hủy yêu cầu cũ, tạo yêu cầu mới</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Dup_Remark_Cancel_Prev</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark khi chọn hủy yêu cầu cũ RL05.02</shortDescription>
+        <value>Tự động hủy (Resolved-AutoCancelled): hủy yêu cầu RL05 trước đó — giữ Case mới {0}.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_Dup_Remark_Cancel_New</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Remark khi chọn hủy Case mới RL05.02</shortDescription>
+        <value>Tự động hủy (Resolved-AutoCancelled): hủy Case mới — tiếp tục xử lý Case RL05 trước đó {0}.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MRC_RL0502_Dup_Open_Case_Btn</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>MRC RL05.02 — nhãn nút mở Case trùng đang xử lý</shortDescription>
+        <value>Mở Case trước</value>
+    </labels>
+    <labels>
         <fullName>FEC_MRC_Zone</fullName>
         <categories>fec_MRC</categories>
         <language>en_US</language>
@@ -11784,7 +11897,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_Remove_Phone_Service_Failed</shortDescription>
-        <value>Dịch vụ lỗi. Vui lòng thử lại.</value>
+        <value>Dịch vụ lỗi, vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Account_Contract_Status</fullName>
+        <categories>Remove Phone LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Account/ Contract Status (Remove Phone datatable)</shortDescription>
+        <value>Account/ Contract Status</value>
     </labels>
     <labels>
         <fullName>FEC_LBL_Remove_Phone_Phone_Type</fullName>
@@ -11840,7 +11961,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Fail_Retry</shortDescription>
-        <value>Chuyển đổi thất bại. Vui lòng thử lại.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại. Vui lòng thử lại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_Conversion_Success</fullName>
@@ -11848,7 +11969,15 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_MSG_IPP_Conversion_Success</shortDescription>
-        <value>Chuyển đổi trả góp thành công.</value>
+        <value>Chuyển đổi giao dịch thành khoản IPP thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_IPP_Noti_10</fullName>
+        <categories>IPP Conversion LWC</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_MSG_IPP_Noti_10</shortDescription>
+        <value>Chuyển đổi giao dịch thành khoản IPP thất bại</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_IPP_No_Eligible_Transactions</fullName>
@@ -15331,6 +15460,70 @@
         <shortDescription>FEC_Assignment_Remarks_History</shortDescription>
         <value>Assignment Remarks History</value>
     </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_TITLE</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New Assignment modal title</shortDescription>
+        <value>New Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_REQUIRED_INFO</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required information label</shortDescription>
+        <value>= Required Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_CALL_NAME</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Assignment Name value for Call type</shortDescription>
+        <value>Click to Call</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_TYPE_REQUIRED</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when Assignment Type not selected</shortDescription>
+        <value>Vui lòng chọn Assignment Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_NAME_REQUIRED</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when Assignment Name not selected</shortDescription>
+        <value>Vui lòng chọn Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_SUCCESS_MSG</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Success message after creating assignment</shortDescription>
+        <value>Đã tạo Assignment.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_CREATE</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error message when creating assignment fails</shortDescription>
+        <value>Lỗi khi tạo Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_NEW_ASSIGNMENT_ERR_CASE_NOT_FOUND</fullName>
+        <categories>Assignment List</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error when case not found during assignment creation</shortDescription>
+        <value>Case not found</value>
+    </labels>
     <!-- tungnm37 thêm: Channel Config labels -->
     <labels>
         <fullName>FEC_Confirm_Before_Submit</fullName>
@@ -15703,7 +15896,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hold Case Save Success</shortDescription>
-        <value>Hold Case Config created successfully</value>
+        <value>Hold Case Config was created </value>
     </labels>
     <labels>
         <fullName>FEC_Hold_Case_Type</fullName>
@@ -16094,7 +16287,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_NoDataFound</shortDescription>
-        <value>Không tìm thấy dữ liệu.</value>
+        <value>No data found</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ExportSuccess</fullName>
@@ -16127,6 +16320,22 @@
         <protected>false</protected>
         <shortDescription>FEC_BCH_ImportFailed</shortDescription>
         <value>Import dữ liệu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Submitted</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Submitted</shortDescription>
+        <value>Import request has been submitted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_Import_Rows_Invalid</fullName>
+        <categories>Apex FEC_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_Import_Rows_Invalid</shortDescription>
+        <value>Một hoặc nhiều dòng import không hợp lệ.</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_RequireFile</fullName>
@@ -16214,7 +16423,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachHas</shortDescription>
-        <value>Has attachment</value>
+        <value>True: Lọc các case có chứa tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AttachNo</fullName>
@@ -16222,7 +16431,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AttachNo</shortDescription>
-        <value>No attachment</value>
+        <value>False: Lọc các case không có tệp đính kèm</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_ActionPickPlaceholder</fullName>
@@ -16318,7 +16527,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickProperty</shortDescription>
-        <value>--Chọn thuộc tính--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterPickOperator</fullName>
@@ -16326,7 +16535,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPickOperator</shortDescription>
-        <value>--Chọn toán tử--</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_NoticeTitle</fullName>
@@ -16526,7 +16735,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterResetHint</shortDescription>
-        <value>Chưa thêm bộ lọc.</value>
+        <value>No filters added</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_AddFilterRow</fullName>
@@ -16534,7 +16743,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_AddFilterRow</shortDescription>
-        <value>Add filter row</value>
+        <value>Add Filter</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_FilterData</fullName>
@@ -16553,12 +16762,68 @@
         <value>Reset</value>
     </labels>
     <labels>
+        <fullName>FEC_BCH_FilterGroupPredefined</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupPredefined</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterGroupCaseFields</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterGroupCaseFields</shortDescription>
+        <value>All Cases</value>
+    </labels>
+    <labels>
         <fullName>FEC_BCH_FilterPropertyField</fullName>
         <categories>LWC fec_BatchCaseHandling</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_FilterPropertyField</shortDescription>
-        <value>Filter property</value>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColCondition</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColCondition</shortDescription>
+        <value>Condition</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterColValue</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterColValue</shortDescription>
+        <value>Filter Value</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeField</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeField</shortDescription>
+        <value>Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopePreDefine</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopePreDefine</shortDescription>
+        <value>Pre-define Filter Properties</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BCH_FilterScopeAllCase</fullName>
+        <categories>LWC fec_BatchCaseHandling</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_BCH_FilterScopeAllCase</shortDescription>
+        <value>All Cases</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_PropertyPlaceholder</fullName>
@@ -16566,7 +16831,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_PropertyPlaceholder</shortDescription>
-        <value>Property</value>
+        <value>--Select--</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_OperatorField</fullName>
@@ -16905,11 +17170,889 @@
         <value>of</value>
     </labels>
     <labels>
-        <fullName>FEC_No_Data_Found</fullName>
+        <fullName>FEC_No_Data_Found_Hold_Case</fullName>
         <categories>Label</categories>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>No Data Found</shortDescription>
         <value>No data Found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Amount</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Amount</shortDescription>
+        <value>Số tiền giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_AuthCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col AuthCode</shortDescription>
+        <value>Mã phê duyệt</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Currency</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Currency</shortDescription>
+        <value>Loại tiền tệ</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_DebitCredit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col DebitCredit</shortDescription>
+        <value>Ghi có/ ghi nợ?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_EffectiveDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col EffectiveDate</shortDescription>
+        <value>Ngày giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_MCC</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col MCC</shortDescription>
+        <value>Mã ngành kinh doanh</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Merchant</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Merchant</shortDescription>
+        <value>Nơi giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_OTP</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col OTP</shortDescription>
+        <value>Gửi OTP?</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_Plan</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col Plan</shortDescription>
+        <value>Mã kế hoạch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_PostDate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col PostDate</shortDescription>
+        <value>Ngày hạch toán</value>
+    </labels>
+    <labels>
+        <fullName>FEC_BilledTx_Col_TxnCode</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC BilledTx Col TxnCode</shortDescription>
+        <value>Mã giao dịch</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_FileExcelXlsxOnly</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileExcelXlsxOnly</shortDescription>
+        <value>Chỉ cho phép tải lên file Excel (.xlsx).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_FileMaxSize150MB</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch FileMaxSize150MB</shortDescription>
+        <value>Dung lượng file tối đa là 150MB.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_CannotReadExcelContent</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg CannotReadExcelContent</shortDescription>
+        <value>Không đọc được nội dung file Excel.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_InvalidImportData</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg InvalidImportData</shortDescription>
+        <value>Dữ liệu file import không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_RequestTimeout</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch RequestTimeout</shortDescription>
+        <value>Yêu cầu đã quá thời gian xử lý, vui lòng thử lại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_TemplateNoAttachment</fullName>
+        <categories>LWC fec_BatchCaseCreation,fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch TemplateNoAttachment</shortDescription>
+        <value>Mẫu đã chọn chưa có file đính kèm để tải.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Select_File</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Select_File</shortDescription>
+        <value>Please select a file before importing.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Submitted</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Submitted</shortDescription>
+        <value>Import request has been submitted.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_RT_Customer_Case_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_RT_Customer_Case_Not_Found</shortDescription>
+        <value>Không tìm thấy Record Type Customer Case.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_RT_Interaction_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_RT_Interaction_Not_Found</shortDescription>
+        <value>Không tìm thấy Record Type Interaction.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Layout</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Layout</shortDescription>
+        <value>layout không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Contract_Number</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Contract_Number</shortDescription>
+        <value>Contract Number là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Phone</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Phone</shortDescription>
+        <value>Interaction Phone là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Product_Type</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Product_Type</shortDescription>
+        <value>Product Type là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Category</shortDescription>
+        <value>Category là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Sub_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Sub_Category</shortDescription>
+        <value>Sub Category là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Sub_Code</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Sub_Code</shortDescription>
+        <value>Sub Code là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Case_Status</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Case_Status</shortDescription>
+        <value>Case Status là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Channel</shortDescription>
+        <value>Interaction Channel là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Interaction_Sub_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Required_Interaction_Sub_Channel</shortDescription>
+        <value>Interaction Sub Channel là bắt buộc.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Product_Type_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Product_Type_Not_Found</shortDescription>
+        <value>Không tìm thấy Product Type.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Category_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Category_Not_Found</shortDescription>
+        <value>Không tìm thấy Category.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Sub_Category_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Sub_Category_Not_Found</shortDescription>
+        <value>Không tìm thấy Sub Category.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Lookup_Sub_Code_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Lookup_Sub_Code_Not_Found</shortDescription>
+        <value>Không tìm thấy Sub Code.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Case_Status</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Case_Status</shortDescription>
+        <value>Case Status không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Channel</shortDescription>
+        <value>Interaction Channel không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Sub_Channel</shortDescription>
+        <value>Interaction Sub Channel không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Email</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Interaction_Email</shortDescription>
+        <value>Interaction Email không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Row_Count</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Row_Count</shortDescription>
+        <value>Có {0} dòng dữ liệu không hợp lệ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Field_Required</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Field_Required</shortDescription>
+        <value>Dòng {0}: {1} không được để trống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Datetime_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Invalid_Datetime_Format</shortDescription>
+        <value>Dòng {0}: {1} không đúng định dạng yyyy-mm-ddThh:mm:ss.msmmsms+0700.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Object_Not_Available</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Object_Not_Available</shortDescription>
+        <value>{0} is not available in this org.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Welcome_Customer_Case_Failed</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Welcome_Customer_Case_Failed</shortDescription>
+        <value>Interaction đã tạo nhưng Case Customer không tạo được: {0}</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_Service_Resource</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_Service_Resource</shortDescription>
+        <value>Thiếu giá trị Service Resource.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_Start_Date</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_Start_Date</shortDescription>
+        <value>Thiếu giá trị Start Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Missing_End_Date</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Missing_End_Date</shortDescription>
+        <value>Thiếu giá trị End Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Note_Too_Long</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Note_Too_Long</shortDescription>
+        <value>Note vượt quá số ký tự cho phép (255 ký tự).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_Service_Resource_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_Service_Resource_Format</shortDescription>
+        <value>Service Resource không đúng định dạng (thiếu @ hoặc .).</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Service_Resource_Not_Found</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Service_Resource_Not_Found</shortDescription>
+        <value>Service Resource không tồn tại.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_Start_Date_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_Start_Date_Format</shortDescription>
+        <value>Start Date không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Invalid_End_Date_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Invalid_End_Date_Format</shortDescription>
+        <value>End Date không đúng định dạng.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_End_Before_Start</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_End_Before_Start</shortDescription>
+        <value>End Date nhỏ hơn Start Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Start_In_Past</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Start_In_Past</shortDescription>
+        <value>Start Date là thời điểm trong quá khứ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_End_In_Past</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_End_In_Past</shortDescription>
+        <value>End Date là thời điểm trong quá khứ.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Absence_Duplicate_In_System</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Absence_Duplicate_In_System</shortDescription>
+        <value>Service Resource đã có Absence trùng giá trị trong hệ thống.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Data_Absence_Duplicate_In_File</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC_Batch_Import_Data_Absence_Duplicate_In_File</shortDescription>
+        <value>Trùng giá trị Service Resource và Start Date và End Date.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Details_Title</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: tiêu đề section Call Transfer Details</shortDescription>
+        <value>Call Transfer Details</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferDataToCollections</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Data to Collections</shortDescription>
+        <value>Transfer Data to Collections</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferTime</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Time</shortDescription>
+        <value>Transfer Time</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_TransferStatus</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Transfer Status</shortDescription>
+        <value>Transfer Status</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_FailureReason</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Failure Reason</shortDescription>
+        <value>Failure Reason</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollActionCode</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Action Code</shortDescription>
+        <value>Coll Action Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollSubActionCode</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Sub-Action Code</shortDescription>
+        <value>Coll Sub-Action Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollRemarks</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Remarks</shortDescription>
+        <value>Coll Remarks</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollActionDate</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Action Date</shortDescription>
+        <value>Coll Action Date</value>
+    </labels>
+    <labels>
+        <fullName>FEC_TransferCall_Field_CollAgent</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>TransferCall: nhãn Coll Agent</shortDescription>
+        <value>Coll Agent</value>
+    </labels>
+    <labels>
+        <fullName>FEC_STOP_IMPACT_ALREADY_MARKED_MSG</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC STOP IMPACT ALREADY MARKED MSG</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã có thông tin ngưng tác động trước đó</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_SUCCESS</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG SUCCESS</shortDescription>
+        <value>Số hợp đồng/ tài khoản này đã chuyển ngưng tác động thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_MSG_ERROR</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC MSG ERROR</shortDescription>
+        <value>Số hợp đồng/ tài khoản đã chuyển ngưng tác động thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Transfer_Err_Remark_Null</fullName>
+        <categories>Label</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Transfer Collections: Remark trống</shortDescription>
+        <value>Remarks for Collections không có giá trị.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Msg_Select_Template</fullName>
+        <categories>LWC fec_BatchCaseCreation, fec_BatchDataCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>FEC Batch Msg Select Template</shortDescription>
+        <value>Vui lòng chọn mẫu cần tạo dữ liệu</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_GA_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Save Success</shortDescription>
+        <value>Lưu thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Save Error</shortDescription>
+        <value>Lưu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Create_Success_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Create Success Message</shortDescription>
+        <value>Tạo mới thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Create_Error_Message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Create Error Message</shortDescription>
+        <value>Tạo mới thất bại. Vui lòng thử lại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Channel_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Channel Required</shortDescription>
+        <value>Vui lòng chọn Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Name_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Name Required</shortDescription>
+        <value>Vui lòng nhập tên</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Name_Required_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Name Required Field</shortDescription>
+        <value>Vui lòng nhập tên General Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_GA_Code_Required_Field</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Code Required Field</shortDescription>
+        <value>Vui lòng nhập mã General Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Success</shortDescription>
+        <value>Lưu thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Create_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Create Success</shortDescription>
+        <value>Tạo mới thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Update_Success</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Update Success</shortDescription>
+        <value>Cập nhật thành công</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Save_Error</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Save Error</shortDescription>
+        <value>Lưu thất bại</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Customer_Type_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Customer Type Required</shortDescription>
+        <value>Vui lòng chọn Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Channel_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Channel Required</shortDescription>
+        <value>Vui lòng chọn Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Team_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Team Required</shortDescription>
+        <value>Vui lòng chọn Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_RA_Queue_Required</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Queue Required</shortDescription>
+        <value>Vui lòng chọn Queue</value>
+    </labels>
+
+    <labels>
+        <fullName>FEC_Label_Detail_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Detail Information</shortDescription>
+        <value>Detail Information</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_RA_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA Name</shortDescription>
+        <value>Routing Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Customer_Type</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Customer Type</shortDescription>
+        <value>Customer Type</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Team</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Team</shortDescription>
+        <value>Team</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Queue</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue</shortDescription>
+        <value>Queue</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Edit</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Edit</shortDescription>
+        <value>Edit</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Back</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Back</shortDescription>
+        <value>Back</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_RA_History</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>RA History</shortDescription>
+        <value>Routing Assignment History</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_No_Records</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No Records</shortDescription>
+        <value>No records found</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_No_History_Short</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>No History Short</shortDescription>
+        <value>No history</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_New_RA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New RA</shortDescription>
+        <value>New Routing Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Required_Info</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Required Info</shortDescription>
+        <value>Please fill in all required fields</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Search_Channel</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Search Channel</shortDescription>
+        <value>Search Channel</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Account_Contract_Number</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Required Account Contract Number</shortDescription>
+        <value>Account/ Contract Number là bắt buộc</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Interaction_Phone_Format</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Invalid Interaction Phone Format</shortDescription>
+        <value>SĐT không đúng định dạng</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Sub_Channel_For_Channel</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Invalid Sub Channel For Channel</shortDescription>
+        <value>Giá trị Interaction Sub Channel không chính xác với Interaction Channel đã chọn.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Required_Case_Remarks</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Required Case Remarks</shortDescription>
+        <value>Thiếu giá trị Case Remarks.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Category_For_Product_Type</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Invalid Category For Product Type</shortDescription>
+        <value>Giá trị Category không chính xác với Product Type đã chọn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Sub_Category_For_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Invalid Sub Category For Category</shortDescription>
+        <value>Giá trị Sub Category không chính xác với Category đã chọn</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Invalid_Sub_Code_For_Sub_Category</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Invalid Sub Code For Sub Category</shortDescription>
+        <value>Giá trị Sub Code không chính xác với Sub Category đã chọn.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Sub_Category_Not_In_Datagroup</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Sub Category Not In Datagroup</shortDescription>
+        <value>Giá trị Sub Category không tồn tại trong Datagroup đã xác định</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Sub_Code_Not_In_Datagroup</fullName>
+        <categories>Apex FEC_BatchImport</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Sub Code Not In Datagroup</shortDescription>
+        <value>Giá trị Sub Code không tồn tại trong Datagroup đã xác định.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Batch_Import_Missing_Excel_Column</fullName>
+        <categories>Apex FEC_BatchImport,LWC fec_BatchCaseCreation</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Batch Import Missing Excel Column</shortDescription>
+        <value>File thiếu cột: {0}.</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_GA_Code</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Code</shortDescription>
+        <value>General Assignment Code</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_GA_Name</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>GA Name</shortDescription>
+        <value>General Assignment Name</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_New_GA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>New GA</shortDescription>
+        <value>New General Assignment</value>
+    </labels>
+    <labels>
+        <fullName>FEC_Label_Information</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Information</shortDescription>
+        <value>Information</value>
     </labels>
 </CustomLabels>
