@@ -12,15 +12,21 @@
 		<members>FEC_CaseExportBatch</members>
         <members>FEC_CaseExportHttpService</members>
 		<members>FEC_CasePayloadBuilder</members>
-		<members>FEC_CaseExportBatch_Test</members>
+		<members>FEC_CaseExportBatchTest</members>
+		<members>FEC_CaseExportHttpServiceTest</members>
+		<members>FEC_CasePayloadBuilderTest</members>
 		<members>FEC_ArchiveVerifyBatch</members>
 		<members>FEC_ArchiveVerifyBatch_Test</members>
 		<members>FEC_ArchiveVerifyHttpService</members>
-		<members>FEC_ArchiveVerifyHttpService_Test</members>
+		<members>FEC_ArchiveVerifyBatchTest</members>
+		<members>FEC_ArchiveVerifyHttpServiceTest</members>
 		<members>FEC_AttachmentExportBatch</members>
 		<members>FEC_AttachmentExportBatch_Test</members>
 		<members>FEC_AttachmentExportHttpService</members>
-		<members>FEC_AttachmentExportHttpService_Test</members>
+		<members>FEC_AttachmentExportBatchTest</members>
+		<members>FEC_AttachmentExportHttpServiceTest</members>
+		<members>FEC_DailyBatchScheduler</members>
+		<members>FEC_DailyBatchScheduler_Test</members>
 		<members>FEC_ConstantArchive</members>
 		<name>ApexClass</name>
 	</types>

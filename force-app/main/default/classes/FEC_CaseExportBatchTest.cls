@@ -11,7 +11,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 @IsTest
-private class FEC_CaseExportBatch_Test {
+private class FEC_CaseExportBatchTest {
 
     // ══════════════════════════════════════════════════════════════════════════
     // HTTP Mocks
