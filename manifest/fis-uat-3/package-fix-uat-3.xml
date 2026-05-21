@@ -264,6 +264,7 @@
         <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <members>FEC_Download_Report__c.FEC_Link__c</members>
         <members>FEC_Download_Report__c.FEC_Report_Unique_Name__c</members>
+        <members>FEC_Case_Assignment_Log_Detail__c.FEC_Case_Assignment_log_Name__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -276,11 +277,14 @@
         <members>FEC_Notification_Template_Channel__c</members>
 		<members>FEC_Routing_Assignment__c</members>
 		<members>FEC_Download_Report__c</members>
+		<members>FEC_Case_Assignment_Log_Detail__c</members>
+		<members>FEC_Case_Assignment_Logs__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fec_CaseAssignmentNocNewOverride</members>
         <members>fecRoutingAssignmentEditOverride</members>
+        <members>fec_CaseAssignmentNocEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
