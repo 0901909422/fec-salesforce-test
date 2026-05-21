@@ -10,6 +10,9 @@
         <members>FEC_MrcDuplicateCaseService</members>
         <members>FEC_MrcReturnCaseService</members>
         <members>FEC_CaseRemarkController</members>
+        <members>FEC_CaseRemarksRollupService</members>
+        <members>FEC_CaseRemarksTriggerHandler</members>
+        <members>FEC_CaseRemarksRollupServiceTest</members>
         <members>FEC_CustomerAdditionalDataController</members>
         <members>FEC_ConstantCommon</members>
         <members>FEC_NotificationHistoryController</members>
@@ -83,6 +86,7 @@
 		<members>FEC_NatureOfCaseTrigger</members>
         <members>FEC_ApplicationListTrigger</members>
 		<members>FEC_CaseAssignmentNOCTrigger</members>
+		<members>FEC_CaseRemarksTrigger</members>
 		<name>ApexTrigger</name>
 	</types>
 	<types>

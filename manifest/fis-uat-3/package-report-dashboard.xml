@@ -5,7 +5,14 @@
         <members>FEC_RoutingHistTatSvc</members>
         <members>FEC_CaseTatFullProcessSvc</members>
         <members>FEC_CaseTriggerHandler</members>
+        <members>FEC_CaseRemarksRollupService</members>
+        <members>FEC_CaseRemarksTriggerHandler</members>
+        <members>FEC_CaseRemarksRollupServiceTest</members>
         <name>ApexClass</name>
+    </types>
+    <types>
+        <members>FEC_CaseRemarksTrigger</members>
+        <name>ApexTrigger</name>
     </types>
     <types>
         <members>Case.FEC_Case_Remarks_Entered_By_1__c</members>
