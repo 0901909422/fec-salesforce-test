@@ -8,8 +8,11 @@
         <members>FEC_ChatHubInitController</members>
         <members>FEC_Utils</members>
         <members>FEC_AttachmentControllerTest</members>
-        <members>FEC_ChatControllersTest</members>
         <members>FEC_ChatHubInitControllerTest</members>
+        <members>FEC_CaseTriggerHandlerTest</members>
+        <members>FEC_ChatHistoryControllerTest</members>
+        <members>FEC_ChatHubCaseControllerTest</members>
+        <members>CaseTriggerHandlerTest</members>
         <name>ApexClass</name>
     </types>
 
@@ -60,11 +63,7 @@
         <members>FEC_SystemSetting.ChatHub_Settings</members>
         <name>CustomMetadata</name>
     </types>
-
-    <types>
-        <members>Admin</members>
-        <name>Profile</name>
-    </types>
+    
 
     <types>
         <members>FEC_ChatHubAccess</members>
@@ -74,9 +73,10 @@
     <types>
         <members>Case.FEC_External_Interaction_ID__c</members>
         <members>Case.FEC_Is_Chat_Automation__c</members>
+        <members>Case.FEC_Chat_History__c</members>
         <name>CustomField</name>
     </types>
-    
+        
     <types>
         <members>FEC_Service</members>
         <name>CustomApplication</name>
@@ -87,6 +87,6 @@
         <members>FEC_Interaction_Case_Record_Page</members>
         <name>FlexiPage</name>
     </types>
-
+    
     <version>66.0</version>
 </Package>
