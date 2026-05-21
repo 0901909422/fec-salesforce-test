@@ -93,6 +93,7 @@ public without sharing class FEC_AssignmentController {
                 c.FEC_Team__c = null;
                 addTeam(c, targetTeam);
             } else {
+                removeTeam(c, FEC_ConstantCommon.TEAM_VALUE_CSSUPPORT);
                 if (!isTeamExist(c, targetTeam)) {
                     addTeam(c, targetTeam);
                 }

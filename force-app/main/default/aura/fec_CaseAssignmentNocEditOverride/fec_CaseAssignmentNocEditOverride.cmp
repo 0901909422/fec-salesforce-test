@@ -1,0 +1,5 @@
+<aura:component implements="lightning:actionOverride,force:hasRecordId" access="global">
+    <div class="slds-scope">
+        <c:fec_CaseAssignmentNocNew/>
+    </div>
+</aura:component>
