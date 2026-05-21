@@ -116,6 +116,8 @@
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
+        <members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_PaymentHistoryValidationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -355,6 +357,9 @@
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
+        <members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
+        <members>FEC_MSG_Cannot_Request_Payment_History</members>
+        <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
