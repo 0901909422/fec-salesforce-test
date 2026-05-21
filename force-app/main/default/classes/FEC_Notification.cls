@@ -75,15 +75,16 @@ public without sharing class FEC_Notification {
             // 1. Fetch the main record and related names for single-select lookups
             FEC_Notification__c noti = [
                 SELECT Id, Name, RecordType.Name, RecordTypeId, RecordType.DeveloperName, 
-                       FEC_Target_Group__c, FEC_Notification_Channel__c, 
+                       FEC_Target_Group__c, //FEC_Notification_Channel__c, 
                        FEC_Channel__c, 
                        FEC_Product_Type__c, FEC_Product_Type__r.Name,
                        FEC_Category__c, FEC_Category__r.Name,
-                    //    FEC_SubCategory__c, FEC_SubCategory__r.Name,
-                    //    FEC_SubCode__c, FEC_SubCode__r.Name,
+                       FEC_SubCategory__c,
+                       FEC_SubCode__c,
                        FEC_Current_Status__c, FEC_Changed_Status__c,
-                       FEC_Notification_Template__c,
-                       FEC_Assigned_to_Queue__c
+                       //FEC_Notification_Template__c,
+                       FEC_Assigned_to_Queue__c,
+                       FEC_Case_Stage__c
                 FROM FEC_Notification__c
                 WHERE Id = :recordId
             ];
@@ -122,6 +123,9 @@ public without sharing class FEC_Notification {
 
             result.put('currentStatusPills', buildCaseStatusPills(noti.FEC_Current_Status__c));
             result.put('changedStatusPills', buildCaseStatusPills(noti.FEC_Changed_Status__c));
+            result.put('subCategoryPills', buildLookupPillsByNamesOrIds(noti.FEC_SubCategory__c, 'FEC_Sub_Category__c'));
+            result.put('subCodePills', buildLookupPillsByNamesOrIds(noti.FEC_SubCode__c, 'FEC_Sub_Code__c'));
+            result.put('caseStagePills', buildLookupPillsByNamesOrIds(noti.FEC_Case_Stage__c, 'FEC_Case_Stage__c'));
 
             return result;
         } catch (Exception e) {
@@ -165,6 +169,39 @@ public without sharing class FEC_Notification {
             m.put('title', n);
             m.put('subtitle', 'FEC Case Status');
             pills.add(m);
+        }
+        return pills;
+    }
+
+    private static List<Map<String, String>> buildLookupPillsByNamesOrIds(String csv, String objectApiName) {
+        List<Map<String, String>> pills = new List<Map<String, String>>();
+        if (String.isBlank(csv)) return pills;
+        
+        List<String> names = new List<String>();
+        List<String> ids = new List<String>();
+        for (String t : csv.split(',')) {
+            t = t.trim();
+            if (String.isNotBlank(t)) {
+                if ((t.length() == 15 || t.length() == 18) && t.isAlphanumeric()) {
+                    ids.add(t);
+                } else {
+                    names.add(t);
+                }
+            }
+        }
+        if (names.isEmpty() && ids.isEmpty()) return pills;
+        
+        String query = 'SELECT Id, Name FROM ' + String.escapeSingleQuotes(objectApiName) + ' WHERE Name IN :names OR Id IN :ids';
+        try {
+            for (SObject row : Database.query(query)) {
+                Map<String, String> m = new Map<String, String>();
+                m.put('id', (String)row.get('Id'));
+                m.put('title', (String)row.get('Name'));
+                m.put('subtitle', objectApiName);
+                pills.add(m);
+            }
+        } catch (Exception e) {
+            System.debug('Error building pills for ' + objectApiName + ': ' + e.getMessage());
         }
         return pills;
     }
@@ -222,7 +259,7 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled(cacheable=true)
-    public static List<Map<String, String>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId, String stageId) {
+    public static List<Map<String, Object>> getAvailableNotifications(Id caseId, String productTypeId, String categoryId, String subCategoryId, String subCodeId, String stageId) {
         // System.debug('--- [getAvailableNotifications] caseId: ' + caseId);
         // System.debug('--- [getAvailableNotifications] productTypeId: ' + productTypeId);
         // System.debug('--- [getAvailableNotifications] categoryId: ' + categoryId);
@@ -232,6 +269,8 @@ public without sharing class FEC_Notification {
         Case currentCase = [SELECT Id, FEC_Customer_Type__c, FEC_Product_Type__c, 
                                    FEC_Category__c, FEC_SubCategory__c, FEC_SubCode__c, 
                                    FEC_Current_Case_Stage__c,
+                                   FEC_SubCategory__r.Name, FEC_SubCode__r.Name,
+                                   FEC_Current_Case_Stage__r.Name,
                                    FEC_Account_or_Contract__r.FEC_Email__c,
                                    FEC_Interaction__r.FEC_Interaction_Email__c,
                                    FEC_Case_Email__c 
@@ -247,15 +286,22 @@ public without sharing class FEC_Notification {
         
         // System.debug('--- [getAvailableNotifications] currentStage: ' + currentStage);
         // System.debug('--- [getAvailableNotifications] emailChannel: ' + emailChannel);
-        String query = 'SELECT Id, Name, FEC_Notification_Template__c, FEC_Customer_Type__c, ' +
-                       'FEC_Notification_Template__r.Name, ' +
-                       'FEC_Notification_Channel__r.Name, ' +
+        String query = 'SELECT Id, Name, FEC_Customer_Type__c, ' +
+                       //'FEC_Notification_Template__r.Name, ' +
                        'FEC_Target_Group__c ' +
                        'FROM FEC_Notification__c ' +
                        'WHERE FEC_Notification_Status__c = true ';
         
+        String stageName = currentCase?.FEC_Current_Case_Stage__r?.Name;
+        String subCategoryName = currentCase?.FEC_SubCategory__r?.Name;
+        String subCodeName = currentCase?.FEC_SubCode__r?.Name;
+
+        String stagePattern = String.isNotBlank(stageName) ? '%' + stageName + '%' : '';
+        String subCategoryPattern = String.isNotBlank(subCategoryName) ? '%' + subCategoryName + '%' : '';
+        String subCodePattern = String.isNotBlank(subCodeName) ? '%' + subCodeName + '%' : '';
+
         if (String.isNotBlank(stageId)) {
-            query += ' AND FEC_Case_Stage__c = :stageId';
+            query += ' AND FEC_Case_Stage__c LIKE :stagePattern';
         }         
         if (String.isNotBlank(productTypeId)) {
             query += ' AND FEC_Product_Type__c = :productTypeId';
@@ -263,12 +309,12 @@ public without sharing class FEC_Notification {
         if (String.isNotBlank(categoryId)) {
             query += ' AND FEC_Category__c = :categoryId';
         }
-        // if (String.isNotBlank(subCategoryId)) {
-        //     query += ' AND FEC_SubCategory__c = :subCategoryId';
-        // }
-        // if (String.isNotBlank(subCodeId)) {
-        //     query += ' AND FEC_SubCode__c = :subCodeId';
-        // }
+        if (String.isNotBlank(subCategoryId)) {
+            query += ' AND FEC_SubCategory__c LIKE :subCategoryPattern';
+        }
+        if (String.isNotBlank(subCodeId)) {
+            query += ' AND FEC_SubCode__c LIKE :subCodePattern';
+        }
 
         List<FEC_Notification__c> queried = Database.query(query);
         System.debug('--- [getAvailableNotifications] queried: ' + queried);
@@ -280,16 +326,44 @@ public without sharing class FEC_Notification {
         }
         System.debug('--- [getAvailableNotifications] validNotifs: ' + validNotifs);
         
-        List<Map<String, String>> options = new List<Map<String, String>>();
+        Set<Id> validNotifIds = new Set<Id>();
+        for (FEC_Notification__c notif : validNotifs) {
+            validNotifIds.add(notif.Id);
+        }
+
+        List<FEC_Notification_Template_Channel__c> templateChannels = new List<FEC_Notification_Template_Channel__c>();
+        if (!validNotifIds.isEmpty()) {
+            templateChannels = [
+                SELECT Id, FEC_Notification__c, 
+                       FEC_Notification_Channel__c, FEC_Notification_Channel__r.Name, 
+                       FEC_Notification_Template__c, FEC_Notification_Template__r.Name 
+                FROM FEC_Notification_Template_Channel__c 
+                WHERE FEC_Notification__c IN :validNotifIds
+            ];
+        }
+
+        Map<Id, List<Map<String, String>>> channelsByNotifId = new Map<Id, List<Map<String, String>>>();
+        for (FEC_Notification_Template_Channel__c tc : templateChannels) {
+            if (!channelsByNotifId.containsKey(tc.FEC_Notification__c)) {
+                channelsByNotifId.put(tc.FEC_Notification__c, new List<Map<String, String>>());
+            }
+            channelsByNotifId.get(tc.FEC_Notification__c).add(new Map<String, String>{
+                'channelId' => tc.FEC_Notification_Channel__c,
+                'channelName' => tc.FEC_Notification_Channel__r.Name,
+                'templateId' => tc.FEC_Notification_Template__c,
+                'templateName' => tc.FEC_Notification_Template__r.Name
+            });
+        }
+        
+        List<Map<String, Object>> options = new List<Map<String, Object>>();
         
         for(FEC_Notification__c notif : validNotifs) {
-                options.add(new Map<String, String>{
+                options.add(new Map<String, Object>{
                     'label' => notif.Name, 
                     'value' => notif.Id, 
-                    'templateId' => notif.FEC_Notification_Template__c, 
-                    'channel' => notif.FEC_Notification_Channel__r.Name,
                     'targetGroup' => notif.FEC_Target_Group__c, 
-                    'targetEmail' => targetEmail 
+                    'targetEmail' => targetEmail,
+                    'channels' => channelsByNotifId.containsKey(notif.Id) ? channelsByNotifId.get(notif.Id) : new List<Map<String, String>>()
                 });
         }
         System.debug('--- [getAvailableNotifications] options: ' + options);
@@ -311,7 +385,8 @@ public without sharing class FEC_Notification {
     }
 
     @AuraEnabled
-    public static void sendManualNotification(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId) {
+    public static void sendManualNotification(Id caseId, Id templateId, String toEmail, Id fecNotificationConfigId, String selectedChannel) {
+        System.debug('--- [sendManualNotification] selectedChannel: ' + selectedChannel);
         User sendingUser = [
             SELECT Email, UserRole.Name
             FROM User
@@ -338,7 +413,7 @@ public without sharing class FEC_Notification {
         FEC_Notification__c notifRule;
         if (fecNotificationConfigId != null) {
             List<FEC_Notification__c> rules = [
-                SELECT Id, Name, FEC_Target_Group__c, FEC_Notification_Channel__r.Name
+                SELECT Id, Name, FEC_Target_Group__c //FEC_Notification_Channel__r.Name
                 FROM FEC_Notification__c
                 WHERE Id = :fecNotificationConfigId
                 LIMIT 1
@@ -348,17 +423,10 @@ public without sharing class FEC_Notification {
             notifRule = null;
         }
 
-        String channelLabel = FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL;
+        String channelLabel = String.isNotBlank(selectedChannel) ? selectedChannel : FEC_ConstantCommon.NOTIFICATION_CHANNEL_EMAIL;
         String targetGrp = (notifRule != null && String.isNotBlank(notifRule.FEC_Target_Group__c))
             ? notifRule.FEC_Target_Group__c
             : '';
-        if (
-            notifRule != null &&
-            notifRule.FEC_Notification_Channel__r != null &&
-            String.isNotBlank(notifRule.FEC_Notification_Channel__r.Name)
-        ) {
-            channelLabel = notifRule.FEC_Notification_Channel__r.Name;
-        }
         String notifRuleName = notifRule != null ? notifRule.Name : '';
 
         String targetEmail;
@@ -441,7 +509,9 @@ public without sharing class FEC_Notification {
         String subject = String.isNotBlank(template.FEC_Subject_Line__c)
             ? template.FEC_Subject_Line__c
             : FEC_ConstantCommon.NOTIFICATION_SUBJECT;
-
+        System.debug('--- [sendManualNotification] channelLabel: ' + channelLabel);
+        System.debug('--- [sendManualNotification]channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_SF_APP: ' + (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_SF_APP));
+        
         if (channelLabel == FEC_ConstantCommon.NOTIFICATION_CHANNEL_SF_APP) {
             List<User> targetUsers = [SELECT Id FROM User WHERE Email = :targetEmail AND IsActive = true LIMIT 1];
             if (targetUsers.isEmpty()) {
