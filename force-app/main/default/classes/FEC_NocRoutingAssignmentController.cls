@@ -14,6 +14,8 @@ public without sharing class FEC_NocRoutingAssignmentController {
         @AuraEnabled public String team;
         @AuraEnabled public String queue;
         @AuraEnabled public Boolean active;
+        @AuraEnabled public String nocId;
+        @AuraEnabled public String nocName;
     }
 
     public class HistoryWrapper {
@@ -216,19 +218,23 @@ public without sharing class FEC_NocRoutingAssignmentController {
         if (String.isBlank(recordId)) return null;
         List<FEC_Routing_Assignment__c> records = [
             SELECT Id, Name, FEC_Customer_Type__c, FEC_Channel__c,
-                   FEC_Team__c, FEC_Queue__c, FEC_Active__c
+                   FEC_Team__c, FEC_Queue__c, FEC_Active__c,
+                   FEC_Nature_of_Cases__c, FEC_Nature_of_Cases__r.Name
             FROM FEC_Routing_Assignment__c
             WHERE Id = :recordId LIMIT 1
         ];
         if (records.isEmpty()) return null;
         FEC_Routing_Assignment__c r = records[0];
         RoutingAssignmentWrapper w = new RoutingAssignmentWrapper();
-        w.id = r.Id; w.name = r.Name;
+        w.id = r.Id;
+        w.name = r.Name;
         w.customerType = r.FEC_Customer_Type__c;
         w.channel = r.FEC_Channel__c;
         w.team = r.FEC_Team__c;
         w.queue = r.FEC_Queue__c;
         w.active = r.FEC_Active__c;
+        w.nocId = r.FEC_Nature_of_Cases__c;
+        w.nocName = r.FEC_Nature_of_Cases__r?.Name;
         return w;
     }
 

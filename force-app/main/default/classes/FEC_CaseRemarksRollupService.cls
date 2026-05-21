@@ -5,7 +5,7 @@
  * Đồng thời rollup 3 trường meta (#n: ...) tối đa 255 ký tự mỗi trường: người tạo (email),
  * FEC_User_Role__c, thời điểm CreatedDate — nối bằng khoảng trắng giữa các phần.
  */
-public with sharing class FEC_CaseRemarksRollupService {
+public without sharing class FEC_CaseRemarksRollupService {
   @TestVisible
   private static final Integer BUCKET_1_MAX = 256;
   @TestVisible
