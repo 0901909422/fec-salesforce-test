@@ -845,15 +845,8 @@ public without sharing class FEC_BCH_TemplateExportService {
             '(?s)<ext uri="\\{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF\\}"[^>]*>.*?</ext>'
         );
         Matcher extDvMat = extDvPat.matcher(xml);
-        Boolean hasX14Ns = xml.contains(
-            'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"'
-        );
         String extTag =
-            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}"' +
-            (hasX14Ns
-                ? ''
-                : ' xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"') +
-            '>' +
+            '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">' +
             dataValidationsXml +
             '</ext>';
         if (extDvMat.find()) {
