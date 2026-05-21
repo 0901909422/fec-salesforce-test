@@ -409,6 +409,7 @@ public without sharing class FEC_BCH_TemplateExportService {
         ValidationHeaderPair assignmentRouting = new ValidationHeaderPair();
         assignmentRouting.mainMustContain = new List<String>{ 'assignmentroutingaction' };
         assignmentRouting.lookupMustContain = new List<String>{ 'assignmentroutingaction' };
+        assignmentRouting.mainMustNotContain = new List<String>{ 'inputtedremarks' };
         pairs.add(assignmentRouting);
         ValidationHeaderPair classification = new ValidationHeaderPair();
         classification.mainMustContain = new List<String>{ 'classificationbycs' };
@@ -511,11 +512,13 @@ public without sharing class FEC_BCH_TemplateExportService {
         return colLetter + String.valueOf(firstRow1) + ':' + colLetter + String.valueOf(lastRow1);
     }
 
-    private static String buildDataValidationXml(String formula1, String sqref, Integer uidSeed) {
-        String uid =
-            '{00000000-0000-4000-8000-' +
-            String.valueOf(uidSeed).leftPad(12, '0') +
-            '}';
+    private static String buildValidationUid(Integer seed) {
+        String suffix = String.valueOf(seed == null ? 1 : seed).leftPad(12, '0');
+        return '{384C5710-23BE-435C-862B-' + suffix.right(12) + '}';
+    }
+
+    private static String buildDataValidationXml(String formula1, String sqref, String xrUid) {
+        String uid = String.isNotBlank(xrUid) ? xrUid : buildValidationUid(1);
         return '<x14:dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" xr:uid="' +
             uid +
             '"><x14:formula1><xm:f>' +
@@ -523,6 +526,78 @@ public without sharing class FEC_BCH_TemplateExportService {
             '</xm:f></x14:formula1><xm:sqref>' +
             sqref +
             '</xm:sqref></x14:dataValidation>';
+    }
+
+    private static String extractColumnFromSqref(String sqref) {
+        if (String.isBlank(sqref)) {
+            return null;
+        }
+        Pattern p = Pattern.compile('([A-Z]{1,3})\\d+');
+        Matcher m = p.matcher(sqref.trim());
+        return m.find() ? m.group(1) : null;
+    }
+
+    private static List<String> parseExistingDataValidationNodes(String mainWorksheetXml) {
+        List<String> nodes = new List<String>();
+        if (String.isBlank(mainWorksheetXml)) {
+            return nodes;
+        }
+        Pattern blockPat = Pattern.compile(
+            '(?s)<x14:dataValidations[^>]*>(.*?)</x14:dataValidations>'
+        );
+        Matcher blockMat = blockPat.matcher(mainWorksheetXml);
+        if (!blockMat.find()) {
+            return nodes;
+        }
+        Pattern valPat = Pattern.compile('(?s)<x14:dataValidation[^>]*>.*?</x14:dataValidation>');
+        Matcher valMat = valPat.matcher(blockMat.group(1));
+        while (valMat.find()) {
+            nodes.add(valMat.group(0));
+        }
+        return nodes;
+    }
+
+    private static String extractDataValidationAttribute(String nodeXml, String attrName) {
+        if (String.isBlank(nodeXml) || String.isBlank(attrName)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern p = Pattern.compile(attrName + '="([^"]*)"');
+        Matcher m = p.matcher(nodeXml);
+        return m.find() ? m.group(1) : FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static String extractDataValidationFormula(String nodeXml) {
+        if (String.isBlank(nodeXml)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern p = Pattern.compile('(?s)<xm:f>([^<]*)</xm:f>');
+        Matcher m = p.matcher(nodeXml);
+        return m.find() ? m.group(1) : FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static String extractDataValidationSqref(String nodeXml) {
+        if (String.isBlank(nodeXml)) {
+            return FEC_ConstantCommon.STR_EMPTY;
+        }
+        Pattern p = Pattern.compile('<xm:sqref>([^<]*)</xm:sqref>');
+        Matcher m = p.matcher(nodeXml);
+        return m.find() ? m.group(1) : FEC_ConstantCommon.STR_EMPTY;
+    }
+
+    private static String extendExistingDataValidationNode(
+        String nodeXml,
+        Integer templateDataRow1,
+        Integer lastDataRow1
+    ) {
+        String formula1 = extractDataValidationFormula(nodeXml);
+        String sqrefRaw = extractDataValidationSqref(nodeXml);
+        String col = extractColumnFromSqref(sqrefRaw);
+        if (String.isBlank(formula1) || String.isBlank(col)) {
+            return nodeXml;
+        }
+        String sqref = buildSqrefRange(col, templateDataRow1, lastDataRow1);
+        String xrUid = extractDataValidationAttribute(nodeXml, 'xr:uid');
+        return buildDataValidationXml(formula1, sqref, xrUid);
     }
 
     private static String applyHeaderBasedListValidations(
@@ -548,7 +623,11 @@ public without sharing class FEC_BCH_TemplateExportService {
         );
         String lookupPath = resolveLookupSheetPath(workbookXml, workbookRelsXml);
         if (!entryByPath.containsKey(lookupPath)) {
-            return mainWorksheetXml;
+            return extendExistingListValidationsOnly(
+                mainWorksheetXml,
+                templateDataRow1,
+                lastDataRow1
+            );
         }
         String lookupXml = blobToUtf8(entryByPath.get(lookupPath));
         Map<String, String> lookupHeaders = parseRowHeaderColumns(lookupXml, 1, sharedStrings);
@@ -578,6 +657,18 @@ public without sharing class FEC_BCH_TemplateExportService {
                 null,
                 pair.lookupMatchAny
             );
+            if (
+                String.isBlank(lookupCol) &&
+                pair.mainMustContain != null &&
+                pair.mainMustContain.contains('assignmentroutingaction')
+            ) {
+                lookupCol = matchColumnByHeaderRules(
+                    lookupHeaders,
+                    new List<String>{ 'routingaction' },
+                    null,
+                    false
+                );
+            }
             if (String.isBlank(lookupCol) || usedLookupCols.contains(lookupCol)) {
                 continue;
             }
@@ -586,10 +677,45 @@ public without sharing class FEC_BCH_TemplateExportService {
                 continue;
             }
             String sqref = buildSqrefRange(mainCol, templateDataRow1, lastDataRow1);
-            validationNodes.add(buildDataValidationXml(formula1, sqref, uidSeed));
+            validationNodes.add(buildDataValidationXml(formula1, sqref, buildValidationUid(uidSeed)));
             usedMainCols.add(mainCol);
             usedLookupCols.add(lookupCol);
             uidSeed += 1;
+        }
+        for (String existingNode : parseExistingDataValidationNodes(mainWorksheetXml)) {
+            String col = extractColumnFromSqref(extractDataValidationSqref(existingNode));
+            if (String.isNotBlank(col) && usedMainCols.contains(col)) {
+                continue;
+            }
+            validationNodes.add(
+                extendExistingDataValidationNode(existingNode, templateDataRow1, lastDataRow1)
+            );
+            if (String.isNotBlank(col)) {
+                usedMainCols.add(col);
+            }
+        }
+        if (validationNodes.isEmpty()) {
+            return mainWorksheetXml;
+        }
+        String dataValidationsXml =
+            '<x14:dataValidations count="' +
+            String.valueOf(validationNodes.size()) +
+            '" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">' +
+            String.join(validationNodes, FEC_ConstantCommon.STR_EMPTY) +
+            '</x14:dataValidations>';
+        return upsertDataValidationsBlock(mainWorksheetXml, dataValidationsXml);
+    }
+
+    private static String extendExistingListValidationsOnly(
+        String mainWorksheetXml,
+        Integer templateDataRow1,
+        Integer lastDataRow1
+    ) {
+        List<String> validationNodes = new List<String>();
+        for (String existingNode : parseExistingDataValidationNodes(mainWorksheetXml)) {
+            validationNodes.add(
+                extendExistingDataValidationNode(existingNode, templateDataRow1, lastDataRow1)
+            );
         }
         if (validationNodes.isEmpty()) {
             return mainWorksheetXml;
