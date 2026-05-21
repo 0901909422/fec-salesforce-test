@@ -639,6 +639,9 @@ public with sharing class FEC_ConstantCommon {
     // ================= QUEUE NAME =================
     public static final String QUEUE_CS_SUPPORT = 'DQ-CS Support';
     public static final String QUEUE_CS_CUSTOMER_CARE = 'DQ-CS Customer Care';
+
+    public static final String QUEUE_CS_SUPPORT_W_SPACE = 'DQ - CS Support';
+    public static final String QUEUE_CS_CUSTOMER_CARE_W_SPACE = 'DQ - CS Customer Care';
     
     public static final String QUEUE_HANDLING = 'Handling';
     public static final String QUEUE_CARE_INTERNAL_TASK = 'Care Internal Task';

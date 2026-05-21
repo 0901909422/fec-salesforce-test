@@ -451,6 +451,36 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FROM Case
         WHERE Id = :caseId
     ];
+        /*
+         * Resolve owner value
+         */
+        String ownerValue =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        
+        String ownerIdValue =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        
+        String ownerStr =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        /*
+         * Only query when value is User Id
+         */
+        if (String.isNotBlank(ownerStr)
+        && ownerStr.startsWith('005')) {
+            User ownerUser = [
+                SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
+            ];
+            
+            ownerValue = emailLocalPart(ownerUser.Email);
+            
+            ownerIdValue = ownerUser.Id;
+        }
         
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
@@ -462,10 +492,10 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Assignment__c = assignmentId,
         FEC_Routing_Action__c = action,
         
-        FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner__c,
-        FEC_Original_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
-        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner__c,
-        FEC_Updated_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
+        FEC_Original_User_Queue__c = ownerValue,
+        FEC_Original_User_Queue_ID__c = ownerValue,
+        FEC_Updated_User_Queue__c = ownerValue,
+        FEC_Updated_User_Queue_ID__c = ownerValue,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
@@ -519,6 +549,40 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         WHERE Id = :caseId
     ];
         
+        
+        /*
+         * Resolve owner value
+         */
+        String ownerValue =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        
+        String ownerIdValue =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        
+        String ownerStr =
+            String.valueOf(
+            ass.FEC_Assignment_Owner__c
+            );
+        /*
+        
+        /*
+         * Only query when value is User Id
+         */
+        if (String.isNotBlank(ass.FEC_Assignment_Owner__c)
+        && ownerStr.startsWith('005')) {
+            User ownerUser = [
+                SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
+            ];
+            
+            ownerValue = emailLocalPart(ownerUser.Email);
+            
+            ownerIdValue = ownerUser.Id;
+        }
+        
         // ===== BUILD RECORDS =====
         List<SObject> records = new List<SObject>();
         
@@ -529,14 +593,14 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         FEC_Assignment__c = assignmentId,
         FEC_Routing_Action__c = action,
         
-        FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner__c,
-        FEC_Original_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
-        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner__c,
-        FEC_Updated_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
+        FEC_Original_User_Queue__c = ownerValue,
+        FEC_Original_User_Queue_ID__c = ownerValue,
+        FEC_Updated_User_Queue__c = ownerValue,
+        FEC_Updated_User_Queue_ID__c = ownerValue,
         
         FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
         
-        FEC_User__c = u.Id,
+        FEC_User__c = emailLocalPart(u.Email),
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
         FEC_Decision__c  = decision
             ));

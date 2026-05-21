@@ -6,7 +6,7 @@ public without sharing class FEC_AssignmentListHandler {
         if(isCSSupport() || isCSCustomerCare() ){
             return 'CS';
         }else{
-            return 'OTHER';
+            return FEC_ConstantCommon.TEAM_OTHER;
         }
     }
     
@@ -158,8 +158,8 @@ public without sharing class FEC_AssignmentListHandler {
             SELECT Id
             FROM Group
             WHERE Type IN (
-                'Role',
-                'RoleAndSubordinates'
+                :FEC_ConstantCommon.ROLE_STR,
+                :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
             )
             AND RelatedId = :u.UserRoleId
         ]) {
@@ -185,7 +185,7 @@ public without sharing class FEC_AssignmentListHandler {
         SELECT Id, Name
         FROM Group
         WHERE Id IN :queueIds
-        AND Type = 'Queue'
+        AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         ORDER BY Name
     ]) {
             
@@ -209,7 +209,7 @@ public without sharing class FEC_AssignmentListHandler {
         for (String qid : queueIds) {
             try { ids.add(Id.valueOf(qid)); } catch(Exception e) {}
         }
-        for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :ids AND Type = 'Queue']) {
+        for (Group g : [SELECT Id, Name FROM Group WHERE Id IN :ids AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE]) {
             result.put(String.valueOf(g.Id), g.Name);
         }
         return result;
@@ -458,13 +458,13 @@ public without sharing class FEC_AssignmentListHandler {
         String userDepart;
         
         if (isCSSupport()) {
-            userDepart = 'CS Support';
+            userDepart = FEC_ConstantCommon.TEAM_CS_SUPPORT;
             
         } else if (isCSCustomerCare()) {
-            userDepart = 'CS Customer Care';
+            userDepart = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
             
         } else {
-            userDepart = 'OTHER';
+            userDepart = FEC_ConstantCommon.TEAM_OTHER;
         }
         
         System.debug('=== User department: ' + userDepart);
@@ -472,7 +472,7 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * OTHER DEPT
          */
-        if (userDepart == 'OTHER') {
+        if (userDepart == FEC_ConstantCommon.TEAM_OTHER) {
             if (caseRecord != null
             && String.isNotBlank(caseRecord.FEC_Stage_Name__c)) {
                 /*
@@ -506,7 +506,7 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * CS Support / CS Customer Care
          */
-        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+        else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
             /*
              * Case owner
              */
@@ -570,7 +570,7 @@ public without sharing class FEC_AssignmentListHandler {
                  * Current user = CC
                  * => route to SP
                  */
-                if (userDepart == 'CS Customer Care') {
+                if (userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
                     TeamWrapper team = getTeamByName('SP');
                     
                     if (team != null) {
@@ -582,7 +582,7 @@ public without sharing class FEC_AssignmentListHandler {
                  * Current user = SP
                  * => route to CC
                  */
-                else if (userDepart == 'CS Support') {
+                else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT) {
                     TeamWrapper team = getTeamByName('CC');
                     
                     if (team != null) {
@@ -629,13 +629,13 @@ public without sharing class FEC_AssignmentListHandler {
         String userDepart;
         
         if (isCSSupport()) {
-            userDepart = 'CS Support';
+            userDepart = FEC_ConstantCommon.TEAM_CS_SUPPORT;
             
         } else if (isCSCustomerCare()) {
-            userDepart = 'CS Customer Care';
+            userDepart = FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE;
             
         } else {
-            userDepart = 'OTHER';
+            userDepart = FEC_ConstantCommon.TEAM_OTHER;
         }
         
         System.debug('=== User department: ' + userDepart);
@@ -643,14 +643,14 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * OTHER DEPT
          */
-        if (userDepart == 'OTHER') {
+        if (userDepart == FEC_ConstantCommon.TEAM_OTHER) {
             if (caseRecord != null && String.isNotBlank(caseRecord.FEC_Stage_Name__c)) {
                 /*
                  * GSR
                  * Route về CS Support
                  */
                 if (caseRecord.FEC_Stage_Name__c.contains(FEC_ConstantCommon.BP_GSR)) {
-                    queueOptions = getQueueByName('DQ - CS Support');
+                    queueOptions = getQueueByName(FEC_ConstantCommon.QUEUE_CS_SUPPORT_W_SPACE);
                 }
                 
                 /*
@@ -659,7 +659,7 @@ public without sharing class FEC_AssignmentListHandler {
                  */
                 else if (caseRecord.FEC_Stage_Name__c.contains(
                 FEC_ConstantCommon.BP_COF)) {
-                    queueOptions = getQueueByName('DQ - CS Customer Care');
+                    queueOptions = getQueueByName(FEC_ConstantCommon.QUEUE_CS_CUSTOMER_CARE_W_SPACE);
                 }
             }
         }
@@ -667,7 +667,7 @@ public without sharing class FEC_AssignmentListHandler {
         /*
          * CS Support / CS Customer Care
          */
-        else if (userDepart == 'CS Support' || userDepart == 'CS Customer Care') {
+        else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT || userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
             /*
              * Current login user queues
              */
@@ -727,8 +727,8 @@ public without sharing class FEC_AssignmentListHandler {
                  * => fixed queue:
                  * DQ - CS Support
                  */
-                if (userDepart == 'CS Customer Care') {
-                    queueOptions = getQueueByName('DQ - CS Support');
+                if (userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
+                    queueOptions = getQueueByName(FEC_ConstantCommon.QUEUE_CS_SUPPORT_W_SPACE);
                 }
                 
                 /*
@@ -736,8 +736,8 @@ public without sharing class FEC_AssignmentListHandler {
                  * => fixed queue:
                  * DQ - CS Customer Care
                  */
-                else if (userDepart == 'CS Support') {
-                    queueOptions = getQueueByName('DQ - CS Customer Care');
+                else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT) {
+                    queueOptions = getQueueByName(FEC_ConstantCommon.QUEUE_CS_CUSTOMER_CARE_W_SPACE);
                 }
             }
             
@@ -859,8 +859,8 @@ public without sharing class FEC_AssignmentListHandler {
             WHERE
                 RelatedId = :u.UserRoleId
                 AND Type IN (
-                    'Role',
-                    'RoleAndSubordinates'
+                   :FEC_ConstantCommon.ROLE_STR,
+                    :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
                 )
         ];
             
@@ -882,7 +882,7 @@ public without sharing class FEC_AssignmentListHandler {
         FROM GroupMember
         WHERE
             UserOrGroupId IN :memberIds
-            AND Group.Type = 'Queue'
+            AND Group.Type =:FEC_ConstantCommon.GROUP_TYPE_QUEUE
     ];
         
         /*
@@ -953,7 +953,7 @@ public without sharing class FEC_AssignmentListHandler {
     private static TeamWrapper getTeamByQueueName(String queueName) {
         List<Group> groups = [
             SELECT Id, Name, DeveloperName,
-            Type FROM Group WHERE Name = : queueName AND Group.Type = 'Queue'
+            Type FROM Group WHERE Name = : queueName AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         ];
         
         String queueDevName = null;
@@ -1023,7 +1023,7 @@ public without sharing class FEC_AssignmentListHandler {
             Name
         FROM Group
         WHERE
-            Type = 'Queue'
+            Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND DeveloperName = :queueDeveloperName
         LIMIT 1
     ];
@@ -1151,8 +1151,8 @@ public without sharing class FEC_AssignmentListHandler {
             WHERE
                 RelatedId = :u.UserRoleId
                 AND Type IN (
-                    'Role',
-                    'RoleAndSubordinates'
+                   :FEC_ConstantCommon.ROLE_STR,
+                   :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
                 )
         ];
             
@@ -1228,7 +1228,7 @@ public without sharing class FEC_AssignmentListHandler {
                 SELECT Id, Name
                 FROM Group
                 WHERE DeveloperName IN :queueNames
-                AND Type = 'Queue'
+                AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             ];
             
             for (Group g : groups) {
@@ -1247,7 +1247,7 @@ public without sharing class FEC_AssignmentListHandler {
                 SELECT Id, Name
                 FROM Group
                 WHERE Name = :queueName
-                AND Type = 'Queue'
+                AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             ];
         
         for (Group g : groups) {
