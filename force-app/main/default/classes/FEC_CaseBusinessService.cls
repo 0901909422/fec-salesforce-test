@@ -137,7 +137,11 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       User currentUser = userlst.get(0);
-      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+      List<String> rolelst = new List<String>();
+      if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
+        rolelst.add(currentUser.FEC_User_Group__c);
+      }
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
         currentUser.FEC_User_Group__c
       );
 
@@ -492,9 +496,10 @@ public without sharing class FEC_CaseBusinessService {
           'AND FEC_Customer_Type__c = :customerType ' +
           'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
           'AND FEC_Active__c = TRUE ' +
-          'AND FEC_User_Group__c INCLUDES (\'' +
-          String.join(new List<String>(rolelst), '\',\'') +
-          '\')';
+          FEC_NatureOfCaseUserGroupService.buildNatureOfCaseUserGroupFilterClause(
+            rolelst,
+            additionalRolelst
+          );
       } else {
         natureOfCaseQuery = 'SELECT Id, FEC_Category__r.FEC_Code__c, FEC_Business_Process__c, FEC_Business_Process__r.FEC_Code__c, FEC_User_Group__c FROM FEC_Actual_Nature_of_Case__c WHERE Id = :selectedNatureOfCaseId ';
       }
@@ -644,7 +649,8 @@ public without sharing class FEC_CaseBusinessService {
         useActualNatureAndSettingObj,
         selectedNatureOfCase,
         caseBindMap,
-        rolelst
+        rolelst,
+        additionalRolelst
       );
 
       // ================================= GET CASE STAGE ===========================
@@ -2372,7 +2378,11 @@ public without sharing class FEC_CaseBusinessService {
 
       User currentUser = userlst.get(0);
 
-      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+      List<String> rolelst = new List<String>();
+      if (String.isNotBlank(currentUser.FEC_User_Group__c)) {
+        rolelst.add(currentUser.FEC_User_Group__c);
+      }
+      List<String> additionalRolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
         currentUser.FEC_User_Group__c
       );
 
@@ -2441,9 +2451,7 @@ public without sharing class FEC_CaseBusinessService {
             'WHERE FEC_Nature_of_Cases__c = :natureOfCaseId ' +
             'AND FEC_Active__c = TRUE ' +
             'AND FEC_Default_Stage__c = TRUE ' +
-            'AND FEC_User_Group__c INCLUDES (\'' +
-            String.join(new List<String>(rolelst), '\',\'') +
-            '\')';
+            FEC_NatureOfCaseUserGroupService.buildUserGroupIncludesWhereClause(rolelst);
 
           Map<String, Object> bindVars = new Map<String, Object>{
             'natureOfCaseId' => natureOfCaselst.get(0)
@@ -5295,7 +5303,8 @@ public without sharing class FEC_CaseBusinessService {
     Boolean useActualNatureAndSettingObj,
     SObject selectedNatureOfCase,
     Map<String, Object> caseBindMap,
-    List<String> rolelst
+    List<String> rolelst,
+    List<String> additionalRolelst
   ) {
     if (selectedNatureOfCase == null) {
       return null;
@@ -5312,9 +5321,10 @@ public without sharing class FEC_CaseBusinessService {
       'AND FEC_Customer_Type__c = :customerType ' +
       'AND FEC_Business_Process__r.FEC_Active__c = TRUE ' +
       'AND FEC_Active__c = TRUE ' +
-      'AND FEC_User_Group__c INCLUDES (\'' +
-      String.join(new List<String>(rolelst), '\',\'') +
-      '\')';
+      FEC_NatureOfCaseUserGroupService.buildNatureOfCaseUserGroupFilterClause(
+        rolelst,
+        additionalRolelst
+      );
     List<SObject> templateRows = Database.queryWithBinds(
       templateNocQuery,
       caseBindMap,
