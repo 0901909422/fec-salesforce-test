@@ -101,6 +101,8 @@
         <!-- Report -->
         <members>RD_IT_User_Report_Dashboard</members>
         <members>FEC_Manage_Report</members>
+        <members>FEC_Common_System_Setting</members>
+        <members>RD_IT_User_System_Management</members>
         <name>PermissionSet</name>
     </types>
     <types>
