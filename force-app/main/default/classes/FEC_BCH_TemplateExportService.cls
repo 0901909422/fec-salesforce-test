@@ -676,6 +676,15 @@ public without sharing class FEC_BCH_TemplateExportService {
         Set<String> usedMainCols = new Set<String>();
         Set<String> usedLookupCols = new Set<String>();
         Integer uidSeed = 1;
+        for (String existingNode : parseExistingDataValidationNodes(mainWorksheetXml)) {
+            String col = extractColumnFromSqref(extractDataValidationSqref(existingNode));
+            validationNodes.add(
+                extendExistingDataValidationNode(existingNode, templateDataRow1, lastDataRow1)
+            );
+            if (String.isNotBlank(col)) {
+                usedMainCols.add(col);
+            }
+        }
         for (ValidationHeaderPair pair : buildValidationHeaderPairs()) {
             String mainCol = matchColumnByHeaderRules(
                 mainHeaders,
@@ -716,18 +725,6 @@ public without sharing class FEC_BCH_TemplateExportService {
             usedMainCols.add(mainCol);
             usedLookupCols.add(lookupCol);
             uidSeed += 1;
-        }
-        for (String existingNode : parseExistingDataValidationNodes(mainWorksheetXml)) {
-            String col = extractColumnFromSqref(extractDataValidationSqref(existingNode));
-            if (String.isNotBlank(col) && usedMainCols.contains(col)) {
-                continue;
-            }
-            validationNodes.add(
-                extendExistingDataValidationNode(existingNode, templateDataRow1, lastDataRow1)
-            );
-            if (String.isNotBlank(col)) {
-                usedMainCols.add(col);
-            }
         }
         if (validationNodes.isEmpty()) {
             return mainWorksheetXml;
