@@ -20,6 +20,7 @@
 		<members>FEC_MockupEndpoint</members>
 		<members>FEC_SearchByListPhonesServiceCallout</members>
 		<members>FEC_UpdateDisbursementStatusRestService</members>
+		<members>FEC_VmxAcctBlkcdUpdEmeaCallout</members>
         <members>FEC_NocInheritanceUtil</members>
 	    <members>FEC_NocInheritanceUtilTest</members>
         <members>FEC_DownloadReportScheduler</members>
@@ -46,6 +47,7 @@
 		<members>FEC_API_Config.FEC_Get_IPP_Detail</members>
 		<members>FEC_API_Config.FEC_MCMSCARDTOCARDINQEMEA</members>
 		<members>FEC_API_Config.FEC_MFASOUTSTANDINGAUTHINQ</members>
+		<members>FEC_API_Config.FEC_Vmx_Acct_Blkcd_Upd_Emea</members>
 		<name>CustomMetadata</name>
 	</types>
 	<types>

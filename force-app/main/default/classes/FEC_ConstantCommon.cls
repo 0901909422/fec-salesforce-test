@@ -163,6 +163,7 @@ public with sharing class FEC_ConstantCommon {
     public static final String REQUESTOR_VTIGER_PL = 'VTIGER_PL';
     public static final String REQUESTOR_VMXVERSION_EMEA = 'E8V8';
     public static final String REQUESTOR_VMXVERSION_EMEA_CARD = 'E8V2';
+    public static final String REQUESTOR_VMXVERSION_EMEA_BLKCD_UPD = 'E8V3';
     public static final String REQUESTOR_VMX_CONTEXT = 'FECVMX';
     public static final String REQUESTOR_LANDING_PAGE = 'FEC_LandingPage';
     public static final String REQUESTOR_ORG_EMEA_CARD = '150';
