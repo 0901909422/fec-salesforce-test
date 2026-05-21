@@ -1966,6 +1966,7 @@
     <types>
         <members>FEC_General_Assignment_Config__c</members>
         <members>FEC_General_Assignment__c</members>
+        <members>FEC_Download_Report__c</members>
         <name>CustomTab</name>
     </types>
     <types>

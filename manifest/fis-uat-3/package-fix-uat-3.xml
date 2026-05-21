@@ -632,6 +632,7 @@
     </types>
 	<types>
 		<members>Batch_Case_Handling</members>
+		<members>FEC_Download_Report__c</members>
         <name>CustomTab</name>
     </types>
 	<types>
