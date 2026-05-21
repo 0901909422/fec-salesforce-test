@@ -2762,73 +2762,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
-  areHeadersEquivalent(left, right) {
-    const a = Array.isArray(left) ? left : [];
-    const b = Array.isArray(right) ? right : [];
-    if (a.length !== b.length) {
-      return false;
-    }
-    for (let i = 0; i < a.length; i++) {
-      if (this.normalizeExportHeader(a[i]) !== this.normalizeExportHeader(b[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  cloneExcelCellStyle(style) {
-    if (!style) {
-      return null;
-    }
-    try {
-      return JSON.parse(JSON.stringify(style));
-    } catch (e) {
-      return style;
-    }
-  }
-
-  clearSheetCellValue(sheet, rowIndex, colIndex) {
-    const addr = window.XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
-    const cell = sheet[addr];
-    if (!cell) {
-      return;
-    }
-    delete cell.v;
-    delete cell.w;
-    delete cell.t;
-    delete cell.f;
-    delete cell.h;
-    delete cell.r;
-  }
-
-  applyTemplateDataRowStyles(sheet, sourceRowIndex, startRowIndex, rowCount, colCount) {
-    if (!sheet || rowCount < 1 || colCount < 1) {
-      return;
-    }
-    const styleByCol = {};
-    for (let c = 0; c < colCount; c++) {
-      const sourceAddr = window.XLSX.utils.encode_cell({ r: sourceRowIndex, c });
-      const sourceCell = sheet[sourceAddr];
-      if (sourceCell?.s) {
-        styleByCol[c] = this.cloneExcelCellStyle(sourceCell.s);
-      }
-    }
-    for (let r = 0; r < rowCount; r++) {
-      const rowIndex = startRowIndex + r;
-      for (let c = 0; c < colCount; c++) {
-        const style = styleByCol[c];
-        if (!style) {
-          continue;
-        }
-        const addr = window.XLSX.utils.encode_cell({ r: rowIndex, c });
-        if (!sheet[addr]) {
-          sheet[addr] = { t: "s", v: STR_EMPTY };
-        }
-        sheet[addr].s = this.cloneExcelCellStyle(style);
-      }
-    }
-  }
-
   base64ToArrayBuffer(base64) {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
@@ -2923,7 +2856,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
     let mappings = this.buildExportColumnMappings(headerRow);
     const extended = this.appendExtraExportColumns(headerRow, mappings);
-    const finalHeader = extended.headerRow;
     const finalMappings = extended.mappings;
     const list = Array.isArray(rows) ? rows : [];
     const dataRows = list.map((r) =>
@@ -2935,34 +2867,49 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         : 0;
     const existingRange = templateSheet["!ref"]
       ? window.XLSX.utils.decode_range(templateSheet["!ref"])
-      : { s: { r: 0, c: 0 }, e: { r: headerRowIndex, c: finalHeader.length - 1 } };
-    if (!this.areHeadersEquivalent(finalHeader, headerRow)) {
-      window.XLSX.utils.sheet_add_aoa(templateSheet, [finalHeader], {
-        origin: { r: headerRowIndex, c: 0 }
-      });
-    }
+      : { s: { r: 0, c: 0 }, e: { r: headerRowIndex, c: finalMappings.length - 1 } };
     const dataStartRow = headerRowIndex + 1;
-    const existingDataEndRow = Math.max(existingRange.e.r, dataStartRow);
-    for (let r = dataStartRow; r <= existingDataEndRow; r++) {
-      for (let c = 0; c < finalHeader.length; c++) {
-        this.clearSheetCellValue(templateSheet, r, c);
+    const styleByCol = {};
+    for (let c = 0; c < finalMappings.length; c++) {
+      const sampleAddr = window.XLSX.utils.encode_cell({ r: dataStartRow, c });
+      const sampleStyle = templateSheet[sampleAddr]?.s;
+      if (sampleStyle) {
+        styleByCol[c] = sampleStyle;
       }
     }
-    if (dataRows.length) {
-      window.XLSX.utils.sheet_add_aoa(templateSheet, dataRows, {
-        origin: { r: dataStartRow, c: 0 }
-      });
-    }
-    this.applyTemplateDataRowStyles(
-      templateSheet,
-      dataStartRow,
-      dataStartRow,
-      dataRows.length,
-      finalHeader.length
-    );
-    const maxCol = Math.max(existingRange.e.c, finalHeader.length - 1, 0);
     const dataLastRow =
       dataRows.length > 0 ? dataStartRow + dataRows.length - 1 : dataStartRow;
+    const clearUntil = Math.max(existingRange.e.r, dataLastRow);
+    for (let r = dataStartRow; r <= clearUntil; r++) {
+      for (let c = 0; c < finalMappings.length; c++) {
+        const addr = window.XLSX.utils.encode_cell({ r, c });
+        if (!templateSheet[addr]) {
+          templateSheet[addr] = { t: "s", v: STR_EMPTY };
+        }
+        templateSheet[addr].v = STR_EMPTY;
+        templateSheet[addr].t = "s";
+        delete templateSheet[addr].w;
+        if (!templateSheet[addr].s && styleByCol[c]) {
+          templateSheet[addr].s = styleByCol[c];
+        }
+      }
+    }
+    for (let r = 0; r < dataRows.length; r++) {
+      const rowData = dataRows[r] || [];
+      for (let c = 0; c < finalMappings.length; c++) {
+        const addr = window.XLSX.utils.encode_cell({ r: dataStartRow + r, c });
+        if (!templateSheet[addr]) {
+          templateSheet[addr] = { t: "s", v: STR_EMPTY };
+        }
+        templateSheet[addr].v = rowData[c] == null ? STR_EMPTY : String(rowData[c]);
+        templateSheet[addr].t = "s";
+        delete templateSheet[addr].w;
+        if (!templateSheet[addr].s && styleByCol[c]) {
+          templateSheet[addr].s = styleByCol[c];
+        }
+      }
+    }
+    const maxCol = Math.max(existingRange.e.c, finalMappings.length - 1, 0);
     const maxRow = Math.max(existingRange.e.r, dataLastRow);
     templateSheet["!ref"] = window.XLSX.utils.encode_range({
       s: { r: 0, c: 0 },
