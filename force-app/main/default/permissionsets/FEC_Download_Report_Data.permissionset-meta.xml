@@ -21,7 +21,7 @@
         <modifyAllRecords>false</modifyAllRecords>
         <object>FEC_Download_Report__c</object>
         <viewAllFields>false</viewAllFields>
-        <viewAllRecords>false</viewAllRecords>
+        <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <tabSettings>
         <tab>FEC_Download_Report__c</tab>

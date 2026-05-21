@@ -272,6 +272,7 @@
         <members>FEC_Case_Assignment_Record_Page</members>
         <members>FEC_Notification_Record_Page_Auto</members>
         <members>FEC_Notification_Record_Page_Manual</members>
+		<members>FEC_Download_Report_Record_Page</members>
         <name>FlexiPage</name>
     </types>
 	<types>

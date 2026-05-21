@@ -68,13 +68,17 @@ public without sharing class FEC_DownloadReportService {
                 '/analytics/reports/' + reportId +
                 '?includeDetails=true';
 
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(endpoint);
-            req.setMethod('GET');
-            req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
-            req.setHeader('Content-Type', 'application/json');
+            Map<String,String> headers = new Map<String,String>{
+                'Authorization' => 'Bearer ' + UserInfo.getSessionId(),
+                'Content-Type'  => 'application/json'
+            };
 
-            HttpResponse res = new Http().send(req);
+            HttpResponse res = FEC_CommonUltils.calloutApiWithHeaders(
+                endpoint,
+                'GET',
+                headers,
+                null
+            );
 
             if (res.getStatusCode() != 200) {
                 throw new CalloutException(
@@ -97,7 +101,7 @@ public without sharing class FEC_DownloadReportService {
             List<Object> detailColumns =
                 (List<Object>) reportMetadata.get('detailColumns');
 
-            List<String> headers = new List<String>();
+            List<String> csvHeaders = new List<String>();
 
             for (Object col : detailColumns) {
 
@@ -106,15 +110,15 @@ public without sharing class FEC_DownloadReportService {
                 if (columnMeta.containsKey(colName)) {
                     Map<String, Object> colInfo =
                         (Map<String, Object>) columnMeta.get(colName);
-                    headers.add(String.valueOf(colInfo.get('label')));
+                    csvHeaders.add(String.valueOf(colInfo.get('label')));
                 } else {
-                    headers.add(colName);
+                    csvHeaders.add(colName);
                 }
             }
 
             List<String> csvLines = new List<String>();
             csvLines.add('\uFEFFsep=,');
-            csvLines.add(buildCsvRow(headers));
+            csvLines.add(buildCsvRow(csvHeaders));
 
             Map<String, Object> factMap =
                 (Map<String, Object>) reportData.get('factMap');
