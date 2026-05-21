@@ -551,6 +551,7 @@
 		<members>FEC_Customer_History__c.FEC_Top_up_Xsell_Eligibility__c</members>
         <members>FEC_Customer_History__c.FEC_Sales_Channel__c</members>
         <members>FEC_Customer_History__c.FEC_Sales_Sub_Channel__c</members>
+        <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
 		<members>FEC_Notification_History__c.FEC_Case_ID__c</members>
 		<members>FEC_Team_Queue__c.FEC_Select_Team__c</members>
 		<members>Case.FEC_Assignment_Users__c</members>
