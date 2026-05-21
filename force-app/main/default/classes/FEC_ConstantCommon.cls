@@ -842,7 +842,18 @@ public with sharing class FEC_ConstantCommon {
         ASSIGNMENT_AUTORECALLED_STATUS
     };
     
+    public static final String USER_ID_START = '005';
     public static final String QUEUE_ID_START = '00G';
+    public static final String QUEUE_DEVELOPER_PREFIX_FEC_DQ = 'FEC_DQ_';
+    public static final String QUEUE_DEVELOPER_CONTAINS_CS = '_CS_';
+    public static final String QUEUE_DEVELOPER_PREFIX_FEC_DQ_CS_LIKE = 'FEC_DQ_CS%';
+    public static final String TEAM_CODE_CS = 'CS';
+    public static final String TEAM_CODE_SP = 'SP';
+    public static final String TEAM_CODE_CC = 'CC';
+    public static final String EMAIL_SEPARATOR_AT = '@';
+    public static final String CASE_SHARE_ROW_CAUSE_MANUAL = 'Manual';
+    public static final String CASE_SHARE_ACCESS_LEVEL_EDIT = 'Edit';
+    public static final String ASSIGNMENT_AUTO_COMPLETED_REMARK = 'Yêu cầu được tự động hoàn tất';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
     public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
     /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
@@ -864,6 +875,9 @@ public with sharing class FEC_ConstantCommon {
             'uniqueName' => 'FEC_RP_01'
         }
     };
+
+    public static final String REPORT_EXPORT_ENDPOINT = '{0}/services/data/{1}/analytics/reports/{2}?includeDetails=true';
+    public static final String CONTENT_DOWNLOAD_ENDPOINT = '{0}/sfc/servlet.shepherd/document/download/{1}';
     
     public static final String ROLE_STR = 'Role';
     public static final String ROLE_SUBORDINATE_STR = 'RoleAndSubordinates';

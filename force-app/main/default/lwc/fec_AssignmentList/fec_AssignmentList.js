@@ -276,33 +276,7 @@ export default class Fec_AssignmentList extends LightningElement {
     return this.isCSSupport ? ACTION_OPTIONS_CS_SUPPORT : ACTION_OPTIONS_OTHER;
   }
 
-  // handleActionChange(event) {
-  //   const id = event.target.dataset.id;
-  //   const value = event.detail.value;
-
-  //   this.assignments = this.assignments.map((item) => {
-  //     if (item.id !== id) return item;
-
-  //     return {
-  //       ...item,
-  //       action: value,
-  //       decision: null,
-  //       subDecision: null,
-
-  //       decisionOptions: DECISION_OPTIONS_MAP[value] || [],
-
-  //       showDecision: ACTIONS_REQUIRE_DECISION.includes(value),
-
-  //       showSubDecision: false,
-  //       isUserDecision: false,
-  //       isQueueDecision: false,
-
-  //       showTeam: item.action == 'Route_to' ? true: false,
-  //       showQueueByTeam: false,
-  //     };
-  //   });
-  //   this.updatePagedData();
-  // }
+  
 
   handleActionChange(event) {
     const id = event.target.dataset.id;
