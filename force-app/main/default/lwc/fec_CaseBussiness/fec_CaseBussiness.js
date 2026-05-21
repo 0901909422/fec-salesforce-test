@@ -693,6 +693,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Auto Hold Case — hiển thị trong accordion Case Information. */
   holdCaseNocParams = { recordId: null };
   wiredCaseHoldResultWire;
+  // wiredHoldCaseSubProcessesWire;
   holdCaseResultOnCase = false;
   holdCaseResultOverride = null;
   showHoldCase = false;
@@ -805,6 +806,14 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
       console.error("[fec_CaseBussiness] hold case subprocess wire error", error);
     }
   }
+
+  // _applyHoldCaseSubProcessWireData(data) {
+  //   this.showHoldCase = !!data.showHoldCase || this.holdCaseResultOnCase;
+  //   this.showHoldCaseManual = !!data.showHoldCaseManual;
+  //   if (!this.holdCaseResultOnCase) {
+  //     this.showHoldCaseAuto = !!data.showHoldCaseAuto;
+  //   }
+  // }
 
   get showHoldCaseSection() {
     return (
@@ -2315,6 +2324,7 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
           subCodeId: subCodeId,
           stageId: res.stage
         });
+        // void this._refreshHoldCaseAutoDisplay();
       })
       .catch((err) => {
         console.error(
@@ -4596,6 +4606,16 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
     this._checkHoldCaseRefreshFlag();
     const initPromise = this._initializeHoldCaseVisibility();
     const promises = [initPromise];
+    // if (this.wiredHoldCaseSubProcessesWire) {
+    //   promises.push(
+    //     refreshApex(this.wiredHoldCaseSubProcessesWire).then(() => {
+    //       const data = this.wiredHoldCaseSubProcessesWire?.data;
+    //       if (data) {
+    //         this._applyHoldCaseSubProcessWireData(data);
+    //       }
+    //     }),
+    //   );
+    // }
     if (this.wiredCaseHoldResultWire) {
       promises.push(
         refreshApex(this.wiredCaseHoldResultWire).then(() => {
@@ -4642,6 +4662,9 @@ export default class Fec_CaseBussiness extends NavigationMixin(LightningElement)
   /** Refresh Auto Hold Case sau Submit (poll khi Queueable Mark NFU hoàn tất). */
   @api
   refreshAutoHoldCase() {
+    // void this._refreshHoldCaseAutoDisplay();
+    // const subprocess = this._getSubProcessContainerEl();
+    // subprocess?.refreshAutoHoldCase?.();
     const delays = [1500, 4000, 8000, 12000, 20000];
     delays.forEach((delayMs) => {
       // eslint-disable-next-line @lwc/lwc/no-async-operation

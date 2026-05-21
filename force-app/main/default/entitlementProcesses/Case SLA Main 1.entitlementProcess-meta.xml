@@ -53,38 +53,6 @@
     </milestones>
     <milestones>
         <milestoneCriteriaFormula>OR(
-  FEC_SubCategory__r.FEC_Code__c=&quot;CC02&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;CC03.02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;CC04&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;CC05.03&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;CL02&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;CL03.02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;CL04&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;CL05.03&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;CU02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;CU03&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC02&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;FC03.02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC04&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;FC05.03&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC07&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC08&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC09&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC10&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FC11&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL02&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;FL03.02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL04&quot;,
-  FEC_SubCode__r.FEC_Code__c=&quot;FL05.03&quot;,
-  AND(FEC_SubCategory__r.FEC_Code__c=&quot;FL07&quot;,OR(
-    FEC_SubCode__r.FEC_Code__c=&quot;FL07.01&quot;,
-    FEC_SubCode__r.FEC_Code__c=&quot;FL07.02&quot;)),
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL08&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL09&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL10&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FL11&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FU02&quot;,
-  FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RC03.06&quot;,
   FEC_SubCode__r.FEC_Code__c=&quot;RC04.03&quot;,
   FEC_SubCategory__r.FEC_Code__c=&quot;RC05&quot;,
@@ -104,20 +72,59 @@
         <minutesToComplete>2880</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>Update_Case_48h_1</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-1</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>Update_Case_48h_1_Violating</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>0</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>Update_Case_48h_1</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <useCriteriaStartTime>true</useCriteriaStartTime>
+    </milestones>
+    <milestones>
+        <milestoneCriteriaFormula>OR(
+FEC_SubCategory__r.FEC_Code__c=&quot;CC02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;CC03.02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;CC04&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;CC05.03&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;CL02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;CL03.02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;CL04&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;CL05.03&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;CU02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;CU03&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;FC03.02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC04&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;FC05.03&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC07&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC08&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC09&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC10&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FC11&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FL02&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;FL03.02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FL04&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;FL05.03&quot;,
+AND(FEC_SubCategory__r.FEC_Code__c=&quot;FL07&quot;,OR(
+FEC_SubCode__r.FEC_Code__c=&quot;FL07.01&quot;,
+FEC_SubCode__r.FEC_Code__c=&quot;FL07.02&quot;)),
+FEC_SubCategory__r.FEC_Code__c=&quot;FL08&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FL09&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FL10&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FL11&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FU02&quot;,
+FEC_SubCategory__r.FEC_Code__c=&quot;FU03&quot;
+)</milestoneCriteriaFormula>
+        <milestoneName>Case Time TAT</milestoneName>
+        <minutesToComplete>2880</minutesToComplete>
         <useCriteriaStartTime>true</useCriteriaStartTime>
     </milestones>
     <milestones>
@@ -173,18 +180,18 @@
         <minutesToComplete>5760</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>Update_Case_96h_Violating</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>0</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>Update_Case_96h_Warning</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>Update_Case_96h_Violating</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -245,18 +252,18 @@
         <minutesToComplete>20160</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>Update_Case_360h_Warning</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>-1</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>Update_Case_360h_Violating</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>0</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>Update_Case_360h_Warning</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>-1</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>
@@ -301,18 +308,18 @@
         <minutesToComplete>66240</minutesToComplete>
         <timeTriggers>
             <actions>
-                <name>Update_Case_1872h_Violating</name>
-                <type>FieldUpdate</type>
-            </actions>
-            <timeLength>0</timeLength>
-            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
-        </timeTriggers>
-        <timeTriggers>
-            <actions>
                 <name>Update_Case_1872h_Warning</name>
                 <type>FieldUpdate</type>
             </actions>
             <timeLength>-1</timeLength>
+            <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
+        </timeTriggers>
+        <timeTriggers>
+            <actions>
+                <name>Update_Case_1872h_Violating</name>
+                <type>FieldUpdate</type>
+            </actions>
+            <timeLength>0</timeLength>
             <workflowTimeTriggerUnit>Hours</workflowTimeTriggerUnit>
         </timeTriggers>
         <useCriteriaStartTime>true</useCriteriaStartTime>

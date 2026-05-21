@@ -15984,18 +15984,25 @@
         <value>Có thể tạo yêu cầu giấy xác nhận đóng thẻ</value>
     </labels>
     <labels>
+        <fullName>FEC_MSG_Cannot_Create_Card_Close_Certificate</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Không đủ điều kiện phát hành giấy xác nhận đóng thẻ</shortDescription>
+        <value>Không đủ điều kiện phát hành yêu cầu giấy xác nhận đóng thẻ</value>
+    </labels>
+    <labels>
         <fullName>FEC_MSG_Cannot_Request_Payment_History</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Không đủ điều kiện gửi yêu cầu lịch sử thanh toán</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch sử thanh toán</value>
+        <value>Không đủ điều kiện phát hành lịch sử thanh toán</value>
     </labels>
     <labels>
         <fullName>FEC_MSG_Cannot_Request_Repayment_Schedule</fullName>
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>Hợp đồng Closed không gửi lịch trả nợ</shortDescription>
-        <value>Không thể tạo yêu cầu gửi lịch trả nợ</value>
+        <value>Không đủ điều kiện phát hành lịch trả nợ</value>
     </labels>
     <labels>
         <fullName>FEC_LABEL_Months</fullName>
@@ -17063,7 +17070,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_Col_TotalRecords</shortDescription>
-        <value>Total Records Count</value>
+        <value>Total Records</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_Col_TotalSuccess</fullName>
