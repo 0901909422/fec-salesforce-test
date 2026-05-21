@@ -12,6 +12,7 @@ import getBusinessProcessExportRows from "@salesforce/apex/FEC_BatchCaseHandling
 import getBulkExportAllowedBusinessProcessNames from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessNames";
 import getBulkExportAllowedBusinessProcessCodes from "@salesforce/apex/FEC_BatchCaseHandlingController.getBulkExportAllowedBusinessProcessCodes";
 import getTemplateFileBase64 from "@salesforce/apex/FEC_BatchCaseHandlingController.getTemplateFileBase64";
+import exportTemplateWorkbook from "@salesforce/apex/FEC_BatchCaseHandlingController.exportTemplateWorkbook";
 import downloadCaseAttachmentsZip from "@salesforce/apex/FEC_BatchCaseHandlingController.downloadCaseAttachmentsZip";
 import zipExcelFiles from "@salesforce/apex/FEC_BatchCaseHandlingController.zipExcelFiles";
 import importBatchData from "@salesforce/apex/FEC_BatchCaseHandlingController.importBatchData";
@@ -251,6 +252,22 @@ const HEADERS_CS_D2C_ASSESSMENT = [
   "csd2cassessment",
   "csd2cassessmenttype"
 ];
+const HEADERS_CS_SUPPORT_ASSESSMENT = [
+  "cssupportđánhgiáyêucầu",
+  "cssupportdanhgiayeucau",
+  "cssupportassessment",
+  "cssupportassessmenttype",
+  "cssupportevaluation"
+];
+const LOOKUP_HEADER_ROUTING_TOKENS = ["routingaction"];
+const LOOKUP_HEADER_CS_SUPPORT_TOKENS = ["cssupport", "danhgia"];
+const EXPORT_VALIDATION_MAX_ROW = 5000;
+const TEMPLATE_LOOKUP_HEADER_FILL = {
+  patternType: "solid",
+  fgColor: { rgb: "FFFFFF00" },
+  bgColor: { rgb: "000000" }
+};
+const TEMPLATE_LOOKUP_HEADER_CELLS = ["A1", "C1"];
 const HEADERS_RISK_LEVEL = ["mứcđộrủiro", "mucdoruiro", "risklevel"];
 const HEADERS_REQUIRED_ACTION = [
   "hànhđộngcầnthiết",
@@ -266,6 +283,7 @@ const EXPORT_USER_FILL_HEADERS = new Set([
   ...HEADERS_REMARKS,
   ...HEADERS_ASSIGNMENT_ROUTING_ACTION,
   ...HEADERS_CS_D2C_ASSESSMENT,
+  ...HEADERS_CS_SUPPORT_ASSESSMENT,
   ...HEADERS_RISK_LEVEL,
   ...HEADERS_REQUIRED_ACTION
 ]);
@@ -497,7 +515,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
   @track bpSubmitLoading = false;
 
   currentPage = 1;
-  pageSize = "10";
+  pageSize = "20";
   sheetJsReady = false;
   filterMetaByKey = {};
   preDefineMetaByKey = {};
@@ -2684,7 +2702,7 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     const rows = Array.isArray(aoa) ? aoa : [];
     let headerRowIndex = 0;
     let sectionRow = null;
-    for (let i = 0; i < Math.min(rows.length, 6); i++) {
+    for (let i = 0; i < Math.min(rows.length, 25); i++) {
       const row = rows[i] || [];
       const normalized = row.map((h) => this.normalizeExportHeader(h));
       const hasCaseId =
@@ -2762,6 +2780,43 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     });
   }
 
+  resolveMainTemplateSheetName(workbook) {
+    const names = Array.isArray(workbook?.SheetNames) ? workbook.SheetNames : [];
+    for (let i = 0; i < names.length; i += 1) {
+      const name = String(names[i] || STR_EMPTY);
+      if (/^sheet\s*1$/i.test(name.trim())) {
+        continue;
+      }
+      const sheet = workbook.Sheets[names[i]];
+      if (!sheet) {
+        continue;
+      }
+      const aoa = window.XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: STR_EMPTY,
+        raw: false
+      });
+      const layout = this.resolveTemplateSheetLayout(aoa);
+      if (!layout.headerRow.length) {
+        continue;
+      }
+      const normalized = layout.headerRow.map((h) => this.normalizeExportHeader(h));
+      if (
+        normalized.indexOf("caseid") >= 0 ||
+        normalized.indexOf("caseidsearch") >= 0
+      ) {
+        return names[i];
+      }
+    }
+    for (let i = 0; i < names.length; i += 1) {
+      const name = String(names[i] || STR_EMPTY);
+      if (!/^sheet\s*1$/i.test(name.trim())) {
+        return names[i];
+      }
+    }
+    return names.length ? names[0] : STR_EMPTY;
+  }
+
   base64ToArrayBuffer(base64) {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
@@ -2771,158 +2826,80 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     return bytes.buffer;
   }
 
-  async loadTemplateSheetData(contentVersionId) {
-    const cacheKey = String(contentVersionId || STR_EMPTY);
-    if (cacheKey && this.templateFileCache[cacheKey]) {
-      return this.templateFileCache[cacheKey];
+  async buildExcelFileFromTemplate(rows, fileName, contentVersionId) {
+    if (!contentVersionId) {
+      return this.buildExcelFile(rows, fileName);
     }
-    const base64 = await getTemplateFileBase64({
-      contentVersionId
-    });
+    await this.ensureSheetJsLoaded();
+    let base64 = null;
+    try {
+      base64 = await getTemplateFileBase64({ contentVersionId });
+    } catch (e) {
+      base64 = null;
+    }
     if (!base64) {
-      return null;
+      return this.buildExcelFile(rows, fileName);
     }
-    const arrayBuffer = this.base64ToArrayBuffer(base64);
-    const workbook = window.XLSX.read(arrayBuffer, {
+    const templateWorkbook = window.XLSX.read(this.base64ToArrayBuffer(base64), {
       type: "array",
       cellText: false,
-      cellStyles: true
+      cellStyles: false
     });
-    const sheetName =
-      Array.isArray(workbook.SheetNames) && workbook.SheetNames.length > 0
-        ? workbook.SheetNames[0]
-        : STR_EMPTY;
-    if (!sheetName) {
-      return null;
+    const sheetNames = Array.isArray(templateWorkbook.SheetNames)
+      ? templateWorkbook.SheetNames
+      : [];
+    if (!sheetNames.length) {
+      return this.buildExcelFile(rows, fileName);
     }
-    const sheet = workbook.Sheets[sheetName];
-    const aoa = window.XLSX.utils.sheet_to_json(sheet, {
+    const templateSheetName = this.resolveMainTemplateSheetName(templateWorkbook);
+    const templateSheet = templateWorkbook.Sheets[templateSheetName];
+    if (!templateSheet) {
+      return this.buildExcelFile(rows, fileName);
+    }
+    const aoa = window.XLSX.utils.sheet_to_json(templateSheet, {
       header: 1,
       defval: STR_EMPTY,
       raw: false
     });
     if (!Array.isArray(aoa) || !aoa.length) {
-      return null;
-    }
-    const parsed = { sheetName, aoa, base64 };
-    if (cacheKey) {
-      this.templateFileCache[cacheKey] = parsed;
-    }
-    return parsed;
-  }
-
-  async buildExcelFileFromTemplate(rows, fileName, contentVersionId) {
-    await this.ensureSheetJsLoaded();
-    if (!contentVersionId) {
       return this.buildExcelFile(rows, fileName);
     }
-    let templateData;
-    try {
-      templateData = await this.loadTemplateSheetData(contentVersionId);
-    } catch (e) {
-      templateData = null;
-    }
-    if (!templateData || !templateData.aoa || !templateData.aoa.length) {
-      return this.buildExcelFile(rows, fileName);
-    }
-    const layout = this.resolveTemplateSheetLayout(templateData.aoa);
+    const layout = this.resolveTemplateSheetLayout(aoa);
     const headerRow = layout.headerRow;
     if (!headerRow.length) {
       return this.buildExcelFile(rows, fileName);
     }
-    if (!templateData.base64) {
-      return this.buildExcelFile(rows, fileName);
-    }
-    const templateWorkbook = window.XLSX.read(
-      this.base64ToArrayBuffer(templateData.base64),
-      {
-        type: "array",
-        cellText: false,
-        cellStyles: true
-      }
-    );
-    const templateSheetName =
-      templateData.sheetName ||
-      (Array.isArray(templateWorkbook.SheetNames) &&
-      templateWorkbook.SheetNames.length > 0
-        ? templateWorkbook.SheetNames[0]
-        : STR_EMPTY);
-    if (!templateSheetName) {
-      return this.buildExcelFile(rows, fileName);
-    }
-    const templateSheet = templateWorkbook.Sheets[templateSheetName];
-    if (!templateSheet) {
-      return this.buildExcelFile(rows, fileName);
-    }
-    let mappings = this.buildExportColumnMappings(headerRow);
-    const extended = this.appendExtraExportColumns(headerRow, mappings);
-    const finalMappings = extended.mappings;
-    const list = Array.isArray(rows) ? rows : [];
-    const dataRows = list.map((r) =>
-      this.mapCaseRowToExportCells(r, finalMappings)
-    );
     const headerRowIndex =
       Number.isInteger(layout.headerRowIndex) && layout.headerRowIndex >= 0
         ? layout.headerRowIndex
         : 0;
-    const existingRange = templateSheet["!ref"]
-      ? window.XLSX.utils.decode_range(templateSheet["!ref"])
-      : { s: { r: 0, c: 0 }, e: { r: headerRowIndex, c: finalMappings.length - 1 } };
-    const dataStartRow = headerRowIndex + 1;
-    const styleByCol = {};
-    for (let c = 0; c < finalMappings.length; c++) {
-      const sampleAddr = window.XLSX.utils.encode_cell({ r: dataStartRow, c });
-      const sampleStyle = templateSheet[sampleAddr]?.s;
-      if (sampleStyle) {
-        styleByCol[c] = sampleStyle;
+    const finalMappings = this.buildExportColumnMappings(headerRow);
+    const list = Array.isArray(rows) ? rows : [];
+    const dataRows = list.map((r) =>
+      this.mapCaseRowToExportCells(r, finalMappings)
+    );
+    const mappedColumnIndexes = [];
+    for (let i = 0; i < finalMappings.length; i += 1) {
+      if (finalMappings[i]) {
+        mappedColumnIndexes.push(i);
       }
     }
-    const dataLastRow =
-      dataRows.length > 0 ? dataStartRow + dataRows.length - 1 : dataStartRow;
-    const clearUntil = Math.max(existingRange.e.r, dataLastRow);
-    for (let r = dataStartRow; r <= clearUntil; r++) {
-      for (let c = 0; c < finalMappings.length; c++) {
-        const addr = window.XLSX.utils.encode_cell({ r, c });
-        if (!templateSheet[addr]) {
-          templateSheet[addr] = { t: "s", v: STR_EMPTY };
-        }
-        templateSheet[addr].v = STR_EMPTY;
-        templateSheet[addr].t = "s";
-        delete templateSheet[addr].w;
-        if (!templateSheet[addr].s && styleByCol[c]) {
-          templateSheet[addr].s = styleByCol[c];
-        }
+    try {
+      const outBase64 = await exportTemplateWorkbook({
+        requestJson: JSON.stringify({
+          contentVersionId,
+          headerRowIndex,
+          mappedColumnIndexes,
+          dataRows
+        })
+      });
+      if (outBase64) {
+        return { fileName, base64Body: outBase64 };
       }
+    } catch (e) {
+      /* fall through to generic export */
     }
-    for (let r = 0; r < dataRows.length; r++) {
-      const rowData = dataRows[r] || [];
-      for (let c = 0; c < finalMappings.length; c++) {
-        const addr = window.XLSX.utils.encode_cell({ r: dataStartRow + r, c });
-        if (!templateSheet[addr]) {
-          templateSheet[addr] = { t: "s", v: STR_EMPTY };
-        }
-        templateSheet[addr].v = rowData[c] == null ? STR_EMPTY : String(rowData[c]);
-        templateSheet[addr].t = "s";
-        delete templateSheet[addr].w;
-        if (!templateSheet[addr].s && styleByCol[c]) {
-          templateSheet[addr].s = styleByCol[c];
-        }
-      }
-    }
-    const maxCol = Math.max(existingRange.e.c, finalMappings.length - 1, 0);
-    const maxRow = Math.max(existingRange.e.r, dataLastRow);
-    templateSheet["!ref"] = window.XLSX.utils.encode_range({
-      s: { r: 0, c: 0 },
-      e: { r: maxRow, c: maxCol }
-    });
-    const wbout = window.XLSX.write(templateWorkbook, {
-      type: "array",
-      bookType: "xlsx",
-      compression: true,
-      cellStyles: true
-    });
-    const base64 = arrayBufferToBase64(wbout);
-    return { fileName, base64Body: base64 };
+    return this.buildExcelFile(rows, fileName);
   }
 
   buildExcelFile(rows, fileName) {
@@ -2945,12 +2922,27 @@ export default class Fec_BatchCaseHandling extends LightningElement {
             FILTERED_CASE_EXPORT_HEADERS,
             ...exportRows
           ]);
+          const fallbackHeaderStyle = {
+            fill: {
+              patternType: "solid",
+              fgColor: { rgb: "C9C9C9" },
+              bgColor: { rgb: "000000" }
+            },
+            font: { bold: true }
+          };
+          for (let c = 0; c < FILTERED_CASE_EXPORT_HEADERS.length; c += 1) {
+            const addr = window.XLSX.utils.encode_cell({ r: 0, c });
+            if (worksheet[addr]) {
+              worksheet[addr].s = fallbackHeaderStyle;
+            }
+          }
           const workbook = window.XLSX.utils.book_new();
           window.XLSX.utils.book_append_sheet(workbook, worksheet, "Cases");
           const wbout = window.XLSX.write(workbook, {
             type: "array",
             bookType: "xlsx",
-            compression: true
+            compression: true,
+            cellStyles: true
           });
           const base64 = arrayBufferToBase64(wbout);
           resolve({ fileName, base64Body: base64 });
@@ -2979,31 +2971,35 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     }
   }
 
+  formatBulkCount(value) {
+    const n = Number(value);
+    return value == null || value === STR_EMPTY || Number.isNaN(n) ? "0" : String(Math.trunc(n));
+  }
+
   normalizeRow(row) {
     const status = row.status || STR_EMPTY;
-    const resultLabel =
-      status === "Processed" || status === "Failure" ? FEC_BCH_Col_Result : STR_EMPTY;
+    const resultDownloadUrl = row.resultDownloadUrl || STR_EMPTY;
+    const fileDownloadUrl = row.fileDownloadUrl || STR_EMPTY;
+    const fileNameDisplay = String(row.fileName || STR_EMPTY).trim();
+    const hasResultDownloadLink =
+      (status === "Processed" || status === "Failure") && !!resultDownloadUrl;
     return {
       ...row,
-      fileDownloadUrl: row.fileDownloadUrl || STR_EMPTY,
+      fileNameDisplay,
+      fileDownloadUrl,
+      hasFileDownloadLink: !!(fileDownloadUrl && fileNameDisplay),
       uploadedOnLabel: row.uploadedOn ? this.formatDateTime(row.uploadedOn) : STR_EMPTY,
-      totalRecordsCount: row.totalRecordsCount ?? 0,
-      totalSuccessRecords: row.totalSuccessRecords ?? 0,
-      totalFailedRecords: row.totalFailedRecords ?? 0,
-      result: resultLabel,
-      resultDownloadUrl: row.resultDownloadUrl || STR_EMPTY
+      totalRecordsCount: this.formatBulkCount(row.totalRecordsCount),
+      totalSuccessRecords: this.formatBulkCount(row.totalSuccessRecords),
+      totalFailedRecords: this.formatBulkCount(row.totalFailedRecords),
+      result: hasResultDownloadLink ? FEC_BCH_Col_Result : STR_EMPTY,
+      resultDownloadUrl,
+      hasResultDownloadLink
     };
   }
 
-  handleResultClick(event) {
-    const url = event.currentTarget?.dataset?.url || STR_EMPTY;
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
-  }
-
-  handleFileNameClick(event) {
-    const url = event.currentTarget?.dataset?.url || STR_EMPTY;
+  handleBulkLinkClick(event) {
+    const url = event.currentTarget?.dataset?.url;
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }

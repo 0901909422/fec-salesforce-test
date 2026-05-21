@@ -17063,7 +17063,7 @@
         <language>en_US</language>
         <protected>false</protected>
         <shortDescription>FEC_BCH_Col_TotalRecords</shortDescription>
-        <value>Total Records Count</value>
+        <value>Total Records</value>
     </labels>
     <labels>
         <fullName>FEC_BCH_Col_TotalSuccess</fullName>
