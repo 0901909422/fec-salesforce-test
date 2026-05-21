@@ -3,7 +3,7 @@
     <fullName>FEC_Cancel_Case__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Cancel Case</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

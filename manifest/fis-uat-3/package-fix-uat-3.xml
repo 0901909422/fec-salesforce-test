@@ -116,6 +116,8 @@
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
+        <members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_PaymentHistoryValidationService</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -231,6 +233,9 @@
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
 		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
+        <members>FEC_Channel__c.FEC_Cancel_Case__c</members>
+        <members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
+        <members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
         <members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
@@ -352,6 +357,9 @@
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
+        <members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
+        <members>FEC_MSG_Cannot_Request_Payment_History</members>
+        <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
 		<name>CustomLabel</name>
 	</types>
     <types>

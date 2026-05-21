@@ -3,7 +3,7 @@
     <fullName>FEC_Get_Nature_Of_Case__c</fullName>
     <defaultValue>false</defaultValue>
     <label>Get Nature Of Case</label>
-    <trackHistory>false</trackHistory>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>
