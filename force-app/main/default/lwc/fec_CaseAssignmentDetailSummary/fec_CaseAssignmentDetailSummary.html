@@ -162,21 +162,11 @@
           <div class="detail-value-row">
             <template if:true={queuesIsEmpty}>
               <div class="empty-hint">
-                Not configured yet. Select queues using the edit icon when Status is Draft.
+                Not configured yet. Select queues when creating the Case Assignment.
               </div>
             </template>
             <template if:false={queuesIsEmpty}>
               <div class="detail-value queues-value">{displayQueues}</div>
-            </template>
-            <template if:true={canEditDraftDetailFields}>
-              <lightning-button-icon
-                icon-name="utility:edit"
-                alternative-text="Edit Select Queues"
-                variant="bare"
-                class="edit-pencil"
-                data-field="FEC_Select_Queues__c"
-                onclick={handleFieldEditClick}
-              ></lightning-button-icon>
             </template>
           </div>
         </div>

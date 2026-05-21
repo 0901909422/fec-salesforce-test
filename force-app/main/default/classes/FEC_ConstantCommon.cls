@@ -367,7 +367,6 @@ public with sharing class FEC_ConstantCommon {
      */
     public static final Integer FEC_TAT_BUSINESS_HOURS_PER_DAY = 8;
 
-
     /** Routing Action History: đổi Owner Case (khớp FEC_CaseBusinessService.buildRoutingActionHistoryRecord). */
     public static final String FEC_RAH_DESCRIPTION_CHANGE_OWNER = 'Change Owner';
     public static final String FEC_RAH_DESCRIPTION_AUTO_ASSIGNMENT = 'Auto Assignment';
@@ -643,11 +642,15 @@ public with sharing class FEC_ConstantCommon {
     public static final String BP_GENERAL_SERVICE = 'General Service Request';
     public static final String BP_COMPLAINT = 'Complaint';
     public static final String BP_FEEDBACK = 'Feedback';
-    
+
+    public static final String BP_GSR= 'GSR';
+    public static final String BP_COF= 'COF';
+
     // ================= ROUTE STATUS =================
     public static final String STATUS_CS_BACKOFFICE = 'CSBackOfficeReview';
+    public static final String STATUS_CS_REVIEW = 'CSReview';
     public static final String STATUS_OTHER_DEPT = 'OtherDeptReview';
-    
+
     // ================= ROUTING TYPE =================
     public static final String ROUTING_TYPE_ASSIGNMENT = 'Assignment';
     
@@ -703,7 +706,6 @@ public with sharing class FEC_ConstantCommon {
         'DOCUMENT_PREP' => 'Pending-DocumentPreparation',
         'TASK_UNDER_REVIEW' => 'Pending-TaskUnderReview'
     };
-
 
     /** Transfer Call: RequestorID gửi lên Pega Collections. */
     public static final String TRANSFER_CALL_REQUESTOR_ID_CSM = 'CSM';
@@ -817,9 +819,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String ASSIGNMENT_AUTORECALLED_STATUS = 'AutoRecalled';
     public static final String ASSIGNMENT_AUTOCOMPLETE_STATUS = 'AutoCompleted';
 
-      //tungnm37: CS Review - Assignment dang duoc xu ly tai cac don vi CS khac (CS Inbound, CS Ecom...)
-    public static final String STATUS_CS_REVIEW = 'CSReview';
-
     //tungnm37: Tap hop team CS BackOffice (SP, CC)
     public static final Set<String> CS_BACKOFFICE_TEAMS = new Set<String>{ 'SP', 'CC' };
     //tungnm37: Tap hop team CS khac (Inbound, Ecom, Outbound, QC, OM, F2F, CA, CL, CX)
@@ -827,11 +826,33 @@ public with sharing class FEC_ConstantCommon {
     //tungnm37: Tap hop team Other Dept (Collections, Payment, CP, DS, IA, IT, TS)
     public static final Set<String> OTHER_DEPT_TEAMS = new Set<String>{ 'CO', 'PM', 'CP', 'DS', 'IA', 'IT', 'TS' };
 
+    //tungnm37: Tap hop cac status Assignment da dong (dung de query active assignments)
+    public static final Set<String> CLOSED_ASSIGNMENT_STATUSES = new Set<String>{
+        ASSIGNMENT_STATUS_COMPLETED,
+        ASSIGNMENT_AUTOCOMPLETE_STATUS,
+        ASSIGNMENT_AUTORECALLED_STATUS
+    };
 
     public static final String QUEUE_ID_START = '00G';
     /** Prefix URL tải file theo ContentVersionId (servlet shepherd). */
     public static final String CONTENT_VERSION_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/version/download/';
     /** Prefix URL tải file theo ContentDocumentId (servlet shepherd). */
     public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
+    public static final String API_VERSION = 'v59.0';
 
+    public static final List<Map<String, String>> REPORT_CONFIGS =
+    new List<Map<String, String>>{
+        new Map<String, String>{
+            'name'       => 'Download BÁO CÁO INTERACTIONS & SERVICE',
+            'uniqueName' => 'BO_CO_INTERACTIONS_SERVICE_CASES_SUM_Rsl'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases Summary TAT',
+            'uniqueName' => 'FEC_RP_02'
+        },
+        new Map<String, String>{
+            'name'       => 'Interactions & Service Cases Summary',
+            'uniqueName' => 'FEC_RP_01'
+        }
+    };
 }
