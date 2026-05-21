@@ -108,6 +108,7 @@
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BCH_TemplateExportService</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
@@ -116,6 +117,9 @@
         <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
+        <members>FEC_NatureOfCaseUserGroupService</members>
+        <members>FEC_PaymentHistoryValidationService</members>
+		<members>FEC_NocRoutingAssignmentController</members>
 		<name>Apexclass</name>
 	</types>
     <types>
@@ -201,6 +205,7 @@
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
         <members>fec_ScopedStageChangeRoutingAction</members>
+		<members>fecRoutingAssignmentEditForm</members>
 		<name>LightningComponentBundle</name>
 	</types>
     <types>
@@ -262,10 +267,12 @@
 		<members>FEC_Case_Hold_History__c</members>
 		<members>FEC_Notification__c</members>
         <members>FEC_Notification_Template_Channel__c</members>
+		<members>FEC_Routing_Assignment__c</members>
 		<name>CustomObject</name>
 	</types>
     <types>
         <members>fec_CaseAssignmentNocNewOverride</members>
+        <members>fecRoutingAssignmentEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
 	<types>
@@ -355,6 +362,17 @@
         <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
         <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
         <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
+        <members>FEC_MSG_Cannot_Create_Card_Close_Certificate</members>
+        <members>FEC_MSG_Cannot_Request_Payment_History</members>
+        <members>FEC_MSG_Cannot_Request_Repayment_Schedule</members>
+        <members>FEC_BCH_Col_TotalRecords</members>
+		<members>FEC_Label_Customer_All</members>
+		<members>FEC_Label_Customer_Existing</members>
+		<members>FEC_Label_Customer_Non_Existing</members>
+		<members>FEC_Label_Edit_RA</members>
+		<members>FEC_Label_Nature_of_Cases</members>
+		<members>FEC_RA_Error_Load</members>
+		<members>FEC_RA_Error_Update</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -536,6 +554,7 @@
 	</types>
     <types>
 		<members>FEC_CommonCss</members>
+		<members>FEC_SheetJS</members>
 		<name>StaticResource</name>
 	</types>
 	<types>
@@ -596,8 +615,8 @@
         <name>CustomTab</name>
     </types>
 	<types>
-        <members>case sla main v1</members>
-        <members>case sla main v3</members>
+        <members>Case SLA Main 1</members>
+        <members>Case SLA Main 2</members>
         <name>EntitlementProcess</name>
     </types>
 	<version>66.0</version>

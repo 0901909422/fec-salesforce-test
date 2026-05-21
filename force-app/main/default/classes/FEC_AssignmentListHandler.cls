@@ -4,7 +4,7 @@ public without sharing class FEC_AssignmentListHandler {
     public static String getUserDepartment() {
         
         if(isCSSupport() || isCSCustomerCare() ){
-            return 'CS';
+            return FEC_ConstantCommon.TEAM_CODE_CS;
         }else{
             return FEC_ConstantCommon.TEAM_OTHER;
         }
@@ -481,7 +481,7 @@ public without sharing class FEC_AssignmentListHandler {
                  */
                 if (caseRecord.FEC_Stage_Name__c.contains(
                 FEC_ConstantCommon.BP_GSR)) {
-                    TeamWrapper team = getTeamByName('SP');
+                    TeamWrapper team = getTeamByName(FEC_ConstantCommon.TEAM_CODE_SP);
                     
                     if (team != null) {
                         teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
@@ -494,7 +494,7 @@ public without sharing class FEC_AssignmentListHandler {
                  */
                 else if (caseRecord.FEC_Stage_Name__c.contains(
                 FEC_ConstantCommon.BP_COF)) {
-                    TeamWrapper team = getTeamByName('CC');
+                    TeamWrapper team = getTeamByName(FEC_ConstantCommon.TEAM_CODE_CC);
                     
                     if (team != null) {
                         teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
@@ -529,7 +529,7 @@ public without sharing class FEC_AssignmentListHandler {
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(currentCase.OwnerId).startsWith('00G')) {
+            if (String.valueOf(currentCase.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
                 Group g = [
       SELECT Id, Name FROM Group WHERE Id = : currentCase.OwnerId LIMIT 1
     ];
@@ -571,7 +571,7 @@ public without sharing class FEC_AssignmentListHandler {
                  * => route to SP
                  */
                 if (userDepart == FEC_ConstantCommon.TEAM_CS_CUSTOMER_CARE) {
-                    TeamWrapper team = getTeamByName('SP');
+                    TeamWrapper team = getTeamByName(FEC_ConstantCommon.TEAM_CODE_SP);
                     
                     if (team != null) {
                         teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
@@ -583,7 +583,7 @@ public without sharing class FEC_AssignmentListHandler {
                  * => route to CC
                  */
                 else if (userDepart == FEC_ConstantCommon.TEAM_CS_SUPPORT) {
-                    TeamWrapper team = getTeamByName('CC');
+                    TeamWrapper team = getTeamByName(FEC_ConstantCommon.TEAM_CODE_CC);
                     
                     if (team != null) {
                         teamOptions.add(new SelectOptionWrapper(team.teamId, team.teamName));
@@ -685,7 +685,7 @@ public without sharing class FEC_AssignmentListHandler {
             /*
              * Case owner = Queue
              */
-            if (String.valueOf(caseRecord.OwnerId).startsWith('00G')) {
+            if (String.valueOf(caseRecord.OwnerId).startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
                 Group g = [
         SELECT Id, Name FROM Group WHERE Id = : caseRecord.OwnerId LIMIT 1
       ];
@@ -901,10 +901,10 @@ public without sharing class FEC_AssignmentListHandler {
                 &&
                 (
                 gm.Group.DeveloperName
-                .startsWith('FEC_DQ_')
+                .startsWith(FEC_ConstantCommon.QUEUE_DEVELOPER_PREFIX_FEC_DQ)
                 ||
                 gm.Group.DeveloperName
-                .contains('_CS_')
+                .contains(FEC_ConstantCommon.QUEUE_DEVELOPER_CONTAINS_CS)
                 )
             ) {
                 
@@ -1173,7 +1173,7 @@ public without sharing class FEC_AssignmentListHandler {
         WHERE
             UserOrGroupId IN :memberIds
             AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND Group.DeveloperName LIKE 'FEC_DQ_CS%'
+            AND Group.DeveloperName LIKE :FEC_ConstantCommon.QUEUE_DEVELOPER_PREFIX_FEC_DQ_CS_LIKE
     ];
         
         if (groupMembers.isEmpty()) {
