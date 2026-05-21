@@ -863,10 +863,6 @@ public with sharing class FEC_ConstantCommon {
     public static final List<Map<String, String>> REPORT_CONFIGS =
     new List<Map<String, String>>{
         new Map<String, String>{
-            'name'       => 'Download BÁO CÁO INTERACTIONS & SERVICE',
-            'uniqueName' => 'BO_CO_INTERACTIONS_SERVICE_CASES_SUM_Rsl'
-        },
-        new Map<String, String>{
             'name'       => 'Interactions & Service Cases Summary TAT',
             'uniqueName' => 'FEC_RP_02'
         },
@@ -875,6 +871,9 @@ public with sharing class FEC_ConstantCommon {
             'uniqueName' => 'FEC_RP_01'
         }
     };
+
+    public static final String REPORT_EXPORT_ENDPOINT = '{0}/services/data/{1}/analytics/reports/{2}?includeDetails=true';
+    public static final String CONTENT_DOWNLOAD_ENDPOINT = '{0}/sfc/servlet.shepherd/document/download/{1}';
     
     public static final String ROLE_STR = 'Role';
     public static final String ROLE_SUBORDINATE_STR = 'RoleAndSubordinates';
