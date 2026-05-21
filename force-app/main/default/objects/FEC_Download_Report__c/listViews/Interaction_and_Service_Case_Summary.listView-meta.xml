@@ -3,8 +3,13 @@
     <fullName>Interaction_and_Service_Case_Summary</fullName>
     <columns>NAME</columns>
     <columns>CREATED_DATE</columns>
-    <filterScope>Mine</filterScope>
-    <label>ALL INTERACTIONS &amp; SERVICE CASES SUMMARY</label>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>NAME</field>
+        <operation>contains</operation>
+        <value>ALL INTERACTIONS &amp; SERVICE CASES SUMMARY</value>
+    </filters>
+    <label>INTERACTIONS &amp; SERVICE CASES SUMMARY</label>
     <sharedTo>
         <role>FEC_Card_Risk_Monitoring_Specialist</role>
         <role>FEC_Customer_Care_Manager</role>

@@ -12,66 +12,23 @@
 ****************************************************************************************/
 
 import { LightningElement, api, wire } from 'lwc';
+import downloadReport from '@salesforce/apex/FEC_DownloadReportController.downloadReport';
 import { EnclosingTabId, closeTab } from 'lightning/platformWorkspaceApi';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import downloadReport from '@salesforce/apex/FEC_DownloadReportController.downloadReport';
 
-import FEC_Download_Report from '@salesforce/label/c.FEC_Download_Report';
-import FEC_Export_View from '@salesforce/label/c.FEC_Export_View';
-import FEC_Formatted_Report from '@salesforce/label/c.FEC_Formatted_Report';
-import FEC_Title_Context_Report from '@salesforce/label/c.FEC_Title_Context_Report';
-import FEC_Details_Only from '@salesforce/label/c.FEC_Details_Only';
-import FEC_Export_Detail from '@salesforce/label/c.FEC_Export_Detail';
-import FEC_Format from '@salesforce/label/c.FEC_Format';
-import FEC_Format_Excel from '@salesforce/label/c.FEC_Format_Excel';
 import FEC_Error_Download from '@salesforce/label/c.FEC_Error_Download';
 
-export default class Fec_DownloadReports extends LightningElement {
+export default class Fec_DownloadReports extends NavigationMixin(LightningElement) {
 
     @api recordIds;
     @wire(EnclosingTabId) tabId;
 
-    isLoading = false;
-    isFormattedSelected = true;
-    isDetailsSelected = false;
-
     customLabel = {
-        downloadReport: FEC_Download_Report,
-        exportView: FEC_Export_View,
-        formattedReport: FEC_Formatted_Report,
-        titleContextReport: FEC_Title_Context_Report,
-        detailsOnly: FEC_Details_Only,
-        exportDetail: FEC_Export_Detail,
-        format: FEC_Format,
-        formatExcel: FEC_Format_Excel,
         errorDownload: FEC_Error_Download
     }
 
-    get formattedClass() {
-        return this.isFormattedSelected ? 'option-card selected' : 'option-card';
-    }
-
-    get detailsClass() {
-        return this.isDetailsSelected ? 'option-card selected' : 'option-card';
-    }
-
-    handleFormatted() {
-        this.isFormattedSelected = true;
-        this.isDetailsSelected = false;
-    }
-
-    handleDetails() {
-        this.isDetailsSelected = true;
-        this.isFormattedSelected = false;
-    }
-
-    getRecordIdsFromUrl() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const raw = urlParams.get('flow__ids');
-        if (!raw) return [];
-        return raw.split(',').map(id => id.trim()).filter(Boolean);
-    }
+    _hasRun = false;
 
     showError(message) {
         this.dispatchEvent(new ShowToastEvent({
@@ -89,50 +46,74 @@ export default class Fec_DownloadReports extends LightningElement {
                     objectApiName: 'FEC_Download_Report__c',
                     actionName: 'list'
                 },
-                state: {
-                    filterName: 'Recent'
-                }
+                state: { filterName: 'Recent' }
             });
-
             await new Promise(resolve => setTimeout(resolve, 300));
             await closeTab(this.tabId);
-
         } catch (e) {
             console.error('closeAndRefresh error:', e);
         }
     }
 
-    async handleDownload() {
-        const ids = this.getRecordIdsFromUrl();
+    getIds() {
+        if (this.recordIds && this.recordIds.length) {
+            return Array.isArray(this.recordIds)
+                ? this.recordIds
+                : this.recordIds.split(',').map(id => id.trim()).filter(Boolean);
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const raw = urlParams.get('flow__ids');
+        if (!raw) return [];
+        return raw.split(',').map(id => id.trim()).filter(Boolean);
+    }
+
+    downloadFiles(urls) {
+        if (urls.length > 0) {
+            window.location.href = urls[0];
+        }
+       
+        urls.slice(1).forEach((url, i) => {
+            setTimeout(() => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.src = url;
+                document.body.appendChild(iframe);
+                setTimeout(() => {
+                    if (document.body.contains(iframe)) {
+                        document.body.removeChild(iframe);
+                    }
+                }, 10000);
+            }, (i + 1) * 1000);
+        });
+    }
+
+    async renderedCallback() {
+        if (this._hasRun) return;
+        this._hasRun = true;
+
+        const ids = this.getIds();
 
         if (!ids.length) {
             this.showError(this.customLabel.errorDownload);
+            await this.closeAndRefresh();
             return;
         }
-
-        this.isLoading = true;
 
         try {
             const urls = await downloadReport({ downloadReportIds: ids });
 
-            for (let i = 0; i < urls.length; i++) {
-                setTimeout(() => {
-                    window.open(urls[i], '_blank');
-                }, i * 500);
-            }
+            this.downloadFiles(urls);
 
             setTimeout(async () => {
                 await this.closeAndRefresh();
-            }, urls.length * 500 + 300);
+            }, urls.length * 800 + 300);
 
         } catch (e) {
             console.error(e);
-        } finally {
-            this.isLoading = false;
+            this.showError('Download failed.');
+            await this.closeAndRefresh();
         }
-    }
-
-    async handleCancel() {
-        await this.closeAndRefresh();
     }
 }

@@ -104,7 +104,7 @@ public without sharing class FEC_DownloadReportService {
             List<Object> detailColumns =
                 (List<Object>) reportMetadata.get('detailColumns');
 
-            List<String> csvHeaders = new List<String>();
+            List<String> excelHeaders = new List<String>();
 
             for (Object col : detailColumns) {
 
@@ -113,21 +113,19 @@ public without sharing class FEC_DownloadReportService {
                 if (columnMeta.containsKey(colName)) {
                     Map<String, Object> colInfo =
                         (Map<String, Object>) columnMeta.get(colName);
-                    csvHeaders.add(String.valueOf(colInfo.get('label')));
+                    excelHeaders.add(String.valueOf(colInfo.get('label')));
                 } else {
-                    csvHeaders.add(colName);
+                    excelHeaders.add(colName);
                 }
             }
-
-            List<String> csvLines = new List<String>();
-            csvLines.add('\uFEFFsep=,');
-            csvLines.add(buildCsvRow(csvHeaders));
 
             Map<String, Object> factMap =
                 (Map<String, Object>) reportData.get('factMap');
 
             List<String> factKeys = new List<String>(factMap.keySet());
             factKeys.sort();
+
+            List<List<String>> dataRows = new List<List<String>>();
 
             for (String key : factKeys) {
 
@@ -179,17 +177,17 @@ public without sharing class FEC_DownloadReportService {
                         rowValues.add(label);
                     }
 
-                    csvLines.add(buildCsvRow(rowValues));
+                    dataRows.add(rowValues);
                 }
             }
 
-            String csvContent = String.join(csvLines, '\n');
-            String fileName   = today.replace('/', '') + '_' + uniqueName + '.csv';
+            String excelContent = buildExcelXml(excelHeaders, dataRows);
+            String fileName     = today.replace('/', '') + '_' + uniqueName + '.xls';
 
             ContentVersion cv = new ContentVersion();
             cv.Title          = today + ' - ' + reportName;
             cv.PathOnClient   = fileName;
-            cv.VersionData    = Blob.valueOf(csvContent);
+            cv.VersionData    = Blob.valueOf(excelContent);
             cv.IsMajorVersion = true;
 
             insert cv;
@@ -238,6 +236,52 @@ public without sharing class FEC_DownloadReportService {
     }
 
     // =========================================================
+    // BUILD EXCEL
+    // =========================================================
+    private static String buildExcelXml(List<String> headers, List<List<String>> rows) {
+
+        String xml = '<?xml version="1.0" encoding="UTF-8"?>';
+        xml += '<?mso-application progid="Excel.Sheet"?>'; // <-- thêm dòng này
+        xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"';
+        xml += ' xmlns:o="urn:schemas-microsoft-com:office:office"';
+        xml += ' xmlns:x="urn:schemas-microsoft-com:office:excel"';
+        xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+        xml += '<Worksheet ss:Name="Report"><Table>';
+
+        xml += '<Row>';
+        for (String h : headers) {
+            xml += '<Cell><Data ss:Type="String">' + escapeXml(h) + '</Data></Cell>';
+        }
+        xml += '</Row>';
+
+        for (List<String> row : rows) {
+            xml += '<Row>';
+            for (String val : row) {
+                xml += '<Cell><Data ss:Type="String">' + escapeXml(val) + '</Data></Cell>';
+            }
+            xml += '</Row>';
+        }
+
+        xml += '</Table></Worksheet></Workbook>';
+        return xml;
+    }
+
+    // =========================================================
+    // ESCAPE XML
+    // =========================================================
+    private static String escapeXml(String val) {
+
+        if (String.isBlank(val)) return '';
+
+        return val
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('"', '&quot;')
+            .replace('\'', '&apos;');
+    }
+
+    // =========================================================
     // STRIP HTML
     // =========================================================
     private static String stripHtml(String val) {
@@ -245,32 +289,5 @@ public without sharing class FEC_DownloadReportService {
         if (String.isBlank(val)) return '';
 
         return val.replaceAll('<[^>]+>', '').trim();
-    }
-
-    // =========================================================
-    // BUILD CSV ROW
-    // =========================================================
-    private static String buildCsvRow(List<String> values) {
-
-        List<String> escaped = new List<String>();
-
-        for (String val : values) {
-
-            if (val == null) val = '';
-
-            val = val.replace('"', '""');
-
-            if (
-                val.contains(',') ||
-                val.contains('\n') ||
-                val.contains('"')
-            ) {
-                val = '"' + val + '"';
-            }
-
-            escaped.add(val);
-        }
-
-        return String.join(escaped, ',');
     }
 }

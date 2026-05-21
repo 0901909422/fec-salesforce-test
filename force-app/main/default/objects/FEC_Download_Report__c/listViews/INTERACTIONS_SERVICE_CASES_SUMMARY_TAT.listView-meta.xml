@@ -3,7 +3,12 @@
     <fullName>INTERACTIONS_SERVICE_CASES_SUMMARY_TAT</fullName>
     <columns>NAME</columns>
     <columns>CREATED_DATE</columns>
-    <filterScope>Mine</filterScope>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>NAME</field>
+        <operation>contains</operation>
+        <value>INTERACTIONS &amp; SERVICE CASES SUMMARY TAT</value>
+    </filters>
     <label>INTERACTIONS &amp; SERVICE CASES SUMMARY TAT</label>
     <sharedTo>
         <role>FEC_Card_Risk_Monitoring_Specialist</role>
