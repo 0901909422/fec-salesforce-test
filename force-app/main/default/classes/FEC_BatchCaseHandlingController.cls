@@ -787,12 +787,27 @@ public without sharing class FEC_BatchCaseHandlingController {
 
             Boolean cofOrGsr = FEC_BatchCaseHandlingImportService.isCofOrGsrTemplate(templateName);
             List<FEC_BatchCaseHandlingImportRow> rowResults = FEC_BatchCaseHandlingImportService.validateCaseHandlingImportRows(inputRows, cofOrGsr);
-            FEC_BatchCaseHandlingImportService.applyCaseHandlingUpdates(rowResults, cofOrGsr);
+            if (FEC_BatchCaseHandlingImportService.hasApplicableImportRows(rowResults)) {
+                System.enqueueJob(
+                    new FEC_BatchCaseHandlingImportQueueable(
+                        (Id) batchRow.get('Id'),
+                        JSON.serialize(rowResults),
+                        cofOrGsr,
+                        0
+                    )
+                );
+                out.success = true;
+                out.message = System.Label.FEC_BCH_Import_Submitted;
+                out.batchRecordId = (Id) batchRow.get('Id');
+                out.contentDocumentId = insertedCv.ContentDocumentId;
+                out.status = 'Processing';
+                out.resultRowsJson = JSON.serialize(rowResults);
+                return out;
+            }
+
+            FEC_BatchCaseHandlingImportService.finalizeBatchImportRecord((Id) batchRow.get('Id'), rowResults);
             Integer failedCount = FEC_BatchCaseHandlingImportService.countFailedImportRows(rowResults);
             Integer totalCount = rowResults.size();
-            Integer successCount = totalCount - failedCount;
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }, totalCount);
-
             String finalStatus;
             String failureReason = FEC_ConstantCommon.STR_EMPTY;
             if (totalCount == 0) {
@@ -804,12 +819,6 @@ public without sharing class FEC_BatchCaseHandlingController {
             } else {
                 finalStatus = 'Processed';
             }
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Status__c' }, finalStatus);
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Result__c' }, 'Result');
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Success_Records__c' }, successCount < 0 ? 0 : successCount);
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Total_Failed_Records__c' }, failedCount);
-            FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(fieldMap, batchRow, new List<String>{ 'FEC_Failure_Reason__c' }, failureReason);
-            update batchRow;
 
             out.success = true;
             out.message = System.Label.FEC_BCH_Import_Submitted;

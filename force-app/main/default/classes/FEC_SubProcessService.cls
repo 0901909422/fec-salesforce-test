@@ -216,7 +216,8 @@ public with sharing class FEC_SubProcessService {
     
     
     
-    @AuraEnabled(cacheable=true)
+    /** Không cacheable — sau Submit FEC_Is_Submited__c đổi, cache cũ khiến Hold Case không hiện. */
+    @AuraEnabled(cacheable=false)
     public static SubProcessWrapper getSubmittedSubProcesses(Id caseId) {
         
         SubProcessWrapper result =
