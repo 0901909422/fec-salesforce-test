@@ -7,21 +7,14 @@ public without sharing class FEC_CaseSlaNotificationService {
     private static final String SLA_CATEGORY_INTERNAL_TASK = 'Internal Task';
     private static final String SLA_SUBCODE_ISL01 = 'ISL01';
     private static final String SLA_SUBCODE_ISC01 = 'ISC01';
-    private static final String SLA_RECIP_QUEUE_CS_CUSTOMER_CARE = 'CS_Customer_Care';
-    private static final String SLA_RECIP_QUEUE_CS_SUPPORT = 'CS_Support';
+    /** CS Support → User Group SP; CS Customer Care → User Group CC. */
+    private static final String SLA_RECIP_USER_GROUP_CS_SUPPORT = FEC_ConstantCommon.RD_ASSESSMENT_TEAM_SP;
+    private static final String SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE = FEC_ConstantCommon.RD_ASSESSMENT_TEAM_CC;
     private static final String SLA_RECIP_ROLE_SENIOR_CC_SPECIALIST = 'Senior Customer Care Specialist';
     private static final String SLA_RECIP_ROLE_CC_MANAGER = 'Customer Care Manager';
     private static final String SLA_RECIP_ROLE_UNIT_HEAD_CC = 'Unit Head of Customer Care';
     private static final String SLA_RECIP_ROLE_SENIOR_CSS_SUPPORT = 'Senior Customer Service Support Specialist';
     private static final String SLA_RECIP_ROLE_UNIT_HEAD_CSS = 'Unit Head of Customer Service Support';
-    /** Trường hợp 1 — Lần 1: bổ sung Senior CC (email) khi có CS Customer Care trong history. */
-    private static final List<String> SLA_CASE1_WARN_EXTRA_SENIOR_CC_EMAILS = new List<String>{
-        'nhu.ho@fecredit.com.vn',
-        'dien.pham.1@fecredit.com.vn',
-        'dung.van.1@fecredit.com.vn',
-        'dung.luu.1@fecredit.com.vn'
-    };
-
     /**
      * Trường hợp 2: Category = Request / Internal Task và Sub-Code ISL01 hoặc ISC01 (Hủy yêu cầu).
      */
@@ -72,10 +65,6 @@ public without sharing class FEC_CaseSlaNotificationService {
         Set<String> unitHeadCssIds = queryActiveUserRecipientIdsByRoleFragment(
             SLA_RECIP_ROLE_UNIT_HEAD_CSS
         );
-        Set<String> case1WarnExtraSeniorCcIds = queryActiveUserRecipientIdsByEmails(
-            SLA_CASE1_WARN_EXTRA_SENIOR_CC_EMAILS
-        );
-
         for (Id caseId : slaCaseById.keySet()) {
             Case slaCase = slaCaseById.get(caseId);
             Boolean isViolating = caseIdToIsViolating != null &&
@@ -102,11 +91,10 @@ public without sharing class FEC_CaseSlaNotificationService {
                     isViolating,
                     seniorCcSpecialistIds,
                     seniorCcManagerIds,
-                    unitHeadCcIds,
-                    case1WarnExtraSeniorCcIds
+                    unitHeadCcIds
                 );
             }
-            caseIdToRecipientIds.put(caseId, recipientIds);
+            caseIdToRecipientIds.put(caseId, deduplicateRecipientIds(recipientIds));
         }
         return caseIdToRecipientIds;
     }
@@ -118,12 +106,12 @@ public without sharing class FEC_CaseSlaNotificationService {
         Boolean isViolating,
         Set<String> seniorCcSpecialistIds,
         Set<String> seniorCcManagerIds,
-        Set<String> unitHeadCcIds,
-        Set<String> case1WarnExtraSeniorCcIds
+        Set<String> unitHeadCcIds
     ) {
         if (isViolating == true) {
             return resolveSlaRecipientsCase1Violating(
                 performUserIds,
+                performUserById,
                 seniorCcManagerIds,
                 unitHeadCcIds
             );
@@ -131,32 +119,36 @@ public without sharing class FEC_CaseSlaNotificationService {
         return resolveSlaRecipientsCase1Warning(
             performUserIds,
             performUserById,
-            seniorCcSpecialistIds,
-            case1WarnExtraSeniorCcIds
+            seniorCcSpecialistIds
         );
     }
 
     /**
-     * Trường hợp 1 — Lần 1 (vàng): có CS Customer Care trong history → tất cả user đã xử lý
-     * + 4 email Senior CC; không có CS Customer Care → role Senior Customer Care Specialist.
+     * Trường hợp 1 — Lần 1 (vàng): có perform user User Group CC → user đã xử lý (chỉ CC)
+     * + Senior Customer Care Specialist; không có CC → chỉ Senior Customer Care Specialist.
      */
     private static Set<String> resolveSlaRecipientsCase1Warning(
         Set<String> performUserIds,
         Map<Id, User> performUserById,
-        Set<String> seniorCcSpecialistIds,
-        Set<String> case1WarnExtraSeniorCcIds
+        Set<String> seniorCcSpecialistIds
     ) {
         Set<String> recipientIds = new Set<String>();
         if (
-            hasPerformUserInMainQueue(
+            hasPerformUserInUserGroup(
                 performUserIds,
                 performUserById,
-                SLA_RECIP_QUEUE_CS_CUSTOMER_CARE
-            ) ||
-            hasPerformUserInMainQueue(performUserIds, performUserById, 'CS Customer Care')
+                SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE
+            )
         ) {
-            mergeRecipientIds(recipientIds, performUserIds);
-            mergeRecipientIds(recipientIds, case1WarnExtraSeniorCcIds);
+            mergeRecipientIds(
+                recipientIds,
+                filterPerformUserIdsByUserGroup(
+                    performUserIds,
+                    performUserById,
+                    SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE
+                )
+            );
+            mergeRecipientIds(recipientIds, seniorCcSpecialistIds);
         } else {
             mergeRecipientIds(recipientIds, seniorCcSpecialistIds);
         }
@@ -164,16 +156,32 @@ public without sharing class FEC_CaseSlaNotificationService {
     }
 
     /**
-     * Trường hợp 1 — Lần 2 (đỏ): tất cả user đã xử lý + Customer Care Manager
-     * + Unit Head of Customer Care (không dùng role CS Support).
+     * Trường hợp 1 — Lần 2 (đỏ): có perform user User Group CC → user đã xử lý (chỉ CC)
+     * + Customer Care Manager + Unit Head of Customer Care; không có CC → chỉ hai role trên.
      */
     private static Set<String> resolveSlaRecipientsCase1Violating(
         Set<String> performUserIds,
+        Map<Id, User> performUserById,
         Set<String> seniorCcManagerIds,
         Set<String> unitHeadCcIds
     ) {
         Set<String> recipientIds = new Set<String>();
-        mergeRecipientIds(recipientIds, performUserIds);
+        if (
+            hasPerformUserInUserGroup(
+                performUserIds,
+                performUserById,
+                SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE
+            )
+        ) {
+            mergeRecipientIds(
+                recipientIds,
+                filterPerformUserIdsByUserGroup(
+                    performUserIds,
+                    performUserById,
+                    SLA_RECIP_USER_GROUP_CS_CUSTOMER_CARE
+                )
+            );
+        }
         mergeRecipientIds(recipientIds, seniorCcManagerIds);
         mergeRecipientIds(recipientIds, unitHeadCcIds);
         return recipientIds;
@@ -190,6 +198,7 @@ public without sharing class FEC_CaseSlaNotificationService {
         if (isViolating == true) {
             return resolveSlaRecipientsCase2Violating(
                 performUserIds,
+                performUserById,
                 seniorCssSupportIds,
                 unitHeadCssIds
             );
@@ -202,8 +211,8 @@ public without sharing class FEC_CaseSlaNotificationService {
     }
 
     /**
-     * Trường hợp 2 — Lần 1 (vàng): có CS Support trong history → tất cả user đã xử lý;
-     * không có → role Senior Customer Service Support Specialist.
+     * Trường hợp 2 — Lần 1 (vàng): có perform user User Group SP → user đã xử lý (chỉ SP);
+     * không có SP → role Senior Customer Service Support Specialist.
      */
     private static Set<String> resolveSlaRecipientsCase2Warning(
         Set<String> performUserIds,
@@ -212,10 +221,20 @@ public without sharing class FEC_CaseSlaNotificationService {
     ) {
         Set<String> recipientIds = new Set<String>();
         if (
-            hasPerformUserInMainQueue(performUserIds, performUserById, SLA_RECIP_QUEUE_CS_SUPPORT) ||
-            hasPerformUserInMainQueue(performUserIds, performUserById, 'CS Support')
+            hasPerformUserInUserGroup(
+                performUserIds,
+                performUserById,
+                SLA_RECIP_USER_GROUP_CS_SUPPORT
+            )
         ) {
-            mergeRecipientIds(recipientIds, performUserIds);
+            mergeRecipientIds(
+                recipientIds,
+                filterPerformUserIdsByUserGroup(
+                    performUserIds,
+                    performUserById,
+                    SLA_RECIP_USER_GROUP_CS_SUPPORT
+                )
+            );
         } else {
             mergeRecipientIds(recipientIds, seniorCssSupportIds);
         }
@@ -223,16 +242,33 @@ public without sharing class FEC_CaseSlaNotificationService {
     }
 
     /**
-     * Trường hợp 2 — Lần 2 (đỏ): tất cả user đã xử lý + Senior Customer Service Support Specialist
-     * + Unit Head of Customer Service Support (không dùng Customer Care Manager / Unit Head CC).
+     * Trường hợp 2 — Lần 2 (đỏ): có perform user User Group SP → user đã xử lý (chỉ SP)
+     * + Senior Customer Service Support Specialist + Unit Head of Customer Service Support;
+     * không có SP → chỉ hai role trên.
      */
     private static Set<String> resolveSlaRecipientsCase2Violating(
         Set<String> performUserIds,
+        Map<Id, User> performUserById,
         Set<String> seniorCssSupportIds,
         Set<String> unitHeadCssIds
     ) {
         Set<String> recipientIds = new Set<String>();
-        mergeRecipientIds(recipientIds, performUserIds);
+        if (
+            hasPerformUserInUserGroup(
+                performUserIds,
+                performUserById,
+                SLA_RECIP_USER_GROUP_CS_SUPPORT
+            )
+        ) {
+            mergeRecipientIds(
+                recipientIds,
+                filterPerformUserIdsByUserGroup(
+                    performUserIds,
+                    performUserById,
+                    SLA_RECIP_USER_GROUP_CS_SUPPORT
+                )
+            );
+        }
         mergeRecipientIds(recipientIds, seniorCssSupportIds);
         mergeRecipientIds(recipientIds, unitHeadCssIds);
         return recipientIds;
@@ -284,32 +320,26 @@ public without sharing class FEC_CaseSlaNotificationService {
             return new Map<Id, User>();
         }
         return new Map<Id, User>([
-            SELECT
-                Id,
-                Division,
-                UserRole.Name,
-                FEC_Main_Queue__c,
-                FEC_User_Group__c,
-                FEC_User_Division_Group__c
+            SELECT Id, FEC_User_Group__c
             FROM User
             WHERE Id IN :performUserIds
         ]);
     }
 
-    /** User Perform có FEC_Main_Queue__c chứa queueFragment (vd CS_Customer_Care, CS_Support). */
-    private static Boolean hasPerformUserInMainQueue(
+    /** Có ít nhất một perform user có FEC_User_Group__c khớp userGroupCode (vd SP, CC). */
+    private static Boolean hasPerformUserInUserGroup(
         Set<String> performUserIds,
         Map<Id, User> performUserById,
-        String queueFragment
+        String userGroupCode
     ) {
-        if (performUserIds == null || performUserIds.isEmpty()) {
+        if (performUserIds == null || performUserIds.isEmpty() || String.isBlank(userGroupCode)) {
             return false;
         }
         for (String performUserIdStr : performUserIds) {
             User performUser = performUserById.get((Id) performUserIdStr);
             if (
                 performUser != null &&
-                userMainQueueContainsFragment(performUser.FEC_Main_Queue__c, queueFragment)
+                userGroupMatches(performUser.FEC_User_Group__c, userGroupCode)
             ) {
                 return true;
             }
@@ -317,10 +347,32 @@ public without sharing class FEC_CaseSlaNotificationService {
         return false;
     }
 
-    private static Boolean userMainQueueContainsFragment(String mainQueue, String queueFragment) {
-        return String.isNotBlank(mainQueue) &&
-            String.isNotBlank(queueFragment) &&
-            mainQueue.contains(queueFragment);
+    private static Boolean userGroupMatches(String userGroup, String expectedGroup) {
+        return String.isNotBlank(userGroup) &&
+            String.isNotBlank(expectedGroup) &&
+            userGroup.trim().equalsIgnoreCase(expectedGroup.trim());
+    }
+
+    /** Perform user trong history có FEC_User_Group__c khớp userGroupCode. */
+    private static Set<String> filterPerformUserIdsByUserGroup(
+        Set<String> performUserIds,
+        Map<Id, User> performUserById,
+        String userGroupCode
+    ) {
+        Set<String> filtered = new Set<String>();
+        if (performUserIds == null || performUserIds.isEmpty() || String.isBlank(userGroupCode)) {
+            return filtered;
+        }
+        for (String performUserIdStr : performUserIds) {
+            User performUser = performUserById.get((Id) performUserIdStr);
+            if (
+                performUser != null &&
+                userGroupMatches(performUser.FEC_User_Group__c, userGroupCode)
+            ) {
+                filtered.add(performUserIdStr);
+            }
+        }
+        return filtered;
     }
 
     private static void mergeRecipientIds(Set<String> target, Set<String> source) {
@@ -328,6 +380,20 @@ public without sharing class FEC_CaseSlaNotificationService {
             return;
         }
         target.addAll(source);
+    }
+
+    /** Lọc trùng Id người nhận (và bỏ blank) trước khi trả kết quả cuối. */
+    private static Set<String> deduplicateRecipientIds(Set<String> recipientIds) {
+        Set<String> deduped = new Set<String>();
+        if (recipientIds == null || recipientIds.isEmpty()) {
+            return deduped;
+        }
+        for (String recipientId : recipientIds) {
+            if (String.isNotBlank(recipientId)) {
+                deduped.add(recipientId.trim());
+            }
+        }
+        return deduped;
     }
 
     private static Set<String> queryActiveUserRecipientIdsByRoleFragment(String roleNameFragment) {
@@ -342,30 +408,6 @@ public without sharing class FEC_CaseSlaNotificationService {
                 IsActive = TRUE
                 AND UserRoleId != NULL
                 AND UserRole.Name LIKE :('%' + roleNameFragment + '%')
-        ]) {
-            recipientIds.add(String.valueOf(u.Id));
-        }
-        return recipientIds;
-    }
-
-    private static Set<String> queryActiveUserRecipientIdsByEmails(List<String> emails) {
-        Set<String> recipientIds = new Set<String>();
-        if (emails == null || emails.isEmpty()) {
-            return recipientIds;
-        }
-        List<String> activeEmails = new List<String>();
-        for (String email : emails) {
-            if (String.isNotBlank(email)) {
-                activeEmails.add(email.trim());
-            }
-        }
-        if (activeEmails.isEmpty()) {
-            return recipientIds;
-        }
-        for (User u : [
-            SELECT Id
-            FROM User
-            WHERE IsActive = TRUE AND Email IN :activeEmails
         ]) {
             recipientIds.add(String.valueOf(u.Id));
         }
