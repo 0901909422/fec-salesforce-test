@@ -1,14 +1,5 @@
 public without sharing class FEC_BatchCaseHandlingCaseFilter {
 
-    private static final List<String> RESOLVED_SERVICE_CASE_STATUSES = new List<String>{
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_COMPLETED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANCELLED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_REJECTED,
-        FEC_ConstantCommon.CASE_STATUS_AUTO_CANCELLED,
-        FEC_ConstantCommon.CASE_STATUS_RESOLVED_CANNOT_CONTACT_CUSTOMER
-    };
-
     public static List<Map<String, Object>> parseFilterMaps(String filtersJson) {
         List<Object> rawFilters = String.isBlank(filtersJson)
             ? new List<Object>()
@@ -37,21 +28,8 @@ public without sharing class FEC_BatchCaseHandlingCaseFilter {
             '\''
         );
         parts.add('IsClosed = false');
-        parts.add(
-            '(FEC_Case_Status__c = null OR FEC_Case_Status__c NOT IN (\'' +
-            String.join(escapeStatusList(RESOLVED_SERVICE_CASE_STATUSES), '\',\'') +
-            '\'))'
-        );
-        parts.add('(FEC_Final_Status__c LIKE \'Pending-%\' OR FEC_Final_Status__c = \'Open\')');
+        parts.add('(FEC_Final_Status__c LIKE \'Pending - %\' OR FEC_Final_Status__c = \'Open\')');
         return parts;
-    }
-
-    private static List<String> escapeStatusList(List<String> src) {
-        List<String> out = new List<String>();
-        for (String s : src) {
-            out.add(String.escapeSingleQuotes(s));
-        }
-        return out;
     }
 
     public static List<String> buildCompleteWhere(List<Map<String, Object>> filterMaps) {

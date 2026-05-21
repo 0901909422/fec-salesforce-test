@@ -51,7 +51,7 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     );
   }
 
-  /** Chỉ Draft được sửa config; chờ wire xong mới mở chỉnh sửa. */
+  /** Chỉ Draft được sửa Role/Scale; Select Queues không đổi sau khi tạo. */
   _statusFromWire = "";
 
   get configReadOnly() {
@@ -61,11 +61,15 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
     return this._statusFromWire !== "Draft";
   }
 
+  get queuesReadOnly() {
+    return true;
+  }
+
   get configFrozenHint() {
     if (!this.loaded || !this.configReadOnly || !this._statusFromWire) {
       return "";
     }
-    return "Chỉ khi Case Assignment có Status Draft mới chỉnh sửa được cấu hình Queues và Role.";
+    return "Chỉ khi Case Assignment có Status Draft mới chỉnh sửa được cấu hình Role.";
   }
 
   get configSaveTitle() {
@@ -157,7 +161,7 @@ export default class Fec_CaseAssignmentConfig extends LightningElement {
   }
 
   async handleQueuesChange(event) {
-    if (this.configReadOnly) {
+    if (this.configReadOnly || this.queuesReadOnly) {
       return;
     }
     this.selectedQueues = event.detail.value || [];
