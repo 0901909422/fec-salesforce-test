@@ -51,30 +51,87 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (batchRecordId == null) {
             return;
         }
-        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe()
-            .get(BATCH_OBJECT_API_NAME)
-            .getDescribe()
-            .fields.getMap();
-        SObject batchRow = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        SObject batchRow = newBatchRow(batchRecordId);
         Integer failedCount = countFailedImportRows(rowResults);
         Integer totalCount = rowResults == null ? 0 : rowResults.size();
-        Integer successCount = totalCount - failedCount;
-        String finalStatus;
         String failureReason = FEC_ConstantCommon.STR_EMPTY;
+        String finalStatus = 'Processed';
         if (totalCount == 0) {
             finalStatus = 'Failure';
             failureReason = System.Label.FEC_BCH_RequireFile;
         } else if (failedCount == totalCount) {
             finalStatus = 'Failure';
             failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+        }
+        putBatchStatusAndResult(fieldMap, batchRow, finalStatus);
+        putBatchCountFields(
+            fieldMap,
+            batchRow,
+            totalCount,
+            totalCount - failedCount < 0 ? 0 : totalCount - failedCount,
+            failedCount
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            failureReason
+        );
+        update batchRow;
+        persistBatchResultArtifact(batchRecordId, rowResults, failureReason);
+    }
+
+    public static void failBatchImportRecord(Id batchRecordId, String reason) {
+        failBatchImportRecord(batchRecordId, reason, null);
+    }
+
+    public static void failBatchImportRecord(
+        Id batchRecordId,
+        String reason,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        SObject batchRow = newBatchRow(batchRecordId);
+        String failureReason = String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason;
+        putBatchStatusAndResult(fieldMap, batchRow, 'Failure');
+        Integer totalCount = rowResults == null ? 0 : rowResults.size();
+        if (totalCount > 0) {
+            putBatchCountFields(fieldMap, batchRow, totalCount, 0, totalCount);
         } else {
-            finalStatus = 'Processed';
+            applyExistingBatchFailCounts(fieldMap, batchRow, batchRecordId);
         }
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
             fieldMap,
             batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            failureReason
+        );
+        update batchRow;
+        persistBatchResultArtifact(batchRecordId, rowResults, failureReason);
+    }
+
+    private static Map<String, Schema.SObjectField> batchFieldMap() {
+        return Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).getDescribe().fields.getMap();
+    }
+
+    private static SObject newBatchRow(Id batchRecordId) {
+        return Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
+    }
+
+    private static void putBatchStatusAndResult(
+        Map<String, Schema.SObjectField> fieldMap,
+        SObject batchRow,
+        String status
+    ) {
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
             new List<String>{ 'FEC_Status__c' },
-            finalStatus
+            status
         );
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
             fieldMap,
@@ -82,6 +139,15 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             new List<String>{ 'FEC_Result__c' },
             'Result'
         );
+    }
+
+    private static void putBatchCountFields(
+        Map<String, Schema.SObjectField> fieldMap,
+        SObject batchRow,
+        Integer totalCount,
+        Integer successCount,
+        Integer failedCount
+    ) {
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
             fieldMap,
             batchRow,
@@ -92,7 +158,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             fieldMap,
             batchRow,
             new List<String>{ 'FEC_Total_Success_Records__c' },
-            successCount < 0 ? 0 : successCount
+            successCount
         );
         FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
             fieldMap,
@@ -100,43 +166,141 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             new List<String>{ 'FEC_Total_Failed_Records__c' },
             failedCount
         );
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
-            batchRow,
-            new List<String>{ 'FEC_Failure_Reason__c' },
-            failureReason
-        );
-        update batchRow;
     }
 
-    public static void failBatchImportRecord(Id batchRecordId, String reason) {
+    private static void applyExistingBatchFailCounts(
+        Map<String, Schema.SObjectField> fieldMap,
+        SObject batchRow,
+        Id batchRecordId
+    ) {
+        String totalField = FEC_BatchCaseHandlingSObjectUtil.pickField(
+            fieldMap,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' }
+        );
+        if (String.isBlank(totalField) || batchRecordId == null) {
+            return;
+        }
+        List<SObject> existing = Database.query(
+            'SELECT ' + totalField + ' FROM ' + BATCH_OBJECT_API_NAME + ' WHERE Id = :batchRecordId LIMIT 1'
+        );
+        if (existing.isEmpty()) {
+            return;
+        }
+        Decimal totalVal = FEC_BatchCaseHandlingSObjectUtil.asDecimal(existing[0].get(totalField));
+        Integer totalCount = totalVal == null ? 0 : totalVal.intValue();
+        if (totalCount > 0) {
+            putBatchCountFields(fieldMap, batchRow, totalCount, 0, totalCount);
+        }
+    }
+
+    private static Boolean isCofOrGsrImportRows(List<FEC_BatchCaseHandlingImportRow> rowResults) {
+        if (rowResults == null) {
+            return false;
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+            if (row != null && (String.isNotBlank(row.assignmentId) || String.isNotBlank(row.assignmentRoutingAction))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void persistBatchResultArtifact(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason
+    ) {
         if (batchRecordId == null) {
             return;
         }
-        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe()
-            .get(BATCH_OBJECT_API_NAME)
-            .getDescribe()
-            .fields.getMap();
-        SObject batchRow = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
-            batchRow,
-            new List<String>{ 'FEC_Status__c' },
-            'Failure'
+        try {
+            String fileName = resolveBatchResultFileName(batchRecordId);
+            String csvBody = buildBatchResultCsv(rowResults, batchFailureReason, isCofOrGsrImportRows(rowResults));
+            if (String.isBlank(csvBody)) {
+                return;
+            }
+            ContentVersion cv = new ContentVersion();
+            cv.Title = ensureResultContentTitle(fileName);
+            cv.PathOnClient = '/' + fileName;
+            cv.VersionData = Blob.valueOf(csvBody);
+            cv.FirstPublishLocationId = batchRecordId;
+            insert cv;
+        } catch (Exception ex) {
+        }
+    }
+
+    private static String resolveBatchResultFileName(Id batchRecordId) {
+        return FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(queryBatchFileName(batchRecordId)) + '_Result.csv';
+    }
+
+    private static String queryBatchFileName(Id batchRecordId) {
+        Map<String, Schema.SObjectField> fieldMap = batchFieldMap();
+        String fileField = FEC_BatchCaseHandlingSObjectUtil.pickField(fieldMap, new List<String>{ 'FEC_File_Name__c' });
+        String nameField = fieldMap.containsKey('Name') ? 'Name' : null;
+        List<String> selectParts = new List<String>{ 'Id' };
+        FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, fileField);
+        FEC_BatchCaseHandlingSObjectUtil.addIfNotBlank(selectParts, nameField);
+        List<SObject> rows = Database.query(
+            'SELECT ' + String.join(selectParts, ', ') + ' FROM ' + BATCH_OBJECT_API_NAME + ' WHERE Id = :batchRecordId LIMIT 1'
         );
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
-            batchRow,
-            new List<String>{ 'FEC_Result__c' },
-            'Result'
-        );
-        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
-            fieldMap,
-            batchRow,
-            new List<String>{ 'FEC_Failure_Reason__c' },
-            String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason
-        );
-        update batchRow;
+        if (rows.isEmpty()) {
+            return 'Import';
+        }
+        SObject row = rows[0];
+        String sourceName = FEC_BatchCaseHandlingSObjectUtil.asString(row.get(fileField));
+        if (String.isBlank(sourceName) && String.isNotBlank(nameField)) {
+            sourceName = FEC_BatchCaseHandlingSObjectUtil.asString(row.get(nameField));
+        }
+        return String.isBlank(sourceName) ? 'Import' : sourceName;
+    }
+
+    private static String buildBatchResultCsv(
+        List<FEC_BatchCaseHandlingImportRow> rowResults,
+        String batchFailureReason,
+        Boolean cofOrGsr
+    ) {
+        List<String> lines = new List<String>();
+        if (cofOrGsr) {
+            lines.add('Case ID Search,Routing Action,Inputted Remarks,Assignment ID,Assignment Routing Action,Status,Errors');
+        } else {
+            lines.add('Case ID Search,Routing Action,Inputted Remarks,Status,Errors');
+        }
+        if (rowResults != null && !rowResults.isEmpty()) {
+            for (FEC_BatchCaseHandlingImportRow row : rowResults) {
+                if (row == null) {
+                    continue;
+                }
+                List<String> cols = new List<String>{
+                    csvEscape(row.caseIdSearch),
+                    csvEscape(row.routingAction),
+                    csvEscape(row.inputtedRemarks)
+                };
+                if (cofOrGsr) {
+                    cols.add(csvEscape(row.assignmentId));
+                    cols.add(csvEscape(row.assignmentRoutingAction));
+                }
+                cols.add(csvEscape(row.status));
+                cols.add(csvEscape(row.errors));
+                lines.add(String.join(cols, ','));
+            }
+        } else if (String.isNotBlank(batchFailureReason)) {
+            List<String> emptyCols = new List<String>();
+            for (Integer i = 0; i < (cofOrGsr ? 6 : 3); i++) {
+                emptyCols.add('');
+            }
+            lines.add(csvEscape(batchFailureReason) + ',' + String.join(emptyCols, ','));
+        } else {
+            return null;
+        }
+        return String.join(lines, '\n');
+    }
+
+    private static String csvEscape(String value) {
+        String v = value == null ? FEC_ConstantCommon.STR_EMPTY : String.valueOf(value);
+        if (v.contains('"') || v.contains(',') || v.contains('\n') || v.contains('\r')) {
+            return '"' + v.replace('"', '""') + '"';
+        }
+        return v;
     }
 
     public static Integer countFailedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
@@ -1121,6 +1285,14 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return incoming;
         }
         return current + ' ' + incoming;
+    }
+
+    private static String ensureResultContentTitle(String fileName) {
+        String title = FEC_BatchCaseHandlingSObjectUtil.removeFileExtension(fileName);
+        if (String.isBlank(title) || title.toLowerCase().endsWith('_result')) {
+            return title;
+        }
+        return title + '_Result';
     }
 
     private class RemarkDraftUpdateItem {
