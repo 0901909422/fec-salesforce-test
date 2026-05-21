@@ -840,8 +840,6 @@ public with sharing class FEC_ConstantCommon {
     public static final String CONTENT_DOCUMENT_DOWNLOAD_URL_PREFIX = '/sfc/servlet.shepherd/document/download/';
     public static final String API_VERSION = 'v59.0';
 
-    public static final String API_VERSION = 'v59.0';
-
     public static final List<Map<String, String>> REPORT_CONFIGS =
     new List<Map<String, String>>{
         new Map<String, String>{
@@ -853,4 +851,7 @@ public with sharing class FEC_ConstantCommon {
             'uniqueName' => 'FEC_RP_01'
         }
     };
+
+    public static final String REPORT_EXPORT_ENDPOINT = '{0}/services/data/{1}/analytics/reports/{2}?includeDetails=true';
+    public static final String CONTENT_DOWNLOAD_ENDPOINT = '{0}/sfc/servlet.shepherd/document/download/{1}';
 }

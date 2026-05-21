@@ -62,11 +62,14 @@ public without sharing class FEC_DownloadReportService {
     ) {
         try {
 
-            String endpoint =
-                baseUrl +
-                '/services/data/' + FEC_ConstantCommon.API_VERSION +
-                '/analytics/reports/' + reportId +
-                '?includeDetails=true';
+            String endpoint = String.format(
+                FEC_ConstantCommon.REPORT_EXPORT_ENDPOINT,
+                new List<String>{
+                    baseUrl,
+                    FEC_ConstantCommon.API_VERSION,
+                    reportId
+                }
+            );
 
             Map<String,String> headers = new Map<String,String>{
                 'Authorization' => 'Bearer ' + UserInfo.getSessionId(),
@@ -198,10 +201,13 @@ public without sharing class FEC_DownloadReportService {
                 LIMIT 1
             ];
 
-            String fileLink =
-                baseUrl +
-                '/sfc/servlet.shepherd/document/download/' +
-                cv.ContentDocumentId;
+            String fileLink = String.format(
+                FEC_ConstantCommon.CONTENT_DOWNLOAD_ENDPOINT,
+                new List<String>{
+                    baseUrl,
+                    cv.ContentDocumentId
+                }
+            );
 
             List<FEC_Download_Report__c> existing = [
                 SELECT Id
