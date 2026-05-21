@@ -389,6 +389,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       this.modalBusinessHoursValue = this.businessHoursId || "";
     }
     if (fieldApiName === "FEC_Status__c" && this.canEditDraftDetailFields) {
+      getRecordNotifyChange([{ recordId: this.recordId }]);
       this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
     }
     if (fieldApiName === "Name") {
@@ -558,16 +559,34 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
     const nextStatus = event.detail.value || STATUS_DRAFT;
     if (nextStatus === STATUS_ACTIVE && !this.canSelectActiveStatus) {
       this.modalStatusValue = this.assignmentStatusKey || STATUS_DRAFT;
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
+      this.reportModalStatusError();
       return;
     }
     this.modalStatusValue = nextStatus;
+    this.clearModalStatusError();
+  }
+
+  reportModalStatusError() {
+    this.dispatchEvent(
+      new ShowToastEvent({
+        title: "Error",
+        message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
+        variant: "error",
+      })
+    );
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity(MSG_CANNOT_ACTIVE_WITHOUT_NOC);
+      statusField.reportValidity();
+    }
+  }
+
+  clearModalStatusError() {
+    const statusField = this.template.querySelector('[data-field="modalStatus"]');
+    if (statusField?.setCustomValidity) {
+      statusField.setCustomValidity("");
+      statusField.reportValidity();
+    }
   }
 
   async handleSaveDraftStatus() {
@@ -575,13 +594,7 @@ export default class Fec_CaseAssignmentDetailSummary extends NavigationMixin(Lig
       return;
     }
     if (this.modalStatusValue === STATUS_ACTIVE && !this.canSelectActiveStatus) {
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Error",
-          message: MSG_CANNOT_ACTIVE_WITHOUT_NOC,
-          variant: "error",
-        })
-      );
+      this.reportModalStatusError();
       return;
     }
     this.isStatusSaving = true;

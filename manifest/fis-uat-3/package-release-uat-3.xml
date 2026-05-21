@@ -1928,6 +1928,7 @@
     <types>
         <members>fecNewGeneralAssignmentAction</members>
         <members>fecRoutingAssignmentEditOverride</members>
+        <members>fec_CaseAssignmentNocEditOverride</members>
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
