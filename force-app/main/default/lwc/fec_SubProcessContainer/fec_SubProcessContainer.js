@@ -234,6 +234,10 @@ export default class Fec_SubProcessContainer extends LightningElement {
 
       // release-uat-3: visibility sau submit; giữ Hold Case khi Case đã có kết quả
       this.showHoldCase = !!result.showHoldCase || this.holdCaseResultOnCase;
+      // this.showHoldCaseManual = !!result.showHoldCaseManual;
+      // if (!this.holdCaseResultOnCase) {
+      //   this.showHoldCaseAuto = !!result.showHoldCaseAuto;
+      // }
       this.showRemovePhone = !!result.showRemovePhone;
       this.showDoNotBother = !!result.showDNB;
       this.showTransferCall = !!result.showTransferCall;
