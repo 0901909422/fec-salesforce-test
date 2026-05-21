@@ -297,6 +297,8 @@ public with sharing class FEC_ConstantCommon {
     public static final String SECTION_NATIONAL_PASSPORT = 'National ID/ Passport ID';
     public static final String SECTION_INTERACTION_PHONE = 'Interaction Phone';
     public static final String SECTION_CUSTOMER_INFORMATION = 'Customer Information';
+    public static final String SECTION_CASE_INFORMATION = 'Case Information';
+    public static final String SUB_SECTION_C360_INFO = 'C360 Info';
 
     public static final String EMAIL = 'Email';
     public static final String PHONE = 'Phone';

@@ -772,7 +772,8 @@ public without sharing class FEC_CaseBusinessService {
           if(
             DOCUMENT_REQUEST.equals(businessProcessCode)
             && String.isNotBlank(docReqValidationMessage)
-            && ('Case Information'.equals(sectionNameTemp) || 'C360 Info'.equals(subSectionNameTemp))
+            && (FEC_ConstantCommon.SECTION_CASE_INFORMATION.equals(sectionNameTemp)
+              || FEC_ConstantCommon.SUB_SECTION_C360_INFO.equals(subSectionNameTemp))
           ){
             continue;
           }
