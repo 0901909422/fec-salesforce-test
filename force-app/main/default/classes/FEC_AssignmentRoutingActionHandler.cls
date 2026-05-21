@@ -412,11 +412,12 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         syncAssignmentUsersToCase(caseId, assignmentId);
         update caseUpdate;
         
-        insertHistory(
+        insertHistoryForUpdate(
             caseId,
         assignmentId,
         FEC_ConstantCommon.ACTION_UPDATE,
-        remark
+        remark,
+        decision
             );
     }
     //----------------------------------------------
@@ -470,6 +471,74 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         
         FEC_User__c = u.Id,
         FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        // --- Case Remark ---
+        records.add(new FEC_Case_Remarks__c(
+            FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case_Remarks__c = remark,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        FEC_User__c = emailLocalPart(u.Email),
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null
+            ));
+        
+        insert records;
+    }
+    
+    private static void insertHistoryForUpdate(
+        Id caseId,
+    Id assignmentId,
+    String action,
+    String remark,
+    String decision
+    ) {
+        
+        System.debug(caseId);
+        System.debug(assignmentId);
+        System.debug(action);
+        System.debug(remark);
+        
+        // ===== GET DATA =====
+        User u = [
+        SELECT Id, Email, UserRole.Name
+        FROM User
+        WHERE Id = :UserInfo.getUserId()
+    ];
+        
+        FEC_Assignment__c ass = [
+        SELECT Id, FEC_Assignment_Owner__c
+        FROM FEC_Assignment__c
+        WHERE Id = :assignmentId
+    ];
+        
+        Case c = [
+        SELECT FEC_Current_Case_Stage__r.FEC_Code__c
+        FROM Case
+        WHERE Id = :caseId
+    ];
+        
+        // ===== BUILD RECORDS =====
+        List<SObject> records = new List<SObject>();
+        
+        // --- Routing History ---
+        records.add(new FEC_Routing_Action_History__c(
+            FEC_Routing_Action_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
+        FEC_Case__c = caseId,
+        FEC_Assignment__c = assignmentId,
+        FEC_Routing_Action__c = action,
+        
+        FEC_Original_User_Queue__c = ass.FEC_Assignment_Owner__c,
+        FEC_Original_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
+        FEC_Updated_User_Queue__c = ass.FEC_Assignment_Owner__c,
+        FEC_Updated_User_Queue_ID__c = ass.FEC_Assignment_Owner__c,
+        
+        FEC_Stage_Name__c = c.FEC_Current_Case_Stage__r.FEC_Code__c,
+        
+        FEC_User__c = u.Id,
+        FEC_User_Role__c = u.UserRole != null ? u.UserRole.Name : null,
+        FEC_Decision__c  = decision
             ));
         
         // --- Case Remark ---
