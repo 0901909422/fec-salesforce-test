@@ -137,7 +137,9 @@ public without sharing class FEC_CaseBusinessService {
         return result;
 
       User currentUser = userlst.get(0);
-      List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
+      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+        currentUser.FEC_User_Group__c
+      );
 
       //  ===================================== GET CASE ===============================
             List<Case> caselst = [
@@ -2370,7 +2372,9 @@ public without sharing class FEC_CaseBusinessService {
 
       User currentUser = userlst.get(0);
 
-      List<String> rolelst = new List<String>{ currentUser.FEC_User_Group__c };
+      List<String> rolelst = FEC_NatureOfCaseUserGroupService.buildRoleListForIncludes(
+        currentUser.FEC_User_Group__c
+      );
 
       List<Case> caselst = [
         SELECT
