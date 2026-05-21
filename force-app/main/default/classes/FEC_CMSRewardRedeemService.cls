@@ -140,20 +140,6 @@ public with sharing class FEC_CMSRewardRedeemService {
     }
 
     private static String buildSoapBody(RedeemRequest req, String actionName) {
-        String transId = String.isNotBlank(req.transId)
-            ? req.transId
-            : FEC_CommonUltils.generateTransactionUUID();
-        String requestorId = String.isNotBlank(req.requestorId)
-            ? req.requestorId
-            : FEC_ConstantCommon.REQUESTOR_PEGA_CSM_HYPHEN;
-        String dateTimeStr = String.isNotBlank(req.dateTimeStr)
-            ? req.dateTimeStr
-            : Datetime.now().formatGMT(FEC_ConstantCommon.DATETIME_FORMAT_GMT);
-        String adjustmentIndicator = String.isNotBlank(req.adjustmentIndicator)
-            ? req.adjustmentIndicator
-            : '+';
-        Decimal cashback = req.cashback == null ? 0 : req.cashback;
-
         Dom.Document doc = new Dom.Document();
         Dom.XmlNode envelope = doc.createRootElement('soapenv:Envelope', null, null);
         envelope.setAttribute('xmlns:soapenv', FEC_ConstantCommon.SOAP_ENV);
@@ -164,16 +150,16 @@ public with sharing class FEC_CMSRewardRedeemService {
         Dom.XmlNode actionNode = body.addChildElement('ns1:' + actionName, null, null);
 
         Dom.XmlNode sysRequest = actionNode.addChildElement('SysRequest', null, null);
-        sysRequest.addChildElement('TransID', null, null).addTextNode(transId);
-        sysRequest.addChildElement('RequestorID', null, null).addTextNode(requestorId);
-        sysRequest.addChildElement('DateTime', null, null).addTextNode(dateTimeStr);
+        sysRequest.addChildElement('TransID', null, null).addTextNode(req.transId);
+        sysRequest.addChildElement('RequestorID', null, null).addTextNode(req.requestorId);
+        sysRequest.addChildElement('DateTime', null, null).addTextNode(req.dateTimeStr);
 
         actionNode.addChildElement('AccountNumber', null, null).addTextNode(req.accountNumber);
         actionNode.addChildElement('CustomerName', null, null).addTextNode(req.customerName);
         actionNode.addChildElement('CustomerMobile', null, null).addTextNode(req.customerMobile);
         actionNode.addChildElement('TicketID', null, null).addTextNode(req.ticketId);
         actionNode.addChildElement('TicketPoint', null, null).addTextNode(String.valueOf(req.ticketPoint));
-        actionNode.addChildElement('AdjustmentIndicator', null, null).addTextNode(adjustmentIndicator);
+        actionNode.addChildElement('AdjustmentIndicator', null, null).addTextNode(req.adjustmentIndicator);
 
         Dom.XmlNode productNode = actionNode.addChildElement('Product', null, null);
         productNode.addChildElement('ID', null, null).addTextNode(req.productId);
@@ -181,7 +167,7 @@ public with sharing class FEC_CMSRewardRedeemService {
         productNode.addChildElement('Type', null, null).addTextNode(req.productType);
         productNode.addChildElement('PriceID', null, null).addTextNode(req.priceId);
         productNode.addChildElement('Price', null, null).addTextNode(String.valueOf(req.price));
-        productNode.addChildElement('Cashback', null, null).addTextNode(String.valueOf(cashback));
+        productNode.addChildElement('Cashback', null, null).addTextNode(String.valueOf(req.cashback));
         productNode.addChildElement('RedeemTypeID', null, null).addTextNode(String.valueOf(req.redeemTypeId));
 
         return doc.toXmlString();
@@ -252,25 +238,28 @@ public with sharing class FEC_CMSRewardRedeemService {
         if (req == null) {
             return String.format(System.Label.FEC_MSG_Param_Required, new List<String>{ FEC_ConstantCommon.FEC_CATEGORY_REQUEST });
         }
-        if (String.isBlank(req.accountNumber) ||
+        if (String.isBlank(req.transId) ||
+            String.isBlank(req.requestorId) ||
+            String.isBlank(req.dateTimeStr) ||
+            String.isBlank(req.accountNumber) ||
             String.isBlank(req.customerName) ||
             String.isBlank(req.customerMobile) ||
             String.isBlank(req.ticketId) ||
             req.ticketPoint == null ||
+            String.isBlank(req.adjustmentIndicator) ||
             String.isBlank(req.productId) ||
             String.isBlank(req.productName) ||
             String.isBlank(req.productType) ||
             String.isBlank(req.priceId) ||
             req.price == null ||
+            req.cashback == null ||
             req.redeemTypeId == null) {
             return System.Label.FEC_MISSING_REQUIRED_FIELDS_MSG;
         }
         if (String.isNotBlank(expectedProductType) && req.productType != expectedProductType) {
             return 'Invalid product type. Expected: ' + expectedProductType;
         }
-        if (String.isNotBlank(req.adjustmentIndicator) &&
-            req.adjustmentIndicator != '+' &&
-            req.adjustmentIndicator != '-') {
+        if (req.adjustmentIndicator != '+' && req.adjustmentIndicator != '-') {
             return 'AdjustmentIndicator must be "+" or "-".';
         }
         return null;

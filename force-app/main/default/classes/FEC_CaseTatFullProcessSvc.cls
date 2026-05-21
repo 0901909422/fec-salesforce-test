@@ -15,13 +15,55 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             if (!isPendingStatus(c.FEC_Case_Status__c)) {
                 continue;
             }
-            if (oldMap != null) {
-                Case prior = oldMap.get(c.Id);
-                if (prior != null && !needsRecalcPending(c, prior)) {
-                    continue;
-                }
-            }
             applyFullProcessTat(c, c, bhId, nowTs);
+        }
+    }
+
+    /**
+     * Tính lại TAT Full Process cho Case liên kết RAH (report đọc qua FEC_Case__c).
+     */
+    public static void syncCasesFromRoutingHistory(Set<Id> caseIds) {
+        if (caseIds == null || caseIds.isEmpty()) {
+            return;
+        }
+
+        List<Case> rows = [
+            SELECT
+                Id,
+                FEC_Case_Status__c,
+                FEC_Case_Created_On__c,
+                FEC_Last_Updated_On__c,
+                CreatedDate,
+                FEC_TAT_Full_Process_Hrs__c
+            FROM Case
+            WHERE Id IN :caseIds
+        ];
+
+        Id bhId = resolveBusinessHoursId();
+        Datetime nowTs = System.now();
+        List<Case> updates = new List<Case>();
+
+        for (Case row : rows) {
+            if (!isPendingStatus(row.FEC_Case_Status__c) && !isResolvedStatus(row.FEC_Case_Status__c)) {
+                continue;
+            }
+            Case patch = new Case(Id = row.Id);
+            applyFullProcessTat(patch, row, bhId, nowTs);
+            if (patch.FEC_TAT_Full_Process_Hrs__c != row.FEC_TAT_Full_Process_Hrs__c) {
+                updates.add(patch);
+            }
+        }
+
+        if (updates.isEmpty()) {
+            return;
+        }
+
+        Boolean priorFlag = FEC_CaseTriggerHandler.isSystemUpdate;
+        FEC_CaseTriggerHandler.isSystemUpdate = true;
+        try {
+            update updates;
+        } finally {
+            FEC_CaseTriggerHandler.isSystemUpdate = priorFlag;
         }
     }
 
@@ -132,7 +174,7 @@ public without sharing class FEC_CaseTatFullProcessSvc {
         }
 
         if (anchorEnd <= anchorStart) {
-            target.FEC_TAT_Full_Process_Hrs__c = 0;
+            target.FEC_TAT_Full_Process_Hrs__c = FEC_RoutingHistTatSvc.formatTatDisplay(0L);
             return;
         }
 
@@ -142,9 +184,7 @@ public without sharing class FEC_CaseTatFullProcessSvc {
             return;
         }
 
-        target.FEC_TAT_Full_Process_Hrs__c = Decimal.valueOf(diffMs)
-            .divide(3600000, 12, System.RoundingMode.HALF_UP)
-            .setScale(2, System.RoundingMode.HALF_UP);
+        target.FEC_TAT_Full_Process_Hrs__c = FEC_RoutingHistTatSvc.formatTatDisplay(diffMs);
     }
 
     private static Boolean isResolvedStatus(String status) {
@@ -152,8 +192,14 @@ public without sharing class FEC_CaseTatFullProcessSvc {
     }
 
     private static Boolean isPendingStatus(String status) {
-        return String.isNotBlank(status)
-            && status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX);
+        if (String.isBlank(status)) {
+            return false;
+        }
+        if (status == FEC_ConstantCommon.CASE_STATUS_PENDING) {
+            return true;
+        }
+        return status.startsWith(FEC_ConstantCommon.CASE_STATUS_PENDING_PREFIX)
+            || status.startsWith('Pending -');
     }
 
     private static Boolean needsRecalcPending(Case n, Case o) {

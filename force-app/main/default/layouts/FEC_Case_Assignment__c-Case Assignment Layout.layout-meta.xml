@@ -79,6 +79,7 @@
         <style>CustomLinks</style>
     </layoutSections>
     <relatedLists>
+        <excludeButtons>New</excludeButtons>
         <fields>NAME</fields>
         <fields>FEC_Number_of_Case__c</fields>
         <fields>CREATED_DATE</fields>

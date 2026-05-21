@@ -289,29 +289,102 @@
   color: #706e6b;
 }
 
+.fec-filter-help--empty {
+  margin-bottom: 0.65rem;
+  font-style: italic;
+  color: #706e6b;
+}
+
+.fec-filter-table {
+  margin-bottom: 0.35rem;
+}
+
+.fec-filter-table__header,
+.fec-filter-table__row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(8rem, 1fr) minmax(8rem, 1fr) 2.25rem;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.fec-filter-table__header {
+  margin-bottom: 0.35rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.fec-filter-table__col {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #3e3e3c;
+}
+
+.fec-filter-table__col--action {
+  width: 2.25rem;
+}
+
 .fec-filter-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.65rem;
+  margin-top: 0.65rem;
 }
 
 .fec-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
-.fec-filter-row lightning-combobox {
-  min-width: 10rem;
-  flex: 1 1 10rem;
+.fec-filter-table__row lightning-combobox,
+.fec-filter-table__row lightning-input {
+  min-width: 0;
 }
 
-.fec-filter-row lightning-input {
-  min-width: 8rem;
-  flex: 1 1 8rem;
+.fec-filter-attach-condition {
+  min-height: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.fec-filter-attach-condition lightning-input {
+  display: block;
+}
+
+.fec-filter-attach-value {
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  line-height: 1.25;
+}
+
+.fec-filter-table__row lightning-dual-listbox {
+  min-width: 0;
+  grid-column: span 1;
+}
+
+.fec-filter-table__row--attach {
+  align-items: center;
+}
+
+.fec-filter-table__row--multi {
+  align-items: start;
+}
+
+.fec-filter-table__row--multi lightning-button-icon {
+  align-self: end;
+  margin-bottom: 0.15rem;
+}
+
+.fec-filter-multi-value {
+  min-width: 0;
+  width: 100%;
+}
+
+.fec-filter-multi-value lightning-dual-listbox {
+  --slds-c-dueling-listbox-height: auto;
+  margin-bottom: 0;
 }
 
 .fec-case-actions {

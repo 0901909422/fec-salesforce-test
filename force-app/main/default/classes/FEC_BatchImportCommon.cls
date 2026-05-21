@@ -17,6 +17,34 @@ public with sharing class FEC_BatchImportCommon {
         return fileName.substring(0, idx);
     }
 
+    /** Title ContentDocument của file upload gốc (tránh nhầm với file result khi tên có *_Result). */
+    public static String normalizeSourceContentTitle(String fileName) {
+        String base = removeFileExtension(fileName);
+        if (String.isBlank(base)) {
+            return base;
+        }
+        String lower = base.toLowerCase();
+        if (lower.endsWith('_importresult')) {
+            return base.substring(0, base.length() - 13);
+        }
+        if (lower.endsWith('_result')) {
+            return base.substring(0, base.length() - 7);
+        }
+        return base;
+    }
+
+    public static String buildResultContentTitle(String sourceFileName) {
+        return normalizeSourceContentTitle(sourceFileName) + '_ImportResult';
+    }
+
+    public static Boolean isResultContentTitle(String title) {
+        if (String.isBlank(title)) {
+            return false;
+        }
+        String lower = title.toLowerCase();
+        return lower.endsWith('_importresult') || lower.endsWith('_result');
+    }
+
     public static void addIfNotBlank(List<String> selectParts, String fieldApiName) {
         if (String.isNotBlank(fieldApiName) && !selectParts.contains(fieldApiName)) {
             selectParts.add(fieldApiName);
