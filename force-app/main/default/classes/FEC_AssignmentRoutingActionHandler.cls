@@ -220,7 +220,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             FROM
             GROUP
             WHERE Id = :queueId
-            AND Type='Queue'
+            AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         ];
         
         Group queue = groups.isEmpty() ? null : groups[0];
@@ -340,7 +340,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             System.debug('queueName: ');
             System.debug(queueName);
             assignment.FEC_OwnerID__c = queueName;
-            if(queueName.contains('CS')){
+            if(queueName.contains(FEC_ConstantCommon.TEAM_CODE_CS)){
                 assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_CS_REVIEW;
             }else{
                 assignment.FEC_Assignment_Status__c = FEC_ConstantCommon.STATUS_OTHER_DEPT;
@@ -353,7 +353,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         update assignment;
         syncAssignmentUsersToCase(caseId, assignmentId);
         
-        insertHistory(caseId, assignmentId, 'Transfer', remark);
+        insertHistory(caseId, assignmentId, FEC_ConstantCommon.ACTION_TRANSFER, remark);
     }
     
     
@@ -472,7 +472,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
          * Only query when value is User Id
          */
         if (String.isNotBlank(ownerStr)
-        && ownerStr.startsWith('005')) {
+        && ownerStr.startsWith(FEC_ConstantCommon.USER_ID_START)) {
             User ownerUser = [
                 SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
             ];
@@ -573,7 +573,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
          * Only query when value is User Id
          */
         if (String.isNotBlank(ass.FEC_Assignment_Owner__c)
-        && ownerStr.startsWith('005')) {
+        && ownerStr.startsWith(FEC_ConstantCommon.USER_ID_START)) {
             User ownerUser = [
                 SELECT Id, Name, Email FROM User WHERE Id = : ass.FEC_Assignment_Owner__c LIMIT 1
             ];
@@ -644,7 +644,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         List<Group> queue = [
             SELECT Id, Name
             FROM Group
-            WHERE Type = 'Queue'
+            WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND DeveloperName = :queueName
             LIMIT 1
         ];
@@ -668,7 +668,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         SELECT Name
         FROM Group
         WHERE Id = :queueId
-        AND Type = 'Queue'
+        AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         LIMIT 1
     ];
         
@@ -681,7 +681,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         List<Group> g = [
         SELECT Id
         FROM Group
-        WHERE Type = 'Queue'
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         AND Name = :queueName
         LIMIT 1
     ];
@@ -756,7 +756,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         Group q = [
         SELECT Id, Name
         FROM Group
-        WHERE Type = 'Queue'
+        WHERE Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
         AND Name = :queueName
         LIMIT 1
     ];
@@ -809,11 +809,11 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     userValue = String.valueOf(a.FEC_Assignment_Owner__c);
                 } else if (String.isNotBlank(a.FEC_OwnerID__c)) {
                     String ownerIdStr = a.FEC_OwnerID__c.trim();
-                    Boolean looksLikeId = ownerIdStr.length() >= 15 && ownerIdStr.startsWith('00G');
+                    Boolean looksLikeId = ownerIdStr.length() >= 15 && ownerIdStr.startsWith(FEC_ConstantCommon.QUEUE_ID_START);
                     if (looksLikeId) {
                         try {
                             Id queueId = (Id) ownerIdStr;
-                            List<Group> groups = [SELECT Name FROM Group WHERE Id = :queueId AND Type = 'Queue' LIMIT 1];
+                            List<Group> groups = [SELECT Name FROM Group WHERE Id = :queueId AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE LIMIT 1];
                             userValue = groups.isEmpty() ? ownerIdStr : groups[0].Name;
                         } catch (Exception ex) {
                             userValue = ownerIdStr;
@@ -942,7 +942,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             return null;
         }
         
-        List<String> parts = email.split('@');
+        List<String> parts = email.split(FEC_ConstantCommon.EMAIL_SEPARATOR_AT);
         
         return parts.isEmpty()
             ? email.trim()
@@ -957,7 +957,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                 SELECT Id FROM CaseShare
                 WHERE CaseId = :caseId
                   AND UserOrGroupId = :userId
-                  AND RowCause = 'Manual'
+                  AND RowCause = :FEC_ConstantCommon.CASE_SHARE_ROW_CAUSE_MANUAL
                 LIMIT 1
             ];
             if (!existing.isEmpty()) return;
@@ -965,8 +965,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             CaseShare share = new CaseShare(
                 CaseId = caseId,
             UserOrGroupId = userId,
-            CaseAccessLevel = 'Edit',
-            RowCause = 'Manual'
+            CaseAccessLevel = FEC_ConstantCommon.CASE_SHARE_ACCESS_LEVEL_EDIT,
+            RowCause = FEC_ConstantCommon.CASE_SHARE_ROW_CAUSE_MANUAL
                 );
             Database.insert(share, false); // false = không throw nếu đã tồn tại
         } catch (Exception e) {
@@ -1000,7 +1000,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             Name
         FROM Group
         WHERE
-            Type = 'Queue'
+            Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
             AND DeveloperName = :queueDeveloperName
         LIMIT 1
     ];
@@ -1126,8 +1126,8 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             WHERE
                 RelatedId = :u.UserRoleId
                 AND Type IN (
-                    'Role',
-                    'RoleAndSubordinates'
+                    :FEC_ConstantCommon.ROLE_STR,
+                    :FEC_ConstantCommon.ROLE_SUBORDINATE_STR
                 )
         ];
             
@@ -1148,7 +1148,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
         WHERE
             UserOrGroupId IN :memberIds
             AND Group.Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
-            AND Group.DeveloperName LIKE 'FEC_DQ_CS%'
+            AND Group.DeveloperName LIKE :FEC_ConstantCommon.QUEUE_DEVELOPER_PREFIX_FEC_DQ_CS_LIKE
     ];
         
         if (groupMembers.isEmpty()) {
@@ -1226,7 +1226,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             
             for (FEC_Assignment__c ass : assignments) {
                 if (String.isNotBlank(ass.FEC_OwnerID__c)
-                && ass.FEC_OwnerID__c.startsWith('00G')) {
+                && ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
                     try {
                         queueIds.add((Id) ass.FEC_OwnerID__c);
                         
@@ -1243,7 +1243,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
             
             if (!queueIds.isEmpty()) {
                 queueMap = new Map<Id, Group>([
-                    SELECT Id, Name FROM Group WHERE Id IN : queueIds AND Type = 'Queue'
+                    SELECT Id, Name FROM Group WHERE Id IN : queueIds AND Type = :FEC_ConstantCommon.GROUP_TYPE_QUEUE
                 ]);
             }
             
@@ -1278,7 +1278,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                  * Queue owner
                  */
                 else if (String.isNotBlank(ass.FEC_OwnerID__c)) {
-                    if (ass.FEC_OwnerID__c.startsWith('00G')) {
+                    if (ass.FEC_OwnerID__c.startsWith(FEC_ConstantCommon.QUEUE_ID_START)) {
                         Group q = queueMap.get((Id) ass.FEC_OwnerID__c);
                         
                         ownerValue = q != null ? q.Name : ass.FEC_OwnerID__c;
@@ -1342,7 +1342,7 @@ public without sharing class FEC_AssignmentRoutingActionHandler {
                     
                 FEC_Remark_Type__c = FEC_ConstantCommon.ROUTING_TYPE_ASSIGNMENT,
                 
-                FEC_Case_Remarks__c = 'Yêu cầu được tự động hoàn tất',
+                FEC_Case_Remarks__c = FEC_ConstantCommon.ASSIGNMENT_AUTO_COMPLETED_REMARK,
                 FEC_Stage_Name__c   = c.FEC_Current_Case_Stage__r.FEC_Code__c,
                 FEC_Case__c = caseId,
                 
