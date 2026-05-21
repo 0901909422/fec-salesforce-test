@@ -22,6 +22,123 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         public String routeQueueHint;
     }
 
+    private static final String BATCH_OBJECT_API_NAME = 'FEC_Batch_Case_Handling__c';
+    private static Map<String, Map<String, String>> routeParamsCacheByKey = new Map<String, Map<String, String>>();
+    private static Map<String, String> queueIdCacheByToken = new Map<String, String>();
+
+    public static Boolean shouldApplyImportRow(FEC_BatchCaseHandlingImportRow row) {
+        return row != null &&
+            row.status != System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed &&
+            String.isNotBlank(row.recordId);
+    }
+
+    public static Boolean hasApplicableImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return false;
+        }
+        for (FEC_BatchCaseHandlingImportRow row : rows) {
+            if (shouldApplyImportRow(row)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void finalizeBatchImportRecord(
+        Id batchRecordId,
+        List<FEC_BatchCaseHandlingImportRow> rowResults
+    ) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe()
+            .get(BATCH_OBJECT_API_NAME)
+            .getDescribe()
+            .fields.getMap();
+        SObject batchRow = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
+        Integer failedCount = countFailedImportRows(rowResults);
+        Integer totalCount = rowResults == null ? 0 : rowResults.size();
+        Integer successCount = totalCount - failedCount;
+        String finalStatus;
+        String failureReason = FEC_ConstantCommon.STR_EMPTY;
+        if (totalCount == 0) {
+            finalStatus = 'Failure';
+            failureReason = System.Label.FEC_BCH_RequireFile;
+        } else if (failedCount == totalCount) {
+            finalStatus = 'Failure';
+            failureReason = System.Label.FEC_BCH_Import_Rows_Invalid;
+        } else {
+            finalStatus = 'Processed';
+        }
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Status__c' },
+            finalStatus
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Result__c' },
+            'Result'
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Total_Records_Count__c', 'FEC_Total_Records__c' },
+            totalCount
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Total_Success_Records__c' },
+            successCount < 0 ? 0 : successCount
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Total_Failed_Records__c' },
+            failedCount
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            failureReason
+        );
+        update batchRow;
+    }
+
+    public static void failBatchImportRecord(Id batchRecordId, String reason) {
+        if (batchRecordId == null) {
+            return;
+        }
+        Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe()
+            .get(BATCH_OBJECT_API_NAME)
+            .getDescribe()
+            .fields.getMap();
+        SObject batchRow = Schema.getGlobalDescribe().get(BATCH_OBJECT_API_NAME).newSObject(batchRecordId);
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Status__c' },
+            'Failure'
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Result__c' },
+            'Result'
+        );
+        FEC_BatchCaseHandlingSObjectUtil.putIfFieldExists(
+            fieldMap,
+            batchRow,
+            new List<String>{ 'FEC_Failure_Reason__c' },
+            String.isBlank(reason) ? System.Label.FEC_BCH_ImportFailed : reason
+        );
+        update batchRow;
+    }
+
     public static Integer countFailedImportRows(List<FEC_BatchCaseHandlingImportRow> rows) {
         Integer n = 0;
         for (FEC_BatchCaseHandlingImportRow r : rows) {
@@ -272,6 +389,8 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (rows == null || rows.isEmpty()) {
             return;
         }
+        routeParamsCacheByKey.clear();
+        queueIdCacheByToken.clear();
         Set<Id> caseIds = new Set<Id>();
         for (FEC_BatchCaseHandlingImportRow rr : rows) {
             if (rr == null || rr.status == System.Label.FEC_Batch_Case_Handling_Import_Row_Status_Failed || String.isBlank(rr.recordId)) {
@@ -605,6 +724,10 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         if (currentStageId == null || parsed == null) {
             return null;
         }
+        String cacheKey = buildRouteParamsCacheKey(currentStageId, parsed);
+        if (routeParamsCacheByKey.containsKey(cacheKey)) {
+            return routeParamsCacheByKey.get(cacheKey);
+        }
         List<FEC_Stage_Change__c> candidates = [
             SELECT FEC_Action_Button__c, FEC_Next_Queue__c, FEC_Team_User_Group__c
             FROM FEC_Stage_Change__c
@@ -614,6 +737,7 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             ORDER BY CreatedDate DESC
         ];
         if (candidates.isEmpty()) {
+            routeParamsCacheByKey.put(cacheKey, null);
             return null;
         }
         String teamHintNorm = normalizeToken(parsed.routeTeamHint);
@@ -665,12 +789,21 @@ public without sharing class FEC_BatchCaseHandlingImportService {
         }
         String queueId = resolveQueueIdFromToken(selected.FEC_Next_Queue__c);
         if (selected.FEC_Action_Button__c == null || String.isBlank(queueId)) {
+            routeParamsCacheByKey.put(cacheKey, null);
             return null;
         }
-        return new Map<String, String>{
+        Map<String, String> resolved = new Map<String, String>{
             'actionId' => String.valueOf(selected.FEC_Action_Button__c),
             'queueId' => queueId
         };
+        routeParamsCacheByKey.put(cacheKey, resolved);
+        return resolved;
+    }
+
+    private static String buildRouteParamsCacheKey(Id currentStageId, RoutingParseResult parsed) {
+        String teamHint = parsed == null ? FEC_ConstantCommon.STR_EMPTY : normalizeToken(parsed.routeTeamHint);
+        String queueHint = parsed == null ? FEC_ConstantCommon.STR_EMPTY : normalizeToken(parsed.routeQueueHint);
+        return String.valueOf(currentStageId) + '|' + teamHint + '|' + queueHint;
     }
 
     private static String resolveQueueIdFromToken(String queueToken) {
@@ -678,6 +811,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             return null;
         }
         String token = queueToken.trim();
+        if (queueIdCacheByToken.containsKey(token)) {
+            return queueIdCacheByToken.get(token);
+        }
         try {
             Id queueId = Id.valueOf(token);
             List<Group> byId = [
@@ -688,7 +824,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
                 LIMIT 1
             ];
             if (!byId.isEmpty()) {
-                return String.valueOf(byId[0].Id);
+                String resolvedId = String.valueOf(byId[0].Id);
+                queueIdCacheByToken.put(token, resolvedId);
+                return resolvedId;
             }
         } catch (Exception ex) {
         }
@@ -699,7 +837,9 @@ public without sharing class FEC_BatchCaseHandlingImportService {
             AND (DeveloperName = :token OR Name = :token)
             LIMIT 1
         ];
-        return byName.isEmpty() ? null : String.valueOf(byName[0].Id);
+        String resolvedId = byName.isEmpty() ? null : String.valueOf(byName[0].Id);
+        queueIdCacheByToken.put(token, resolvedId);
+        return resolvedId;
     }
 
     private static Map<Id, Set<String>> loadConfiguredLabelsByStage(Set<Id> stageIds) {
