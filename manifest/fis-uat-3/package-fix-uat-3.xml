@@ -6,6 +6,7 @@
 	    <members>FEC_CaseBusinessService</members>
 	    <members>FEC_CaseEditNOCController</members>
 	    <members>FEC_CofGsrRoutePrepareService</members>
+	    <members>FEC_ContractClosureController</members>
 	    <members>FEC_CheckEligibilityIPPCallout</members>
 	    <members>FEC_CustomerAdditionalDataController</members>
 	    <members>FEC_SearchController</members>
@@ -79,6 +80,7 @@
 		<members>FEC_AutoHoldCaseService</members>
 		<members>FEC_MrcDuplicateCaseService</members>
 		<members>FEC_MrcReturnCaseService</members>
+		<members>FEC_MrcReturnCaseServiceTest</members>
 		<members>FEC_CreateCSCaseService</members>
 		<members>FEC_GsrStage1RevertMasterDataHelper</members>
 		<members>FEC_AssignAutoDistribSched</members>
@@ -93,6 +95,7 @@
 		<members>FEC_AutoHoldCaseExpireBatch</members>
 		<members>FEC_AutoHoldCaseExpireSchedulable</members>
 		<members>FEC_AutoHoldCaseHistoryService</members>
+		<members>FEC_MarkNFU</members>
 		<members>FEC_CardInfoController</members>
         <members>FEC_IPPController</members>
         <members>FEC_MockData</members>
@@ -103,12 +106,14 @@
         <members>FEC_BCH_FilterPropertyService</members>
         <members>FEC_BatchCaseHandlingCaseFilter</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingImportService</members>
         <members>FEC_BatchCaseHandlingSObjectUtil</members>
         <members>FEC_BatchCaseHandlingTemplateHelper</members>
         <members>FEC_BatchCaseHandlingZipResult</members>
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_CaseTatFullProcessSvc</members>
+        <members>FEC_CaseSlaNotificationService</members>
         <members>FEC_CaseAssignmentTriggerHandler</members>
         <members>FEC_ScopedStageChangeRoutingService</members>
 		<name>Apexclass</name>
@@ -191,6 +196,7 @@
         <members>fec_CaseAssignmentNocNew</members>
         <members>fec_IPPDetails</members>
         <members>fecCaseAssignmentNewForm</members>
+        <members>fec_ContractClosureForm</members>
         <members>fec_NotificationOverride</members>
         <members>fec_CaseBussinessScopedRoutingIntegration</members>
         <members>fec_ScopedStageChangeRouting</members>
@@ -205,6 +211,7 @@
         <members>Case.FEC_Original_Sub_Category__c</members>
         <members>Case.FEC_Original_Sub_Code__c</members>
         <members>Case.FEC_NFU_Description_Result__c</members>
+        <members>Case.FEC_Collections_Response__c</members>
         <members>Case.FEC_Delivery_Option_2__c</members>
 		<members>Case.FEC_Is_DNB__c</members>
 		<members>FEC_Assignment__c.FEC_Submitted_On__c</members>
@@ -224,6 +231,9 @@
 		<members>FEC_Sales_Logic__c.FEC_TSA_Code__c</members>
         <members>FEC_Do_Not_Bother__c.FEC_Case__c</members>
 		<members>FEC_Do_Not_Bother__c.FEC_Customer_History__c</members>
+        <members>FEC_Channel__c.FEC_Cancel_Case__c</members>
+        <members>FEC_Channel__c.FEC_Get_Nature_Of_Case__c</members>
+        <members>FEC_Channel__c.FEC_Update_Case_Status__c</members>
         <members>FEC_Nature_of_Case__c.FEC_Channel__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Do_Not_Bother__c</members>
 		<members>FEC_Nature_of_Case__c.FEC_Remove_Phone__c</members>
@@ -241,6 +251,7 @@
         <members>FEC_Template_Import__c.FEC_User_Group__c</members>
         <members>FEC_Case_Assignment_Logs__c.FEC_Case_Assignment_Name__c</members>
         <members>FEC_Case_Assignment__c.FEC_Case_Assignmetn_NOC_Count__c</members>
+        <members>FEC_Customer_History__c.FEC_Search_Result_National_ID__c</members>
         <name>CustomField</name>
     </types>
     <types>
@@ -260,6 +271,7 @@
 	<types>
         <members>FEC_Interaction_Case_Record_Page</members>
         <members>FEC_Internal_Case_Record_Page</members>
+        <members>FEC_Case_Assignment_Log_Record_Page</members>
         <members>Nature_of_Cases_Record_Page</members>
         <members>FEC_Search_Case_Record_Page</members>
         <members>FEC_Customer_Case_Record_Page</members>
@@ -339,6 +351,10 @@
         <members>FEC_BCH_PropertyPlaceholder</members>
         <members>FEC_Points_Redeem_Fail_After_Max</members>
         <members>FEC_Points_Redeem_Fail_Retry</members>
+        <members>FEC_MSG_SLA_Notif_Body_Approaching</members>
+        <members>FEC_MSG_SLA_Notif_Body_Exceeded</members>
+        <members>FEC_MSG_SLA_Notif_Title_Approaching</members>
+        <members>FEC_MSG_SLA_Notif_Title_Exceeded</members>
 		<name>CustomLabel</name>
 	</types>
     <types>
@@ -528,7 +544,9 @@
 		<name>Flow</name>
 	</types>
     <types>
+        <members>FEC_Case_Assignment_Logs__c-Case Assignment Log Layout</members>
         <members>FEC_Currency_Code__c-Currency Code Layout</members>
+        <members>FEC_Case_Assignment__c-Case Assignment Layout</members>
 		<name>Layout</name>
 	</types>
     <types>
@@ -578,7 +596,8 @@
         <name>CustomTab</name>
     </types>
 	<types>
-        <members>case sla main</members>
+        <members>case sla main v1</members>
+        <members>case sla main v3</members>
         <name>EntitlementProcess</name>
     </types>
 	<version>66.0</version>

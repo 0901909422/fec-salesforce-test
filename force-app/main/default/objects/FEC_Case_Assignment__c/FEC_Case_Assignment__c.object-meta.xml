@@ -166,7 +166,7 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Case Assignment</label>
     <nameField>
-        <label>Case Assignment Name</label>
+        <label>Name</label>
         <trackHistory>true</trackHistory>
         <type>Text</type>
     </nameField>
@@ -176,6 +176,7 @@
         <excludedStandardButtons>ChangeOwner</excludedStandardButtons>
         <excludedStandardButtons>MassChangeOwner</excludedStandardButtons>
         <excludedStandardButtons>MassAssignRecordLabel</excludedStandardButtons>
+        <excludedStandardButtons>PrintableListView</excludedStandardButtons>
         <customTabListAdditionalFields>FEC_Business_Hours__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>FEC_Status__c</customTabListAdditionalFields>
         <customTabListAdditionalFields>CREATED_DATE</customTabListAdditionalFields>

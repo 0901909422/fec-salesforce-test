@@ -17,6 +17,40 @@
           </template>
         </div>
 
+        <template if:true={section.showMrcRl0502DupStandalone}>
+          <template if:true={showMrcRl0502DupBanner}>
+            <div class="mrc-dup-standalone slds-m-top_small slds-p-horizontal_small">
+              <p class="mrc-dup-message">
+                {mrcDupMessageBeforeLink}
+                <a href="#" class="mrc-dup-case-link" onclick={handleOpenMrcDupCase}>{mrcDupCaseNumber}</a>
+                {mrcDupMessageAfterLink}
+              </p>
+              <lightning-record-edit-form object-api-name="Case" record-id={recordId}>
+                <lightning-radio-group
+                  name="mrcRl0502DupStandalone"
+                  label=""
+                  options={mrcHandlingRadioOptions}
+                  value={mrcHandlingOptionValue}
+                  type="radio"
+                  variant="label-hidden"
+                  data-obj={recordId}
+                  data-obj-name="Case"
+                  onchange={handleMrcHandlingOptionChange}>
+                </lightning-radio-group>
+                <lightning-input-field
+                  class="slds-hide"
+                  data-field="FEC_MRC_Request_Handling_Option__c"
+                  data-obj-name="Case"
+                  variant="label-hidden"
+                  field-name="FEC_MRC_Request_Handling_Option__c"
+                  value={mrcHandlingOptionValue}
+                  onchange={handleChangeInput}>
+                </lightning-input-field>
+              </lightning-record-edit-form>
+            </div>
+          </template>
+        </template>
+
         <div class="slds-grid slds-wrap slds-m-top--small">
           <template for:each={section.sortedSectionContentlst} for:item="row">
             <div key={row.rowKey} class={row.outerClass}>
@@ -287,6 +321,17 @@
                 </template>
               </template>
             </div>
+          </template>
+
+          <template if:true={section.isCaseInformationSection}>
+            <template if:true={showHoldCaseSection}>
+              <div key={section.holdCaseRowKey} class="slds-col slds-size_1-of-1 slds-m-top_medium">
+                <c-fec_hold-case-auto
+                  record-id={recordId}
+                  result-override={holdCaseResultOverride}>
+                </c-fec_hold-case-auto>
+              </div>
+            </template>
           </template>
         </div>
 
