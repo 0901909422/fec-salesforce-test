@@ -5,6 +5,7 @@ import { getRecord, getRecordNotifyChange } from 'lightning/uiRecordApi';
 import searchChannels from '@salesforce/apex/FEC_NocChannelConfigController.searchChannels';
 import getChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.getChannelIds';
 import saveChannelIds from '@salesforce/apex/FEC_NocChannelConfigController.saveChannelIds';
+import canEditChannelConfig from '@salesforce/apex/FEC_NocChannelConfigController.canEditChannelConfig';
 import FEC_Toast_Success from '@salesforce/label/c.FEC_Toast_Success';
 import FEC_Toast_Error from '@salesforce/label/c.FEC_Toast_Error';
 import FEC_Channel_Config_Save_Success from '@salesforce/label/c.FEC_Channel_Config_Save_Success';
@@ -23,6 +24,7 @@ export default class Fec_NocChannelConfig extends LightningElement {
     @track isLoading = false;
     @track isSaving = false;
     @track isEditMode = false;
+    @track canEdit = false;
     _timer = null;
     _originalIds = '';
 
@@ -33,6 +35,10 @@ export default class Fec_NocChannelConfig extends LightningElement {
 
     connectedCallback() {
         this.loadCurrentChannels();
+        //tungnm37: check permission khi load
+        canEditChannelConfig()
+            .then(result => { this.canEdit = result; })
+            .catch(() => { this.canEdit = false; });
     }
 
     async loadCurrentChannels() {
