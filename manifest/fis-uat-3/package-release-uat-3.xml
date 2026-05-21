@@ -136,6 +136,7 @@
         <members>FEC_BatchCaseHandlingZipService</members>
         <members>FEC_BatchCaseHandlingImportRow</members>
         <members>FEC_BatchCaseHandlingImportService</members>
+        <members>FEC_BatchCaseHandlingImportQueueable</members>
         <members>FEC_BatchCaseHandlingExportService</members>
         <members>FEC_BatchCaseHandlingExportRow</members>
         <members>FEC_SubProcessService</members>

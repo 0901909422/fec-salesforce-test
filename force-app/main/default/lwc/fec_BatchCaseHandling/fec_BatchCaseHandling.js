@@ -35,6 +35,7 @@ import FEC_BCH_ExportSuccess from "@salesforce/label/c.FEC_BCH_ExportSuccess";
 import FEC_BCH_ExportFailed from "@salesforce/label/c.FEC_BCH_ExportFailed";
 import FEC_BCH_ImportSuccess from "@salesforce/label/c.FEC_BCH_ImportSuccess";
 import FEC_BCH_ImportFailed from "@salesforce/label/c.FEC_BCH_ImportFailed";
+import FEC_BCH_Import_Submitted from "@salesforce/label/c.FEC_BCH_Import_Submitted";
 import FEC_BCH_RequireFile from "@salesforce/label/c.FEC_BCH_RequireFile";
 import FEC_BCH_InvalidFileFormat from "@salesforce/label/c.FEC_BCH_InvalidFileFormat";
 import FEC_BCH_FileTooLarge from "@salesforce/label/c.FEC_BCH_FileTooLarge";
@@ -228,6 +229,8 @@ const MSG_EXPORT_SUCCESS = FEC_BCH_ExportSuccess;
 const MSG_EXPORT_FAILED = FEC_BCH_ExportFailed;
 const MSG_IMPORT_SUCCESS = FEC_BCH_ImportSuccess;
 const MSG_IMPORT_FAILED = FEC_BCH_ImportFailed;
+const MSG_IMPORT_SUBMITTED = FEC_BCH_Import_Submitted;
+const IMPORT_STATUS_PROCESSING = "Processing";
 const MSG_REQUIRE_FILE = FEC_BCH_RequireFile;
 const MSG_INVALID_FILE_FORMAT = FEC_BCH_InvalidFileFormat;
 const MSG_FILE_TOO_LARGE = FEC_BCH_FileTooLarge;
@@ -2228,7 +2231,6 @@ export default class Fec_BatchCaseHandling extends LightningElement {
     this.attachDataRequiredError = false;
     if (!this.selectedImportFile) {
       this.attachDataRequiredError = true;
-      this.importErrorMessage = MSG_REQUIRE_FILE;
       return;
     }
     const file = this.selectedImportFile;
@@ -2286,22 +2288,27 @@ export default class Fec_BatchCaseHandling extends LightningElement {
         await this.refreshRows();
         return;
       }
-      const resultRows = this.parseResultRows(result.resultRowsJson);
-      try {
-        await this.saveResultWorkbook(
-          result.batchRecordId,
-          fileName,
-          isCofOrGsr,
-          originalHeaders,
-          rows,
-          resultRows
-        );
-      } catch (saveErr) {
-        // Result file generation failure does not invalidate the import itself
+      const isProcessing = result.status === IMPORT_STATUS_PROCESSING;
+      if (!isProcessing) {
+        const resultRows = this.parseResultRows(result.resultRowsJson);
+        try {
+          await this.saveResultWorkbook(
+            result.batchRecordId,
+            fileName,
+            isCofOrGsr,
+            originalHeaders,
+            rows,
+            resultRows
+          );
+        } catch (saveErr) {
+          // Result file generation failure does not invalidate the import itself
+        }
       }
-      this.importSuccessMessage = MSG_IMPORT_SUCCESS;
+      const successTitle = isProcessing ? MSG_IMPORT_SUBMITTED : MSG_IMPORT_SUCCESS;
+      const successDetail = result.message || STR_EMPTY;
+      this.importSuccessMessage = successTitle;
       this.importErrorMessage = STR_EMPTY;
-      this.showSuccess(MSG_IMPORT_SUCCESS, result.message || STR_EMPTY);
+      this.showSuccess(successTitle, successDetail);
       this.clearSelectedImportFile();
       await this.refreshRows();
     } catch (error) {
