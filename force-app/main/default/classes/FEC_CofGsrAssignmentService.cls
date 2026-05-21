@@ -206,6 +206,13 @@ public without sharing class FEC_CofGsrAssignmentService {
             );
             String userRoleName = currentUser.UserRole?.Name;
 
+            //tungnm37 start: resolve team cua Service Case Owner (Queue) de check cross-team SP<->CC
+            String caseOwnerTeam = null;
+            if (currentCase.OwnerId != null && currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                caseOwnerTeam = resolveTeamFromQueueId(currentCase.OwnerId);
+            }
+            //tungnm37 end
+
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             for (FEC_Routing_Assignment__c ra : routingAssignments) {
                 String queueId = queueNameToId.containsKey(ra.FEC_Queue__c)
@@ -214,8 +221,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team + caseOwnerTeam de xu ly cross-team SP<->CC
-                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(ra.FEC_Team__c, currentUser.FEC_User_Group__c),
+                    //tungnm37: set status theo team + caseOwnerTeam (tu Case Owner Queue)
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(ra.FEC_Team__c, caseOwnerTeam),
                     FEC_OwnerID__c = ra.FEC_Queue__c, // tungnm37 sửa: lưu Queue Name để formula FEC_Assignment_Owner_Text__c hiện đúng
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = ra.FEC_Team__c,
@@ -348,6 +355,13 @@ public without sharing class FEC_CofGsrAssignmentService {
                 ? String.valueOf(currentUser.Id)
                 : (currentCase.OwnerId != null ? String.valueOf(currentCase.OwnerId) : null);
 
+            //tungnm37 start: resolve team cua Service Case Owner (Queue)
+            String caseOwnerTeamManual = null;
+            if (currentCase.OwnerId != null && currentCase.OwnerId.getSObjectType() == Group.SObjectType) {
+                caseOwnerTeamManual = resolveTeamFromQueueId(currentCase.OwnerId);
+            }
+            //tungnm37 end
+
             List<FEC_Assignment__c> assignments = new List<FEC_Assignment__c>();
             List<String> remarkList = new List<String>();
             List<String> queueNameList = new List<String>(); // tungnm37: lưu queueName để dùng cho history
@@ -362,8 +376,8 @@ public without sharing class FEC_CofGsrAssignmentService {
                     FEC_Case__c = caseId,
                     FEC_Assignment_Name__c = FEC_ConstantCommon.ASSIGNMENT_NAME_ROUTING,
                     FEC_Assignment_Type__c = FEC_ConstantCommon.ASSIGNMENT_TYPE_ROUTING,
-                    //tungnm37: set status theo team + caseOwnerTeam de xu ly cross-team SP<->CC
-                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(teamName, currentUser.FEC_User_Group__c),
+                    //tungnm37: set status theo team + caseOwnerTeam (tu Case Owner Queue)
+                    FEC_Assignment_Status__c = resolveAssignmentStatusWithOwner(teamName, caseOwnerTeamManual),
                     FEC_OwnerID__c = queueDevNameToDisplayName.containsKey(queueName) ? queueDevNameToDisplayName.get(queueName) : queueName, // tungnm37 sửa: lưu Queue Name
                     FEC_Assignment_Owner__c = null,
                     FEC_Team__c = teamName,
